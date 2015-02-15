@@ -2,15 +2,16 @@
 Docker and Fig based environment for Drupal
 
 ## Requirements
-1. [Docker](https://www.docker.com/)
-2. [Fig](http://www.fig.sh/)
-3. Mac/Windows only: [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
+1. OSX/Windows: [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
+2. OSX/Linux: [Docker](https://www.docker.com/). Optional, but recommended on OSX. Available in the Vagrant box.
+3. OSX/Linux: [Fig](http://www.fig.sh/). Optional, but recommended on OSX. Available in the Vagrant box.
 
 ## Usage
- 1. Clone this repo and copy `fig.yml` and `.docker` into your Drupal project folder (`</path/to/project>`).
+ 1. Download or clone this repo and copy `fig.yml` and `.docker` into your Drupal project folder (`</path/to/project>`).
  2. Make sure your docroot is in `</path/to/project>/docroot`
  3. Edit DB connection settings in settings.php for the site (see below).
- 4. `fig up -d`
+ 4. If using [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant): `vagrant up`
+ 5. `fig up -d`
  
 ## DB connection settings
 
