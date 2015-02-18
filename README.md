@@ -1,5 +1,5 @@
 # docker-fig-drupal
-Docker and Fig based environment for Drupal
+Docker and Fig based environment for Drupal.
 
 ## Requirements
 1. OSX/Windows: [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
@@ -15,16 +15,24 @@ Docker and Fig based environment for Drupal
  
 ## DB connection settings
 
+Containers do not have static IP addresses assigned. 
+DB connection settings can be obtained from the environment variables.  
+Below are sample settings for Drupal 7 and Drupal8.  
+If you change the DB node name in fig.yml (e.g. `mysql` instead of `db`) 
+then this has to be updated, since variable names will change as well.
+
+### Drupal 7
+
 ```php
 $databases = array (
   'default' => 
   array (
     'default' => 
     array (
-      'database' => $_SERVER['MYSQL_ENV_MYSQL_DATABASE'],
-      'username' => $_SERVER['MYSQL_ENV_MYSQL_USER'],
-      'password' => $_SERVER['MYSQL_ENV_MYSQL_PASSWORD'],
-      'host' => $_SERVER['MYSQL_PORT_3306_TCP_ADDR'],
+      'database' => getenv('DB_1_ENV_MYSQL_DATABASE'),
+      'username' => getenv('DB_1_ENV_MYSQL_USER'),
+      'password' => getenv('DB_1_ENV_MYSQL_PASSWORD'),
+      'host' => getenv('DB_1_PORT_3306_TCP_ADDR'),
       'port' => '',
       'driver' => 'mysql',
       'prefix' => '',
@@ -32,4 +40,19 @@ $databases = array (
   ),
 );
 
+```
+
+### Drupal 8
+
+```php
+$databases['default']['default'] = array (
+  'database' => getenv('DB_1_ENV_MYSQL_DATABASE'),
+  'username' => getenv('DB_1_ENV_MYSQL_USER'),
+  'password' => getenv('DB_1_ENV_MYSQL_PASSWORD'),
+  'prefix' => '',
+  'host' => getenv('DB_1_PORT_3306_TCP_ADDR'),
+  'port' => '3306',
+  'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+  'driver' => 'mysql',
+);
 ```

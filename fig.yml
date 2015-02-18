@@ -9,7 +9,7 @@ web:
     # Drupal docroot mapping
     - "./docroot:/var/www"
   links:
-    - "db:mysql"
+    - db
 
 # DB node
 db:
