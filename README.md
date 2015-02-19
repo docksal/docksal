@@ -21,7 +21,7 @@ Below are sample settings for Drupal 7 and Drupal8.
 If you change the DB node name in fig.yml (e.g. `mysql` instead of `db`) 
 then this has to be updated, since variable names will change as well.
 
-### Drupal 7
+**Drupal 7**
 
 ```php
 $databases = array (
@@ -42,7 +42,7 @@ $databases = array (
 
 ```
 
-### Drupal 8
+**Drupal 8**
 
 ```php
 $databases['default']['default'] = array (
@@ -55,4 +55,22 @@ $databases['default']['default'] = array (
   'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
   'driver' => 'mysql',
 );
+```
+
+## File permissions fix
+
+With NFS mounts Drupal may complain about files directory not being writable. This is a "false-negative" however can be annoying and break certain things. For a workaround add the following to your setting.php file. 
+
+**Drupal 7**
+
+```php
+# Workaround for permission issues with NFS shares in Vagrant
+$conf['file_chmod_directory'] = 0777;
+$conf['file_chmod_file'] = 0666;
+```
+
+You may also have to reset permissions on the existing files folder. The following command will recursively set folders to 777 (rwx) and files to 666 (rw)
+
+```bash
+chmod -R +rwX files
 ```
