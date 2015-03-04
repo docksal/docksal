@@ -3,6 +3,7 @@ web:
   image: blinkreaction/drupal-nginx-php
   ports:
     - "80:80"
+    - "443:443"
   volumes:
     # PHP configuration overrides
     - "./.docker/etc/php5/php.ini:/etc/php5/fpm/conf.d/99-php.ini"
