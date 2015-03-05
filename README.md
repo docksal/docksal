@@ -1,27 +1,54 @@
-# docker-fig-drupal
-Docker and Fig based environment for Drupal.
+# docker-drupal
+Docker and Docker Compose based environment for Drupal.
 
 ## Requirements
-1. OSX/Windows: [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
-2. OSX/Linux: [Docker](https://www.docker.com/). Optional, but recommended on OSX. Available in the Vagrant box.
-3. OSX/Linux: [Fig](http://www.fig.sh/). Optional, but recommended on OSX. Available in the Vagrant box.
+
+### Mac and Windows
+Docker is not supported natively on Mac and requires a Docker Host VM - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
+
+On Mac both [Docker](https://docs.docker.com/compose/install/#install-docker) and [Docker Compose](https://docs.docker.com/compose/install/#install-compose) can be installed and used natively.
+
+They are preinstalled and can be used inside the Docker Host VM.  This is also the only option available for Windows right now:
+
+    vagrant ssh
+    docker version
+    docker-compose --version
+
+### Linux
+1. [Docker](https://docs.docker.com/compose/install/#install-docker)
+2. [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
 
 ## Usage
- 1. Download or clone this repo and copy `fig.yml` and `.docker` into your Drupal project folder (`</path/to/project>`).
+ 1. Copy `docker-compose.yml` and `.docker` into your Drupal project folder (`</path/to/project>`).
  2. Make sure your docroot is in `</path/to/project>/docroot`
- 3. Edit DB connection settings in settings.php for the site (see below).
- 4. If using [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant): `vagrant up`
- 5. `fig up -d`
+ 3. Edit DB connection settings in `settings.php` for the site (see below).
+ 4. cd `</path/to/project>` and continue with the steps below depending on your OS.
+
+### Mac
+If you have not installed Docker and Docker Compose - skip down to Windows instructions. Otherwise:
+
+    vagrant up
+    docker-compose up -d
+
+### Windows
+
+    vagrant up
+    vagrant ssh
+    cd </path/to/project>
+    docker-compose up -d
+
+### Linux
+
+    docker-compose -d
  
 ## DB connection settings
 
-Containers do not have static IP addresses assigned. 
-DB connection settings can be obtained from the environment variables.  
-Below are sample settings for Drupal 7 and Drupal8.  
-If you change the DB node name in fig.yml (e.g. `mysql` instead of `db`) 
-then this has to be updated, since variable names will change as well.
+Containers do not have static IP addresses assigned.  DB connection settings can be obtained from the environment variables.
 
-**Drupal 7**
+Below are sample settings for Drupal 7 and Drupal8.  
+If you change the DB node name in `docker-compose.yml` (e.g. `mysql` instead of `db`) then this has to be updated, since variable names will change as well.
+
+### Drupal 7
 
 ```php
 $databases = array (
@@ -42,7 +69,7 @@ $databases = array (
 
 ```
 
-**Drupal 8**
+### Drupal 8
 
 ```php
 $databases['default']['default'] = array (
