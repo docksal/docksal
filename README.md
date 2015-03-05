@@ -101,3 +101,27 @@ You may also have to reset permissions on the existing files folder. The followi
 ```bash
 chmod -R +rwX files
 ```
+
+## Tips and tricks
+
+### Runnig Drush
+
+Drush is available inside the **web** container. To run it first open bash inside **web**:
+
+    docker exec -it $(fig ps -q web) bash
+
+A more convenient way of running Drush is via the [docker-drush](.docker/bin/docker-drush) wrapper:
+
+    .docker/bin/docker-drush st
+
+To make the wrapper available in your shell directly (as `docker-drush`) add the following to your `~/.bash_profile`:
+
+    # Docker custom project scripts
+    export PATH="./.docker/bin:$PATH"
+
+This will work universally on all projects using this repo.
+
+### Available wrapper scripts
+
+ - [docker-bash](.docker/bin/docker-bash)- launches bash inside the web container
+ - [docker-drush](.docker/bin/docker-drush) - launches drsuh inside the web container
