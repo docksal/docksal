@@ -21,7 +21,7 @@ They are preinstalled and can be used inside the Docker Host VM.  This is also t
 ## Usage
  1. Copy `docker-compose.yml` and `.docker` into your Drupal project folder (`</path/to/project>`).
  2. Make sure your docroot is in `</path/to/project>/docroot`
- 3. Edit DB connection settings in `settings.php` for the site (see below).
+ 3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
  4. cd `</path/to/project>` and continue with the steps below depending on your OS.
 
 ### Mac
@@ -41,14 +41,16 @@ If you have not installed Docker and Docker Compose - skip down to Windows instr
 
     docker-compose -d
  
-## DB connection settings
+## <a name="drupal-settings"></a> Drupal settings
+
+### DB connection settings
 
 Containers do not have static IP addresses assigned.  DB connection settings can be obtained from the environment variables.
 
 Below are sample settings for Drupal 7 and Drupal8.  
 If you change the DB node name in `docker-compose.yml` (e.g. `mysql` instead of `db`) then this has to be updated, since variable names will change as well.
 
-### Drupal 7
+**Drupal 7**
 
 ```php
 $databases = array (
@@ -69,7 +71,7 @@ $databases = array (
 
 ```
 
-### Drupal 8
+**Drupal 8**
 
 ```php
 $databases['default']['default'] = array (
@@ -84,7 +86,7 @@ $databases['default']['default'] = array (
 );
 ```
 
-## File permissions fix
+### File permissions fix
 
 With NFS mounts Drupal may complain about files directory not being writable. This is a "false-negative" however can be annoying and break certain things. For a workaround add the following to your setting.php file. 
 
