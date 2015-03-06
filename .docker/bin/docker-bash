@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker exec -it $(fig ps -q web) bash
+docker exec -it $(docker-compose ps -q web) bash -ic "$*"
