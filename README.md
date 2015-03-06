@@ -18,7 +18,7 @@ They are preinstalled and can be used inside the Docker Host VM.  This is also t
 1. [Docker](https://docs.docker.com/compose/install/#install-docker)
 2. [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
 
-## Usage
+## <a name="setup"></a> Setup and usage
  1. Copy `docker-compose.yml` and `.docker` into your Drupal project folder (`</path/to/project>`).
  2. Make sure your docroot is in `</path/to/project>/docroot`
  3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
@@ -104,9 +104,34 @@ You may also have to reset permissions on the existing files folder. The followi
 chmod -R +rwX files
 ```
 
-## Tips and tricks
+## Working with multiple projects
 
-### Runnig Drush
+Running multiple projects is very easy. 
+Follow the [setup](#setup) instructions for each project making sure that ports used by containers accross all projects do not collide (e.g. two containers cannot use port 80 at the same time).
+
+This requires a slight modification of the `docker-compose.yml`.
+Edit the `ports` key for each container that does port mapping in `docker-compose.yml`.
+You can either map unique ports for each container or use dedicated IPs:
+
+**Unique ports**
+
+```
+ports:
+  - "8080:80"
+  - "8443:443"
+```
+
+**Dedicated IP**
+
+```
+ports:
+  - "192.168.10.11:80:80"
+  - "192.168.10.11:443:443"
+```
+
+For Mac and Windows see (boot2docker-vagrant/Vagrantfile)[https://github.com/blinkreaction/boot2docker-vagrant/blob/master/Vagrantfile] for instructions on enabling additional IPs for the Docker Host VM.
+
+## Runnig Drush
 
 Drush is available inside the **web** container. To run it first open bash inside **web**:
 
