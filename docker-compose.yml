@@ -26,16 +26,3 @@ db:
   volumes:
      # MySQL configuration overrides
      - "./.docker/etc/mysql/my.cnf:/etc/mysql/conf.d/99-my.cnf"
-  volumes_from:
-    # Map a data volume for /var/lib/mysql
-    - dbdata
-
-# Data-only container for db. 
-# Either use the command (prefered):
-# docker run -d -v /var/lib/mysql --name dbdata mysql:5.5
-# OR uncomment the dbdata service below, in which case `fig rm` will remove your DB data as well!
-dbdata:
-  image: mysql:5.5
-  volumes:
-    - /var/lib/mysql
-  command: echo "Data-only container for db"
