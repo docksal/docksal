@@ -89,11 +89,11 @@ $databases['default']['default'] = array (
 ### Memcached settings
 
 To enable memcached add these settings to your `settings.php` file.
-Replace `[PATH TO MEMCACHE MODULE]` with path to memcached module in your project.
+Replace `</path/to/memcache-module>` with path to [memcache module](https://www.drupal.org/project/memcache) in your project. E.g. `sites/all/modules/contrib/memcache`
 
 ```php
 // Memcache
-$conf['cache_backends'][] = '[PATH TO MEMCACHE MODULE]/memcache/memcache.inc';
+$conf['cache_backends'][] = '/path/to/memcache-module/memcache/memcache.inc';
 $conf['cache_default_class'] = 'MemCacheDrupal';
 $conf['memcache_servers'] = array(
   'memcached:11211' => 'default',
