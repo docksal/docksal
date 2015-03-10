@@ -25,11 +25,11 @@ Follow instructions below to get started.
     `docker-compose up -d`
 
 5. Import the DB dump you created in step 1.
-6. Stop and commit the **db** service container (this will turn the container into a reusable docker image)
+6. Stop and [commit](https://docs.docker.com/reference/commandline/cli/#commit) the **db** service container (this will turn the container into a reusable docker image)
     
     `docker stop $(docker-compose ps -q db) && docker commit $(docker-compose ps -q db) <tag>`
 
-Replace `<tag>` with any meaningful tag you'd like to use for the image. E.g. `db_backup` or `dbdata/myproject:snapshot1`
+    Replace `<tag>` with any meaningful tag you'd like to use for the image. E.g. `db_backup` or `dbdata/myproject:snapshot1`
 
 7. Edit the image definition for the *db* service in `docker-compose.yml` and replace it with the selected tag. E.g.:
 
