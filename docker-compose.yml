@@ -14,7 +14,7 @@ web:
 
 # DB node
 db:
-  image: mysql:5.5
+  image: blinkreaction/mysql:5.5
   ports:
     - "3306:3306"
   # DB configuration
@@ -26,3 +26,5 @@ db:
   volumes:
      # MySQL configuration overrides
      - "./.docker/etc/mysql/my.cnf:/etc/mysql/conf.d/99-my.cnf"
+     # Permanent DB data storage
+     - /var/lib/mysql

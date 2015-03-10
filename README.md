@@ -160,3 +160,6 @@ The following configuration files are mounted inside the respective containers a
 - [.docker/etc/php5/php.ini](.docker/etc/php5/php.ini) - PHP settings overrides
 - [.docker/etc/mysql/my.cnf](.docker/etc/mysql/my.cnf) - MySQL settings overrides
 
+## Advanced use cases
+
+- [DB sandbox mode](.docker/docs/db-sandbox.md)
