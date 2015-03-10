@@ -12,6 +12,29 @@ For example, a 2.6GB DB dump file takes 14 minutes to import with MySQL. (Re)lau
 This is an advanced used case, so make sure you have a backup of the database before proceeding.
 Follow instructions below to get started.
 
+## How it works
+
+In Docker terminology, a read-only [Layer](https://docs.docker.com/terms/layer/#layer) is called an image. In traditional setup you use mysql as Base Docker Image for your DataBase container node. 
+
+
+```yml
+# from docker-compose.yml
+...
+# DB node
+dbdata:
+  image: mysql:5.5
+  ```
+
+With sandboxed DB approach *after* traditional setup and importing your database you create a new Docker Image from your `dbdata` container. This new image (mysql + your DB) is then used as a new Base Image for your DB container. 
+
+```yml
+# DB node
+dbdata:
+  image: mysql_with_my_database:snapshot1
+  ```
+
+An image never changes. However it doesn't mean your DB is going to be read only. Thanks to (Union File System)[https://docs.docker.com/terms/layer/#union-file-system] when process wants to write a file to an image the Docker creates a copy of that file in Writeble Container. All the changes go to the top-most writeable layer, the original file in the read-only image is unchanged.
+
 ## Steps
 
 1. Create a DB dump
