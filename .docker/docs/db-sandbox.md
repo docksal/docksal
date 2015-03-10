@@ -29,11 +29,11 @@ db:
 
 An image never changes. Thanks to [Union File System](https://docs.docker.com/terms/layer/#union-file-system) when process wants to write a file to an image, the Docker creates a copy of that file in Writable Container (the top-most writeable layer).
 
-<img src="img/unionfs-your-image.png" />
+However all changes to containers are not permanent hence in traditional setup you have the `/var/lib/mysql` external volume to save them permanently outside of `db` container.
 
-However all changes to containers are not permanent hence in traditional setup you have the `/var/lib/mysql` external volume to save them permanently outside of `db` container. But for sandboxed approach that's not what we need. 
+<img src="img/unionfs-container.png" />
 
-For sandboxed DB you remove this permanent storage, import your database into container's memory and create a new Docker Image from your container that includes all in-memory changes i.e. your DataBase snapshot. The image is then used as a Base Image for your DB container. 
+For sandboxed DB you remove this permanent storage, import your database into container's memory and create a new Docker Image from your container that includes all in-memory changes made i.e. your DataBase snapshot. The image is then used as a Base Image for your DB container. 
 
 :page_facing_up: docker-compose.yml
 ```yml
@@ -45,6 +45,8 @@ db:
   # Permanent DB data storage (turned off)
   #  - /var/lib/mysql
   ```
+
+<img src="img/unionfs-your-image.png" />
 
 ## Steps
 
