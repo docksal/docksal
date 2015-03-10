@@ -33,7 +33,11 @@ dbdata:
   image: mysql_with_my_database:snapshot1
   ```
 
-An image never changes. However it doesn't mean your DB is going to be read only. Thanks to (Union File System)[https://docs.docker.com/terms/layer/#union-file-system] when process wants to write a file to an image the Docker creates a copy of that file in Writeble Container. All the changes go to the top-most writeable layer, the original file in the read-only image is unchanged.
+An image never changes. However it doesn't mean your DB is going to be read only. Thanks to [Union File System](https://docs.docker.com/terms/layer/#union-file-system) when process wants to write a file to an image, the Docker creates a copy of that file in Writeble Container. 
+
+All the changes go to the top-most writeable layer, the original file in the read-only image is unchanged.
+
+<img src="img/unionfs-your-image.png" />
 
 ## Steps
 
