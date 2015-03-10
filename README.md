@@ -86,9 +86,9 @@ $databases['default']['default'] = array (
 );
 ```
 
-### Memcached settings
+### Memcache settings
 
-To enable memcached add these settings to your `settings.php` file.
+To enable memcache add these settings to your `settings.php` file.
 Replace `</path/to/memcache-module>` with path to [memcache module](https://www.drupal.org/project/memcache) in your project. E.g. `sites/all/modules/contrib/memcache`
 
 ```php
