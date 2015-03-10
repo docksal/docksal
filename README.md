@@ -93,7 +93,7 @@ Replace `</path/to/memcache-module>` with path to [memcache module](https://www.
 
 ```php
 // Memcache
-$conf['cache_backends'][] = '/path/to/memcache-module/memcache/memcache.inc';
+$conf['cache_backends'][] = '</path/to/memcache-module>/memcache.inc';
 $conf['cache_default_class'] = 'MemCacheDrupal';
 $conf['memcache_servers'] = array(
   'memcached:11211' => 'default',
