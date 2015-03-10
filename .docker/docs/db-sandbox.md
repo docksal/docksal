@@ -16,28 +16,35 @@ Follow instructions below to get started.
 
 In Docker terminology, a read-only [Layer](https://docs.docker.com/terms/layer/#layer) is called an image. In traditional setup you use mysql as Base Docker Image for your DataBase container node. 
 
-
-```yml
-# from docker-compose.yml
-...
-# DB node
-dbdata:
-  image: mysql:5.5
-  ```
-
-With sandboxed DB approach *after* traditional setup and importing your database you create a new Docker Image from your `dbdata` container. This new image (mysql + your DB) is then used as a new Base Image for your DB container. 
-
+:page_facing_up: docker-compose.yml
 ```yml
 # DB node
-dbdata:
-  image: mysql_with_my_database:snapshot1
+db:
+  image: blinkreaction/mysql:5.5
+  volumes:
+  ...
+  # Permanent DB data storage
+    - /var/lib/mysql
   ```
 
-An image never changes. However it doesn't mean your DB is going to be read only. Thanks to [Union File System](https://docs.docker.com/terms/layer/#union-file-system) when process wants to write a file to an image, the Docker creates a copy of that file in Writeble Container. 
-
-All the changes go to the top-most writeable layer, the original file in the read-only image is unchanged.
+An image never changes. Thanks to [Union File System](https://docs.docker.com/terms/layer/#union-file-system) when process wants to write a file to an image, the Docker creates a copy of that file in Writable Container (the top-most writeable layer).
 
 <img src="img/unionfs-your-image.png" />
+
+However all changes to containers are not permanent hence in traditional setup you have the `/var/lib/mysql` external volume to save them permanently outside of `db` container. But for sandboxed approach that's not what we need. 
+
+For sandboxed DB you remove this permanent storage, import your database into container's memory and create a new Docker Image from your container that includes all in-memory changes i.e. your DataBase snapshot. The image is then used as a Base Image for your DB container. 
+
+:page_facing_up: docker-compose.yml
+```yml
+# DB node
+db:
+  image: mysql_with_my_database:snapshot1
+  volumes:
+  ...
+  # Permanent DB data storage (turned off)
+  #  - /var/lib/mysql
+  ```
 
 ## Steps
 
