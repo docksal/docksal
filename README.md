@@ -86,6 +86,20 @@ $databases['default']['default'] = array (
 );
 ```
 
+### Memcached settings
+
+To enable memcached add these settings to your `settings.php` file.
+Replace `[PATH TO MEMCACHE MODULE]` with path to memcached module in your project.
+
+```php
+// Memcache
+$conf['cache_backends'][] = '[PATH TO MEMCACHE MODULE]/memcache/memcache.inc';
+$conf['cache_default_class'] = 'MemCacheDrupal';
+$conf['memcache_servers'] = array(
+  'memcached:11211' => 'default',
+);
+```
+
 ### File permissions fix
 
 With NFS mounts Drupal may complain about files directory not being writable. This is a "false-negative" however can be annoying and break certain things. For a workaround add the following to your setting.php file. 

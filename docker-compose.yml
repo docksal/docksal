@@ -11,6 +11,11 @@ web:
     - "./docroot:/var/www"
   links:
     - db
+    - memcached
+
+# Memcached node
+memcached:
+  image: memcached
 
 # DB node
 db:
