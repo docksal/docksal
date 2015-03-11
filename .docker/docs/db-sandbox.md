@@ -12,6 +12,44 @@ For example, a 2.6GB DB dump file takes 14 minutes to import with MySQL. (Re)lau
 This is an advanced used case, so make sure you have a backup of the database before proceeding.
 Follow instructions below to get started.
 
+## How it works
+
+In Docker terminology, a read-only [Layer](https://docs.docker.com/terms/layer/#layer) is called an image. In traditional setup you use mysql as Base Docker Image for your DataBase container node. 
+
+:page_facing_up: docker-compose.yml
+```yml
+# DB node
+db:
+  image: blinkreaction/mysql:5.5
+  volumes:
+  ...
+  # Permanent DB data storage
+    - /var/lib/mysql
+  ```
+
+An image never changes. Thanks to [Union File System](https://docs.docker.com/terms/layer/#union-file-system) when process wants to write a file to an image, the Docker creates a copy of that file in Writable Container (the top-most writeable layer).
+
+However all changes to containers are not permanent hence in traditional setup you have the `/var/lib/mysql` external volume to save them permanently outside of `db` container.
+
+<img src="img/unionfs-container.png" />
+
+For sandboxed DB you remove this permanent storage, import your database into Writeable Container's memory and create a new Docker Image from your container with `docker commit` command. New image will include Base Image plus all in-memory changes made i.e. your DataBase snapshot. It is then used as a Base Image for your DB container. 
+
+:page_facing_up: docker-compose.yml
+```yml
+# DB node
+db:
+  image: mysql_with_my_database:snapshot1
+  volumes:
+  ...
+  # Permanent DB data storage (turned off)
+  #  - /var/lib/mysql
+  ```
+
+<img src="img/unionfs-your-image.png" />
+
+Now you can do any changes to database you want but each time after the container is restarted all changes will be lost (as it doesn't have external persistant storage) and you will be back to your Base Image `mysql_with_my_database:snapshot1`.
+
 ## Steps
 
 1. Create a DB dump
@@ -43,7 +81,9 @@ You will now have a sandboxed DB container, which defaults to the DB snapshot yo
 
 ## Precaution
 
-It's not advisable to commit the container more than once in a row. Every docker image holds all parent images inside it. Thus, **with every commit the size of the resulting image will increase by full size of the DB, not its delta.**
+In case you have a large database it is not recommended to commit the container that already runs on snaphot Base Image (i.e. creating snapshot on top of snapshot). Every docker image holds all parent images + in-memory changes inside it. Thus, **with every commit the size of the resulting image will increase by full size of the DB, not its delta.**
+
+In case of small database though it is ok to do that. But please keep in mind there's a limitation on depth of layers which currently equals 120. 
 
 ## Disabling the sandbox mode
 
