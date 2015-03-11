@@ -1,6 +1,6 @@
 # Web node
 web:
-  image: blinkreaction/drupal-nginx-php
+  image: blinkreaction/drupal-apache-php:2.2-5.5
   ports:
     - "80:80"
     - "443:443"
