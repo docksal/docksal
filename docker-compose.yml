@@ -41,9 +41,10 @@ db:
      - /var/lib/mysql
 
 # Memcached node
-memcached:
-  hostname: memcached
-  image: memcached
-  environment:
-    # Memcached memory limit in megabytes
-    - MEMCACHED_MEMORY_LIMIT=128
+# Uncomment the service definition section below to start using memcached.
+# memcached:
+#   hostname: memcached
+#   image: memcached
+#   environment:
+#     # Memcached memory limit in megabytes
+#     - MEMCACHED_MEMORY_LIMIT=128

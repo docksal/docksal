@@ -88,8 +88,9 @@ $databases['default']['default'] = array (
 
 ### Memcache settings
 
-To enable memcache add these settings to your `settings.php` file.
-Replace `</path/to/memcache-module>` with path to [memcache module](https://www.drupal.org/project/memcache) in your project. E.g. `sites/all/modules/contrib/memcache`
+1. Uncomment the **memcached** service definition section in [`docker-compose.yml`](docker-compose.yml) to start using memcached.
+
+2. Add the following lines to `settings.php` to point Drupal to the memcached node. Replace `</path/to/memcache-module>` with path to [memcache module](https://www.drupal.org/project/memcache) in your project. E.g. `sites/all/modules/contrib/memcache`
 
 ```php
 // Memcache
