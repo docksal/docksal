@@ -1,5 +1,6 @@
 # Web node
 web:
+  hostname: web
   image: blinkreaction/drupal-apache-php:2.2-5.5
   ports:
     - "80:80"
@@ -13,15 +14,9 @@ web:
     - db
     - memcached
 
-# Memcached node
-memcached:
-  image: memcached
-  environment:
-    # Memcached memory limit in megabytes
-    - MEMCACHED_MEMORY_LIMIT=128
-
 # DB node
 db:
+  hostname: db
   image: blinkreaction/mysql:5.5
   ports:
     - "3306:3306"
@@ -36,3 +31,12 @@ db:
      - "./.docker/etc/mysql/my.cnf:/etc/mysql/conf.d/99-my.cnf"
      # Permanent DB data storage
      - /var/lib/mysql
+
+# Memcached node
+memcached:
+  hostname: memcached
+  image: memcached
+  environment:
+    # Memcached memory limit in megabytes
+    - MEMCACHED_MEMORY_LIMIT=128
+
