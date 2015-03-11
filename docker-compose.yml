@@ -11,6 +11,14 @@ web:
     - "./docroot:/var/www"
   links:
     - db
+    - memcached
+
+# Memcached node
+memcached:
+  image: memcached
+  environment:
+    # Memcached memory limit in megabytes
+    - MEMCACHED_MEMORY_LIMIT=128
 
 # DB node
 db:
