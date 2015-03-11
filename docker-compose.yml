@@ -10,7 +10,7 @@ web:
     - "443:443"
   volumes:
     # PHP configuration overrides
-    - "./.docker/etc/php5/php.ini:/etc/php5/fpm/conf.d/99-php.ini"
+    - "./.docker/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
     # Drupal docroot mapping
     - "./docroot:/var/www"
   links:
@@ -31,7 +31,7 @@ db:
     - MYSQL_DATABASE=drupal
   volumes:
      # MySQL configuration overrides
-     - "./.docker/etc/mysql/my.cnf:/etc/mysql/conf.d/99-my.cnf"
+     - "./.docker/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
      # Permanent DB data storage
      - /var/lib/mysql
 
