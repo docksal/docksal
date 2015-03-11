@@ -40,7 +40,17 @@ If you have not installed Docker and Docker Compose - skip down to Windows instr
 ### Linux
 
     docker-compose -d
- 
+
+## Updates
+Base images will be updated from time to time. Docker Compose does not automatically pull new image versions.
+To get an up-to-date version of the entire stack do:
+
+    docker-compose pull
+    docker-compose up -d
+
+Configuration file updates ([`docker-compose.yml`](docker-compose.yml) and [`.docker`](.docker) folder) have to be performed manually.
+See the [commit history](https://github.com/blinkreaction/docker-fig-drupal/commits/master) for recent changes.
+
 ## <a name="drupal-settings"></a> Drupal settings
 
 ### DB connection settings
