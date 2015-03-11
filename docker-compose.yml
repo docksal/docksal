@@ -8,6 +8,9 @@ web:
   ports:
     - "80:80"
     - "443:443"
+    # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
+    #- 192.168.10.10:80:80 
+    #- 192.168.10.10:443:443 
   volumes:
     # PHP configuration overrides
     - "./.docker/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
@@ -23,6 +26,8 @@ db:
   image: blinkreaction/mysql:5.5
   ports:
     - "3306:3306"
+    # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
+    #- 192.168.10.10:3306:3306
   # DB configuration
   environment:
     - MYSQL_ROOT_PASSWORD=admin123
