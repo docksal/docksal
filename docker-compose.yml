@@ -1,3 +1,6 @@
+# Docker and Docker Compose based environment for Drupal.
+# See https://github.com/blinkreaction/docker-fig-drupal for more information and documentation.
+
 # Web node
 web:
   hostname: web
