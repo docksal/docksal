@@ -1,6 +1,7 @@
 # docker-drupal
 Docker and Docker Compose based environment for Drupal.
 
+<a name="requirements"></a>
 ## Requirements
 
 ### Mac and Windows
@@ -18,7 +19,8 @@ They are preinstalled and can be used inside the Docker Host VM.  This is also t
 1. [Docker](https://docs.docker.com/compose/install/#install-docker)
 2. [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
 
-## <a name="setup"></a> Setup and usage
+<a name="setup"></a>
+## Setup and usage
  1. Copy `docker-compose.yml` and `.docker` into your Drupal project folder (`</path/to/project>`).
  2. Make sure your docroot is in `</path/to/project>/docroot`
  3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
@@ -41,6 +43,7 @@ If you have not installed Docker and Docker Compose - skip down to Windows instr
 
     docker-compose -d
 
+<a name="updates"></a>
 ## Updates
 Base images will be updated from time to time. Docker Compose does not automatically pull new image versions.
 To get an up-to-date version of the entire stack do:
@@ -53,6 +56,7 @@ See the [commit history](https://github.com/blinkreaction/docker-fig-drupal/comm
 
 ## <a name="drupal-settings"></a> Drupal settings
 
+<a name="db-settings"></a>
 ### DB connection settings
 
 Containers do not have static IP addresses assigned.  DB connection settings can be obtained from the environment variables.
@@ -96,6 +100,7 @@ $databases['default']['default'] = array (
 );
 ```
 
+<a name="memcache"></a>
 ### Memcache settings
 
 1. Uncomment the **memcached** service definition section in [`docker-compose.yml`](docker-compose.yml) to start using memcached.
@@ -112,6 +117,7 @@ $conf['memcache_servers'] = array(
 );
 ```
 
+<a name="file-permissions"></a>
 ### File permissions fix
 
 With NFS mounts Drupal may complain about files directory not being writable. This is a "false-negative" however can be annoying and break certain things. For a workaround add the following to your setting.php file. 
@@ -130,6 +136,7 @@ You may also have to reset permissions on the existing files folder. The followi
 chmod -R +rwX files
 ```
 
+<a name="multiple-projects"></a>
 ## Working with multiple projects
 
 Running multiple projects is very easy. 
@@ -157,6 +164,7 @@ ports:
 
 For Mac and Windows see (boot2docker-vagrant/Vagrantfile)[https://github.com/blinkreaction/boot2docker-vagrant/blob/master/Vagrantfile] for instructions on enabling additional IPs for the Docker Host VM.
 
+<a name="drush"></a>
 ## Runnig Drush
 
 Drush is available inside the **web** container. To run it first open bash inside **web**:
@@ -174,11 +182,13 @@ To make the wrapper available in your shell directly (as `docker-drush`) add the
 
 This will work universally on all projects using this repo.
 
-### Available wrapper scripts
+<a name="wrapper-scripts"></a>
+## Available wrapper scripts
 
  - [docker-bash](.docker/bin/docker-bash)- launches bash inside the web container
  - [docker-drush](.docker/bin/docker-drush) - launches drsuh inside the web container
 
+<a name="php-mysql-conf"></a>
 ## Altering PHP and MySQL configuration
 
 The following configuration files are mounted inside the respective containers and can be used to override the default settings:
@@ -186,8 +196,9 @@ The following configuration files are mounted inside the respective containers a
 - [.docker/etc/php5/php.ini](.docker/etc/php5/php.ini) - PHP settings overrides
 - [.docker/etc/mysql/my.cnf](.docker/etc/mysql/my.cnf) - MySQL settings overrides
 
+<a name="advanced"></a>
 ## Advanced use cases
 
 - [DB sandbox mode](.docker/docs/db-sandbox.md)
-- [Publicly accessible server](.docker/docs/public-access.md)
+- [Public access](.docker/docs/public-access.md)
 
