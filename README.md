@@ -22,7 +22,7 @@ They are preinstalled and can be used inside the Docker Host VM.  This is also t
 <a name="setup"></a>
 ## Setup and usage
 
- 1. Copy the content of this repo into your new or existing project.
+ 1. Copy the contents of this repo into your new or existing project. Rename README.md to DRUDE.md if there is a name colision.
  2. Make sure your docroot is in `</path/to/project>/docroot`.
  3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
  4. cd `</path/to/project>` and continue with the steps below depending on your OS.
@@ -150,7 +150,7 @@ You can either map unique ports for each container or use dedicated IPs:
 
 **Unique ports**
 
-```
+```yml
 ports:
   - "8080:80"
   - "8443:443"
@@ -158,7 +158,7 @@ ports:
 
 **Dedicated IP**
 
-```
+```yml
 ports:
   - "192.168.10.11:80:80"
   - "192.168.10.11:443:443"
