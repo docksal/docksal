@@ -21,8 +21,9 @@ They are preinstalled and can be used inside the Docker Host VM.  This is also t
 
 <a name="setup"></a>
 ## Setup and usage
- 1. Copy `docker-compose.yml` and `.docker` into your Drupal project folder (`</path/to/project>`).
- 2. Make sure your docroot is in `</path/to/project>/docroot`
+
+ 1. Copy the content of this repo into your new or existing project.
+ 2. Make sure your docroot is in `</path/to/project>/docroot`.
  3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
  4. cd `</path/to/project>` and continue with the steps below depending on your OS.
 
@@ -41,7 +42,7 @@ If you have not installed Docker and Docker Compose - skip down to Windows instr
 
 ### Linux
 
-    docker-compose -d
+    docker-compose up -d
 
 <a name="updates"></a>
 ## Updates
