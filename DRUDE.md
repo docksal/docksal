@@ -1,4 +1,4 @@
-# docker-drupal
+# Drude (**Dru**pal **D**ocker **E**nvironment)
 Docker and Docker Compose based environment for Drupal.
 
 <a name="requirements"></a>
@@ -52,9 +52,10 @@ To get an up-to-date version of the entire stack do:
     docker-compose up -d
 
 Configuration file updates ([`docker-compose.yml`](docker-compose.yml) and [`.docker`](.docker) folder) have to be performed manually.
-See the [commit history](https://github.com/blinkreaction/docker-fig-drupal/commits/master) for recent changes.
+See the [commit history](commits/master) for recent changes.
 
-## <a name="drupal-settings"></a> Drupal settings
+<a name="drupal-settings"></a>
+## Drupal settings
 
 <a name="db-settings"></a>
 ### DB connection settings
@@ -202,3 +203,26 @@ The following configuration files are mounted inside the respective containers a
 - [DB sandbox mode](.docker/docs/db-sandbox.md)
 - [Public access](.docker/docs/public-access.md)
 
+## License
+
+The MIT License (MIT)
+
+Copyright (c) 2015 BlinkReaction
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
