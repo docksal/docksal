@@ -48,3 +48,15 @@ db:
 #   environment:
 #     # Memcached memory limit in megabytes
 #     - MEMCACHED_MEMORY_LIMIT=128
+
+# ngrok node
+# Uncomment the service definition section below to start using ngrok for sharing your local web server with the world.
+# share:
+#   hostname: share
+#   image: fnichol/ngrok
+#   ports:
+#     - "4040:4040"
+#     # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
+#     #- 192.168.10.10:4040:4040
+#   links:
+#     - web:http

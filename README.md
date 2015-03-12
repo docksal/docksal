@@ -189,3 +189,5 @@ The following configuration files are mounted inside the respective containers a
 ## Advanced use cases
 
 - [DB sandbox mode](.docker/docs/db-sandbox.md)
+- [Publicly accessible server](.docker/docs/public-access.md)
+
