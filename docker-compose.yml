@@ -18,7 +18,8 @@ web:
     - "./docroot:/var/www"
   links:
     - db
-    - memcached
+    # Uncomment this and the memcached service definition below to start using memcached.
+    #- memcached
 
 # DB node
 db:
@@ -41,7 +42,7 @@ db:
      - /var/lib/mysql
 
 # Memcached node
-# Uncomment the service definition section below to start using memcached.
+# Uncomment the service definition section below and the link in the web service above to start using memcached.
 # memcached:
 #   hostname: memcached
 #   image: memcached
