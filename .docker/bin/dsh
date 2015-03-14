@@ -6,17 +6,98 @@ help ()
 	echo "Usage: dsh <command>"
 	echo "Commands list:"
 	echo 
-	echo "	start (up)		Start vagrant vm (mac, win) and docker containers -OR- restarts containers if vm is already up"
+	echo "	start (up)		Start vagrant vm (mac, win) and docker containers -OR- restarts containers if vm is already running"
 	echo "	stop (down, halt)	Stop vagrant vm (mac, win) or stop containers (linux)"
 	echo "	reload (restart)	Re-start vagrant vm (mac, win) and docker containers (only restart containers on linux)"
 	echo "	status (st)		Show vm/containers status"
 	echo "	bash			Start bash on web container"
 	echo "	run			Run a command in web container"
 	echo "	  Usage: dsh run <command> <param> <param> <param>..."
-	echo "	mysql			Run mysql shell"
+	echo "	mysql			Open mysql shell"
+	echo "	cc			Clears caches using \"drush cc <cache_type>\""
+	echo "	  Usage: dsh cc <cache_type> (optional, if no <cache_type> specified runs \"drush cc all\")"
 	echo "	help			Output this help"
 	echo
 }
+
+#-------------------------- Helper functions --------------------------------
+
+# Search for file in current dir and all parent dirs
+# @param $1 filename
+# @param $2 variable that gets result - a path to file if it was found
+upfind ()
+{
+	if [[ $1 == '' ]]; then return 1; fi
+	local up='../'
+	local pathup='./'
+	local slashes=${PWD//[^\/]/}
+	for (( i=${#slashes}; i>0; --i )) ; do 
+		if [ -f "${pathup}$1" ] ; then
+			eval $2="${pathup}"
+			break
+		else
+			pathup=$pathup$up
+		fi
+	done
+}
+
+# Returns docroot absolute path
+# @param $1 name of variable to get result
+get_docroot_path ()
+{
+	if [ $# -ne 1 ]; then return; fi
+	upfind "docker-compose.yml" yml_path
+	# get relative docroot path from docker-compose.yml config
+	local docroot_relative=$(grep "&docroot" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
+	local docroot_absolute=$( cd "${yml_path}$docroot_relative" ; pwd )
+	eval $1="$docroot_absolute"
+}
+
+# dummy function to check that command is run along settings.php
+get_drush_path ()
+{
+	if [ ! -f './settings.php' ]; then
+		echo "dsh supports \"${argv[0]}\" command only from sites/yoursite directory which contains settings.php"
+		return 1
+	fi
+	return 0
+}
+
+# Get current path relative to docroot
+# @param $1 name of variable to get result
+cmdpath ()
+{
+	if [[ $# -ne 1 ]]; then return; fi
+	get_docroot_path docroot_path
+	# leave only part of absolute path that is after docroot
+	local cmdpath=${PWD#$docroot_path/}
+	if [[ "$cmdpath" == "$(pwd)" ]] ; then
+		# if replacement didnt happen then we are in docroot or higher
+		eval $1="."
+	else	
+		eval $1="$cmdpath"
+	fi
+}
+
+# Removes invisible residue from the string that remains leftover sometimes
+# @param $1 string to cleanup
+# @param $2 variable that receives clean string
+clean_string ()
+{
+	cleaned=$(echo -e "$1" | sed -e 's/[^a-zA-Z0-9_-]$//')
+	eval $2=\'${cleaned}\'
+}
+
+# get mysql connection string
+# @param $1 gets result
+get_mysql_connect ()
+{
+	# get connection string and cleanup residue that is leftover
+	clean_string "$(_run drush sql-connect)" clean_res
+	eval $1=\'$clean_res\'
+}
+
+#----------------------- Basics check functions -----------------------------
 
 # checks if binary exists and callable in PATH
 binary_found ()
@@ -64,26 +145,7 @@ is_linux ()
 	fi
 }
 
-# Search for file in current dir and all parent dirs
-# @param $1 filename
-# @param $2 variable that gets result - a path to file if it was found
-upfind ()
-{
-	if [[ $1 == '' ]]; then return 1; fi
-	local up='../'
-	local pathup='./'
-	local slashes=${PWD//[^\/]/}
-	for (( i=${#slashes}; i>0; --i )) ; do 
-		if [ -f "${pathup}$1" ] ; then
-			eval $2="${pathup}"
-			break
-		else
-			pathup=$pathup$up
-		fi
-	done
-}
-
-# checks if yml or vagrantfile is absent
+# Checks if yml or vagrantfile (win, mac) is absent
 is_yml_absent ()
 {
 	local vagrant_path=''
@@ -108,7 +170,7 @@ is_yml_absent ()
 	return 1
 }
 
-# checks if vm exists (as per vagrant)
+# Checks if vm exists (as per vagrant)
 is_vm_exist ()
 {
 	if is_yml_absent ; then return 2; fi
@@ -126,7 +188,7 @@ is_vm_exist ()
 	fi
 }
 
-# checks if vm is stopped
+# Checks if vm is stopped
 is_vm_stopped ()
 {
 	if is_yml_absent ; then return 2; fi
@@ -142,8 +204,6 @@ is_vm_stopped ()
 		return 2
 	fi
 }
-
-
 
 #------------------------------- Commands -----------------------------------
 # bring box up
@@ -241,34 +301,6 @@ _bash ()
 	fi
 }
 
-# Get current path relative to docroot
-# @param $1 name of variable to get result
-cmdpath ()
-{
-	if [[ $1 == '' ]]; then return; fi
-	upfind "docker-compose.yml" yml_path
-	# get relative docroot path from docker-compose.yml config
-	local docroot_relative=$(grep "&docroot" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
-	local docroot_absolute=$( cd "${yml_path}$docroot_relative" ; pwd )
-	# leave only part of absolute path that is after docroot
-	local cmdpath=${PWD#$docroot_absolute/}
-	if [[ "$cmdpath" == "$(pwd)" ]] ; then
-		# if replacement didnt happen then we are in docroot or higher
-		eval $1="."
-	else	
-		eval $1="$cmdpath"
-	fi
-}
-
-# Removes invisible residue from the string that remain leftover sometimes
-# @param $1 string to cleanup
-# @param $2 variable that receives clean string
-clean_string ()
-{
-	cleaned=$(echo -e "$1" | sed -e 's/[^a-zA-Z0-9_-]$//')
-	eval $2=\'${cleaned}\'
-}
-
 # Run a command in container
 # param $* command with it's params to run
 _run ()
@@ -286,15 +318,36 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
-	if [ ! -f './settings.php' ]; then
-		echo "dsh supports mysql command only from sites/yoursite directory which contains settings.php"
-		return
-	fi
-	res=$(_run drush sql-connect)
-	clean_string "$res" clean_res
-	_run $clean_res" -A" # -A option to speed up mysql load
+	if ! get_drush_path; then return; fi
+	local sql_connect
+	get_mysql_connect sql_connect
+	_run $sql_connect" -A" # -A option to speed up mysql load
 }
 
+# Truncate db and import from sql dump
+# @param $1 filename of backup file. Should be inside docroot
+mysql_import ()
+{
+	dirname $1
+	#local sql_connect
+	#get_mysql_connect sql_connect
+	#_run 'echo "show databases;" | '$sql_connect
+}
+
+# Shortcut to run drush cc ... on site
+# @param $1 type of cache to clean (all, css-js, ...)
+clear_cache ()
+{
+	if ! get_drush_path; then return; fi
+	local type='all'
+	if [[ ! $1 == '' ]]; then 
+		type=$1
+	fi
+	_run 'drush cc '$type
+}
+
+# command bindings
+argv=("$@")
 case $1 in
 	up)
 		up
@@ -332,6 +385,12 @@ case $1 in
 		;;
 	mysql)
 		mysql
+		;;
+	mysql-import)
+		mysql_import $2
+		;;
+	cc)
+		clear_cache $2
 		;;
 	*)
 		help
