@@ -6,9 +6,9 @@ help ()
 	echo "Usage: dsh <command>"
 	echo "Commands list:"
 	echo 
-	echo "	start (up)		Start vagrant vm and docker containers -OR- restarts containers if vm is already up"
-	echo "	stop (down, halt)	Stop vagrant vm"
-	echo "	reload (restart)	Re-start vagrant vm and docker containers"
+	echo "	start (up)		Start vagrant vm (mac, win) and docker containers -OR- restarts containers if vm is already up"
+	echo "	stop (down, halt)	Stop vagrant vm (mac, win) or stop containers (linux)"
+	echo "	reload (restart)	Re-start vagrant vm (mac, win) and docker containers (only restart containers on linux)"
 	echo "	status (st)		Show vm/containers status"
 	echo "	bash			Start bash on web container"
 	echo "	run			Run a command in web container"
@@ -56,6 +56,14 @@ is_docker ()
 	return $?
 }
 
+is_linux ()
+{
+	local res=`uname | grep 'Linux'`
+	if [[ ! $res == '' ]]; then
+		return 0;
+	fi
+}
+
 # Search for file in current dir and all parent dirs
 # @param $1 filename
 # @param $2 variable that gets result - a path to file if it was found
@@ -87,6 +95,10 @@ is_yml_absent ()
 		return 0
 	fi
 
+	if is_linux ; then
+		return 1; # linux does not need vagrant
+	fi
+
 	upfind "Vagrantfile" vagrant_path
 	if [ $vagrant_path == '' ] ; then
 		echo "dsh: Vagrantfile not found in your directory tree"
@@ -101,6 +113,7 @@ is_yml_absent ()
 is_vm_exist ()
 {
 	if is_yml_absent ; then return 2; fi
+	if is_linux ; then return 0; fi
 	if is_vagrant ; then
 		res=`vagrant status | grep -e "boot2docker.*not created"`
 		if [[ $res == '' ]]; then
@@ -118,6 +131,7 @@ is_vm_exist ()
 is_vm_stopped ()
 {
 	if is_yml_absent ; then return 2; fi
+	if is_linux ; then return 1; fi
 	if is_vagrant ; then
 		res=`vagrant status | grep -e "boot2docker.*running"`
 		if [[ $res == '' ]]; then
@@ -129,6 +143,8 @@ is_vm_stopped ()
 		return 2
 	fi
 }
+
+
 
 #------------------------------- Commands -----------------------------------
 # bring box up
@@ -145,6 +161,9 @@ up ()
 			echo "Starting containers..."
 			docker-compose up -d
 		fi
+	elif is_linux && is_docker_compose ; then
+		echo "Starting containers..."
+		docker-compose up -d
 	fi
 }
 
@@ -155,6 +174,9 @@ down ()
 	if is_vagrant ; then
 		echo "Stopping vagrant vm..."
 		vagrant halt
+	elif is_linux; then
+		echo "Stopping containers..."
+		docker-compose stop
 	fi
 }
 
@@ -172,6 +194,9 @@ restart ()
 			echo "Starting containers..."
 			docker-compose up -d
 		fi
+	elif is_linux && is_docker_compose ; then
+		echo "Restarting containers..."
+		docker-compose up -d
 	fi	
 }
 
@@ -205,7 +230,6 @@ status ()
 # start interactive bash in container
 _bash ()
 {
-	local yml_path=''
 	upfind "docker-compose.yml" yml_path
 	cd $yml_path
 	if is_docker && is_docker_compose ; then
