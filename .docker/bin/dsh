@@ -13,6 +13,7 @@ help ()
 	echo "	bash			Start bash on web container"
 	echo "	run			Run a command in web container"
 	echo "	  Usage: dsh run <command> <param> <param> <param>..."
+	echo "	mysql			Run mysql shell"
 	echo "	help			Output this help"
 	echo
 }
@@ -185,6 +186,8 @@ status ()
 			;;
 		1)
 			if is_docker_compose ; then
+				upfind "docker-compose.yml" yml_path
+				cd $yml_path
 				docker-compose ps
 			fi
 			;;
@@ -202,6 +205,9 @@ status ()
 # start interactive bash in container
 _bash ()
 {
+	local yml_path=''
+	upfind "docker-compose.yml" yml_path
+	cd $yml_path
 	if is_docker && is_docker_compose ; then
 		docker exec -it $(docker-compose ps -q web) bash -i
 		RES=$?
@@ -232,16 +238,21 @@ cmdpath ()
 	fi
 }
 
+rrr=''
 # Run a command in container
 # param $* command with it's params to run
 _run ()
 {
+	#echo $1
 	if is_docker && is_docker_compose ; then
-		local cd_path
+		local cd_path=''
 		local yml_path=''
 		cmdpath cd_path
 		upfind "docker-compose.yml" yml_path
 		cd $yml_path
+		#echo "cd $cd_path && $*"
+		#echo .
+		rrr="---docker exec -it $(docker-compose ps -q web) bash -ic 'cd $cd_path && $*'"
 		docker exec -it $(docker-compose ps -q web) bash -ic "cd $cd_path && $*"
 	fi
 }
@@ -249,7 +260,14 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
-	return; #dummy
+	if [ ! -f './settings.php' ]; then
+		echo "dsh supports mysql command only from sites/yoursite directory which contains settings.php"
+		return
+	fi
+	res=$(_run drush sql-connect)
+	# TODO: improve res cleanup for generic case
+	clean_res=$( echo $res|sed 's/^\(mysql.*3306\).*/\1/' )
+	_run $clean_res" -A"
 }
 
 case $1 in
