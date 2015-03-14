@@ -142,6 +142,8 @@ is_linux ()
 	local res=`uname | grep 'Linux'`
 	if [[ ! $res == '' ]]; then
 		return 0;
+	else 
+		return 1;
 	fi
 }
 
