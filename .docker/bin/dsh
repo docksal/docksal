@@ -86,7 +86,6 @@ upfind ()
 # checks if yml or vagrantfile is absent
 is_yml_absent ()
 {
-	local yml_path=''
 	local vagrant_path=''
 
 	upfind "docker-compose.yml" yml_path
@@ -247,7 +246,6 @@ _bash ()
 cmdpath ()
 {
 	if [[ $1 == '' ]]; then return; fi
-	local yml_path=''
 	upfind "docker-compose.yml" yml_path
 	# get relative docroot path from docker-compose.yml config
 	local docroot_relative=$(grep "&docroot" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
@@ -262,7 +260,15 @@ cmdpath ()
 	fi
 }
 
-rrr=''
+# Removes invisible residue from the string that remain leftover sometimes
+# @param $1 string to cleanup
+# @param $2 variable that receives clean string
+clean_string ()
+{
+	cleaned=$(echo -e "$1" | sed -e 's/[^a-zA-Z0-9_-]$//')
+	eval $2=\'${cleaned}\'
+}
+
 # Run a command in container
 # param $* command with it's params to run
 _run ()
@@ -270,13 +276,9 @@ _run ()
 	#echo $1
 	if is_docker && is_docker_compose ; then
 		local cd_path=''
-		local yml_path=''
 		cmdpath cd_path
 		upfind "docker-compose.yml" yml_path
 		cd $yml_path
-		#echo "cd $cd_path && $*"
-		#echo .
-		rrr="---docker exec -it $(docker-compose ps -q web) bash -ic 'cd $cd_path && $*'"
 		docker exec -it $(docker-compose ps -q web) bash -ic "cd $cd_path && $*"
 	fi
 }
@@ -289,9 +291,8 @@ mysql ()
 		return
 	fi
 	res=$(_run drush sql-connect)
-	# TODO: improve res cleanup for generic case
-	clean_res=$( echo $res|sed 's/^\(mysql.*3306\).*/\1/' )
-	_run $clean_res" -A"
+	clean_string "$res" clean_res
+	_run $clean_res" -A" # -A option to speed up mysql load
 }
 
 case $1 in
