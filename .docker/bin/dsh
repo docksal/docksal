@@ -2,7 +2,7 @@
 
 help ()
 {
-	echo "dsh - Docker Shell"
+	echo "dsh - Drude Shell"
 	echo "Usage: dsh <command>"
 	echo "Commands list:"
 	echo 
