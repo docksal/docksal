@@ -6,12 +6,14 @@ help ()
 	echo "Usage: dsh <command>"
 	echo "Commands list:"
 	echo 
-	echo "	help			Output this help"
-	echo "	start (up)		Start vagrant vm and docker containers -OR- restarts containers"
+	echo "	start (up)		Start vagrant vm and docker containers -OR- restarts containers if vm is already up"
 	echo "	stop (down, halt)	Stop vagrant vm"
 	echo "	reload (restart)	Re-start vagrant vm and docker containers"
 	echo "	status (st)		Show vm/containers status"
 	echo "	bash			Start bash on web container"
+	echo "	run			Run a command in web container"
+	echo "	  Usage: dsh run <command> <param> <param> <param>..."
+	echo "	help			Output this help"
 	echo
 }
 
@@ -32,40 +34,65 @@ binary_found ()
 	fi
 }
 
-# check that vagrant exists
+# check that vagrant binary exists
 is_vagrant ()
 {
 	binary_found 'vagrant';
 	return $?
 }
 
-# check that docker-compose exists
+# check that docker-compose binary exists
 is_docker_compose ()
 {
 	binary_found 'docker-compose';
 	return $?
 }
 
-# check that docker exists
+# check that docker binary exists
 is_docker ()
 {
 	binary_found 'docker';
 	return $?
 }
 
-# checks if yml absent
+# Search for file in current dir and all parent dirs
+# @param $1 filename
+# @param $2 variable that gets result - a path to file if it was found
+upfind ()
+{
+	if [[ $1 == '' ]]; then return 1; fi
+	local up='../'
+	local pathup='./'
+	local slashes=${PWD//[^\/]/}
+	for (( i=${#slashes}; i>0; --i )) ; do 
+		if [ -f "${pathup}$1" ] ; then
+			eval $2="${pathup}"
+			break
+		else
+			pathup=$pathup$up
+		fi
+	done
+}
+
+# checks if yml or vagrantfile is absent
 is_yml_absent ()
 {
-	if [ ! -f './docker-compose.yml' ] ; then
-		echo "dsh: docker-compose.yml not found in current directory. Please run dsh from directory where it is located"
+	local yml_path=''
+	local vagrant_path=''
+
+	upfind "docker-compose.yml" yml_path
+	if [ $yml_path == '' ] ; then
+		echo "dsh: docker-compose.yml not found in your directory tree"
 		return 0
 	fi
 
-	if [ ! -f './Vagrantfile' ] && [ ! -f '../Vagrantfile' ] ; then
-		echo "dsh: Vagrantfile not found in current directory. Please run dsh from directory where it is located"
+	upfind "Vagrantfile" vagrant_path
+	if [ $vagrant_path == '' ] ; then
+		echo "dsh: Vagrantfile not found in your directory tree"
 		return 0
 	fi
 
+	#if we got here files are present
 	return 1
 }
 
@@ -102,6 +129,7 @@ is_vm_stopped ()
 	fi
 }
 
+#------------------------------- Commands -----------------------------------
 # bring box up
 up ()
 {
@@ -129,6 +157,7 @@ down ()
 	fi
 }
 
+# call 911
 restart ()
 {
 	echo "Checking files..."
@@ -170,6 +199,7 @@ status ()
 	esac
 }
 
+# start interactive bash in container
 _bash ()
 {
 	if is_docker && is_docker_compose ; then
@@ -180,6 +210,46 @@ _bash ()
 			echo "dsh: You might want to run \"dsh up\""
 		fi
 	fi
+}
+
+# Get current path relative to docroot
+# @param $1 name of variable to get result
+cmdpath ()
+{
+	if [[ $1 == '' ]]; then return; fi
+	local yml_path=''
+	upfind "docker-compose.yml" yml_path
+	# get relative docroot path from docker-compose.yml config
+	local docroot_relative=$(grep "&docroot" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
+	local docroot_absolute=$( cd "${yml_path}$docroot_relative" ; pwd )
+	# leave only part of absolute path that is after docroot
+	local cmdpath=${PWD#$docroot_absolute/}
+	if [[ "$cmdpath" == "$(pwd)" ]] ; then
+		# if replacement didnt happen then we are in docroot or higher
+		eval $1="."
+	else	
+		eval $1="$cmdpath"
+	fi
+}
+
+# Run a command in container
+# param $* command with it's params to run
+_run ()
+{
+	if is_docker && is_docker_compose ; then
+		local cd_path
+		local yml_path=''
+		cmdpath cd_path
+		upfind "docker-compose.yml" yml_path
+		cd $yml_path
+		docker exec -it $(docker-compose ps -q web) bash -ic "cd $cd_path && $*"
+	fi
+}
+
+# start interactive mysql shell
+mysql ()
+{
+	return; #dummy
 }
 
 case $1 in
@@ -212,6 +282,13 @@ case $1 in
 		;;
 	bash)
 		_bash
+		;;
+	run)
+		shift
+		_run $*
+		;;
+	mysql)
+		mysql
 		;;
 	*)
 		help
