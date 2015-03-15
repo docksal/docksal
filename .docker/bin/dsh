@@ -41,6 +41,22 @@ upfind ()
 	done
 }
 
+# Returns absolute path 
+get_abs_path ()
+{
+	local _dir
+	if [ -f $1 ]; then
+		_dir=`dirname $1`
+	elif [ -d $1 ]; then
+		_dir=$1
+	else
+		echo "Path \"$1\" does not exist"
+		return
+	fi
+	local absolute=$( cd "${_dir}" ; pwd )
+	eval $2="$absolute"
+}
+
 # Returns docroot absolute path
 # @param $1 name of variable to get result
 get_docroot_path ()
@@ -220,10 +236,14 @@ up ()
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo "Starting containers..."
+			upfind "docker-compose.yml" yml_path
+			cd $yml_path
 			docker-compose up -d
 		fi
 	elif is_linux && is_docker_compose ; then
 		echo "Starting containers..."
+		upfind "docker-compose.yml" yml_path
+		cd $yml_path
 		docker-compose up -d
 	fi
 }
@@ -237,6 +257,8 @@ down ()
 		vagrant halt
 	elif is_linux; then
 		echo "Stopping containers..."
+		upfind "docker-compose.yml" yml_path
+		cd $yml_path
 		docker-compose stop
 	fi
 }
@@ -253,10 +275,14 @@ restart ()
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo "Starting containers..."
+			upfind "docker-compose.yml" yml_path
+			cd $yml_path
 			docker-compose up -d
 		fi
 	elif is_linux && is_docker_compose ; then
 		echo "Restarting containers..."
+		upfind "docker-compose.yml" yml_path
+		cd $yml_path
 		docker-compose up -d
 	fi	
 }
@@ -303,17 +329,25 @@ _bash ()
 	fi
 }
 
-# Run a command in container
+# Run a command in container in docroot
+# param $* command with it's params to run
+run ()
+{
+	if is_docker && is_docker_compose ; then
+		upfind "docker-compose.yml" yml_path
+		cd $yml_path
+		docker exec -it $(docker-compose ps -q web) bash -ic "$*"
+	fi
+}
+
+# Run a command in container changing dir to the same folder
 # param $* command with it's params to run
 _run ()
 {
-	#echo $1
 	if is_docker && is_docker_compose ; then
 		local cd_path=''
 		cmdpath cd_path
-		upfind "docker-compose.yml" yml_path
-		cd $yml_path
-		docker exec -it $(docker-compose ps -q web) bash -ic "cd $cd_path && $*"
+		run "cd $cd_path && $*" 
 	fi
 }
 
@@ -330,10 +364,28 @@ mysql ()
 # @param $1 filename of backup file. Should be inside docroot
 mysql_import ()
 {
-	dirname $1
-	#local sql_connect
-	#get_mysql_connect sql_connect
-	#_run 'echo "show databases;" | '$sql_connect
+	if ! get_drush_path; then return; fi
+	local docroot
+	get_docroot_path docroot
+	local filename=`basename $1`
+	local filepath
+	get_abs_path $1 filepath
+	#substract docroot path from filepath
+	local pathdiff=${filepath#$docroot}
+
+	if [[ $pathdiff == $filepath ]] ; then
+		# substraction did not succeed because file is outside docroot
+		echo "\"$filename\" should be inside your docroot folder"
+		return
+	fi
+
+	#run "ls $filename"
+
+	local sql_connect
+	get_mysql_connect sql_connect
+	#_run 'echo "use drupal; show tables;" | '$sql_connect
+	echo "Importing $filename into database 'drupal'..."
+	run $sql_connect" < $filename"
 }
 
 # Shortcut to run drush cc ... on site
