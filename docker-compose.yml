@@ -14,8 +14,8 @@ web:
   volumes:
     # PHP configuration overrides
     - "./.docker/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
-    # Drupal docroot mapping
-    - &docroot "./docroot:/var/www"
+    # Project root folder mapping
+    - &project_root ".:/var/www"
   links:
     - db
     # Uncomment this and the memcached service definition below to start using memcached.
@@ -49,8 +49,8 @@ cli:
   volumes:
     # PHP configuration overrides
     - "./.docker/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
-    # Drupal docroot mapping
-    - *docroot
+    # Project root folder mapping
+    - *project_root
   links:
     - db
 
