@@ -15,7 +15,7 @@ web:
     # PHP configuration overrides
     - "./.docker/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
     # Drupal docroot mapping
-    - "./docroot:/var/www"
+    - &docroot "./docroot:/var/www"
   links:
     - db
     # Uncomment this and the memcached service definition below to start using memcached.
@@ -40,6 +40,19 @@ db:
      - "./.docker/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
      # Permanent DB data storage
      - /var/lib/mysql
+
+# CLI node
+# Used for all console commands and tools.
+cli:
+  hostname: cli
+  image: blinkreaction/drupal-cli
+  volumes:
+    # PHP configuration overrides
+    - "./.docker/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
+    # Drupal docroot mapping
+    - *docroot
+  links:
+    - db
 
 # Memcached node
 # Uncomment the service definition section below and the link in the web service above to start using memcached.

@@ -166,16 +166,25 @@ ports:
 
 For Mac and Windows see (boot2docker-vagrant/Vagrantfile)[https://github.com/blinkreaction/boot2docker-vagrant/blob/master/Vagrantfile] for instructions on enabling additional IPs for the Docker Host VM.
 
-<a name="drush"></a>
-## Runnig Drush
+<a name="cli"></a>
+## Console tools (cli)
 
-Drush is available inside the **web** container. To run it first open bash inside **web**:
+A variety of console tools is available inside the **cli** container:
 
-    docker exec -it $(fig ps -q web) bash
+- php-cli, composer, drush7
+- ruby, bundler, compass
+- node, npm, bower, grunt
+- git, wget, zip, mysql-client
 
-A more convenient way of running Drush is via the [docker-drush](.docker/bin/docker-drush) wrapper:
+The the most up-to-date list see [cli container](https://github.com/blinkreaction/docker-images/tree/master/cli)
 
-    .docker/bin/docker-drush st
+To access the console tools first open bash inside **cli**:
+
+    docker exec -it $(docker-compose ps -q cli) bash
+
+A more convenient way of entering **cli** with bash is via the [docker-bash](.docker/bin/docker-bash) wrapper:
+
+    .docker/bin/docker-bash [<command>]
 
 To make the wrapper available in your shell directly (as `docker-drush`) add the following to your `~/.bash_profile`:
 
