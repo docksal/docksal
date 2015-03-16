@@ -2,7 +2,7 @@
 
 if [[ $1 == '' ]]; then
 	echo "Starting bash..."
-	docker exec -it $(docker-compose ps -q cli) bash -i
+	docker-compose run --rm cli bash -i
 else
-	docker exec -it $(docker-compose ps -q cli) bash -ic "$*"
+	docker-compose run --rm cli bash -ic "$*"
 fi
