@@ -11,7 +11,7 @@ help ()
 	echo "	reload (restart)	Re-start vagrant vm (mac only) and docker containers"
 	echo "	status (st, ps)		Show vm/containers status"
 	echo "	bash			Start bash on cli container"
-	echo "	run			Run a command in cli container (usage: dsh run <command> [param] [param] [param]...)"
+	echo "	exec (run)		Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)"
 	echo "	mysql			Opens mysql shell to drude database"
 	echo "	drush			Shorthand for executing drush commands (dsh drush [command] [options])"
 	echo "	cc			Shorthand for clearing caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
@@ -477,6 +477,10 @@ case $1 in
 		;;
 	bash)
 		_bash
+		;;
+	exec)
+		shift
+		_run $*
 		;;
 	run)
 		shift
