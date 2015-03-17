@@ -57,16 +57,16 @@ get_abs_path ()
 	eval $2="$absolute"
 }
 
-# Returns docroot absolute path
+# Returns project root absolute path
 # @param $1 name of variable to get result
-get_docroot_path ()
+get_project_root_path ()
 {
 	if [ $# -ne 1 ]; then return; fi
 	upfind "docker-compose.yml" yml_path
-	# get relative docroot path from docker-compose.yml config
-	local docroot_relative=$(grep "&docroot" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
-	local docroot_absolute=$( cd "${yml_path}$docroot_relative" ; pwd )
-	eval $1="$docroot_absolute"
+	# get relative project root path from docker-compose.yml config
+	local project_root_relative=$(grep "&project_root" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
+	local project_root_absolute=$( cd "${yml_path}$project_root_relative" ; pwd )
+	eval $1="$project_root_absolute"
 }
 
 # dummy function to check that command is run along settings.php
@@ -79,16 +79,17 @@ get_drush_path ()
 	return 0
 }
 
-# Get current path relative to docroot
+# Get current path relative to project root
 # @param $1 name of variable to get result
 cmdpath ()
 {
 	if [[ $# -ne 1 ]]; then return; fi
-	get_docroot_path docroot_path
-	# leave only part of absolute path that is after docroot
-	local cmdpath=${PWD#$docroot_path/}
+	get_project_root_path project_root_path
+	# leave only part of absolute path that is after project root
+	local cmdpath=${PWD#$project_root_path/}
 	if [[ "$cmdpath" == "$(pwd)" ]] ; then
-		# if replacement didnt happen then we are in docroot or higher
+
+		# if replacement didnt happen then we are in project root or higher
 		eval $1="."
 	else	
 		eval $1="$cmdpath"
@@ -321,7 +322,7 @@ _bash ()
 	upfind "docker-compose.yml" yml_path
 	cd $yml_path
 	if is_docker && is_docker_compose ; then
-		docker exec -it $(docker-compose ps -q web) bash -i
+		docker exec -it $(docker-compose ps -q cli) bash -i
 		RES=$?
 		if [ $RES -ne 0 ]; then
 			echo
@@ -330,14 +331,14 @@ _bash ()
 	fi
 }
 
-# Run a command in container in docroot
+# Run a command in container in project root
 # param $* command with it's params to run
 run ()
 {
 	if is_docker && is_docker_compose ; then
 		upfind "docker-compose.yml" yml_path
 		cd $yml_path
-		docker exec -it $(docker-compose ps -q web) bash -ic "$*"
+		docker exec -it $(docker-compose ps -q cli) bash -ic "$*"
 	fi
 }
 
@@ -362,21 +363,21 @@ mysql ()
 }
 
 # Truncate db and import from sql dump
-# @param $1 filename of backup file. Should be inside docroot
+# @param $1 filename of backup file. Should be inside project root
 mysql_import ()
 {
 	if ! get_drush_path; then return; fi
-	local docroot
-	get_docroot_path docroot
+	local project_root
+	get_project_root_path project_root
 	local filename=`basename $1`
 	local filepath
 	get_abs_path $1 filepath
-	#substract docroot path from filepath
-	local pathdiff=${filepath#$docroot}
+	#substract project root path from filepath
+	local pathdiff=${filepath#$project_root}
 
 	if [[ $pathdiff == $filepath ]] ; then
-		# substraction did not succeed because file is outside docroot
-		echo "\"$filename\" should be inside your docroot folder"
+		# substraction did not succeed because file is outside project root
+		echo "\"$filename\" should be inside your project root folder"
 		return
 	fi
 
