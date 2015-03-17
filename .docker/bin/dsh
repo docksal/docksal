@@ -260,7 +260,6 @@ up ()
 {
 	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
-	if ! is_vm_exist ; then return 2; fi
 	if is_vagrant ; then
 		echo "Starting vagrant vm..."
 		vagrant up
@@ -286,6 +285,7 @@ up ()
 down ()
 {
 	if is_yml_absent ; then return 2; fi
+	if ! is_vm_exist ; then return 2; fi
 	if is_vagrant ; then
 		echo "Stopping vagrant vm..."
 		vagrant halt
@@ -331,6 +331,7 @@ restart ()
 # output status of boot2docker if stopped or containers if started
 status ()
 {
+	if ! is_vm_exist ; then return 2; fi
 	is_vm_stopped
 	stopped=$?
 	case $stopped in
