@@ -172,7 +172,7 @@ For Mac and Windows see (boot2docker-vagrant/Vagrantfile)[https://github.com/bli
 A variety of console tools is available inside the **cli** container:
 
 - php-cli, composer, drush7
-- ruby, bundler, compass
+- ruby, bundler
 - node, npm, bower, grunt
 - git, wget, zip, mysql-client
 
