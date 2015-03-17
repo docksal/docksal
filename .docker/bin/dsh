@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 help ()
 {
@@ -6,16 +6,15 @@ help ()
 	echo "Usage: dsh <command>"
 	echo "Commands list:"
 	echo 
-	echo "	start (up)		Start vagrant vm (mac, win) and docker containers -OR- restarts containers if vm is already running"
-	echo "	stop (down, halt)	Stop vagrant vm (mac, win) or stop containers (linux)"
-	echo "	reload (restart)	Re-start vagrant vm (mac, win) and docker containers (only restart containers on linux)"
-	echo "	status (st)		Show vm/containers status"
-	echo "	bash			Start bash on web container"
-	echo "	run			Run a command in web container"
-	echo "	  Usage: dsh run <command> <param> <param> <param>..."
-	echo "	mysql			Open mysql shell"
-	echo "	cc			Clears caches using \"drush cc <cache_type>\""
-	echo "	  Usage: dsh cc <cache_type> (optional, if no <cache_type> specified runs \"drush cc all\")"
+	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
+	echo "	stop (down, halt)	Stop vagrant vm (mac only) or stop containers"
+	echo "	reload (restart)	Re-start vagrant vm (mac only) and docker containers"
+	echo "	status (st, ps)		Show vm/containers status"
+	echo "	bash			Start bash on cli container"
+	echo "	run			Run a command in cli container (usage: dsh run <command> [param] [param] [param]...)"
+	echo "	mysql			Opens mysql shell to drude database"
+	echo "	drush			Shorthand for executing drush commands (dsh drush [command] [options])"
+	echo "	cc			Shorthand for clearing caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo "	help			Output this help"
 	echo
 }
@@ -24,22 +23,40 @@ help ()
 
 # Search for file in current dir and all parent dirs
 # @param $1 filename
-# @param $2 variable that gets result - a path to file if it was found
 upfind ()
 {
 	if [[ $1 == '' ]]; then return 1; fi
 	local up='../'
 	local pathup='./'
-	local slashes=${PWD//[^\/]/}
-	for (( i=${#slashes}; i>0; --i )) ; do 
+	local slashes=$(pwd | sed 's/[^\/]//g')
+	for i in $(seq 0 ${#slashes}) ; do 
 		if [ -f "${pathup}$1" ] ; then
-			eval $2="${pathup}"
+			echo "${pathup}"
 			break
 		else
 			pathup=$pathup$up
 		fi
 	done
 }
+
+yml_get_path ()
+{
+	echo `upfind docker-compose.yml`
+}
+
+# Search for file in $VAGRANT_ROOT and all child dirs with maxlevel. Return first match (alphabetically)
+# @param $1 filename
+# @param $2 maxlevel (default 2 meaning current dir + all dirs in current)
+downfind ()
+{
+	if [[ ! "$2" == "" ]]; then
+		depth=$2
+	else
+		depth=2
+	fi
+	echo `dirname $(find $VAGRANT_ROOT -maxdepth $depth -name "$1" | head -n 1)`
+}
+
 
 # Returns absolute path 
 get_abs_path ()
@@ -54,7 +71,7 @@ get_abs_path ()
 		return
 	fi
 	local absolute=$( cd "${_dir}" ; pwd )
-	eval $2="$absolute"
+	echo "$absolute"
 }
 
 # Returns project root absolute path
@@ -62,7 +79,7 @@ get_abs_path ()
 get_project_root_path ()
 {
 	if [ $# -ne 1 ]; then return; fi
-	upfind "docker-compose.yml" yml_path
+	yml_path=`yml_get_path`
 	# get relative project root path from docker-compose.yml config
 	local project_root_relative=$(grep "&project_root" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
 	local project_root_absolute=$( cd "${yml_path}$project_root_relative" ; pwd )
@@ -73,7 +90,7 @@ get_project_root_path ()
 get_drush_path ()
 {
 	if [ ! -f './settings.php' ]; then
-		echo "dsh supports \"${argv[0]}\" command only from sites/yoursite directory which contains settings.php"
+		echo "dsh supports '$argv' command only from sites/yoursite directory which contains settings.php"
 		return 1
 	fi
 	return 0
@@ -118,10 +135,21 @@ get_mysql_connect ()
 
 is_linux ()
 {
-	local res=`uname | grep 'Linux'`
-	if [[ ! $res == '' ]]; then
+	res=`uname | grep 'Linux'`
+	if [[ ! "$res" == '' ]]; then
 		return 0;
 	else 
+		return 1;
+	fi
+}
+
+# cheсks wether we are in boot2docker console
+is_boot2docker ()
+{
+	local res=`uname -a|grep 'boot2docker'`
+	if [[ ! "$res" == '' ]]; then
+		return 0;
+	else
 		return 1;
 	fi
 }
@@ -129,13 +157,13 @@ is_linux ()
 # checks if binary exists and callable in PATH
 binary_found ()
 {
-	if [[ $1 == '' ]]; then
+	if [[ "$1" == "" ]]; then
 		return 1;
 	fi
 
 	local bpath=`which $1`
 	
-	if [[ $bpath != '' ]] && [ -f `which $1` ]; then
+	if [[ "$bpath" != "" ]] && [ -f `which $1` ]; then
 		return 0
 	else
 		echo "\"$1\" executable not found."
@@ -146,7 +174,8 @@ binary_found ()
 # check that vagrant binary exists
 is_vagrant ()
 {
-	if is_linux ; then return 0; fi
+	if is_linux ; then return 1; fi
+	if is_boot2docker ; then return 1; fi
 	binary_found 'vagrant';
 	return $?
 }
@@ -170,8 +199,8 @@ is_yml_absent ()
 {
 	local vagrant_path=''
 
-	upfind "docker-compose.yml" yml_path
-	if [ $yml_path == '' ] ; then
+	yml_path=`yml_get_path`
+	if [ "$yml_path" == "" ] ; then
 		echo "dsh: docker-compose.yml not found in your directory tree"
 		return 0
 	fi
@@ -180,8 +209,8 @@ is_yml_absent ()
 		return 1; # linux does not need vagrant
 	fi
 
-	upfind "Vagrantfile" vagrant_path
-	if [ $vagrant_path == '' ] ; then
+	vagrant_path=`upfind "Vagrantfile"`
+	if [ "$vagrant_path" == "" ] ; then
 		echo "dsh: Vagrantfile not found in your directory tree"
 		return 0
 	fi
@@ -194,10 +223,10 @@ is_yml_absent ()
 is_vm_exist ()
 {
 	if is_yml_absent ; then return 2; fi
-	if is_linux ; then return 0; fi
+	if is_linux || is_boot2docker ; then return 0; fi
 	if is_vagrant ; then
 		res=`vagrant status | grep -e "boot2docker.*not created"`
-		if [[ $res == '' ]]; then
+		if [[ "$res" == "" ]]; then
 			return 0
 		else 
 			echo "dsh: Vagrant reports that boot2docker vm is not created. Please check you Vagrantfile or run \"dsh up\""
@@ -212,10 +241,10 @@ is_vm_exist ()
 is_vm_stopped ()
 {
 	if is_yml_absent ; then return 2; fi
-	if is_linux ; then return 1; fi
+	if is_linux || is_boot2docker ; then return 1; fi
 	if is_vagrant ; then
 		res=`vagrant status | grep -e "boot2docker.*running"`
-		if [[ $res == '' ]]; then
+		if [[ "$res" == "" ]]; then
 			return 0
 		else 
 			return 1
@@ -238,14 +267,17 @@ up ()
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo "Starting containers..."
-			upfind "docker-compose.yml" yml_path
-			cd $yml_path
+			cd `yml_get_path`
 			docker-compose up -d
 		fi
+	elif is_boot2docker ; then
+		echo "Starting containers..."
+		yml_path=`downfind "docker-compose.yml"`
+		cd $yml_path
+		docker-compose up -d
 	elif is_linux && is_docker_compose ; then
 		echo "Starting containers..."
-		upfind "docker-compose.yml" yml_path
-		cd $yml_path
+		cd `yml_get_path`
 		docker-compose up -d
 	fi
 }
@@ -257,10 +289,14 @@ down ()
 	if is_vagrant ; then
 		echo "Stopping vagrant vm..."
 		vagrant halt
+	elif is_boot2docker ; then
+		echo "Stopping containers..."
+		yml_path=`downfind "docker-compose.yml"`
+		cd $yml_path
+		docker-compose stop
 	elif is_linux; then
 		echo "Stopping containers..."
-		upfind "docker-compose.yml" yml_path
-		cd $yml_path
+		cd `yml_get_path`
 		docker-compose stop
 	fi
 }
@@ -277,14 +313,17 @@ restart ()
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo "Starting containers..."
-			upfind "docker-compose.yml" yml_path
-			cd $yml_path
+			cd `yml_get_path`
 			docker-compose up -d
 		fi
+	elif is_boot2docker ; then
+		echo "Restarting containers..."
+		yml_path=`downfind "docker-compose.yml"`
+		cd $yml_path
+		docker-compose up -d
 	elif is_linux && is_docker_compose ; then
 		echo "Restarting containers..."
-		upfind "docker-compose.yml" yml_path
-		cd $yml_path
+		cd `yml_get_path`
 		docker-compose up -d
 	fi	
 }
@@ -299,11 +338,13 @@ status ()
 			return
 			;;
 		1)
-			if is_docker_compose ; then
-				upfind "docker-compose.yml" yml_path
-				cd $yml_path
-				docker-compose ps
+			if is_boot2docker ; then
+				yml_path=`downfind "docker-compose.yml"`
+			elif is_docker_compose ; then
+				yml_path=`upfind "docker-compose.yml"`
 			fi
+			cd $yml_path
+			docker-compose ps
 			;;
 		0)
 			echo "boot2docker is not running"
@@ -319,15 +360,10 @@ status ()
 # start interactive bash in container
 _bash ()
 {
-	upfind "docker-compose.yml" yml_path
-	cd $yml_path
+	cd `yml_get_path`
 	if is_docker && is_docker_compose ; then
 		docker exec -it $(docker-compose ps -q cli) bash -i
 		RES=$?
-		if [ $RES -ne 0 ]; then
-			echo
-			echo "dsh: You might want to run \"dsh up\""
-		fi
 	fi
 }
 
@@ -336,8 +372,7 @@ _bash ()
 run ()
 {
 	if is_docker && is_docker_compose ; then
-		upfind "docker-compose.yml" yml_path
-		cd $yml_path
+		cd `yml_get_path`
 		docker exec -it $(docker-compose ps -q cli) bash -ic "$*"
 	fi
 }
@@ -367,11 +402,9 @@ mysql ()
 mysql_import ()
 {
 	if ! get_drush_path; then return; fi
-	local project_root
 	get_project_root_path project_root
 	local filename=`basename $1`
-	local filepath
-	get_abs_path $1 filepath
+	local filepath=`get_abs_path $1`
 	#substract project root path from filepath
 	local pathdiff=${filepath#$project_root}
 
@@ -396,14 +429,21 @@ clear_cache ()
 {
 	if ! get_drush_path; then return; fi
 	local type='all'
-	if [[ ! $1 == '' ]]; then 
+	if [[ ! "$1" == "" ]]; then 
 		type=$1
 	fi
 	_run 'drush cc '$type
 }
 
+# shorthand for executing drush commands
+drush ()
+{
+	if ! get_drush_path; then return; fi
+	_run 'drush '$*
+}
+
 # command bindings
-argv=("$@")
+argv="$@"
 case $1 in
 	up)
 		up
@@ -432,6 +472,9 @@ case $1 in
 	st)
 		status
 		;;
+	ps)
+		status
+		;;
 	bash)
 		_bash
 		;;
@@ -447,6 +490,10 @@ case $1 in
 		;;
 	cc)
 		clear_cache $2
+		;;
+	drush)
+		shift
+		drush $*
 		;;
 	*)
 		help
