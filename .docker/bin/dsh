@@ -3,7 +3,7 @@
 help ()
 {
 	echo "dsh - Drude Shell"
-	echo "Usage: dsh <command>"
+	echo "Usage: dsh <command> [params]"
 	echo "Commands list:"
 	echo 
 	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
@@ -332,6 +332,7 @@ restart ()
 status ()
 {
 	if ! is_vm_exist ; then return 2; fi
+	if is_yml_absent ; then return 2; fi
 	is_vm_stopped
 	stopped=$?
 	case $stopped in
@@ -361,9 +362,12 @@ status ()
 # start interactive bash in container
 _bash ()
 {
+	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	if is_docker && is_docker_compose ; then
-		docker exec -it $(docker-compose ps -q cli) bash -i
+		local container_id
+		clean_string $(docker-compose ps -q cli) container_id
+		docker exec -it $container_id bash -i
 		RES=$?
 	fi
 }
@@ -374,7 +378,8 @@ run ()
 {
 	if is_docker && is_docker_compose ; then
 		cd `yml_get_path`
-		docker exec -it $(docker-compose ps -q cli) bash -ic "$*"
+		clean_string $(docker-compose ps -q cli) container_id
+		docker exec -it $container_id bash -ic "$*"
 	fi
 }
 
@@ -382,6 +387,7 @@ run ()
 # param $* command with it's params to run
 _run ()
 {
+	if is_yml_absent ; then return 2; fi
 	if is_docker && is_docker_compose ; then
 		local cd_path=''
 		cmdpath cd_path
@@ -392,6 +398,7 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
+	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
 	local sql_connect
 	get_mysql_connect sql_connect
@@ -402,6 +409,7 @@ mysql ()
 # @param $1 filename of backup file. Should be inside project root
 mysql_import ()
 {
+	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
 	project_root=$(get_project_root_path)
 	local filename=`basename $1`
@@ -443,6 +451,7 @@ mysql_import ()
 # @param $1 type of cache to clean (all, css-js, ...)
 clear_cache ()
 {
+	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
 	local type='all'
 	if [[ ! "$1" == "" ]]; then 
@@ -454,6 +463,7 @@ clear_cache ()
 # shorthand for executing drush commands
 _drush ()
 {
+	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
 	_run 'drush '$*
 }
