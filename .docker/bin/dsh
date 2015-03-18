@@ -15,7 +15,7 @@ help ()
 	echo "	mysql			Opens mysql shell to drude database"
 	echo "	mysql-import		Truncate database and import from sql dump (usage: dsh mysql-import <filename>)"
 	echo "					Note: <filename> should be inside your project root"
-	echo "	drush			Shorthand for executing drush commands (dsh drush [command] [options])"
+	echo "	drush			Shorthand for executing drush commands (usage: dsh drush [command] [options])"
 	echo "	cc			Shorthand for clearing caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo "	help			Output this help"
 	echo
