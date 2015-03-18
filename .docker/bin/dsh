@@ -13,6 +13,8 @@ help ()
 	echo "	bash			Start bash on cli container"
 	echo "	exec (run)		Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)"
 	echo "	mysql			Opens mysql shell to drude database"
+	echo "	mysql-import		Truncate database and import from sql dump (usage: dsh mysql-import <filename>)"
+	echo "					Note: <filename> should be inside your project root"
 	echo "	drush			Shorthand for executing drush commands (dsh drush [command] [options])"
 	echo "	cc			Shorthand for clearing caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo "	help			Output this help"
@@ -75,15 +77,13 @@ get_abs_path ()
 }
 
 # Returns project root absolute path
-# @param $1 name of variable to get result
 get_project_root_path ()
 {
-	if [ $# -ne 1 ]; then return; fi
 	yml_path=`yml_get_path`
 	# get relative project root path from docker-compose.yml config
 	local project_root_relative=$(grep "&project_root" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
 	local project_root_absolute=$( cd "${yml_path}$project_root_relative" ; pwd )
-	eval $1="$project_root_absolute"
+	echo "$project_root_absolute"
 }
 
 # dummy function to check that command is run along settings.php
@@ -101,7 +101,7 @@ get_drush_path ()
 cmdpath ()
 {
 	if [[ $# -ne 1 ]]; then return; fi
-	get_project_root_path project_root_path
+	project_root_path=$(get_project_root_path)
 	# leave only part of absolute path that is after project root
 	local cmdpath=${PWD#$project_root_path/}
 	if [[ "$cmdpath" == "$(pwd)" ]] ; then
@@ -118,7 +118,7 @@ cmdpath ()
 # @param $2 variable that receives clean string
 clean_string ()
 {
-	cleaned=$(echo -e "$1" | sed -e 's/[^a-zA-Z0-9_-]$//')
+	cleaned=$(echo "$1" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	eval $2=\'${cleaned}\'
 }
 
@@ -403,7 +403,7 @@ mysql ()
 mysql_import ()
 {
 	if ! get_drush_path; then return; fi
-	get_project_root_path project_root
+	project_root=$(get_project_root_path)
 	local filename=`basename $1`
 	local filepath=`get_abs_path $1`
 	#substract project root path from filepath
@@ -415,13 +415,28 @@ mysql_import ()
 		return
 	fi
 
-	#run "ls $filename"
+	while true; do
+		read -p "[!] This will delete all current data in database 'drupal'. Continue? [y/n]: " answer
+		case $answer in
+			[Yy]|[Yy][Ee][Ss] )
+				echo "Deleting all tables in database 'drupal'..."
+				break
+				;;
+			[Nn]|[Nn][Oo] )
+				echo 'Ok, whatever.'
+				exit
+				;;
+			* )
+				echo 'Please answer yes or no.'
+		esac
+	done
 
+	echo $(_drush sql-drop -y)
 	local sql_connect
 	get_mysql_connect sql_connect
-	#_run 'echo "use drupal; show tables;" | '$sql_connect
 	echo "Importing $filename into database 'drupal'..."
-	run $sql_connect" < $filename"
+	run $sql_connect" < ./$pathdiff/$filename"
+	echo "mysql-import finished"
 }
 
 # Shortcut to run drush cc ... on site
@@ -437,7 +452,7 @@ clear_cache ()
 }
 
 # shorthand for executing drush commands
-drush ()
+_drush ()
 {
 	if ! get_drush_path; then return; fi
 	_run 'drush '$*
@@ -498,7 +513,7 @@ case $1 in
 		;;
 	drush)
 		shift
-		drush $*
+		_drush $*
 		;;
 	*)
 		help
