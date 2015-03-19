@@ -1,0 +1,20 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  override:
+    - wget -q https://github.com/docker/compose/releases/download/1.1.0/docker-compose-`uname -s`-`uname -m` 
+    - sudo mv docker-compose-`uname -s`-`uname -m` /usr/local/bin/docker-compose 
+    - sudo chmod +x /usr/local/bin/docker-compose 
+    - cat /etc/*release*
+    - docker version
+    - docker info
+    - docker-compose --version
+    - sudo service mysql stop
+
+test:
+  override:
+    - wget https://github.com/blinkreaction/drude-testing/archive/master.zip && unzip -q master.zip && mv drude-testing-master/docroot docroot 
+    - docker-compose up -d
+    - docker-compose run cli bash -ic 'cd docroot && time env PHP_OPTIONS="-d sendmail_path=`which true`" drush si -y' > $CIRCLE_ARTIFACTS/drush-site-install.log

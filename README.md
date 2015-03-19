@@ -1,6 +1,8 @@
 # Drude (**Dru**pal **D**ocker **E**nvironment)
 Docker and Docker Compose based environment for Drupal.
 
+[![Circle CI](https://circleci.com/gh/blinkreaction/drude.svg?style=shield)](https://circleci.com/gh/blinkreaction/drude)
+
 <a name="requirements"></a>
 ## Requirements
 
