@@ -89,8 +89,11 @@ get_project_root_path ()
 # dummy function to check that command is run along settings.php
 get_drush_path ()
 {
-	if [ ! -f './settings.php' ]; then
-		echo "dsh supports '$argv' command only from sites/yoursite directory which contains settings.php"
+	local docroot=$(get_project_root_path)'/docroot'
+	local cwd=$(pwd)
+	local pathdiff=${cwd#$docroot}
+	if [ "$cwd" == "$pathdiff" ]; then
+		echo "dsh supports '$argv' command only from docroot directory or directory that contains settings.php"
 		return 1
 	fi
 	return 0
