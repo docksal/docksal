@@ -46,20 +46,6 @@ yml_get_path ()
 	echo `upfind docker-compose.yml`
 }
 
-# Search for file in $VAGRANT_ROOT and all child dirs with maxlevel. Return first match (alphabetically)
-# @param $1 filename
-# @param $2 maxlevel (default 2 meaning current dir + all dirs in current)
-downfind ()
-{
-	if [[ ! "$2" == "" ]]; then
-		depth=$2
-	else
-		depth=2
-	fi
-	echo `dirname $(find $VAGRANT_ROOT -maxdepth $depth -name "$1" | head -n 1)`
-}
-
-
 # Returns absolute path 
 get_abs_path ()
 {
@@ -272,12 +258,7 @@ up ()
 			cd `yml_get_path`
 			docker-compose up -d
 		fi
-	elif is_boot2docker ; then
-		echo "Starting containers..."
-		yml_path=`downfind "docker-compose.yml"`
-		cd $yml_path
-		docker-compose up -d
-	elif is_linux && is_docker_compose ; then
+	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo "Starting containers..."
 		cd `yml_get_path`
 		docker-compose up -d
@@ -292,12 +273,7 @@ down ()
 	if is_vagrant ; then
 		echo "Stopping vagrant vm..."
 		vagrant halt
-	elif is_boot2docker ; then
-		echo "Stopping containers..."
-		yml_path=`downfind "docker-compose.yml"`
-		cd $yml_path
-		docker-compose stop
-	elif is_linux; then
+	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo "Stopping containers..."
 		cd `yml_get_path`
 		docker-compose stop
@@ -319,12 +295,7 @@ restart ()
 			cd `yml_get_path`
 			docker-compose up -d
 		fi
-	elif is_boot2docker ; then
-		echo "Restarting containers..."
-		yml_path=`downfind "docker-compose.yml"`
-		cd $yml_path
-		docker-compose up -d
-	elif is_linux && is_docker_compose ; then
+	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo "Restarting containers..."
 		cd `yml_get_path`
 		docker-compose up -d
@@ -343,13 +314,10 @@ status ()
 			return
 			;;
 		1)
-			if is_boot2docker ; then
-				yml_path=`downfind "docker-compose.yml"`
-			elif is_docker_compose ; then
-				yml_path=`upfind "docker-compose.yml"`
+			if is_docker_compose ; then
+				cd `yml_get_path`
+				docker-compose ps
 			fi
-			cd $yml_path
-			docker-compose ps
 			;;
 		0)
 			echo "boot2docker is not running"
@@ -446,7 +414,7 @@ mysql_import ()
 	local sql_connect
 	get_mysql_connect sql_connect
 	echo "Importing $filename into database 'drupal'..."
-	run $sql_connect" < ./$pathdiff/$filename"
+	run "pv ./$pathdiff/$filename | "$sql_connect
 	echo "mysql-import finished"
 }
 
