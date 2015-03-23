@@ -24,4 +24,4 @@ deployment:
   release:
     branch: master
     commands:
-      - ./release.sh
+      - ./build.sh
