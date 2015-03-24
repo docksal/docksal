@@ -1,25 +1,31 @@
+## General build settings
+general:
+  branches:
+    only:
+      - master # Only build master
+
+## Customize the test machine
 machine:
   services:
-    - docker
+    - docker # Enable docker
 
+## Customize dependencies
 dependencies:
   override:
     - wget -q https://github.com/docker/compose/releases/download/1.1.0/docker-compose-`uname -s`-`uname -m` 
     - sudo mv docker-compose-`uname -s`-`uname -m` /usr/local/bin/docker-compose 
     - sudo chmod +x /usr/local/bin/docker-compose 
-    - cat /etc/*release*
-    - docker version
-    - docker info
-    - docker-compose --version
     - sudo service mysql stop
     - git config --global user.email "ci@circleci.com" && git config --global user.name "Circle CI"
 
+## Customize test commands
 test:
   override:
     - wget https://github.com/blinkreaction/drude-testing/archive/master.zip && unzip -q master.zip && mv drude-testing-master/docroot docroot 
     - docker-compose up -d
     - docker-compose run cli bash -ic 'cd docroot && time env PHP_OPTIONS="-d sendmail_path=`which true`" drush si -y' > $CIRCLE_ARTIFACTS/drush-site-install.log
 
+## Customize deployment commands
 deployment:
   release:
     branch: master
