@@ -11,19 +11,30 @@ machine:
 
 ## Customize dependencies
 dependencies:
-  override:
+  pre:
+    # Install docker-compose
     - wget -q https://github.com/docker/compose/releases/download/1.1.0/docker-compose-`uname -s`-`uname -m` 
     - sudo mv docker-compose-`uname -s`-`uname -m` /usr/local/bin/docker-compose 
     - sudo chmod +x /usr/local/bin/docker-compose 
+    # Stop built-in mysql service
     - sudo service mysql stop
+    # Configure Git
     - git config --global user.email "ci@circleci.com" && git config --global user.name "Circle CI"
+    # Replace sh with bash
+    - sudo ln -sf /bin/bash /bin/sh
 
 ## Customize test commands
 test:
+  pre:
   override:
-    - wget https://github.com/blinkreaction/drude-testing/archive/master.zip && unzip -q master.zip && mv drude-testing-master/docroot docroot 
+    # Download "drude-testing" repo
+    - wget https://github.com/blinkreaction/drude-testing/archive/master.zip && unzip -q master.zip && mv drude-testing-master/* .
+    # Spin up the docker environment
     - docker-compose up -d
-    - docker-compose run cli bash -ic 'cd docroot && time env PHP_OPTIONS="-d sendmail_path=`which true`" drush si -y' > $CIRCLE_ARTIFACTS/drush-site-install.log
+    # Install Drupal with Drush
+    - docker-compose run cli bash -c 'cd docroot && time env PHP_OPTIONS="-d sendmail_path=`which true`" drush si -y' | tee $CIRCLE_ARTIFACTS/drush-site-install.log
+    # Run Behat tests
+    - docker-compose run cli bash -c 'cd tests/behat && composer install --prefer-source --no-interaction && bin/behat' | tee $CIRCLE_ARTIFACTS/behat.log
 
 ## Customize deployment commands
 deployment:

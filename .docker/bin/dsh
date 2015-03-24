@@ -439,6 +439,15 @@ _drush ()
 	_run 'drush '$*
 }
 
+# Run Behat tests (also install dependencies through Composer)
+# @param $* arguments and params passed to Behat
+behat ()
+{
+	if is_yml_absent ; then return 2; fi
+	run 'cd tests/behat && composer install --prefer-source --no-interaction'
+	run 'cd tests/behat && bin/behat '$*
+}
+
 # command bindings
 argv="$@"
 case $1 in
@@ -495,6 +504,10 @@ case $1 in
 	drush)
 		shift
 		_drush $*
+		;;
+	behat)
+		shift
+		behat $*
 		;;
 	*)
 		help

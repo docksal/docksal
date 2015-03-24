@@ -56,6 +56,7 @@ cli:
     #- ~/.ssh:/.ssh  # Linux
   links:
     - db
+    - web
 
 # Memcached node
 # Uncomment the service definition section below and the link in the web service above to start using memcached.
