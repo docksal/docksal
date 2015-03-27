@@ -30,6 +30,7 @@ git rm .gitignore
 cp -fR "../.docker" .
 cp -f "../docker-compose.yml" .
 cp -f "../README.md" .docker && sed -i '' 's/(\.docker\/docs/(docs/g' .docker/README.md
+cp -f "../CHANGELOG.md" .docker
 cp -f "../$VERSION_FILE" .docker
 
 # Add, commit and push
