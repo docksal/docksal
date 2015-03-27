@@ -8,12 +8,18 @@ NC='\033[0m'
 
 # Drude repo
 DRUDE_REPO='git@github.com:blinkreaction/drude.git'
+DRUDE_REPO_RAW='https://raw.githubusercontent.com/blinkreaction/drude/master'
+
+# Install/update dsh tool wrapper
+echo -e "${green}Installing/updating dsh (Drude Shell) tool wrapper to /usr/local/bin/dsh${NC}"
+sudo curl "$DRUDE_REPO_RAW/scripts/dsh-wrapper.sh" > /usr/local/bin/dsh
+sudo chmod +x /usr/local/bin/dsh
 
 # Check that git binary is available
 type git > /dev/null 2>&1 || { echo -e >&2 "${red}No git? Srsly? \n${yellow}Please install git then come back. Aborting...${NC}"; exit 1; }
 
 # Check if current directory is a Git repository
-if [[ -z $(git rev-parse --git-dir) ]]; then
+if [[ -z $(git rev-parse --git-dir 2>/dev/null) ]]; then
 	# If there is no git repo - initialize one and commit everything before we proceed
 	echo -e "${yellow}No git repository! We'll create one to proceed witht he install.${NC}"
 	echo -e "${green}Initializing a git repo and commiting everything.${NC}"
