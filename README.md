@@ -7,15 +7,15 @@ Docker and Docker Compose based environment for Drupal.
 ## Requirements
 
 ### Mac and Windows
-Docker is not supported natively on Mac and requires a Docker Host VM - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
+Docker is not supported natively on Mac and requires a Boot2docker VM - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
 
-On Mac both [Docker](https://docs.docker.com/compose/install/#install-docker) and [Docker Compose](https://docs.docker.com/compose/install/#install-compose) can be installed and used natively.
+On **Mac**, install [Docker](https://docs.docker.com/compose/install/#install-docker) and [Docker Compose](https://docs.docker.com/compose/install/#install-compose) natively. This can be done via brew:
 
-They are preinstalled and can be used inside the Docker Host VM.  This is also the only option available for Windows right now:
-
-    vagrant ssh
+    brew install docker docker-compose
     docker version
     docker-compose --version
+
+On **Windows**, both tools can be used inside the Boot2docker VM. In fact, this is the only option available for Windows right now.
 
 ### Linux
 1. [Docker](https://docs.docker.com/compose/install/#install-docker)
@@ -24,30 +24,42 @@ They are preinstalled and can be used inside the Docker Host VM.  This is also t
 <a name="setup"></a>
 ## Setup and usage
 
- 1. Make sure your docroot is in `</path/to/project>/docroot`.
- 2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 3. cd `</path/to/project>` and run
-
-    `curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash`
-
- 4. Continue with the steps below depending on your OS.
+The installation process is slightly different based on the OS.
 
 ### Mac
-If you have not installed Docker and Docker Compose - skip down to Windows instructions. Otherwise:
 
-    vagrant up
-    docker-compose up -d
+ 1. Make sure your site's docroot is in `</path/to/project>/docroot`.
+ 2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
+ 3. cd `</path/to/project>` and run:
+
+    ```
+    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
+    dsh up
+    ```
 
 ### Windows
 
+ 1. Make sure your site's docroot is in `</path/to/project>/docroot`.
+ 2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
+ 3. Copy `.docker` and `docker-compose.yml` from this repo into `</path/to/project>`.
+ 4. Open GitBash shell and cd into `</path/to/project>`, then run:
+
+    ```
     vagrant up
     vagrant ssh
-    cd </path/to/project>
-    docker-compose up -d
+    dsh up
+    ```
 
 ### Linux
 
+ 1. Make sure your site's docroot is in `</path/to/project>/docroot`.
+ 2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
+ 3. cd `</path/to/project>` and run:
+
+    ```
+    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
     docker-compose up -d
+    ```
 
 <a name="updates"></a>
 ## Updates
@@ -67,160 +79,71 @@ To get an up-to-date version of the entire stack do:
 <a name="drupal-settings"></a>
 ## Drupal settings
 
-<a name="db-settings"></a>
-### DB connection settings
+Below you will find instructions on configuring you Drupal project to work with Drude.
+Some settings are required, others are optional or enahncements. Please review carefully.
 
-Containers do not have static IP addresses assigned.  DB connection settings can be obtained from the environment variables.
+**Required**
+- [DB connection settings](.docker/docs/drupal-settings#db)
+- [File permissions fix](.docker/docs/drupal-settings#file-permissions)
 
-Below are sample settings for Drupal 7 and Drupal8.  
-If you change the DB node name in `docker-compose.yml` (e.g. `mysql` instead of `db`) then this has to be updated, since variable names will change as well.
+**Optional**
+- [Memcache settings](.docker/docs/drupal-settings#memcache)
 
-**Drupal 7**
+<a name="dsh"></a>
+## Drude Shell (dsh)
 
-```php
-$databases = array (
-  'default' => 
-  array (
-    'default' => 
-    array (
-      'database' => getenv('DB_1_ENV_MYSQL_DATABASE'),
-      'username' => getenv('DB_1_ENV_MYSQL_USER'),
-      'password' => getenv('DB_1_ENV_MYSQL_PASSWORD'),
-      'host' => getenv('DB_1_PORT_3306_TCP_ADDR'),
-      'port' => '',
-      'driver' => 'mysql',
-      'prefix' => '',
-    ),
-  ),
-);
+Drude shell (dsh) is a console tool that simplifies that day-to-day work with Drude.
+It provide a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush and other console commands inside the **cli** container.
 
-```
+See `dsh help` for a complete list:
 
-**Drupal 8**
+    Usage: dsh <command> [params]
+    Commands list:
 
-```php
-$databases['default']['default'] = array (
-  'database' => getenv('DB_1_ENV_MYSQL_DATABASE'),
-  'username' => getenv('DB_1_ENV_MYSQL_USER'),
-  'password' => getenv('DB_1_ENV_MYSQL_PASSWORD'),
-  'prefix' => '',
-  'host' => getenv('DB_1_PORT_3306_TCP_ADDR'),
-  'port' => '3306',
-  'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
-  'driver' => 'mysql',
-);
-```
+      start (up)    Start vagrant vm (mac only) and docker containers -OR- restarts docker containers
+      stop (down, halt) Stop vagrant vm (mac only) or stop containers
+      reload (restart)  Re-start vagrant vm (mac only) and docker containers
+      status (st, ps)   Show vm/containers status
+      bash      Start bash on cli container
+      exec (run)    Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)
+      mysql     Opens mysql shell to drude database
+      mysql-import    Truncate database and import from sql dump (usage: dsh mysql-import <filename>)
+              Note: <filename> should be inside your project root
+      drush     Shorthand for executing drush commands (usage: dsh drush [command] [options])
+      cc      Shorthand for clearing caches (usage: dsh cc [cache_type] ("dsh cc" is equal to "dsh cc all")
+      help      Output this help
+      ...
 
-<a name="memcache"></a>
-### Memcache settings
+`dsh` is automatically installed when you install Drude via the [install.sh](https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh) script
 
-1. Uncomment the **memcached** service definition section in [`docker-compose.yml`](docker-compose.yml) to start using memcached.
+    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
 
-2. Add the following lines to `settings.php` to point Drupal to the memcached node. Replace `</path/to/memcache-module>` with path to [memcache module](https://www.drupal.org/project/memcache) in your project. E.g. `sites/all/modules/contrib/memcache`
-
-```php
-// Memcache
-$conf['cache_backends'][] = '</path/to/memcache-module>/memcache.inc';
-$conf['cache_default_class'] = 'MemCacheDrupal';
-$conf['cache_class_cache_form'] = 'DrupalDatabaseCache';
-$conf['memcache_servers'] = array(
-  'memcached:11211' => 'default',
-);
-```
-
-<a name="file-permissions"></a>
-### File permissions fix
-
-With NFS mounts Drupal may complain about files directory not being writable. This is a "false-negative" however can be annoying and break certain things. For a workaround add the following to your setting.php file. 
-
-**Drupal 7**
-
-```php
-# Workaround for permission issues with NFS shares in Vagrant
-$conf['file_chmod_directory'] = 0777;
-$conf['file_chmod_file'] = 0666;
-```
-
-You may also have to reset permissions on the existing files folder. The following command will recursively set folders to 777 (rwx) and files to 666 (rw)
-
-```bash
-chmod -R +rwX files
-```
-
-<a name="multiple-projects"></a>
-## Working with multiple projects
-
-Running multiple projects is very easy. 
-Follow the [setup](#setup) instructions for each project making sure that ports used by containers accross all projects do not collide (e.g. two containers cannot use port 80 at the same time).
-
-This requires a slight modification of the `docker-compose.yml`.
-Edit the `ports` key for each container that does port mapping in `docker-compose.yml`.
-You can either map unique ports for each container or use dedicated IPs:
-
-**Unique ports**
-
-```yml
-ports:
-  - "8080:80"
-  - "8443:443"
-```
-
-**Dedicated IP**
-
-```yml
-ports:
-  - "192.168.10.11:80:80"
-  - "192.168.10.11:443:443"
-```
-
-For Mac and Windows see (boot2docker-vagrant/Vagrantfile)[https://github.com/blinkreaction/boot2docker-vagrant/blob/master/Vagrantfile] for instructions on enabling additional IPs for the Docker Host VM.
+`dsh` detects the environment it's launched in and will automatically start the boot2docker VM and launch containers as necessary.
+It runs on Mac/Linux directly. On Windows `dsh` runs inside the boot2docker VM.
 
 <a name="cli"></a>
 ## Console tools (cli)
 
-A variety of console tools is available inside the **cli** container:
+**cli** container is ment to serv as a single console to access all necessary command line tools.
+The **cli** console can launch with `dsh`:
+
+    dsh bash
+
+Tools available inside the **cli** container:
 
 - php-cli, composer, drush7
 - ruby, bundler
 - node, npm, bower, grunt
 - git, wget, zip, mysql-client
+- python
 
-The the most up-to-date list see [cli container](https://github.com/blinkreaction/docker-images/tree/master/cli)
+<a name="instructions"></a>
+## Instructions and tutorials
 
-To access the console tools first open bash inside **cli**:
-
-    docker exec -it $(docker-compose ps -q cli) bash
-
-A more convenient way of entering **cli** with bash is via the [docker-bash](.docker/bin/docker-bash) wrapper:
-
-    .docker/bin/docker-bash [<command>]
-
-To make the wrapper available in your shell directly (as `docker-drush`) add the following to your `~/.bash_profile`:
-
-    # Docker custom project scripts
-    export PATH="./.docker/bin:$PATH"
-
-This will work universally on all projects using this repo.
-
-<a name="wrapper-scripts"></a>
-## Available wrapper scripts
-
- - [docker-bash](.docker/bin/docker-bash)- launches bash inside the web container
- - [docker-drush](.docker/bin/docker-drush) - launches drsuh inside the web container
-
-<a name="php-mysql-conf"></a>
-## Altering PHP and MySQL configuration
-
-The following configuration files are mounted inside the respective containers and can be used to override the default settings:
-
-- [.docker/etc/php5/php.ini](.docker/etc/php5/php.ini) - PHP settings overrides
-- [.docker/etc/mysql/my.cnf](.docker/etc/mysql/my.cnf) - MySQL settings overrides
-
-<a name="advanced"></a>
-## Advanced use cases
-
-- [DB sandbox mode](.docker/docs/db-sandbox.md)
+- [Running multiple projects](.docker/docs/multiple-projects.md)
+- [Overriding default PHP/MySQL/etc. settings](.docker/docs/settings.md)
 - [Public access](.docker/docs/public-access.md)
+- [DB sandbox mode](.docker/docs/db-sandbox.md)
 
 ## License
 
