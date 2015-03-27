@@ -24,10 +24,13 @@ They are preinstalled and can be used inside the Docker Host VM.  This is also t
 <a name="setup"></a>
 ## Setup and usage
 
- 1. Copy the contents of this repo into your new or existing project. Rename README.md to DRUDE.md if there is a name colision.
- 2. Make sure your docroot is in `</path/to/project>/docroot`.
- 3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 4. cd `</path/to/project>` and continue with the steps below depending on your OS.
+ 1. Make sure your docroot is in `</path/to/project>/docroot`.
+ 2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
+ 3. cd `</path/to/project>` and run
+
+    `curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash`
+
+ 4. Continue with the steps below depending on your OS.
 
 ### Mac
 If you have not installed Docker and Docker Compose - skip down to Windows instructions. Otherwise:
@@ -48,14 +51,18 @@ If you have not installed Docker and Docker Compose - skip down to Windows instr
 
 <a name="updates"></a>
 ## Updates
+
+To update Drude run the following from the `</path/to/project>` folder:
+
+    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
+
+Review the changes, revert any local overrides that were reset and commit into your project git repo.
+
 Base images will be updated from time to time. Docker Compose does not automatically pull new image versions.
 To get an up-to-date version of the entire stack do:
 
     docker-compose pull
     docker-compose up -d
-
-Configuration file updates ([`docker-compose.yml`](docker-compose.yml) and [`.docker`](.docker) folder) have to be performed manually.
-See the [commit history](commits/master) for recent changes.
 
 <a name="drupal-settings"></a>
 ## Drupal settings
