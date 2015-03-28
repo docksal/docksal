@@ -34,21 +34,29 @@ The installation process is slightly different based on the OS.
 
     ```
     curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
-    dsh up
     ```
+    
+ 4. Start containers with `dsh up`
 
 ### Windows
 
  1. Make sure your site's docroot is in `</path/to/project>/docroot`.
  2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 3. Copy `.docker` and `docker-compose.yml` from this repo into `</path/to/project>`.
- 4. Open GitBash shell and cd into `</path/to/project>`, then run:
+ 3. Open Git Bash shell and cd into `</path/to/project>`, then run:
 
+    ```
+    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
+    ```
+    
+ 4. Start and login into vagrant, cd into `</path/to/project>`:
+ 
     ```
     vagrant up
     vagrant ssh
-    dsh up
+    cd </path/to/project>
     ```
+
+ 5. Start containers with `dsh up`
 
 ### Linux
 
@@ -58,8 +66,9 @@ The installation process is slightly different based on the OS.
 
     ```
     curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
-    docker-compose up -d
     ```
+
+ 4. Start containers with `dsh up`
 
 <a name="updates"></a>
 ## Updates
