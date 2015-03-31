@@ -94,11 +94,11 @@ Below you will find instructions on configuring you Drupal project to work with 
 Some settings are required, others are optional or enahncements. Please review carefully.
 
 **Required**
-- [DB connection settings](.docker/docs/drupal-settings#db)
-- [File permissions fix](.docker/docs/drupal-settings#file-permissions)
+- [DB connection settings](.docker/docs/drupal-settings.md#db)
+- [File permissions fix](.docker/docs/drupal-settings.md#file-permissions)
 
 **Optional**
-- [Memcache settings](.docker/docs/drupal-settings#memcache)
+- [Memcache settings](.docker/docs/drupal-settings.md#memcache)
 
 <a name="dsh"></a>
 ## Drude Shell (dsh)
