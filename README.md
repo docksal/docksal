@@ -6,23 +6,25 @@ Docker and Docker Compose based environment for Drupal.
 <a name="requirements"></a>
 ## Requirements
 
+Docker is natively supported only on Linux.  
+Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
+
 ### Mac and Windows
-Docker is not supported natively on Mac and requires a Boot2docker VM - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
 
-On **Mac**, install [Docker](https://docs.docker.com/compose/install/#install-docker) and [Docker Compose](https://docs.docker.com/compose/install/#install-compose) natively. This can be done via brew:
-
-    brew install docker docker-compose
-    docker version
-    docker-compose --version
-
-On **Windows**, both tools can be used inside the Boot2docker VM. In fact, this is the only option available for Windows right now.
+1. Get the [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant) up and running.
 
 ### Linux
 1. [Docker](https://docs.docker.com/compose/install/#install-docker)
 2. [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
 
 <a name="setup"></a>
-## Setup and usage
+## Setup
+
+Drude initial setup is done once per project (e.g. by a team lead).  
+Once installed into the project repo, Drude can be used by anyone on the team.  
+To use Drude each team member will need to meet the [requirements](#requirements) outlined above.
+
+`docker-compose.yml` fiel and `.docker` folder are good indicators of Drude's presence in the project repo.
 
 The installation process is slightly different based on the OS.
 
