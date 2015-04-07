@@ -33,11 +33,11 @@ test:
     # Download "drude-testing" repo
     - wget https://github.com/blinkreaction/drude-testing/archive/master.zip && unzip -q master.zip && mv drude-testing-master/* .
     # Spin up the docker environment
-    - docker-compose up -d
+    - docker-compose -f circle.docker-compose.yml up -d
     # Install Drupal with Drush
-    - docker-compose run cli bash -c 'cd docroot && time env PHP_OPTIONS="-d sendmail_path=`which true`" drush si -y' | tee $CIRCLE_ARTIFACTS/drush-site-install.log
+    - docker-compose -f circle.docker-compose.yml run cli bash -c 'cd docroot && time env PHP_OPTIONS="-d sendmail_path=`which true`" drush si -y' | tee $CIRCLE_ARTIFACTS/drush-site-install.log
     # Run Behat tests
-    - docker-compose run cli bash -c 'cd tests/behat && composer install --prefer-source --no-interaction && bin/behat -p docker --format=pretty --out=std --format=junit --out=junit' | tee $CIRCLE_ARTIFACTS/behat.log
+    - docker-compose -f circle.docker-compose.yml run cli bash -c 'cd tests/behat && composer install --prefer-source --no-interaction && bin/behat -p docker --format=pretty --out=std --format=junit --out=junit' | tee $CIRCLE_ARTIFACTS/behat.log
   post:
     # Copy JUnit tests for CircleCI to parse results.
     - cp -R tests/behat/junit $CIRCLE_TEST_REPORTS

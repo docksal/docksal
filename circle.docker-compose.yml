@@ -58,7 +58,7 @@ cli:
     - db
     - web
     # Uncomment this and the browser service definition below to start using selenium2.
-    #- browser
+    - browser
 
 # Memcached node
 # Uncomment the service definition section below and the link in the web service above to start using memcached.
@@ -83,10 +83,10 @@ cli:
 
 # selenium2 node
 # Uncomment the service definition section below and the link in the web service above to start using selenium2 driver for Behat tests requiring JS support.
-# browser:
-#   hostname: browser
-#   image: selenium/standalone-chrome
-#   links:
-#     - web
-#   ports:
-#     - "4444:4444"
+browser:
+  hostname: browser
+  image: selenium/standalone-chrome
+  links:
+    - web
+  ports:
+    - "4444:4444"
