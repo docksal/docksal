@@ -34,7 +34,7 @@ test:
     # Install Drupal with Drush
     - docker-compose run cli bash -c 'cd docroot && time env PHP_OPTIONS="-d sendmail_path=`which true`" drush si -y' | tee $CIRCLE_ARTIFACTS/drush-site-install.log
     # Run Behat tests
-    - docker-compose run cli bash -c 'cd tests/behat && composer install --prefer-source --no-interaction && bin/behat' | tee $CIRCLE_ARTIFACTS/behat.log
+    - docker-compose run cli bash -c 'cd tests/behat && composer install --prefer-source --no-interaction && bin/behat -p docker' | tee $CIRCLE_ARTIFACTS/behat.log
 
 ## Customize deployment commands
 deployment:
