@@ -155,6 +155,7 @@ Tools available inside the **cli** container:
 - [Overriding default PHP/MySQL/etc. settings](.docker/docs/settings.md)
 - [Public access](.docker/docs/public-access.md)
 - [DB sandbox mode](.docker/docs/db-sandbox.md)
+- [Using Behat](.docker/docs/behat.md)
 
 ## License
 
