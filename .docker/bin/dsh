@@ -445,7 +445,7 @@ behat ()
 {
 	if is_yml_absent ; then return 2; fi
 	run 'cd tests/behat && composer install --prefer-source --no-interaction'
-	run 'cd tests/behat && bin/behat '$*
+	run 'cd tests/behat && bin/behat -p docker '$*
 }
 
 # command bindings
