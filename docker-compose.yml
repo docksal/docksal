@@ -78,3 +78,13 @@ cli:
 #     #- 192.168.10.10:4040:4040
 #   links:
 #     - web:http
+
+# selenium2 node
+# Uncomment the service definition section below to start using selenium2 driver for Behat tests requiring JS support.
+browser:
+  hostname: browser
+  image: selenium/standalone-chrome
+  links:
+    - web
+  ports:
+    - "4444:4444"
