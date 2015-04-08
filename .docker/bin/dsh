@@ -19,6 +19,7 @@ help ()
 	echo "					Note: <filename> should be inside your project root"
 	echo "	drush			Shorthand for executing drush commands (usage: dsh drush [command] [options])"
 	echo "	cc			Shorthand for clearing caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
+	echo "	behat			Run Behat tests"
 	echo "	help			Output this help"
 	echo
 }
@@ -432,6 +433,11 @@ _drush ()
 behat ()
 {
 	if is_yml_absent ; then return 2; fi
+	local project_root_path=$(get_project_root_path)
+	if [[ ! -f "$project_root_path/tests/behat/behat.yml" ]]; then
+		echo "Missing behat.yml in tests/behat. Aborting..."
+		exit
+	fi
 	run 'cd tests/behat && composer install --prefer-source --no-interaction'
 	run 'cd tests/behat && bin/behat -p docker '$*
 }
