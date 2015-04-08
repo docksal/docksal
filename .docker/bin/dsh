@@ -6,6 +6,7 @@ help ()
 	echo "Usage: dsh <command> [params]"
 	echo "Commands list:"
 	echo 
+	echo "	init			Set up the project locally. Calls .docker/scripts/drude-init.sh"
 	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
 	echo "	stop (down, halt)	Stop vagrant vm (mac only) or stop containers"
 	echo "	reload (restart)	Re-start vagrant vm (mac only) and docker containers"
@@ -435,6 +436,21 @@ behat ()
 	run 'cd tests/behat && bin/behat -p docker '$*
 }
 
+# Set up the project locally
+# Calls .docker/scripts/drude-init.sh script, so it must exist.
+init ()
+{
+	local project_root_path=$(get_project_root_path)
+	local init_script="$project_root_path/.docker/scripts/drude-init.sh"
+	if [[ -f $init_script ]]; then
+	  exec $init_script
+	else
+		echo "Project init script is missing: $init_script"
+		echo "See $project_root_path/.docker/scripts/example.drude-init.sh for a starting point."
+		exit -1
+	fi
+}
+
 # Yes/no confirmation dialog with an optional message
 # @param $1 confirmation message
 _confirm ()
@@ -539,6 +555,10 @@ case $1 in
 	behat)
 		shift
 		behat $*
+		;;
+	init)
+		shift
+		init
 		;;
 	reset)
 		shift
