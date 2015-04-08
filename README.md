@@ -12,10 +12,20 @@ Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box
 ### Mac and Windows
 
 1. Get the [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant) up and running.
+2. Install [dsh](#dsh) tool (Drude Shell) wrapper
+
+    ```
+    curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/install-dsh.sh | bash
+    ```
 
 ### Linux
 1. [Docker](https://docs.docker.com/compose/install/#install-docker)
 2. [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
+3. Install [dsh](#dsh) tool (Drude Shell) wrapper
+
+    ```
+    curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/install-dsh.sh | bash
+    ```
 
 <a name="setup"></a>
 ## Setup
@@ -24,7 +34,9 @@ Drude initial setup is done once per project (e.g. by a team lead).
 Once installed into the project repo, Drude can be used by anyone on the team.  
 To use Drude each team member will need to meet the [requirements](#requirements) outlined above.
 
-`docker-compose.yml` fiel and `.docker` folder are good indicators of Drude's presence in the project repo.
+`docker-compose.yml` file and `.docker` folder are good indicators of Drude's presence in the project repo.
+
+**If this is the first time Drude is being installed into the project, follow the instructions below.**  
 
 The installation process is slightly different based on the OS.
 
@@ -35,7 +47,7 @@ The installation process is slightly different based on the OS.
  3. cd `</path/to/project>` and run:
 
     ```
-    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
+    curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/install-drude.sh | bash
     ```
     
  4. Start containers with `dsh up`
@@ -47,7 +59,7 @@ The installation process is slightly different based on the OS.
  3. Open Git Bash shell and cd into `</path/to/project>`, then run:
 
     ```
-    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
+    curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/install-drude.sh | bash
     ```
     
  4. Start and login into vagrant, cd into `</path/to/project>`:
@@ -67,7 +79,7 @@ The installation process is slightly different based on the OS.
  3. cd `</path/to/project>` and run:
 
     ```
-    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
+    curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/install-drude.sh | bash
     ```
 
  4. Start containers with `dsh up`
@@ -77,7 +89,7 @@ The installation process is slightly different based on the OS.
 
 To update Drude run the following from the `</path/to/project>` folder:
 
-    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
+    curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/install-drude.sh | bash
 
 Review the changes, revert any local overrides that were reset and commit into your project git repo.
 
@@ -106,31 +118,17 @@ Some settings are required, others are optional or enahncements. Please review c
 Drude shell (dsh) is a console tool that simplifies that day-to-day work with Drude.
 It provide a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush and other console commands inside the **cli** container.
 
-See `dsh help` for a complete list:
-
-    Usage: dsh <command> [params]
-    Commands list:
-
-      start (up)    Start vagrant vm (mac only) and docker containers -OR- restarts docker containers
-      stop (down, halt) Stop vagrant vm (mac only) or stop containers
-      reload (restart)  Re-start vagrant vm (mac only) and docker containers
-      status (st, ps)   Show vm/containers status
-      bash      Start bash on cli container
-      exec (run)    Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)
-      mysql     Opens mysql shell to drude database
-      mysql-import    Truncate database and import from sql dump (usage: dsh mysql-import <filename>)
-              Note: <filename> should be inside your project root
-      drush     Shorthand for executing drush commands (usage: dsh drush [command] [options])
-      cc      Shorthand for clearing caches (usage: dsh cc [cache_type] ("dsh cc" is equal to "dsh cc all")
-      help      Output this help
-      ...
-
-`dsh` is automatically installed when you install Drude via the [install.sh](https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh) script
-
-    curl https://raw.githubusercontent.com/blinkreaction/drude/master/install.sh | bash
+See `dsh help` for a complete list.
 
 `dsh` detects the environment it's launched in and will automatically start the boot2docker VM and launch containers as necessary.
 It runs on Mac/Linux directly. On Windows `dsh` runs inside the boot2docker VM.
+
+### Installation
+
+    curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/install-dsh.sh | bash
+
+This will install a local dsh wrapper into `/usr/local/bin/dsh`.
+The actual dsh script resides in each project individually (in `.docker/bin/dsh`) and is installed into the project along with Drude. The wrapper makes it possible to use `dsh` from anywhere in the project tree.
 
 <a name="cli"></a>
 ## Console tools (cli)

@@ -10,17 +10,8 @@ NC='\033[0m'
 DRUDE_REPO='https://github.com/blinkreaction/drude.git'
 DRUDE_REPO_RAW='https://raw.githubusercontent.com/blinkreaction/drude/master'
 
-# Detemine where we can install (/usb/local/bin or /bin)
-BIN='/usr/local/bin'
-touch "$BIN/dsh" 2> /dev/null || BIN="/bin"
-touch "$BIN/dsh" 2> /dev/null || { echo -e "${yellow}Warning: Not able to install dsh.${NC}"; }
-# Determine if we have sudo
-SUDO='sudo'
-if [[ -z $(which $SUDO) ]]; then SUDO=''; fi
 # Install/update dsh tool wrapper
-echo -e "${green}Installing/updating dsh (Drude Shell) tool wrapper to $BIN/dsh${NC}"
-$SUDO curl "$DRUDE_REPO_RAW/scripts/dsh-wrapper.sh" > "$BIN/dsh"
-$SUDO chmod +x "$BIN/dsh"
+curl -s "$DRUDE_REPO_RAW/install.sh" | bash
 
 # Check that git binary is available
 type git > /dev/null 2>&1 || { echo -e >&2 "${red}No git? Srsly? \n${yellow}Please install git then come back. Aborting...${NC}"; exit 1; }
