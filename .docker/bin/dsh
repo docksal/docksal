@@ -9,6 +9,7 @@ help ()
 	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
 	echo "	stop (down, halt)	Stop vagrant vm (mac only) or stop containers"
 	echo "	reload (restart)	Re-start vagrant vm (mac only) and docker containers"
+	echo "	reset			Restart docker containers from scratch (stop, remove, up)"
 	echo "	status (st, ps)		Show vm/containers status"
 	echo "	bash			Start bash on cli container"
 	echo "	exec (run)		Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)"
@@ -394,21 +395,7 @@ mysql_import ()
 		return
 	fi
 
-	while true; do
-		read -p "[!] This will delete all current data in database 'drupal'. Continue? [y/n]: " answer
-		case $answer in
-			[Yy]|[Yy][Ee][Ss] )
-				echo "Deleting all tables in database 'drupal'..."
-				break
-				;;
-			[Nn]|[Nn][Oo] )
-				echo 'Ok, whatever.'
-				exit
-				;;
-			* )
-				echo 'Please answer yes or no.'
-		esac
-	done
+	_confirm "[!] This will delete all current data in database 'drupal'."
 
 	echo $(_drush sql-drop -y)
 	local sql_connect
@@ -446,6 +433,50 @@ behat ()
 	if is_yml_absent ; then return 2; fi
 	run 'cd tests/behat && composer install --prefer-source --no-interaction'
 	run 'cd tests/behat && bin/behat -p docker '$*
+}
+
+# Yes/no confirmation dialog with an optional message
+# @param $1 confirmation message
+_confirm ()
+{
+	while true; do
+		read -p "$1 Continue? [y/n]: " answer
+		case $answer in
+			[Yy]|[Yy][Ee][Ss] )
+				echo "Working..."
+				break
+				;;
+			[Nn]|[Nn][Oo] )
+				echo 'Ok, whatever.'
+				exit
+				;;
+			* )
+				echo 'Please answer yes or no.'
+		esac
+	done
+}
+
+# Reset containers (stop, remove, up)
+reset ()
+{
+	_confirm "[!] This will delete all project containers including the DB one.";
+
+	echo "Checking files..."
+	if is_yml_absent ; then return 2; fi
+	if is_vagrant ; then
+		echo "Starting vagrant vm..."
+		vagrant up
+		started=$?
+		if [ $started -eq 0 ] && is_docker_compose ; then
+			echo "Resetting containers..."
+			cd `yml_get_path`
+			docker-compose stop && docker-compose rm --force && docker-compose up -d
+		fi
+	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
+		echo "Resetting containers..."
+		cd `yml_get_path`
+		docker-compose stop && docker-compose rm --force && docker-compose up -d
+	fi
 }
 
 # command bindings
@@ -508,6 +539,10 @@ case $1 in
 	behat)
 		shift
 		behat $*
+		;;
+	reset)
+		shift
+		reset
 		;;
 	*)
 		help
