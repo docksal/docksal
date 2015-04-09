@@ -23,7 +23,7 @@ dependencies:
     # Replace sh with bash
     - sudo ln -sf /bin/bash /bin/sh
     # Install dsh wrapper
-    - curl https://raw.githubusercontent.com/blinkreaction/drude/master/scripts/dsh-wrapper.sh | sudo tee 1>/dev/null /usr/local/bin/dsh
+    - curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/scripts/dsh-wrapper.sh | sudo tee 1>/dev/null /usr/local/bin/dsh
     - sudo chmod +x /usr/local/bin/dsh
 
 ## Customize test commands
