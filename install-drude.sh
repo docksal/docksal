@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Console colors
 red='\033[0;31m'
