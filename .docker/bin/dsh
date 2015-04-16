@@ -5,7 +5,7 @@ help ()
 	echo "dsh - Drude Shell"
 	echo "Usage: dsh <command> [params]"
 	echo "Commands list:"
-	echo 
+	echo
 	echo "	init			Set up the project locally. Calls .docker/scripts/drude-init.sh"
 	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
 	echo "	stop (down, halt)	Stop vagrant vm (mac only) or stop containers"
@@ -34,7 +34,7 @@ upfind ()
 	local up='../'
 	local pathup='./'
 	local slashes=$(pwd | sed 's/[^\/]//g')
-	for i in $(seq 0 ${#slashes}) ; do 
+	for i in $(seq 0 ${#slashes}) ; do
 		if [ -f "${pathup}$1" ] ; then
 			echo "${pathup}"
 			break
@@ -49,7 +49,7 @@ yml_get_path ()
 	echo `upfind docker-compose.yml`
 }
 
-# Returns absolute path 
+# Returns absolute path
 get_abs_path ()
 {
 	local _dir
@@ -100,7 +100,7 @@ cmdpath ()
 
 		# if replacement didnt happen then we are in project root or higher
 		eval $1="."
-	else	
+	else
 		eval $1="$cmdpath"
 	fi
 }
@@ -130,7 +130,7 @@ is_linux ()
 	res=`uname | grep 'Linux'`
 	if [[ ! "$res" == '' ]]; then
 		return 0;
-	else 
+	else
 		return 1;
 	fi
 }
@@ -154,7 +154,7 @@ binary_found ()
 	fi
 
 	local bpath=`which $1`
-	
+
 	if [[ "$bpath" != "" ]] && [ -f `which $1` ]; then
 		return 0
 	else
@@ -220,7 +220,7 @@ is_vm_exist ()
 		res=`vagrant status | grep -e "boot2docker.*not created"`
 		if [[ "$res" == "" ]]; then
 			return 0
-		else 
+		else
 			echo "dsh: Vagrant reports that boot2docker vm is not created. Please check you Vagrantfile or run \"dsh up\""
 			return 1
 		fi
@@ -238,7 +238,7 @@ is_vm_stopped ()
 		res=`vagrant status | grep -e "boot2docker.*running"`
 		if [[ "$res" == "" ]]; then
 			return 0
-		else 
+		else
 			return 1
 		fi
 	else
@@ -302,7 +302,7 @@ restart ()
 		echo "Restarting containers..."
 		cd `yml_get_path`
 		docker-compose up -d
-	fi	
+	fi
 }
 
 # output status of boot2docker if stopped or containers if started
@@ -365,7 +365,7 @@ _run ()
 	if is_docker && is_docker_compose ; then
 		local cd_path=''
 		cmdpath cd_path
-		run "cd $cd_path && $*" 
+		run "cd $cd_path && $*"
 	fi
 }
 
@@ -414,7 +414,7 @@ clear_cache ()
 	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
 	local type='all'
-	if [[ ! "$1" == "" ]]; then 
+	if [[ ! "$1" == "" ]]; then
 		type=$1
 	fi
 	_run 'drush cc '$type
