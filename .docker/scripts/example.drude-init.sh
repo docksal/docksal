@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Set to the appropriate site directory
 SITE_DIRECTORY='project.drude'
