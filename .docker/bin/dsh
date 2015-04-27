@@ -339,10 +339,15 @@ _bash ()
 	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	if is_docker && is_docker_compose ; then
+		local container_name
+		if [ "$1" == "" ]; then
+			container_name='cli'
+		else
+			container_name="$1"
+		fi
 		local container_id
-		clean_string $(docker-compose ps -q cli) container_id
+		clean_string $(docker-compose ps -q $container_name) container_id
 		docker exec -it $container_id bash -i
-		RES=$?
 	fi
 }
 
@@ -535,7 +540,8 @@ case $1 in
 		status
 		;;
 	bash)
-		_bash
+		shift
+		_bash $*
 		;;
 	exec)
 		shift
