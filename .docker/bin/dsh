@@ -15,7 +15,7 @@ help ()
 	echo "	bash			Start bash on cli container"
 	echo "	exec (run)		Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)"
 	echo "	mysql			Opens mysql shell to drude database"
-	echo "	mysql-import		Truncate database and import from sql dump (usage: dsh mysql-import <filename>)"
+	echo "	mysql-import		Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
 	echo "					Note: <filename> should be inside your project root"
 	echo "	drush			Shorthand for executing drush commands (usage: dsh drush [command] [options])"
 	echo "	cc			Shorthand for clearing caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
@@ -408,8 +408,16 @@ mysql_import ()
 	local sql_connect
 	get_mysql_connect sql_connect
 	echo "Importing $filename into database 'drupal'..."
-	run "pv ./$pathdiff/$filename | "$sql_connect
-	echo "mysql-import finished"
+
+	# Check if we have a gzipped dump and treat it differently.
+	if [[ $filename == *.gz ]]; then
+		file_size=$(gzip -l $filename | sed -n 2p | awk '{print $2}')
+		run "zcat ./$pathdiff/$filename | pv --size $file_size | "$sql_connect
+	else
+		run "pv ./$pathdiff/$filename | "$sql_connect
+	fi
+	# Check if import succeded or not and print results.
+	if [ $? -eq 0 ]; then echo "mysql-import finished"; else echo "mysql-import failed"; fi
 }
 
 # Shortcut to run drush cc ... on site
