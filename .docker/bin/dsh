@@ -411,7 +411,7 @@ mysql_import ()
 
 	# Check if we have a gzipped dump and treat it differently.
 	if [[ $filename == *.gz ]]; then
-		file_size=$(gzip -l $filename | sed -n 2p | awk '{print $2}')
+		file_size=$(gzip -l $1 | sed -n 2p | awk '{print $2}')
 		run "zcat ./$pathdiff/$filename | pv --size $file_size | "$sql_connect
 	else
 		run "pv ./$pathdiff/$filename | "$sql_connect
