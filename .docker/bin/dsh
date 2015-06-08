@@ -505,12 +505,12 @@ reset ()
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo "Resetting containers..."
 			cd `yml_get_path`
-			docker-compose stop && docker-compose rm -v --force && docker-compose up -d
+			docker-compose kill && docker-compose rm -v -f && docker-compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo "Resetting containers..."
 		cd `yml_get_path`
-		docker-compose stop && docker-compose rm -v --force && docker-compose up -d
+		docker-compose kill && docker-compose rm -v -f && docker-compose up -d
 	fi
 }
 
