@@ -49,9 +49,10 @@ cli:
     - "./.docker/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
     # Project root folder mapping
     - *project_root
-    # Host SSH keys mapping. Uncomment one of the lines below based on your setup.
-    - /.ssh:/.ssh   # boot2docker-vagrant
-    #- ~/.ssh:/.ssh  # Linux
+    # Host SSH keys mappings.
+    # We try to map both options. The startup.sh script in cli container will decide which one to use.
+    - /.ssh:/.ssh-b2d  # boot2docker-vagrant
+    - ~/.ssh:/.ssh   # Linux
   links:
     - db
     - web
