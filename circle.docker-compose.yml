@@ -24,7 +24,7 @@ web:
 # DB node
 db:
   hostname: db
-  image: mysql/mysql-server:5.5
+  image: mysql:5.5
   ports:
     - "3306:3306"
     # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
