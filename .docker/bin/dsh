@@ -305,32 +305,24 @@ restart ()
 	fi
 }
 
-# output status of boot2docker if stopped or containers if started
+# output status of Drude if stopped or containers if started
 status ()
 {
-	if ! is_vm_exist ; then return 2; fi
+	local res
+	local compose_error
+	compose_error='Couldn'"'"'t connect to Docker daemon - you might need to run `boot2docker up`.'
+
 	if is_yml_absent ; then return 2; fi
-	is_vm_stopped
-	stopped=$?
-	case $stopped in
-		2)
-			return
-			;;
-		1)
-			if is_docker_compose ; then
-				cd `yml_get_path`
-				docker-compose ps
-			fi
-			;;
-		0)
-			echo "boot2docker is not running"
-			if ! is_vm_exist ; then
-				return
-			else
-				echo "Run \"dsh up\" to start boot2docker"
-			fi
-			;;
-	esac
+	cd `yml_get_path`
+	# check docker compose output to not be $compose_error
+	res=$(docker-compose ps 2>&1)
+	if [ "$res" == "$compose_error" ]; then
+		echo "Drude is not running. Use 'dsh up' to start it"
+		return 1
+	else
+		echo "${res}"
+		return 0
+	fi
 }
 
 # start interactive bash in container
