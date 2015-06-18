@@ -211,41 +211,6 @@ is_yml_absent ()
 	return 1
 }
 
-# Checks if vm exists (as per vagrant)
-is_vm_exist ()
-{
-	if is_yml_absent ; then return 2; fi
-	if is_linux || is_boot2docker ; then return 0; fi
-	if is_vagrant ; then
-		res=`vagrant status | grep -e "boot2docker.*not created"`
-		if [[ "$res" == "" ]]; then
-			return 0
-		else
-			echo "dsh: Vagrant reports that boot2docker vm is not created. Please check you Vagrantfile or run \"dsh up\""
-			return 1
-		fi
-	else
-		return 2
-	fi
-}
-
-# Checks if vm is stopped
-is_vm_stopped ()
-{
-	if is_yml_absent ; then return 2; fi
-	if is_linux || is_boot2docker ; then return 1; fi
-	if is_vagrant ; then
-		res=`vagrant status | grep -e "boot2docker.*running"`
-		if [[ "$res" == "" ]]; then
-			return 0
-		else
-			return 1
-		fi
-	else
-		return 2
-	fi
-}
-
 #------------------------------- Commands -----------------------------------
 # bring box up
 up ()
@@ -272,7 +237,6 @@ up ()
 down ()
 {
 	if is_yml_absent ; then return 2; fi
-	if ! is_vm_exist ; then return 2; fi
 	if is_vagrant ; then
 		echo "Stopping vagrant vm..."
 		vagrant halt
@@ -288,7 +252,6 @@ restart ()
 {
 	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
-	if ! is_vm_exist ; then return 2; fi
 	if is_vagrant ; then
 		echo "Restarting vagrant vm..."
 		vagrant reload
