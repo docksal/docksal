@@ -72,7 +72,7 @@ fi
 
 # Check if the working tree and index are clean
 if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
-	echo -e "${yellow}Your have uncommitted changes in following files:${NC}"
+	echo -e "${yellow}You have uncommitted changes in following files:${NC}"
 	git status .docker docker-compose.yml -s
 	echo -e "${yellow}Before proceeding with the update it is recommended to commit any pending changes in files above.$NC"
 	_confirm "Proceeding will overwrite your changes. Continue?"
