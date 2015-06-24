@@ -29,13 +29,26 @@ help ()
 	echo
 }
 
-#-------------------------- Helper functions --------------------------------
-
 # Console colors
 red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[1;33m'
 NC='\033[0m'
+
+#-------------------------- Testing --------------------------------
+BOX_BRANCH='master'
+DRUDE_BRANCH='master'
+if [ ! $DRUDE_TEST_ENVIRONMENT == "" ]; then
+	DRUDE_BRANCH=$DRUDE_TEST_ENVIRONMENT
+fi
+if [ ! $BOOT2DOCKER_TEST_ENVIRONMENT == "" ]; then
+	BOX_BRANCH=$BOOT2DOCKER_TEST_ENVIRONMENT
+fi
+if [ ! $BOX_BRANCH == 'master' ] || [ ! $DRUDE_BRANCH == 'master' ]; then
+	echo -e "${red}[dsh] testing mode: boot2docker - ${BOX_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
+fi
+
+#-------------------------- Helper functions --------------------------------
 
 # Search for file in current dir and all parent dirs
 # @param $1 filename
@@ -332,14 +345,19 @@ update ()
 
 	# run boot2docker update only on Mac and Win
 	if ! is_linux ; then
-		echo "Checking boot2docker version..."
+		echo -e "${green}Installing boot2docker update...${NC}"
 		# get current version
 		local boot2docker_ver_path=$HOME/.drude/boot2docker_ver
 		local boot2docker_ver=$(cat $boot2docker_ver_path)
 		if [ "$boot2docker_ver" = "" ]; then $boot2docker_ver="undetected version"; fi
 
 		# get new version
-		curl -sS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/master/VERSION -o ${boot2docker_ver_path}_tmp
+		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/VERSION -o ${boot2docker_ver_path}_tmp
+		if [ ! $? -eq 0 ]; then
+			echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
+			exit
+		fi
+
 		local boot2docker_new_ver=$(cat ${boot2docker_ver_path}_tmp)
 
 		# update boot2docker
@@ -351,15 +369,25 @@ update ()
 		if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ]; then
 			echo -e "boot2docker update available: ${green}$boot2docker_new_ver${NC} (you have $boot2docker_ver)."
 			if [ $destroy_box -eq 1 ]; then
-				echo -e "${red}Update will destroy and re-create your vagrant box${NC} (run with -n if you know re-creation can be skipped this time)"
+				echo -e "${red}Update will destroy and re-create your Vagrant box${NC} (run with -n if you know re-creation can be skipped this time)"
+				_confirm "Please confirm."
 			else
 				echo -e "${green}Vagrant box will not be re-created${NC}"
 			fi
-			_confirm
+
 			# don't download update if we can't locate Vagrantfile
 			if is_vagrantfile_absent ; then return 1; fi
 			cd $vagrant_path
 			echo "Vagrantfile is found in "$(pwd)
+
+			echo -n "Downloading boot2docker install script..."
+			curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh -o setup.sh
+			if [ ! $? -eq 0 ]; then
+				echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
+				exit
+			fi
+			echo "done"
+			chmod +x setup.sh
 
 			echo "Creating backups..."
 			local timestamp=$(date +%s)
@@ -367,14 +395,12 @@ update ()
 			cp -v vagrant.yml $HOME/.drude/vagrant.yml.$timestamp
 
 			if [ $destroy_box -eq 1 ]; then
-				echo "Re-creating vagrant box..."
+				echo -e "${yellow}Destroying vagrant box...$NC"
 				vagrant destroy -f
 			fi
 
-			echo "Downloading install script..."
-			curl -sS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/master/setup.sh -o setup.sh
-			chmod +x setup.sh
-			source setup.sh # run boot2docker setup/update script
+			echo "${yellow}Running boot2docker install script...$NC"
+			source setup.sh
 
 			if [[ $? -ne 0 ]]; then
 				# don't continue in automatic mode if boot2docker update failed
@@ -392,8 +418,15 @@ update ()
 		fi
 	fi
 
-	echo "Checking Drude version..."
-	curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/install-drude.sh | bash
+	echo -n "Downloading drude install script..."
+	curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/install-drude.sh >/dev/null
+	if [ ! $? -eq 0 ]; then
+		echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
+		exit
+	else
+		echo "done"
+		curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/install-drude.sh | bash
+	fi
 }
 
 # start interactive bash in container
