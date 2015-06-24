@@ -1,7 +1,10 @@
 #!/bin/bash
+set -e
 
 # Set to the appropriate site directory
-SITE_DIRECTORY='project.drude'
+SITE_DIRECTORY='project'
+# Set to the appropriate site directory
+SITE_DOMAIN='project.drude'
 # Set to the appropriate site alias for the DB source
 SOURCE_ALIAS='@project.prod'
 
@@ -39,23 +42,28 @@ _confirm ()
 	done
 }
 
+# Copy a settings file from $source to $dest
+# Skips if the $dest already exists.
+_copy_settings_file()
+{
+  local source=${1}
+  local dest=${2}
+
+  if [[ ! -f $dest ]]; then
+    echo -e "${green}Copying ${dest}...${NC}"
+    cp $source $dest
+  else
+    echo -e "${yellow}${dest} already in place${NC}"
+  fi
+}
+
 # Copy settings files
 init_settings ()
 {
   cd $GIT_ROOT
-  if [[ ! -f 'docker-compose.yml' ]]; then
-    echo -e "${green}Copying docker-compose.yml${NC}"
-    cp docker-compose.yml.dist docker-compose.yml
-  else
-    echo -e "${yellow}docker-compose.yml already in place${NC}"
-  fi
 
-  if [[ ! -f "docroot/sites/${SITE_DIRECTORY}/settings.local.php" ]]; then
-    echo -e "${green}Copying docroot/sites/${SITE_DIRECTORY}/settings.local.php${NC}"
-    cp docroot/sites/${SITE_DIRECTORY}/example.settings.local.php docroot/sites/${SITE_DIRECTORY}/settings.local.php
-  else
-    echo -e "${yellow}docroot/sites/${SITE_DIRECTORY}/settings.local.php already in place${NC}"
-  fi
+  _copy_settings_file 'docker-compose.yml.dist' 'docker-compose.yml'
+  _copy_settings_file "docroot/sites/${SITE_DIRECTORY}/example.settings.local.php" "docroot/sites/${SITE_DIRECTORY}/settings.local.php"
 }
 
 # Import database from the source site alias
@@ -65,7 +73,7 @@ db_import ()
 
   cd $GIT_ROOT
   cd docroot
-  dsh drush -l ${SITE_DIRECTORY} sql-sync ${SOURCE_ALIAS} @self -y
+  dsh drush -l ${SITE_DOMAIN} sql-sync ${SOURCE_ALIAS} @self -y
 }
 
 # Local adjustments
@@ -76,17 +84,17 @@ local_settings ()
   cd docroot
   set -x
 
-  dsh drush -l ${SITE_DIRECTORY} en stage_file_proxy -y
+  dsh drush -l ${SITE_DOMAIN} en stage_file_proxy -y
 
   set +x
 }
 
 init_settings
-dsh up
+dsh reset
 db_import
 local_settings
 
 echo -e "${green}All done!${NC}"
-echo -e "${green}Add ${SITE_DIRECTORY} to your hosts file (/etc/hosts), e.g.:${NC}"
-echo -e "192.168.10.10  ${SITE_DIRECTORY}"
-echo -e "${green}Open http://${SITE_DIRECTORY} in your browser to verify the setup.${NC}"
+echo -e "${green}Add ${SITE_DOMAIN} to your hosts file (/etc/hosts), e.g.:${NC}"
+echo -e "192.168.10.10  ${SITE_DOMAIN}"
+echo -e "${green}Open http://${SITE_DOMAIN} in your browser to verify the setup.${NC}"
