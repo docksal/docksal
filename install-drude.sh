@@ -81,7 +81,7 @@ fi
 # Checking out the most recent Drude build
 git remote add drude $DRUDE_REPO
 git remote update drude 1>/dev/null
-git checkout --theirs drude/devel .
+git checkout --theirs drude/build .
 git remote rm drude
 
 if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
