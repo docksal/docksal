@@ -263,19 +263,17 @@ is_yml_absent ()
 # bring box up
 up ()
 {
-	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
-		echo "Starting vagrant vm..."
 		vagrant up
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
-			echo "Starting containers..."
+			echo -e "${green}Starting containers...$NC"
 			cd `yml_get_path`
 			docker-compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo "Starting containers..."
+		echo -e "${green}Starting containers...$NC"
 		cd `yml_get_path`
 		docker-compose up -d
 	fi
@@ -286,10 +284,9 @@ down ()
 {
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
-		echo "Stopping vagrant vm..."
 		vagrant halt
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo "Stopping containers..."
+		echo -e "${yellow}Stopping containers...$NC"
 		cd `yml_get_path`
 		docker-compose stop
 	fi
@@ -298,19 +295,17 @@ down ()
 # call 911
 restart ()
 {
-	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
-		echo "Restarting vagrant vm..."
 		vagrant reload
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
-			echo "Starting containers..."
+			echo -e "${green}Starting containers...$NC"
 			cd `yml_get_path`
 			docker-compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo "Restarting containers..."
+		echo -e "${green}Restarting containers...$NC"
 		cd `yml_get_path`
 		docker-compose up -d
 	fi
@@ -328,7 +323,7 @@ status ()
 	# check docker compose output to not be $compose_error
 	res=$(docker-compose ps 2>&1)
 	if [ "$res" == "$compose_error" ]; then
-		echo "Drude is not running. Use 'dsh up' to start it"
+		echo -e "${yellow}Drude is not running. Use 'dsh up' to start it$NC"
 		return 1
 	else
 		echo "${res}"
@@ -339,12 +334,12 @@ status ()
 update ()
 {
 	if is_boot2docker ; then
-		echo "dsh: You are running inside boot2docker"
+		echo -e "${red}dsh: You are running inside boot2docker$NC"
 		return 1;
 	fi
 
 	if is_windows; then
-		echo "dsh: Update is not automated on Windows yet"
+		echo -e "${red}dsh: Update is not automated on Windows yet$NC"
 		return 1;
 	fi
 
@@ -423,6 +418,7 @@ update ()
 		fi
 	fi
 
+	# Update drude
 	echo -n "Downloading drude install script..."
 	curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/install-drude.sh >/dev/null
 	if [ ! $? -eq 0 ]; then
@@ -431,6 +427,15 @@ update ()
 	else
 		echo "done"
 		curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/install-drude.sh | bash
+		if [ $? -eq 0 ]; then # start conatiners only if drude was updated fine
+			if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
+				# if vagrant box was updated containers will be downloaded again
+				_confirm "Downloading and starting containers."
+			else
+				_confirm "Starting containers. If there's an update to container images it will be downloaded."
+				up
+			fi
+		fi
 	fi
 }
 
