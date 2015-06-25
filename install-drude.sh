@@ -38,12 +38,10 @@ _confirm ()
 }
 
 # Install/update dsh tool wrapper
-curl -fsS "$DRUDE_REPO_RAW/install-dsh.sh" -o install-dsh.sh
+local dsh_install_script=$(curl -fsS "$DRUDE_REPO_RAW/install-dsh.sh")
 if [ $? -eq 0 ]; then
-	source install-dsh.sh
-	dsh_success=$?
-	rm install-dsh.sh
-	if [ ! $dsh_success -eq 0 ]; then
+	echo $dsh_install_script | bash
+	if [ ! $? -eq 0 ]; then
 		_confirm "Do you want to continue with drude update regardless?"
 	fi
 else
