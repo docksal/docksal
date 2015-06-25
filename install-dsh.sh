@@ -33,19 +33,16 @@ $SUDO touch "$BIN/dsh" 2> /dev/null || {
 $SUDO touch "$BIN/dsh" 2> /dev/null || {
 	echo -e "${yellow}Could not write to $BIN/dsh.${NC}";
 	echo -e "${red}Could not install dsh wrapper tool${NC}";
-	return 1;
 	exit 1;
 }
 
 # Install/update dsh tool wrapper
-curl -fsS "$DRUDE_REPO_RAW/scripts/dsh-wrapper.sh" -o "$BIN/dsh-new"
+local dsh_wrapper=$(curl -fsS "$DRUDE_REPO_RAW/scripts/dsh-wrapper.sh")
 if [ ! $? -eq 0 ]; then
-	rm "$BIN/dsh-new" 2>dev/null
 	echo -e "${red}Could not get latest dsh wrapper version.${NC}"
-	return 1
 	exit 1
 else
-	$SUDO mv "$BIN/dsh-new" "$BIN/dsh"
+	echo $dsh_wrapper | $SUDO tee "$BIN/dsh" >/dev/null
 	$SUDO chmod +x "$BIN/dsh"
 	echo -e "${green}dsh wrapper was installed as${NC}${yellow} $BIN/dsh${NC}"
 fi
