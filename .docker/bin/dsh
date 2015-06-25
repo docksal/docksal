@@ -398,7 +398,8 @@ update ()
 			fi
 
 			echo -e "${yellow}Running boot2docker install script...$NC"
-			echo $setup_script | bash
+			# calling bash interactively
+			bash <(echo "$setup_script")
 
 			if [[ $? -ne 0 ]]; then
 				# don't continue in automatic mode if boot2docker update failed
@@ -421,7 +422,8 @@ update ()
 		return 1
 	else
 		echo "done"
-		echo $drude_install_script | bash
+		# calling bash interactively
+		bash <(echo "$drude_install_script")
 		if [ $? -eq 0 ]; then # start conatiners only if drude was updated fine
 			if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
 				# if vagrant box was updated containers will be downloaded again

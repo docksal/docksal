@@ -28,7 +28,6 @@ _confirm ()
 				break
 				;;
 			[Nn]|[Nn][Oo] )
-				return 1
 				exit 1
 				;;
 			* )
@@ -38,9 +37,10 @@ _confirm ()
 }
 
 # Install/update dsh tool wrapper
-local dsh_install_script=$(curl -fsS "$DRUDE_REPO_RAW/install-dsh.sh")
+dsh_install_script=$(curl -fsS "$DRUDE_REPO_RAW/install-dsh.sh")
 if [ $? -eq 0 ]; then
-	echo $dsh_install_script | bash
+	# calling bash interactively
+	bash <(echo "$dsh_install_script")
 	if [ ! $? -eq 0 ]; then
 		_confirm "Do you want to continue with drude update regardless?"
 	fi
