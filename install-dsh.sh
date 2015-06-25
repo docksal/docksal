@@ -37,7 +37,7 @@ $SUDO touch "$BIN/dsh" 2> /dev/null || {
 }
 
 # Install/update dsh tool wrapper
-local dsh_wrapper=$(curl -fsS "$DRUDE_REPO_RAW/scripts/dsh-wrapper.sh")
+dsh_wrapper=$(curl -fsS "$DRUDE_REPO_RAW/scripts/dsh-wrapper.sh")
 if [ ! $? -eq 0 ]; then
 	echo -e "${red}Could not get latest dsh wrapper version.${NC}"
 	exit 1
