@@ -462,7 +462,11 @@ run ()
 	if is_docker && is_docker_compose ; then
 		cd `yml_get_path`
 		clean_string $(docker-compose ps -q cli) container_id
-		docker exec -it $container_id bash -ic "$*"
+		if [[ "$(/usr/bin/tty || true)" != "not a tty" ]]; then
+			docker exec -it $container_id bash -ic "$*"
+		else
+			docker exec $container_id bash -c "$*"
+		fi
 	fi
 }
 
@@ -495,6 +499,15 @@ mysql_import ()
 {
 	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
+
+	local confirm=1
+	if [ "$1" == "-y" ] || [ "$2" == "-y" ]; then
+		confirm=0
+		if [ "$1" == "-y" ]; then
+			shift #remove this param if -y was first
+		fi
+	fi
+
 	project_root=$(get_project_root_path)
 	local filename=`basename $1`
 	local filepath=`get_abs_path $1`
@@ -507,7 +520,10 @@ mysql_import ()
 		return
 	fi
 
-	_confirm "[!] This will delete all current data in database 'drupal'."
+	if [ $confirm -eq 1 ]; then
+		_confirm "[!] This will delete all current data in database 'drupal'."
+	fi
+
 
 	echo $(_drush sql-drop -y)
 	local sql_connect
@@ -672,7 +688,7 @@ case $1 in
 		mysql
 		;;
 	mysql-import)
-		mysql_import $2
+		mysql_import $2 $3
 		;;
 	cc)
 		clear_cache $2
