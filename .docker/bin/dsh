@@ -102,12 +102,17 @@ get_project_root_path ()
 # dummy function to check that command is run along settings.php
 get_drush_path ()
 {
-	local docroot=$(get_project_root_path)'/docroot'
+	# Check that we're inside project folder
+	local proj_root=$(get_project_root_path)
 	local cwd=$(pwd)
-	local pathdiff=${cwd#$docroot}
+	# if cwd substract proj_root is still cwd then it means we're out of proj_root
+	local pathdiff=${cwd#$proj_root}
 	if [ "$cwd" == "$pathdiff" ]; then
-		echo "dsh supports '$argv' command only from docroot directory or directory that contains settings.php"
+		echo "dsh supports '$argv' command only from within project directory"
 		return 1
+	fi
+	if [ "$pathdiff" == "" ]; then
+		cd docroot
 	fi
 	return 0
 }
