@@ -111,7 +111,7 @@ get_drush_path ()
 		echo "dsh supports '$argv' command only from within project directory"
 		return 1
 	fi
-	if [ "$pathdiff" == "" ]; then
+	if [ "$pathdiff" == "" ]; then # we're on top level, let's cd for drush to work
 		cd docroot
 	fi
 	return 0
@@ -467,11 +467,12 @@ run ()
 # param $* command with it's params to run
 _run ()
 {
+	local COLS=$(tput cols) #get client window width
 	if is_yml_absent ; then return 2; fi
 	if is_docker && is_docker_compose ; then
 		local cd_path=''
 		cmdpath cd_path
-		run "cd $cd_path && $*"
+		run "cd $cd_path && export COLUMNS=$COLS && $*"
 	fi
 }
 
