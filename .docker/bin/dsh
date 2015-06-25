@@ -415,6 +415,7 @@ update ()
 	fi
 
 	# Update drude
+	cd $cwd # we need to bo back if we were installing boot2docker
 	echo -n "Downloading drude install script..."
 	local drude_install_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/install-drude.sh)
 	if [ ! $? -eq 0 ]; then
@@ -431,7 +432,6 @@ update ()
 			else
 				_confirm "Starting containers. If there's an update to container images it will be downloaded."
 			fi
-			cd $cwd
 			up
 		fi
 	fi
