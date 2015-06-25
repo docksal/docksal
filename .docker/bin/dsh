@@ -7,22 +7,46 @@ help ()
 	echo "Commands list:"
 	echo
 	echo "	init			Set up the project locally. Calls .docker/scripts/drude-init.sh"
+	echo
 	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
 	echo "	stop (down, halt)	Stop vagrant vm (mac only) or stop containers"
 	echo "	reload (restart)	Re-start vagrant vm (mac only) and docker containers"
+	echo "	status (st, ps)		Show containers status"
+	echo
 	echo "	reset			Restart docker containers from scratch (stop, remove, up)"
-	echo "	status (st, ps)		Show vm/containers status"
-	echo "	bash			Start bash on cli container"
+	echo
+	echo "	bash			Start bash on container. Default: cli (usage: dsh bash [container_name])"
 	echo "	exec (run)		Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)"
+	echo
 	echo "	mysql			Opens mysql shell to drude database"
 	echo "	mysql-import		Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
-	echo "					Note: <filename> should be inside your project root"
-	echo "	drush			Shorthand for executing drush commands (usage: dsh drush [command] [options])"
-	echo "	cc			Shorthand for clearing caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
+	echo "					Note: DB dump file should be inside your project folder"
+	echo "	drush			Execute drush command (usage: dsh drush [command] [options])"
+	echo "	cc			Clear Drupal caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
+	echo
 	echo "	behat			Run Behat tests"
-	echo "	help			Output this help"
+	echo "	update			Update boot2docker and drude"
 	echo
 }
+
+# Console colors
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[1;33m'
+NC='\033[0m'
+
+#-------------------------- Testing --------------------------------
+BOX_BRANCH='master'
+DRUDE_BRANCH='master'
+if [ ! $DRUDE_TEST_ENVIRONMENT == "" ]; then
+	DRUDE_BRANCH=$DRUDE_TEST_ENVIRONMENT
+fi
+if [ ! $BOOT2DOCKER_TEST_ENVIRONMENT == "" ]; then
+	BOX_BRANCH=$BOOT2DOCKER_TEST_ENVIRONMENT
+fi
+if [ ! $BOX_BRANCH == 'master' ] || [ ! $DRUDE_BRANCH == 'master' ]; then
+	echo -e "${red}[dsh] testing mode: boot2docker - ${BOX_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
+fi
 
 #-------------------------- Helper functions --------------------------------
 
@@ -78,12 +102,17 @@ get_project_root_path ()
 # dummy function to check that command is run along settings.php
 get_drush_path ()
 {
-	local docroot=$(get_project_root_path)'/docroot'
+	# Check that we're inside project folder
+	local proj_root=$(get_project_root_path)
 	local cwd=$(pwd)
-	local pathdiff=${cwd#$docroot}
+	# if cwd substract proj_root is still cwd then it means we're out of proj_root
+	local pathdiff=${cwd#$proj_root}
 	if [ "$cwd" == "$pathdiff" ]; then
-		echo "dsh supports '$argv' command only from docroot directory or directory that contains settings.php"
+		echo "dsh supports '$argv' command only from within project directory"
 		return 1
+	fi
+	if [ "$pathdiff" == "" ]; then # we're on top level, let's cd for drush to work
+		cd docroot
 	fi
 	return 0
 }
@@ -128,6 +157,16 @@ get_mysql_connect ()
 is_linux ()
 {
 	res=`uname | grep 'Linux'`
+	if [[ ! "$res" == '' ]]; then
+		return 0;
+	else
+		return 1;
+	fi
+}
+
+is_windows ()
+{
+	res=`uname | grep 'MINGW32_NT'`
 	if [[ ! "$res" == '' ]]; then
 		return 0;
 	else
@@ -186,11 +225,20 @@ is_docker ()
 	return $?
 }
 
+is_vagrantfile_absent ()
+{
+	vagrant_path=`upfind "Vagrantfile"`
+	if [ "$vagrant_path" == "" ] ; then
+		echo "dsh: Vagrantfile not found in your directory tree"
+		return 0
+	fi
+
+	return 1
+}
+
 # Checks if yml or vagrantfile (win, mac) is absent
 is_yml_absent ()
 {
-	local vagrant_path=''
-
 	yml_path=`yml_get_path`
 	if [ "$yml_path" == "" ] ; then
 		echo "dsh: docker-compose.yml not found in your directory tree"
@@ -215,19 +263,17 @@ is_yml_absent ()
 # bring box up
 up ()
 {
-	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
-		echo "Starting vagrant vm..."
 		vagrant up
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
-			echo "Starting containers..."
+			echo -e "${green}Starting containers...$NC"
 			cd `yml_get_path`
 			docker-compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo "Starting containers..."
+		echo -e "${green}Starting containers...$NC"
 		cd `yml_get_path`
 		docker-compose up -d
 	fi
@@ -238,10 +284,9 @@ down ()
 {
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
-		echo "Stopping vagrant vm..."
 		vagrant halt
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo "Stopping containers..."
+		echo -e "${yellow}Stopping containers...$NC"
 		cd `yml_get_path`
 		docker-compose stop
 	fi
@@ -250,19 +295,17 @@ down ()
 # call 911
 restart ()
 {
-	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
-		echo "Restarting vagrant vm..."
 		vagrant reload
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
-			echo "Starting containers..."
+			echo -e "${green}Starting containers...$NC"
 			cd `yml_get_path`
 			docker-compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo "Restarting containers..."
+		echo -e "${green}Restarting containers...$NC"
 		cd `yml_get_path`
 		docker-compose up -d
 	fi
@@ -280,11 +323,113 @@ status ()
 	# check docker compose output to not be $compose_error
 	res=$(docker-compose ps 2>&1)
 	if [ "$res" == "$compose_error" ]; then
-		echo "Drude is not running. Use 'dsh up' to start it"
+		echo -e "${yellow}Drude is not running. Use 'dsh up' to start it$NC"
 		return 1
 	else
 		echo "${res}"
 		return 0
+	fi
+}
+
+update ()
+{
+	if is_boot2docker ; then
+		echo -e "${red}dsh: You are running inside boot2docker$NC"
+		return 1;
+	fi
+
+	if is_windows; then
+		echo -e "${red}dsh: Update is not automated on Windows yet$NC"
+		return 1;
+	fi
+
+	# run boot2docker update only on Mac and Win
+	if ! is_linux ; then
+		echo -e "${green}Installing boot2docker update...${NC}"
+		# get current version
+		local boot2docker_ver_path=$HOME/.drude/b2d_version
+		local boot2docker_ver=$(cat $boot2docker_ver_path)
+		if [ "$boot2docker_ver" = "" ]; then $boot2docker_ver="undetected version"; fi
+
+		# get new version
+		local boot2docker_new_ver=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/VERSION)
+		if [ ! $? -eq 0 ]; then
+			echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
+			return 1
+		fi
+
+		# update boot2docker
+
+		local destroy_box=1;
+		if [ "$1" == "-f" ] || [ "$2" == "-f" ]; then boot2docker_new_ver="${boot2docker_new_ver} (forced update)"; fi
+		if [ "$1" == "-n" ] || [ "$2" == "-n" ]; then destroy_box=0; fi
+
+		if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ]; then
+			echo -e "boot2docker update available: ${green}$boot2docker_new_ver${NC} (you have $boot2docker_ver)."
+			if [ $destroy_box -eq 1 ]; then
+				echo -e "${red}Update will destroy and re-create your Vagrant box${NC} (run with -n if you know re-creation can be skipped this time)"
+				_confirm "Please confirm."
+			else
+				echo -e "${green}Vagrant box will not be re-created${NC}"
+			fi
+
+			# don't download update if we can't locate Vagrantfile
+			if is_vagrantfile_absent ; then return 1; fi
+			cd $vagrant_path
+			echo "Vagrantfile is found in "$(pwd)
+
+			echo -n "Downloading boot2docker install script..."
+			local setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh)
+			if [ ! $? -eq 0 ]; then
+				echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
+				exit
+			fi
+			echo "done"
+
+			echo "Creating backups..."
+			local timestamp=$(date +%s)
+			cp -v Vagrantfile $HOME/.drude/Vagrantfile.$timestamp
+			cp -v vagrant.yml $HOME/.drude/vagrant.yml.$timestamp
+
+			if [ $destroy_box -eq 1 ]; then
+				echo -e "${yellow}Destroying vagrant box...$NC"
+				vagrant destroy -f
+			fi
+
+			echo "${yellow}Running boot2docker install script...$NC"
+			echo $setup_script | bash
+
+			if [[ $? -ne 0 ]]; then
+				# don't continue in automatic mode if boot2docker update failed
+				return 1
+			else
+				# update recorded boot2docker version
+				echo $boot2docker_new_ver > $boot2docker_ver_path
+				echo -e "boot2docker ${green}$boot2docker_new_ver${NC} was installed"
+			fi
+		else
+			echo "boot2docker $boot2docker_ver you have is the latest version (-f to force update)"
+		fi
+	fi
+
+	# Update drude
+	echo -n "Downloading drude install script..."
+	local drude_install_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/install-drude.sh)
+	if [ ! $? -eq 0 ]; then
+		echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
+		return 1
+	else
+		echo "done"
+		echo $drude_install_script | bash
+		if [ $? -eq 0 ]; then # start conatiners only if drude was updated fine
+			if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
+				# if vagrant box was updated containers will be downloaded again
+				_confirm "Downloading and starting containers."
+			else
+				_confirm "Starting containers. If there's an update to container images it will be downloaded."
+			fi
+			up
+		fi
 	fi
 }
 
@@ -321,11 +466,12 @@ run ()
 # param $* command with it's params to run
 _run ()
 {
+	local COLS=$(tput cols) #get client window width
 	if is_yml_absent ; then return 2; fi
 	if is_docker && is_docker_compose ; then
 		local cd_path=''
 		cmdpath cd_path
-		run "cd $cd_path && $*"
+		run "cd $cd_path && export COLUMNS=$COLS && $*"
 	fi
 }
 
@@ -495,6 +641,10 @@ case $1 in
 		;;
 	status)
 		status
+		;;
+	update)
+		shift
+		update $*
 		;;
 	st)
 		status

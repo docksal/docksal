@@ -6,18 +6,43 @@ green='\033[0;32m'
 yellow='\033[1;33m'
 NC='\033[0m'
 
-# Drude repo
-DRUDE_REPO='https://github.com/blinkreaction/drude.git'
-DRUDE_REPO_RAW='https://raw.githubusercontent.com/blinkreaction/drude/master'
+# For testing
+BRANCH='master'
+if [ ! $DRUDE_TEST_ENVIRONMENT == "" ]; then
+	BRANCH=$DRUDE_TEST_ENVIRONMENT
+	echo -e "${red}[install-dsh] testing mode: environment = \"${BRANCH}\"$NC"
+fi
 
+# Drude repo
+DRUDE_REPO="https://github.com/blinkreaction/drude.git"
+DRUDE_REPO_RAW="https://raw.githubusercontent.com/blinkreaction/drude/$BRANCH"
+
+echo -e "${green}Installing/updating dsh tool wrapper. Admin access required${NC}"
 # Determine if we have sudo
 SUDO='sudo'
 if [[ -z $(which $SUDO) ]]; then SUDO=''; fi
+
 # Detemine where we can install (/usb/local/bin or /bin)
 BIN='/usr/local/bin'
-$SUDO touch "$BIN/dsh" 2> /dev/null || BIN="/bin"
-$SUDO touch "$BIN/dsh" 2> /dev/null || { echo -e "${yellow}Warning: Not able to install dsh.${NC}"; }
+
+$SUDO touch "$BIN/dsh" 2> /dev/null || {
+	echo -e "${yellow}Could not write to $BIN/dsh.${NC}";
+	BIN="/bin";
+}
+
+$SUDO touch "$BIN/dsh" 2> /dev/null || {
+	echo -e "${yellow}Could not write to $BIN/dsh.${NC}";
+	echo -e "${red}Could not install dsh wrapper tool${NC}";
+	exit 1;
+}
+
 # Install/update dsh tool wrapper
-echo -e "${green}Installing/updating dsh (Drude Shell) tool wrapper to $BIN/dsh${NC}"
-curl -s "$DRUDE_REPO_RAW/scripts/dsh-wrapper.sh" | $SUDO tee 1>/dev/null "$BIN/dsh"
-$SUDO chmod +x "$BIN/dsh"
+local dsh_wrapper=$(curl -fsS "$DRUDE_REPO_RAW/scripts/dsh-wrapper.sh")
+if [ ! $? -eq 0 ]; then
+	echo -e "${red}Could not get latest dsh wrapper version.${NC}"
+	exit 1
+else
+	echo $dsh_wrapper | $SUDO tee "$BIN/dsh" >/dev/null
+	$SUDO chmod +x "$BIN/dsh"
+	echo -e "${green}dsh wrapper was installed as${NC}${yellow} $BIN/dsh${NC}"
+fi
