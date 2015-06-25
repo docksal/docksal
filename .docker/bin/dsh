@@ -343,13 +343,14 @@ update ()
 		return 1;
 	fi
 
+	local cwd=$(pwd)
 	# run boot2docker update only on Mac and Win
 	if ! is_linux ; then
 		echo -e "${green}Installing boot2docker update...${NC}"
 		# get current version
 		local boot2docker_ver_path=$HOME/.drude/b2d_version
-		local boot2docker_ver=$(cat $boot2docker_ver_path)
-		if [ "$boot2docker_ver" = "" ]; then $boot2docker_ver="undetected version"; fi
+		local boot2docker_ver=$(cat $boot2docker_ver_path 2>/dev/null)
+		if [ "$boot2docker_ver" = "" ]; then boot2docker_ver="undetected version"; fi
 
 		# get new version
 		local boot2docker_new_ver=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/VERSION)
@@ -396,8 +397,9 @@ update ()
 				vagrant destroy -f
 			fi
 
-			echo "${yellow}Running boot2docker install script...$NC"
-			echo $setup_script | bash
+			echo -e "${yellow}Running boot2docker install script...$NC"
+			# calling bash interactively
+			bash <(echo "$setup_script")
 
 			if [[ $? -ne 0 ]]; then
 				# don't continue in automatic mode if boot2docker update failed
@@ -420,14 +422,16 @@ update ()
 		return 1
 	else
 		echo "done"
-		echo $drude_install_script | bash
+		# calling bash interactively
+		bash <(echo "$drude_install_script")
 		if [ $? -eq 0 ]; then # start conatiners only if drude was updated fine
 			if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
 				# if vagrant box was updated containers will be downloaded again
-				_confirm "Downloading and starting containers."
+				_confirm "Starting Vagrant box. Downloading and starting containers."
 			else
 				_confirm "Starting containers. If there's an update to container images it will be downloaded."
 			fi
+			cd $cwd
 			up
 		fi
 	fi
