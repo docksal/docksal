@@ -28,6 +28,7 @@ _confirm ()
 				break
 				;;
 			[Nn]|[Nn][Oo] )
+				return 1
 				exit 1
 				;;
 			* )
