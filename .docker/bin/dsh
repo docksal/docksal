@@ -347,7 +347,7 @@ update ()
 	if ! is_linux ; then
 		echo -e "${green}Installing boot2docker update...${NC}"
 		# get current version
-		local boot2docker_ver_path=$HOME/.drude/boot2docker_ver
+		local boot2docker_ver_path=$HOME/.drude/b2d_version
 		local boot2docker_ver=$(cat $boot2docker_ver_path)
 		if [ "$boot2docker_ver" = "" ]; then $boot2docker_ver="undetected version"; fi
 
