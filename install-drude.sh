@@ -17,10 +17,19 @@ fi
 DRUDE_REPO="https://github.com/blinkreaction/drude.git"
 DRUDE_REPO_RAW="https://raw.githubusercontent.com/blinkreaction/drude/$BRANCH"
 
+# Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
+is_tty ()
+{
+	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
+}
+
 # Yes/no confirmation dialog with an optional message
 # @param $1 confirmation message
 _confirm ()
 {
+	# Skip checks if not a tty
+	if ! is_tty ; then return 0; fi
+	
 	while true; do
 		read -p "$1 [y/n]: " answer
 		case $answer in

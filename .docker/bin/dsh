@@ -50,6 +50,12 @@ fi
 
 #-------------------------- Helper functions --------------------------------
 
+# Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
+is_tty ()
+{
+	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
+}
+
 # Search for file in current dir and all parent dirs
 # @param $1 filename
 upfind ()
@@ -259,6 +265,28 @@ is_yml_absent ()
 	return 1
 }
 
+# Yes/no confirmation dialog with an optional message
+# @param $1 confirmation message
+_confirm ()
+{
+	# Skip checks if not a tty
+	if ! is_tty ; then return 0; fi
+	
+	while true; do
+		read -p "$1 [y/n]: " answer
+		case $answer in
+			[Yy]|[Yy][Ee][Ss] )
+				break
+				;;
+			[Nn]|[Nn][Oo] )
+				exit 1
+				;;
+			* )
+				echo 'Please answer yes or no.'
+		esac
+	done
+}
+
 #------------------------------- Commands -----------------------------------
 # bring box up
 up ()
@@ -333,14 +361,19 @@ status ()
 
 update ()
 {
+	if ! is_tty ; then
+		echo "'update' is not allowed in a non-interactive environment."
+		return 1
+	fi
+
 	if is_boot2docker ; then
 		echo -e "${red}dsh: You are running inside boot2docker$NC"
-		return 1;
+		return 1
 	fi
 
 	if is_windows; then
 		echo -e "${red}dsh: Update is not automated on Windows yet$NC"
-		return 1;
+		return 1
 	fi
 
 	local cwd=$(pwd)
@@ -440,6 +473,11 @@ update ()
 # start interactive bash in container
 _bash ()
 {
+	if ! is_tty ; then
+		echo "Interactive bash console in a non-interactive enveronment!? Nope, won't happen."
+		return 1
+	fi
+
 	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	if is_docker && is_docker_compose ; then
@@ -462,7 +500,12 @@ run ()
 	if is_docker && is_docker_compose ; then
 		cd `yml_get_path`
 		clean_string $(docker-compose ps -q cli) container_id
-		docker exec -it $container_id bash -ic "$*"
+
+		if is_tty ; then
+			docker exec -it $container_id bash -ic "$*"
+		else
+			docker exec $container_id bash -c "$*"
+		fi
 	fi
 }
 
@@ -514,13 +557,24 @@ mysql_import ()
 	get_mysql_connect sql_connect
 	echo "Importing $filename into database 'drupal'..."
 
-	# Check if we have a gzipped dump and treat it differently.
-	if [[ $filename == *.gz ]]; then
-		file_size=$(gzip -l $1 | sed -n 2p | awk '{print $2}')
-		run "zcat ./$pathdiff/$filename | pv --size $file_size | "$sql_connect
+	# Use pv for interactive shells only.
+	if is_tty ; then
+		# Check if we have a gzipped dump and treat it differently.
+		if [[ $filename == *.gz ]]; then
+			file_size=$(gzip -l $1 | sed -n 2p | awk '{print $2}')
+			run "zcat ./$pathdiff/$filename | pv --size $file_size | "$sql_connect
+		else
+			run "pv ./$pathdiff/$filename | "$sql_connect
+		fi
 	else
-		run "pv ./$pathdiff/$filename | "$sql_connect
+		# Check if we have a gzipped dump and treat it differently.
+		if [[ $filename == *.gz ]]; then
+			run "zcat ./$pathdiff/$filename | "$sql_connect
+		else
+			run "cat ./$pathdiff/$filename | "$sql_connect
+		fi
 	fi
+
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then echo "mysql-import finished"; else echo "mysql-import failed"; fi
 }
@@ -573,27 +627,6 @@ init ()
 		echo "See $project_root_path/.docker/scripts/example.drude-init.sh for a starting point."
 		exit -1
 	fi
-}
-
-# Yes/no confirmation dialog with an optional message
-# @param $1 confirmation message
-_confirm ()
-{
-	while true; do
-		read -p "$1 Continue? [y/n]: " answer
-		case $answer in
-			[Yy]|[Yy][Ee][Ss] )
-				echo "Working..."
-				break
-				;;
-			[Nn]|[Nn][Oo] )
-				echo 'Ok, whatever.'
-				exit
-				;;
-			* )
-				echo 'Please answer yes or no.'
-		esac
-	done
 }
 
 # Reset containers (stop, remove, up)
