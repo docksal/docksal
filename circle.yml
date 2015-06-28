@@ -43,8 +43,8 @@ test:
     - cp -R tests/behat/junit $CIRCLE_TEST_REPORTS
 
 ## Customize deployment commands
-deployment:
-  release:
-    branch: master
-    commands:
-      - ./build.sh
+#deployment:
+#  release:
+#    branch: master
+#    commands:
+#      - ./build.sh
