@@ -380,6 +380,9 @@ update ()
 	# run boot2docker update only on Mac and Win
 	if ! is_linux ; then
 		echo -e "${green}Installing boot2docker update...${NC}"
+		# Make sure ~/.drude folder exists
+		mkdir -p $HOME/.drude
+		
 		# get current version
 		local boot2docker_ver_path=$HOME/.drude/b2d_version
 		local boot2docker_ver=$(cat $boot2docker_ver_path 2>/dev/null)
@@ -422,8 +425,12 @@ update ()
 
 			echo "Creating backups..."
 			local timestamp=$(date +%s)
-			cp -v Vagrantfile $HOME/.drude/Vagrantfile.$timestamp
+			cp -v Vagrantfile $HOME/.drude/Vagrantfile.$timestamp && \
 			cp -v vagrant.yml $HOME/.drude/vagrant.yml.$timestamp
+			if [ ! $? -eq 0 ]; then
+				echo -e "${red}Unable to perform configuration backups. Aborting... ${NC}"
+				exit 1
+			fi
 
 			if [ $destroy_box -eq 1 ]; then
 				echo -e "${yellow}Destroying vagrant box...$NC"
