@@ -105,6 +105,6 @@ if [ ! $? -eq 0 ]; then
 	echo -e "${red}Could not get latest docker-compose.yml version.${NC}"
 	exit 1
 else
-	echo $docker_compose | tee "docker-compose.yml" >/dev/null
+	echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
 	echo -e "${green}docker-compose.yml updated to the latest version.${NC}"
 fi

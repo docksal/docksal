@@ -42,7 +42,7 @@ if [ ! $? -eq 0 ]; then
 	echo -e "${red}Could not get latest dsh version.${NC}"
 	exit 1
 else
-	echo $dsh_script | $SUDO tee "$BIN/dsh" >/dev/null
+	echo "$dsh_script" | $SUDO tee "$BIN/dsh" >/dev/null
 	$SUDO chmod +x "$BIN/dsh"
 	echo -e "${green}dsh wrapper was installed as${NC}${yellow} $BIN/dsh${NC}"
 fi
