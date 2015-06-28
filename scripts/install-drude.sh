@@ -46,17 +46,17 @@ _confirm ()
 }
 
 # Install/update dsh tool wrapper
-dsh_install_script=$(curl -fsS "$DRUDE_REPO_RAW/install-dsh.sh")
-if [ $? -eq 0 ]; then
-	# calling bash interactively
-	bash <(echo "$dsh_install_script")
-	if [ ! $? -eq 0 ]; then
-		_confirm "Do you want to continue with drude update regardless?"
-	fi
-else
-	echo -e "${red}Could not get install-dsh script.${NC}"
-	_confirm "Do you want to continue with drude update regardless?"
-fi
+# dsh_install_script=$(curl -fsS "$DRUDE_REPO_RAW/install-dsh.sh")
+# if [ $? -eq 0 ]; then
+# 	# calling bash interactively
+# 	bash <(echo "$dsh_install_script")
+# 	if [ ! $? -eq 0 ]; then
+# 		_confirm "Do you want to continue with drude update regardless?"
+# 	fi
+# else
+# 	echo -e "${red}Could not get install-dsh script.${NC}"
+# 	_confirm "Do you want to continue with drude update regardless?"
+# fi
 
 echo -e "${green}Installing Drude update...${NC}"
 # Check that git binary is available
