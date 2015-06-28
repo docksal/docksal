@@ -86,15 +86,15 @@ if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
 	_confirm "Proceeding will overwrite your changes. Continue?"
 fi
 
-# Checking out the most recent Drude build
-git remote add drude $DRUDE_REPO
-git remote update drude 1>/dev/null
-git checkout --theirs drude/build .
-git remote rm drude
+# # Checking out the most recent Drude build
+# git remote add drude $DRUDE_REPO
+# git remote update drude 1>/dev/null
+# git checkout --theirs drude/build .
+# git remote rm drude
 
-if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
-	echo -e "${green}Installed/updated Drude to version $(cat .docker/VERSION)${NC}"
-	echo -e "${yellow}Please review the changes and commit them into your repo!${NC}"
-else
-	echo -e "${yellow}You already have the most recent build of Drude${NC}"
-fi
+# if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
+# 	echo -e "${green}Installed/updated Drude to version $(cat .docker/VERSION)${NC}"
+# 	echo -e "${yellow}Please review the changes and commit them into your repo!${NC}"
+# else
+# 	echo -e "${yellow}You already have the most recent build of Drude${NC}"
+# fi
