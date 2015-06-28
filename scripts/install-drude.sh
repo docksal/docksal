@@ -98,3 +98,13 @@ fi
 # else
 # 	echo -e "${yellow}You already have the most recent build of Drude${NC}"
 # fi
+
+# Downloading the most recent version of Drude
+docker_compose=$(curl -fsS "$DRUDE_REPO_RAW/docker-compose.yml")
+if [ ! $? -eq 0 ]; then
+	echo -e "${red}Could not get latest docker-compose.yml version.${NC}"
+	exit 1
+else
+	echo $docker_compose | tee "docker-compose.yml" >/dev/null
+	echo -e "${green}docker-compose.yml updated to the latest version.${NC}"
+fi
