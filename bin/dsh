@@ -457,7 +457,7 @@ update ()
 	# Update drude
 	cd $cwd # we need to bo back if we were installing boot2docker
 	echo -n "Downloading drude install script..."
-	local drude_install_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/install-drude.sh)
+	local drude_install_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/scripts/install-drude.sh)
 	if [ ! $? -eq 0 ]; then
 		echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
 		return 1
