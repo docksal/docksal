@@ -384,12 +384,12 @@ update ()
 		mkdir -p $HOME/.drude
 		
 		# get current version
-		local boot2docker_ver_path=$HOME/.drude/b2d_version
-		local boot2docker_ver=$(cat $boot2docker_ver_path 2>/dev/null)
-		if [ "$boot2docker_ver" = "" ]; then boot2docker_ver="undetected version"; fi
+		local b2d_version_path=$HOME/.drude/b2d_version
+		local b2d_version=$(cat $b2d_version_path 2>/dev/null)
+		if [ "$b2d_version" = "" ]; then b2d_version="undetected version"; fi
 
 		# get new version
-		local boot2docker_new_ver=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/VERSION)
+		local b2d_new_version=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/VERSION)
 		if [ ! $? -eq 0 ]; then
 			echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
 			return 1
@@ -397,12 +397,13 @@ update ()
 
 		# update boot2docker
 
+		local forced_update='';
 		local destroy_box=1;
-		if [ "$1" == "-f" ] || [ "$2" == "-f" ]; then boot2docker_new_ver="${boot2docker_new_ver} (forced update)"; fi
+		if [ "$1" == "-f" ] || [ "$2" == "-f" ]; then forced_update="(forced update)"; fi
 		if [ "$1" == "-n" ] || [ "$2" == "-n" ]; then destroy_box=0; fi
 
-		if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ]; then
-			echo -e "boot2docker update available: ${green}$boot2docker_new_ver${NC} (you have $boot2docker_ver)."
+		if [ ! "$b2d_new_version" == "$b2d_version" ] || [ -n "$forced_update" ]; then
+			echo -e "boot2docker update available: ${green}$b2d_new_version $forced_update${NC} (you have $b2d_version)."
 			if [ $destroy_box -eq 1 ]; then
 				echo -e "${red}Update will destroy and re-create your Vagrant box${NC} (run with -n if you know re-creation can be skipped this time)"
 				_confirm "Please confirm."
@@ -416,7 +417,7 @@ update ()
 			echo "Vagrantfile is found in "$(pwd)
 
 			echo -n "Downloading boot2docker install script..."
-			local setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh)
+			local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh)
 			if [ ! $? -eq 0 ]; then
 				echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
 				exit
@@ -439,18 +440,18 @@ update ()
 
 			echo -e "${yellow}Running boot2docker install script...$NC"
 			# calling bash interactively
-			bash <(echo "$setup_script")
+			bash <(echo "$b2d_setup_script")
 
 			if [[ $? -ne 0 ]]; then
 				# don't continue in automatic mode if boot2docker update failed
 				return 1
 			else
 				# update recorded boot2docker version
-				echo $boot2docker_new_ver > $boot2docker_ver_path
-				echo -e "boot2docker ${green}$boot2docker_new_ver${NC} was installed"
+				echo $b2d_new_version > $b2d_version_path
+				echo -e "boot2docker ${green}$b2d_new_version${NC} was installed"
 			fi
 		else
-			echo "boot2docker $boot2docker_ver you have is the latest version (-f to force update)"
+			echo "boot2docker $b2d_version you have is the latest version (-f to force update)"
 		fi
 	fi
 
@@ -466,7 +467,7 @@ update ()
 		# calling bash interactively
 		bash <(echo "$drude_install_script")
 		if [ $? -eq 0 ]; then # start conatiners only if drude was updated fine
-			if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
+			if [ ! "$b2d_new_version" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
 				# if vagrant box was updated containers will be downloaded again
 				_confirm "Starting Vagrant box. Downloading and starting containers."
 			else
