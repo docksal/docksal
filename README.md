@@ -106,11 +106,11 @@ Below you will find instructions on configuring you Drupal project to work with 
 Some settings are required, others are optional or enahncements. Please review carefully.
 
 **Required**
-- [DB connection settings](.docker/docs/drupal-settings.md#db)
-- [File permissions fix](.docker/docs/drupal-settings.md#file-permissions)
+- [DB connection settings](docs/drupal-settings.md#db)
+- [File permissions fix](docs/drupal-settings.md#file-permissions)
 
 **Optional**
-- [Memcache settings](.docker/docs/drupal-settings.md#memcache)
+- [Memcache settings](docs/drupal-settings.md#memcache)
 
 <a name="dsh"></a>
 ## Drude Shell (dsh)
@@ -149,11 +149,11 @@ Tools available inside the **cli** container:
 <a name="instructions"></a>
 ## Instructions and tutorials
 
-- [Running multiple projects](.docker/docs/multiple-projects.md)
-- [Overriding default PHP/MySQL/etc. settings](.docker/docs/settings.md)
-- [Public access](.docker/docs/public-access.md)
-- [DB sandbox mode](.docker/docs/db-sandbox.md)
-- [Using Behat](.docker/docs/behat.md)
+- [Running multiple projects](docs/multiple-projects.md)
+- [Overriding default PHP/MySQL/etc. settings](docs/settings.md)
+- [Public access](docs/public-access.md)
+- [DB sandbox mode](docs/db-sandbox.md)
+- [Using Behat](docs/behat.md)
 
 ## License
 
