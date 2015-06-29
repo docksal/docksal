@@ -50,6 +50,12 @@ fi
 
 #-------------------------- Helper functions --------------------------------
 
+# Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
+is_tty ()
+{
+	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
+}
+
 # Search for file in current dir and all parent dirs
 # @param $1 filename
 upfind ()
@@ -259,6 +265,28 @@ is_yml_absent ()
 	return 1
 }
 
+# Yes/no confirmation dialog with an optional message
+# @param $1 confirmation message
+_confirm ()
+{
+	# Skip checks if not a tty
+	if ! is_tty ; then return 0; fi
+	
+	while true; do
+		read -p "$1 [y/n]: " answer
+		case $answer in
+			[Yy]|[Yy][Ee][Ss] )
+				break
+				;;
+			[Nn]|[Nn][Oo] )
+				exit 1
+				;;
+			* )
+				echo 'Please answer yes or no.'
+		esac
+	done
+}
+
 #------------------------------- Commands -----------------------------------
 # bring box up
 up ()
@@ -333,27 +361,35 @@ status ()
 
 update ()
 {
+	if ! is_tty ; then
+		echo "'update' is not allowed in a non-interactive environment."
+		return 1
+	fi
+
 	if is_boot2docker ; then
 		echo -e "${red}dsh: You are running inside boot2docker$NC"
-		return 1;
+		return 1
 	fi
 
 	if is_windows; then
 		echo -e "${red}dsh: Update is not automated on Windows yet$NC"
-		return 1;
+		return 1
 	fi
 
 	local cwd=$(pwd)
 	# run boot2docker update only on Mac and Win
 	if ! is_linux ; then
 		echo -e "${green}Installing boot2docker update...${NC}"
+		# Make sure ~/.drude folder exists
+		mkdir -p $HOME/.drude
+		
 		# get current version
-		local boot2docker_ver_path=$HOME/.drude/b2d_version
-		local boot2docker_ver=$(cat $boot2docker_ver_path 2>/dev/null)
-		if [ "$boot2docker_ver" = "" ]; then boot2docker_ver="undetected version"; fi
+		local b2d_version_path=$HOME/.drude/b2d_version
+		local b2d_version=$(cat $b2d_version_path 2>/dev/null)
+		if [ "$b2d_version" = "" ]; then b2d_version="undetected version"; fi
 
 		# get new version
-		local boot2docker_new_ver=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/VERSION)
+		local b2d_new_version=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/VERSION)
 		if [ ! $? -eq 0 ]; then
 			echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
 			return 1
@@ -361,12 +397,13 @@ update ()
 
 		# update boot2docker
 
+		local forced_update='';
 		local destroy_box=1;
-		if [ "$1" == "-f" ] || [ "$2" == "-f" ]; then boot2docker_new_ver="${boot2docker_new_ver} (forced update)"; fi
+		if [ "$1" == "-f" ] || [ "$2" == "-f" ]; then forced_update="(forced update)"; fi
 		if [ "$1" == "-n" ] || [ "$2" == "-n" ]; then destroy_box=0; fi
 
-		if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ]; then
-			echo -e "boot2docker update available: ${green}$boot2docker_new_ver${NC} (you have $boot2docker_ver)."
+		if [ ! "$b2d_new_version" == "$b2d_version" ] || [ -n "$forced_update" ]; then
+			echo -e "boot2docker update available: ${green}$b2d_new_version $forced_update${NC} (you have $b2d_version)."
 			if [ $destroy_box -eq 1 ]; then
 				echo -e "${red}Update will destroy and re-create your Vagrant box${NC} (run with -n if you know re-creation can be skipped this time)"
 				_confirm "Please confirm."
@@ -380,7 +417,7 @@ update ()
 			echo "Vagrantfile is found in "$(pwd)
 
 			echo -n "Downloading boot2docker install script..."
-			local setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh)
+			local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh)
 			if [ ! $? -eq 0 ]; then
 				echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
 				exit
@@ -389,8 +426,12 @@ update ()
 
 			echo "Creating backups..."
 			local timestamp=$(date +%s)
-			cp -v Vagrantfile $HOME/.drude/Vagrantfile.$timestamp
+			cp -v Vagrantfile $HOME/.drude/Vagrantfile.$timestamp && \
 			cp -v vagrant.yml $HOME/.drude/vagrant.yml.$timestamp
+			if [ ! $? -eq 0 ]; then
+				echo -e "${red}Unable to perform configuration backups. Aborting... ${NC}"
+				exit 1
+			fi
 
 			if [ $destroy_box -eq 1 ]; then
 				echo -e "${yellow}Destroying vagrant box...$NC"
@@ -399,25 +440,25 @@ update ()
 
 			echo -e "${yellow}Running boot2docker install script...$NC"
 			# calling bash interactively
-			bash <(echo "$setup_script")
+			bash <(echo "$b2d_setup_script")
 
 			if [[ $? -ne 0 ]]; then
 				# don't continue in automatic mode if boot2docker update failed
 				return 1
 			else
 				# update recorded boot2docker version
-				echo $boot2docker_new_ver > $boot2docker_ver_path
-				echo -e "boot2docker ${green}$boot2docker_new_ver${NC} was installed"
+				echo $b2d_new_version > $b2d_version_path
+				echo -e "boot2docker ${green}$b2d_new_version${NC} was installed"
 			fi
 		else
-			echo "boot2docker $boot2docker_ver you have is the latest version (-f to force update)"
+			echo "boot2docker $b2d_version you have is the latest version (-f to force update)"
 		fi
 	fi
 
 	# Update drude
 	cd $cwd # we need to bo back if we were installing boot2docker
 	echo -n "Downloading drude install script..."
-	local drude_install_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/install-drude.sh)
+	local drude_install_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/scripts/install-drude.sh)
 	if [ ! $? -eq 0 ]; then
 		echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
 		return 1
@@ -426,7 +467,7 @@ update ()
 		# calling bash interactively
 		bash <(echo "$drude_install_script")
 		if [ $? -eq 0 ]; then # start conatiners only if drude was updated fine
-			if [ ! "$boot2docker_new_ver" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
+			if [ ! "$b2d_new_version" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
 				# if vagrant box was updated containers will be downloaded again
 				_confirm "Starting Vagrant box. Downloading and starting containers."
 			else
@@ -440,6 +481,11 @@ update ()
 # start interactive bash in container
 _bash ()
 {
+	if ! is_tty ; then
+		echo "Interactive bash console in a non-interactive enveronment!? Nope, won't happen."
+		return 1
+	fi
+
 	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	if is_docker && is_docker_compose ; then
@@ -462,7 +508,8 @@ run ()
 	if is_docker && is_docker_compose ; then
 		cd `yml_get_path`
 		clean_string $(docker-compose ps -q cli) container_id
-		if [[ "$(/usr/bin/tty || true)" != "not a tty" ]]; then
+
+		if is_tty ; then
 			docker exec -it $container_id bash -ic "$*"
 		else
 			docker exec $container_id bash -c "$*"
@@ -530,13 +577,24 @@ mysql_import ()
 	get_mysql_connect sql_connect
 	echo "Importing $filename into database 'drupal'..."
 
-	# Check if we have a gzipped dump and treat it differently.
-	if [[ $filename == *.gz ]]; then
-		file_size=$(gzip -l $1 | sed -n 2p | awk '{print $2}')
-		run "zcat ./$pathdiff/$filename | pv --size $file_size | "$sql_connect
+	# Use pv for interactive shells only.
+	if is_tty ; then
+		# Check if we have a gzipped dump and treat it differently.
+		if [[ $filename == *.gz ]]; then
+			file_size=$(gzip -l $1 | sed -n 2p | awk '{print $2}')
+			run "zcat ./$pathdiff/$filename | pv --size $file_size | "$sql_connect
+		else
+			run "pv ./$pathdiff/$filename | "$sql_connect
+		fi
 	else
-		run "pv ./$pathdiff/$filename | "$sql_connect
+		# Check if we have a gzipped dump and treat it differently.
+		if [[ $filename == *.gz ]]; then
+			run "zcat ./$pathdiff/$filename | "$sql_connect
+		else
+			run "cat ./$pathdiff/$filename | "$sql_connect
+		fi
 	fi
+
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then echo "mysql-import finished"; else echo "mysql-import failed"; fi
 }
@@ -589,27 +647,6 @@ init ()
 		echo "See $project_root_path/.docker/scripts/example.drude-init.sh for a starting point."
 		exit -1
 	fi
-}
-
-# Yes/no confirmation dialog with an optional message
-# @param $1 confirmation message
-_confirm ()
-{
-	while true; do
-		read -p "$1 Continue? [y/n]: " answer
-		case $answer in
-			[Yy]|[Yy][Ee][Ss] )
-				echo "Working..."
-				break
-				;;
-			[Nn]|[Nn][Oo] )
-				echo 'Ok, whatever.'
-				exit
-				;;
-			* )
-				echo 'Please answer yes or no.'
-		esac
-	done
 }
 
 # Reset containers (stop, remove, up)

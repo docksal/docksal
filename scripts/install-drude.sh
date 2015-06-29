@@ -17,10 +17,19 @@ fi
 DRUDE_REPO="https://github.com/blinkreaction/drude.git"
 DRUDE_REPO_RAW="https://raw.githubusercontent.com/blinkreaction/drude/$BRANCH"
 
+# Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
+is_tty ()
+{
+	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
+}
+
 # Yes/no confirmation dialog with an optional message
 # @param $1 confirmation message
 _confirm ()
 {
+	# Skip checks if not a tty
+	if ! is_tty ; then return 0; fi
+	
 	while true; do
 		read -p "$1 [y/n]: " answer
 		case $answer in
@@ -37,17 +46,17 @@ _confirm ()
 }
 
 # Install/update dsh tool wrapper
-dsh_install_script=$(curl -fsS "$DRUDE_REPO_RAW/install-dsh.sh")
-if [ $? -eq 0 ]; then
-	# calling bash interactively
-	bash <(echo "$dsh_install_script")
-	if [ ! $? -eq 0 ]; then
-		_confirm "Do you want to continue with drude update regardless?"
-	fi
-else
-	echo -e "${red}Could not get install-dsh script.${NC}"
-	_confirm "Do you want to continue with drude update regardless?"
-fi
+# dsh_install_script=$(curl -fsS "$DRUDE_REPO_RAW/install-dsh.sh")
+# if [ $? -eq 0 ]; then
+# 	# calling bash interactively
+# 	bash <(echo "$dsh_install_script")
+# 	if [ ! $? -eq 0 ]; then
+# 		_confirm "Do you want to continue with drude update regardless?"
+# 	fi
+# else
+# 	echo -e "${red}Could not get install-dsh script.${NC}"
+# 	_confirm "Do you want to continue with drude update regardless?"
+# fi
 
 echo -e "${green}Installing Drude update...${NC}"
 # Check that git binary is available
@@ -77,15 +86,25 @@ if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
 	_confirm "Proceeding will overwrite your changes. Continue?"
 fi
 
-# Checking out the most recent Drude build
-git remote add drude $DRUDE_REPO
-git remote update drude 1>/dev/null
-git checkout --theirs drude/build .
-git remote rm drude
+# # Checking out the most recent Drude build
+# git remote add drude $DRUDE_REPO
+# git remote update drude 1>/dev/null
+# git checkout --theirs drude/build .
+# git remote rm drude
 
-if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
-	echo -e "${green}Installed/updated Drude to version $(cat .docker/VERSION)${NC}"
-	echo -e "${yellow}Please review the changes and commit them into your repo!${NC}"
+# if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
+# 	echo -e "${green}Installed/updated Drude to version $(cat .docker/VERSION)${NC}"
+# 	echo -e "${yellow}Please review the changes and commit them into your repo!${NC}"
+# else
+# 	echo -e "${yellow}You already have the most recent build of Drude${NC}"
+# fi
+
+# Downloading the most recent version of Drude
+docker_compose=$(curl -fsS "$DRUDE_REPO_RAW/docker-compose.yml")
+if [ ! $? -eq 0 ]; then
+	echo -e "${red}Could not get latest docker-compose.yml version.${NC}"
+	exit 1
 else
-	echo -e "${yellow}You already have the most recent build of Drude${NC}"
+	echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
+	echo -e "${green}docker-compose.yml updated to the latest version.${NC}"
 fi

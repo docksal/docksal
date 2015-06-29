@@ -17,7 +17,7 @@ fi
 DRUDE_REPO="https://github.com/blinkreaction/drude.git"
 DRUDE_REPO_RAW="https://raw.githubusercontent.com/blinkreaction/drude/$BRANCH"
 
-echo -e "${green}Installing/updating dsh tool wrapper. Admin access required${NC}"
+echo -e "${green}Installing/updating dsh (Drude Shell). Admin access required${NC}"
 # Determine if we have sudo
 SUDO='sudo'
 if [[ -z $(which $SUDO) ]]; then SUDO=''; fi
@@ -36,13 +36,13 @@ $SUDO touch "$BIN/dsh" 2> /dev/null || {
 	exit 1;
 }
 
-# Install/update dsh tool wrapper
-dsh_wrapper=$(curl -fsS "$DRUDE_REPO_RAW/scripts/dsh-wrapper.sh")
+# Install/update dsh
+dsh_script=$(curl -fsS "$DRUDE_REPO_RAW/bin/dsh")
 if [ ! $? -eq 0 ]; then
-	echo -e "${red}Could not get latest dsh wrapper version.${NC}"
+	echo -e "${red}Could not get latest dsh version.${NC}"
 	exit 1
 else
-	echo $dsh_wrapper | $SUDO tee "$BIN/dsh" >/dev/null
+	echo "$dsh_script" | $SUDO tee "$BIN/dsh" >/dev/null
 	$SUDO chmod +x "$BIN/dsh"
 	echo -e "${green}dsh wrapper was installed as${NC}${yellow} $BIN/dsh${NC}"
 fi

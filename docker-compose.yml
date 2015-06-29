@@ -4,10 +4,10 @@
 # Web node
 web:
   hostname: web
-  image: blinkreaction/drupal-apache-php:2.2-5.5
+  image: blinkreaction/drupal-apache-php:2.2-5.6
   ports:
-    - "80:80"
-    - "443:443"
+    - "80"
+    - "443"
     # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
     #- 192.168.10.10:80:80 
     #- 192.168.10.10:443:443 
@@ -15,18 +15,20 @@ web:
     # PHP configuration overrides
     - "./.docker/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
     # Project root folder mapping
-    - &project_root ".:/var/www"
+    - ".:/var/www"
   links:
     - db
     # Uncomment this and the memcached service definition below to start using memcached.
     #- memcached
+  environment:
+    - VIRTUAL_HOST=hello-world.drude
 
 # DB node
 db:
   hostname: db
   image: mysql:5.5
   ports:
-    - "3306:3306"
+    - "3306"
     # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
     #- 192.168.10.10:3306:3306
   # DB configuration
@@ -45,14 +47,12 @@ cli:
   hostname: cli
   image: blinkreaction/drupal-cli
   volumes:
-    # PHP configuration overrides
-    - "./.docker/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
-    # Project root folder mapping
-    - *project_root
     # Host SSH keys mappings.
     # We try to map both options. The startup.sh script in cli container will decide which one to use.
     - /.ssh:/.ssh-b2d  # boot2docker-vagrant
     - ~/.ssh:/.ssh   # Linux
+  volumes_from:
+    - web
   links:
     - db
     - web
@@ -74,7 +74,7 @@ cli:
 #   hostname: share
 #   image: fnichol/ngrok
 #   ports:
-#     - "4040:4040"
+#     - "4040"
 #     # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
 #     #- 192.168.10.10:4040:4040
 #   links:
@@ -88,4 +88,4 @@ cli:
 #   links:
 #     - web
 #   ports:
-#     - "4444:4444"
+#     - "4444"
