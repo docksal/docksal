@@ -15,7 +15,7 @@ web:
     # PHP configuration overrides
     - "./.docker/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
     # Project root folder mapping
-    - &project_root ".:/var/www"
+    - ".:/var/www"
   links:
     - db
     # Uncomment this and the memcached service definition below to start using memcached.
@@ -45,14 +45,12 @@ cli:
   hostname: cli
   image: blinkreaction/drupal-cli
   volumes:
-    # PHP configuration overrides
-    - "./.docker/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
-    # Project root folder mapping
-    - *project_root
     # Host SSH keys mappings.
     # We try to map both options. The startup.sh script in cli container will decide which one to use.
     - /.ssh:/.ssh-b2d  # boot2docker-vagrant
     - ~/.ssh:/.ssh   # Linux
+  volumes_from:
+    - web
   links:
     - db
     - web
