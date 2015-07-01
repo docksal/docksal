@@ -2,7 +2,8 @@ FROM alpine:3.2
 
 RUN apk add --update ca-certificates nginx supervisor && rm -rf /var/cache/apk/*
 
-RUN mkdir -p /var/log/supervisor
+RUN mkdir -p /var/log/supervisor && \
+	chown -R nginx /var/lib/nginx
 
 ENV DOCKER_GEN_VERSION 0.3.9
 
