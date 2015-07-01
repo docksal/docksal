@@ -24,7 +24,7 @@ web:
 # DB node
 db:
   hostname: db
-  image: mysql:5.5
+  image: blinkreaction/drupal-mysql:5.5
   ports:
     - "3306"
     # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
@@ -37,7 +37,7 @@ db:
     - MYSQL_DATABASE=drupal
   volumes:
      # MySQL configuration overrides
-     - "./.docker/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
+     - "./.drude/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
 
 # CLI node
 # Used for all console commands and tools.
