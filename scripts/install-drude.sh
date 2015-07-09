@@ -100,7 +100,7 @@ fi
 # fi
 
 # Downloading the most recent version of Drude
-docker_compose=$(curl -fsS "$DRUDE_REPO_RAW/docker-compose.yml")
+docker_compose=$(curl -kfsS "$DRUDE_REPO_RAW/docker-compose.yml")
 if [ ! $? -eq 0 ]; then
 	echo -e "${red}Could not get latest docker-compose.yml version.${NC}"
 	exit 1
