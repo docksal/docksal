@@ -640,16 +640,15 @@ behat ()
 }
 
 # Set up the project locally
-# Calls .docker/scripts/drude-init.sh script, so it must exist.
+# Calls .drude/scripts/drude-init.sh script, so it must exist.
 init ()
 {
 	local project_root_path=$(get_project_root_path)
-	local init_script="$project_root_path/.docker/scripts/drude-init.sh"
+	local init_script="$project_root_path/.drude/scripts/drude-init.sh"
 	if [[ -f $init_script ]]; then
 	  exec $init_script
 	else
 		echo "Project init script is missing: $init_script"
-		echo "See $project_root_path/.docker/scripts/example.drude-init.sh for a starting point."
 		exit -1
 	fi
 }
