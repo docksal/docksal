@@ -37,7 +37,7 @@ $SUDO touch "$BIN/dsh" 2> /dev/null || {
 }
 
 # Install/update dsh
-dsh_script=$(curl -fsS "$DRUDE_REPO_RAW/bin/dsh")
+dsh_script=$(curl -kfsS "$DRUDE_REPO_RAW/bin/dsh")
 if [ ! $? -eq 0 ]; then
 	echo -e "${red}Could not get latest dsh version.${NC}"
 	exit 1
