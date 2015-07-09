@@ -48,6 +48,23 @@ if [ ! $BOX_BRANCH == 'master' ] || [ ! $DRUDE_BRANCH == 'master' ]; then
 	echo -e "${red}[dsh] testing mode: boot2docker - ${BOX_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
 fi
 
+#---------------- Docker Compose Global Settings ----------------------
+DC_FILE=''
+DC_PROJECT=''
+if [ ! $DRUDE_DC_FILE == "" ]; then
+	DC_FILE="-f $DRUDE_DC_FILE"
+fi
+if [ ! $DRUDE_DC_PROJECT == "" ]; then
+	DC_PROJECT="-p $DRUDE_DC_PROJECT"
+fi
+
+# Pass global project and file settings to docker-compose.
+# Use this function for every docker-compose invocation.
+docker_compose ()
+{
+	docker-compose $DC_FILE $DC_PROJECT $*
+}
+
 #-------------------------- Helper functions --------------------------------
 
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
@@ -298,12 +315,12 @@ up ()
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo -e "${green}Starting containers...$NC"
 			cd `yml_get_path`
-			docker-compose up -d
+			docker_compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo -e "${green}Starting containers...$NC"
 		cd `yml_get_path`
-		docker-compose up -d
+		docker_compose up -d
 	fi
 }
 
@@ -316,7 +333,7 @@ down ()
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo -e "${yellow}Stopping containers...$NC"
 		cd `yml_get_path`
-		docker-compose stop
+		docker_compose stop
 	fi
 }
 
@@ -330,12 +347,12 @@ restart ()
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo -e "${green}Starting containers...$NC"
 			cd `yml_get_path`
-			docker-compose up -d
+			docker_compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo -e "${green}Restarting containers...$NC"
 		cd `yml_get_path`
-		docker-compose up -d
+		docker_compose up -d
 	fi
 }
 
@@ -349,7 +366,7 @@ status ()
 	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	# check docker compose output to not be $compose_error
-	res=$(docker-compose ps 2>&1)
+	res=$(docker_compose ps 2>&1)
 	if [ "$res" == "$compose_error" ]; then
 		echo -e "${yellow}Drude is not running. Use 'dsh up' to start it$NC"
 		return 1
@@ -496,7 +513,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		clean_string $(docker-compose ps -q $container_name) container_id
+		clean_string $(docker_compose ps -q $container_name) container_id
 		docker exec -it $container_id bash -i
 	fi
 }
@@ -507,7 +524,7 @@ run ()
 {
 	if is_docker && is_docker_compose ; then
 		cd `yml_get_path`
-		clean_string $(docker-compose ps -q cli) container_id
+		clean_string $(docker_compose ps -q cli) container_id
 
 		if is_tty ; then
 			docker exec -it $container_id bash -ic "$*"
@@ -651,12 +668,12 @@ reset ()
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo "Resetting containers..."
 			cd `yml_get_path`
-			docker-compose kill && docker-compose rm -v -f && docker-compose up -d
+			docker_compose kill && docker_compose rm -v -f && docker_compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo "Resetting containers..."
 		cd `yml_get_path`
-		docker-compose kill && docker-compose rm -v -f && docker-compose up -d
+		docker_compose kill && docker_compose rm -v -f && docker_compose up -d
 	fi
 }
 
