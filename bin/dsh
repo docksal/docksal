@@ -773,6 +773,9 @@ case $1 in
 	status)
 		status
 		;;
+	install)
+		install
+		;;
 	update)
 		shift
 		update $*
