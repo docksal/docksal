@@ -25,6 +25,8 @@ help ()
 	echo "	cc			Clear Drupal caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo
 	echo "	behat			Run Behat tests"
+	echo
+	echo "	install			Install boot2docker and drude"
 	echo "	update			Update boot2docker and drude"
 	echo
 }
