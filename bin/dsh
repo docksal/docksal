@@ -378,7 +378,8 @@ status ()
 	fi
 }
 
-install_prerequisites() {
+install_prerequisites() 
+{
 	echo -e "${green}Installing prerequisites...${NC}"
 	if is_windows ; then
 		echo -e "${red}dsh: Install is not automated on Windows yet. PLease install prerequisites manually$NC"
@@ -396,7 +397,8 @@ install_prerequisites() {
 	fi
 }
 
-install_boot2docker() {
+install_boot2docker() 
+{
 	echo -n "Downloading boot2docker install script..."
 	local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh)
 	if [ ! $? -eq 0 ]; then
@@ -409,28 +411,29 @@ install_boot2docker() {
 	bash <(echo "$b2d_setup_script")
 }
 
-install_drude() {
-	echo -n "Downloading drude install script..."
-	local drude_install_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/scripts/install-drude.sh)
+install_drude() 
+{
+	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
 	if [ ! $? -eq 0 ]; then
-		echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
+		echo -e "${red}Could not get latest docker-compose.yml version.${NC}"
 		return 1
 	else
-		echo "done"
-		# calling bash interactively
-		bash <(echo "$drude_install_script")
+		echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
+		echo -e "${green}docker-compose.yml updated to the latest version.${NC}"
+		return 0
 	fi
+
 }
 
 install ()
 {
 	local cwd=$(pwd)
 	cd ..
-	_confirm "Will install Vagrantfile to $(pwd)."
+	_confirm "Will install Vagrantfile to $(pwd)"
 	install_prerequisites
 	install_boot2docker
 	cd $cwd
-	_confirm "Will install docker-compose.yml to $(pwd)."
+	_confirm "Will install docker-compose.yml to $(pwd)"
 	install_drude
 }
 
@@ -532,24 +535,17 @@ update ()
 
 	# Update drude
 	cd $cwd # we need to bo back if we were installing boot2docker
-	echo -n "Downloading drude install script..."
-	local drude_install_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/scripts/install-drude.sh)
-	if [ ! $? -eq 0 ]; then
+	if install_drude ; then
+		if [ ! "$b2d_new_version" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
+			# if vagrant box was updated containers will be downloaded again
+			_confirm "Starting Vagrant box. Downloading and starting containers."
+		else
+			_confirm "Starting containers. If there's an update to container images it will be downloaded."
+		fi
+		up
+	else
 		echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
 		return 1
-	else
-		echo "done"
-		# calling bash interactively
-		bash <(echo "$drude_install_script")
-		if [ $? -eq 0 ]; then # start conatiners only if drude was updated fine
-			if [ ! "$b2d_new_version" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
-				# if vagrant box was updated containers will be downloaded again
-				_confirm "Starting Vagrant box. Downloading and starting containers."
-			else
-				_confirm "Starting containers. If there's an update to container images it will be downloaded."
-			fi
-			up
-		fi
 	fi
 }
 
