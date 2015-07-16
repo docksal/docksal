@@ -25,24 +25,24 @@ is_tty ()
 
 # Yes/no confirmation dialog with an optional message
 # @param $1 confirmation message
-_confirm ()
-{
-	# Skip checks if not a tty
-	if ! is_tty ; then return 0; fi
+# _confirm ()
+# {
+# 	# Skip checks if not a tty
+# 	if ! is_tty ; then return 0; fi
 	
-	while true; do
-		read -p "$1 [y/n]: " answer
-		case $answer in
-			[Yy]|[Yy][Ee][Ss] )
-				break
-				;;
-			[Nn]|[Nn][Oo] )
-				exit 1
-				;;
-			* )
-				echo 'Please answer yes or no.'
-		esac
-	done
+# 	while true; do
+# 		read -p "$1 [y/n]: " answer
+# 		case $answer in
+# 			[Yy]|[Yy][Ee][Ss] )
+# 				break
+# 				;;
+# 			[Nn]|[Nn][Oo] )
+# 				exit 1
+# 				;;
+# 			* )
+# 				echo 'Please answer yes or no.'
+# 		esac
+# 	done
 }
 
 # Install/update dsh tool wrapper
@@ -71,20 +71,20 @@ type git > /dev/null 2>&1 || { echo -e >&2 "${red}No git? Srsly? \n${yellow}Plea
 # 	git init -q && git add -A && git commit -q -m 'Initial commit'
 # fi
 
-# Make sure we are in the root of a git repository
-if [[ $(git rev-parse --git-dir) != '.git' ]]; then
-	GIT_ROOT=$(git rev-parse --show-toplevel)
-	echo "Switching to git repo root: $GIT_ROOT"
-	cd $GIT_ROOT
-fi
+# # Make sure we are in the root of a git repository
+# if [[ $(git rev-parse --git-dir) != '.git' ]]; then
+# 	GIT_ROOT=$(git rev-parse --show-toplevel)
+# 	echo "Switching to git repo root: $GIT_ROOT"
+# 	cd $GIT_ROOT
+# fi
 
-# Check if the working tree and index are clean
-if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
-	echo -e "${yellow}You have uncommitted changes in following files:${NC}"
-	git status .docker docker-compose.yml -s
-	echo -e "${yellow}Before proceeding with the update it is recommended to commit any pending changes in files above.$NC"
-	_confirm "Proceeding will overwrite your changes. Continue?"
-fi
+# # Check if the working tree and index are clean
+# if [[ -n $(git status .docker docker-compose.yml -s) ]]; then
+# 	echo -e "${yellow}You have uncommitted changes in following files:${NC}"
+# 	git status .docker docker-compose.yml -s
+# 	echo -e "${yellow}Before proceeding with the update it is recommended to commit any pending changes in files above.$NC"
+# 	_confirm "Proceeding will overwrite your changes. Continue?"
+# fi
 
 # # Checking out the most recent Drude build
 # git remote add drude $DRUDE_REPO
