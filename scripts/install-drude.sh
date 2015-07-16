@@ -63,13 +63,13 @@ echo -e "${green}Installing Drude update...${NC}"
 type git > /dev/null 2>&1 || { echo -e >&2 "${red}No git? Srsly? \n${yellow}Please install git then come back. Aborting...${NC}"; exit 1; }
 
 # Check if current directory is a Git repository
-if [[ -z $(git rev-parse --git-dir 2>/dev/null) ]]; then
-	# If there is no git repo - initialize one and commit everything before we proceed
-	echo -e "${yellow}No git repository! We'll create one to proceed with the install.${NC}"
-	echo -e "${green}Going to initialize a git repo and commit everything.${NC}"
-	_confirm "Do you want to initialize new git repo in $(pwd)?"
-	git init -q && git add -A && git commit -q -m 'Initial commit'
-fi
+# if [[ -z $(git rev-parse --git-dir 2>/dev/null) ]]; then
+# 	# If there is no git repo - initialize one and commit everything before we proceed
+# 	echo -e "${yellow}No git repository! We'll create one to proceed with the install.${NC}"
+# 	echo -e "${green}Going to initialize a git repo and commit everything.${NC}"
+# 	_confirm "Do you want to initialize new git repo in $(pwd)?"
+# 	git init -q && git add -A && git commit -q -m 'Initial commit'
+# fi
 
 # Make sure we are in the root of a git repository
 if [[ $(git rev-parse --git-dir) != '.git' ]]; then
