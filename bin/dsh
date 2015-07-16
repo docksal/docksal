@@ -359,6 +359,62 @@ status ()
 	fi
 }
 
+install_prerequisites() {
+	echo -e "${green}Installing prerequisites...${NC}"
+	if is_windows ; then
+		echo -e "${red}dsh: Install is not automated on Windows yet. PLease install prerequisites manually$NC"
+		exit;
+	elif is_linux ; then
+		echo -e "${red}dsh: Install is not automated on Linux yet. PLease install prerequisites manually$NC"
+		exit;
+	else # mac
+		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/presetup-mac.sh)
+		if [ ! $? -eq 0 ]; then
+			echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
+			exit
+		fi
+		bash <(echo "$presetup_script")
+	fi
+}
+
+install_boot2docker() {
+	echo -n "Downloading boot2docker install script..."
+	local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh)
+	if [ ! $? -eq 0 ]; then
+		echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
+		exit
+	fi
+	echo "done"
+	echo -e "${yellow}Running boot2docker install script...$NC"
+	# calling bash interactively
+	bash <(echo "$b2d_setup_script")
+}
+
+install_drude() {
+	echo -n "Downloading drude install script..."
+	local drude_install_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/scripts/install-drude.sh)
+	if [ ! $? -eq 0 ]; then
+		echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
+		return 1
+	else
+		echo "done"
+		# calling bash interactively
+		bash <(echo "$drude_install_script")
+	fi
+}
+
+install ()
+{
+	local cwd=$(pwd)
+	cd ..
+	_confirm "Will install Vagrantfile to $(pwd)."
+	install_prerequisites
+	install_boot2docker
+	cd $cwd
+	_confirm "Will install docker-compose.yml to $(pwd)."
+	install_drude
+}
+
 update ()
 {
 	if ! is_tty ; then
