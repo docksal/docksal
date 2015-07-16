@@ -50,6 +50,23 @@ if [ ! $BOX_BRANCH == 'master' ] || [ ! $DRUDE_BRANCH == 'master' ]; then
 	echo -e "${red}[dsh] testing mode: boot2docker - ${BOX_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
 fi
 
+#---------------- Docker Compose Global Settings ----------------------
+DC_FILE=''
+DC_PROJECT=''
+if [ ! $DRUDE_DC_FILE == "" ]; then
+	DC_FILE="-f $DRUDE_DC_FILE"
+fi
+if [ ! $DRUDE_DC_PROJECT == "" ]; then
+	DC_PROJECT="-p $DRUDE_DC_PROJECT"
+fi
+
+# Pass global project and file settings to docker-compose.
+# Use this function for every docker-compose invocation.
+docker_compose ()
+{
+	docker-compose $DC_FILE $DC_PROJECT $*
+}
+
 #-------------------------- Helper functions --------------------------------
 
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
@@ -300,12 +317,12 @@ up ()
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo -e "${green}Starting containers...$NC"
 			cd `yml_get_path`
-			docker-compose up -d
+			docker_compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo -e "${green}Starting containers...$NC"
 		cd `yml_get_path`
-		docker-compose up -d
+		docker_compose up -d
 	fi
 }
 
@@ -318,7 +335,7 @@ down ()
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo -e "${yellow}Stopping containers...$NC"
 		cd `yml_get_path`
-		docker-compose stop
+		docker_compose stop
 	fi
 }
 
@@ -332,12 +349,12 @@ restart ()
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo -e "${green}Starting containers...$NC"
 			cd `yml_get_path`
-			docker-compose up -d
+			docker_compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo -e "${green}Restarting containers...$NC"
 		cd `yml_get_path`
-		docker-compose up -d
+		docker_compose up -d
 	fi
 }
 
@@ -351,7 +368,7 @@ status ()
 	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	# check docker compose output to not be $compose_error
-	res=$(docker-compose ps 2>&1)
+	res=$(docker_compose ps 2>&1)
 	if [ "$res" == "$compose_error" ]; then
 		echo -e "${yellow}Drude is not running. Use 'dsh up' to start it$NC"
 		return 1
@@ -447,7 +464,7 @@ update ()
 		if [ "$b2d_version" = "" ]; then b2d_version="undetected version"; fi
 
 		# get new version
-		local b2d_new_version=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/VERSION)
+		local b2d_new_version=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/VERSION)
 		if [ ! $? -eq 0 ]; then
 			echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
 			return 1
@@ -475,7 +492,7 @@ update ()
 			echo "Vagrantfile is found in "$(pwd)
 
 			echo -n "Downloading boot2docker install script..."
-			local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh)
+			local b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$BOX_BRANCH/setup.sh)
 			if [ ! $? -eq 0 ]; then
 				echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
 				exit
@@ -516,7 +533,7 @@ update ()
 	# Update drude
 	cd $cwd # we need to bo back if we were installing boot2docker
 	echo -n "Downloading drude install script..."
-	local drude_install_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/scripts/install-drude.sh)
+	local drude_install_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/scripts/install-drude.sh)
 	if [ ! $? -eq 0 ]; then
 		echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
 		return 1
@@ -554,7 +571,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		clean_string $(docker-compose ps -q $container_name) container_id
+		clean_string $(docker_compose ps -q $container_name) container_id
 		docker exec -it $container_id bash -i
 	fi
 }
@@ -565,7 +582,7 @@ run ()
 {
 	if is_docker && is_docker_compose ; then
 		cd `yml_get_path`
-		clean_string $(docker-compose ps -q cli) container_id
+		clean_string $(docker_compose ps -q cli) container_id
 
 		if is_tty ; then
 			docker exec -it $container_id bash -ic "$*"
@@ -693,16 +710,15 @@ behat ()
 }
 
 # Set up the project locally
-# Calls .docker/scripts/drude-init.sh script, so it must exist.
+# Calls .drude/scripts/drude-init.sh script, so it must exist.
 init ()
 {
 	local project_root_path=$(get_project_root_path)
-	local init_script="$project_root_path/.docker/scripts/drude-init.sh"
+	local init_script="$project_root_path/.drude/scripts/drude-init.sh"
 	if [[ -f $init_script ]]; then
 	  exec $init_script
 	else
 		echo "Project init script is missing: $init_script"
-		echo "See $project_root_path/.docker/scripts/example.drude-init.sh for a starting point."
 		exit -1
 	fi
 }
@@ -721,12 +737,12 @@ reset ()
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			echo "Resetting containers..."
 			cd `yml_get_path`
-			docker-compose kill && docker-compose rm -v -f && docker-compose up -d
+			docker_compose kill && docker_compose rm -v -f && docker_compose up -d
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
 		echo "Resetting containers..."
 		cd `yml_get_path`
-		docker-compose kill && docker-compose rm -v -f && docker-compose up -d
+		docker_compose kill && docker_compose rm -v -f && docker_compose up -d
 	fi
 }
 

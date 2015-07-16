@@ -4,19 +4,17 @@
 # Web node
 web:
   hostname: web
-  image: blinkreaction/drupal-apache-php:2.2-5.6
+  image: blinkreaction/drupal-apache:2.2
   ports:
     - "80"
     - "443"
     # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
     #- 192.168.10.10:80:80 
     #- 192.168.10.10:443:443 
-  volumes:
-    # PHP configuration overrides
-    - "./.docker/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
-    # Project root folder mapping
-    - ".:/var/www"
+  volumes_from:
+    - cli
   links:
+    - cli
     - db
     # Uncomment this and the memcached service definition below to start using memcached.
     #- memcached
@@ -26,7 +24,7 @@ web:
 # DB node
 db:
   hostname: db
-  image: mysql:5.5
+  image: blinkreaction/drupal-mysql:5.5
   ports:
     - "3306"
     # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
@@ -39,23 +37,25 @@ db:
     - MYSQL_DATABASE=drupal
   volumes:
      # MySQL configuration overrides
-     - "./.docker/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
+     - "./.drude/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
 
 # CLI node
 # Used for all console commands and tools.
 cli:
   hostname: cli
-  image: blinkreaction/drupal-cli
+  image: blinkreaction/drupal-cli:php-5.6
   volumes:
     # Host SSH keys mappings.
     # We try to map both options. The startup.sh script in cli container will decide which one to use.
     - /.ssh:/.ssh-b2d  # boot2docker-vagrant
     - ~/.ssh:/.ssh   # Linux
-  volumes_from:
-    - web
+    # PHP configuration overrides
+    - "./.drude/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
+    - "./.drude/etc/php5/php-cli.ini:/etc/php5/fpm/conf.d/z_php.ini"
+    # Project root folder mapping
+    - ".:/var/www"
   links:
     - db
-    - web
     # Uncomment this and the browser service definition below to start using selenium2.
     #- browser
 
