@@ -7,15 +7,15 @@ yellow='\033[1;33m'
 NC='\033[0m'
 
 # For testing
-BRANCH='master'
-if [ ! $DRUDE_TEST_ENVIRONMENT == "" ]; then
-	BRANCH=$DRUDE_TEST_ENVIRONMENT
-	echo -e "${red}[install-drude] testing mode: environment = \"${BRANCH}\"$NC"
+if [ ! $DRUDE_BRANCH == "" ]; then
+	echo -e "${red}[install-drude] testing mode: environment = \"${DRUDE_BRANCH}\"$NC"
+else
+	DRUDE_BRANCH='master'
 fi
 
 # Drude repo
 DRUDE_REPO="https://github.com/blinkreaction/drude.git"
-DRUDE_REPO_RAW="https://raw.githubusercontent.com/blinkreaction/drude/$BRANCH"
+DRUDE_REPO_RAW="https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH"
 
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
 is_tty ()
@@ -60,7 +60,7 @@ is_tty ()
 
 echo -e "${green}Installing Drude update...${NC}"
 # Check that git binary is available
-type git > /dev/null 2>&1 || { echo -e >&2 "${red}No git? Srsly? \n${yellow}Please install git then come back. Aborting...${NC}"; exit 1; }
+# type git > /dev/null 2>&1 || { echo -e >&2 "${red}No git? Srsly? \n${yellow}Please install git then come back. Aborting...${NC}"; exit 1; }
 
 # Check if current directory is a Git repository
 # if [[ -z $(git rev-parse --git-dir 2>/dev/null) ]]; then

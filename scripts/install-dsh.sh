@@ -7,15 +7,15 @@ yellow='\033[1;33m'
 NC='\033[0m'
 
 # For testing
-BRANCH='master'
-if [ ! $DRUDE_TEST_ENVIRONMENT == "" ]; then
-	BRANCH=$DRUDE_TEST_ENVIRONMENT
-	echo -e "${red}[install-dsh] testing mode: environment = \"${BRANCH}\"$NC"
+if [ ! $DRUDE_BRANCH == "" ]; then
+	echo -e "${red}[install-dsh] testing mode: environment = \"${DRUDE_BRANCH}\"$NC"
+else
+	DRUDE_BRANCH='master'
 fi
 
 # Drude repo
 DRUDE_REPO="https://github.com/blinkreaction/drude.git"
-DRUDE_REPO_RAW="https://raw.githubusercontent.com/blinkreaction/drude/$BRANCH"
+DRUDE_REPO_RAW="https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH"
 
 echo -e "${green}Installing/updating dsh (Drude Shell). Admin access required${NC}"
 # Determine if we have sudo
