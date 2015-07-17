@@ -378,7 +378,7 @@ status ()
 
 # installation and updates
 
-install_prerequisites() 
+install_prerequisites()
 {
 	echo -e "${green}Installing prerequisites...${NC}"
 	if is_windows ; then
@@ -412,7 +412,7 @@ install_prerequisites()
 	fi
 }
 
-install_boot2docker() 
+install_boot2docker()
 {
 	if is_linux ; then
 		return 0; # not needed on Linux
@@ -440,7 +440,7 @@ install_boot2docker()
 	fi
 }
 
-install_drude() 
+install_drude()
 {
 	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
 	if [ ! $? -eq 0 ]; then
