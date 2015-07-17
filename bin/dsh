@@ -437,6 +437,11 @@ install_boot2docker()
 	else
 		# calling bash interactively. B2D_NO_AUTOSTART prevents vagrant up after download
 		B2D_NO_AUTOSTART=1 bash <(echo "$b2d_setup_script")
+
+		# Configuring resolver
+		echo -e "${yellow}Configuring *.drude wildcard DNS resolution...$NC"
+		sudo mkdir -p /etc/resolver
+		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee 1>/dev/null /etc/resolver/drude
 	fi
 }
 
