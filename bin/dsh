@@ -396,10 +396,9 @@ install_prerequisites()
 		fi
 		echo "Setup needs administrator privileges to contiue..."
 		cscript "presetup-git-bash.vbs"
-		sleep 10 # give time csript to run
-		rm presetup-git-bash.cmd
-		rm presetup-git-bash.vbs
 		cd $cwd
+		echo -e "${red}Please wait until tools installation finishes$NC"
+		read -p "Press any key when installation in another console window is done..."
 	elif is_linux ; then
 		echo -e "${red}dsh: prerequisites install is not automated on Linux yet.$NC"
 		_confirm "Do you already have them installed manually?"
