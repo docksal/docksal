@@ -384,9 +384,9 @@ install_prerequisites()
 	if is_windows ; then
 		local cwd=$(pwd)
 		cd ~
-		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-win.cmd -o presetup-win.cmd
+		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-git-bash.cmd -o presetup-git-bash.cmd
 		if [ ! $? -eq 0 ]; then
-			echo -e "${red}Could not get 'presetup-win.cmd'. Please check your internet connection${NC}"
+			echo -e "${red}Could not get 'presetup-git-bash.cmd'. Please check your internet connection${NC}"
 			exit
 		fi
 		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-git-bash.vbs -o presetup-git-bash.vbs
