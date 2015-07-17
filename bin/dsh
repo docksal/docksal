@@ -397,7 +397,7 @@ install_prerequisites()
 		echo "Setup needs administrator privileges to contiue..."
 		cscript "presetup-git-bash.vbs"
 		sleep 10 # give time csript to run
-		rm presetup-win.cmd
+		rm presetup-git-bash.cmd
 		rm presetup-git-bash.vbs
 		cd $cwd
 	elif is_linux ; then
