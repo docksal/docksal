@@ -81,7 +81,7 @@ upfind ()
 	local up='../'
 	local pathup='./'
 	local slashes=$(pwd | sed 's/[^\/]//g')
-	for i in $(seq 0 ${#slashes}) ; do
+	for ((i=0; i<=${#slashes}; i++)) do
 		if [ -f "${pathup}$1" ] ; then
 			echo "${pathup}"
 			break
