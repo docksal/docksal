@@ -382,18 +382,23 @@ install_prerequisites()
 {
 	echo -e "${green}Installing prerequisites...${NC}"
 	if is_windows ; then
-		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-win.cmd)
+		local cwd=$(pwd)
+		cd ~
+		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-win.cmd -o presetup-win.cmd
 		if [ ! $? -eq 0 ]; then
 			echo -e "${red}Could not get 'presetup-win.cmd'. Please check your internet connection${NC}"
 			exit
 		fi
-		local presetup_vbs=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-git-bash.vbs)
+		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-git-bash.vbs -o presetup-git-bash.vbs
 		if [ ! $? -eq 0 ]; then
 			echo -e "${red}Could not get 'presetup-git-bash.vbs'. Please check your internet connection${NC}"
 			exit
 		fi
 		echo "Setup needs administrator privileges to contiue..."
 		cscript "presetup-git-bash.vbs"
+		rm presetup-win.cmd
+		rm presetup-git-bash.vbs
+		cd $cwd
 	elif is_linux ; then
 		echo -e "${red}dsh: prerequisites install is not automated on Linux yet.$NC"
 		_confirm "Do you already have them installed manually?"
@@ -420,8 +425,8 @@ install_boot2docker()
 	fi
 	echo "done"
 	echo -e "${yellow}Running boot2docker install script...$NC"
-	# calling bash interactively
-	bash <(echo "$b2d_setup_script")
+	# calling bash interactively. B2D_NO_AUTOSTART prevents vagrant up after download
+	B2D_NO_AUTOSTART=1 bash <(echo "$b2d_setup_script")
 }
 
 install_drude() 
@@ -441,14 +446,14 @@ install_drude()
 install ()
 {
 	local cwd=$(pwd)
+	install_prerequisites
 	cd ..
 	_confirm "Install Vagrantfile to $(pwd)?"
-	install_prerequisites
 	install_boot2docker
 	cd $cwd
 	_confirm "Install docker-compose.yml to $(pwd)?"
 	install_drude
-	echo -e "${red}Please restart you terminal shell$NC"
+	echo -e "${red}Please restart you terminal shell and then use 'dsh up' to start Drude$NC"
 }
 
 update ()
