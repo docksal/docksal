@@ -38,23 +38,23 @@ yellow='\033[1;33m'
 NC='\033[0m'
 
 #-------------------------- Testing --------------------------------
-if [ $DRUDE_BRANCH == "" ]; then
+if [[ $DRUDE_BRANCH == "" ]]; then
 	DRUDE_BRANCH='master'
 fi
-if [ $B2D_BRANCH == "" ]; then
+if [[ $B2D_BRANCH == "" ]]; then
 	B2D_BRANCH='master'
 fi
-if [ ! $B2D_BRANCH == 'master' ] || [ ! $DRUDE_BRANCH == 'master' ]; then
+if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
 	echo -e "${red}[dsh] testing mode: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
 fi
 
 #---------------- Docker Compose Global Settings ----------------------
 DC_FILE=''
 DC_PROJECT=''
-if [ ! $DRUDE_DC_FILE == "" ]; then
+if [[ ! $DRUDE_DC_FILE == "" ]]; then
 	DC_FILE="-f $DRUDE_DC_FILE"
 fi
-if [ ! $DRUDE_DC_PROJECT == "" ]; then
+if [[ ! $DRUDE_DC_PROJECT == "" ]]; then
 	DC_PROJECT="-p $DRUDE_DC_PROJECT"
 fi
 
@@ -130,11 +130,11 @@ get_drush_path ()
 	local cwd=$(pwd)
 	# if cwd substract proj_root is still cwd then it means we're out of proj_root
 	local pathdiff=${cwd#$proj_root}
-	if [ "$cwd" == "$pathdiff" ]; then
+	if [[ "$cwd" == "$pathdiff" ]]; then
 		echo "dsh supports '$argv' command only from within project directory"
 		return 1
 	fi
-	if [ "$pathdiff" == "" ]; then # we're on top level, let's cd for drush to work
+	if [[ "$pathdiff" == "" ]]; then # we're on top level, let's cd for drush to work
 		cd docroot
 	fi
 	return 0
@@ -251,7 +251,7 @@ is_docker ()
 is_vagrantfile_absent ()
 {
 	vagrant_path=`upfind "Vagrantfile"`
-	if [ "$vagrant_path" == "" ] ; then
+	if [[ "$vagrant_path" == "" ]] ; then
 		echo "dsh: Vagrantfile not found in your directory tree"
 		return 0
 	fi
@@ -263,7 +263,7 @@ is_vagrantfile_absent ()
 is_yml_absent ()
 {
 	yml_path=`yml_get_path`
-	if [ "$yml_path" == "" ] ; then
+	if [[ "$yml_path" == "" ]] ; then
 		echo "dsh: docker-compose.yml not found in your directory tree"
 		return 0
 	fi
@@ -273,7 +273,7 @@ is_yml_absent ()
 	fi
 
 	vagrant_path=`upfind "Vagrantfile"`
-	if [ "$vagrant_path" == "" ] ; then
+	if [[ "$vagrant_path" == "" ]] ; then
 		echo "dsh: Vagrantfile not found in your directory tree"
 		return 0
 	fi
@@ -367,7 +367,7 @@ status ()
 	cd `yml_get_path`
 	# check docker compose output to not be $compose_error
 	res=$(docker_compose ps 2>&1)
-	if [ "$res" == "$compose_error" ]; then
+	if [[ "$res" == "$compose_error" ]]; then
 		echo -e "${yellow}Drude is not running. Use 'dsh up' to start it$NC"
 		return 1
 	else
@@ -483,7 +483,7 @@ update ()
 		# get current version
 		local b2d_version_path=$HOME/.drude/b2d_version
 		local b2d_version=$(cat $b2d_version_path 2>/dev/null)
-		if [ "$b2d_version" = "" ]; then b2d_version="undetected version"; fi
+		if [[ "$b2d_version" = "" ]]; then b2d_version="undetected version"; fi
 
 		# get new version
 		local b2d_new_version=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/VERSION)
@@ -496,10 +496,10 @@ update ()
 
 		local forced_update='';
 		local destroy_box=1;
-		if [ "$1" == "-f" ] || [ "$2" == "-f" ]; then forced_update="(forced update)"; fi
-		if [ "$1" == "-n" ] || [ "$2" == "-n" ]; then destroy_box=0; fi
+		if [[ "$1" == "-f" ]] || [[ "$2" == "-f" ]]; then forced_update="(forced update)"; fi
+		if [[ "$1" == "-n" ]] || [[ "$2" == "-n" ]]; then destroy_box=0; fi
 
-		if [ ! "$b2d_new_version" == "$b2d_version" ] || [ -n "$forced_update" ]; then
+		if [[ ! "$b2d_new_version" == "$b2d_version" ]] || [ -n "$forced_update" ]; then
 			echo -e "boot2docker update available: ${green}$b2d_new_version $forced_update${NC} (you have $b2d_version)."
 			if [ $destroy_box -eq 1 ]; then
 				echo -e "${red}Update will destroy and re-create your Vagrant box${NC} (run with -n if you know re-creation can be skipped this time)"
@@ -555,7 +555,7 @@ update ()
 	# Update drude
 	cd $cwd # we need to bo back if we were installing boot2docker
 	if install_drude ; then
-		if [ ! "$b2d_new_version" = "$boot2docker_ver" ] && [ $destroy_box -eq 1 ]; then
+		if [[ ! "$b2d_new_version" == "$b2d_version" ]] && [ $destroy_box -eq 1 ]; then
 			# if vagrant box was updated containers will be downloaded again
 			_confirm "Starting Vagrant box. Downloading and starting containers."
 		else
@@ -580,7 +580,7 @@ _bash ()
 	cd `yml_get_path`
 	if is_docker && is_docker_compose ; then
 		local container_name
-		if [ "$1" == "" ]; then
+		if [[ "$1" == "" ]]; then
 			container_name='cli'
 		else
 			container_name="$1"
@@ -638,9 +638,9 @@ mysql_import ()
 	if ! get_drush_path; then return; fi
 
 	local confirm=1
-	if [ "$1" == "-y" ] || [ "$2" == "-y" ]; then
+	if [[ "$1" == "-y" ]] || [[ "$2" == "-y" ]]; then
 		confirm=0
-		if [ "$1" == "-y" ]; then
+		if [[ "$1" == "-y" ]]; then
 			shift #remove this param if -y was first
 		fi
 	fi
