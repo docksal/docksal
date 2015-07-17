@@ -16,7 +16,7 @@ Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box
 
     ```
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh  -o /usr/local/bin/dsh
-    sudo chmod +x /user/local/bin/dsh
+    sudo chmod +x /usr/local/bin/dsh
     ```
 
 ### Linux
