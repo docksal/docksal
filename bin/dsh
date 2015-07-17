@@ -418,15 +418,26 @@ install_boot2docker()
 		return 0; # not needed on Linux
 	fi
 	echo -n "Downloading boot2docker install script..."
-	local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/setup.sh)
+
+	if is_windows ; then
+		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/setup.sh -o ~/setup.sh
+	else
+		local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/setup.sh)
+	fi
 	if [ ! $? -eq 0 ]; then
 		echo -e "${red}Could not get 'setup.sh'. Please check your internet connection${NC}"
 		exit
 	fi
+
 	echo "done"
 	echo -e "${yellow}Running boot2docker install script...$NC"
-	# calling bash interactively. B2D_NO_AUTOSTART prevents vagrant up after download
-	B2D_NO_AUTOSTART=1 bash <(echo "$b2d_setup_script")
+	if is_windows ; then
+		chmod +x ~/setup.sh
+		B2D_NO_AUTOSTART=1 ~/setup.sh
+	else
+		# calling bash interactively. B2D_NO_AUTOSTART prevents vagrant up after download
+		B2D_NO_AUTOSTART=1 bash <(echo "$b2d_setup_script")
+	fi
 }
 
 install_drude() 
