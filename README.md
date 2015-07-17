@@ -9,14 +9,23 @@ Docker and Docker Compose based environment for Drupal.
 Docker is natively supported only on Linux.  
 Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
 
-### Mac and Windows
+### Mac
 
-1. Get the [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant) up and running.
-2. Install [dsh](#dsh) tool (Drude Shell)
+1. Install [dsh](#dsh) tool (Drude Shell)
 
     ```
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh  -o /usr/local/bin/dsh
     sudo chmod +x /usr/local/bin/dsh
+    ```
+
+### Windows
+
+1. Install Git Bash
+2. Install [dsh](#dsh) tool (Drude Shell) in Git Bash
+
+    ```
+    curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh  -o /usr/local/bin/dsh
+    chmod +x /usr/local/bin/dsh
     ```
 
 ### Linux
