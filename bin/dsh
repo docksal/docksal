@@ -395,7 +395,8 @@ install_prerequisites()
 			exit
 		fi
 		echo "Setup needs administrator privileges to contiue..."
-		cscript "%USERPROFILE%/presetup-git-bash.vbs"
+		cscript "presetup-git-bash.vbs"
+		wait %1
 		rm presetup-win.cmd
 		rm presetup-git-bash.vbs
 		cd $cwd
