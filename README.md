@@ -20,8 +20,8 @@ Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box
 
 ### Windows
 
-1. Install Git Bash
-2. Install [dsh](#dsh) tool (Drude Shell) in Git Bash
+1. [Install Babun](http://babun.github.io)
+2. Open Babun shell and run following lines to install [dsh](#dsh) (Drude Shell) tool:
 
     ```
     curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh  -o /usr/local/bin/dsh
