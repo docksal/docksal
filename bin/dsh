@@ -389,6 +389,7 @@ install_prerequisites()
 	echo -e "${green}Installing prerequisites...${NC}"
 	if is_windows ; then
 		# installing required babun packages
+		babun shell /bin/bash # change shell do bash
 		pact install python-setuptools
 		pact install libxml2-devel libxslt-devel libyaml-devel
 		curl -skS https://bootstrap.pypa.io/get-pip.py | python
