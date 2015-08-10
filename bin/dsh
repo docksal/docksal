@@ -190,6 +190,12 @@ is_linux ()
 is_windows ()
 {
 	res=`uname | grep 'MINGW32_NT'`
+	if [[ ! "$res" != '' ]]; then
+		echo -e "${red}Running from Git Bash is not supported. Please get Babun http://babun.github.io${NC}"
+		exit
+	fi
+
+	res=`uname | grep 'CYGWIN_NT'`
 	if [[ ! "$res" == '' ]]; then
 		return 0;
 	else
@@ -382,6 +388,14 @@ install_prerequisites()
 {
 	echo -e "${green}Installing prerequisites...${NC}"
 	if is_windows ; then
+		# installing required babun packages
+		pact install python-setuptools
+		pact install libxml2-devel libxslt-devel libyaml-devel
+		curl -skS https://bootstrap.pypa.io/get-pip.py | python
+		pip install virtualenv
+		curl -skS https://raw.githubusercontent.com/mitsuhiko/pipsi/master/get-pipsi.py | python
+		pip install -U docker-compose
+		# installing prerequisites
 		local cwd=$(pwd)
 		cd ~
 		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-git-bash.cmd -o presetup-git-bash.cmd
@@ -401,7 +415,7 @@ install_prerequisites()
 		read -p "Press any key when installation in another console window is done..."
 	elif is_linux ; then
 		echo -e "${red}dsh: prerequisites install is not automated on Linux yet.$NC"
-		_confirm "Do you already have them installed manually?"
+		_confirm "Do you already have docker and docker-compose installed manually?"
 	else # mac
 		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-mac.sh)
 		if [ ! $? -eq 0 ]; then
