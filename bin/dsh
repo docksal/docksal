@@ -39,10 +39,10 @@ NC='\033[0m'
 
 #-------------------------- Testing --------------------------------
 if [[ $DRUDE_BRANCH == "" ]]; then
-	DRUDE_BRANCH='master'
+	DRUDE_BRANCH='develop'
 fi
 if [[ $B2D_BRANCH == "" ]]; then
-	B2D_BRANCH='master'
+	B2D_BRANCH='develop'
 fi
 if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
 	echo -e "${red}[dsh] testing mode: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
@@ -190,13 +190,13 @@ is_linux ()
 is_windows ()
 {
 	res=`uname | grep 'MINGW32_NT'`
-	if [[ ! "$res" != '' ]]; then
+	if [[ "$res" != '' ]]; then
 		echo -e "${red}Running from Git Bash is not supported. Please get Babun http://babun.github.io${NC}"
 		exit
 	fi
 
 	res=`uname | grep 'CYGWIN_NT'`
-	if [[ ! "$res" == '' ]]; then
+	if [[ "$res" != '' ]]; then
 		return 0;
 	else
 		return 1;
