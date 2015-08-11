@@ -5,7 +5,7 @@ Docker and Docker Compose based environment for Drupal.
 
 To get Drude follow the instructions below.
 
-## Install dsh (Drude Shell)
+## Install dsh (Drude Shell Helper)
 
 ### Windows 
 
@@ -14,7 +14,7 @@ To get Drude follow the instructions below.
 **On Windows you will need Linux-type shell. All further Drude interactions are supposed to be done in Babun shell on Windows and require pact package manager. Instructions were not tested with other CYGWIN shells.**
 
 ### Mac, Windows (Babun shell), Linux
-To install [dsh](#dsh) tool (Drude Shell) run:
+To install [dsh](#dsh) run:
 
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh -o /usr/local/bin/dsh
     sudo chmod +x /usr/local/bin/dsh
@@ -24,8 +24,8 @@ To install [dsh](#dsh) tool (Drude Shell) run:
 
 While Docker is supported natively on Linux, Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant).
 
-On Mac and Windows [VirtualBox](https://www.virtualbox.org/) and our [Boot2docker VM](https://github.com/blinkreaction/boot2docker-vagrant) will be installed for you if you follow the instructions.  
-_Boot2docker VM requires 2GB of RAM by default._
+On Mac and Windows [VirtualBox](https://www.virtualbox.org/) and our [Boot2docker Vagrant VM](https://github.com/blinkreaction/boot2docker-vagrant) will be installed for you if you follow the instructions.  
+_Boot2docker Vagrant Box requires 2GB of RAM by default._
 
 Drude initial configuration is done once per project (e.g. by a team lead).  
 `docker-compose.yml` file and optional `.drude` folder are good indicators of Drude's presence in the project repo.  
@@ -122,7 +122,7 @@ Some settings are required, others are optional or enahncements. Please review c
 - [Memcache settings](docs/drupal-settings.md#memcache)
 
 <a name="dsh"></a>
-## Drude Shell (dsh)
+## Drude Shell Helper (dsh)
 
 Drude shell (dsh) is a console tool that simplifies day-to-day work with Drude.
 It provides a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush and other commands inside the **cli** container.
