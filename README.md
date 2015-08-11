@@ -7,14 +7,14 @@ Docker and Docker Compose based environment for Drupal.
 ## Requirements
 
 Docker is natively supported only on Linux.  
-Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
+Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant). It will be installed for you if you follow the instructions.
 
 ### Mac
 
 1. Install [dsh](#dsh) tool (Drude Shell)
 
     ```
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh  -o /usr/local/bin/dsh
+    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh -o /usr/local/bin/dsh
     sudo chmod +x /usr/local/bin/dsh
     ```
 
@@ -24,17 +24,17 @@ Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box
 2. Open Babun shell and run following lines to install [dsh](#dsh) (Drude Shell) tool:
 
     ```
-    curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh  -o /usr/local/bin/dsh
+    curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh -o /usr/local/bin/dsh
     chmod +x /usr/local/bin/dsh
     ```
 
 ### Linux
-1. [Docker](https://docs.docker.com/compose/install/#install-docker)
-2. [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
+1. [Install Docker](https://docs.docker.com/compose/install/#install-docker)
+2. [Install Docker Compose](https://docs.docker.com/compose/install/#install-compose)
 3. Install [dsh](#dsh) tool (Drude Shell)
 
     ```
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh  -o /usr/local/bin/dsh
+    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh -o /usr/local/bin/dsh
     sudo chmod +x /usr/local/bin/dsh
     ```
 
@@ -45,7 +45,7 @@ Drude initial setup is done once per project (e.g. by a team lead).
 Once installed into the project repo, Drude can be used by anyone on the team.  
 To use Drude each team member will need to meet the [requirements](#requirements) outlined above.
 
-`docker-compose.yml` file and `.docker` folder are good indicators of Drude's presence in the project repo.
+`docker-compose.yml` file and optional `.drude` folder are good indicators of Drude's presence in the project repo.
 
 **If this is the first time Drude is being installed into the project, follow the instructions below.**  
 
@@ -55,11 +55,19 @@ The installation process is slightly different based on the OS.
 
  1. Make sure your site's docroot is in `</path/to/project>/docroot`.
  2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 3. cd `</path/to/project>` and run:
-
+ 3. cd `</path/to/project>`
+ 
+    3.1. If you have never used Drude before run:
     ```
-    bash <(curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/scripts/install-drude.sh)
+    dsh install
     ```
+    This will install/update all required prerequisites. They include [Homebrew](http://brew.sh/), [Homebrew-cask](https://github.com/caskroom/homebrew-cask), VirtualBox, Vagrant, docker, docker-compose.
+    
+    3.2. If you already use Drude and just need to initialize new project run:
+    ```
+    dsh install drude
+    ```
+    This will ony download latest `docker-compose.yml` with default containers' settings.
     
  4. Start containers with `dsh up`
 
@@ -67,11 +75,19 @@ The installation process is slightly different based on the OS.
 
  1. Make sure your site's docroot is in `</path/to/project>/docroot`.
  2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 3. Open Git Bash shell and cd into `</path/to/project>`, then run:
-
+ 3. Open Babun shell and cd into `</path/to/project>`, then run:
+ 
+    3.1. If you have never used Drude before run:
     ```
-    bash <(curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/scripts/install-drude.sh)
+    dsh install
     ```
+    This will install/update all required prerequisites. They include [Chocolatey](https://chocolatey.org/), VirtualBox, Vagrant, docker, docker-compose.
+    
+    3.2. If you already use Drude and just need to initialize new project run:
+    ```
+    dsh install drude
+    ```
+    This will ony download latest `docker-compose.yml` with default containers' settings.
     
  4. Start and login into vagrant, cd into `</path/to/project>`:
  
@@ -85,12 +101,13 @@ The installation process is slightly different based on the OS.
 
 ### Linux
 
- 1. Make sure your site's docroot is in `</path/to/project>/docroot`.
- 2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 3. cd `</path/to/project>` and run:
+ 1. Make sure you have prerequisites from previous step installed. They include docker and docker-compose.
+ 2. Make sure your site's docroot is in `</path/to/project>/docroot`.
+ 3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
+ 4. cd `</path/to/project>` and run:
 
     ```
-    bash <(curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/scripts/install-drude.sh)
+    dsh install
     ```
 
  4. Start containers with `dsh up`
@@ -98,17 +115,14 @@ The installation process is slightly different based on the OS.
 <a name="updates"></a>
 ## Updates
 
-To update Drude run the following from the `</path/to/project>` folder:
-
-    bash <(curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/scripts/install-drude.sh)
-
-Review the changes, revert any local overrides that were reset and commit into your project git repo.
-
-Base images will be updated from time to time. Docker Compose does not automatically pull new image versions.
-To get an up-to-date version of the entire stack do:
-
-    docker-compose pull
-    docker-compose up -d
+ 1. Run the following from the `</path/to/project>` folder:
+ 
+    ```
+    dsh update
+    ```
+    _**Note**: This will overwrite your `docker-compose.yml`. If you have it customized but not controlled by git please make backup first._ 
+    
+    _**Note Windows and Mac users:** if boot2docker VM image was updated then update will warn you that VM will be re-created. It means you will have to re-import your database._ 
 
 <a name="drupal-settings"></a>
 ## Drupal settings
@@ -136,10 +150,7 @@ It runs on Mac/Linux directly. On Windows `dsh` runs inside the boot2docker VM.
 
 ### Installation
 
-    bash <(curl -s https://raw.githubusercontent.com/blinkreaction/drude/master/scripts/install-dsh.sh)
-
-This will install a local dsh wrapper into `/usr/local/bin/dsh`.
-The actual dsh script resides in each project individually (in `.docker/bin/dsh`) and is installed into the project along with Drude. The wrapper makes it possible to use `dsh` from anywhere in the project tree.
+See installation steps for different platforms at the beginning of this instruction. dsh is installed into `/usr/local/bin/dsh`.
 
 <a name="cli"></a>
 ## Console tools (cli)
