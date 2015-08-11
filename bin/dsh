@@ -386,8 +386,10 @@ status ()
 	fi
 }
 
-# installation and updates
+### Installation and updates
 
+# Install required software on Mac or Win. Check installed software on Linux
+# TODO: move presetup windows scripts to drude repo. they are not required for boot2docker 2 exist
 install_prerequisites()
 {
 	echo -e "${green}Installing prerequisites...${NC}"
@@ -433,6 +435,8 @@ install_prerequisites()
 	fi
 }
 
+# Install Vagrantfile and vagrant.yml required by boot2docker
+# TODO: refactor to not rely on setup.sh as dsh only needs those 2 files
 install_boot2docker()
 {
 	if is_linux ; then
@@ -466,6 +470,7 @@ install_boot2docker()
 	fi
 }
 
+# Download latest Drude config file
 install_drude()
 {
 	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
@@ -480,6 +485,7 @@ install_drude()
 
 }
 
+# Install Drude
 install ()
 {
 	if [[ "$1" == "drude" ]]; then
@@ -499,6 +505,7 @@ install ()
 	fi
 }
 
+# Update Drude
 update ()
 {
 	if ! is_tty ; then
@@ -507,8 +514,7 @@ update ()
 	fi
 
 	if is_boot2docker ; then
-		echo -e "${red}dsh: You are running inside boot2docker$NC"
-		return 1
+		echo -e "${yellow}dsh: Updating from inside boot2docker will not update you VM box$NC"
 	fi
 
 	if is_windows; then
