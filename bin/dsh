@@ -125,7 +125,7 @@ get_abs_path ()
 	echo "$absolute"
 }
 
-# Returns project root absolute path
+# Returns project root absolute path without trailing slash
 get_project_root_path ()
 {
 	yml_path=`yml_get_path`
@@ -144,7 +144,7 @@ get_current_relative_path ()
 	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
 	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff=d
 	# ex: cwd=/a/b/, proj_root=/a/b/c, pathdiff=/a/b/
-	local pathdiff=${cwd#$proj_root}
+	local pathdiff=${cwd#$proj_root/}
 	echo $pathdiff
 }
 
@@ -157,23 +157,6 @@ get_drush_path ()
 		return 1
 	fi
 	return 0
-}
-
-# Get current path relative to project root
-# @param $1 name of variable to get result
-cmdpath ()
-{
-	if [[ $# -ne 1 ]]; then return; fi
-	project_root_path=$(get_project_root_path)
-	# leave only part of absolute path that is after project root
-	local cmdpath=${PWD#$project_root_path/}
-	if [[ "$cmdpath" == "$(pwd)" ]] ; then
-
-		# if replacement didnt happen then we are in project root or higher
-		eval $1="."
-	else
-		eval $1="$cmdpath"
-	fi
 }
 
 # Removes invisible residue from the string that remains leftover sometimes
@@ -683,9 +666,13 @@ _run ()
 	local COLS=$(tput cols) #get client window width
 	if is_yml_absent ; then return 2; fi
 	if is_docker && is_docker_compose ; then
-		local cd_path=''
-		cmdpath cd_path
-		run "cd $cd_path && export COLUMNS=$COLS && $*"
+		local path=$(get_current_relative_path)
+		local cd=''
+		if [[ "$(get_current_relative_path)" != "$(pwd)" ]] ; then
+			# if we're not outside project folder
+			cd="cd $path &&"
+		fi
+		run "$cd export COLUMNS=$COLS && $*"
 	fi
 }
 
