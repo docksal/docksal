@@ -22,14 +22,15 @@ To install [dsh](#dsh) tool (Drude Shell) run:
 <a name="setup"></a>
 ## Setup
 
-Docker is natively supported on Linux.  
-Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant). It will be installed for you if you follow the instructions.
+While Docker is supported natively on Linux, Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant).
 
-Drude initial setup is done once per project (e.g. by a team lead).  
-Once installed into the project repo, Drude can be used by anyone on the team.  
+On Mac and Windows [VirtualBox](https://www.virtualbox.org/) and our [Boot2docker VM](https://github.com/blinkreaction/boot2docker-vagrant) will be installed for you if you follow the instructions.  
+_Boot2docker VM requires 2GB of RAM by default._
+
+Drude initial configuration is done once per project (e.g. by a team lead).  
+`docker-compose.yml` file and optional `.drude` folder are good indicators of Drude's presence in the project repo.  
+Once installed into the project repo, Drude can be used by anyone in the team.  
 To use Drude each team member will need to follow this instruction.
-
-`docker-compose.yml` file and optional `.drude` folder are good indicators of Drude's presence in the project repo.
 
 ### Mac
 
@@ -37,13 +38,13 @@ To use Drude each team member will need to follow this instruction.
  2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
  3. cd `</path/to/project>`
  
-    3.1. If you have never used Drude before run:
+    3.1) If you have never used Drude before run:
     ```
     dsh install
     ```
     This will install/update all required prerequisites. They include [Homebrew](http://brew.sh/), [Homebrew-cask](https://github.com/caskroom/homebrew-cask), VirtualBox, Vagrant, docker, docker-compose.
     
-    3.2. If you already use Drude and just need to initialize new project run:
+    3.2) If you already use Drude and just need to initialize new project run:
     ```
     dsh install drude
     ```
@@ -57,13 +58,13 @@ To use Drude each team member will need to follow this instruction.
  2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
  3. **In Babun shell** cd into `</path/to/project>`
  
-    3.1. If you have never used Drude before run:
+    3.1) If you have never used Drude before run:
     ```
     dsh install
     ```
     This will install/update all required prerequisites. They include [Chocolatey](https://chocolatey.org/), VirtualBox, Vagrant, docker, docker-compose.
     
-    3.2. If you already use Drude and just need to initialize new project run:
+    3.2) If you already use Drude and just need to initialize new project run:
     ```
     dsh install drude
     ```
@@ -123,8 +124,8 @@ Some settings are required, others are optional or enahncements. Please review c
 <a name="dsh"></a>
 ## Drude Shell (dsh)
 
-Drude shell (dsh) is a console tool that simplifies that day-to-day work with Drude.
-It provide a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush and other console commands inside the **cli** container.
+Drude shell (dsh) is a console tool that simplifies day-to-day work with Drude.
+It provides a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush and other commands inside the **cli** container.
 
 See `dsh help` for a complete list.
 
