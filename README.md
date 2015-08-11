@@ -124,23 +124,19 @@ Some settings are required, others are optional or enahncements. Please review c
 <a name="dsh"></a>
 ## Drude Shell Helper (dsh)
 
-Drude shell (dsh) is a console tool that simplifies day-to-day work with Drude.
-It provides a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush and other commands inside the **cli** container.
+Drude shell helper is a console tool that simplifies day-to-day work with Drude.
+It provides a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush or other commands inside the **cli** container. (**Note**: dsh requires cli container to function properly)
 
 See `dsh help` for a complete list.
 
 `dsh` detects the environment it's launched in and will automatically start the boot2docker VM and launch containers as necessary.
 It runs on Mac/Linux directly. On Windows `dsh` runs inside the boot2docker VM.
 
-### Installation
-
-See installation steps for different platforms at the beginning of this instruction. dsh is installed into `/usr/local/bin/dsh`.
-
 <a name="cli"></a>
 ## Console tools (cli)
 
-**cli** container is ment to serv as a single console to access all necessary command line tools.
-The **cli** console can launch with `dsh`:
+**cli** container is ment to serve as a single console to access all necessary command line tools.
+You can access **cli** container's console with `dsh`:
 
     dsh bash
 
