@@ -169,12 +169,10 @@ clean_string ()
 }
 
 # get mysql connection string
-# @param $1 gets result
 get_mysql_connect ()
 {
 	# get connection string and cleanup residue that is leftover
-	clean_res=$(clean_string "$(_run drush sql-connect)")
-	eval $1=\'$clean_res\'
+	echo $(clean_string "$(_run drush sql-connect)")
 }
 
 #----------------------- Basics check functions -----------------------------
@@ -681,9 +679,7 @@ mysql ()
 {
 	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
-	local sql_connect
-	get_mysql_connect sql_connect
-	_run $sql_connect" -A" # -A option to speed up mysql load
+	_run $(get_mysql_connect)" -A" # -A option to speed up mysql load
 }
 
 # Truncate db and import from sql dump
@@ -720,7 +716,7 @@ mysql_import ()
 
 	echo $(_drush sql-drop -y)
 	local sql_connect
-	get_mysql_connect sql_connect
+	$sql_connect=$(get_mysql_connect)
 	echo "Importing $filename into database 'drupal'..."
 
 	# Use pv for interactive shells only.
