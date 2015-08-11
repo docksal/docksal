@@ -161,11 +161,11 @@ get_drush_path ()
 
 # Removes invisible residue from the string that remains leftover sometimes
 # @param $1 string to cleanup
-# @param $2 variable that receives clean string
+# @return clean string
 clean_string ()
 {
 	cleaned=$(echo "$1" | sed -e 's/[^a-zA-Z0-9_-]$//')
-	eval $2=\'${cleaned}\'
+	echo ${cleaned}
 }
 
 # get mysql connection string
@@ -173,7 +173,7 @@ clean_string ()
 get_mysql_connect ()
 {
 	# get connection string and cleanup residue that is leftover
-	clean_string "$(_run drush sql-connect)" clean_res
+	clean_res=$(clean_string "$(_run drush sql-connect)")
 	eval $1=\'$clean_res\'
 }
 
@@ -637,7 +637,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		clean_string $(docker_compose ps -q $container_name) container_id
+		container_id=$(clean_string $(docker_compose ps -q $container_name))
 		docker exec -it $container_id bash -i
 	fi
 }
@@ -649,7 +649,7 @@ run ()
 	if is_docker && is_docker_compose ; then
 		drude_check_env
 		cd `yml_get_path`
-		clean_string $(docker_compose ps -q cli) container_id
+		container_id=$(clean_string $(docker_compose ps -q cli))
 
 		if is_tty ; then
 			docker exec -it $container_id bash -ic "$*"
