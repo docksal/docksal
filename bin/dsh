@@ -59,6 +59,18 @@ if [[ ! $DRUDE_DC_PROJECT == "" ]]; then
 	DC_PROJECT="-p $DRUDE_DC_PROJECT"
 fi
 
+drude_check_env ()
+{
+	# don't change DOCKER_HOST if it's nonempty
+	if [[ "$DOCKER_HOST" != "" ]]; then
+		return 0;
+	else
+		# set Drude's default DOCKER_HOST var
+		DOCKER_HOST="tcp://localhost:2375"
+		export DOCKER_HOST="tcp://localhost:2375"
+	fi
+}
+
 # Pass global project and file settings to docker-compose.
 # Use this function for every docker-compose invocation.
 docker_compose ()
@@ -316,6 +328,7 @@ _confirm ()
 up ()
 {
 	if is_yml_absent ; then return 2; fi
+	drude_check_env
 	if is_vagrant ; then
 		vagrant up
 		started=$?
@@ -335,6 +348,7 @@ up ()
 down ()
 {
 	if is_yml_absent ; then return 2; fi
+	drude_check_env
 	if is_vagrant ; then
 		vagrant halt
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
@@ -348,6 +362,7 @@ down ()
 restart ()
 {
 	if is_yml_absent ; then return 2; fi
+	drude_check_env
 	if is_vagrant ; then
 		vagrant reload
 		started=$?
@@ -373,6 +388,7 @@ status ()
 	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	# check docker compose output to not be $compose_error
+	drude_check_env
 	res=$(docker_compose ps 2>&1)
 	if [[ "$res" == "$compose_error" ]]; then
 		echo -e "${yellow}Drude is not running. Use 'dsh up' to start it$NC"
@@ -471,7 +487,7 @@ install_drude()
 		return 1
 	else
 		echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
-		echo -e "${green}docker-compose.yml updated to the latest version.${NC}"
+		echo -e "${green}Latest version of docker-compose.yml was downloaded.${NC}"
 		return 0
 	fi
 
@@ -593,6 +609,7 @@ update ()
 	fi
 
 	if is_linux; then
+		drude_check_env
 		docker_compose pull
 	fi
 
@@ -623,6 +640,7 @@ _bash ()
 	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	if is_docker && is_docker_compose ; then
+		drude_check_env
 		local container_name
 		if [[ "$1" == "" ]]; then
 			container_name='cli'
@@ -640,6 +658,7 @@ _bash ()
 run ()
 {
 	if is_docker && is_docker_compose ; then
+		drude_check_env
 		cd `yml_get_path`
 		clean_string $(docker_compose ps -q cli) container_id
 
@@ -789,6 +808,7 @@ reset ()
 
 	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
+	drude_check_env
 	if is_vagrant ; then
 		echo "Starting vagrant vm..."
 		vagrant up
@@ -833,7 +853,8 @@ case $1 in
 		status
 		;;
 	install)
-		install
+		shift
+		install $*
 		;;
 	update)
 		shift
