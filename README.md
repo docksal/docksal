@@ -3,14 +3,15 @@ Docker and Docker Compose based environment for Drupal.
 
 [![Circle CI](https://circleci.com/gh/blinkreaction/drude.svg?style=shield)](https://circleci.com/gh/blinkreaction/drude)
 
-<a name="requirements"></a>
+To get Drude follow the instructions below.
+
 ## Install dsh (Drude Shell)
 
 ### Windows 
 
  1. [Install Babun](http://babun.github.io)
 
-**On Windows you will need Linux-type shell. All further Drude interactions are supposed to be done in Babun shell on Windows. Instructions were not tested with other CYGWIN shells.**
+**On Windows you will need Linux-type shell. All further Drude interactions are supposed to be done in Babun shell on Windows and require pact package manager. Instructions were not tested with other CYGWIN shells.**
 
 ### Mac, Windows (Babun shell), Linux
 To install [dsh](#dsh) tool (Drude Shell) run:
@@ -26,13 +27,9 @@ Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box
 
 Drude initial setup is done once per project (e.g. by a team lead).  
 Once installed into the project repo, Drude can be used by anyone on the team.  
-To use Drude each team member will need to meet the [requirements](#requirements) outlined above.
+To use Drude each team member will need to follow this instruction.
 
 `docker-compose.yml` file and optional `.drude` folder are good indicators of Drude's presence in the project repo.
-
-**If this is the first time Drude is being installed into the project, follow the instructions below.**  
-
-The installation process is slightly different based on the OS.
 
 ### Mac
 
@@ -58,7 +55,7 @@ The installation process is slightly different based on the OS.
 
  1. Make sure your site's docroot is in `</path/to/project>/docroot`.
  2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 3. Open Babun shell and cd into `</path/to/project>`, then run:
+ 3. **In Babun shell** cd into `</path/to/project>`
  
     3.1. If you have never used Drude before run:
     ```
@@ -104,9 +101,11 @@ The installation process is slightly different based on the OS.
     ```
     dsh update
     ```
-    _**Note**: This will overwrite your `docker-compose.yml`. If you have it customized but not controlled by git please make backup first._ 
+    **Note**: This will overwrite your `docker-compose.yml`. If you have it customized but not controlled by git please make backup first.
     
-    _**Note Windows and Mac users:** if boot2docker VM image was updated then update will warn you that VM will be re-created. It means you will have to re-import your database._ 
+    **Note**: if docker image for database container was updated then container will be re-created and you will need to _re-import your database._ 
+    
+    **Note Windows and Mac users:** if boot2docker VM image was updated then update will warn you that VM will be re-created. It means you will have to _re-import your database._ 
 
 <a name="drupal-settings"></a>
 ## Drupal settings
