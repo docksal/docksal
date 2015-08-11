@@ -135,20 +135,26 @@ get_project_root_path ()
 	echo "$project_root_absolute"
 }
 
-# dummy function to check that command is run along settings.php
-get_drush_path ()
+# get current path relative to project root
+get_current_relative_path ()
 {
 	# Check that we're inside project folder
 	local proj_root=$(get_project_root_path)
 	local cwd=$(pwd)
-	# if cwd substract proj_root is still cwd then it means we're out of proj_root
+	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
+	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff=d
+	# ex: cwd=/a/b/, proj_root=/a/b/c, pathdiff=/a/b/
 	local pathdiff=${cwd#$proj_root}
-	if [[ "$cwd" == "$pathdiff" ]]; then
-		echo "dsh supports '$argv' command only from within project directory"
+	echo $pathdiff
+}
+
+# check that command is run inside project folder
+get_drush_path ()
+{
+	local pathdiff=$(get_current_relative_path)
+	if [[ "$(pwd)" == "$pathdiff" ]]; then
+		echo "dsh supports commands only from within project directory"
 		return 1
-	fi
-	if [[ "$pathdiff" == "" ]]; then # we're on top level, let's cd for drush to work
-		cd docroot
 	fi
 	return 0
 }
@@ -770,6 +776,11 @@ _drush ()
 {
 	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
+
+	local pathdiff=$(get_current_relative_path)
+	if [[ "$pathdiff" == "" ]]; then # we're on top level, let's cd to docroot for drush to work
+		cd docroot
+	fi
 	_run 'drush '$*
 }
 
