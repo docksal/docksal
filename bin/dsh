@@ -142,8 +142,8 @@ get_current_relative_path ()
 	local proj_root=$(get_project_root_path)
 	local cwd=$(pwd)
 	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
-	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff=d
-	# ex: cwd=/a/b/, proj_root=/a/b/c, pathdiff=/a/b/
+	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
+	# ex: cwd=/a/b, proj_root=/a/b/c, pathdiff==/a/b
 	local pathdiff=${cwd#$proj_root/}
 	echo $pathdiff
 }
