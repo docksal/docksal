@@ -396,6 +396,7 @@ install_prerequisites()
 		pip install virtualenv
 		curl -skS https://raw.githubusercontent.com/mitsuhiko/pipsi/master/get-pipsi.py | python
 		pip install -U docker-compose
+		# nfs-server-config
 		# installing prerequisites
 		local cwd=$(pwd)
 		cd `cygpath $USERPROFILE`
@@ -415,8 +416,9 @@ install_prerequisites()
 		echo -e "${red}Please wait until tools installation finishes$NC"
 		read -p "Press any key when installation in another console window is done..."
 	elif is_linux ; then
-		echo -e "${red}dsh: prerequisites install is not automated on Linux yet.$NC"
-		_confirm "Do you already have docker and docker-compose installed manually?"
+		echo -e "${red}dsh: checking that you have docker and docker-compose installed.$NC"
+		binary_found "docker"
+		binary_found "docker-compose"
 	else # mac
 		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-mac.sh)
 		if [ ! $? -eq 0 ]; then
@@ -478,13 +480,15 @@ install ()
 {
 	local cwd=$(pwd)
 	install_prerequisites
-	cd ..
-	_confirm "Install Vagrantfile to $(pwd)?"
-	install_boot2docker
-	cd $cwd
+	if ! is_linux ; then
+		cd ..
+		_confirm "Install Vagrantfile to $(pwd)?"
+		install_boot2docker
+		cd $cwd
+	fi
 	_confirm "Install docker-compose.yml to $(pwd)?"
 	install_drude
-	echo -e "${red}Please restart you terminal shell and then use 'dsh up' to start Drude$NC"
+	echo -e "${red}Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude$NC"
 }
 
 update ()
@@ -581,6 +585,10 @@ update ()
 		else
 			echo "boot2docker $b2d_version you have is the latest version (-f to force update)"
 		fi
+	fi
+
+	if is_linux then;
+		docker_compose pull
 	fi
 
 	# Update drude
