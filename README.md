@@ -135,7 +135,7 @@ It runs on Mac/Linux directly. On Windows `dsh` runs inside the boot2docker VM.
 <a name="cli"></a>
 ## Console tools (cli)
 
-**cli** container is ment to serve as a single console to access all necessary command line tools.
+**cli** container is meant to serve as a single console to access all necessary command line tools.
 You can access **cli** container's console with `dsh`:
 
     dsh bash
