@@ -768,17 +768,21 @@ clear_cache ()
 	if [[ ! "$1" == "" ]]; then
 		type=$1
 	fi
+
+	if [[ "$(get_current_relative_path)" == "" ]]; then # we're on top level, let's cd to docroot for drush to work
+		cd docroot
+	fi
 	_run 'drush cc '$type
 }
 
-# shorthand for executing drush commands
+# Shorthand for executing drush commands
+# @param $* arguments and params passed to Drush
 _drush ()
 {
 	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
 
-	local pathdiff=$(get_current_relative_path)
-	if [[ "$pathdiff" == "" ]]; then # we're on top level, let's cd to docroot for drush to work
+	if [[ "$(get_current_relative_path)" == "" ]]; then # we're on top level, let's cd to docroot for drush to work
 		cd docroot
 	fi
 	_run 'drush '$*
