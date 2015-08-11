@@ -26,7 +26,8 @@ help ()
 	echo
 	echo "	behat			Run Behat tests"
 	echo
-	echo "	install			Install boot2docker and drude"
+	echo "	install			Install/check prerequisites, boot2docker and drude config"
+	echo "				\"install drude\" will only install latest drude config"
 	echo "	update			Update boot2docker and drude"
 	echo
 }
@@ -478,17 +479,21 @@ install_drude()
 
 install ()
 {
-	local cwd=$(pwd)
-	install_prerequisites
-	if ! is_linux ; then
-		cd ..
-		_confirm "Install Vagrantfile to $(pwd)?"
-		install_boot2docker
-		cd $cwd
+	if [[ "$1" == "drude" ]]; then
+		install_drude
+	else
+		local cwd=$(pwd)
+		install_prerequisites
+		if ! is_linux ; then
+			cd ..
+			_confirm "Install Vagrantfile to $(pwd)?"
+			install_boot2docker
+			cd $cwd
+		fi
+		_confirm "Install docker-compose.yml to $(pwd)?"
+		install_drude
+		echo -e "${red}Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude$NC"
 	fi
-	_confirm "Install docker-compose.yml to $(pwd)?"
-	install_drude
-	echo -e "${red}Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude$NC"
 }
 
 update ()
@@ -587,7 +592,7 @@ update ()
 		fi
 	fi
 
-	if is_linux then;
+	if is_linux; then
 		docker_compose pull
 	fi
 
