@@ -4,42 +4,25 @@ Docker and Docker Compose based environment for Drupal.
 [![Circle CI](https://circleci.com/gh/blinkreaction/drude.svg?style=shield)](https://circleci.com/gh/blinkreaction/drude)
 
 <a name="requirements"></a>
-## Requirements
+## Install dsh (Drude Shell)
 
-Docker is natively supported only on Linux.  
-Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant). It will be installed for you if you follow the instructions.
+### Windows 
 
-### Mac
+ 1. [Install Babun](http://babun.github.io)
 
-1. Install [dsh](#dsh) tool (Drude Shell)
+**On Windows you will need Linux-type shell. All further Drude interactions are supposed to be done in Babun shell on Windows. Instructions were not tested with other CYGWIN shells.**
 
-    ```
+### Mac, Windows (Babun shell), Linux
+To install [dsh](#dsh) tool (Drude Shell) run:
+
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh -o /usr/local/bin/dsh
     sudo chmod +x /usr/local/bin/dsh
-    ```
-
-### Windows
-
-1. [Install Babun](http://babun.github.io)
-2. Open Babun shell and run following lines to install [dsh](#dsh) (Drude Shell) tool:
-
-    ```
-    curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh -o /usr/local/bin/dsh
-    chmod +x /usr/local/bin/dsh
-    ```
-
-### Linux
-1. [Install Docker](https://docs.docker.com/compose/install/#install-docker)
-2. [Install Docker Compose](https://docs.docker.com/compose/install/#install-compose)
-3. Install [dsh](#dsh) tool (Drude Shell)
-
-    ```
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh -o /usr/local/bin/dsh
-    sudo chmod +x /usr/local/bin/dsh
-    ```
 
 <a name="setup"></a>
 ## Setup
+
+Docker is natively supported on Linux.  
+Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant). It will be installed for you if you follow the instructions.
 
 Drude initial setup is done once per project (e.g. by a team lead).  
 Once installed into the project repo, Drude can be used by anyone on the team.  
@@ -101,16 +84,17 @@ The installation process is slightly different based on the OS.
 
 ### Linux
 
- 1. Make sure you have prerequisites from previous step installed. They include docker and docker-compose.
- 2. Make sure your site's docroot is in `</path/to/project>/docroot`.
- 3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 4. cd `</path/to/project>` and run:
+ 1. [Install Docker](https://docs.docker.com/compose/install/#install-docker)
+ 2. [Install Docker Compose](https://docs.docker.com/compose/install/#install-compose)
+ 3. Make sure your site's docroot is in `</path/to/project>/docroot`.
+ 4. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
+ 5. cd `</path/to/project>` and run:
 
     ```
     dsh install
     ```
 
- 4. Start containers with `dsh up`
+ 6. Start containers with `dsh up`
 
 <a name="updates"></a>
 ## Updates
