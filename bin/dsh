@@ -150,7 +150,7 @@ get_current_relative_path ()
 	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
 	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
 	# ex: cwd=/a/b, proj_root=/a/b/c, pathdiff==/a/b
-	local pathdiff=${cwd#$proj_root/}
+	local pathdiff=${cwd/#$proj_root/}
 	echo $pathdiff
 }
 
@@ -767,7 +767,7 @@ clear_cache ()
 		type=$1
 	fi
 
-	if [[ "$(get_current_relative_path)" == "" ]]; then # we're on top level, let's cd to docroot for drush to work
+	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
 		cd docroot
 	fi
 	_run 'drush cc '$type
@@ -780,7 +780,7 @@ _drush ()
 	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
 
-	if [[ "$(get_current_relative_path)" == "" ]]; then # we're on top level, let's cd to docroot for drush to work
+	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
 		cd docroot
 	fi
 	_run 'drush '$*
