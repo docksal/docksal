@@ -22,41 +22,62 @@ To install [dsh](#dsh) run:
 <a name="setup"></a>
 ## Setup
 
+Drude initial configuration is done once per project (e.g. by a team lead).  
+`docker-compose.yml` file and optional `.drude` folder are good indicators of Drude's presence in the project repo.  
+To use Drude each team member will need to follow this instruction.
+
+#### Hardware requirements
 While Docker is supported natively on Linux, Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant).
 
 On Mac and Windows [VirtualBox](https://www.virtualbox.org/) and our [Boot2docker Vagrant VM](https://github.com/blinkreaction/boot2docker-vagrant) will be installed for you if you follow the instructions.  
-_Boot2docker Vagrant Box requires 2GB of RAM by default._
+_- Boot2docker Vagrant Box requires 2GB of RAM by default. You need minimum 4GB RAM on your computer._  
+_- Your CPU should support hardware VT-x/AMD-V virtualization. (most modern CPUs)_
 
-Drude initial configuration is done once per project (e.g. by a team lead).  
-`docker-compose.yml` file and optional `.drude` folder are good indicators of Drude's presence in the project repo.  
-Once installed into the project repo, Drude can be used by anyone in the team.  
-To use Drude each team member will need to follow this instruction.
+#### Directory structure
+Drude enforces directory structure where you have arbitrary located `projects` folder in which you place subfolder for each project you have.  
+Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
 
+```
++ ...
+ - projects
+ |--- drupal-site-1
+ |      docker-compose.yml
+ |      docroot
+ |      ...
+ | 
+ |--- drupal-site-2
+ |      .drude
+ |      docker-compose.yml
+ |      docroot
+ |      ...
+ | 
+ |--- Vagrantfile
+ |--- vagrant.yml
+```
 ### Mac
 
- 1. Make sure your site's docroot is in `</path/to/project>/docroot`.
- 2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 3. cd `</path/to/project>`
+ 1. Edit `settings.php` for your site (see [Drupal settings](#drupal-settings) below).
+ 2. Open Terminal and cd into `<projects/your-drupal-site>`
  
-    3.1) If you have never used Drude before run:
+    2.1) If you have never used Drude before run:
     ```
     dsh install
     ```
     This will install/update all required prerequisites. They include [Homebrew](http://brew.sh/), [Homebrew-cask](https://github.com/caskroom/homebrew-cask), VirtualBox, Vagrant, docker, docker-compose.
     
-    3.2) If you already use Drude and just need to initialize new project run:
+    2.2) If you already use Drude and just need to initialize new project run:
     ```
     dsh install drude
     ```
     This will ony download latest `docker-compose.yml` with default containers' settings.
     
- 4. Start VM and containers with `dsh up`
+ 3. Start VM and containers with `dsh up`
 
 ### Windows
 
- 1. Make sure your site's docroot is in `</path/to/project>/docroot`.
- 2. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 3. **In Babun shell** cd into `</path/to/project>`
+ 1. Make sure your `projects` folder is **not** inside `%USERPROFILE%/.babun` installation folder.
+ 2. Edit `settings.php` for your site (see [Drupal settings](#drupal-settings) below).
+ 3. **In Babun shell** cd into `<projects/your-drupal-site>`
  
     3.1) If you have never used Drude before run:
     ```
@@ -70,8 +91,32 @@ To use Drude each team member will need to follow this instruction.
     ```
     This will ony download latest `docker-compose.yml` with default containers' settings.
     
- 4. Start VM and containers with `dsh up`
+ 4. Configure Volumes in your `docker-compose.yml` to use absolute paths formatted in the following way.  
+ If you have this file you need to map:
 
+ ```
+ c:\work\projects\project\.drude\etc\mysql\my.cnf
+
+ Or same in Babun (cygwin) notation:
+
+ /cygdrive/c/work/projects/project/.drude/etc/mysql/my.cnf
+
+ ```
+ Then use this path in `docker-compose.yml`:
+
+ ```
+ /work/projects/project/.drude/etc/mysql/my.cnf
+ ```
+ e.g. in this case DB container "volumes" section will look like this:
+
+ ```
+ volumes:
+   # MySQL configuration overrides
+   - "/work/projects/project/.drude/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
+ ```
+ 
+ 5. Start VM and containers with `dsh up`
+ 
 ### Linux
 
  1. [Install Docker](https://docs.docker.com/compose/install/#install-docker)
