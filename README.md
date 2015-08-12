@@ -50,7 +50,7 @@ To use Drude each team member will need to follow this instruction.
     ```
     This will ony download latest `docker-compose.yml` with default containers' settings.
     
- 4. Start containers with `dsh up`
+ 4. Start VM and containers with `dsh up`
 
 ### Windows
 
@@ -70,15 +70,7 @@ To use Drude each team member will need to follow this instruction.
     ```
     This will ony download latest `docker-compose.yml` with default containers' settings.
     
- 4. Start and login into vagrant, cd into `</path/to/project>`:
- 
-    ```
-    vagrant up
-    vagrant ssh
-    cd </path/to/project>
-    ```
-
- 5. Start containers with `dsh up`
+ 4. Start VM and containers with `dsh up`
 
 ### Linux
 
