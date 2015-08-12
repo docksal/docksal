@@ -83,6 +83,12 @@ docker_compose ()
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
 is_tty ()
 {
+	# disable interactive shell on windows for now
+	# known Docker issue: https://github.com/docker/docker/issues/12469
+	res=`uname | grep 'CYGWIN_NT'`
+	if [[ "$res" != '' ]]; then
+		return 1;
+	else
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
 }
 
@@ -421,6 +427,9 @@ install_prerequisites()
 		cd $cwd
 		echo -e "${red}Please wait until tools installation finishes$NC"
 		read -p "Press any key when installation in another console window is done..."
+		echo "Adjusting git defaults"
+		git config --global core.autocrlf input
+		git config --system core.longpaths true
 	elif is_linux ; then
 		echo -e "${red}dsh: checking that you have docker and docker-compose installed.$NC"
 		binary_found "docker"
