@@ -27,11 +27,10 @@ Drude initial configuration is done once per project (e.g. by a team lead).
 To use Drude each team member will need to follow this instruction.
 
 #### Hardware requirements
-While Docker is supported natively on Linux, Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant).
+While Docker is supported natively on Linux, Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant). [VirtualBox](https://www.virtualbox.org/) and our Boot2docker Vagrant Box will be installed for you if you follow the instructions.  
 
-On Mac and Windows [VirtualBox](https://www.virtualbox.org/) and our [Boot2docker Vagrant VM](https://github.com/blinkreaction/boot2docker-vagrant) will be installed for you if you follow the instructions.  
-_- Boot2docker Vagrant Box requires 2GB of RAM by default. You need minimum 4GB RAM on your computer._  
-_- Your CPU should support hardware VT-x/AMD-V virtualization. (most modern CPUs)_
+- Boot2docker Vagrant Box requires 2GB of RAM by default. You need minimum 4GB RAM on your computer.  
+- Your CPU should support hardware VT-x/AMD-V virtualization. (most modern CPUs)
 
 #### Directory structure
 Drude enforces directory structure where you have arbitrary located `projects` folder in which you place subfolder for each project you have.  
@@ -92,7 +91,7 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
     This will ony download latest `docker-compose.yml` with default containers' settings.
     
  4. Configure Volumes in your `docker-compose.yml` to use absolute paths formatted in the following way.  
- If you have this file you need to map:
+ Suppose you have following file you need to map into db container to customize MySQL settings:
 
  ```
  c:\work\projects\project\.drude\etc\mysql\my.cnf
@@ -102,12 +101,12 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
  /cygdrive/c/work/projects/project/.drude/etc/mysql/my.cnf
 
  ```
- Then use this path in `docker-compose.yml`:
+ Use following path in `docker-compose.yml`:
 
  ```
  /work/projects/project/.drude/etc/mysql/my.cnf
  ```
- e.g. in this case DB container "volumes" section will look like this:
+ In this case DB container "volumes" section should look like this:
 
  ```
  volumes:
