@@ -51,7 +51,7 @@ cli:
     - ~/.ssh:/.ssh   # Linux
     # PHP configuration overrides
     - "./.drude/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
-    - "./.drude/etc/php5/php-cli.ini:/etc/php5/fpm/conf.d/z_php.ini"
+    - "./.drude/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
     # Project root folder mapping
     - ".:/var/www"
   links:
