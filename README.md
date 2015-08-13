@@ -90,31 +90,7 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
     ```
     This will ony download latest `docker-compose.yml` with default containers' settings.
     
- 4. Configure Volumes in your `docker-compose.yml` to use absolute paths formatted in the following way.  
- Suppose you have following file you need to map into db container to customize MySQL settings:
-
- ```
- c:\work\projects\project\.drude\etc\mysql\my.cnf
-
- Or same in Babun (cygwin) notation:
-
- /cygdrive/c/work/projects/project/.drude/etc/mysql/my.cnf
-
- ```
- Use following path in `docker-compose.yml`:
-
- ```
- /work/projects/project/.drude/etc/mysql/my.cnf
- ```
- In this case DB container "volumes" section should look like this:
-
- ```
- volumes:
-   # MySQL configuration overrides
-   - "/work/projects/project/.drude/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
- ```
- 
- 5. Start VM and containers with `dsh up`
+ 4. Start VM and containers with `dsh up`
  
 ### Linux
 
