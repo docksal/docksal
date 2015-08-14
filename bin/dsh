@@ -9,26 +9,28 @@ help ()
 	echo "	init			Set up the project locally. Calls .docker/scripts/drude-init.sh"
 	echo
 	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
-	echo "	stop (down, halt)	Stop vagrant vm (mac only) or stop containers"
+	echo "	stop (down)		Stop containers"
+	echo "	halt			Stop vagrant vm"
 	echo "	reload (restart)	Re-start vagrant vm (mac only) and docker containers"
 	echo "	status (st, ps)		Show containers status"
 	echo
-	echo "	reset			Restart docker containers from scratch (stop, remove, up)"
+	echo "	reset			Re-create and restart docker containers (stop, remove, up)"
 	echo
 	echo "	bash			Start bash on container. Default: cli (usage: dsh bash [container_name])"
 	echo "	exec (run)		Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)"
 	echo
 	echo "	mysql			Opens mysql shell to drude database"
 	echo "	mysql-import		Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
-	echo "					Note: DB dump file should be inside your project folder"
+	echo "				Note: DB dump file should be inside your project folder"
+	echo
 	echo "	drush			Execute drush command (usage: dsh drush [command] [options])"
 	echo "	cc			Clear Drupal caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo
 	echo "	behat			Run Behat tests"
 	echo
 	echo "	install			Install/check prerequisites, boot2docker and drude config"
-	echo "				\"install drude\" will only install latest drude config"
-	echo "	update			Update boot2docker and drude"
+	echo "	install drude 		Only install latest default docker-compose.yml"
+	echo "	update			Update Drude"
 	echo
 }
 
@@ -141,7 +143,7 @@ get_project_root_path ()
 	echo "$project_root_absolute"
 }
 
-# get current path relative to project root
+# Return current path relative to project root with trailing slash
 get_current_relative_path ()
 {
 	# Check that we're inside project folder
@@ -337,17 +339,27 @@ up ()
 	fi
 }
 
-# stop box
+# Stop containers
 down ()
+{
+	if is_yml_absent ; then return 2; fi
+	drude_check_env
+	if is_docker_compose ; then
+		echo -e "${yellow}Stopping containers...$NC"
+		cd `yml_get_path`
+		docker_compose stop
+	fi
+}
+
+# Stop Vagrant box
+halt ()
 {
 	if is_yml_absent ; then return 2; fi
 	drude_check_env
 	if is_vagrant ; then
 		vagrant halt
-	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo -e "${yellow}Stopping containers...$NC"
-		cd `yml_get_path`
-		docker_compose stop
+	elif ( is_boot2docker || is_linux ) ; then
+		down
 	fi
 }
 
