@@ -1,0 +1,44 @@
+# Sync folders configuration
+synced_folders:
+    # nfs: better performance on Mac, recommended.
+    # smb: better performance on Windows. Requires Vagrant to be run with admin privileges.
+    # smb2: experimental, does not require running vagrant as admin.
+    # rsync: the best performance, cross-platform platform, one-way only. Run `vagrant rsync-auto` to start auto sync.
+    #   When using rsync sync type the "folders" list below is mandatory.
+    # vboxfs (or leave empty): best compatibility and ease of setup, but poor performance.
+    type: 'nfs'
+    # smb_user, smb_password - The username and password used for authentication to mount the SMB mount.
+    # This is usually your Windows username and password, unless you created a dedicated user for vagrant.
+    # If using the 'smb2' type above the user and share will be configured automatically.
+    smb_username: 'vagrant'
+    smb_password: 'vagrant'
+    # List of folders to sync with rsync. These should be subfolder names within the <Projects> folder (e.g. "drupal7")
+    # Uncomment and add folders per the example below as neccessary.
+    # Note: you'll have to run `vagrant rsync-auto` in the background to keep the files in sync as you make changes
+    folders:
+      #- "projectA"  # rsync projectA folder
+      #- "projectB"  # rsync projectB folder
+      #- ""  # rsync the whole <Projects> folder. WARNING: don't do this if your <Projects> folder is big.
+
+# VirtualBox VM settings
+v.gui: false  # Set to true for debugging. Will unhide VM's primary console screen.
+v.memory: 2048  # Memory settings.
+v.cpus: 1  # CPU settings. VirtualBox works much better with a single CPU.
+
+# Network settings
+# The default box private network IP is 192.168.10.10
+# Uncomment lines below to map additional IP addresses for use with multiple projects.
+# Project specific `<IP>:<port>` mapping for containers is done in via docker-compose in `docker-compose.yml`
+hosts:
+    #- ip: 192.168.10.11
+    #- ip: 192.168.10.12
+    #- ip: 192.168.10.13
+
+# Automatically start containers if docker-compose.yml is present in the current directory (default: false).
+compose_autostart: false
+
+# vhost-proxy
+# Use a reverse proxy to map host name to containers.
+# This is an alternative to using dedicated IP addresses in the 'hosts' section above.
+# Containers must define a "VIRTUAL_HOST" environment variable to be recognized and routed by the vhost-proxy.
+vhost_proxy: true
