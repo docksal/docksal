@@ -1,9 +1,13 @@
 #!/bin/bash
 
+DSH_VERSION=0.13.0-dev
+
 help ()
 {
 	echo "dsh - Drude Shell"
+	echo
 	echo "Usage: dsh <command> [params]"
+	echo
 	echo "Commands list:"
 	echo
 	echo "	init			Set up the project locally. Calls .docker/scripts/drude-init.sh"
@@ -29,10 +33,14 @@ help ()
 	echo "	behat			Run Behat tests"
 	echo
 	echo "	install			Install/check prerequisites, boot2docker and drude config"
-	echo "	install prerequisites 		Only install prerequisites"
-	echo "	install boot2docker 		Only install boot2docker"
+	echo "	install prerequisites 	Only install prerequisites"
+	echo "	install boot2docker 	Only install boot2docker"
 	echo "	install drude 		Only install the latest default docker-compose.yml"
 	echo "	update			Update Drude"
+	echo
+	echo "	self-update		Update dsh itself"
+	echo "	version			Print dsh version"
+	echo
 	echo
 }
 
@@ -62,6 +70,17 @@ fi
 if [[ ! $DRUDE_DC_PROJECT == "" ]]; then
 	DC_PROJECT="-p $DRUDE_DC_PROJECT"
 fi
+
+# Disaply dsh version
+# @option --short - Display only the version number
+version ()
+{
+	if [[ $1 == '--short' ]]; then
+		echo "$DSH_VERSION"
+	else
+		echo "dsh version: $DSH_VERSION"
+	fi
+}
 
 drude_check_env ()
 {
@@ -627,6 +646,21 @@ update ()
 	fi
 }
 
+# Update dsh itself
+update_self ()
+{
+    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh && \
+    sudo chmod +x /usr/local/bin/dsh
+
+	if [ ! $? -eq 0 ]; then
+		echo -e "${red}dsh update failed.${NC}"
+		return 1
+	else
+		echo -e "${green}dsh successfully updated to version: $(dsh version --short)${NC}"
+		return 0
+	fi
+}
+
 # start interactive bash in container
 _bash ()
 {
@@ -869,6 +903,9 @@ case $1 in
 		shift
 		update $*
 		;;
+	self-update)
+		update_self
+		;;
 	st)
 		status
 		;;
@@ -911,6 +948,10 @@ case $1 in
 	reset)
 		shift
 		reset
+		;;
+	version)
+		shift
+		version $*
 		;;
 	*)
 		help
