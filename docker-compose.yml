@@ -1,20 +1,22 @@
 # Docker and Docker Compose based environment for Drupal.
-# See https://github.com/blinkreaction/docker-fig-drupal for more information and documentation.
+# See https://github.com/blinkreaction/drude for more information and documentation.
 
 # Web node
 web:
   hostname: web
-  image: blinkreaction/drupal-apache:2.2
+  image: blinkreaction/drupal-apache-php:2.2-5.6
   ports:
     - "80"
     - "443"
     # Use IP based mapping when working with multiple projects. See docs (^^) for more details.
-    #- 192.168.10.10:80:80 
-    #- 192.168.10.10:443:443 
-  volumes_from:
-    - cli
+    #- 192.168.10.10:80:80
+    #- 192.168.10.10:443:443
+  volumes:
+    # Project root folder mapping
+    - &project_root ".:/var/www"
+    # PHP configuration overrides
+    - "./.drude/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
   links:
-    - cli
     - db
     # Uncomment this and the memcached service definition below to start using memcached.
     #- memcached
@@ -45,17 +47,20 @@ cli:
   hostname: cli
   image: blinkreaction/drupal-cli:php-5.6
   volumes:
+    # Project root folder mapping
+    - *project_root
+    # PHP configuration overrides
+    - "./.drude/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
     # Host SSH keys mappings.
     # We try to map both options. The startup.sh script in cli container will decide which one to use.
     - /.ssh:/.ssh-b2d  # boot2docker-vagrant
     - ~/.ssh:/.ssh   # Linux
-    # PHP configuration overrides
-    - "./.drude/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
-    - "./.drude/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
-    # Project root folder mapping
-    - ".:/var/www"
+    # Acquia credentials mapping
+    - /.acquia:/root/.acquia # boot2docker-vagrant
+    #- ~/.acquia:/root/.acquia # Linux
   links:
     - db
+    - web
     # Uncomment this and the browser service definition below to start using selenium2.
     #- browser
 
