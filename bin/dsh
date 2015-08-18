@@ -9,25 +9,30 @@ help ()
 	echo "	init			Set up the project locally. Calls .docker/scripts/drude-init.sh"
 	echo
 	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
-	echo "	stop (down, halt)	Stop vagrant vm (mac only) or stop containers"
+	echo "	stop (down)		Stop containers"
+	echo "	halt			Stop vagrant vm"
 	echo "	reload (restart)	Re-start vagrant vm (mac only) and docker containers"
 	echo "	status (st, ps)		Show containers status"
 	echo
-	echo "	reset			Restart docker containers from scratch (stop, remove, up)"
+	echo "	reset			Re-create and restart docker containers (stop, remove, up)"
 	echo
 	echo "	bash			Start bash on container. Default: cli (usage: dsh bash [container_name])"
 	echo "	exec (run)		Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)"
 	echo
 	echo "	mysql			Opens mysql shell to drude database"
 	echo "	mysql-import		Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
-	echo "					Note: DB dump file should be inside your project folder"
+	echo "				Note: DB dump file should be inside your project folder"
+	echo
 	echo "	drush			Execute drush command (usage: dsh drush [command] [options])"
 	echo "	cc			Clear Drupal caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo
 	echo "	behat			Run Behat tests"
 	echo
-	echo "	install			Install boot2docker and drude"
-	echo "	update			Update boot2docker and drude"
+	echo "	install			Install/check prerequisites, boot2docker and drude config"
+	echo "	install prerequisites 		Only install prerequisites"
+	echo "	install boot2docker 		Only install boot2docker"
+	echo "	install drude 		Only install the latest default docker-compose.yml"
+	echo "	update			Update Drude"
 	echo
 }
 
@@ -39,10 +44,10 @@ NC='\033[0m'
 
 #-------------------------- Testing --------------------------------
 if [[ $DRUDE_BRANCH == "" ]]; then
-	DRUDE_BRANCH='master'
+	DRUDE_BRANCH='develop'
 fi
 if [[ $B2D_BRANCH == "" ]]; then
-	B2D_BRANCH='master'
+	B2D_BRANCH='develop'
 fi
 if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
 	echo -e "${red}[dsh] testing mode: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
@@ -58,6 +63,18 @@ if [[ ! $DRUDE_DC_PROJECT == "" ]]; then
 	DC_PROJECT="-p $DRUDE_DC_PROJECT"
 fi
 
+drude_check_env ()
+{
+	# don't change DOCKER_HOST if it's nonempty
+	if [[ "$DOCKER_HOST" != "" ]]; then
+		return 0;
+	else
+		# set Drude's default DOCKER_HOST var
+		DOCKER_HOST="tcp://localhost:2375"
+		export DOCKER_HOST="tcp://localhost:2375"
+	fi
+}
+
 # Pass global project and file settings to docker-compose.
 # Use this function for every docker-compose invocation.
 docker_compose ()
@@ -70,6 +87,12 @@ docker_compose ()
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
 is_tty ()
 {
+	# disable interactive shell on windows for now
+	# known Docker issue: https://github.com/docker/docker/issues/12469
+	res=`uname | grep 'CYGWIN_NT'`
+	if [[ "$res" != '' ]]; then
+		return 1;
+	fi
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
 }
 
@@ -112,7 +135,7 @@ get_abs_path ()
 	echo "$absolute"
 }
 
-# Returns project root absolute path
+# Returns project root absolute path without trailing slash
 get_project_root_path ()
 {
 	yml_path=`yml_get_path`
@@ -122,57 +145,44 @@ get_project_root_path ()
 	echo "$project_root_absolute"
 }
 
-# dummy function to check that command is run along settings.php
-get_drush_path ()
+# Return current path relative to project root with trailing slash
+get_current_relative_path ()
 {
 	# Check that we're inside project folder
 	local proj_root=$(get_project_root_path)
 	local cwd=$(pwd)
-	# if cwd substract proj_root is still cwd then it means we're out of proj_root
-	local pathdiff=${cwd#$proj_root}
-	if [[ "$cwd" == "$pathdiff" ]]; then
-		echo "dsh supports '$argv' command only from within project directory"
+	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
+	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
+	# ex: cwd=/a/b, proj_root=/a/b/c, pathdiff==/a/b
+	local pathdiff=${cwd/#$proj_root/}
+	echo $pathdiff
+}
+
+# check that command is run inside project folder
+get_drush_path ()
+{
+	local pathdiff=$(get_current_relative_path)
+	if [[ "$(pwd)" == "$pathdiff" ]]; then
+		echo "dsh supports commands only from within project directory"
 		return 1
-	fi
-	if [[ "$pathdiff" == "" ]]; then # we're on top level, let's cd for drush to work
-		cd docroot
 	fi
 	return 0
 }
 
-# Get current path relative to project root
-# @param $1 name of variable to get result
-cmdpath ()
-{
-	if [[ $# -ne 1 ]]; then return; fi
-	project_root_path=$(get_project_root_path)
-	# leave only part of absolute path that is after project root
-	local cmdpath=${PWD#$project_root_path/}
-	if [[ "$cmdpath" == "$(pwd)" ]] ; then
-
-		# if replacement didnt happen then we are in project root or higher
-		eval $1="."
-	else
-		eval $1="$cmdpath"
-	fi
-}
-
 # Removes invisible residue from the string that remains leftover sometimes
 # @param $1 string to cleanup
-# @param $2 variable that receives clean string
+# @return clean string
 clean_string ()
 {
 	cleaned=$(echo "$1" | sed -e 's/[^a-zA-Z0-9_-]$//')
-	eval $2=\'${cleaned}\'
+	echo ${cleaned}
 }
 
 # get mysql connection string
-# @param $1 gets result
 get_mysql_connect ()
 {
 	# get connection string and cleanup residue that is leftover
-	clean_string "$(_run drush sql-connect)" clean_res
-	eval $1=\'$clean_res\'
+	echo $(clean_string "$(_run drush sql-connect)")
 }
 
 #----------------------- Basics check functions -----------------------------
@@ -190,7 +200,13 @@ is_linux ()
 is_windows ()
 {
 	res=`uname | grep 'MINGW32_NT'`
-	if [[ ! "$res" == '' ]]; then
+	if [[ "$res" != '' ]]; then
+		echo -e "${red}Running from Git Bash is not supported. Please get Babun http://babun.github.io${NC}"
+		exit
+	fi
+
+	res=`uname | grep 'CYGWIN_NT'`
+	if [[ "$res" != '' ]]; then
 		return 0;
 	else
 		return 1;
@@ -309,6 +325,7 @@ _confirm ()
 up ()
 {
 	if is_yml_absent ; then return 2; fi
+	drude_check_env
 	if is_vagrant ; then
 		vagrant up
 		started=$?
@@ -324,16 +341,27 @@ up ()
 	fi
 }
 
-# stop box
+# Stop containers
 down ()
 {
 	if is_yml_absent ; then return 2; fi
-	if is_vagrant ; then
-		vagrant halt
-	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
+	drude_check_env
+	if is_docker_compose ; then
 		echo -e "${yellow}Stopping containers...$NC"
 		cd `yml_get_path`
 		docker_compose stop
+	fi
+}
+
+# Stop Vagrant box
+halt ()
+{
+	if is_yml_absent ; then return 2; fi
+	drude_check_env
+	if is_vagrant ; then
+		vagrant halt
+	elif ( is_boot2docker || is_linux ) ; then
+		down
 	fi
 }
 
@@ -341,6 +369,7 @@ down ()
 restart ()
 {
 	if is_yml_absent ; then return 2; fi
+	drude_check_env
 	if is_vagrant ; then
 		vagrant reload
 		started=$?
@@ -366,6 +395,7 @@ status ()
 	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	# check docker compose output to not be $compose_error
+	drude_check_env
 	res=$(docker_compose ps 2>&1)
 	if [[ "$res" == "$compose_error" ]]; then
 		echo -e "${yellow}Drude is not running. Use 'dsh up' to start it$NC"
@@ -376,32 +406,26 @@ status ()
 	fi
 }
 
-# installation and updates
+### Installation and updates
 
+# Install required software on Mac or Win. Check installed software on Linux
+# TODO: move presetup windows scripts to drude repo. they are not required for boot2docker 2 exist
 install_prerequisites()
 {
 	echo -e "${green}Installing prerequisites...${NC}"
 	if is_windows ; then
-		local cwd=$(pwd)
-		cd ~
-		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-git-bash.cmd -o presetup-git-bash.cmd
+		# installing prerequisites
+		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-win.sh)
 		if [ ! $? -eq 0 ]; then
-			echo -e "${red}Could not get 'presetup-git-bash.cmd'. Please check your internet connection${NC}"
+			echo -e "${red}Could not get 'presetup-win.sh'. Please check your internet connection${NC}"
 			exit
 		fi
-		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-git-bash.vbs -o presetup-git-bash.vbs
-		if [ ! $? -eq 0 ]; then
-			echo -e "${red}Could not get 'presetup-git-bash.vbs'. Please check your internet connection${NC}"
-			exit
-		fi
-		echo "Setup needs administrator privileges to contiue..."
-		cscript "presetup-git-bash.vbs"
-		cd $cwd
-		echo -e "${red}Please wait until tools installation finishes$NC"
-		read -p "Press any key when installation in another console window is done..."
+		bash <(echo "$presetup_script")
+		read -p "Press any key when the installation in another console window is done..."
 	elif is_linux ; then
-		echo -e "${red}dsh: prerequisites install is not automated on Linux yet.$NC"
-		_confirm "Do you already have them installed manually?"
+		echo -e "${red}dsh: checking that you have docker and docker-compose installed.$NC"
+		binary_found "docker"
+		binary_found "docker-compose"
 	else # mac
 		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-mac.sh)
 		if [ ! $? -eq 0 ]; then
@@ -412,6 +436,8 @@ install_prerequisites()
 	fi
 }
 
+# Install Vagrantfile and vagrant.yml required by boot2docker
+# TODO: refactor to not rely on setup.sh as dsh only needs those 2 files
 install_boot2docker()
 {
 	if is_linux ; then
@@ -445,6 +471,7 @@ install_boot2docker()
 	fi
 }
 
+# Download latest Drude config file
 install_drude()
 {
 	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
@@ -453,25 +480,37 @@ install_drude()
 		return 1
 	else
 		echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
-		echo -e "${green}docker-compose.yml updated to the latest version.${NC}"
+		echo -e "${green}Latest version of docker-compose.yml was downloaded.${NC}"
 		return 0
 	fi
 
 }
 
+# Install prerequisites, boot2docker, Drude
 install ()
 {
-	local cwd=$(pwd)
-	install_prerequisites
-	cd ..
-	_confirm "Install Vagrantfile to $(pwd)?"
-	install_boot2docker
-	cd $cwd
-	_confirm "Install docker-compose.yml to $(pwd)?"
-	install_drude
-	echo -e "${red}Please restart you terminal shell and then use 'dsh up' to start Drude$NC"
+	if [[ "$1" == "prerequisites" ]]; then
+		install_prerequisites
+	elif [[ "$1" == "boot2docker" ]]; then
+		install_boot2docker
+	elif [[ "$1" == "drude" ]]; then
+		install_drude
+	else # Full setup
+		local cwd=$(pwd)
+		install_prerequisites
+		if ! is_linux ; then
+			cd ..
+			_confirm "Install Vagrantfile to $(pwd) (This should be your <Projects> folder)?"
+			install_boot2docker
+			cd $cwd
+		fi
+		_confirm "Install docker-compose.yml to $(pwd) (This should be your <project_name> folder)?"
+		install_drude
+		echo -e "${red}Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude$NC"
+	fi
 }
 
+# Update Drude
 update ()
 {
 	if ! is_tty ; then
@@ -480,8 +519,7 @@ update ()
 	fi
 
 	if is_boot2docker ; then
-		echo -e "${red}dsh: You are running inside boot2docker$NC"
-		return 1
+		echo -e "${yellow}dsh: Updating from inside boot2docker will not update you VM box$NC"
 	fi
 
 	if is_windows; then
@@ -568,6 +606,11 @@ update ()
 		fi
 	fi
 
+	if is_linux; then
+		drude_check_env
+		docker_compose pull
+	fi
+
 	# Update drude
 	cd $cwd # we need to bo back if we were installing boot2docker
 	if install_drude ; then
@@ -595,6 +638,7 @@ _bash ()
 	if is_yml_absent ; then return 2; fi
 	cd `yml_get_path`
 	if is_docker && is_docker_compose ; then
+		drude_check_env
 		local container_name
 		if [[ "$1" == "" ]]; then
 			container_name='cli'
@@ -602,7 +646,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		clean_string $(docker_compose ps -q $container_name) container_id
+		container_id=$(clean_string $(docker_compose ps -q $container_name))
 		docker exec -it $container_id bash -i
 	fi
 }
@@ -612,8 +656,9 @@ _bash ()
 run ()
 {
 	if is_docker && is_docker_compose ; then
+		drude_check_env
 		cd `yml_get_path`
-		clean_string $(docker_compose ps -q cli) container_id
+		container_id=$(clean_string $(docker_compose ps -q cli))
 
 		if is_tty ; then
 			docker exec -it $container_id bash -ic "$*"
@@ -630,9 +675,13 @@ _run ()
 	local COLS=$(tput cols) #get client window width
 	if is_yml_absent ; then return 2; fi
 	if is_docker && is_docker_compose ; then
-		local cd_path=''
-		cmdpath cd_path
-		run "cd $cd_path && export COLUMNS=$COLS && $*"
+		local path=$(get_current_relative_path)
+		local cd=''
+		if [[ "$(get_current_relative_path)" != "$(pwd)" ]] ; then
+			# if we're not outside project folder
+			cd="cd $path &&"
+		fi
+		run "$cd export COLUMNS=$COLS && $*"
 	fi
 }
 
@@ -641,9 +690,7 @@ mysql ()
 {
 	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
-	local sql_connect
-	get_mysql_connect sql_connect
-	_run $sql_connect" -A" # -A option to speed up mysql load
+	_run $(get_mysql_connect)" -A" # -A option to speed up mysql load
 }
 
 # Truncate db and import from sql dump
@@ -680,7 +727,7 @@ mysql_import ()
 
 	echo $(_drush sql-drop -y)
 	local sql_connect
-	get_mysql_connect sql_connect
+	$sql_connect=$(get_mysql_connect)
 	echo "Importing $filename into database 'drupal'..."
 
 	# Use pv for interactive shells only.
@@ -715,14 +762,23 @@ clear_cache ()
 	if [[ ! "$1" == "" ]]; then
 		type=$1
 	fi
+
+	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
+		cd docroot
+	fi
 	_run 'drush cc '$type
 }
 
-# shorthand for executing drush commands
+# Shorthand for executing drush commands
+# @param $* arguments and params passed to Drush
 _drush ()
 {
 	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
+
+	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
+		cd docroot
+	fi
 	_run 'drush '$*
 }
 
@@ -761,6 +817,7 @@ reset ()
 
 	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
+	drude_check_env
 	if is_vagrant ; then
 		echo "Starting vagrant vm..."
 		vagrant up
@@ -805,7 +862,8 @@ case $1 in
 		status
 		;;
 	install)
-		install
+		shift
+		install $*
 		;;
 	update)
 		shift
