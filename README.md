@@ -5,15 +5,19 @@ Docker and Docker Compose based environment for Drupal.
 
 To get Drude follow the instructions below.
 
+There is also a [demo project](https://github.com/blinkreaction/drude-testing) which can be used as a setup example.
+
 ## Install dsh (Drude Shell Helper)
 
 ### Windows 
 
- 1. [Install Babun](http://babun.github.io)
+[Install Babun](http://babun.github.io).  
+Do this as a regular user (do not used admin command prompt).
 
-**On Windows you will need Linux-type shell. All further Drude interactions are supposed to be done in Babun shell on Windows and require pact package manager. Instructions were not tested with other CYGWIN shells.**
+**On Windows you will need a Linux-type shell. All further Drude interactions are supposed to be done in Babun shell. Drude is not tested with other shells on Windows.**
 
 ### Mac, Windows (Babun shell), Linux
+
 To install [dsh](#dsh) run:
 
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh -o /usr/local/bin/dsh
