@@ -761,7 +761,7 @@ mysql_import ()
 
 	echo $(_drush sql-drop -y)
 	local sql_connect
-	$sql_connect=$(get_mysql_connect)
+	sql_connect=$(get_mysql_connect)
 	echo "Importing $filename into database 'drupal'..."
 
 	# Use pv for interactive shells only.
@@ -884,7 +884,7 @@ case $1 in
 		down
 		;;
 	halt)
-		down
+		halt
 		;;
 	restart)
 		restart
