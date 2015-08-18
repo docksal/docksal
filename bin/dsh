@@ -29,7 +29,9 @@ help ()
 	echo "	behat			Run Behat tests"
 	echo
 	echo "	install			Install/check prerequisites, boot2docker and drude config"
-	echo "	install drude 		Only install latest default docker-compose.yml"
+	echo "	install prerequisites 		Only install prerequisites"
+	echo "	install boot2docker 		Only install boot2docker"
+	echo "	install drude 		Only install the latest default docker-compose.yml"
 	echo "	update			Update Drude"
 	echo
 }
@@ -419,8 +421,7 @@ install_prerequisites()
 			exit
 		fi
 		bash <(echo "$presetup_script")
-		echo -e "${red}Please wait until tools installation finishes$NC"
-		read -p "Press any key when installation in another console window is done..."
+		read -p "Press any key when the installation in another console window is done..."
 	elif is_linux ; then
 		echo -e "${red}dsh: checking that you have docker and docker-compose installed.$NC"
 		binary_found "docker"
@@ -485,21 +486,25 @@ install_drude()
 
 }
 
-# Install Drude
+# Install prerequisites, boot2docker, Drude
 install ()
 {
-	if [[ "$1" == "drude" ]]; then
+	if [[ "$1" == "prerequisites" ]]; then
+		install_prerequisites
+	elif [[ "$1" == "boot2docker" ]]; then
+		install_boot2docker
+	elif [[ "$1" == "drude" ]]; then
 		install_drude
-	else
+	else # Full setup
 		local cwd=$(pwd)
 		install_prerequisites
 		if ! is_linux ; then
 			cd ..
-			_confirm "Install Vagrantfile to $(pwd)?"
+			_confirm "Install Vagrantfile to $(pwd) (This should be your <Projects> folder)?"
 			install_boot2docker
 			cd $cwd
 		fi
-		_confirm "Install docker-compose.yml to $(pwd)?"
+		_confirm "Install docker-compose.yml to $(pwd) (This should be your <project_name> folder)?"
 		install_drude
 		echo -e "${red}Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude$NC"
 	fi
