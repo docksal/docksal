@@ -1,9 +1,13 @@
 #!/bin/bash
 
+DSH_VERSION=0.13.0-dev
+
 help ()
 {
 	echo "dsh - Drude Shell"
+	echo
 	echo "Usage: dsh <command> [params]"
+	echo
 	echo "Commands list:"
 	echo
 	echo "	init			Set up the project locally. Calls .docker/scripts/drude-init.sh"
@@ -29,8 +33,14 @@ help ()
 	echo "	behat			Run Behat tests"
 	echo
 	echo "	install			Install/check prerequisites, boot2docker and drude config"
-	echo "	install drude 		Only install latest default docker-compose.yml"
+	echo "	install prerequisites 	Only install prerequisites"
+	echo "	install boot2docker 	Only install boot2docker"
+	echo "	install drude 		Only install the latest default docker-compose.yml"
 	echo "	update			Update Drude"
+	echo
+	echo "	self-update		Update dsh itself"
+	echo "	version			Print dsh version"
+	echo
 	echo
 }
 
@@ -60,6 +70,17 @@ fi
 if [[ ! $DRUDE_DC_PROJECT == "" ]]; then
 	DC_PROJECT="-p $DRUDE_DC_PROJECT"
 fi
+
+# Disaply dsh version
+# @option --short - Display only the version number
+version ()
+{
+	if [[ $1 == '--short' ]]; then
+		echo "$DSH_VERSION"
+	else
+		echo "dsh version: $DSH_VERSION"
+	fi
+}
 
 drude_check_env ()
 {
@@ -412,36 +433,14 @@ install_prerequisites()
 {
 	echo -e "${green}Installing prerequisites...${NC}"
 	if is_windows ; then
-		# installing required babun packages
-		babun shell /bin/bash # change shell do bash
-		pact install python-setuptools
-		pact install libxml2-devel libxslt-devel libyaml-devel
-		curl -skS https://bootstrap.pypa.io/get-pip.py | python
-		pip install virtualenv
-		curl -skS https://raw.githubusercontent.com/mitsuhiko/pipsi/master/get-pipsi.py | python
-		pip install -U docker-compose
-		# nfs-server-config
 		# installing prerequisites
-		local cwd=$(pwd)
-		cd `cygpath $USERPROFILE`
-		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-git-bash.cmd -o presetup-git-bash.cmd
+		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-win.sh)
 		if [ ! $? -eq 0 ]; then
-			echo -e "${red}Could not get 'presetup-git-bash.cmd'. Please check your internet connection${NC}"
+			echo -e "${red}Could not get 'presetup-win.sh'. Please check your internet connection${NC}"
 			exit
 		fi
-		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-git-bash.vbs -o presetup-git-bash.vbs
-		if [ ! $? -eq 0 ]; then
-			echo -e "${red}Could not get 'presetup-git-bash.vbs'. Please check your internet connection${NC}"
-			exit
-		fi
-		echo "Setup needs administrator privileges to contiue..."
-		cscript "presetup-git-bash.vbs"
-		cd $cwd
-		echo -e "${red}Please wait until tools installation finishes$NC"
-		read -p "Press any key when installation in another console window is done..."
-		echo "Adjusting git defaults"
-		git config --global core.autocrlf input
-		git config --system core.longpaths true
+		bash <(echo "$presetup_script")
+		read -p "Press any key when the installation in another console window is done..."
 	elif is_linux ; then
 		echo -e "${red}dsh: checking that you have docker and docker-compose installed.$NC"
 		binary_found "docker"
@@ -506,21 +505,25 @@ install_drude()
 
 }
 
-# Install Drude
+# Install prerequisites, boot2docker, Drude
 install ()
 {
-	if [[ "$1" == "drude" ]]; then
+	if [[ "$1" == "prerequisites" ]]; then
+		install_prerequisites
+	elif [[ "$1" == "boot2docker" ]]; then
+		install_boot2docker
+	elif [[ "$1" == "drude" ]]; then
 		install_drude
-	else
+	else # Full setup
 		local cwd=$(pwd)
 		install_prerequisites
 		if ! is_linux ; then
 			cd ..
-			_confirm "Install Vagrantfile to $(pwd)?"
+			_confirm "Install Vagrantfile to $(pwd) (This should be your <Projects> folder)?"
 			install_boot2docker
 			cd $cwd
 		fi
-		_confirm "Install docker-compose.yml to $(pwd)?"
+		_confirm "Install docker-compose.yml to $(pwd) (This should be your <project_name> folder)?"
 		install_drude
 		echo -e "${red}Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude$NC"
 	fi
@@ -640,6 +643,21 @@ update ()
 	else
 		echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
 		return 1
+	fi
+}
+
+# Update dsh itself
+update_self ()
+{
+    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh && \
+    sudo chmod +x /usr/local/bin/dsh
+
+	if [ ! $? -eq 0 ]; then
+		echo -e "${red}dsh update failed.${NC}"
+		return 1
+	else
+		echo -e "${green}dsh successfully updated to version: $(dsh version --short)${NC}"
+		return 0
 	fi
 }
 
@@ -885,6 +903,9 @@ case $1 in
 		shift
 		update $*
 		;;
+	self-update)
+		update_self
+		;;
 	st)
 		status
 		;;
@@ -927,6 +948,10 @@ case $1 in
 	reset)
 		shift
 		reset
+		;;
+	version)
+		shift
+		version $*
 		;;
 	*)
 		help
