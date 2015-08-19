@@ -627,7 +627,6 @@ update ()
 	fi
 
 	if is_linux; then
-		drude_check_env
 		docker_compose pull
 	fi
 
