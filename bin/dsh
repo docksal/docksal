@@ -84,6 +84,7 @@ version ()
 
 drude_check_env ()
 {
+	if is_linux ; then return 0; fi
 	# don't change DOCKER_HOST if it's nonempty
 	if [[ "$DOCKER_HOST" != "" ]]; then
 		return 0;
