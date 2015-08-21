@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=0.13.0-dev
+DSH_VERSION=0.13.1-dev
 
 help ()
 {
