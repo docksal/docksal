@@ -668,6 +668,24 @@ update_self ()
 # start interactive bash in container
 _bash ()
 {
+	# workaround through vagrant until docker solves the issue with cygwin
+	if is_windows; then
+		if is_yml_absent ; then return 2; fi
+		cd `yml_get_path`
+		cwd=$(cygpath $(cygpath -aw .));
+		local container_name
+		if [[ "$1" == "" ]]; then
+			container_name='cli'
+		else
+			container_name="$1"
+		fi
+		local container_id
+		container_id='$(docker-compose ps -q '$container_name')';
+		command="cd $cwd && docker exec -it $container_id bash -i";
+		vagrant ssh -c "$command"
+		return
+	fi
+
 	if ! is_tty ; then
 		echo "Interactive bash console in a non-interactive enveronment!? Nope, won't happen."
 		return 1
