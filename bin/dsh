@@ -546,11 +546,6 @@ update ()
 		echo -e "${yellow}dsh: Updating from inside boot2docker will not update you VM box$NC"
 	fi
 
-	if is_windows; then
-		echo -e "${red}dsh: Update is not automated on Windows yet$NC"
-		return 1
-	fi
-
 	local cwd=$(pwd)
 	# run boot2docker update only on Mac and Win
 	if ! is_linux ; then
@@ -630,14 +625,10 @@ update ()
 		fi
 	fi
 
-	if is_linux; then
-		docker_compose pull
-	fi
-
 	# Update drude
 	cd $cwd # we need to bo back if we were installing boot2docker
 	if install_drude ; then
-		if [[ ! "$b2d_new_version" == "$b2d_version" ]] && [ $destroy_box -eq 1 ]; then
+		if [[ ! "$b2d_new_version" == "$b2d_version" ]] && [ $destroy_box -eq 1 ] && ! is_linux; then
 			# if vagrant box was updated containers will be downloaded again
 			_confirm "Starting Vagrant box. Downloading and starting containers."
 		else
