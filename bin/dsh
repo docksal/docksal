@@ -10,8 +10,6 @@ help ()
 	echo
 	echo "Commands list:"
 	echo
-	echo "	init			Set up the project locally. Calls .docker/scripts/drude-init.sh"
-	echo
 	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
 	echo "	stop (down)		Stop containers"
 	echo "	halt			Stop vagrant vm"
@@ -20,14 +18,16 @@ help ()
 	echo
 	echo "	reset			Re-create and restart docker containers (stop, remove, up)"
 	echo
-	echo "	bash			Start bash on container. Default: cli (usage: dsh bash [container_name])"
-	echo "	exec (run)		Execute a command in cli container (usage: dsh exec <command> [param] [param] [param]...)"
+	echo "	bash [container]	Open bash to container. If no container provided defaults to 'cli'"
+	echo "	exec (run)		Execute a command in cli container (Usage: dsh exec <command> [param] [param] [param]...)"
 	echo
 	echo "	mysql			Opens mysql shell to drude database"
-	echo "	mysql-import		Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
+	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
 	echo "				Note: DB dump file should be inside your project folder"
 	echo
-	echo "	drush			Execute drush command (usage: dsh drush [command] [options])"
+	echo "	init [url]		Execute project init script .docker/scripts/drude-init.sh. If URL is provided downloads script from there and execute it instead."
+	echo "				Note: URL should be public"
+	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
 	echo "	cc			Clear Drupal caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo
 	echo "	behat			Run Behat tests"
@@ -155,10 +155,14 @@ get_abs_path ()
 	echo "$absolute"
 }
 
-# Returns project root absolute path without trailing slash
+# Returns project root absolute path without trailing slash or "." if couldn't find real path
 get_project_root_path ()
 {
 	yml_path=`yml_get_path`
+	if [ ! -f ${yml_path}docker-compose.yml ]; then
+		echo "."
+		return
+	fi
 	# get relative project root path from docker-compose.yml config
 	local project_root_relative=$(grep "&project_root" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
 	local project_root_absolute=$( cd "${yml_path}$project_root_relative" ; pwd )
@@ -711,7 +715,7 @@ _run ()
 	if is_docker && is_docker_compose ; then
 		local path=$(get_current_relative_path)
 		local cd=''
-		if [[ "$(get_current_relative_path)" != "$(pwd)" ]] ; then
+		if [[ "$path" != "$(pwd)" ]] && [[ "$path" != "" ]] ; then
 			# if we're not outside project folder
 			cd="cd $path &&"
 		fi
@@ -830,17 +834,27 @@ behat ()
 	run 'cd tests/behat && bin/behat -p docker '$*
 }
 
-# Set up the project locally
-# Calls .drude/scripts/drude-init.sh script, so it must exist.
+# Execute project init scripts (if url provided or if such exists locally)
+# Looks for script at .drude/scripts/drude-init.sh
+# @param $1 url of init script. If provided downloads script by that URL an execute it instead
 init ()
 {
-	local project_root_path=$(get_project_root_path)
-	local init_script="$project_root_path/.drude/scripts/drude-init.sh"
-	if [[ -f $init_script ]]; then
-	  exec $init_script
+	if [[ "$1" != "" ]]; then
+		local init_script=$(curl -fsS $1)
+		if [ ! $? -eq 0 ]; then
+			echo -e "${red}Failed downloading init script${NC}"
+			exit -1
+		fi
+		bash <(echo "$init_script")
 	else
-		echo "Project init script is missing: $init_script"
-		exit -1
+		local project_root_path=$(get_project_root_path)
+		local init_script="$project_root_path/.drude/scripts/drude-init.sh"
+		if [[ -f $init_script ]]; then
+		  exec $init_script
+		else
+			echo "Project init script is missing: $init_script"
+			exit -1
+		fi
 	fi
 }
 
@@ -943,7 +957,7 @@ case $1 in
 		;;
 	init)
 		shift
-		init
+		init $*
 		;;
 	reset)
 		shift
