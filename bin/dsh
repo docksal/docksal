@@ -344,6 +344,27 @@ _confirm ()
 	done
 }
 
+_start_containers ()
+{
+	echo -e "${green}Starting containers...$NC"
+	cd `yml_get_path`
+	docker_compose up -d
+}
+
+_stop_containers ()
+{
+	echo -e "${yellow}Stopping containers...$NC"
+	cd `yml_get_path`
+	docker_compose stop
+}
+
+_remove_containers ()
+{
+	echo -e "${yellow}Removing containers...${NC}"
+	cd `yml_get_path`
+	docker_compose kill && docker_compose rm -v --force
+}
+
 #------------------------------- Commands -----------------------------------
 # bring box up
 up ()
@@ -354,14 +375,10 @@ up ()
 		vagrant up
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
-			echo -e "${green}Starting containers...$NC"
-			cd `yml_get_path`
-			docker_compose up -d
+			_start_containers
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo -e "${green}Starting containers...$NC"
-		cd `yml_get_path`
-		docker_compose up -d
+		_start_containers
 	fi
 }
 
@@ -371,9 +388,7 @@ down ()
 	if is_yml_absent ; then return 2; fi
 	drude_check_env
 	if is_docker_compose ; then
-		echo -e "${yellow}Stopping containers...$NC"
-		cd `yml_get_path`
-		docker_compose stop
+		_stop_containers
 	fi
 }
 
@@ -385,7 +400,7 @@ halt ()
 	if is_vagrant ; then
 		vagrant halt
 	elif ( is_boot2docker || is_linux ) ; then
-		down
+		_stop_containers
 	fi
 }
 
@@ -398,14 +413,10 @@ restart ()
 		vagrant reload
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
-			echo -e "${green}Starting containers...$NC"
-			cd `yml_get_path`
-			docker_compose up -d
+			_start_containers
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo -e "${green}Restarting containers...$NC"
-		cd `yml_get_path`
-		docker_compose up -d
+		_start_containers
 	fi
 }
 
@@ -867,8 +878,8 @@ init ()
 	fi
 }
 
-# Reset containers (stop, remove, up)
-reset ()
+# Remove containers
+remove ()
 {
 	_confirm "[!] This will delete all project containers including the DB one. You will have to re-import DB.";
 
@@ -880,15 +891,18 @@ reset ()
 		vagrant up
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
-			echo "Resetting containers..."
-			cd `yml_get_path`
-			docker_compose kill && docker_compose rm -v -f && docker_compose up -d
+			_remove_containers
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		echo "Resetting containers..."
-		cd `yml_get_path`
-		docker_compose kill && docker_compose rm -v -f && docker_compose up -d
+		_remove_containers
 	fi
+}
+
+# Reset containers (stop, remove, up)
+reset ()
+{
+	remove
+	_start_containers
 }
 
 # command bindings
@@ -969,8 +983,10 @@ case $1 in
 		init $*
 		;;
 	reset)
-		shift
 		reset
+		;;
+	remove)
+		remove
 		;;
 	version)
 		shift
