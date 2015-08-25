@@ -58,7 +58,7 @@ if [[ $B2D_BRANCH == "" ]]; then
 	B2D_BRANCH='develop'
 fi
 if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
-	echo -e "${red}[dsh] testing mode: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
+	echo -e "${yellow}[dsh] testing mode: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
 fi
 
 #---------------- Docker Compose Global Settings ----------------------
@@ -292,7 +292,7 @@ is_vagrantfile_absent ()
 {
 	vagrant_path=`upfind "Vagrantfile"`
 	if [[ "$vagrant_path" == "" ]] ; then
-		echo "dsh: Vagrantfile not found in your directory tree"
+		echo -e "${red}dsh: [error] Vagrantfile not found in your directory tree${NC}"
 		return 0
 	fi
 
@@ -796,7 +796,7 @@ mysql_import ()
 	fi
 
 	# Check if import succeded or not and print results.
-	if [ $? -eq 0 ]; then echo "mysql-import finished"; else echo "mysql-import failed"; fi
+	if [ $? -eq 0 ]; then echo "dsh: mysql-import finished"; else echo -e "${red}dsh: mysql-import failed${NC}"; fi
 }
 
 # Shortcut to run drush cc ... on site
