@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=0.13.3-dev
+DSH_VERSION=0.13.4-dev
 
 help ()
 {
@@ -10,11 +10,12 @@ help ()
 	echo
 	echo "Commands list:"
 	echo
-	echo "	start (up)		Start vagrant vm (mac only) and docker containers -OR- restarts docker containers"
+	echo "	start (up)		Start vagrant vm and docker containers -OR- restarts docker containers"
 	echo "	stop (down)		Stop containers"
 	echo "	halt			Stop vagrant vm"
-	echo "	reload (restart)	Re-start vagrant vm (mac only) and docker containers"
+	echo "	reload (restart)	Re-start vagrant vm and docker containers"
 	echo "	status (st, ps)		Show containers status"
+	echo "	    -a (--all)		Show all running containers from all Docker projects"
 	echo
 	echo "	reset			Re-create and restart docker containers (stop, remove, up)"
 	echo
@@ -58,12 +59,13 @@ if [[ $B2D_BRANCH == "" ]]; then
 	B2D_BRANCH='develop'
 fi
 if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
-	echo -e "${yellow}[dsh] testing mode: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
+	echo -e "${yellow}dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
 fi
 
 #---------------- Docker Compose Global Settings ----------------------
 DC_FILE=''
 DC_PROJECT=''
+DEFAULT_DOCKER_HOST='tcp://localhost:2375'
 if [[ ! $DRUDE_DC_FILE == "" ]]; then
 	DC_FILE="-f $DRUDE_DC_FILE"
 fi
@@ -79,19 +81,6 @@ version ()
 		echo "$DSH_VERSION"
 	else
 		echo "dsh version: $DSH_VERSION"
-	fi
-}
-
-drude_check_env ()
-{
-	if is_linux ; then return 0; fi
-	# don't change DOCKER_HOST if it's nonempty
-	if [[ "$DOCKER_HOST" != "" ]]; then
-		return 0;
-	else
-		# set Drude's default DOCKER_HOST var
-		DOCKER_HOST="tcp://localhost:2375"
-		export DOCKER_HOST="tcp://localhost:2375"
 	fi
 }
 
@@ -187,7 +176,7 @@ get_drush_path ()
 {
 	local pathdiff=$(get_current_relative_path)
 	if [[ "$(pwd)" == "$pathdiff" ]]; then
-		echo "dsh supports commands only from within project directory"
+		echo -e "${red}dsh: dsh supports this command only from within project directory${NC}"
 		return 1
 	fi
 	return 0
@@ -225,7 +214,7 @@ is_windows ()
 {
 	res=`uname | grep 'MINGW32_NT'`
 	if [[ "$res" != '' ]]; then
-		echo -e "${red}Running from Git Bash is not supported. Please get Babun http://babun.github.io${NC}"
+		echo -e "${red}dsh: Running from Git Bash is not supported. Please get Babun http://babun.github.io${NC}"
 		exit
 	fi
 
@@ -260,7 +249,7 @@ binary_found ()
 	if [[ "$bpath" != "" ]] && [ -f `which $1` ]; then
 		return 0
 	else
-		echo "\"$1\" executable not found."
+		echo -e "${red}dsh: \"$1\" executable not found.${NC}"
 		return 1
 	fi
 }
@@ -286,6 +275,33 @@ is_docker ()
 {
 	binary_found 'docker';
 	return $?
+}
+
+is_docker_running ()
+{
+	binary_found 'nc'
+	if is_linux; then
+		# on linux check that pid file exists and process with that pid exists
+		local pid='/var/run/docker.pid'
+		if [ ! -f $pid ]; then return 1; fi
+		local status=$(ps ax | grep $(cat "/var/run/docker.pid" 2>&1 1>/dev/null) 2>&1 1>/dev/null | grep -v "grep");
+		return $?
+	else
+		# on mac and win extract host and port from $DOCKER_HOST
+		local host=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/\([a-z0-9\.]*\):[0-9]*/\1/')
+		local port=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/[a-z0-9\.]*:\([0-9]*\)/\1/')
+		# then use netcat to check that port
+		nc -z -w5 $host $port 2>&1 1>/dev/null
+		return $?
+	fi
+}
+
+check_docker_running ()
+{
+	if ! is_docker_running; then
+		echo -e "${red}dsh: Docker is not running${NC}";
+		exit 1
+	fi
 }
 
 is_vagrantfile_absent ()
@@ -344,6 +360,22 @@ _confirm ()
 	done
 }
 
+check_docker_host ()
+{
+	if is_linux ; then return 0; fi
+	# don't change DOCKER_HOST if it's nonempty
+	if [[ "$DOCKER_HOST" != "" ]]; then
+		return 0;
+	else
+		# set Drude's default DOCKER_HOST var
+		DOCKER_HOST=$DEFAULT_DOCKER_HOST
+		export DOCKER_HOST=$DEFAULT_DOCKER_HOST
+	fi
+}
+check_docker_host #perform this check in any case
+
+#-- Containers management --
+
 _start_containers ()
 {
 	echo -e "${green}Starting containers...$NC"
@@ -370,10 +402,14 @@ _remove_containers ()
 up ()
 {
 	if is_yml_absent ; then return 2; fi
-	drude_check_env
 	if is_vagrant ; then
-		vagrant up
-		started=$?
+		if ! is_docker_running; then
+			echo -e "${green}dsh: Starting vagrant vm...${NC}"
+			vagrant up
+			started=$?
+		else
+			started=0
+		fi
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			_start_containers
 		fi
@@ -386,7 +422,6 @@ up ()
 down ()
 {
 	if is_yml_absent ; then return 2; fi
-	drude_check_env
 	if is_docker_compose ; then
 		_stop_containers
 	fi
@@ -396,7 +431,6 @@ down ()
 halt ()
 {
 	if is_yml_absent ; then return 2; fi
-	drude_check_env
 	if is_vagrant ; then
 		vagrant halt
 	elif ( is_boot2docker || is_linux ) ; then
@@ -408,7 +442,6 @@ halt ()
 restart ()
 {
 	if is_yml_absent ; then return 2; fi
-	drude_check_env
 	if is_vagrant ; then
 		vagrant reload
 		started=$?
@@ -421,33 +454,39 @@ restart ()
 }
 
 # output status of Drude if stopped or containers if started
+# @param $1 Show containers from all projects (-a)
 status ()
 {
-	local res
-	local compose_error
-	compose_error='Couldn'"'"'t connect to Docker daemon - you might need to run `boot2docker up`.'
+	check_docker_running
 
-	if is_yml_absent ; then return 2; fi
-	cd `yml_get_path`
-	# check docker compose output to not be $compose_error
-	drude_check_env
-	res=$(docker_compose ps 2>&1)
-	if [[ "$res" == "$compose_error" ]]; then
-		echo -e "${yellow}Drude is not running. Use 'dsh up' to start it$NC"
-		return 1
+	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
+		docker ps
 	else
-		echo "${res}"
-		return 0
+		if is_yml_absent ; then return 2; fi
+		cd `yml_get_path`
+		docker_compose ps
 	fi
 }
 
 ### Installation and updates
 
 # Install required software on Mac or Win. Check installed software on Linux
-# TODO: move presetup windows scripts to drude repo. they are not required for boot2docker 2 exist
 install_prerequisites()
 {
-	echo -e "${green}Installing prerequisites...${NC}"
+	if is_docker_running; then
+		if is_linux; then
+			stopcmd="'dsh stop"
+		else
+			stopcmd="'dsh halt'"
+		fi
+		echo -e "${yellow}WARNING: Docker is running. It's recommended to stop Docker first with ${stopcmd} ${NC}"
+		_confirm "Continue without stopping Docker?"
+	fi
+
+	if ! is_linux; then
+		echo -e "${green}Installing prerequisites...${NC}"
+	fi
+
 	if is_windows ; then
 		# installing prerequisites
 		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-win.sh)
@@ -458,7 +497,7 @@ install_prerequisites()
 		bash <(echo "$presetup_script")
 		read -p "Press any key when the installation in another console window is done..."
 	elif is_linux ; then
-		echo -e "${red}dsh: checking that you have docker and docker-compose installed.$NC"
+		echo -e "${green}dsh: checking that you have docker and docker-compose installed.$NC"
 		binary_found "docker"
 		binary_found "docker-compose"
 	else # mac
@@ -518,7 +557,6 @@ install_drude()
 		echo -e "${green}Latest version of docker-compose.yml was downloaded.${NC}"
 		return 0
 	fi
-
 }
 
 # Install prerequisites, boot2docker, Drude
@@ -667,13 +705,16 @@ update_self ()
 	fi
 }
 
-# start interactive bash in container
+# Start interactive bash in container
+# @param $1 container name (defaults to cli)
 _bash ()
 {
+	if is_yml_absent ; then return 2; fi
+	cd `yml_get_path`
+
 	# workaround through vagrant until docker solves the issue with cygwin
 	if is_windows; then
-		if is_yml_absent ; then return 2; fi
-		cd `yml_get_path`
+		check_docker_running
 		cwd=$(cygpath $(cygpath -aw .));
 		local container_name
 		if [[ "$1" == "" ]]; then
@@ -693,10 +734,8 @@ _bash ()
 		return 1
 	fi
 
-	if is_yml_absent ; then return 2; fi
-	cd `yml_get_path`
 	if is_docker && is_docker_compose ; then
-		drude_check_env
+		check_docker_running
 		local container_name
 		if [[ "$1" == "" ]]; then
 			container_name='cli'
@@ -714,7 +753,7 @@ _bash ()
 run ()
 {
 	if is_docker && is_docker_compose ; then
-		drude_check_env
+		check_docker_running
 		cd `yml_get_path`
 		container_id=$(clean_string $(docker_compose ps -q cli))
 
@@ -782,8 +821,9 @@ mysql_import ()
 		_confirm "[!] This will delete all current data in database 'drupal'."
 	fi
 
+	check_docker_running
 
-	echo $(_drush sql-drop -y)
+	_drush sql-drop -y
 	local sql_connect
 	sql_connect=$(get_mysql_connect)
 	echo "Importing $filename into database 'drupal'..."
@@ -834,10 +874,12 @@ _drush ()
 	if is_yml_absent ; then return 2; fi
 	if ! get_drush_path; then return; fi
 
+	cwd=$(pwd)
 	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
 		cd docroot
 	fi
 	_run 'drush '$*
+	cd $cwd
 }
 
 # Run Behat tests (also install dependencies through Composer)
@@ -885,11 +927,15 @@ remove ()
 
 	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
-	drude_check_env
 	if is_vagrant ; then
-		echo "Starting vagrant vm..."
-		vagrant up
-		started=$?
+		if ! is_docker_running; then
+			echo -e "${green}dsh: Starting vagrant vm...${NC}"
+			vagrant up
+			started=$?
+		else
+			started=0
+		fi
+
 		if [ $started -eq 0 ] && is_docker_compose ; then
 			_remove_containers
 		fi
@@ -930,7 +976,16 @@ case $1 in
 		restart
 		;;
 	status)
-		status
+		shift
+		status $*
+		;;
+	st)
+		shift
+		status $*
+		;;
+	ps)
+		shift
+		status $*
 		;;
 	install)
 		shift
@@ -942,12 +997,6 @@ case $1 in
 		;;
 	self-update)
 		update_self
-		;;
-	st)
-		status
-		;;
-	ps)
-		status
 		;;
 	bash)
 		shift
