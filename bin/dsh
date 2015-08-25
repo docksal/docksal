@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=0.13.4-dev
+DSH_VERSION=0.13.5-dev
 
 help ()
 {
@@ -781,6 +781,10 @@ _run ()
 		if [[ "$path" != "$(pwd)" ]] && [[ "$path" != "" ]] ; then
 			# if we're not outside project folder
 			cd="cd $path &&"
+		fi
+		if [[ "$path" == "" ]] ; then
+			# if we're on project folder level (outside docroot)
+			cd="cd docroot &&"
 		fi
 		run "$cd export COLUMNS=$COLS && $*"
 	fi
