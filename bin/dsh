@@ -237,6 +237,16 @@ is_boot2docker ()
 	fi
 }
 
+is_mac ()
+{
+	res=`uname | grep 'Darwin'`
+	if [[ ! "$res" == '' ]]; then
+		return 0;
+	else
+		return 1;
+	fi
+}
+
 # checks if binary exists and callable in PATH
 binary_found ()
 {
@@ -358,6 +368,16 @@ _confirm ()
 				echo 'Please answer yes or no.'
 		esac
 	done
+}
+
+# Display desktop notification (Mac only)
+# @param $1 title
+# @param $2 message
+_notify ()
+{
+	if is_mac && [[ "$1" != "" ]]; then
+		osascript -e 'display notification "'"$2"'" with title "'"$1"'"'
+	fi
 }
 
 check_docker_host ()
@@ -855,7 +875,12 @@ mysql_import ()
 	fi
 
 	# Check if import succeded or not and print results.
-	if [ $? -eq 0 ]; then echo "dsh: mysql-import finished"; else echo -e "${red}dsh: mysql-import failed${NC}"; fi
+	if [ $? -eq 0 ]; then
+		echo "dsh: mysql-import finished";
+		_notify "Dsh" "Mysql import finished"
+	else
+		echo -e "${red}dsh: mysql-import failed${NC}";
+	fi
 }
 
 # Shortcut to run drush cc ... on site
