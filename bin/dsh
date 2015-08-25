@@ -73,7 +73,7 @@ if [[ ! $DRUDE_DC_PROJECT == "" ]]; then
 	DC_PROJECT="-p $DRUDE_DC_PROJECT"
 fi
 
-# Disaply dsh version
+# Display dsh version
 # @option --short - Display only the version number
 version ()
 {
@@ -443,6 +443,7 @@ restart ()
 {
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
+		echo -e "${green}dsh: Restarting vagrant vm...${NC}"
 		vagrant reload
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
@@ -565,6 +566,9 @@ install ()
 	if [[ "$1" == "prerequisites" ]]; then
 		install_prerequisites
 	elif [[ "$1" == "boot2docker" ]]; then
+		echo -e "${green}ATTENTION:${NC} Vagrantfile and vagrant.yml will be downloaded to ${green}$(pwd)${NC}"
+		echo -e "           If that is not correct please cancel, cd to proper dir and re-run command."
+		_confirm "Continue with download to $(pwd)?"
 		install_boot2docker
 	elif [[ "$1" == "drude" ]]; then
 		install_drude
@@ -577,9 +581,9 @@ install ()
 			install_boot2docker
 			cd $cwd
 		fi
-		_confirm "Install docker-compose.yml to $(pwd) (This should be your <project_name> folder)?"
+		_confirm "Install default docker-compose.yml to $(pwd) (This should be your <drupal_site> folder)?"
 		install_drude
-		echo -e "${red}Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude$NC"
+		echo -e "${green}Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude$NC"
 	fi
 }
 
