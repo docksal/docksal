@@ -1059,7 +1059,7 @@ case $1 in
 		for i in "$@"; do
 		    params="$params \"${i//\"/\\\"}\""
 		done
-		_drush $params
+		_drush "$params"
 		;;
 	behat)
 		shift
