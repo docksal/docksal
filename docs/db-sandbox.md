@@ -14,68 +14,56 @@ Follow instructions below to get started.
 
 ## How it works
 
-In Docker terminology, a read-only [Layer](https://docs.docker.com/terms/layer/#layer) is called an image. In traditional setup you use mysql as Base Docker Image for your DataBase container node. 
+In Docker terminology, a read-only [Layer](https://docs.docker.com/terms/layer/#layer) is called an image. In a traditional setup you would use the stock [mysql image](https://registry.hub.docker.com/_/mysql/) as the base image for your DB container. 
 
 :page_facing_up: docker-compose.yml
 ```yml
 # DB node
 db:
-  image: blinkreaction/mysql:5.5
-  volumes:
+  image: mysql:5.5
   ...
-  # Permanent DB data storage
-    - /var/lib/mysql
   ```
 
-An image never changes. Thanks to [Union File System](https://docs.docker.com/terms/layer/#union-file-system) when process wants to write a file to an image, the Docker creates a copy of that file in Writable Container (the top-most writeable layer).
+The image never changes. Thanks to [Union File System](https://docs.docker.com/terms/layer/#union-file-system) when process wants to write a file to an image, Docker creates a copy of that file in a new layer (the top-most writeable layer).
 
-However all changes to containers are not permanent hence in traditional setup you have the `/var/lib/mysql` external volume to save them permanently outside of `db` container.
+The stock [mysql image](https://registry.hub.docker.com/_/mysql/) defines a data volume (`/var/lib/mysql`). This makes sure the DB data is permanently stored outside of the `db` container on the host and is not lost as the container is (re)launches.
 
 <img src="img/unionfs-container.png" />
 
-For sandboxed DB you remove this permanent storage, import your database into Writeable Container's memory and create a new Docker Image from your container with `docker commit` command. New image will include Base Image plus all in-memory changes made i.e. your DataBase snapshot. It is then used as a Base Image for your DB container. 
+To make the sandbox DB mode possible we have to remove this permanent storage volume from the image (this is done be using a fork of the image), import the DB and commit the container as a new image with `docker commit` command.  
+The new image will include the base image plus all in-memory changes made i.e. your DB snapshot. It is then used as the base image for the DB node going forward. 
 
 :page_facing_up: docker-compose.yml
 ```yml
 # DB node
 db:
   image: mysql_with_my_database:snapshot1
-  volumes:
   ...
-  # Permanent DB data storage (turned off)
-  #  - /var/lib/mysql
   ```
 
 <img src="img/unionfs-your-image.png" />
 
-Now you can do any changes to database you want but each time after the container is restarted all changes will be lost (as it doesn't have external persistant storage) and you will be back to your Base Image `mysql_with_my_database:snapshot1`.
+Now you can do any changes to the database you want and each time after the container is restarted all changes will be lost (as it doesn't have external persistant storage) and you will be back to your base image `mysql_with_my_database:snapshot1`.
 
 ## Steps
 
 1. Create a DB dump
-2. Stop and remove running containers
-    
-    `docker-compose stop && docker-compose rm --force`
+2. Replace the **db** service base image in `docker-compose.yml` with `blinkreaction/mysql-sandbox`
+3. Reset containers
 
-3. Comment out the `/var/lib/mysql` volume definition for the **db** service in `docker-compose.yml`
-4. Restart containers
+    `dsh reset`
 
-    `docker-compose up -d`
-
-5. Import the DB dump you created in step 1.
-6. Stop and [commit](https://docs.docker.com/reference/commandline/cli/#commit) the **db** service container (this will turn the container into a reusable docker image)
+4. Import the DB dump you created in step 1.
+5. Stop and [commit](https://docs.docker.com/reference/commandline/cli/#commit) the **db** service container (this will turn the container into a reusable docker image)
     
     `docker stop $(docker-compose ps -q db) && docker commit $(docker-compose ps -q db) <tag>`
 
     Replace `<tag>` with any meaningful tag you'd like to use for the image. E.g. `db_backup` or `dbdata/myproject:snapshot1`
 
-7. Edit the image definition for the *db* service in `docker-compose.yml` and replace it with the selected tag. E.g.:
-
-    `image: dbdata/myproject:snapshot1`
-
+6. Replace the *db* service base image in `docker-compose.yml` with the selected tag. E.g. `image: dbdata/myproject:snapshot1`
 8. Restart containers
 
-    `docker-compose up -d`
+    `dsh up`
 
 You will now have a sandboxed DB container, which defaults to the DB snapshot you created in step 1 every time the db container is restarted.
 
@@ -90,14 +78,10 @@ In case of small database though it is ok to do that. But please keep in mind th
 You will need a DB dump to revert to.
 Either use the one created before enabling the sandbox mode or take another one while the **db** service contained is still up.
 
-1. Stop and remove running containers
-    
-    `docker-compose stop && docker-compose rm --force`
+1. Revert the changes done to the **db** service in `docker-compose.yml`
+2. Reset containers
 
-2. Revert the changes done to the **db** service in `docker-compose.yml`
-3. Restart containers
-
-    `docker-compose up -d`
+    `dsh reset`
 
 5. Import the DB dump.
 
