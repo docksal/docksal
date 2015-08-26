@@ -12,7 +12,7 @@ There is also a [demo project](https://github.com/blinkreaction/drude-testing) w
 ### Windows 
 
 [Install Babun](http://babun.github.io).  
-Do this as a regular user (do not used admin command prompt).
+Do this as a regular user (do not use admin command prompt).
 
 **On Windows you will need a Linux-type shell. All further Drude interactions are supposed to be done in Babun shell. Drude is not tested with other shells on Windows.**
 
@@ -43,12 +43,12 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
 ```
 + ...
  - projects
- |--- drupal-site-1
+ |--- your-drupal-site
  |      docker-compose.yml
  |      docroot
  |      ...
  | 
- |--- drupal-site-2
+ |--- your-another-drupal-site
  |      .drude
  |      docker-compose.yml
  |      docroot
@@ -100,29 +100,30 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
 
  1. [Install Docker](https://docs.docker.com/compose/install/#install-docker)
  2. [Install Docker Compose](https://docs.docker.com/compose/install/#install-compose)
- 3. Make sure your site's docroot is in `</path/to/project>/docroot`.
- 4. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 5. cd `</path/to/project>` and run:
-
+ 3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
+ 4. If you don't have your `docker-compose.yml` and would like to initialize new Drude project cd `<projects/your-drupal-site>` and run:
+ 
     ```
-    dsh install
+    dsh install drude
     ```
+    This will ony download latest `docker-compose.yml` with default containers' settings.
 
- 6. Start containers with `dsh up`
+ 5. Start containers with `dsh up`
 
 <a name="updates"></a>
 ## Updates
 
- 1. Run the following from the `</path/to/project>` folder:
+ 1. Updating Dsh. It **recommended to always update Dsh before updating Drude** as new version of Dsh may contain changes or improvements to update process. Anywhere run
+
+        dsh self-update
+
+ 2. Updating Drude. Run the following from the `<projects/your-drupal-site>` folder:
  
-    ```
-    dsh update
-    ```
-    **Note**: This will overwrite your `docker-compose.yml`. If you have it customized but not controlled by git please make backup first.
-    
+        dsh update
+
     **Note**: if docker image for database container was updated then container will be re-created and you will need to _re-import your database._ 
     
-    **Note Windows and Mac users:** if boot2docker VM image was updated then update will warn you that VM will be re-created. It means you will have to _re-import your database._ 
+    **Note Windows and Mac users:** if boot2docker VM image was updated then update will warn you that VM will be re-created. It means you will have to _re-import your databases._ 
 
 <a name="drupal-settings"></a>
 ## Drupal settings
@@ -146,7 +147,7 @@ It provides a set of most commonly used commands and operations for controlling 
 See `dsh help` for a complete list.
 
 `dsh` detects the environment it's launched in and will automatically start the boot2docker VM and launch containers as necessary.
-It runs on Mac/Linux directly. On Windows `dsh` runs inside the boot2docker VM.
+It runs on Mac/Linux directly. On Windows `dsh` runs inside the Babun Shell.
 
 <a name="cli"></a>
 ## Console tools (cli)
