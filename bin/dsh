@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=0.13.5-dev
+DSH_VERSION=1.0.0-rc1
 
 help ()
 {
@@ -53,10 +53,10 @@ NC='\033[0m'
 
 #-------------------------- Testing --------------------------------
 if [[ $DRUDE_BRANCH == "" ]]; then
-	DRUDE_BRANCH='develop'
+	DRUDE_BRANCH='master'
 fi
 if [[ $B2D_BRANCH == "" ]]; then
-	B2D_BRANCH='develop'
+	B2D_BRANCH='master'
 fi
 if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
 	echo -e "${yellow}dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
