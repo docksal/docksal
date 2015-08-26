@@ -37,7 +37,7 @@ While Docker is supported natively on Linux, Mac and Windows users will need a t
 - Your CPU should support hardware VT-x/AMD-V virtualization. (most modern CPUs)
 
 #### Directory structure
-Drude enforces directory structure where you have arbitrary located `projects` folder in which you place subfolder for each project you have.  
+Drude enforces directory structure where you have arbitrary located `projects` folder (name is arbitrary and can be different, for the sake of instruction it's further referred as `projects`) in which you place subfolder for each project you have.  
 Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
 
 ```
