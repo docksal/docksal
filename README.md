@@ -20,7 +20,7 @@ Do this as a regular user (do not use admin command prompt).
 
 To install [dsh](#dsh) run:
 
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/develop/bin/dsh -o /usr/local/bin/dsh
+    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/master/bin/dsh -o /usr/local/bin/dsh
     sudo chmod +x /usr/local/bin/dsh
 
 <a name="setup"></a>
