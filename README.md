@@ -54,8 +54,8 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
  |      docroot
  |      ...
  | 
- |--- Vagrantfile
- |--- vagrant.yml
+ |--- Vagrantfile (not needed on Linux)
+ |--- vagrant.yml (not needed on Linux)
 ```
 ### Mac
 
