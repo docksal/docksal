@@ -1038,11 +1038,19 @@ case $1 in
 		;;
 	exec)
 		shift
-		_run $*
+		params=''
+		for i in "$@"; do
+		    params="$params \"${i//\"/\\\"}\""
+		done
+		_run "$params"
 		;;
 	run)
 		shift
-		_run $*
+		params=''
+		for i in "$@"; do
+		    params="$params \"${i//\"/\\\"}\""
+		done
+		_run "$params"
 		;;
 	mysql)
 		mysql
