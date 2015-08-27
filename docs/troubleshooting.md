@@ -4,11 +4,11 @@
 
 <img src="img/b2d-connection-timeout.png" />
 
-<img src="img/b2d-connection-timeout1.png" />
+<img src="img/b2d-connection-timeout-1.png" />
 
-<img src="img/b2d-connection-timeout2.png" />
+<img src="img/b2d-connection-timeout-2.png" />
 
-<img src="img/b2d-connection-timeout3.png" />
+<img src="img/b2d-connection-timeout-3.png" />
 
 ## Pulling images stucks
 
