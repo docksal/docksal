@@ -1038,21 +1038,11 @@ case $1 in
 		;;
 	exec)
 		shift
-		# this weird construction allows to properly handle parameters with spaces in values
-		# http://stackoverflow.com/questions/1668649/how-to-keep-quotes-in-args
-		params=''
-		for i in "$@"; do
-		    params="$params \"${i//\"/\\\"}\""
-		done
-		_run "$params"
+		_run $*
 		;;
 	run)
 		shift
-		params=''
-		for i in "$@"; do
-		    params="$params \"${i//\"/\\\"}\""
-		done
-		_run "$params"
+		_run $*
 		;;
 	mysql)
 		mysql
