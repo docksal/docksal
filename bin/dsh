@@ -301,7 +301,7 @@ is_docker_running ()
 		local host=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/\([a-z0-9\.]*\):[0-9]*/\1/')
 		local port=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/[a-z0-9\.]*:\([0-9]*\)/\1/')
 		# then use netcat to check that port
-		nc -z -w5 $host $port 2>&1 1>/dev/null
+		nc -z -w5 $host $port 2>/dev/null 1>/dev/null
 		return $?
 	fi
 }
