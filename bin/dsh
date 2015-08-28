@@ -782,9 +782,11 @@ run ()
 		container_id=$(clean_string $(docker_compose ps -q cli))
 
 		if is_tty ; then
-			docker exec -it $container_id bash -ic "$@"
+			# need to use $* here to finally resolve slash-escaped string if any. 
+			# passing $@ will not work properly if $@ contains slash espaped string from _drush command
+			docker exec -it $container_id bash -ic "$*"
 		else
-			docker exec $container_id bash -c "$@"
+			docker exec $container_id bash -c "$*"
 		fi
 	fi
 }
@@ -911,8 +913,7 @@ _drush ()
 	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
 		cd docroot
 	fi
-
-	_run 'drush '"$@"
+	_run "drush $@"
 	cd $cwd
 }
 
@@ -986,6 +987,7 @@ reset ()
 }
 
 # command bindings
+
 argv="$@"
 case $1 in
 	up)
@@ -1055,11 +1057,9 @@ case $1 in
 		;;
 	drush)
 		shift
-		params=''
-		for i in "$@"; do
-		    params="$params \"${i//\"/\\\"}\""
-		done
-		_drush "$params"
+		# slash escape space-delimited parameters for safe passing between functions
+		cmd=$(printf " %q" "$@")
+		_drush $cmd
 		;;
 	behat)
 		shift
