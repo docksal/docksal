@@ -58,9 +58,13 @@ fi
 if [[ $B2D_BRANCH == "" ]]; then
 	B2D_BRANCH='master'
 fi
-if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
-	echo -e "${yellow}dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
-fi
+
+testing_warn ()
+{
+	if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
+		echo -e "${yellow}dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
+	fi
+}
 
 #---------------- Docker Compose Global Settings ----------------------
 DC_FILE=''
@@ -80,6 +84,7 @@ version ()
 	if [[ $1 == '--short' ]]; then
 		echo "$DSH_VERSION"
 	else
+		testing_warn
 		echo "dsh version: $DSH_VERSION"
 	fi
 }
@@ -494,6 +499,7 @@ status ()
 # Install required software on Mac or Win. Check installed software on Linux
 install_prerequisites()
 {
+	testing_warn
 	if is_docker_running; then
 		if is_linux; then
 			stopcmd="'dsh stop"
@@ -535,6 +541,7 @@ install_prerequisites()
 # TODO: refactor to not rely on setup.sh as dsh only needs those 2 files
 install_boot2docker()
 {
+	testing_warn
 	if is_linux ; then
 		return 0; # not needed on Linux
 	fi
@@ -569,6 +576,7 @@ install_boot2docker()
 # Download latest Drude config file
 install_drude()
 {
+	testing_warn
 	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
 	if [ ! $? -eq 0 ]; then
 		echo -e "${red}Could not get latest docker-compose.yml version.${NC}"
@@ -610,6 +618,7 @@ install ()
 # Update Drude
 update ()
 {
+	testing_warn
 	if ! is_tty ; then
 		echo "'update' is not allowed in a non-interactive environment."
 		return 1
@@ -717,6 +726,7 @@ update ()
 # Update dsh itself
 update_self ()
 {
+	testing_warn
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh && \
     sudo chmod +x /usr/local/bin/dsh
 
