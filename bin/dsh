@@ -45,6 +45,24 @@ help ()
 	echo
 }
 
+# return bash completion words
+# @param $1 command to return words for
+bash_comp_words ()
+{
+	case $1 in
+		install)
+			echo "prerequisites boot2docker drude"
+			exit 0
+			;;
+		dsh)
+			echo "start up stop down halt reload restart status reset bash exec run mysql mysql-import init drush behat install update self-update version help"
+			exit 0
+			;;
+		*)
+			exit 1 #return 1 to completion function to prevent completion is we don't know what to do
+	esac
+}
+
 # Console colors
 red='\033[0;31m'
 green='\033[0;32m'
@@ -1088,6 +1106,10 @@ case $1 in
 	version)
 		shift
 		version $*
+		;;
+	bash_comp_words)
+		shift
+		bash_comp_words $*
 		;;
 	*)
 		help
