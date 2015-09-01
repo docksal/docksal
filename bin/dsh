@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.0.0-rc3-297
+DSH_VERSION=1.0.0-rc3-299
 
 help ()
 {
@@ -37,6 +37,7 @@ help ()
 	echo "	install prerequisites 	Only install prerequisites"
 	echo "	install boot2docker 	Only install boot2docker"
 	echo "	install drude 		Only install the latest default docker-compose.yml"
+	echo "	install autocomplete 	Install commands autocomplete for Bash"
 	echo "	update			Update Drude"
 	echo
 	echo "	self-update		Update dsh itself"
@@ -115,6 +116,19 @@ docker_compose ()
 }
 
 #-------------------------- Helper functions --------------------------------
+
+echo-r () { echo -e "${red}$1${NC}"; }
+echo-g () { echo -e "${green}$1${NC}"; }
+echo-y () { echo -e "${yellow}$1${NC}"; }
+
+if_failed ()
+{
+	if [ ! $? -eq 0 ]; then
+		if [[ "$1" == "" ]]; then msg="Error"; else msg="$1"; fi
+		echo-r "$msg";
+		exit 1;
+	fi
+}
 
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
 is_tty ()
@@ -606,6 +620,27 @@ install_drude()
 	fi
 }
 
+install_autocomplete ()
+{
+	autocomplete_script=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh-bash-complete")
+	if_failed "Autocomplete script download has failed"
+
+	destination="/usr/local/bin/dsh-bash-autocomplete"
+	echo "$autocomplete_script" | tee "$destination" >/dev/null
+	if_failed "Failed to write file to $destination"
+	echo-g "Script saved to $destination"
+	chmod +x $destination
+
+	SOURCE_FILE=".bash_profile"
+	grep -q "$destination" $HOME/$SOURCE_FILE
+	if [[ $? -ne 0 ]]; then
+		echo -e ". $destination" >> $HOME/$SOURCE_FILE
+		if_failed "Failed to write file to $HOME/$SOURCE_FILE"
+		echo-g "Autocomplete appended to $HOME/$SOURCE_FILE"
+		echo-y "dsh: Please restart you bash session to apply"
+	fi
+}
+
 # Install prerequisites, boot2docker, Drude
 install ()
 {
@@ -618,6 +653,8 @@ install ()
 		install_boot2docker
 	elif [[ "$1" == "drude" ]]; then
 		install_drude
+	elif [[ "$1" == "autocomplete" ]]; then
+		install_autocomplete
 	else # Full setup
 		local cwd=$(pwd)
 		install_prerequisites
