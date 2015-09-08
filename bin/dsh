@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.0.0-rc3-300
+DSH_VERSION=1.0.0-rc3-301
 
 help ()
 {
@@ -29,7 +29,7 @@ help ()
 	echo "	init [url]		Execute project init script .docker/scripts/drude-init.sh. If URL is provided downloads script from there and execute it instead."
 	echo "				Note: URL should be public"
 	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
-	echo "	cc			Clear Drupal caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
+	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo
 	echo "	behat			Run Behat tests"
 	echo
@@ -142,22 +142,17 @@ is_tty ()
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
 }
 
-# Search for file in current dir and all parent dirs
+# Search for file in directiry tree upwards. Return it's path with trailing slash
 # @param $1 filename
 upfind ()
 {
 	if [[ $1 == '' ]]; then return 1; fi
-	local up='../'
-	local pathup='./'
-	local slashes=$(pwd | sed 's/[^\/]//g')
-	for ((i=0; i<=${#slashes}; i++)) do
-		if [ -f "${pathup}$1" ] ; then
-			echo "${pathup}"
-			break
-		else
-			pathup=$pathup$up
-		fi
-	done
+	( #incapsulate cd
+		while [[ ! -f $1 ]] && [[ $PWD != / ]]; do
+			cd ".."
+		done;
+		if [[ -f $1 ]]; then echo $PWD/; fi
+	)
 }
 
 yml_get_path ()
