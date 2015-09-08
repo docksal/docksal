@@ -51,18 +51,18 @@ cli:
     - *project_root
     # PHP configuration overrides
     - "./.drude/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
-    # Host SSH keys mappings.
-    # We try to map both options. The startup.sh script in cli container will decide which one to use.
-    - /.ssh:/.ssh-b2d  # boot2docker-vagrant
-    - ~/.ssh:/.ssh   # Linux
-    # Acquia credentials mapping
-    - /.acquia:/root/.acquia # boot2docker-vagrant
-    #- ~/.acquia:/root/.acquia # Linux
+    # Host home directory mapping (for SSH keys and ther credentials).
+    # We try to map both options (b2d and Linux). The startup.sh script in cli container will decide which one to use.
+    - /.home:/.home-b2d  # boot2docker-vagrant
+    - ~:/.home-linux   # Linux
   links:
     - db
     - web
     # Uncomment this and the browser service definition below to start using selenium2.
     #- browser
+  environment:
+    # Optional. Specify a custom SSH RSA key name if necessary. Defaults to 'id_rsa'.
+    - SSH_KEY_NAME=id_rsa
 
 # Memcached node
 # Uncomment the service definition section below and the link in the web service above to start using memcached.
