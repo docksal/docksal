@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 (2015-09-14)
+
+- Bump dsh version to v1.0.1
+
 ## 1.0.0 (2015-09-14)
 
 - Properly handle complex parameters in `dsh drush`
