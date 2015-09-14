@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0 (2015-09-14)
+
+- Properly handle complex parameters in `dsh drush`
+- Bash autocomplete for dsh
+- Support running drush with symlinked directories
+- Host's home directory mapping in CLI container to simplify mounts for SSH keys and other credentials and configs.
+- Support for custom SSH key names
+- Debugging with Xdebug tutorial
+- Documentation cleanup and updates (php and mysql settings overrides, vhost-proxy usage, troubleshooting docs)
+
 ## 1.0.0-rc1 (2015-08-26)
 
 - Switching shell scripts back to /bin/bash for consistency across all platforms
