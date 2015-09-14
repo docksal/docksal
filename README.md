@@ -175,6 +175,11 @@ Tools available inside the **cli** container:
 - [Using Behat](docs/behat.md)
 - [Zero-configuration Debugging with Xdebug and PhpStorm](docs/xdebug.md)
 
+<a name="troubleshooting"></a>
+## troubleshooting
+
+See [Troubleshooting](docs/troubleshooting.md) section of the docs.
+
 ## License
 
 The MIT License (MIT)

@@ -1,23 +1,5 @@
 # Troubleshooting
 
-## Boot2docker connection timeout
+Start with [boot2docker-vagrant troubleshooting](https://github.com/blinkreaction/boot2docker-vagrant/blob/master/docs/troubleshooting.md)
 
-<img src="img/b2d-connection-timeout.png" />
-
-<img src="img/b2d-connection-timeout-1.png" />
-
-<img src="img/b2d-connection-timeout-2.png" />
-
-<img src="img/b2d-connection-timeout-3.png" />
-
-## Pulling images stucks
-
-Also known as "Layer already being pulled by another client" problem.
-
-<img src="img/pull-image.png" />
-
-<img src="img/default-network-adapter-1.png" />
-
-<img src="img/default-network-adapter-2.png" />
-
-<img src="img/default-network-adapter-3.png" />
+Most of the issues related to VM startup, file sync, etc. will be covered there.
