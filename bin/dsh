@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.0.0-rc1
+DSH_VERSION=1.0.0-rc3-301
 
 help ()
 {
@@ -29,7 +29,7 @@ help ()
 	echo "	init [url]		Execute project init script .docker/scripts/drude-init.sh. If URL is provided downloads script from there and execute it instead."
 	echo "				Note: URL should be public"
 	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
-	echo "	cc			Clear Drupal caches (usage: dsh cc [cache_type] (\"dsh cc\" is equal to \"dsh cc all\")"
+	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo
 	echo "	behat			Run Behat tests"
 	echo
@@ -37,12 +37,31 @@ help ()
 	echo "	install prerequisites 	Only install prerequisites"
 	echo "	install boot2docker 	Only install boot2docker"
 	echo "	install drude 		Only install the latest default docker-compose.yml"
+	echo "	install autocomplete 	Install commands autocomplete for Bash"
 	echo "	update			Update Drude"
 	echo
 	echo "	self-update		Update dsh itself"
 	echo "	version			Print dsh version"
 	echo
 	echo
+}
+
+# return bash completion words
+# @param $1 command to return words for
+bash_comp_words ()
+{
+	case $1 in
+		install)
+			echo "prerequisites boot2docker drude"
+			exit 0
+			;;
+		dsh)
+			echo "start up stop down halt reload restart status reset bash exec run mysql mysql-import init drush behat install update self-update version help"
+			exit 0
+			;;
+		*)
+			exit 1 #return 1 to completion function to prevent completion is we don't know what to do
+	esac
 }
 
 # Console colors
@@ -58,9 +77,13 @@ fi
 if [[ $B2D_BRANCH == "" ]]; then
 	B2D_BRANCH='master'
 fi
-if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
-	echo -e "${yellow}dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}$NC"
-fi
+
+testing_warn ()
+{
+	if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
+		echo-yellow "dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}"
+	fi
+}
 
 #---------------- Docker Compose Global Settings ----------------------
 DC_FILE=''
@@ -80,6 +103,7 @@ version ()
 	if [[ $1 == '--short' ]]; then
 		echo "$DSH_VERSION"
 	else
+		testing_warn
 		echo "dsh version: $DSH_VERSION"
 	fi
 }
@@ -93,6 +117,19 @@ docker_compose ()
 
 #-------------------------- Helper functions --------------------------------
 
+echo-red () { echo -e "${red}$1${NC}"; }
+echo-green () { echo -e "${green}$1${NC}"; }
+echo-yellow () { echo -e "${yellow}$1${NC}"; }
+
+if_failed ()
+{
+	if [ ! $? -eq 0 ]; then
+		if [[ "$1" == "" ]]; then msg="dsh: error"; else msg="$1"; fi
+		echo-red "dsh: $msg";
+		exit 1;
+	fi
+}
+
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
 is_tty ()
 {
@@ -105,22 +142,17 @@ is_tty ()
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
 }
 
-# Search for file in current dir and all parent dirs
+# Search for file in directiry tree upwards. Return it's path with trailing slash
 # @param $1 filename
 upfind ()
 {
 	if [[ $1 == '' ]]; then return 1; fi
-	local up='../'
-	local pathup='./'
-	local slashes=$(pwd | sed 's/[^\/]//g')
-	for ((i=0; i<=${#slashes}; i++)) do
-		if [ -f "${pathup}$1" ] ; then
-			echo "${pathup}"
-			break
-		else
-			pathup=$pathup$up
-		fi
-	done
+	( #incapsulate cd
+		while [[ ! -f $1 ]] && [[ $PWD != / ]]; do
+			cd ".."
+		done;
+		if [[ -f $1 ]]; then echo $PWD/; fi
+	)
 }
 
 yml_get_path ()
@@ -176,7 +208,7 @@ get_drush_path ()
 {
 	local pathdiff=$(get_current_relative_path)
 	if [[ "$(pwd)" == "$pathdiff" ]]; then
-		echo -e "${red}dsh: dsh supports this command only from within project directory${NC}"
+		echo-red "dsh: dsh supports this command only from within project directory"
 		return 1
 	fi
 	return 0
@@ -214,7 +246,7 @@ is_windows ()
 {
 	res=`uname | grep 'MINGW32_NT'`
 	if [[ "$res" != '' ]]; then
-		echo -e "${red}dsh: Running from Git Bash is not supported. Please get Babun http://babun.github.io${NC}"
+		echo-red "dsh: Running from Git Bash is not supported. Please get Babun http://babun.github.io"
 		exit
 	fi
 
@@ -301,7 +333,7 @@ is_docker_running ()
 		local host=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/\([a-z0-9\.]*\):[0-9]*/\1/')
 		local port=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/[a-z0-9\.]*:\([0-9]*\)/\1/')
 		# then use netcat to check that port
-		nc -z -w5 $host $port 2>&1 1>/dev/null
+		nc -z -w5 $host $port 2>/dev/null 1>/dev/null
 		return $?
 	fi
 }
@@ -309,7 +341,7 @@ is_docker_running ()
 check_docker_running ()
 {
 	if ! is_docker_running; then
-		echo -e "${red}dsh: Docker is not running${NC}";
+		echo-red "dsh: Docker is not running";
 		exit 1
 	fi
 }
@@ -318,7 +350,7 @@ is_vagrantfile_absent ()
 {
 	vagrant_path=`upfind "Vagrantfile"`
 	if [[ "$vagrant_path" == "" ]] ; then
-		echo -e "${red}dsh: [error] Vagrantfile not found in your directory tree${NC}"
+		echo-red "dsh: [error] Vagrantfile not found in your directory tree"
 		return 0
 	fi
 
@@ -398,21 +430,21 @@ check_docker_host #perform this check in any case
 
 _start_containers ()
 {
-	echo -e "${green}Starting containers...$NC"
+	echo-green "Starting containers..."
 	cd `yml_get_path`
 	docker_compose up -d
 }
 
 _stop_containers ()
 {
-	echo -e "${yellow}Stopping containers...$NC"
+	echo-yellow "Stopping containers..."
 	cd `yml_get_path`
 	docker_compose stop
 }
 
 _remove_containers ()
 {
-	echo -e "${yellow}Removing containers...${NC}"
+	echo-yellow "Removing containers..."
 	cd `yml_get_path`
 	docker_compose kill && docker_compose rm -v --force
 }
@@ -424,7 +456,7 @@ up ()
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
 		if ! is_docker_running; then
-			echo -e "${green}dsh: Starting vagrant vm...${NC}"
+			echo-green "dsh: Starting vagrant vm..."
 			vagrant up
 			started=$?
 		else
@@ -463,7 +495,7 @@ restart ()
 {
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
-		echo -e "${green}dsh: Restarting vagrant vm...${NC}"
+		echo-green "dsh: Restarting vagrant vm..."
 		vagrant reload
 		started=$?
 		if [ $started -eq 0 ] && is_docker_compose ; then
@@ -494,39 +526,34 @@ status ()
 # Install required software on Mac or Win. Check installed software on Linux
 install_prerequisites()
 {
+	testing_warn
 	if is_docker_running; then
 		if is_linux; then
 			stopcmd="'dsh stop"
 		else
 			stopcmd="'dsh halt'"
 		fi
-		echo -e "${yellow}WARNING: Docker is running. It's recommended to stop Docker first with ${stopcmd} ${NC}"
+		echo-yellow "WARNING: Docker is running. It's recommended to stop Docker first with ${stopcmd} "
 		_confirm "Continue without stopping Docker?"
 	fi
 
 	if ! is_linux; then
-		echo -e "${green}Installing prerequisites...${NC}"
+		echo-green "Installing prerequisites..."
 	fi
 
 	if is_windows ; then
 		# installing prerequisites
 		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-win.sh)
-		if [ ! $? -eq 0 ]; then
-			echo -e "${red}Could not get 'presetup-win.sh'. Please check your internet connection${NC}"
-			exit
-		fi
+		if_failed "Could not get 'presetup-win.sh'. Please check your internet connection"
 		bash <(echo "$presetup_script")
 		read -p "Press any key when the installation in another console window is done..."
 	elif is_linux ; then
-		echo -e "${green}dsh: checking that you have docker and docker-compose installed.$NC"
+		echo-green "dsh: checking that you have docker and docker-compose installed."
 		binary_found "docker"
 		binary_found "docker-compose"
 	else # mac
 		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-mac.sh)
-		if [ ! $? -eq 0 ]; then
-			echo -e "${red}Could not get 'presetup-mac.sh'. Please check your internet connection${NC}"
-			exit
-		fi
+		if_failed "Could not get 'presetup-mac.sh'. Please check your internet connection"
 		bash <(echo "$presetup_script")
 	fi
 }
@@ -535,23 +562,21 @@ install_prerequisites()
 # TODO: refactor to not rely on setup.sh as dsh only needs those 2 files
 install_boot2docker()
 {
+	testing_warn
 	if is_linux ; then
 		return 0; # not needed on Linux
 	fi
-	echo -n "Downloading boot2docker install script..."
+	echo-green "Downloading boot2docker install script..."
 
 	if is_windows ; then
 		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/setup.sh -o ~/setup.sh
 	else
 		local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/setup.sh)
 	fi
-	if [ ! $? -eq 0 ]; then
-		echo -e "${red}Could not get 'setup.sh'. Please check your internet connection${NC}"
-		exit
-	fi
+	if_failed "Could not get 'setup.sh'. Please check your internet connection"
 
 	echo "done"
-	echo -e "${yellow}Running boot2docker install script...$NC"
+	echo-yellow "Running boot2docker install script..."
 	if is_windows ; then
 		chmod +x ~/setup.sh
 		B2D_NO_AUTOSTART=1 ~/setup.sh
@@ -560,7 +585,7 @@ install_boot2docker()
 		B2D_NO_AUTOSTART=1 bash <(echo "$b2d_setup_script")
 
 		# Configuring resolver
-		echo -e "${yellow}Configuring *.drude wildcard DNS resolution...$NC"
+		echo-yellow "Configuring *.drude wildcard DNS resolution..."
 		sudo mkdir -p /etc/resolver
 		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee 1>/dev/null /etc/resolver/drude
 	fi
@@ -569,14 +594,33 @@ install_boot2docker()
 # Download latest Drude config file
 install_drude()
 {
+	testing_warn
 	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
-	if [ ! $? -eq 0 ]; then
-		echo -e "${red}Could not get latest docker-compose.yml version.${NC}"
-		return 1
-	else
-		echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
-		echo -e "${green}Latest version of docker-compose.yml was downloaded.${NC}"
-		return 0
+	if_failed  "Could not get latest docker-compose.yml version."
+
+	echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
+	if_failed  "Could not write to docker-compose.yml"
+	echo-green "Latest version of docker-compose.yml was downloaded."
+}
+
+install_autocomplete ()
+{
+	autocomplete_script=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh-bash-complete")
+	if_failed "Autocomplete script download has failed"
+
+	destination="/usr/local/bin/dsh-bash-autocomplete"
+	echo "$autocomplete_script" | tee "$destination" >/dev/null
+	if_failed "Failed to write file to $destination"
+	echo-green "Script saved to $destination"
+	chmod +x $destination
+
+	SOURCE_FILE=".bash_profile"
+	grep -q "$destination" $HOME/$SOURCE_FILE
+	if [[ $? -ne 0 ]]; then
+		echo -e ". $destination" >> $HOME/$SOURCE_FILE
+		if_failed "Failed to write file to $HOME/$SOURCE_FILE"
+		echo-green "Autocomplete appended to $HOME/$SOURCE_FILE"
+		echo-yellow "dsh: Please restart you bash session to apply"
 	fi
 }
 
@@ -592,6 +636,8 @@ install ()
 		install_boot2docker
 	elif [[ "$1" == "drude" ]]; then
 		install_drude
+	elif [[ "$1" == "autocomplete" ]]; then
+		install_autocomplete
 	else # Full setup
 		local cwd=$(pwd)
 		install_prerequisites
@@ -603,26 +649,27 @@ install ()
 		fi
 		_confirm "Install default docker-compose.yml to $(pwd) (This should be your <drupal_site> folder)?"
 		install_drude
-		echo -e "${green}Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude$NC"
+		echo-green "Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude"
 	fi
 }
 
 # Update Drude
 update ()
 {
+	testing_warn
 	if ! is_tty ; then
 		echo "'update' is not allowed in a non-interactive environment."
 		return 1
 	fi
 
 	if is_boot2docker ; then
-		echo -e "${yellow}dsh: Updating from inside boot2docker will not update you VM box$NC"
+		echo-yellow "dsh: Updating from inside boot2docker will not update you VM box"
 	fi
 
 	local cwd=$(pwd)
 	# run boot2docker update only on Mac and Win
 	if ! is_linux ; then
-		echo -e "${green}Installing boot2docker update...${NC}"
+		echo-green "Installing boot2docker update..."
 		# Make sure ~/.drude folder exists
 		mkdir -p $HOME/.drude
 		
@@ -633,10 +680,7 @@ update ()
 
 		# get new version
 		local b2d_new_version=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/VERSION)
-		if [ ! $? -eq 0 ]; then
-			echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
-			return 1
-		fi
+		if_failed "Could not get latest boot2docker version. Please check your internet connection"
 
 		# update boot2docker
 
@@ -651,7 +695,7 @@ update ()
 				echo -e "${red}Update will destroy and re-create your Vagrant box${NC} (run with -n if you know re-creation can be skipped this time)"
 				_confirm "Please confirm."
 			else
-				echo -e "${green}Vagrant box will not be re-created${NC}"
+				echo-green "Vagrant box will not be re-created"
 			fi
 
 			# don't download update if we can't locate Vagrantfile
@@ -659,40 +703,30 @@ update ()
 			cd $vagrant_path
 			echo "Vagrantfile is found in "$(pwd)
 
-			echo -n "Downloading boot2docker install script..."
+			echo-green "dsh: Downloading boot2docker install script..."
 			local b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/setup.sh)
-			if [ ! $? -eq 0 ]; then
-				echo -e "${red}Could not get latest boot2docker version. Please check your internet connection${NC}"
-				exit
-			fi
-			echo "done"
+			if_failed  "Could not get latest boot2docker version. Please check your internet connection"
 
-			echo "Creating backups..."
+			echo "dsh: Creating backups..."
 			local timestamp=$(date +%s)
 			cp -v Vagrantfile $HOME/.drude/Vagrantfile.$timestamp && \
 			cp -v vagrant.yml $HOME/.drude/vagrant.yml.$timestamp
-			if [ ! $? -eq 0 ]; then
-				echo -e "${red}Unable to perform configuration backups. Aborting... ${NC}"
-				exit 1
-			fi
+			if_failed "Unable to perform configuration backups. Aborting..."
 
 			if [ $destroy_box -eq 1 ]; then
-				echo -e "${yellow}Destroying vagrant box...$NC"
+				echo-yellow "dsh: Destroying vagrant box..."
 				vagrant destroy -f
 			fi
 
-			echo -e "${yellow}Running boot2docker install script...$NC"
+			echo-green "dsh: Running boot2docker install script..."
 			# calling bash interactively
 			bash <(echo "$b2d_setup_script")
 
-			if [[ $? -ne 0 ]]; then
-				# don't continue in automatic mode if boot2docker update failed
-				return 1
-			else
-				# update recorded boot2docker version
-				echo $b2d_new_version > $b2d_version_path
-				echo -e "boot2docker ${green}$b2d_new_version${NC} was installed"
-			fi
+			if_failed "boot2docker install script error"
+
+			# update recorded boot2docker version
+			echo $b2d_new_version > $b2d_version_path
+			echo -e "boot2docker ${green}$b2d_new_version${NC} was installed"
 		else
 			echo "boot2docker $b2d_version you have is the latest version (-f to force update)"
 		fi
@@ -717,16 +751,11 @@ update ()
 # Update dsh itself
 update_self ()
 {
+	testing_warn
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh && \
+    if_failed "new version download has failed."
     sudo chmod +x /usr/local/bin/dsh
-
-	if [ ! $? -eq 0 ]; then
-		echo -e "${red}dsh update failed.${NC}"
-		return 1
-	else
-		echo -e "${green}dsh successfully updated to version: $(dsh version --short)${NC}"
-		return 0
-	fi
+	echo-green "dsh successfully updated to version: $(dsh version --short)"
 }
 
 # Start interactive bash in container
@@ -782,6 +811,8 @@ run ()
 		container_id=$(clean_string $(docker_compose ps -q cli))
 
 		if is_tty ; then
+			# need to use $* here to finally resolve slash-escaped string if any. 
+			# passing $@ will not work properly if $@ contains slash espaped string from _drush command
 			docker exec -it $container_id bash -ic "$*"
 		else
 			docker exec $container_id bash -c "$*"
@@ -806,7 +837,7 @@ _run ()
 			# if we're on project folder level (outside docroot)
 			cd="cd docroot &&"
 		fi
-		run "$cd export COLUMNS=$COLS && $*"
+		run "$cd export COLUMNS=$COLS && $@"
 	fi
 }
 
@@ -880,6 +911,7 @@ mysql_import ()
 		_notify "Dsh" "Mysql import finished"
 	else
 		echo -e "${red}dsh: mysql-import failed${NC}";
+		_notify "Dsh" "Mysql import failed!"
 	fi
 }
 
@@ -911,7 +943,7 @@ _drush ()
 	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
 		cd docroot
 	fi
-	_run 'drush '$*
+	_run "drush $@"
 	cd $cwd
 }
 
@@ -936,10 +968,7 @@ init ()
 {
 	if [[ "$1" != "" ]]; then
 		local init_script=$(curl -fsS $1)
-		if [ ! $? -eq 0 ]; then
-			echo -e "${red}Failed downloading init script${NC}"
-			exit -1
-		fi
+		if_failed "Failed downloading init script"
 		bash <(echo "$init_script")
 	else
 		local project_root_path=$(get_project_root_path)
@@ -962,7 +991,7 @@ remove ()
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
 		if ! is_docker_running; then
-			echo -e "${green}dsh: Starting vagrant vm...${NC}"
+			echo-green "dsh: Starting vagrant vm..."
 			vagrant up
 			started=$?
 		else
@@ -985,6 +1014,7 @@ reset ()
 }
 
 # command bindings
+
 argv="$@"
 case $1 in
 	up)
@@ -1054,7 +1084,9 @@ case $1 in
 		;;
 	drush)
 		shift
-		_drush $*
+		# slash escape space-delimited parameters for safe passing between functions
+		cmd=$(printf " %q" "$@")
+		_drush $cmd
 		;;
 	behat)
 		shift
@@ -1073,6 +1105,10 @@ case $1 in
 	version)
 		shift
 		version $*
+		;;
+	bash_comp_words)
+		shift
+		bash_comp_words $*
 		;;
 	*)
 		help
