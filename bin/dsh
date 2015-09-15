@@ -442,11 +442,14 @@ _stop_containers ()
 	docker_compose stop
 }
 
+# @param $1 container name
 _remove_containers ()
 {
-	echo-yellow "Removing containers..."
+	if [[ $1 == "" ]]; then
+		echo-yellow "Removing containers..."
+	fi
 	cd `yml_get_path`
-	docker_compose kill && docker_compose rm -v --force
+	echo "docker_compose kill $1 && docker_compose rm -v --force $1"
 }
 
 #------------------------------- Commands -----------------------------------
@@ -982,12 +985,14 @@ init ()
 	fi
 }
 
-# Remove containers
+# Remove container(s)
+# @param $1 container name
 remove ()
 {
-	_confirm "[!] This will delete all project containers including the DB one. You will have to re-import DB.";
+	if [[ $1 == "" ]]; then
+		_confirm "[!] This will delete all project containers including the DB one. You will have to re-import DB.";
+	fi
 
-	echo "Checking files..."
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
 		if ! is_docker_running; then
@@ -999,10 +1004,10 @@ remove ()
 		fi
 
 		if [ $started -eq 0 ] && is_docker_compose ; then
-			_remove_containers
+			_remove_containers $1
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		_remove_containers
+		_remove_containers $1
 	fi
 }
 
@@ -1100,7 +1105,8 @@ case $1 in
 		reset
 		;;
 	remove)
-		remove
+		shift
+		remove $*
 		;;
 	version)
 		shift
