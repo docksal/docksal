@@ -1,33 +1,34 @@
 #!/bin/bash
 
-DSH_VERSION=1.2.1
+DSH_VERSION=1.3.2
 
 help ()
 {
 	echo "dsh - Drude Shell"
-	echo
 	echo "Usage: dsh <command> [params]"
 	echo
 	echo "Commands list:"
 	echo
-	echo "	start (up)		Start vagrant vm and docker containers -OR- restarts docker containers"
-	echo "	stop (down)		Stop containers"
+	echo "	start (up)		Start vagrant vm (if stopped) and docker containers"
+	echo "	stop (down)		Stop project containers"
 	echo "	    -a (--all)		Stop all running containers from all Docker projects"
+	echo "	restart	[containers]	Restart all current project containers or specified [containers]"
+	echo "	reload			Restart vagrant vm"
 	echo "	halt			Stop vagrant vm"
-	echo "	reload (restart)	Re-start vagrant vm and docker containers"
-	echo "	status (st, ps)		Show containers status"
-	echo "	    -a (--all)		Show all running containers from all Docker projects"
+	echo "	status (st, ps)		Show project containers status"
+	echo "	    -a (--all)		Show all running containers from all Docker projects status"
 	echo
-	echo "	reset			Re-create and restart docker containers (stop, remove, up)"
+	echo "	reset [containers]	Recreate (stop, remove, up) all project containers or specified [containers]"
+	echo "	remove [containers]	Remove all project containers or specified [containers]"
 	echo
 	echo "	bash [container]	Open bash to container. If no container provided defaults to 'cli'"
-	echo "	exec (run)		Execute a command in cli container (Usage: dsh exec <command> [param] [param] [param]...)"
+	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
 	echo
 	echo "	mysql			Opens mysql shell to drude database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
 	echo "				Note: DB dump file should be inside your project folder"
 	echo
-	echo "	init [url]		Execute project init script .docker/scripts/drude-init.sh. If URL is provided downloads script from there and execute it instead."
+	echo "	init [url]		Execute project init script .drude/scripts/drude-init.sh (if URL provided downloads script from there and runs it instead)"
 	echo "				Note: URL should be public"
 	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
 	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
@@ -363,7 +364,7 @@ is_yml_absent ()
 {
 	yml_path=`yml_get_path`
 	if [[ "$yml_path" == "" ]] ; then
-		echo "dsh: docker-compose.yml not found in your directory tree"
+		echo-red "dsh: docker-compose.yml not found in your directory tree"
 		return 0
 	fi
 
@@ -373,7 +374,7 @@ is_yml_absent ()
 
 	vagrant_path=`upfind "Vagrantfile"`
 	if [[ "$vagrant_path" == "" ]] ; then
-		echo "dsh: Vagrantfile not found in your directory tree"
+		echo-red "dsh: Vagrantfile not found in your directory tree"
 		return 0
 	fi
 
@@ -436,6 +437,14 @@ _start_containers ()
 	docker_compose up -d
 }
 
+# @param $1 container_name
+_restart_containers ()
+{
+	echo-green "Restarting containers..."
+	cd `yml_get_path`
+	docker_compose restart $*
+}
+
 # @param $1 "-a" || "--all"
 _stop_containers ()
 {
@@ -449,14 +458,14 @@ _stop_containers ()
 	docker_compose stop
 }
 
-# @param $1 container name
+# @param $1 container_name
 _remove_containers ()
 {
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
 	cd `yml_get_path`
-	echo "docker_compose kill $1 && docker_compose rm -v --force $1"
+	docker_compose kill $* && docker_compose rm -v --force $*
 }
 
 #------------------------------- Commands -----------------------------------
@@ -502,8 +511,16 @@ halt ()
 	fi
 }
 
-# call 911
+# Restart container(s)
+# @param $1 container_name
 restart ()
+{
+	if is_yml_absent ; then return 2; fi
+	_restart_containers $*
+}
+
+# Restart Vagrant and start containers again
+reload ()
 {
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
@@ -995,7 +1012,7 @@ init ()
 }
 
 # Remove container(s)
-# @param $1 container name
+# @param $1 $2... container names
 remove ()
 {
 	if [[ $1 == "" ]]; then
@@ -1013,22 +1030,22 @@ remove ()
 		fi
 
 		if [ $started -eq 0 ] && is_docker_compose ; then
-			_remove_containers $1
+			_remove_containers $*
 		fi
 	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
-		_remove_containers $1
+		_remove_containers $*
 	fi
 }
 
-# Reset containers (stop, remove, up)
+# Reset container(s) (stop, remove, up)
+# @param $1 $2... containers names
 reset ()
 {
-	remove
+	remove $*
 	_start_containers
 }
 
-# command bindings
-
+# Command bindings
 argv="$@"
 case $1 in
 	up)
@@ -1049,10 +1066,11 @@ case $1 in
 		halt
 		;;
 	restart)
-		restart
+		shift
+		restart $*
 		;;
 	reload)
-		restart
+		reload
 		;;
 	status)
 		shift
@@ -1113,7 +1131,8 @@ case $1 in
 		init $*
 		;;
 	reset)
-		reset
+		shift
+		reset $*
 		;;
 	remove)
 		shift
