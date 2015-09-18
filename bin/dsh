@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.1.1
+DSH_VERSION=1.2.1
 
 help ()
 {
@@ -12,6 +12,7 @@ help ()
 	echo
 	echo "	start (up)		Start vagrant vm and docker containers -OR- restarts docker containers"
 	echo "	stop (down)		Stop containers"
+	echo "	    -a (--all)		Stop all running containers from all Docker projects"
 	echo "	halt			Stop vagrant vm"
 	echo "	reload (restart)	Re-start vagrant vm and docker containers"
 	echo "	status (st, ps)		Show containers status"
@@ -435,9 +436,15 @@ _start_containers ()
 	docker_compose up -d
 }
 
+# @param $1 "-a" || "--all"
 _stop_containers ()
 {
 	echo-yellow "Stopping containers..."
+	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
+		#                        get containers | remove trailing | select last line part only | remove 1 line | convert into line
+		local all_running_containers=`docker ps | sed 's/[ ]*$//' | sed 's/^.* \([^ ]*\)$/\1/' | sed '1d' | xargs`
+		docker stop $all_running_containers
+	fi
 	cd `yml_get_path`
 	docker_compose stop
 }
@@ -476,15 +483,17 @@ up ()
 # Stop containers
 down ()
 {
+	check_docker_running
 	if is_yml_absent ; then return 2; fi
 	if is_docker_compose ; then
-		_stop_containers
+		_stop_containers $@
 	fi
 }
 
 # Stop Vagrant box
 halt ()
 {
+	check_docker_running
 	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
 		vagrant halt
@@ -1029,10 +1038,12 @@ case $1 in
 		up
 		;;
 	stop)
-		down
+		shift
+		down $*
 		;;
 	down)
-		down
+		shift
+		down $*
 		;;
 	halt)
 		halt
