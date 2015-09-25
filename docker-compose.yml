@@ -87,7 +87,7 @@ cli:
 # browser:
 #   hostname: browser
 #   image: selenium/standalone-chrome
-#   links:
-#     - web
 #   ports:
 #     - "4444"
+#   environment:
+#     - DOMAIN_NAME=hello-world.browser.docker
