@@ -63,8 +63,33 @@ You may also have to reset permissions on the existing files folder. The followi
 chmod -R +rwX files
 ```
 
+<a name="reverse-proxy"></a>
+## Reverse proxy settings
+
+If using [boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant), 
+you are most likely using it's vhost-proxy. In that case add the following to settings.php:
+
+**Drupal 7**
+
+```php
+# Reverse proxy configuration (Drude's vhost-proxy)
+$conf['reverse_proxy'] = TRUE;
+$conf['reverse_proxy_addresses'] = array($_SERVER['REMOTE_ADDR']);
+// HTTPS behind reverse-proxy
+if (
+  isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' &&
+  !empty($conf['reverse_proxy']) && in_array($_SERVER['REMOTE_ADDR'], $conf['reverse_proxy_addresses'])
+) {
+  $_SERVER['HTTPS'] = 'on';
+  // This is hardcoded because there is no header specifying the original port.
+  $_SERVER['SERVER_PORT'] = 443;
+}
+```
+
 <a name="memcache"></a>
 ## Memcache settings
+
+**Drupal 7**
 
 1. Uncomment the **memcached** service definition section in [`docker-compose.yml`](docker-compose.yml) to start using memcached.
 
