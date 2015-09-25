@@ -1,8 +1,6 @@
 # Drude (**Dru**pal **D**ocker **E**nvironment)
 Docker and Docker Compose based environment for Drupal.
 
-[![Circle CI](https://circleci.com/gh/blinkreaction/drude.svg?style=shield)](https://circleci.com/gh/blinkreaction/drude)
-
 To get Drude follow the instructions below.
 
 There is also a [demo project](https://github.com/blinkreaction/drude-testing) which can be used as a setup example.
