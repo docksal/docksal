@@ -4,7 +4,7 @@
 # Web node
 web:
   hostname: web
-  image: blinkreaction/drupal-apache-php:2.2-5.6
+  image: blinkreaction/drupal-apache:2.2
   ports:
     - "80"
     - "443"
@@ -14,12 +14,8 @@ web:
   volumes:
     # Project root folder mapping
     - &project_root ".:/var/www"
-    # PHP configuration overrides
-    - "./.drude/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
   links:
-    - db
-    # Uncomment this and the memcached service definition below to start using memcached.
-    #- memcached
+    - cli
   environment:
     - VIRTUAL_HOST=hello-world.drude
 
@@ -49,7 +45,9 @@ cli:
   volumes:
     # Project root folder mapping
     - *project_root
-    # PHP configuration overrides
+    # PHP FPM configuration overrides
+    - "./.drude/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
+    # PHP CLI configuration overrides
     - "./.drude/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
     # Host home directory mapping (for SSH keys and ther credentials).
     # We try to map both options (b2d and Linux). The startup.sh script in cli container will decide which one to use.
@@ -57,15 +55,14 @@ cli:
     - ~:/.home-linux   # Linux
   links:
     - db
-    - web
-    # Uncomment this and the browser service definition below to start using selenium2.
-    #- browser
   environment:
     # Optional. Specify a custom SSH RSA key name if necessary. Defaults to 'id_rsa'.
     - SSH_KEY_NAME=id_rsa
+    # Uncomment this and the memcached service definition below to start using memcached.
+    #- memcached
 
 # Memcached node
-# Uncomment the service definition section below and the link in the web service above to start using memcached.
+# Uncomment the service definition section below and the link in the cli service above to start using memcached.
 # memcached:
 #   hostname: memcached
 #   image: memcached
