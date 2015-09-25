@@ -1,61 +1,38 @@
 # Drude (**Dru**pal **D**ocker **E**nvironment)
 Docker and Docker Compose based environment for Drupal.
 
-To get Drude follow the instructions below.
+**For a fully working example of Drude setup for a Drupal7 site take a loot at [drude-testing](https://github.com/blinkreaction/drude-testing) project repo.**
 
-There is also a [demo project](https://github.com/blinkreaction/drude-testing) which can be used as a setup example.
 
-## Install dsh (Drude Shell Helper)
+## System requirements
 
-### Windows 
+Please review [system requirements](docs/system-requirements.md) before proceeding with the setup.
 
-[Install Babun](http://babun.github.io).  
-Do this as a regular user (do not use admin command prompt).
-
-**On Windows you will need a Linux-type shell. All further Drude interactions are supposed to be done in Babun shell. Drude is not tested with other shells on Windows.**
-
-### Mac, Windows (Babun shell), Linux
-
-To install [dsh](#dsh) run:
-
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/master/bin/dsh -o /usr/local/bin/dsh
-    sudo chmod +x /usr/local/bin/dsh
 
 <a name="setup"></a>
 ## Setup
 
-Drude initial configuration is done once per project (e.g. by a team lead).  
-`docker-compose.yml` file and optional `.drude` folder are good indicators of Drude's presence in the project repo.  
-To use Drude each team member will need to follow this instruction.
+Initial configuration is done once per project (e.g. by a team lead) and committed into the project repo. 
+`docker-compose.yml` file and an optional `.drude` folder are good indicators that a project is using Drude.  
 
-#### Hardware requirements
-While Docker is supported natively on Linux, Mac and Windows users will need a tiny linux VM layer - [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant). [VirtualBox](https://www.virtualbox.org/) and our Boot2docker Vagrant Box will be installed for you if you follow the instructions.  
+Drude expects a particular [directory structure](docs/system-requirements.md). Please review it before proceeding with the setup.
 
-- Boot2docker Vagrant Box requires 2GB of RAM by default. You need minimum 4GB RAM on your computer.  
-- Your CPU should support hardware VT-x/AMD-V virtualization. (most modern CPUs)
+### Step 0: Install Babun (Windows only)
 
-#### Directory structure
-Drude enforces directory structure where you have arbitrary located `projects` folder (name is arbitrary and can be different, for the sake of instruction it's further referred as `projects`) in which you place subfolder for each project you have.  
-Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
+[Babun](http://babun.github.io) is a very nice Linux-type shell for Windows.  
+Install it as a regular user (do not use admin command prompt).  
+**Drude is not tested and may not work with any other shell on Windows.**
 
-```
-+ ...
- - projects
- |--- your-drupal-site
- |      docker-compose.yml
- |      docroot
- |      ...
- | 
- |--- your-another-drupal-site
- |      .drude
- |      docker-compose.yml
- |      docroot
- |      ...
- | 
- |--- Vagrantfile (not needed on Linux)
- |--- vagrant.yml (not needed on Linux)
-```
-### Mac
+### Step 1: Install dsh (Drude Shell Helper)
+
+dsh will automate the rest of the setup steps and will be used to control a Drude powered environment.
+
+    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/master/bin/dsh -o /usr/local/bin/dsh
+    sudo chmod +x /usr/local/bin/dsh
+
+dsh work and is supported on Mac, Windows (in Babun shell), Linux and [boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant).
+
+### Step 2: Mac
 
  1. Edit `settings.php` for your site (see [Drupal settings](#drupal-settings) below).
  2. Open Terminal and cd into `<projects/your-drupal-site>`
@@ -64,9 +41,9 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
     ```
     dsh install
     ```
-    This will install/update all required prerequisites. They include [Homebrew](http://brew.sh/), [Homebrew-cask](https://github.com/caskroom/homebrew-cask), VirtualBox, Vagrant, docker, docker-compose.
+    This will install/update all required prerequisites: [Homebrew](http://brew.sh/), [Homebrew-cask](https://github.com/caskroom/homebrew-cask), VirtualBox, Vagrant, docker, docker-compose.
     
-    2.2) If you already use Drude and just need to initialize new project run:
+    2.2) If you are already using Drude on other projects and just need to initialize a new one run:
     ```
     dsh install drude
     ```
@@ -74,7 +51,7 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
     
  3. Start VM and containers with `dsh up`
 
-### Windows
+### Step 2: Windows
 
  1. Make sure your `projects` folder is **not** inside `%USERPROFILE%/.babun` installation folder.
  2. Edit `settings.php` for your site (see [Drupal settings](#drupal-settings) below).
@@ -84,9 +61,9 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
     ```
     dsh install
     ```
-    This will install/update all required prerequisites. They include [Chocolatey](https://chocolatey.org/), VirtualBox, Vagrant, docker, docker-compose.
+    This will install/update all required prerequisites: [Chocolatey](https://chocolatey.org/), VirtualBox, Vagrant, docker, docker-compose.
     
-    3.2) If you already use Drude and just need to initialize new project run:
+    3.2) If you are already using Drude on other projects and just need to initialize a new one run:
     ```
     dsh install drude
     ```
@@ -94,12 +71,12 @@ Dsh will put `Vagrantfile` and `vagrant.yml` into the `projects` folder.
     
  4. Start VM and containers with `dsh up`
  
-### Linux
+### Step 2: Linux
 
  1. [Install Docker](https://docs.docker.com/compose/install/#install-docker)
  2. [Install Docker Compose](https://docs.docker.com/compose/install/#install-compose)
  3. Edit `settings.php` for the site (see [Drupal settings](#drupal-settings) below).
- 4. If you don't have your `docker-compose.yml` and would like to initialize new Drude project cd `<projects/your-drupal-site>` and run:
+ 4. If you don't have your `docker-compose.yml` and would like to initialize a new Drude project cd `<projects/your-drupal-site>` and run:
  
     ```
     dsh install drude
@@ -174,7 +151,7 @@ Tools available inside the **cli** container:
 - [Zero-configuration Debugging with Xdebug and PhpStorm](docs/xdebug.md)
 
 <a name="troubleshooting"></a>
-## troubleshooting
+## Troubleshooting
 
 See [Troubleshooting](docs/troubleshooting.md) section of the docs.
 
