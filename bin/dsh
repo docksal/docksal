@@ -17,7 +17,7 @@ help ()
 	echo "	halt			Stop vagrant vm"
 	echo "	status (st, ps)		Show project containers status"
 	echo "	    -a (--all)		Show all running containers from all Docker projects status"
-	echo "	vminfo			Show vagrant vm usage info"
+	echo "	vmstat			Show vagrant vm usage statistics"
 	echo
 	echo "	reset [containers]	Recreate (stop, remove, up) all project containers or specified [containers]"
 	echo "	remove [containers]	Remove all project containers or specified [containers]"
@@ -59,7 +59,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down halt reload restart status vminfo reset remove bash exec logs run mysql sql mysql-import sqli init drush behat install update self-update version help"
+			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sql mysql-import sqli init drush behat install update self-update version help"
 			exit 0
 			;;
 		*)
@@ -551,7 +551,7 @@ status ()
 	fi
 }
 
-vminfo ()
+vmstat ()
 {
 	local vagrant_path=`upfind Vagrantfile`
 	if [[ $vagrant_path == "" ]]; then
@@ -1124,8 +1124,8 @@ case $1 in
 		shift
 		status $*
 		;;
-	vminfo)
-		vminfo
+	vmstat)
+		vmstat
 		;;
 	install)
 		shift
