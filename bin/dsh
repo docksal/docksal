@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.5.0
+DSH_VERSION=1.5.1
 
 help ()
 {
@@ -30,8 +30,8 @@ help ()
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
 	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
 	echo
-	echo "	init [url]		Execute project init script .drude/scripts/drude-init.sh (if URL provided downloads script from there and runs it instead)"
-	echo "				Note: URL should be public"
+	echo "	init [params]		Execute project init script .drude/scripts/drude-init.sh (params will be passed to script)"
+	echo "	exec-url <url>		Download script from URL and run it. URL should be public. Alias: init-url"
 	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
 	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo
@@ -59,7 +59,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sql mysql-import sqli init drush behat install update self-update version help"
+			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sql mysql-import sqli init exec-url drush behat install update self-update version help"
 			exit 0
 			;;
 		*)
@@ -566,7 +566,7 @@ vmstat ()
 	fi
 	local id=`cat $machine_id`
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
-	vboxmanage metrics setup --period 1 --samples 1 "$id" $metrics
+	vboxmanage metrics setup --period 1 --samples 1 "$id"
 	sleep 1
 	vboxmanage metrics query "$id" $metrics
 }
@@ -803,9 +803,10 @@ update_self ()
 {
 	testing_warn
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh && \
-    if_failed "new version download has failed."
+    if_failed "New version download has failed."
     sudo chmod +x /usr/local/bin/dsh
-	echo-green "dsh successfully updated to version: $(dsh version --short)"
+	echo-green "dsh successfully updated to version: "
+	dsh version --short
 }
 
 # Start interactive bash in container
@@ -1011,24 +1012,31 @@ behat ()
 	run 'cd tests/behat && bin/behat -p docker '$*
 }
 
-# Execute project init scripts (if url provided or if such exists locally)
+# Execute project init scripts (if it exists)
 # Looks for script at .drude/scripts/drude-init.sh
-# @param $1 url of init script. If provided downloads script by that URL an execute it instead
+# @param $@ params to pass to init script
 init ()
 {
-	if [[ "$1" != "" ]]; then
-		local init_script=$(curl -fsS $1)
-		if_failed "Failed downloading init script"
-		bash <(echo "$init_script")
+	local project_root_path=$(get_project_root_path)
+	local init_script="$project_root_path/.drude/scripts/drude-init.sh"
+	if [[ -f $init_script ]]; then
+		exec $init_script $@
 	else
-		local project_root_path=$(get_project_root_path)
-		local init_script="$project_root_path/.drude/scripts/drude-init.sh"
-		if [[ -f $init_script ]]; then
-		  exec $init_script
-		else
-			echo "Project init script is missing: $init_script"
-			exit -1
-		fi
+		echo "Project init script is missing: $init_script"
+		exit 1
+	fi
+}
+
+# Download script by URL and execute it
+# @param $1 url of init script.
+exec_url ()
+{
+	if [[ "$1" != "" ]]; then
+		local script=$(curl -fsS $1)
+		if_failed "Failed downloading script $1"
+		bash <(echo "$script")
+	else
+		echo-red "URL is required"
 	fi
 }
 
@@ -1177,7 +1185,11 @@ case $1 in
 		;;
 	init)
 		shift
-		init $*
+		init $@
+		;;
+	exec-url)
+		shift
+		exec_url $*
 		;;
 	reset)
 		shift
