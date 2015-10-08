@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.4.0
+DSH_VERSION=1.5.0
 
 help ()
 {
@@ -17,6 +17,7 @@ help ()
 	echo "	halt			Stop vagrant vm"
 	echo "	status (st, ps)		Show project containers status"
 	echo "	    -a (--all)		Show all running containers from all Docker projects status"
+	echo "	vminfo			Show vagrant vm usage info"
 	echo
 	echo "	reset [containers]	Recreate (stop, remove, up) all project containers or specified [containers]"
 	echo "	remove [containers]	Remove all project containers or specified [containers]"
@@ -58,7 +59,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down halt reload restart status reset remove bash exec logs run mysql sql mysql-import sqli init drush behat install update self-update version help"
+			echo "start up stop down halt reload restart status vminfo reset remove bash exec logs run mysql sql mysql-import sqli init drush behat install update self-update version help"
 			exit 0
 			;;
 		*)
@@ -548,6 +549,26 @@ status ()
 		cd `yml_get_path`
 		docker_compose ps
 	fi
+}
+
+vminfo ()
+{
+	local vagrant_path=`upfind Vagrantfile`
+	if [[ $vagrant_path == "" ]]; then
+		echo-red "Vagrantfile not found"
+		exit 1
+	fi
+	binary_found vboxmanage
+	local machine_id="$vagrant_path.vagrant/machines/boot2docker/virtualbox/id"
+	if [ ! -f $machine_id ]; then
+		echo-red "Could not find id file $machine_id"
+		exit 1
+	fi
+	local id=`cat $machine_id`
+	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
+	vboxmanage metrics setup --period 1 --samples 1 "$id" $metrics
+	sleep 1
+	vboxmanage metrics query "$id" $metrics
 }
 
 ### Installation and updates
@@ -1102,6 +1123,9 @@ case $1 in
 	ps)
 		shift
 		status $*
+		;;
+	vminfo)
+		vminfo
 		;;
 	install)
 		shift
