@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.3.2
+DSH_VERSION=1.4.0
 
 help ()
 {
@@ -23,10 +23,11 @@ help ()
 	echo
 	echo "	bash [container]	Open bash to container. If no container provided defaults to 'cli'"
 	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
+	echo "	logs [-b] [containers]	Show logs for containers. If -b provided exit in 3 seconds"
 	echo
-	echo "	mysql			Opens mysql shell to drude database"
+	echo "	mysql (sql)		Opens mysql shell to drude database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
-	echo "				Note: DB dump file should be inside your project folder"
+	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
 	echo
 	echo "	init [url]		Execute project init script .drude/scripts/drude-init.sh (if URL provided downloads script from there and runs it instead)"
 	echo "				Note: URL should be public"
@@ -43,8 +44,7 @@ help ()
 	echo "	update			Update Drude"
 	echo
 	echo "	self-update		Update dsh itself"
-	echo "	version			Print dsh version"
-	echo
+	echo "	version	(-v)		Print dsh version"
 	echo
 }
 
@@ -58,7 +58,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down halt reload restart status reset bash exec run mysql mysql-import init drush behat install update self-update version help"
+			echo "start up stop down halt reload restart status reset remove bash exec logs run mysql sql mysql-import sqli init drush behat install update self-update version help"
 			exit 0
 			;;
 		*)
@@ -1045,6 +1045,25 @@ reset ()
 	_start_containers
 }
 
+# Show logs
+# @param $1 -b kill docker logs after 3 secs to feed results to other command
+# @param $* container(s) name
+logs ()
+{
+	if [[ $1 == '-b' ]]; then
+		batch=0
+		shift
+	else
+		batch=1
+	fi
+	docker-compose $DC_FILE $DC_PROJECT logs $* &
+	if [[ $batch -eq 0 ]] ; then
+		pid=$!
+		sleep 3
+		kill -9 $pid
+	fi
+}
+
 # Command bindings
 argv="$@"
 case $1 in
@@ -1110,7 +1129,13 @@ case $1 in
 	mysql)
 		mysql
 		;;
+	sqlc)
+		mysql
+		;;
 	mysql-import)
+		mysql_import $2 $3
+		;;
+	sqli)
 		mysql_import $2 $3
 		;;
 	cc)
@@ -1139,14 +1164,26 @@ case $1 in
 		remove $*
 		;;
 	version)
-		shift
-		version $*
+		version
+		;;
+	-v)
+		version
+		;;
+	--version)
+		version
 		;;
 	bash_comp_words)
 		shift
 		bash_comp_words $*
 		;;
-	*)
+	logs)
+		shift
+		logs $@
+		;;
+	"")
 		help
-		exit 0
+		;;
+	*)
+		echo "Unknown command '"$*"'. See 'dsh help' for list of available commands"
+		exit 1
 esac
