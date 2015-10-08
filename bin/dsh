@@ -24,7 +24,7 @@ help ()
 	echo
 	echo "	bash [container]	Open bash to container. If no container provided defaults to 'cli'"
 	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
-	echo "	logs [-b] [containers]	Show logs for containers. If -b provided exit in 3 seconds"
+	echo "	logs [containers]	Show logs for container(s)"
 	echo
 	echo "	mysql (sql)		Opens mysql shell to drude database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
@@ -1075,22 +1075,10 @@ reset ()
 }
 
 # Show logs
-# @param $1 -b kill docker logs after 3 secs to feed results to other command
 # @param $* container(s) name
 logs ()
 {
-	if [[ $1 == '-b' ]]; then
-		batch=0
-		shift
-	else
-		batch=1
-	fi
-	docker-compose $DC_FILE $DC_PROJECT logs $* &
-	if [[ $batch -eq 0 ]] ; then
-		pid=$!
-		sleep 3
-		kill -9 $pid
-	fi
+	docker-compose $DC_FILE $DC_PROJECT logs $*
 }
 
 # Command bindings
