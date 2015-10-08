@@ -90,3 +90,15 @@ cli:
 #     - "4444"
 #   environment:
 #     - DOMAIN_NAME=hello-world.browser.docker
+
+# Solr node
+# Uncomment the service definition section below to start using Solr.
+# solr:
+#   hostname: solr
+#   image: blinkreaction/drupal-solr:3.x-stable
+#   # Mapping for custom Solr configuration.
+#   # See https://github.com/blinkreaction/docker-drupal-solr/tree/master/solr3.x/solr/conf for the default one.
+#   #volumes:
+#   #  - "./.drude/etc/solr:/var/lib/solr/conf"
+#   environment:
+#     - DOMAIN_NAME=hello-world.solr.docker
