@@ -58,17 +58,16 @@ cli:
   environment:
     # Optional. Specify a custom SSH RSA key name if necessary. Defaults to 'id_rsa'.
     - SSH_KEY_NAME=id_rsa
-    # Uncomment this and the memcached service definition below to start using memcached.
-    #- memcached
 
 # Memcached node
-# Uncomment the service definition section below and the link in the cli service above to start using memcached.
+# Uncomment the service definition section below to start using memcached.
 # memcached:
 #   hostname: memcached
 #   image: memcached
 #   environment:
 #     # Memcached memory limit in megabytes
 #     - MEMCACHED_MEMORY_LIMIT=128
+#     - DOMAIN_NAME=hello-world.memcached.docker
 
 # ngrok node
 # Uncomment the service definition section below to start using ngrok for sharing your local web server with the world.
@@ -82,8 +81,8 @@ cli:
 #   links:
 #     - web:http
 
-# selenium2 node
-# Uncomment the service definition section below and the link in the web service above to start using selenium2 driver for Behat tests requiring JS support.
+# Selenium2 node
+# Uncomment the service definition section below to start using selenium2 driver for Behat tests requiring JS support.
 # browser:
 #   hostname: browser
 #   image: selenium/standalone-chrome
@@ -91,3 +90,15 @@ cli:
 #     - "4444"
 #   environment:
 #     - DOMAIN_NAME=hello-world.browser.docker
+
+# Solr node
+# Uncomment the service definition section below to start using Solr.
+# solr:
+#   hostname: solr
+#   image: blinkreaction/drupal-solr:3.x-stable
+#   # Mapping for custom Solr configuration.
+#   # See https://github.com/blinkreaction/docker-drupal-solr/tree/master/solr3.x/solr/conf for the default one.
+#   #volumes:
+#   #  - "./.drude/etc/solr:/var/lib/solr/conf"
+#   environment:
+#     - DOMAIN_NAME=hello-world.solr.docker
