@@ -4,8 +4,7 @@ DSH_VERSION=1.5.2
 
 help ()
 {
-	echo "dsh - Drude Shell"
-	echo "Usage: dsh <command> [params]"
+	echo "Drude Shell $DSH_VERSION. Usage: dsh <command> [params]"
 	echo
 	echo "Commands list:"
 	echo
@@ -24,9 +23,9 @@ help ()
 	echo
 	echo "	bash [container]	Open bash to container. If no container provided defaults to 'cli'"
 	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
-	echo "	logs [containers]	Show logs for container(s)"
+	echo "	logs [containers]	Show docker logs for container(s)"
 	echo
-	echo "	mysql (sql)		Opens mysql shell to drude database"
+	echo "	mysql (sql)		Opens mysql shell to current project database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
 	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
 	echo
@@ -35,7 +34,7 @@ help ()
 	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
 	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo
-	echo "	behat			Run Behat tests"
+	echo "	behat [--path=path]	Run Behat tests from path (relative to project root). Default: tests/behat"
 	echo
 	echo "	install			Install/check prerequisites, boot2docker and drude config"
 	echo "	install prerequisites 	Only install prerequisites"
@@ -1003,13 +1002,27 @@ _drush ()
 behat ()
 {
 	if is_yml_absent ; then return 2; fi
+	local params=''
+	local path='tests/behat'
+	for i in "$@"; do
+		case $i in
+			--path=*)
+				path="${i#*=}"
+				;;
+			*)
+				params=$params$i" "
+				;;
+		esac;
+	done
+
 	local project_root_path=$(get_project_root_path)
-	if [[ ! -f "$project_root_path/tests/behat/behat.yml" ]]; then
-		echo "Missing behat.yml in tests/behat. Aborting..."
-		exit
+	local behat_yml_path="$project_root_path/$path/behat.yml"
+	if [[ ! -f "$behat_yml_path" ]]; then
+		echo-red "Could not find $behat_yml_path"
+		exit 1
 	fi
-	run 'cd tests/behat && composer install --prefer-source --no-interaction'
-	run 'cd tests/behat && bin/behat -p docker '$*
+	run "cd $path && composer install --prefer-source --no-interaction"
+	run "cd $path && bin/behat -p docker "$params
 }
 
 # Execute project init scripts (if it exists)
@@ -1169,7 +1182,7 @@ case $1 in
 		;;
 	behat)
 		shift
-		behat $*
+		behat "$@"
 		;;
 	init)
 		shift
