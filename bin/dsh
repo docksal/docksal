@@ -1091,7 +1091,8 @@ reset ()
 # @param $* container(s) name
 logs ()
 {
-	docker-compose $DC_FILE $DC_PROJECT logs $*
+	cd `yml_get_path`
+	docker_compose logs $*
 }
 
 # Command bindings
