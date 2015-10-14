@@ -83,6 +83,12 @@ fi
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
 is_tty ()
 {
+	# disable interactive shell on windows for now
+	# known Docker issue: https://github.com/docker/docker/issues/12469
+	res=`uname | grep 'CYGWIN_NT'`
+	if [[ "$res" != '' ]]; then
+		return 1;
+	fi
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
 }
 
