@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.5.3
+DSH_VERSION=1.5.4
 
 help ()
 {
@@ -1218,6 +1218,9 @@ case $1 in
 		logs $@
 		;;
 	"")
+		help
+		;;
+	help)
 		help
 		;;
 	*)
