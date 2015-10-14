@@ -90,7 +90,7 @@ testing_warn ()
 #---------------- Docker Compose Global Settings ----------------------
 DC_FILE=''
 DC_PROJECT=''
-DEFAULT_DOCKER_HOST='tcp://localhost:2375'
+DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
 if [[ ! $DRUDE_DC_FILE == "" ]]; then
 	DC_FILE="-f $DRUDE_DC_FILE"
 fi
