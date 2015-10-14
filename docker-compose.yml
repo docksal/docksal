@@ -4,7 +4,7 @@
 # Web node
 web:
   hostname: web
-  image: blinkreaction/drupal-apache:2.2
+  image: blinkreaction/drupal-apache:2.2-stable
   ports:
     - "80"
     - "443"
