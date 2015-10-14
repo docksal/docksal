@@ -41,7 +41,7 @@ db:
 # Used for all console commands and tools.
 cli:
   hostname: cli
-  image: blinkreaction/drupal-cli:php-5.6
+  image: blinkreaction/drupal-cli:stable
   volumes:
     # Project root folder mapping
     - *project_root
