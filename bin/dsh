@@ -80,8 +80,15 @@ if [[ $B2D_BRANCH == "" ]]; then
 	B2D_BRANCH='master'
 fi
 
+# Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
+is_tty ()
+{
+	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
+}
+
 testing_warn ()
 {
+	if ! is_tty ; then return; fi
 	if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
 		echo-yellow "dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}"
 	fi
@@ -130,18 +137,6 @@ if_failed ()
 		echo-red "dsh: $msg";
 		exit 1;
 	fi
-}
-
-# Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
-is_tty ()
-{
-	# disable interactive shell on windows for now
-	# known Docker issue: https://github.com/docker/docker/issues/12469
-	res=`uname | grep 'CYGWIN_NT'`
-	if [[ "$res" != '' ]]; then
-		return 1;
-	fi
-	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
 }
 
 # Search for file in directiry tree upwards. Return it's path with trailing slash
@@ -805,7 +800,7 @@ update_self ()
     if_failed "New version download has failed."
     sudo chmod +x /usr/local/bin/dsh
 	echo-green "dsh successfully updated to version: "
-	dsh version --short
+	echo "dsh version --short" | bash
 }
 
 # Start interactive bash in container
