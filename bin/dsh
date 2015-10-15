@@ -574,7 +574,7 @@ vmstat ()
 ### Installation and updates
 
 # Install required software on Mac or Win. Check installed software on Linux
-install_prerequisites()
+install_prerequisites ()
 {
 	testing_warn
 	if is_docker_running; then
@@ -598,9 +598,7 @@ install_prerequisites()
 		bash <(echo "$presetup_script")
 		read -p "Press any key when the installation in another console window is done..."
 	elif is_linux ; then
-		echo-green "dsh: checking that you have docker and docker-compose installed."
-		binary_found "docker"
-		binary_found "docker-compose"
+		install_ubuntu
 	else # mac
 		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/presetup-mac.sh)
 		if_failed "Could not get 'presetup-mac.sh'. Please check your internet connection"
@@ -608,9 +606,54 @@ install_prerequisites()
 	fi
 }
 
+# Install Docker and setup Drude on Ubuntu 14.04+
+install_ubuntu ()
+{
+	DISTRIB_ID=$(cat /etc/lsb-release | grep DISTRIB_ID | cut -d '=' -f 2)
+	DISTRIB_RELEASE=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2)
+	DISTRIB_CODENAME=$(cat /etc/lsb-release | grep DISTRIB_CODENAME | cut -d '=' -f 2)
+
+	if [[ $DISTRIB_ID != 'Ubuntu' || $DISTRIB_RELEASE < '14.04' ]]; then
+		echo "Sorry, this script only supports Ubuntu 14.04+"
+		exit 1
+	fi
+
+	echo "Installing Docker..."
+	sudo apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D && \
+	echo "deb https://apt.dockerproject.org/repo ubuntu-${DISTRIB_CODENAME} main" | sudo tee /etc/apt/sources.list.d/docker.list && \
+	sudo apt-get update && \
+	sudo apt-get purge lxc-docker* && \
+	sudo apt-get install docker-engine -y && \
+	sudo usermod -aG docker $(whoami) && newgrp docker
+	if_failed "Docker installation/upgrade failed."
+
+	echo "Adding a subnet for Drude..."
+	cat > /tmp/drude.ip.addr <<EOF
+	up   ip addr add 192.168.10.1/24 dev lo label lo:drude
+	down ip addr del 192.168.10.1/24 dev lo label lo:drude
+EOF
+	sudo sed -i '/iface lo inet loopback/r /tmp/drude.ip.addr' /etc/network/interfaces && \
+	rm -f /tmp/drude.ip.addr
+	if_failed "Docker installation/upgrade failed."
+
+	echo "Creating Drude HTTP/HTTPS reverse proxy..."
+	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always -v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
+	if_failed "Drude HTTP/HTTPS reverse proxy setup failed."
+	
+	echo "Creating Drude DNS service..."
+	sudo docker run -d --name dns -p 192.168.10.10:53:53/udp --cap-add=NET_ADMIN --restart=always -v /var/run/docker.sock:/var/run/docker.sock blinkreaction/dns-discovery:stable
+	if [[ $? == 0 ]]; then
+		echo "Configuring host DNS resolver for .drude domain..."
+		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head 
+		sudo resolvconf -u
+	else
+		echo-red "Drude DNS service setup failed."
+	fi
+}
+
 # Install Vagrantfile and vagrant.yml required by boot2docker
 # TODO: refactor to not rely on setup.sh as dsh only needs those 2 files
-install_boot2docker()
+install_boot2docker ()
 {
 	testing_warn
 	if is_linux ; then
@@ -642,7 +685,7 @@ install_boot2docker()
 }
 
 # Download latest Drude config file
-install_drude()
+install_drude ()
 {
 	testing_warn
 	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
