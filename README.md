@@ -33,7 +33,7 @@ dsh will automate the rest of the setup steps and will be used to control a Drud
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/master/bin/dsh -o /usr/local/bin/dsh
     sudo chmod +x /usr/local/bin/dsh
 
-dsh work and is supported on Mac, Windows (in Babun shell), Linux and [boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant).
+dsh works and is supported on Mac, Windows (in Babun shell), Linux and [boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant).
 
 ### Step 2: Mac
 
