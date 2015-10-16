@@ -18,7 +18,6 @@ $databases['default']['default'] = array (
   'password' => getenv('DB_1_ENV_MYSQL_PASSWORD'),
   'host' => getenv('DB_1_PORT_3306_TCP_ADDR'),
   'driver' => 'mysql',
-  'collation' => 'utf8mb4_general_ci',
 );
 ```
 
