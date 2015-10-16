@@ -640,10 +640,12 @@ EOF
 	fi
 
 	echo-green "Creating Drude HTTP/HTTPS reverse proxy..."
+	sudo docker rm -f vhost-proxy || true
 	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always -v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
 	if_failed "Drude HTTP/HTTPS reverse proxy setup failed."
 	
 	echo-green "Creating Drude DNS service..."
+	sudo docker rm -f dns || true
 	sudo docker run -d --name dns -p 192.168.10.10:53:53/udp --cap-add=NET_ADMIN --restart=always -v /var/run/docker.sock:/var/run/docker.sock blinkreaction/dns-discovery:stable
 	if [[ $? == 0 ]]; then
 		echo-green "Configuring host DNS resolver for .drude domain..."
