@@ -26,7 +26,7 @@ $databases['default']['default'] = array (
 
 With NFS mounts Drupal may complain about files directory not being writable. This is a "false-negative" however can be annoying and break certain things. For a workaround add the following to your setting.php file. 
 
-**Drupal 7 and 8**
+**Drupal 7**
 
 ```php
 # Workaround for permission issues with NFS shares in Vagrant
