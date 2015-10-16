@@ -626,15 +626,18 @@ install_ubuntu ()
 	if_failed "Docker installation/upgrade failed."
 
 	echo-green "Adding a subnet for Drude..."
-	# Adding IP permanently
-	cat > /tmp/drude.ip.addr <<EOF
+	ip_mask="192.168.10.1/24"
+	# Make sure we don't do this twice
+	if ! grep -q $ip_mask /etc/network/interfaces; then
+		cat > /tmp/drude.ip.addr <<EOF
 	up   ip addr add 192.168.10.1/24 dev lo label lo:drude
 	down ip addr del 192.168.10.1/24 dev lo label lo:drude
 EOF
-	sudo sed -i '/iface lo inet loopback/r /tmp/drude.ip.addr' /etc/network/interfaces
-	rm -f /tmp/drude.ip.addr
-	sudo ifdown lo && sudo ifup lo
-	if_failed "Docker installation/upgrade failed."
+		sudo sed -i '/iface lo inet loopback/r /tmp/drude.ip.addr' /etc/network/interfaces
+		rm -f /tmp/drude.ip.addr
+		sudo ifdown lo && sudo ifup lo
+		if_failed "Docker subnet configuration failed failed."
+	fi
 
 	echo-green "Creating Drude HTTP/HTTPS reverse proxy..."
 	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always -v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
