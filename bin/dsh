@@ -650,7 +650,7 @@ EOF
 		echo-red "Drude DNS service setup failed."
 	fi
 
-	echo-green "To be able to run docker without sudo log out and log in back or run 'newgrp docker'."
+	echo-green "To run docker without sudo log out and back in or run 'newgrp docker' now."
 }
 
 # Install Vagrantfile and vagrant.yml required by boot2docker
