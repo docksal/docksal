@@ -609,21 +609,18 @@ install_prerequisites ()
 # Install Docker and setup Drude on Ubuntu 14.04+
 install_ubuntu ()
 {
-	DISTRIB_ID=$(cat /etc/lsb-release | grep DISTRIB_ID | cut -d '=' -f 2)
-	DISTRIB_RELEASE=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2)
-	DISTRIB_CODENAME=$(cat /etc/lsb-release | grep DISTRIB_CODENAME | cut -d '=' -f 2)
+	if [ -r /etc/lsb-release ]; then
+		lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
+		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
+	fi
 
-	if [[ $DISTRIB_ID != 'Ubuntu' || $DISTRIB_RELEASE < '14.04' ]]; then
+	if [[ $lsb_dist != 'Ubuntu' || $lsb_release < '14.04' ]]; then
 		echo-red "Sorry, this script only supports Ubuntu 14.04+"
 		exit 1
 	fi
 
 	echo-green "Installing Docker..."
-	sudo apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D && \
-	echo "deb https://apt.dockerproject.org/repo ubuntu-${DISTRIB_CODENAME} main" | sudo tee /etc/apt/sources.list.d/docker.list && \
-	sudo apt-get update && \
-	sudo apt-get purge lxc-docker* && \
-	sudo apt-get install docker-engine -y && \
+	curl -sSL https://get.docker.com/ | sh && \
 	sudo usermod -aG docker $(whoami) && \
 	sudo docker version
 	if_failed "Docker installation/upgrade failed."
