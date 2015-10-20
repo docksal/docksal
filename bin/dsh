@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.6.0
+DSH_VERSION=1.6.1
 
 help ()
 {
@@ -669,9 +669,9 @@ install_boot2docker ()
 	echo-green "Downloading boot2docker install script..."
 
 	if is_windows ; then
-		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/setup.sh -o ~/setup.sh
+		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh -o ~/setup.sh
 	else
-		local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/setup.sh)
+		local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
 	fi
 	if_failed "Could not get 'setup.sh'. Please check your internet connection"
 
@@ -804,7 +804,7 @@ update ()
 			echo "Vagrantfile is found in "$(pwd)
 
 			echo-green "dsh: Downloading boot2docker install script..."
-			local b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/setup.sh)
+			local b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
 			if_failed  "Could not get latest boot2docker version. Please check your internet connection"
 
 			echo "dsh: Creating backups..."
