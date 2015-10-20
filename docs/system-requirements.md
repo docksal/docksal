@@ -1,17 +1,5 @@
 # System requirements
 
-## Software
-
-While Docker is supported natively on Linux, Mac and Windows users will need a tiny Linux VM layer to be able to run Docker containers.
-
-Drude relies on the following components for Docker support on Mac and Windows:
-
-- [VirtualBox](https://www.virtualbox.org)
-- [Vagrant](https://www.vagrantup.com)
-- [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
-
-Please refer to the installation and setup instruction for further steps.
-
 ## Hardware
 
 ### RAM
@@ -27,3 +15,16 @@ Please understand that this will be the amount of RAM available to the entire Do
 ### CPU
 
 Your CPU should support hardware VT-x/AMD-V virtualization (most modern CPUs)
+
+## Software
+
+While Docker is supported natively on Linux, Mac and Windows users will need a tiny Linux VM layer to be able to run Docker containers.
+
+Drude relies on the following components for Docker support on Mac and Windows:
+
+- [VirtualBox](https://www.virtualbox.org)
+- [Vagrant](https://www.vagrantup.com)
+- [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant)
+
+**You do not have to install these components manually as Drude automates this for you.**  
+Please refer to the [setup instructions](/README.md#setup) for further steps.
