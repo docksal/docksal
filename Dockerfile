@@ -7,6 +7,8 @@ RUN apk add --update \
 
 	&& rm -rf /var/cache/apk/*
 
+RUN chown -R nginx:nginx /var/lib/nginx
+
 # Generate SSL certificate and key
 RUN openssl req -batch -nodes -newkey rsa:2048 -keyout /etc/nginx/server.key -out /tmp/server.csr && \
     openssl x509 -req -days 365 -in /tmp/server.csr -signkey /etc/nginx/server.key -out /etc/nginx/server.crt; rm /tmp/server.csr
@@ -23,4 +25,4 @@ COPY conf/nginx.conf /etc/nginx/nginx.conf
 COPY conf/nginx.default.conf.tmpl /etc/nginx/default.conf.tmpl
 COPY conf/supervisord.conf /etc/supervisor.d/docker-gen.ini
 
-CMD ["/usr/bin/supervisord", "-n"]
+CMD ["supervisord", "-n"]
