@@ -154,7 +154,7 @@ upfind ()
 		while [[ ! -f $1 ]] && [[ $PWD != / ]]; do
 			cd ".."
 		done;
-		if [[ -f $1 ]]; then echo $PWD/; fi
+		if [[ -f $1 ]]; then echo $PWD; fi
 	)
 }
 
@@ -179,17 +179,18 @@ get_abs_path ()
 	echo "$absolute"
 }
 
+# TODO: DEPRECATED
 # Returns project root absolute path without trailing slash or "." if couldn't find real path
 get_project_root_path ()
 {
-	yml_path=`yml_get_path`
-	if [ ! -f ${yml_path}docker-compose.yml ]; then
+	yml_path=$(yml_get_path)
+	if [ ! -f "${yml_path}/docker-compose.yml" ]; then
 		echo "."
 		return
 	fi
 	# get relative project root path from docker-compose.yml config
-	local project_root_relative=$(grep "&project_root" ${yml_path}docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
-	local project_root_absolute=$( cd "${yml_path}$project_root_relative" ; pwd )
+	local project_root_relative=$(grep "&project_root" ${yml_path}/docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
+	local project_root_absolute=$( cd "${yml_path}/${project_root_relative}" ; pwd )
 	echo "$project_root_absolute"
 }
 
@@ -197,8 +198,8 @@ get_project_root_path ()
 get_current_relative_path ()
 {
 	# Check that we're inside project folder
-	local proj_root=$(get_project_root_path)
-	local cwd=$(pwd)/
+	local proj_root=$(yml_get_path)
+	local cwd=$(pwd)
 	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
 	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
 	# ex: cwd=/a/b, proj_root=/a/b/c, pathdiff==/a/b
@@ -965,9 +966,9 @@ mysql_import ()
 		fi
 	fi
 
-	project_root=$(get_project_root_path)
-	local filename=`basename $1`
-	local filepath=`get_abs_path $1`
+	project_root=$(yml_get_path)
+	local filename=$(basename $1)
+	local filepath=$(get_abs_path $1)
 	#substract project root path from filepath
 	local pathdiff=${filepath#$project_root}
 
@@ -1066,10 +1067,10 @@ behat ()
 		esac;
 	done
 
-	local project_root_path=$(get_project_root_path)
-	local behat_yml_path="$project_root_path/$path/behat.yml"
-	if [[ ! -f "$behat_yml_path" ]]; then
-		echo-red "Could not find $behat_yml_path"
+	local project_root_path=$(yml_get_path)
+	local behat_yml_path="${project_root_path}/${path}/behat.yml"
+	if [[ ! -f "${behat_yml_path}" ]]; then
+		echo-red "Could not find ${behat_yml_path}"
 		exit 1
 	fi
 	run "cd $path && composer install --prefer-source --no-interaction"
@@ -1081,8 +1082,8 @@ behat ()
 # @param $@ params to pass to init script
 init ()
 {
-	local project_root_path=$(get_project_root_path)
-	local init_script="$project_root_path/.drude/scripts/drude-init.sh"
+	export PROJECT_ROOT=$(yml_get_path)
+	local init_script="$PROJECT_ROOT/.drude/scripts/drude-init.sh"
 	if [[ -f $init_script ]]; then
 		exec $init_script $@
 	else
