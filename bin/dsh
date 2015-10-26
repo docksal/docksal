@@ -145,22 +145,25 @@ if_failed ()
 	fi
 }
 
-# Search for file in directiry tree upwards. Return it's path with trailing slash
+# Search for a file/directory in a directiry tree upwards. Return it's path.
 # @param $1 filename
 upfind ()
 {
 	if [[ $1 == '' ]]; then return 1; fi
 	( #incapsulate cd
-		while [[ ! -f $1 ]] && [[ $PWD != / ]]; do
+		while [[ ! -f $1 ]] && [[ ! -d $1 ]] && [[ $PWD != / ]]; do
 			cd ".."
 		done;
-		if [[ -f $1 ]]; then echo $PWD; fi
+		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; fi
 	)
 }
 
 yml_get_path ()
 {
-	echo $(upfind docker-compose.yml)
+	local yml_path=''
+	yml_path=$(upfind "docker-compose.yml")
+	if [[ $yml_path == '' ]]; then yml_path=$(upfind ".drude"); fi
+	echo $yml_path
 }
 
 # Returns absolute path
