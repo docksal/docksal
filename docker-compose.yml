@@ -67,7 +67,7 @@ cli:
 #   environment:
 #     # Memcached memory limit in megabytes
 #     - MEMCACHED_MEMORY_LIMIT=128
-#     - DOMAIN_NAME=hello-world.memcached.docker
+#     - DOMAIN_NAME=memcached.hello-world.docker
 
 # ngrok node
 # Uncomment the service definition section below to start using ngrok for sharing your local web server with the world.
@@ -89,7 +89,7 @@ cli:
 #   ports:
 #     - "4444"
 #   environment:
-#     - DOMAIN_NAME=hello-world.browser.docker
+#     - DOMAIN_NAME=browser.hello-world.docker
 
 # Solr node
 # Uncomment the service definition section below to start using Solr.
@@ -101,4 +101,4 @@ cli:
 #   #volumes:
 #   #  - "./.drude/etc/solr:/var/lib/solr/conf"
 #   environment:
-#     - DOMAIN_NAME=hello-world.solr.docker
+#     - DOMAIN_NAME=solr.hello-world.docker

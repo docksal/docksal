@@ -93,9 +93,7 @@ if (
 
 **Drupal 7**
 
-1. Uncomment the **memcached** service definition section in [`docker-compose.yml`](docker-compose.yml) to start using memcached.
-
-2. Add the following lines to `settings.php` to point Drupal to the memcached node. Replace `</path/to/memcache-module>` with path to [memcache module](https://www.drupal.org/project/memcache) in your project. E.g. `sites/all/modules/contrib/memcache`
+Add the following lines to `settings.php` to point Drupal to the memcached node. Replace `</path/to/memcache-module>` with path to [memcache module](https://www.drupal.org/project/memcache) in your project. E.g. `sites/all/modules/contrib/memcache`
 
 ```php
 // Memcache
@@ -103,6 +101,6 @@ $conf['cache_backends'][] = '</path/to/memcache-module>/memcache.inc';
 $conf['cache_default_class'] = 'MemCacheDrupal';
 $conf['cache_class_cache_form'] = 'DrupalDatabaseCache';
 $conf['memcache_servers'] = array(
-  'hello-world.memcached.docker:11211' => 'default',
+  'memcached.hello-world.docker:11211' => 'default',
 );
 ```

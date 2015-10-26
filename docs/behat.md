@@ -25,7 +25,7 @@ docker:
       # URL of the site when accessed inside Drude.
       base_url: http://hello-world.drude
       selenium2:
-        wd_host: http://hello-world.browser.docker:4444/wd/hub
+        wd_host: http://browser.hello-world.docker:4444/wd/hub
       # Stick with chrome by default. It's 2x faster than firefox or phantomjs (your results may vary).
       browser_name: chrome
     Drupal\DrupalExtension:
@@ -41,7 +41,7 @@ This will configure Behat for use with Drude.
 
 **Important note**
 
-`base_url: http://hello-world.drude` and `wd_host: http://hello-world.browser.docker:4444/wd/hub`
+`base_url: http://hello-world.drude` and `wd_host: http://browser.hello-world.docker:4444/wd/hub`
 should be configured based on your `docker-compose.yml` settings for `VIRTUAL_HOST` 
 in the web container definition and `DOMAIN_NAME` in the browser container definition.  
 
