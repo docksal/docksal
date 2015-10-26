@@ -85,7 +85,7 @@ is_tty ()
 {
 	# disable interactive shell on windows for now
 	# known Docker issue: https://github.com/docker/docker/issues/12469
-	res=`uname | grep 'CYGWIN_NT'`
+	res=$(uname | grep 'CYGWIN_NT')
 	if [[ "$res" != '' ]]; then
 		return 1;
 	fi
@@ -160,7 +160,7 @@ upfind ()
 
 yml_get_path ()
 {
-	echo `upfind docker-compose.yml`
+	echo $(upfind docker-compose.yml)
 }
 
 # Returns absolute path
@@ -168,7 +168,7 @@ get_abs_path ()
 {
 	local _dir
 	if [ -f $1 ]; then
-		_dir=`dirname $1`
+		_dir=$(dirname $1)
 	elif [ -d $1 ]; then
 		_dir=$1
 	else
@@ -211,7 +211,7 @@ get_drush_path ()
 {
 	local pathdiff=$(get_current_relative_path)
 	if [[ "$(pwd)" == "$pathdiff" ]]; then
-		echo-red "dsh: dsh supports this command only from within project directory"
+		echo-red "dsh: This command must be run inside Drupal's document root"
 		return 1
 	fi
 	return 0
@@ -237,7 +237,7 @@ get_mysql_connect ()
 
 is_linux ()
 {
-	res=`uname | grep 'Linux'`
+	res=$(uname | grep 'Linux')
 	if [[ ! "$res" == '' ]]; then
 		return 0;
 	else
@@ -247,13 +247,13 @@ is_linux ()
 
 is_windows ()
 {
-	res=`uname | grep 'MINGW32_NT'`
+	res=$(uname | grep 'MINGW32_NT')
 	if [[ "$res" != '' ]]; then
 		echo-red "dsh: Running from Git Bash is not supported. Please get Babun http://babun.github.io"
 		exit
 	fi
 
-	res=`uname | grep 'CYGWIN_NT'`
+	res=$(uname | grep 'CYGWIN_NT')
 	if [[ "$res" != '' ]]; then
 		return 0;
 	else
@@ -264,7 +264,7 @@ is_windows ()
 # cheсks wether we are in boot2docker console
 is_boot2docker ()
 {
-	local res=`uname -a|grep 'boot2docker'`
+	local res=$(uname -a|grep 'boot2docker')
 	if [[ ! "$res" == '' ]]; then
 		return 0;
 	else
@@ -274,7 +274,7 @@ is_boot2docker ()
 
 is_mac ()
 {
-	res=`uname | grep 'Darwin'`
+	res=$(uname | grep 'Darwin')
 	if [[ ! "$res" == '' ]]; then
 		return 0;
 	else
@@ -289,12 +289,12 @@ binary_found ()
 		return 1;
 	fi
 
-	local bpath=`which $1`
+	local bpath=$(which $1)
 
-	if [[ "$bpath" != "" ]] && [ -f `which $1` ]; then
+	if [[ "$bpath" != "" ]] && [ -f $(which $1) ]; then
 		return 0
 	else
-		echo -e "${red}dsh: \"$1\" executable not found.${NC}"
+		echo-red "dsh: \"$1\" executable not found."
 		return 1
 	fi
 }
@@ -351,7 +351,7 @@ check_docker_running ()
 
 is_vagrantfile_absent ()
 {
-	vagrant_path=`upfind "Vagrantfile"`
+	vagrant_path=$(upfind "Vagrantfile")
 	if [[ "$vagrant_path" == "" ]] ; then
 		echo-red "dsh: [error] Vagrantfile not found in your directory tree"
 		return 0
@@ -363,7 +363,7 @@ is_vagrantfile_absent ()
 # Checks if yml or vagrantfile (win, mac) is absent
 is_yml_absent ()
 {
-	yml_path=`yml_get_path`
+	yml_path=$(yml_get_path)
 	if [[ "$yml_path" == "" ]] ; then
 		echo-red "dsh: docker-compose.yml not found in your directory tree"
 		return 0
@@ -373,7 +373,7 @@ is_yml_absent ()
 		return 1; # linux does not need vagrant
 	fi
 
-	vagrant_path=`upfind "Vagrantfile"`
+	vagrant_path=$(upfind "Vagrantfile")
 	if [[ "$vagrant_path" == "" ]] ; then
 		echo-red "dsh: Vagrantfile not found in your directory tree"
 		return 0
@@ -434,7 +434,7 @@ check_docker_host #perform this check in any case
 _start_containers ()
 {
 	echo-green "Starting containers..."
-	cd `yml_get_path`
+	cd $(yml_get_path)
 	docker_compose up -d
 }
 
@@ -442,7 +442,7 @@ _start_containers ()
 _restart_containers ()
 {
 	echo-green "Restarting containers..."
-	cd `yml_get_path`
+	cd $(yml_get_path)
 	docker_compose restart $*
 }
 
@@ -452,10 +452,10 @@ _stop_containers ()
 	echo-yellow "Stopping containers..."
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
 		#                        get containers | remove trailing | select last line part only | remove 1 line | convert into line
-		local all_running_containers=`docker ps | sed 's/[ ]*$//' | sed 's/^.* \([^ ]*\)$/\1/' | sed '1d' | xargs`
+		local all_running_containers=$(docker ps | sed 's/[ ]*$//' | sed 's/^.* \([^ ]*\)$/\1/' | sed '1d' | xargs)
 		docker stop $all_running_containers
 	fi
-	cd `yml_get_path`
+	cd $(yml_get_path)
 	docker_compose stop
 }
 
@@ -465,7 +465,7 @@ _remove_containers ()
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
-	cd `yml_get_path`
+	cd $(yml_get_path)
 	docker_compose kill $* && docker_compose rm -v --force $*
 }
 
@@ -546,25 +546,25 @@ status ()
 		docker ps
 	else
 		if is_yml_absent ; then return 2; fi
-		cd `yml_get_path`
+		cd $(yml_get_path)
 		docker_compose ps
 	fi
 }
 
 vmstat ()
 {
-	local vagrant_path=`upfind Vagrantfile`
+	local vagrant_path=$(upfind Vagrantfile)
 	if [[ $vagrant_path == "" ]]; then
 		echo-red "Vagrantfile not found"
 		exit 1
 	fi
 	binary_found vboxmanage
-	local machine_id="$vagrant_path.vagrant/machines/boot2docker/virtualbox/id"
+	local machine_id="${vagrant_path}/.vagrant/machines/boot2docker/virtualbox/id"
 	if [ ! -f $machine_id ]; then
 		echo-red "Could not find id file $machine_id"
 		exit 1
 	fi
-	local id=`cat $machine_id`
+	local id=$(cat $machine_id)
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
 	vboxmanage metrics setup --period 1 --samples 1 "$id"
 	sleep 1
@@ -864,7 +864,7 @@ update_self ()
 _bash ()
 {
 	if is_yml_absent ; then return 2; fi
-	cd `yml_get_path`
+	cd $(yml_get_path)
 
 	# workaround through vagrant until docker solves the issue with cygwin
 	if is_windows; then
@@ -908,7 +908,7 @@ run ()
 {
 	if is_docker && is_docker_compose ; then
 		check_docker_running
-		cd `yml_get_path`
+		cd $(yml_get_path)
 		container_id=$(clean_string $(docker_compose ps -q cli))
 
 		if is_tty ; then
@@ -978,7 +978,7 @@ mysql_import ()
 	fi
 
 	if [ $confirm -eq 1 ]; then
-		_confirm "[!] This will delete all current data in database 'drupal'."
+		_confirm "[!] This will drop the existing database. Continue?"
 	fi
 
 	check_docker_running
@@ -986,7 +986,7 @@ mysql_import ()
 	_drush sql-drop -y
 	local sql_connect
 	sql_connect=$(get_mysql_connect)
-	echo "Importing $filename into database 'drupal'..."
+	echo "Importing $filename into the database..."
 
 	# Use pv for interactive shells only.
 	if is_tty ; then
@@ -1008,10 +1008,10 @@ mysql_import ()
 
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then
-		echo "dsh: mysql-import finished";
+		echo-green "dsh: mysql-import finished";
 		_notify "Dsh" "Mysql import finished"
 	else
-		echo -e "${red}dsh: mysql-import failed${NC}";
+		echo-red "dsh: mysql-import failed";
 		_notify "Dsh" "Mysql import failed!"
 	fi
 }
@@ -1142,7 +1142,7 @@ reset ()
 # @param $* container(s) name
 logs ()
 {
-	cd `yml_get_path`
+	cd $(yml_get_path)
 	docker_compose logs $*
 }
 
