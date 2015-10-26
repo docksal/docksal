@@ -1022,7 +1022,7 @@ mysql_import ()
 clear_cache ()
 {
 	if is_yml_absent ; then return 2; fi
-	if ! get_drush_path; then return; fi
+	#if ! get_drush_path; then return; fi
 	local type='all'
 	if [[ ! "$1" == "" ]]; then
 		type=$1
@@ -1039,7 +1039,7 @@ clear_cache ()
 _drush ()
 {
 	if is_yml_absent ; then return 2; fi
-	if ! get_drush_path; then return; fi
+	#if ! get_drush_path; then return; fi
 
 	cwd=$(pwd)
 	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
