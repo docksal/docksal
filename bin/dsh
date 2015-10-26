@@ -140,8 +140,8 @@ if_failed ()
 {
 	if [ ! $? -eq 0 ]; then
 		if [[ "$1" == "" ]]; then msg="dsh: error"; else msg="$1"; fi
-		echo-red "dsh: $msg";
-		exit 1;
+		echo-red "dsh: $msg"
+		exit 1
 	fi
 }
 
