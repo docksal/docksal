@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.1.0 (2015-10-26)
+
+Notable changes:
+
+- Lots of dsh updates
+  - `dsh remove` can now remove a single container
+  - `dsh stop --all` will stop all running containers
+  - `dsh restart` command now restarts only containers
+  - `dsh reset` can reset individual container
+  - `dsh logs` command will display all/individual container logs
+  - `dsh vmstat` command will show VirtualBox VM stats
+  - `dsh exec-url` command will download a script from a URL and run it
+  - `dsh behat` now access a `--path=<path-to-behat>` option
+  - `dsh install prerequisites` now supports Ubuntu 14.04+
+- docker-compose.yml
+  - BIG CHANGE: PHP is now solely in the CLI container (single place for cli and web). Web container has Apache only and uses php-fpm service in CLI.
+  - Added Solr container example
+  - DOMAIN_NAME environment variable can now be used for service discovery between containers (instead of docker links). Using this will memcached, browser and solr nodes.
+  - Using stable tags for web (blinkreaction/drupal-apache:2.2-stable) and cli (blinkreaction/drupal-cli:stable)
+- Documentation updates
+  - Updated docs on D7 and D8 settings (including reverse proxy settings for vhost-proxy)
+  - Updated Behat instructions
+  - Added Drupal 8 sample project link
+- Miscellaneous
+  - Removed CircleCI stuff. It has not been used in a while and is outdated
+  - Changed default docker host to 192.168.10.10:2375 (private network interface) instead of 127.0.0.1:2375 (NAT) for better performance of the docker client with VBox's Intel adapters
+  - Added error reporting php settings in [examples/.drude/etc/php5](examples/.drude/etc/php5)
+
 ## 1.0.1 (2015-09-14)
 
 - Bump dsh version to v1.0.1

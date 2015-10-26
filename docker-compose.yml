@@ -4,7 +4,7 @@
 # Web node
 web:
   hostname: web
-  image: blinkreaction/drupal-apache-php:2.2-5.6
+  image: blinkreaction/drupal-apache:2.2-stable
   ports:
     - "80"
     - "443"
@@ -14,12 +14,8 @@ web:
   volumes:
     # Project root folder mapping
     - &project_root ".:/var/www"
-    # PHP configuration overrides
-    - "./.drude/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
   links:
-    - db
-    # Uncomment this and the memcached service definition below to start using memcached.
-    #- memcached
+    - cli
   environment:
     - VIRTUAL_HOST=hello-world.drude
 
@@ -45,11 +41,13 @@ db:
 # Used for all console commands and tools.
 cli:
   hostname: cli
-  image: blinkreaction/drupal-cli:php-5.6
+  image: blinkreaction/drupal-cli:stable
   volumes:
     # Project root folder mapping
     - *project_root
-    # PHP configuration overrides
+    # PHP FPM configuration overrides
+    - "./.drude/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
+    # PHP CLI configuration overrides
     - "./.drude/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
     # Host home directory mapping (for SSH keys and ther credentials).
     # We try to map both options (b2d and Linux). The startup.sh script in cli container will decide which one to use.
@@ -57,21 +55,19 @@ cli:
     - ~:/.home-linux   # Linux
   links:
     - db
-    - web
-    # Uncomment this and the browser service definition below to start using selenium2.
-    #- browser
   environment:
     # Optional. Specify a custom SSH RSA key name if necessary. Defaults to 'id_rsa'.
     - SSH_KEY_NAME=id_rsa
 
 # Memcached node
-# Uncomment the service definition section below and the link in the web service above to start using memcached.
+# Uncomment the service definition section below to start using memcached.
 # memcached:
 #   hostname: memcached
 #   image: memcached
 #   environment:
 #     # Memcached memory limit in megabytes
 #     - MEMCACHED_MEMORY_LIMIT=128
+#     - DOMAIN_NAME=memcached.hello-world.docker
 
 # ngrok node
 # Uncomment the service definition section below to start using ngrok for sharing your local web server with the world.
@@ -85,12 +81,24 @@ cli:
 #   links:
 #     - web:http
 
-# selenium2 node
-# Uncomment the service definition section below and the link in the web service above to start using selenium2 driver for Behat tests requiring JS support.
+# Selenium2 node
+# Uncomment the service definition section below to start using selenium2 driver for Behat tests requiring JS support.
 # browser:
 #   hostname: browser
 #   image: selenium/standalone-chrome
-#   links:
-#     - web
 #   ports:
 #     - "4444"
+#   environment:
+#     - DOMAIN_NAME=browser.hello-world.docker
+
+# Solr node
+# Uncomment the service definition section below to start using Solr.
+# solr:
+#   hostname: solr
+#   image: blinkreaction/drupal-solr:3.x-stable
+#   # Mapping for custom Solr configuration.
+#   # See https://github.com/blinkreaction/docker-drupal-solr/tree/master/solr3.x/solr/conf for the default one.
+#   #volumes:
+#   #  - "./.drude/etc/solr:/var/lib/solr/conf"
+#   environment:
+#     - DOMAIN_NAME=solr.hello-world.docker
