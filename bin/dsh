@@ -25,7 +25,7 @@ help ()
 	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
 	echo "	logs [containers]	Show docker logs for container(s)"
 	echo
-	echo "	mysql (sql)		Opens mysql shell to current project database"
+	echo "	mysql (sqlc)		Opens mysql shell to current project database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
 	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
 	echo
@@ -58,7 +58,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sql mysql-import sqli init exec-url drush behat install update self-update version help"
+			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli init exec-url drush behat install update self-update version help"
 			exit 0
 			;;
 		*)
@@ -856,7 +856,7 @@ update ()
 update_self ()
 {
 	testing_warn
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh && \
+    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh
     if_failed "New version download has failed."
     sudo chmod +x /usr/local/bin/dsh
 	echo-green "dsh successfully updated to version: "
