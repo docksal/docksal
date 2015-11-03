@@ -629,6 +629,12 @@ install_ubuntu ()
 	sudo docker version
 	if_failed "Docker installation/upgrade failed."
 
+	echo-green "Installing Docker Compose..."
+	sudo curl -L https://github.com/docker/compose/releases/download/1.4.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
+	sudo chmod +x /usr/local/bin/docker-compose && \
+	docker-compose --version
+	if_failed "Docker Compose installation/upgrade failed."
+
 	echo-green "Adding a subnet for Drude..."
 	ip_mask="192.168.10.1/24"
 	# Make sure we don't do this twice
