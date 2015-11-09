@@ -1165,18 +1165,20 @@ logs ()
 _set_cli_uid ()
 {
 	# Let uid to be set with the DRUDE_SET_UID env variable
-	if [[ $DRUDE_SET_UID != "" ]]; then local host_uid=$DRUDE_SET_UID; else return; fi
-	local container_uid=$(docker exec $(docker-compose ps -q cli) id -u)
+	if [[ $DRUDE_SET_UID != "" ]]; then
+		local host_uid=$DRUDE_SET_UID
+		local container_uid=$(docker exec $(docker-compose ps -q cli) id -u)
 
-	if [[ $container_uid != $host_uid ]]; then
-		echo-green "Changing user uid in cli from $container_uid to $host_uid..."
-		docker exec -it -u root $(docker-compose ps -q cli) usermod -u $host_uid docker
-		echo-green "Reseting permissions on /var/www..."
-		docker exec -it -u root $(docker-compose ps -q cli) chown -R docker:users /var/www
-		echo-green "Restarting php daemon..."
-		docker exec -it -u root $(docker-compose ps -q cli) supervisorctl restart php5-fpm
-	else
-		echo-green "Container and host uids already match ($container_uid)."
+		if [[ $container_uid != $host_uid ]]; then
+			echo-green "Changing user uid in cli from $container_uid to $host_uid..."
+			docker exec -it -u root $(docker-compose ps -q cli) usermod -u $host_uid docker
+			echo-green "Reseting permissions on /var/www..."
+			docker exec -it -u root $(docker-compose ps -q cli) chown -R docker:users /var/www
+			echo-green "Restarting php daemon..."
+			docker exec -it -u root $(docker-compose ps -q cli) supervisorctl restart php5-fpm
+		else
+			echo-green "Container and host uids already match ($container_uid)."
+		fi
 	fi
 }
 
