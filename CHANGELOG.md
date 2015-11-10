@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0 (2015-11-11)
+
+- Ubuntu support
+  - Added docker-compose installation
+  - Point dns service to 8.8.8.8 to prevent it from recursing to itself
+- Allow to override the user id in the cli container via DRUDE_SET_UID environment variable
+  - Experimental. Requires `blinkreaction/drupal-cli:latest`
+- Fixed #65 (`dsh stop --all` should not stop system containers)
+- Docs updates
+ - MySQL DB access for external tools
+ - Updated minimal versions requirements
+
 ## 1.1.0 (2015-10-26)
 
 Notable changes:

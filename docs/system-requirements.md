@@ -24,7 +24,7 @@ Drude relies on the following components for Docker support on Mac and Windows:
 
 - [VirtualBox](https://www.virtualbox.org) 5.0+
 - [Vagrant](https://www.vagrantup.com) 1.7.3+
-- [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant) v1.2.1+
+- [Boot2docker Vagrant Box](https://github.com/blinkreaction/boot2docker-vagrant) v1.3.0+
 
 **You do not have to install these components manually as Drude automates this for you.**  
 Please refer to the [setup instructions](/README.md#setup) for further steps.
