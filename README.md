@@ -137,7 +137,7 @@ You can access **cli** container's console with `dsh`:
 
 Tools available inside the **cli** container:
 
-- php-cli, composer, drush7
+- php-cli, composer, drush[6,7,8], phpcs
 - ruby, bundler
 - node, npm, bower, grunt
 - git, wget, zip, mysql-client
