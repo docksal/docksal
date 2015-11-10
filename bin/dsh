@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.8.0
+DSH_VERSION=1.9.0
 
 help ()
 {
@@ -457,9 +457,8 @@ _stop_containers ()
 {
 	echo-yellow "Stopping containers..."
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
-		#                        get containers | remove trailing | select last line part only | remove 1 line | convert into line
-		local all_running_containers=$(docker ps | sed 's/[ ]*$//' | sed 's/^.* \([^ ]*\)$/\1/' | sed '1d' | xargs)
-		docker stop $all_running_containers
+		# stop all but system containers (--label "group=system")
+		docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 	fi
 	cd $(yml_get_path)
 	docker_compose stop
