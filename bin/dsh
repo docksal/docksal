@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.7.0
+DSH_VERSION=1.9.0
 
 help ()
 {
@@ -25,7 +25,7 @@ help ()
 	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
 	echo "	logs [containers]	Show docker logs for container(s)"
 	echo
-	echo "	mysql (sql)		Opens mysql shell to current project database"
+	echo "	mysql (sqlc)		Opens mysql shell to current project database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
 	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
 	echo
@@ -58,7 +58,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sql mysql-import sqli init exec-url drush behat install update self-update version help"
+			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli init exec-url drush behat install update self-update version help"
 			exit 0
 			;;
 		*)
@@ -440,6 +440,7 @@ _start_containers ()
 	echo-green "Starting containers..."
 	cd $(yml_get_path)
 	docker_compose up -d
+	_set_cli_uid
 }
 
 # @param $1 container_name
@@ -448,6 +449,7 @@ _restart_containers ()
 	echo-green "Restarting containers..."
 	cd $(yml_get_path)
 	docker_compose restart $*
+	_set_cli_uid
 }
 
 # @param $1 "-a" || "--all"
@@ -455,9 +457,8 @@ _stop_containers ()
 {
 	echo-yellow "Stopping containers..."
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
-		#                        get containers | remove trailing | select last line part only | remove 1 line | convert into line
-		local all_running_containers=$(docker ps | sed 's/[ ]*$//' | sed 's/^.* \([^ ]*\)$/\1/' | sed '1d' | xargs)
-		docker stop $all_running_containers
+		# stop all but system containers (--label "group=system")
+		docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 	fi
 	cd $(yml_get_path)
 	docker_compose stop
@@ -629,6 +630,12 @@ install_ubuntu ()
 	sudo docker version
 	if_failed "Docker installation/upgrade failed."
 
+	echo-green "Installing Docker Compose..."
+	sudo curl -L https://github.com/docker/compose/releases/download/1.5.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
+	sudo chmod +x /usr/local/bin/docker-compose && \
+	docker-compose --version
+	if_failed "Docker Compose installation/upgrade failed."
+
 	echo-green "Adding a subnet for Drude..."
 	ip_mask="192.168.10.1/24"
 	# Make sure we don't do this twice
@@ -645,12 +652,14 @@ EOF
 
 	echo-green "Creating Drude HTTP/HTTPS reverse proxy..."
 	sudo docker rm -f vhost-proxy || true
-	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always -v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
+	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always \
+	-v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
 	if_failed "Drude HTTP/HTTPS reverse proxy setup failed."
 	
 	echo-green "Creating Drude DNS service..."
 	sudo docker rm -f dns || true
-	sudo docker run -d --name dns -p 192.168.10.10:53:53/udp --cap-add=NET_ADMIN --restart=always -v /var/run/docker.sock:/var/run/docker.sock blinkreaction/dns-discovery:stable
+	sudo docker run -d --name dns -p 192.168.10.10:53:53/udp --cap-add=NET_ADMIN --dns 8.8.8.8 --restart=always \
+	-v /var/run/docker.sock:/var/run/docker.sock blinkreaction/dns-discovery:stable
 	if [[ $? == 0 ]]; then
 		echo-green "Configuring host DNS resolver for .drude domain..."
 		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head 
@@ -856,7 +865,7 @@ update ()
 update_self ()
 {
 	testing_warn
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh && \
+    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh
     if_failed "New version download has failed."
     sudo chmod +x /usr/local/bin/dsh
 	echo-green "dsh successfully updated to version: "
@@ -1148,6 +1157,28 @@ logs ()
 {
 	cd $(yml_get_path)
 	docker_compose logs $*
+}
+
+# Set uid of the primary "docker" user in the cli container
+# Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
+_set_cli_uid ()
+{
+	# Let uid to be set with the DRUDE_SET_UID env variable
+	if [[ $DRUDE_SET_UID != "" ]]; then
+		local host_uid=$DRUDE_SET_UID
+		local container_uid=$(docker exec $(docker-compose ps -q cli) id -u)
+
+		if [[ $container_uid != $host_uid ]]; then
+			echo-green "Changing user uid in cli from $container_uid to $host_uid..."
+			docker exec -it -u root $(docker-compose ps -q cli) usermod -u $host_uid docker
+			echo-green "Reseting permissions on /var/www..."
+			docker exec -it -u root $(docker-compose ps -q cli) chown -R docker:users /var/www
+			echo-green "Restarting php daemon..."
+			docker exec -it -u root $(docker-compose ps -q cli) supervisorctl restart php5-fpm
+		else
+			echo-green "Container and host uids already match ($container_uid)."
+		fi
+	fi
 }
 
 # Command bindings
