@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.9.0
+DSH_VERSION=1.9.1
 
 help ()
 {
@@ -611,6 +611,9 @@ install_prerequisites ()
 	fi
 }
 
+# Simple function to convert a version number into a string usable for comparison in bash
+_get_version_str () { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
+
 # Install Docker and setup Drude on Ubuntu 14.04+
 install_ubuntu ()
 {
@@ -619,7 +622,7 @@ install_ubuntu ()
 		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
 	fi
 
-	if [[ $lsb_dist != 'Ubuntu' || $lsb_release < '14.04' ]]; then
+	if [[ $lsb_dist != 'Ubuntu' || $(_get_version_str $lsb_release) < $(_get_version_str '14.04') ]]; then
 		echo-red "Sorry, this script only supports Ubuntu 14.04+"
 		exit 1
 	fi
@@ -882,7 +885,6 @@ _bash ()
 	# workaround through vagrant until docker solves the issue with cygwin
 	if is_windows; then
 		check_docker_running
-		cwd=$(cygpath $(cygpath -aw .));
 		local container_name
 		if [[ "$1" == "" ]]; then
 			container_name='cli'
@@ -891,6 +893,8 @@ _bash ()
 		fi
 		local container_id
 		container_id='$(docker-compose ps -q '$container_name')';
+		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
+		cwd=$(pwd); cwd=${cwd#/cygdrive}
 		command="cd $cwd && docker exec -it $container_id bash -i";
 		vagrant ssh -c "$command"
 		return
