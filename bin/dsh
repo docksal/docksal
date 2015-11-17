@@ -882,7 +882,6 @@ _bash ()
 	# workaround through vagrant until docker solves the issue with cygwin
 	if is_windows; then
 		check_docker_running
-		cwd=$(cygpath $(cygpath -aw .));
 		local container_name
 		if [[ "$1" == "" ]]; then
 			container_name='cli'
@@ -891,6 +890,8 @@ _bash ()
 		fi
 		local container_id
 		container_id='$(docker-compose ps -q '$container_name')';
+		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
+		cwd=$(pwd); cwd=${cwd#/cygdrive}
 		command="cd $cwd && docker exec -it $container_id bash -i";
 		vagrant ssh -c "$command"
 		return
