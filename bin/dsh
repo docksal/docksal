@@ -611,6 +611,9 @@ install_prerequisites ()
 	fi
 }
 
+# Simple function to convert a version number into a string usable for comparison in bash
+_get_version_str () { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
+
 # Install Docker and setup Drude on Ubuntu 14.04+
 install_ubuntu ()
 {
@@ -619,7 +622,7 @@ install_ubuntu ()
 		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
 	fi
 
-	if [[ $lsb_dist != 'Ubuntu' || $lsb_release < '14.04' ]]; then
+	if [[ $lsb_dist != 'Ubuntu' || $(_get_version_str $lsb_release) < $(_get_version_str '14.04') ]]; then
 		echo-red "Sorry, this script only supports Ubuntu 14.04+"
 		exit 1
 	fi
