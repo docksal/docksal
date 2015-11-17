@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1 (2015-11-17)
+
+- Droped /cygdrive prefix on Windows
+  - Compatibility fix for the new docker-compose binary on Windows in boot2docker-vagrant v1.3.0+
+- Fixed Ubuntu version check
+- Updated minimal versions requirements
+
 ## 1.2.0 (2015-11-11)
 
 - Ubuntu support
