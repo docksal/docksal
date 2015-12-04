@@ -2,7 +2,7 @@
 
 Docker and Docker Compose based environment for Drupal.
 
-**For a fully working example of Drude setup take a loot at:**
+**For a fully working example of Drude setup take a look at:**
  - [Drupal 7 sample project](https://github.com/blinkreaction/drude-d7-testing)
  - [Drupal 8 sample project](https://github.com/blinkreaction/drude-d8-testing)
 
