@@ -1,7 +1,10 @@
 # Drupal settings
 
+Below you will find instructions on configuring you Drupal project to work with Drude.
+Some settings are required, others are optional or enahncements. Please review carefully.
+
 <a name="db"></a>
-# DB connection settings
+# DB connection settings (**required**)
 
 Containers do not have static IP addresses assigned.  DB connection settings can be obtained from the environment variables.
 
@@ -22,7 +25,7 @@ $databases['default']['default'] = array (
 ```
 
 <a name="file-permissions"></a>
-## File permissions fix
+## File permissions fix (**required**)
 
 With NFS mounts Drupal may complain about files directory not being writable. This is a "false-negative" however can be annoying and break certain things. For a workaround add the following to your setting.php file. 
 
@@ -49,7 +52,7 @@ chmod -R +rwX files
 ```
 
 <a name="reverse-proxy"></a>
-## Reverse proxy settings
+## Reverse proxy settings (**optional**)
 
 If using [boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant), 
 you are most likely using it's vhost-proxy. In that case add the following to settings.php:
@@ -89,7 +92,7 @@ if (
 ```
 
 <a name="memcache"></a>
-## Memcache settings
+## Memcache settings (**optional**)
 
 **Drupal 7**
 

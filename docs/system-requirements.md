@@ -4,13 +4,13 @@
 
 ### RAM
 
-Boot2docker Vagrant Box requires 2GB of RAM by default.  
-You will need a bare minimum of 4GB RAM on your computer to be able to use it.  
-8GB of RAM is OK and 16GB is recommended for comfortable work with lots of tabs and windws open.
+8GB (16GB if you keep lost of apps running) for a comfortable work experience.  
 
-The amount of RAM Boot2docker Vagrant Box reserves is configurable.  
+It is possible to use Drude with less than 8GB of RAM (e.g. 4GB), however not recommended.  
+
+The amount of RAM Drude reserves is configurable via the `vagrant.yml` file (2GB by default).  
 You can lower it to 1GB if your host computer runs low on memory.  
-Please understand that this will be the amount of RAM available to the entire Docker powered stack and your sites.
+Please understand that this will be the amount of RAM available to the application stack and sites running on it.
 
 ### CPU
 
