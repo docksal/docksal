@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.9.3
+DSH_VERSION=1.10.0
 
 help ()
 {
@@ -101,15 +101,7 @@ testing_warn ()
 }
 
 #---------------- Docker Compose Global Settings ----------------------
-DC_FILE=''
-DC_PROJECT=''
 DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
-if [[ ! $DRUDE_DC_FILE == "" ]]; then
-	DC_FILE="-f $DRUDE_DC_FILE"
-fi
-if [[ ! $DRUDE_DC_PROJECT == "" ]]; then
-	DC_PROJECT="-p $DRUDE_DC_PROJECT"
-fi
 
 # Display dsh version
 # @option --short - Display only the version number
@@ -121,13 +113,6 @@ version ()
 		testing_warn
 		echo "dsh version: $DSH_VERSION"
 	fi
-}
-
-# Pass global project and file settings to docker-compose.
-# Use this function for every docker-compose invocation.
-docker_compose ()
-{
-	docker-compose $DC_FILE $DC_PROJECT $*
 }
 
 #-------------------------- Helper functions --------------------------------
@@ -439,7 +424,7 @@ _start_containers ()
 {
 	echo-green "Starting containers..."
 	cd $(yml_get_path)
-	docker_compose up -d
+	docker-compose up -d
 	_set_cli_uid
 }
 
@@ -448,7 +433,7 @@ _restart_containers ()
 {
 	echo-green "Restarting containers..."
 	cd $(yml_get_path)
-	docker_compose restart $*
+	docker-compose restart $*
 	_set_cli_uid
 }
 
@@ -461,7 +446,7 @@ _stop_containers ()
 		docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 	fi
 	cd $(yml_get_path)
-	docker_compose stop
+	docker-compose stop
 }
 
 # @param $1 container_name
@@ -471,7 +456,7 @@ _remove_containers ()
 		echo-yellow "Removing containers..."
 	fi
 	cd $(yml_get_path)
-	docker_compose kill $* && docker_compose rm -v --force $*
+	docker-compose kill $* && docker-compose rm -v --force $*
 }
 
 #------------------------------- Commands -----------------------------------
@@ -552,7 +537,7 @@ status ()
 	else
 		if is_yml_absent ; then return 2; fi
 		cd $(yml_get_path)
-		docker_compose ps
+		docker-compose ps
 	fi
 }
 
@@ -711,10 +696,10 @@ install_boot2docker ()
 install_drude ()
 {
 	testing_warn
-	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
+	docker_compose_yml=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
 	if_failed  "Could not get latest docker-compose.yml version."
 
-	echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
+	echo "$docker_compose_yml" | tee "docker-compose.yml" >/dev/null
 	if_failed  "Could not write to docker-compose.yml"
 	echo-green "Latest version of docker-compose.yml was downloaded."
 }
@@ -882,7 +867,7 @@ _bash ()
 	if is_yml_absent ; then return 2; fi
 	cd $(yml_get_path)
 
-	# workaround through vagrant until docker solves the issue with cygwin
+	# Workaround through winpty to get a tty console in cygwin
 	if is_windows; then
 		check_docker_running
 		local container_name
@@ -892,11 +877,13 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		container_id='$(docker_compose ps -q '$container_name')';
+		container_id='$(docker-compose ps -q '$container_name')';
 		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
-		cwd=$(pwd); cwd=${cwd#/cygdrive}
-		command="cd $cwd && docker exec -it $container_id bash -i";
-		vagrant ssh -c "$command"
+		#cwd=$(pwd); cwd=${cwd#/cygdrive}
+		#command="cd $cwd && docker exec -it $container_id bash -i";
+		# Run command via winpty (console.exe)
+		#console "$command"
+		console docker exec -it $container_id bash -i
 		return
 	fi
 
@@ -914,7 +901,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		container_id=$(clean_string $(docker_compose ps -q $container_name))
+		container_id=$(clean_string $(docker-compose ps -q $container_name))
 		docker exec -it $container_id bash -i
 	fi
 }
@@ -926,7 +913,7 @@ run ()
 	if is_docker && is_docker_compose ; then
 		check_docker_running
 		cd $(yml_get_path)
-		container_id=$(clean_string $(docker_compose ps -q cli))
+		container_id=$(clean_string $(docker-compose ps -q cli))
 
 		if is_tty ; then
 			# need to use $* here to finally resolve slash-escaped string if any. 
@@ -1160,7 +1147,7 @@ reset ()
 logs ()
 {
 	cd $(yml_get_path)
-	docker_compose logs $*
+	docker-compose logs $*
 }
 
 # Set uid of the primary "docker" user in the cli container
@@ -1170,15 +1157,15 @@ _set_cli_uid ()
 	# Let uid to be set with the DRUDE_SET_UID env variable
 	if [[ $DRUDE_SET_UID != "" ]]; then
 		local host_uid=$DRUDE_SET_UID
-		local container_uid=$(docker exec $(docker_compose ps -q cli) id -u)
+		local container_uid=$(docker exec $(docker-compose ps -q cli) id -u)
 
 		if [[ $container_uid != $host_uid ]]; then
 			echo-green "Changing user uid in cli from $container_uid to $host_uid..."
-			docker exec -u root $(docker_compose ps -q cli) usermod -u $host_uid docker
+			docker exec -u root $(docker-compose ps -q cli) usermod -u $host_uid docker
 			echo-green "Reseting permissions on /var/www..."
-			docker exec -u root $(docker_compose ps -q cli) chown -R docker:users /var/www
+			docker exec -u root $(docker-compose ps -q cli) chown -R docker:users /var/www
 			echo-green "Restarting php daemon..."
-			docker exec -u root $(docker_compose ps -q cli) supervisorctl restart php5-fpm
+			docker exec -u root $(docker-compose ps -q cli) supervisorctl restart php5-fpm
 		else
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
