@@ -703,10 +703,10 @@ install_boot2docker ()
 install_drude ()
 {
 	testing_warn
-	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
+	docker_compose_yml=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
 	if_failed  "Could not get latest docker-compose.yml version."
 
-	echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
+	echo "$docker_compose_yml" | tee "docker-compose.yml" >/dev/null
 	if_failed  "Could not write to docker-compose.yml"
 	echo-green "Latest version of docker-compose.yml was downloaded."
 }
