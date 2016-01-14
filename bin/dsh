@@ -886,25 +886,9 @@ _bash ()
 	if is_yml_absent ; then return 2; fi
 	cd $(yml_get_path)
 
-	# workaround through vagrant until docker solves the issue with cygwin
-	if is_windows; then
-		check_docker_running
-		local container_name
-		if [[ "$1" == "" ]]; then
-			container_name='cli'
-		else
-			container_name="$1"
-		fi
-		local container_id
-		container_id=$(get_container_id $container_name);
-		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>..
-		cwd=$(pwd); cwd=${cwd#/cygdrive}
-		command="cd $cwd && docker exec -it $container_id bash -i";
-		vagrant ssh -c "$command"
-		return
-	fi
-
-	if ! is_tty ; then
+	# Interactive shell requires a tty.
+	# On Windows we assume we run interactively via winpty (console.exe).
+	if ! (is_tty || is_windows) ; then
 		echo "Interactive bash console in a non-interactive enveronment!? Nope, won't happen."
 		return 1
 	fi
@@ -919,7 +903,12 @@ _bash ()
 		fi
 		local container_id
 		container_id=$(get_container_id $container_name)
-		docker exec -it $container_id bash -i
+		if is_windows; then
+			# Workaround - run docker via winpty (console.exe) to get a tty console in cygwin.
+			console docker exec -it $container_id bash -i
+		else
+			docker exec -it $container_id bash -i
+		fi
 	fi
 }
 
