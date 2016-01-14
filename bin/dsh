@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.9.3
+DSH_VERSION=1.10.1
 
 help ()
 {
@@ -101,15 +101,7 @@ testing_warn ()
 }
 
 #---------------- Docker Compose Global Settings ----------------------
-DC_FILE=''
-DC_PROJECT=''
 DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
-if [[ ! $DRUDE_DC_FILE == "" ]]; then
-	DC_FILE="-f $DRUDE_DC_FILE"
-fi
-if [[ ! $DRUDE_DC_PROJECT == "" ]]; then
-	DC_PROJECT="-p $DRUDE_DC_PROJECT"
-fi
 
 # Display dsh version
 # @option --short - Display only the version number
@@ -123,11 +115,11 @@ version ()
 	fi
 }
 
-# Pass global project and file settings to docker-compose.
 # Use this function for every docker-compose invocation.
 docker_compose ()
 {
-	docker-compose $DC_FILE $DC_PROJECT $*
+	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
+	docker-compose $* | tr -d '\r'
 }
 
 #-------------------------- Helper functions --------------------------------
@@ -914,7 +906,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		container_id=$(clean_string $(docker_compose ps -q $container_name))
+		container_id=$(docker_compose ps -q $container_name)
 		docker exec -it $container_id bash -i
 	fi
 }
@@ -926,7 +918,7 @@ run ()
 	if is_docker && is_docker_compose ; then
 		check_docker_running
 		cd $(yml_get_path)
-		container_id=$(clean_string $(docker_compose ps -q cli))
+		container_id=$(docker_compose ps -q cli)
 
 		if is_tty ; then
 			# need to use $* here to finally resolve slash-escaped string if any. 
