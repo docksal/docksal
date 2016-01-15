@@ -934,7 +934,12 @@ run ()
 # param $* command with it's params to run
 _run ()
 {
-	local COLS=$(tput cols) #get client window width
+	#get client window width for interactive sessions
+	local COLS=''
+	if is_tty ; then
+		COLS=$(tput cols)
+	fi
+
 	if is_yml_absent ; then return 2; fi
 	if is_docker && is_docker_compose ; then
 		local path=$(get_current_relative_path)
