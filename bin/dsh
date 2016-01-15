@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.10.1
+DSH_VERSION=1.10.3
 
 help ()
 {
@@ -884,7 +884,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		container_id='$(docker_compose ps -q '$container_name')';
+		container_id=$(docker_compose ps -q $container_name);
 		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
 		cwd=$(pwd); cwd=${cwd#/cygdrive}
 		command="cd $cwd && docker exec -it $container_id bash -i";
