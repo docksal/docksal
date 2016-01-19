@@ -83,12 +83,21 @@ fi
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
 is_tty ()
 {
+	# Override option via $DRUDE_IS_TTY (true|false) env variable.
+	if [[ $DRUDE_IS_TTY == 'true' ]]; then
+		return 0;
+	fi
+	if [[ $DRUDE_IS_TTY == 'false' ]]; then
+		return 1;
+	fi
+
 	# disable interactive shell on windows for now
 	# known Docker issue: https://github.com/docker/docker/issues/12469
 	res=$(uname | grep 'CYGWIN_NT')
 	if [[ "$res" != '' ]]; then
 		return 1;
 	fi
+
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
 }
 
@@ -222,11 +231,11 @@ clean_string ()
 	echo ${cleaned}
 }
 
-# get mysql connection string
+# Get mysql connection string
 get_mysql_connect ()
 {
-	# get connection string and cleanup residue that is leftover
-	echo $(clean_string "$(_run drush sql-connect)")
+	# Run drush forcing tty to false to avoid colored output string from drush.
+	echo "$(DRUDE_IS_TTY=false _run drush sql-connect)"
 }
 
 #----------------------- Basics check functions -----------------------------
@@ -911,8 +920,8 @@ _bash ()
 	fi
 }
 
-# Run a command in container in project root
-# param $* command with it's params to run
+# Run a command in the cli container in the project root
+# @param $* command with it's params to run
 run ()
 {
 	if is_docker && is_docker_compose ; then
@@ -930,8 +939,8 @@ run ()
 	fi
 }
 
-# Run a command in container changing dir to the same folder
-# param $* command with it's params to run
+# Run a command in the cli container changing dir to the same folder
+# @param $* command with it's params to run
 _run ()
 {
 	#get client window width for interactive sessions
