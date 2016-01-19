@@ -4,7 +4,7 @@
 
 [boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant) has a built-in vhost-proxy container that adds support for running multiple projects on the same `IP:port`. The container binds to `192.168.10.10:80` (the default box IP address) and routes web requests based on the Host header.
 
-See https://github.com/blinkreaction/boot2docker-vagrant#vhost-proxy for more information and configuration instructions.
+See https://github.com/blinkreaction/boot2docker-vagrant/blob/develop/docs/networking.md#vhost-proxy for more information and configuration instructions.
 
 
 ## Without vhost-proxy (Mac, Windows, Linux)
