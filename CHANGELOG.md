@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.2.4 (2016-01-20)
+
+- Bump dsh to v1.10.3
+  - Fixed "tput: No value for $TERM and no -T specified" in noninteractive (CI) environments
+  - Fixed "Error response from daemon: no such id: bash" on Windows
+- Restructured and updated docs with setup instructions per use case
+
+## 1.2.3 (2015-12-04)
+
+- Bump dsh to v1.9.3
+  - Fix in _set_cli_uid for non-interactive sessions
+
+## 1.2.2 (2015-12-04)
+
+- Fix a really tiny typo in the README.
+- Bump dsh to v1.9.2
+  - Fix DRUDE_SET_UID usage (experimental) when combined with DRUDE_DC_PROJECT.
+
 ## 1.2.1 (2015-11-17)
 
 - Droped /cygdrive prefix on Windows

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.9.3
+DSH_VERSION=1.10.3
 
 help ()
 {
@@ -83,12 +83,21 @@ fi
 # Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
 is_tty ()
 {
+	# Override option via $DRUDE_IS_TTY (true|false) env variable.
+	if [[ $DRUDE_IS_TTY == 'true' ]]; then
+		return 0;
+	fi
+	if [[ $DRUDE_IS_TTY == 'false' ]]; then
+		return 1;
+	fi
+
 	# disable interactive shell on windows for now
 	# known Docker issue: https://github.com/docker/docker/issues/12469
 	res=$(uname | grep 'CYGWIN_NT')
 	if [[ "$res" != '' ]]; then
 		return 1;
 	fi
+
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
 }
 
@@ -101,15 +110,7 @@ testing_warn ()
 }
 
 #---------------- Docker Compose Global Settings ----------------------
-DC_FILE=''
-DC_PROJECT=''
 DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
-if [[ ! $DRUDE_DC_FILE == "" ]]; then
-	DC_FILE="-f $DRUDE_DC_FILE"
-fi
-if [[ ! $DRUDE_DC_PROJECT == "" ]]; then
-	DC_PROJECT="-p $DRUDE_DC_PROJECT"
-fi
 
 # Display dsh version
 # @option --short - Display only the version number
@@ -123,11 +124,11 @@ version ()
 	fi
 }
 
-# Pass global project and file settings to docker-compose.
 # Use this function for every docker-compose invocation.
 docker_compose ()
 {
-	docker-compose $DC_FILE $DC_PROJECT $*
+	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
+	docker-compose $* | tr -d '\r'
 }
 
 #-------------------------- Helper functions --------------------------------
@@ -230,11 +231,11 @@ clean_string ()
 	echo ${cleaned}
 }
 
-# get mysql connection string
+# Get mysql connection string
 get_mysql_connect ()
 {
-	# get connection string and cleanup residue that is leftover
-	echo $(clean_string "$(_run drush sql-connect)")
+	# Run drush forcing tty to false to avoid colored output string from drush.
+	echo "$(DRUDE_IS_TTY=false _run drush sql-connect)"
 }
 
 #----------------------- Basics check functions -----------------------------
@@ -711,10 +712,10 @@ install_boot2docker ()
 install_drude ()
 {
 	testing_warn
-	docker_compose=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
+	docker_compose_yml=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
 	if_failed  "Could not get latest docker-compose.yml version."
 
-	echo "$docker_compose" | tee "docker-compose.yml" >/dev/null
+	echo "$docker_compose_yml" | tee "docker-compose.yml" >/dev/null
 	if_failed  "Could not write to docker-compose.yml"
 	echo-green "Latest version of docker-compose.yml was downloaded."
 }
@@ -892,7 +893,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		container_id='$(docker_compose ps -q '$container_name')';
+		container_id=$(docker_compose ps -q $container_name);
 		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
 		cwd=$(pwd); cwd=${cwd#/cygdrive}
 		command="cd $cwd && docker exec -it $container_id bash -i";
@@ -914,19 +915,19 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		container_id=$(clean_string $(docker_compose ps -q $container_name))
+		container_id=$(docker_compose ps -q $container_name)
 		docker exec -it $container_id bash -i
 	fi
 }
 
-# Run a command in container in project root
-# param $* command with it's params to run
+# Run a command in the cli container in the project root
+# @param $* command with it's params to run
 run ()
 {
 	if is_docker && is_docker_compose ; then
 		check_docker_running
 		cd $(yml_get_path)
-		container_id=$(clean_string $(docker_compose ps -q cli))
+		container_id=$(docker_compose ps -q cli)
 
 		if is_tty ; then
 			# need to use $* here to finally resolve slash-escaped string if any. 
@@ -938,11 +939,16 @@ run ()
 	fi
 }
 
-# Run a command in container changing dir to the same folder
-# param $* command with it's params to run
+# Run a command in the cli container changing dir to the same folder
+# @param $* command with it's params to run
 _run ()
 {
-	local COLS=$(tput cols) #get client window width
+	#get client window width for interactive sessions
+	local COLS=''
+	if is_tty ; then
+		COLS=$(tput cols)
+	fi
+
 	if is_yml_absent ; then return 2; fi
 	if is_docker && is_docker_compose ; then
 		local path=$(get_current_relative_path)
