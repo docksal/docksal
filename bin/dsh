@@ -329,21 +329,8 @@ is_docker ()
 
 is_docker_running ()
 {
-	binary_found 'nc'
-	if is_linux; then
-		# on linux check that pid file exists and process with that pid exists
-		local pid='/var/run/docker.pid'
-		if [ ! -f $pid ]; then return 1; fi
-		local status=$(ps ax | grep $(cat "/var/run/docker.pid" 2>&1 1>/dev/null) 2>&1 1>/dev/null | grep -v "grep");
-		return $?
-	else
-		# on mac and win extract host and port from $DOCKER_HOST
-		local host=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/\([a-z0-9\.]*\):[0-9]*/\1/')
-		local port=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/[a-z0-9\.]*:\([0-9]*\)/\1/')
-		# then use netcat to check that port
-		nc -z -G 1 $host $port 2>/dev/null 1>/dev/null
-		return $?
-	fi
+	docker info > /dev/null
+	return $?
 }
 
 check_docker_running ()
