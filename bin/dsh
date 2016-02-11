@@ -336,7 +336,7 @@ is_docker_running ()
 check_docker_running ()
 {
 	if ! is_docker_running; then
-		echo-red "dsh: Docker is not running";
+		echo-red "dsh: Unable to connect to the docker daemon";
 		exit 1
 	fi
 }
@@ -345,7 +345,7 @@ is_vagrantfile_absent ()
 {
 	vagrant_path=$(upfind "Vagrantfile")
 	if [[ "$vagrant_path" == "" ]] ; then
-		echo-red "dsh: [error] Vagrantfile not found in your directory tree"
+		echo-red "dsh: Vagrantfile not found in your directory tree"
 		return 0
 	fi
 
