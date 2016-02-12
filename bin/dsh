@@ -1,29 +1,29 @@
 #!/bin/bash
 
-DSH_VERSION=1.10.5
+DSH_VERSION=1.10.6
 
-help ()
+show_help ()
 {
 	echo "Drude Shell $DSH_VERSION. Usage: dsh <command> [params]"
 	echo
 	echo "Commands list:"
 	echo
-	echo "	start (up)		Start vagrant vm (if stopped) and docker containers"
-	echo "	stop (down)		Stop project containers"
-	echo "	    -a (--all)		Stop all running containers from all Docker projects"
-	echo "	restart	[containers]	Restart all current project containers or specified [containers]"
+	echo "	start (up)		Start vagrant vm (if stopped) and project services (containers)"
+	echo "	stop (down)		Stop project services (containers)"
+	echo "	    -a (--all)		Stop all running containers from all Docker projects (except where group=system)"
+	echo "	restart	[service]	Restart all current project services (containers) or specified service"
 	echo "	reload			Restart vagrant vm"
 	echo "	halt			Stop vagrant vm"
-	echo "	status (st, ps)		Show project containers status"
-	echo "	    -a (--all)		Show all running containers from all Docker projects status"
-	echo "	vmstat			Show vagrant vm usage statistics"
+	echo "	status (st, ps)		Show project services (containers) status"
+	echo "	    -a (--all)		Show status of all running containers from all Docker projects"
+	echo "	vmstat			Show vagrant vm usage statistics (Win, Mac)"
 	echo
-	echo "	reset [containers]	Recreate (stop, remove, up) all project containers or specified [containers]"
-	echo "	remove [containers]	Remove all project containers or specified [containers]"
+	echo "	reset [service]	Recreate (stop, remove, start) all services (containers) or specified service"
+	echo "	remove [service]	Remove all project services (containers) or specified service"
 	echo
-	echo "	bash [container]	Open bash to container. If no container provided defaults to 'cli'"
+	echo "	bash [service]	Open bash to service (container). If no service specified defaults to 'cli'"
 	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
-	echo "	logs [containers]	Show docker logs for container(s)"
+	echo "	logs [service]	Show docker logs for service (container)"
 	echo
 	echo "	mysql (sqlc)		Opens mysql shell to current project database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
@@ -183,21 +183,6 @@ get_abs_path ()
 	echo "$absolute"
 }
 
-# TODO: DEPRECATED
-# Returns project root absolute path without trailing slash or "." if couldn't find real path
-get_project_root_path ()
-{
-	yml_path=$(yml_get_path)
-	if [ ! -f "${yml_path}/docker-compose.yml" ]; then
-		echo "."
-		return
-	fi
-	# get relative project root path from docker-compose.yml config
-	local project_root_relative=$(grep "&project_root" ${yml_path}/docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
-	local project_root_absolute=$( cd "${yml_path}/${project_root_relative}" ; pwd )
-	echo "$project_root_absolute"
-}
-
 # Return current path relative to project root with trailing slash
 get_current_relative_path ()
 {
@@ -329,8 +314,14 @@ is_docker ()
 
 is_docker_running ()
 {
-	docker info > /dev/null
-	return $?
+	local ERR
+	local ERRCODE
+	ERR=$(docker info 2>&1 >/dev/null)
+	ERRCODE=$?
+	if [[ $ERR =~ 'Error' ]]; then
+					echo $ERR;
+	fi
+	return $ERRCODE
 }
 
 check_docker_running ()
@@ -381,7 +372,7 @@ _confirm ()
 {
 	# Skip checks if not a tty
 	if ! is_tty ; then return 0; fi
-	
+
 	while true; do
 		read -p "$1 [y/n]: " answer
 		case $answer in
@@ -646,14 +637,14 @@ EOF
 	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always \
 	-v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
 	if_failed "Drude HTTP/HTTPS reverse proxy setup failed."
-	
+
 	echo-green "Creating Drude DNS service..."
 	sudo docker rm -f dns || true
 	sudo docker run -d --name dns -p 192.168.10.10:53:53/udp --cap-add=NET_ADMIN --dns 8.8.8.8 --restart=always \
 	-v /var/run/docker.sock:/var/run/docker.sock blinkreaction/dns-discovery:stable
 	if [[ $? == 0 ]]; then
 		echo-green "Configuring host DNS resolver for .drude domain..."
-		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head 
+		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head
 		sudo resolvconf -u
 	else
 		echo-red "Drude DNS service setup failed."
@@ -663,7 +654,6 @@ EOF
 }
 
 # Install Vagrantfile and vagrant.yml required by boot2docker
-# TODO: refactor to not rely on setup.sh as dsh only needs those 2 files
 install_boot2docker ()
 {
 	testing_warn
@@ -776,7 +766,7 @@ update ()
 		echo-green "Installing boot2docker update..."
 		# Make sure ~/.drude folder exists
 		mkdir -p $HOME/.drude
-		
+
 		# get current version
 		local b2d_version_path=$HOME/.drude/b2d_version
 		local b2d_version=$(cat $b2d_version_path 2>/dev/null)
@@ -881,7 +871,7 @@ _bash ()
 		fi
 		local container_id
 		container_id=$(docker_compose ps -q $container_name);
-		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
+		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>..
 		cwd=$(pwd); cwd=${cwd#/cygdrive}
 		command="cd $cwd && docker exec -it $container_id bash -i";
 		vagrant ssh -c "$command"
@@ -917,7 +907,7 @@ run ()
 		container_id=$(docker_compose ps -q cli)
 
 		if is_tty ; then
-			# need to use $* here to finally resolve slash-escaped string if any. 
+			# need to use $* here to finally resolve slash-escaped string if any.
 			# passing $@ will not work properly if $@ contains slash espaped string from _drush command
 			docker exec -it $container_id bash -ic "$*"
 		else
@@ -1305,7 +1295,7 @@ case $1 in
 		help
 		;;
 	help)
-		help
+		show_help
 		;;
 	*)
 		echo "Unknown command '"$*"'. See 'dsh help' for list of available commands"
