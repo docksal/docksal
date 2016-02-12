@@ -319,7 +319,7 @@ is_docker_running ()
 	ERR=$(docker info 2>&1 >/dev/null)
 	ERRCODE=$?
 	if [[ $ERR =~ 'Error' ]]; then
-					echo $ERR;
+		echo $ERR;
 	fi
 	return $ERRCODE
 }
