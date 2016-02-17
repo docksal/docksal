@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.10.6
+DSH_VERSION=1.11.0
 
 show_help ()
 {
