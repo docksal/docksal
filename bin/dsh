@@ -18,19 +18,20 @@ show_help ()
 	echo "	    -a (--all)		Show status of all running containers from all Docker projects"
 	echo "	vmstat			Show vagrant vm usage statistics (Win, Mac)"
 	echo
-	echo "	reset [service]	Recreate (stop, remove, start) all services (containers) or specified service"
+	echo "	reset [service]		Recreate (stop, remove, start) all services (containers) or specified service"
 	echo "	remove [service]	Remove all project services (containers) or specified service"
 	echo
-	echo "	bash [service]	Open bash to service (container). If no service specified defaults to 'cli'"
+	echo "	bash [service]		Open bash to service (container). If no service specified defaults to 'cli'"
 	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
-	echo "	logs [service]	Show docker logs for service (container)"
+	echo "	logs [service]		Show docker logs for service (container)"
 	echo
 	echo "	mysql (sqlc)		Opens mysql shell to current project database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
 	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
 	echo
 	echo "	init [params]		Execute project init script .drude/scripts/drude-init.sh (params will be passed to script)"
-	echo "	exec-url <url>		Download script from URL and run it. URL should be public. Alias: init-url"
+	echo "	exec-url <url>		Download script from URL and run it. URL should be public."
+	echo "	  (init-url <url>)"
 	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
 	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo
@@ -39,11 +40,14 @@ show_help ()
 	echo "	install			Install/check prerequisites, boot2docker and drude config"
 	echo "	install prerequisites 	Only install prerequisites"
 	echo "	install boot2docker 	Only install boot2docker"
-	echo "	install drude 		Only install the latest default docker-compose.yml"
+	echo "	install drude-config 	Only install the latest default docker-compose.yml"
 	echo "	install autocomplete 	Install commands autocomplete for Bash"
-	echo "	update			Update Drude"
 	echo
-	echo "	self-update		Update dsh itself"
+	echo "	update prerequisites 	Update prerequisites"
+	echo "	update boot2docker	Update boot2docker-vagrant box"
+	echo "	update images		Update container images"
+	echo "	update dsh		Update dsh itself (ex. dsh self-update)"
+	echo
 	echo "	version	(-v)		Print dsh version"
 	echo
 }
@@ -54,7 +58,11 @@ bash_comp_words ()
 {
 	case $1 in
 		install)
-			echo "prerequisites boot2docker drude"
+			echo "prerequisites boot2docker drude-config"
+			exit 0
+			;;
+		update)
+			echo "prerequisites boot2docker images dsh"
 			exit 0
 			;;
 		dsh)
@@ -686,7 +694,7 @@ install_boot2docker ()
 }
 
 # Download latest Drude config file
-install_drude ()
+install_drude_config ()
 {
 	testing_warn
 	docker_compose_yml=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
@@ -728,8 +736,8 @@ install ()
 		echo -e "           If that is not correct please cancel, cd to proper dir and re-run command."
 		_confirm "Continue with download to $(pwd)?"
 		install_boot2docker
-	elif [[ "$1" == "drude" ]]; then
-		install_drude
+	elif [[ "$1" == "drude-config" ]]; then
+		install_drude_config
 	elif [[ "$1" == "autocomplete" ]]; then
 		install_autocomplete
 	else # Full setup
@@ -742,13 +750,20 @@ install ()
 			cd $cwd
 		fi
 		_confirm "Install default docker-compose.yml to $(pwd) (This should be your <drupal_site> folder)?"
-		install_drude
+		install_drude_config
 		echo-green "Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude"
 	fi
 }
 
-# Update Drude
-update ()
+# Update container images
+update_images ()
+{
+	docker_compose pull
+	up
+}
+
+# Update Vagrant Box
+update_boot2docker ()
 {
 	testing_warn
 	if ! is_tty ; then
@@ -828,27 +843,15 @@ update ()
 
 	# Update drude
 	cd $cwd # we need to bo back if we were installing boot2docker
-	# if install_drude ; then
-	# 	if [[ ! "$b2d_new_version" == "$b2d_version" ]] && [ $destroy_box -eq 1 ] && ! is_linux; then
-	# 		# if vagrant box was updated containers will be downloaded again
-	# 		_confirm "Starting Vagrant box. Downloading and starting containers."
-	# 	else
-	# 		_confirm "Starting containers. If there's an update to container images it will be downloaded."
-	# 	fi
-	# 	up
-	# else
-	# 	echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
-	# 	return 1
-	# fi
 }
 
 # Update dsh itself
 update_self ()
 {
 	testing_warn
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh
-    if_failed "New version download has failed."
-    sudo chmod +x /usr/local/bin/dsh
+	sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh
+	if_failed "New version download has failed."
+	sudo chmod +x /usr/local/bin/dsh
 	echo-green "dsh successfully updated to version: "
 	echo "dsh version --short" | bash
 }
@@ -1220,8 +1223,17 @@ case $1 in
 		install $*
 		;;
 	update)
-		shift
-		update $*
+		if [[ "$1" == "prerequisites" ]]; then
+			install_prerequisites
+		elif [[ "$1" == "boot2docker" ]]; then
+			update_boot2docker
+		elif [[ "$1" == "images" ]]; then
+			update_images
+		elif [[ "$1" == "dsh" ]]; then
+			update_self
+		else
+			echo "Use dsh update [prerequisites|boot2docker|images|dsh]"
+		fi
 		;;
 	self-update)
 		update_self
@@ -1297,7 +1309,7 @@ case $1 in
 		logs $@
 		;;
 	"")
-		help
+		show_help
 		;;
 	help)
 		show_help
