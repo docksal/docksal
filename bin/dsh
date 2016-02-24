@@ -1172,7 +1172,7 @@ _set_cli_uid ()
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
 	else
-		echo-yellow "Can not match uid in cli with host's uid (uid=0). Using default (uid=1000)."
+		echo-yellow "Running Drude as root is not recommended. Please run as a regular user with docker access."
 	fi
 }
 
