@@ -135,8 +135,12 @@ version ()
 # Use this function for every docker-compose invocation.
 docker_compose ()
 {
-	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
-	docker-compose $* | tr -d '\r'
+	if is_windows; then
+		# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
+		docker-compose $* | tr -d '\r'
+	else
+		docker-compose $*
+	fi
 }
 
 #-------------------------- Helper functions --------------------------------
