@@ -1267,9 +1267,13 @@ case $1 in
 		;;
 	drush)
 		shift
-		# slash escape space-delimited parameters for safe passing between functions
-		cmd=$(printf " %q" "$@")
-		_drush $cmd
+		if [[ $1 == "" ]]; then
+			_run drush
+		else
+			# slash escape space-delimited parameters for safe passing between functions
+			cmd=$(printf " %q" "$@")
+			_drush $cmd
+		fi
 		;;
 	behat)
 		shift
