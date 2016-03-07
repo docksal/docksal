@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.11.2
+DSH_VERSION=1.11.3
 
 show_help ()
 {
@@ -132,17 +132,6 @@ version ()
 	fi
 }
 
-# Use this function for every docker-compose invocation.
-docker_compose ()
-{
-	if is_windows; then
-		# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
-		docker-compose $* | tr -d '\r'
-	else
-		docker-compose $*
-	fi
-}
-
 #-------------------------- Helper functions --------------------------------
 
 echo-red () { echo -e "${red}$1${NC}"; }
@@ -233,6 +222,29 @@ get_mysql_connect ()
 {
 	# Run drush forcing tty to false to avoid colored output string from drush.
 	echo "$(DRUDE_IS_TTY=false _run drush sql-connect)"
+}
+
+# Use this function for every docker-compose invocation.
+docker_compose ()
+{
+	# TODO: remove this
+	# if is_windows; then
+	# 	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
+	# 	docker-compose $* | tr -d '\r'
+	# else
+	# 	docker-compose $*
+	# fi
+	
+	docker-compose $*
+}
+
+# Get container id by service name
+# @param $1 docker compose service name (e.g. cli)
+# @return docker container id 
+get_container_id ()
+{
+	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
+	echo $(docker_compose ps -q $1 | tr -d '\r')
 }
 
 #----------------------- Basics check functions -----------------------------
@@ -911,7 +923,7 @@ run ()
 	if is_docker && is_docker_compose ; then
 		check_docker_running
 		cd $(yml_get_path)
-		container_id=$(docker_compose ps -q cli)
+		container_id=$(get_container_id cli)
 
 		if is_tty ; then
 			# need to use $* here to finally resolve slash-escaped string if any.
@@ -1163,15 +1175,15 @@ _set_cli_uid ()
 	# Let uid to be set with the DRUDE_SET_UID env variable
 	if [[ $DRUDE_SET_UID != 0 ]] ; then
 		local host_uid=$DRUDE_SET_UID
-		local container_uid=$(docker exec $(docker_compose ps -q cli) id -u)
+		local container_uid=$(docker exec $(get_container_id cli) id -u)
 
 		if [[ $container_uid != $host_uid ]]; then
 			echo-green "Changing user uid in cli from $container_uid to $host_uid..."
-			docker exec -u root $(docker_compose ps -q cli) usermod -u $host_uid docker
+			docker exec -u root $(get_container_id cli) usermod -u $host_uid docker
 			echo-green "Reseting permissions on /var/www..."
-			docker exec -u root $(docker_compose ps -q cli) chown -R docker:users /var/www
+			docker exec -u root $(get_container_id cli) chown -R docker:users /var/www
 			echo-green "Restarting php daemon..."
-			docker exec -u root $(docker_compose ps -q cli) supervisorctl restart php5-fpm
+			docker exec -u root $(get_container_id cli) supervisorctl restart php5-fpm
 		else
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
