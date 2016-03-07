@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.11.1
+DSH_VERSION=1.11.2
 
 show_help ()
 {
@@ -1227,6 +1227,7 @@ case $1 in
 		install $*
 		;;
 	update)
+		shift
 		if [[ "$1" == "prerequisites" ]]; then
 			install_prerequisites
 		elif [[ "$1" == "boot2docker" ]]; then
