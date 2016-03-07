@@ -896,7 +896,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		container_id=$(docker_compose ps -q $container_name);
+		container_id=$(get_container_id $container_name);
 		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>..
 		cwd=$(pwd); cwd=${cwd#/cygdrive}
 		command="cd $cwd && docker exec -it $container_id bash -i";
@@ -918,7 +918,7 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		container_id=$(docker_compose ps -q $container_name)
+		container_id=$(get_container_id $container_name)
 		docker exec -it $container_id bash -i
 	fi
 }
