@@ -303,7 +303,7 @@ binary_found ()
 		return 1;
 	fi
 
-	local bpath=$(which $1)
+	local bpath=$(which $1 2>/dev/null)
 
 	if [[ "$bpath" != "" ]] && [ -f $(which $1) ]; then
 		return 0
@@ -903,7 +903,7 @@ _bash ()
 		fi
 		local container_id
 		container_id=$(get_container_id $container_name)
-		if is_windows; then
+		if is_windows && binary_found console; then
 			# Workaround - run docker via winpty (console.exe) to get a tty console in cygwin.
 			console docker exec -it $container_id bash -i
 		else
