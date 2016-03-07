@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.11.3
+DSH_VERSION=1.11.4
 
 show_help ()
 {
@@ -338,14 +338,21 @@ is_docker ()
 
 is_docker_running ()
 {
-	local ERR
-	local ERRCODE
-	ERR=$(docker info 2>&1 >/dev/null)
-	ERRCODE=$?
-	if [[ $ERR =~ 'Error' ]]; then
-		echo $ERR;
+	binary_found 'nc'
+
+	# Extract host and port from $DOCKER_HOST
+	local host=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/\([a-z0-9\.]*\):[0-9]*/\1/')
+	local port=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/[a-z0-9\.]*:\([0-9]*\)/\1/')
+
+	# then use netcat to check the host:port
+	# nc on Mac needs -G for the connections timeout argument
+	if is_mac; then
+		nc -z -G 1 $host $port 2>/dev/null 1>/dev/null
+	else
+		nc -z -w 1 $host $port 2>/dev/null 1>/dev/null
 	fi
-	return $ERRCODE
+	return $?
+
 }
 
 check_docker_running ()
