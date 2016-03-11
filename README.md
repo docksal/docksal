@@ -91,6 +91,7 @@ Tools available inside the **cli** container:
 - [Using Behat](/docs/behat.md)
 - [Zero-configuration Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
+- [Sending and capturing email](/docs/mail.md)
 
 
 <a name="troubleshooting"></a>
