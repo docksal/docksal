@@ -12,7 +12,7 @@
     # Varnish node
     varnish:
       hostname: varnish
-      image: blinkreaction/varnish:3.0-stable
+      image: blinkreaction/drupal-varnish:3.0-stable
       links:
         - web
       environment:
