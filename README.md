@@ -92,7 +92,7 @@ Tools available inside the **cli** container:
 - [Zero-configuration Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
 - [Sending and capturing email](/docs/mail.md)
-
+- [Enabling Varnish support](/docs/varnish.md)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
