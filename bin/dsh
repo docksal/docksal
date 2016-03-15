@@ -340,19 +340,30 @@ is_docker_running ()
 {
 	binary_found 'nc'
 
-	# Extract host and port from $DOCKER_HOST
-	local host=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/\([a-z0-9\.]*\):[0-9]*/\1/')
-	local port=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/[a-z0-9\.]*:\([0-9]*\)/\1/')
-
-	# then use netcat to check the host:port
-	# nc on Mac needs -G for the connections timeout argument
-	if is_mac; then
-		nc -z -G 1 $host $port 2>/dev/null 1>/dev/null
+	if is_linux; then
+		# On Linux check that pid file exists and process with that pid exists.
+		local pid='/var/run/docker.pid'
+		if [ ! -f $pid ]; then return 1; fi
+		local status=$(ps ax | grep $(cat "/var/run/docker.pid" 2>&1 1>/dev/null) 2>&1 1>/dev/null | grep -v "grep");
 	else
-		nc -z -w 1 $host $port 2>/dev/null 1>/dev/null
-	fi
-	return $?
+		if [[ $DOCKER_HOST == "" ]]; then
+			echo-red "dsh: $DOCKER_HOST variable is empty"
+			return 1
+		fi
+		# Extract host and port from $DOCKER_HOST
+		local host=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/\([a-z0-9\.]*\):[0-9]*/\1/')
+		local port=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/[a-z0-9\.]*:\([0-9]*\)/\1/')
 
+		# Then use netcat to check the host:port
+		# nc on Mac needs -G for the connections timeout argument.
+		if is_mac; then
+			nc -z -G 1 $host $port 2>/dev/null 1>/dev/null
+		else
+			nc -z -w 1 $host $port 2>/dev/null 1>/dev/null
+		fi
+	fi
+
+	return $?
 }
 
 check_docker_running ()
