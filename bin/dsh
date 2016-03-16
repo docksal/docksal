@@ -883,11 +883,13 @@ update_boot2docker ()
 update_dsh ()
 {
 	testing_warn
-	#sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh
-	sudo curl -L https://raw.githubusercontent.com/achekulaev/docker-fig-drupal/develop/bin/dsh -o /usr/local/bin/dsh
+	#local new_dsh=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
+	local new_dsh=$(curl -kfsS https://raw.githubusercontent.com/achekulaev/docker-fig-drupal/develop/bin/dsh)
 	if_failed "New version download has failed."
+	local new_version=$(grep DSH_VERSION= <<< "$new_dsh" | cut -f 2 -d "=")
+	echo "$new_dsh" | sudo tee /usr/local/bin/dsh > /dev/null
+	if_failed "Could not write /usr/local/bin/dsh."
 	sudo chmod +x /usr/local/bin/dsh
-	local new_version=$(cat /usr/local/bin/dsh | grep DSH_VERSION= | cut -f 2 -d "=")
 	echo-green "dsh successfully updated to version: $new_version"
 	exit
 }
