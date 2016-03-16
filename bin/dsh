@@ -880,14 +880,15 @@ update_boot2docker ()
 }
 
 # Update dsh itself
-update_self ()
+update_dsh ()
 {
 	testing_warn
-	sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh
+	#sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh
+	sudo curl -L https://raw.githubusercontent.com/achekulaev/docker-fig-drupal/develop/bin/dsh -o /usr/local/bin/dsh
 	if_failed "New version download has failed."
 	sudo chmod +x /usr/local/bin/dsh
-	echo-green "dsh successfully updated to version: "
-	echo "dsh version --short" | bash
+	local new_version=$(cat /usr/local/bin/dsh | grep DSH_VERSION= | cut -f 2 -d "=")
+	echo-green "dsh successfully updated to version: $new_version"
 }
 
 # Start interactive bash in container
@@ -1254,13 +1255,13 @@ case $1 in
 		elif [[ "$1" == "images" ]]; then
 			update_images
 		elif [[ "$1" == "dsh" ]]; then
-			update_self
+			update_dsh
 		else
 			echo "Use dsh update [prerequisites|boot2docker|images|dsh]"
 		fi
 		;;
 	self-update)
-		update_self
+		update_dsh
 		;;
 	bash)
 		shift
@@ -1343,6 +1344,6 @@ case $1 in
 		show_help
 		;;
 	*)
-		echo "Unknown command '"$*"'. See 'dsh help' for list of available commands"
+		echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands"
 		exit 1
 esac
