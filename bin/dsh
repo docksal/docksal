@@ -2,93 +2,32 @@
 
 DSH_VERSION=1.12.2
 
-show_help ()
-{
-	echo "Drude Shell $DSH_VERSION. Usage: dsh <command> [params]"
-	echo
-	echo "Commands list:"
-	echo
-	echo "	start (up)		Start vagrant vm (if stopped) and project services (containers)"
-	echo "	stop (down)		Stop project services (containers)"
-	echo "	    -a (--all)		Stop all running containers from all Docker projects (except where group=system)"
-	echo "	restart	[service]	Restart all current project services (containers) or specified service"
-	echo "	reload			Restart vagrant vm"
-	echo "	halt			Stop vagrant vm"
-	echo "	status (st, ps)		Show project services (containers) status"
-	echo "	    -a (--all)		Show status of all running containers from all Docker projects"
-	echo "	vmstat			Show vagrant vm usage statistics (Win, Mac)"
-	echo
-	echo "	reset [service]		Recreate (stop, remove, start) all services (containers) or specified service"
-	echo "	remove [service]	Remove all project services (containers) or specified service"
-	echo
-	echo "	bash [service]		Open bash to service (container). If no service specified defaults to 'cli'"
-	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
-	echo "	logs [service]		Show docker logs for service (container)"
-	echo
-	echo "	mysql (sqlc)		Opens mysql shell to current project database"
-	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
-	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
-	echo
-	echo "	init [params]		Execute project init script .drude/scripts/drude-init.sh (params will be passed to script)"
-	echo "	exec-url <url>		Download script from URL and run it. URL should be public."
-	echo "	  (init-url <url>)"
-	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
-	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
-	echo
-	echo "	behat [--path=path]	Run Behat tests from path (relative to project root). Default: tests/behat"
-	echo
-	echo "	install			Install/check prerequisites, boot2docker and drude config"
-	echo "	install prerequisites 	Only install prerequisites"
-	echo "	install boot2docker 	Only install boot2docker"
-	echo "	install drude-config 	Only install the latest default docker-compose.yml"
-	echo "	install autocomplete 	Install commands autocomplete for Bash"
-	echo
-	echo "	update prerequisites 	Update prerequisites"
-	echo "	update boot2docker	Update boot2docker-vagrant box"
-	echo "	update images		Update container images"
-	echo "	update dsh		Update dsh itself (ex. dsh self-update)"
-	echo
-	echo "	version	(-v)		Print dsh version"
-	echo
-}
-
-# return bash completion words
-# @param $1 command to return words for
-bash_comp_words ()
-{
-	case $1 in
-		install)
-			echo "prerequisites boot2docker drude-config"
-			exit 0
-			;;
-		update)
-			echo "prerequisites boot2docker images dsh"
-			exit 0
-			;;
-		dsh)
-			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli init exec-url drush behat install update self-update version help"
-			exit 0
-			;;
-		*)
-			exit 1 #return 1 to completion function to prevent completion is we don't know what to do
-	esac
-}
-
 # Console colors
 red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[1;33m'
 NC='\033[0m'
 
-#-------------------------- Testing --------------------------------
+#---------------------------- Global Variables --------------------------------
+
+DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
+
 if [[ $DRUDE_BRANCH == "" ]]; then
 	DRUDE_BRANCH='master'
 fi
+
 if [[ $B2D_BRANCH == "" ]]; then
 	B2D_BRANCH='master'
 fi
 
-# Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
+#---------------------------- Helper functions --------------------------------
+
+echo-red () { echo -e "${red}$1${NC}"; }
+echo-green () { echo -e "${green}$1${NC}"; }
+echo-yellow () { echo -e "${yellow}$1${NC}"; }
+
+# Check whether shell is interactive
+# Otherwise we are running in a non-interactive script environment
 is_tty ()
 {
 	# Override option via $DRUDE_IS_TTY (true|false) env variable.
@@ -117,27 +56,7 @@ testing_warn ()
 	fi
 }
 
-#---------------- Docker Compose Global Settings ----------------------
-DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
-
-# Display dsh version
-# @option --short - Display only the version number
-version ()
-{
-	if [[ $1 == '--short' ]]; then
-		echo "$DSH_VERSION"
-	else
-		testing_warn
-		echo "dsh version: $DSH_VERSION"
-	fi
-}
-
-#-------------------------- Helper functions --------------------------------
-
-echo-red () { echo -e "${red}$1${NC}"; }
-echo-green () { echo -e "${green}$1${NC}"; }
-echo-yellow () { echo -e "${yellow}$1${NC}"; }
-
+# Exits dsh if previous command exited with non-zero code
 if_failed ()
 {
 	if [ ! $? -eq 0 ]; then
@@ -160,6 +79,7 @@ upfind ()
 	)
 }
 
+# Get path to docker-compose.yml using upfind
 yml_get_path ()
 {
 	local yml_path=''
@@ -169,6 +89,7 @@ yml_get_path ()
 }
 
 # Returns absolute path
+# @param $1 file/dir relative path
 get_abs_path ()
 {
 	local _dir
@@ -197,7 +118,7 @@ get_current_relative_path ()
 	echo $pathdiff
 }
 
-# check that command is run inside project folder
+# Check that command is run inside project folder
 get_drush_path ()
 {
 	local pathdiff=$(get_current_relative_path)
@@ -247,7 +168,7 @@ get_container_id ()
 	echo $(docker_compose ps -q $1 | tr -d '\r')
 }
 
-#----------------------- Basics check functions -----------------------------
+#------------------------- Basics check functions -----------------------------
 
 is_linux ()
 {
@@ -366,6 +287,8 @@ is_docker_running ()
 	return $?
 }
 
+#---------------------------- Control functions -------------------------------
+
 check_docker_running ()
 {
 	if ! is_docker_running; then
@@ -454,7 +377,7 @@ check_docker_host ()
 }
 check_docker_host #perform this check in any case
 
-#-- Containers management --
+#-------------------------- Containers management -----------------------------
 
 _start_containers ()
 {
@@ -495,8 +418,108 @@ _remove_containers ()
 	docker_compose kill $* && docker_compose rm -v --force $*
 }
 
-#------------------------------- Commands -----------------------------------
-# bring box up
+#------------------------------ Help functions --------------------------------
+
+show_help ()
+{
+	echo "Drude Shell $DSH_VERSION. Usage: dsh <command> [params]"
+	echo
+	if is_linux; then
+		echo "	start (up)		Start project services (containers)"
+	else
+		echo "	start (up)		Start vagrant vm (if stopped) and project services (containers)"
+	fi
+	echo "	stop (down)		Stop project services (containers)"
+	echo "	    -a (--all)		Stop all running containers from all Docker projects (except where group=system)"
+	echo "	restart	[service]	Restart all current project services (containers) or specified service"
+	if ! is_linux; then
+		echo "	reload			Restart vagrant vm"
+		echo "	halt			Stop vagrant vm"
+	fi
+	echo "	status (st, ps)		Show project services (containers) status"
+	echo "	    -a (--all)		Show status of all running containers from all Docker projects"
+	echo "	reset [service]		Recreate (stop, remove, start) all services (containers) or specified service"
+	echo "	remove [service]	Remove all project services (containers) or specified service"
+	if ! is_linux; then
+		echo "	vmstat			Show vagrant vm usage statistics"
+	fi
+	echo
+	echo "	bash [service]		Open bash to service (container). If no service specified defaults to 'cli'"
+	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
+	echo "	logs [service]		Show docker logs for service (container)"
+	echo
+	echo "	init [params]		Execute project init script .drude/scripts/drude-init.sh (params will be passed to script)"
+	echo "	exec-url <url>		Download script from URL and run it. URL should be public."
+	echo "	  (init-url <url>)"
+	echo
+	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
+	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
+	echo
+	echo "	mysql (sqlc)		Opens mysql shell to current project database"
+	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
+	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
+	echo
+	echo "	behat [--path=path]	Run Behat tests from path (relative to project root). Default: tests/behat"
+	echo
+	if is_linux; then
+		echo "	install			Install/check prerequisites and drude config"
+	else
+		echo "	install			Install/check prerequisites, boot2docker and drude config"
+	fi
+	echo "	install prerequisites 	Only install prerequisites"
+	if ! is_linux; then
+		echo "	install boot2docker 	Only install boot2docker"
+	fi
+	echo "	install drude-config 	Only install the latest default docker-compose.yml"
+	echo "	install autocomplete 	Install commands autocomplete for Bash"
+	echo
+	echo "	update prerequisites 	Update prerequisites"
+	if ! is_linux; then
+		echo "	update boot2docker	Update boot2docker-vagrant box"
+	fi
+	echo "	update images		Update container images"
+	echo "	update dsh		Update dsh itself (ex. dsh self-update)"
+	echo
+	echo "	version	(-v)		Print dsh version"
+	echo
+}
+
+# Display dsh version
+# @option --short - Display only the version number
+version ()
+{
+	if [[ $1 == '--short' ]]; then
+		echo "$DSH_VERSION"
+	else
+		testing_warn
+		echo "dsh version: $DSH_VERSION"
+	fi
+}
+
+# return bash completion words
+# @param $1 command to return words for
+bash_comp_words ()
+{
+	case $1 in
+		install)
+			echo "prerequisites boot2docker drude-config"
+			exit 0
+			;;
+		update)
+			echo "prerequisites boot2docker images dsh"
+			exit 0
+			;;
+		dsh)
+			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli init exec-url drush behat install update self-update version help"
+			exit 0
+			;;
+		*)
+			exit 1 #return 1 to completion function to prevent completion is we don't know what to do
+	esac
+}
+
+#------------------------------- User Commands -----------------------------------
+# Start containers
 up ()
 {
 	if is_yml_absent ; then return 2; fi
@@ -597,7 +620,7 @@ vmstat ()
 	vboxmanage metrics query "$id" $metrics
 }
 
-### Installation and updates
+#----- Installations and updates -----
 
 # Install required software on Mac or Win. Check installed software on Linux
 install_prerequisites ()
@@ -743,6 +766,7 @@ install_drude_config ()
 	echo-green "Latest version of docker-compose.yml was downloaded."
 }
 
+# Install shell commands autocomplete script
 install_autocomplete ()
 {
 	local autocomplete_script
@@ -765,7 +789,7 @@ install_autocomplete ()
 	fi
 }
 
-# Install prerequisites, boot2docker, Drude
+# Install everything: prerequisites, boot2docker and drude config
 install ()
 {
 	if [[ "$1" == "prerequisites" ]]; then
