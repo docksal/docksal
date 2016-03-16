@@ -887,10 +887,11 @@ update_dsh ()
 	local new_dsh=$(curl -kfsS https://raw.githubusercontent.com/achekulaev/docker-fig-drupal/develop/bin/dsh)
 	if_failed "New version download has failed."
 	local new_version=$(grep DSH_VERSION= <<< "$new_dsh" | cut -f 2 -d "=")
+	local msg="dsh successfully updated to version: ${new_version}"
 	echo "$new_dsh" | sudo tee /usr/local/bin/dsh > /dev/null
 	if_failed "Could not write /usr/local/bin/dsh."
 	sudo chmod +x /usr/local/bin/dsh
-	echo-green "dsh successfully updated to version: $new_version"
+	echo-green "${msg}"
 	exit
 }
 
