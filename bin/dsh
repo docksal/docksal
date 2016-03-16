@@ -889,6 +889,7 @@ update_dsh ()
 	sudo chmod +x /usr/local/bin/dsh
 	local new_version=$(cat /usr/local/bin/dsh | grep DSH_VERSION= | cut -f 2 -d "=")
 	echo-green "dsh successfully updated to version: $new_version"
+	exit
 }
 
 # Start interactive bash in container
