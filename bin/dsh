@@ -619,14 +619,16 @@ install_prerequisites ()
 
 	if is_windows ; then
 		# installing prerequisites
-		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-win.sh)
+		local presetup_script
+		presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-win.sh)
 		if_failed "Could not get 'presetup-win.sh'. Please check your internet connection"
 		bash <(echo "$presetup_script")
 		read -p "Press any key when the installation in another console window is done..."
 	elif is_linux ; then
 		install_ubuntu
 	else # mac
-		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-mac.sh)
+		local presetup_script
+		presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-mac.sh)
 		if_failed "Could not get 'presetup-mac.sh'. Please check your internet connection"
 		bash <(echo "$presetup_script")
 	fi
@@ -707,7 +709,8 @@ install_boot2docker ()
 	if is_windows ; then
 		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh -o ~/setup.sh
 	else
-		local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
+		local b2d_setup_script
+		b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
 	fi
 	if_failed "Could not get 'setup.sh'. Please check your internet connection"
 
@@ -731,6 +734,7 @@ install_boot2docker ()
 install_drude_config ()
 {
 	testing_warn
+	local docker_compose_yml
 	docker_compose_yml=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
 	if_failed  "Could not get latest docker-compose.yml version."
 
@@ -741,6 +745,7 @@ install_drude_config ()
 
 install_autocomplete ()
 {
+	local autocomplete_script
 	autocomplete_script=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh-bash-complete")
 	if_failed "Autocomplete script download has failed"
 
@@ -822,7 +827,8 @@ update_boot2docker ()
 		if [[ "$b2d_version" = "" ]]; then b2d_version="undetected version"; fi
 
 		# get new version
-		local b2d_new_version=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/VERSION)
+		local b2d_new_version
+		b2d_new_version=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/VERSION)
 		if_failed "Could not get latest boot2docker version. Please check your internet connection"
 
 		# update boot2docker
@@ -847,7 +853,8 @@ update_boot2docker ()
 			echo "Vagrantfile is found in "$(pwd)
 
 			echo-green "dsh: Downloading boot2docker install script..."
-			local b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
+			local b2d_setup_script
+			b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
 			if_failed  "Could not get latest boot2docker version. Please check your internet connection"
 
 			echo "dsh: Creating backups..."
@@ -884,7 +891,8 @@ update_dsh ()
 {
 	testing_warn
 	echo "Downloading..."
-	local new_dsh=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
+	local new_dsh
+	new_dsh=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
 	if_failed "Download has failed."
 
 	# saving to file
@@ -1129,7 +1137,8 @@ init ()
 exec_url ()
 {
 	if [[ "$1" != "" ]]; then
-		local script=$(curl -fsS $1)
+		local script
+		script=$(curl -kfsS $1)
 		if_failed "Failed downloading script $1"
 		bash <(echo "$script")
 	else
