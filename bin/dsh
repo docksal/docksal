@@ -884,8 +884,7 @@ update_dsh ()
 {
 	testing_warn
 	echo "Downloading..."
-	#local new_dsh=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
-	local new_dsh=$(curl -kfsS https://raw.githubusercontent.com/achekulaev/docker-fig-drupal/develop/bin/dsh)
+	local new_dsh=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
 	if_failed "Download has failed."
 
 	# saving to file
