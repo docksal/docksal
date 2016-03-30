@@ -785,7 +785,7 @@ install_autocomplete ()
 		echo -e ". $destination" >> $HOME/$SOURCE_FILE
 		if_failed "Failed to write file to $HOME/$SOURCE_FILE"
 		echo-green "Autocomplete appended to $HOME/$SOURCE_FILE"
-		echo-yellow "dsh: Please restart you bash session to apply"
+		echo-yellow "dsh: Please restart your bash session to apply"
 	fi
 }
 
