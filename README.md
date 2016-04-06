@@ -17,11 +17,11 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 
 1. [Drude environment setup](/docs/drude-env-setup.md)
     
-    This is done **one time per host** and shoudl be performed by everyone.
+    This is done **one time per host** and should be performed by everyone.
 
 2. [Configure a project to use Drude](/docs/drude-project-setup.md)
 
-    This is done **one time per project** and should be performed by the the project TL.
+    This is done **one time per project** and should be performed by the project TL.
 
 3. [Initialize a Drude powered project](/docs/drude-project-init.md)
 
