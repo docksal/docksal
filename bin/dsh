@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.12.3
+DSH_VERSION=1.12.4
 
 # Console colors
 red='\033[0;31m'
@@ -11,6 +11,10 @@ NC='\033[0m'
 #---------------------------- Global Variables --------------------------------
 
 DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
+# boot2docker-vagrant does not support Docker TLS.
+# Make sure it is disabled for the current terminal session.
+unset DOCKER_TLS_VERIFY
+unset DOCKER_CERT_PATH
 
 if [[ $DRUDE_BRANCH == "" ]]; then
 	DRUDE_BRANCH='master'
