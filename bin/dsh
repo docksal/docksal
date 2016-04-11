@@ -456,8 +456,9 @@ show_help ()
 	echo "	exec-url <url>		Download script from URL and run it. URL should be public."
 	echo "	  (init-url <url>)"
 	echo
-	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
+	echo "	drush [command]		Execute Drush command (usage: dsh drush [command] [option] [option]...)"
 	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
+	echo "	drupal [command]	Execute Drupal Console command (Drupal 8)"
 	echo
 	echo "	mysql (sqlc)		Opens mysql shell to current project database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
@@ -514,7 +515,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli init exec-url drush behat install update self-update version help"
+			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli init exec-url drush drupal behat install update self-update version help"
 			exit 0
 			;;
 		*)
@@ -1341,6 +1342,14 @@ case $1 in
 			# slash escape space-delimited parameters for safe passing between functions
 			cmd=$(printf " %q" "$@")
 			_drush $cmd
+		fi
+		;;
+	drupal)
+		shift
+		if [[ $1 == "" ]]; then
+			_run docker
+		else
+			_run "docker $@"
 		fi
 		;;
 	behat)
