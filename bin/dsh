@@ -1313,11 +1313,11 @@ case $1 in
 		;;
 	exec)
 		shift
-		_run $*
+		_run "$*"
 		;;
 	run)
 		shift
-		_run $*
+		_run "$*"
 		;;
 	mysql)
 		mysql
@@ -1346,10 +1346,10 @@ case $1 in
 		;;
 	drupal)
 		shift
-		if [[ $1 == "" ]]; then
-			_run docker
+		if [[ "$1" == "" ]]; then
+			_run drupal
 		else
-			_run "docker $@"
+			_run "drupal $@"
 		fi
 		;;
 	behat)
@@ -1362,7 +1362,7 @@ case $1 in
 		;;
 	exec-url)
 		shift
-		exec_url $*
+		exec_url "$*"
 		;;
 	reset)
 		shift
@@ -1383,7 +1383,7 @@ case $1 in
 		;;
 	bash_comp_words)
 		shift
-		bash_comp_words $*
+		bash_comp_words "$*"
 		;;
 	logs)
 		shift
