@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.12.6
+DSH_VERSION=1.12.7
 
 # Console colors
 red='\033[0;31m'
@@ -263,24 +263,28 @@ is_docker ()
 
 is_docker_running ()
 {
-	binary_found 'nc'
-
 	if is_linux; then
-		# On Linux check that pid file exists and process with that pid exists.
-		local pid='/var/run/docker.pid'
-		if [ ! -f $pid ]; then return 1; fi
-		local status=$(ps ax | grep $(cat "/var/run/docker.pid" 2>&1 1>/dev/null) 2>&1 1>/dev/null | grep -v "grep");
+		local err
+		local errcode
+		# On Linux check if docker is running via docker info.
+		# We use "timeout 1" to get a faster response (1s) if docker is down.
+		# This can be used on Windows (Babun) as well, however Mac does not have the timeout util...
+		err=$(timeout 1 docker info 2>&1 >/dev/null); errcode=$?
+		if [[ $err =~ 'Error' ]]; then echo $err; fi
+		return $errcode
 	else
 		if [[ $DOCKER_HOST == "" ]]; then
 			echo-red "dsh: $DOCKER_HOST variable is empty"
 			return 1
 		fi
+
 		# Extract host and port from $DOCKER_HOST
 		local host=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/\([a-z0-9\.]*\):[0-9]*/\1/')
 		local port=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/[a-z0-9\.]*:\([0-9]*\)/\1/')
 
 		# Then use netcat to check the host:port
 		# nc on Mac needs -G for the connections timeout argument.
+		binary_found 'nc'
 		if is_mac; then
 			nc -z -G 1 $host $port 2>/dev/null 1>/dev/null
 		else
