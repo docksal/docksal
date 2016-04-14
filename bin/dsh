@@ -270,6 +270,8 @@ is_docker_running ()
 		# We use "timeout 1" to get a faster response (1s) if docker is down.
 		# This can be used on Windows (Babun) as well, however Mac does not have the timeout util...
 		err=$(timeout 1 docker info 2>&1 >/dev/null); errcode=$?
+		# Print error details if available. We are looking for a specific case here:
+		# e.g. "Error response from daemon: client is newer than server (client API version: 1.22, server API version: 1.21)"
 		if [[ $err =~ 'Error' ]]; then echo $err; fi
 		return $errcode
 	else
