@@ -31,22 +31,18 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 <a name="updates"></a>
 ## Updates
 
-1. Updating dsh. It is recommended to **always update dsh before updating Drude** 
-as new version of dsh may contain changes or improvements to the update process. Anywhere run:
+Switch to your `<projects>` folder and run:
 
-    ```
-    dsh self-update
-    ```
+```
+dsh self-update
+dsh update prerequisites
+```
 
-2. Updating Drude. Run the following from the `<projects/your-drupal-site>` folder:
- 
-    ```
-    dsh update
-    ```
+On Mac and Windows only (skip for Linux) also run:
 
-    **Note**: if the docker image for the database container was updated then the container will be re-created and you will need to _re-import your database._ 
-    
-    **Note Windows and Mac users:** if boot2docker VM image was updated then update will warn you that VM will be re-created. It means you will have to _re-import your databases._ 
+```
+dsh update boot2docker
+```
 
 
 <a name="dsh"></a>
