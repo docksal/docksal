@@ -1286,7 +1286,7 @@ case $1 in
 		if [[ "$1" == "prerequisites" ]]; then
 			install_prerequisites
 		elif [[ "$1" == "boot2docker" ]]; then
-			update_boot2docker
+			update_boot2docker $*
 		elif [[ "$1" == "images" ]]; then
 			update_images
 		elif [[ "$1" == "dsh" ]]; then
