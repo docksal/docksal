@@ -222,7 +222,7 @@ is_mac ()
 }
 
 # checks if binary exists and callable in PATH
-binary_found ()
+is_binary_found ()
 {
 	if [[ "$1" == "" ]]; then
 		return 1;
@@ -233,9 +233,14 @@ binary_found ()
 	if [[ "$bpath" != "" ]] && [ -f $(which $1) ]; then
 		return 0
 	else
-		echo-red "dsh: \"$1\" executable not found."
 		return 1
 	fi
+}
+
+binary_found ()
+{
+	is_binary_found $1
+	if_failed "$1 executable not found."
 }
 
 # check that vagrant binary exists
