@@ -490,6 +490,7 @@ show_help ()
 	fi
 	echo "	update images		Update container images"
 	echo "	update dsh		Update dsh itself (ex. dsh self-update)"
+	echo "	update everything	Run full update sequence (update dsh, prerequisites and boot2docker VM on Mac/Windows)"
 	echo
 	echo "	version	(-v)		Print dsh version"
 	echo
@@ -940,6 +941,21 @@ update_dsh ()
 	exit
 }
 
+# Full update sequence
+update_everything ()
+{
+	echo-green "Updating dsh..."
+	update_dsh
+	
+	echo-green "Updating prerequisites..."
+	install_prerequisites
+	
+	if ! is_linux; then
+		echo-green "Updating boot2docker..."
+		update_boot2docker
+	fi
+}
+
 # Start interactive bash in container
 # @param $1 container name (defaults to cli)
 _bash ()
@@ -1291,8 +1307,10 @@ case $1 in
 			update_images
 		elif [[ "$1" == "dsh" ]]; then
 			update_dsh
+		elif [[ "$1" == "everything" ]]; then
+			update_everything
 		else
-			echo "Use dsh update [prerequisites|boot2docker|images|dsh]"
+			echo "Use dsh update [prerequisites|boot2docker|images|dsh|everything]"
 		fi
 		;;
 	self-update)
