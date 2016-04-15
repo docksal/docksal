@@ -1355,7 +1355,9 @@ case $1 in
 		if [[ "$1" == "" ]]; then
 			_run drupal
 		else
-			_run "drupal $@"
+			# slash escape space-delimited parameters for safe passing between functions
+			cmd=$(printf " %q" "$@")
+			_run drupal $cmd
 		fi
 		;;
 	behat)
