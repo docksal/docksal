@@ -17,11 +17,11 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 
 1. [Drude environment setup](/docs/drude-env-setup.md)
     
-    This is done **one time per host** and shoudl be performed by everyone.
+    This is done **one time per host** and should be performed by everyone.
 
 2. [Configure a project to use Drude](/docs/drude-project-setup.md)
 
-    This is done **one time per project** and should be performed by the the project TL.
+    This is done **one time per project** and should be performed by the project TL.
 
 3. [Initialize a Drude powered project](/docs/drude-project-init.md)
 
@@ -31,22 +31,18 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 <a name="updates"></a>
 ## Updates
 
-1. Updating dsh. It is recommended to **always update dsh before updating Drude** 
-as new version of dsh may contain changes or improvements to the update process. Anywhere run:
+Switch to your `<projects>` folder and run:
 
-    ```
-    dsh self-update
-    ```
+```
+dsh self-update
+dsh update prerequisites
+```
 
-2. Updating Drude. Run the following from the `<projects/your-drupal-site>` folder:
- 
-    ```
-    dsh update
-    ```
+On Mac and Windows only (skip for Linux) also run:
 
-    **Note**: if the docker image for the database container was updated then the container will be re-created and you will need to _re-import your database._ 
-    
-    **Note Windows and Mac users:** if boot2docker VM image was updated then update will warn you that VM will be re-created. It means you will have to _re-import your databases._ 
+```
+dsh update boot2docker
+```
 
 
 <a name="dsh"></a>
@@ -91,7 +87,8 @@ Tools available inside the **cli** container:
 - [Using Behat](/docs/behat.md)
 - [Zero-configuration Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
-
+- [Sending and capturing email](/docs/mail.md)
+- [Enabling Varnish support](/docs/varnish.md)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting

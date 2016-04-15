@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.3.0 (2016-04-15)
+
+- Implement dsh drupal shortcut for Drupal Console commands
+- dsh bash improved on Windows
+  - Use winpty on Windows (if installed), fall back to "vagrant ssh" otherwise
+- Make sure Docker TLS is disabled
+- Refactored of install/update commands
+- Refactored of docker daemon status check on different platforms
+- Automatic detection of host user id
+  - Docker user id in cli is matched to the host user id
+  - Add messaging that running as root is not recommended
+- Fixed the issue with line breaks when running dsh stop
+- Fixed dsh drush (with no arguments) throws an error message
+- Documentation updates
+ - Added MailHog service usage instructions
+ - Added Varnish service usage instructions
+ - Misc update and typo fixes
+
+
 ## 1.2.4 (2016-01-20)
 
 - Bump dsh to v1.10.3

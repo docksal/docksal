@@ -1,70 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.10.3
-
-help ()
-{
-	echo "Drude Shell $DSH_VERSION. Usage: dsh <command> [params]"
-	echo
-	echo "Commands list:"
-	echo
-	echo "	start (up)		Start vagrant vm (if stopped) and docker containers"
-	echo "	stop (down)		Stop project containers"
-	echo "	    -a (--all)		Stop all running containers from all Docker projects"
-	echo "	restart	[containers]	Restart all current project containers or specified [containers]"
-	echo "	reload			Restart vagrant vm"
-	echo "	halt			Stop vagrant vm"
-	echo "	status (st, ps)		Show project containers status"
-	echo "	    -a (--all)		Show all running containers from all Docker projects status"
-	echo "	vmstat			Show vagrant vm usage statistics"
-	echo
-	echo "	reset [containers]	Recreate (stop, remove, up) all project containers or specified [containers]"
-	echo "	remove [containers]	Remove all project containers or specified [containers]"
-	echo
-	echo "	bash [container]	Open bash to container. If no container provided defaults to 'cli'"
-	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
-	echo "	logs [containers]	Show docker logs for container(s)"
-	echo
-	echo "	mysql (sqlc)		Opens mysql shell to current project database"
-	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
-	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
-	echo
-	echo "	init [params]		Execute project init script .drude/scripts/drude-init.sh (params will be passed to script)"
-	echo "	exec-url <url>		Download script from URL and run it. URL should be public. Alias: init-url"
-	echo "	drush [command]		Execute drush command (usage: dsh drush [command] [option] [option]...)"
-	echo "	cc [cache_type]		Clear Drupal caches (\"dsh cc\" is equal to \"dsh cc all\")"
-	echo
-	echo "	behat [--path=path]	Run Behat tests from path (relative to project root). Default: tests/behat"
-	echo
-	echo "	install			Install/check prerequisites, boot2docker and drude config"
-	echo "	install prerequisites 	Only install prerequisites"
-	echo "	install boot2docker 	Only install boot2docker"
-	echo "	install drude 		Only install the latest default docker-compose.yml"
-	echo "	install autocomplete 	Install commands autocomplete for Bash"
-	echo "	update			Update Drude"
-	echo
-	echo "	self-update		Update dsh itself"
-	echo "	version	(-v)		Print dsh version"
-	echo
-}
-
-# return bash completion words
-# @param $1 command to return words for
-bash_comp_words ()
-{
-	case $1 in
-		install)
-			echo "prerequisites boot2docker drude"
-			exit 0
-			;;
-		dsh)
-			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli init exec-url drush behat install update self-update version help"
-			exit 0
-			;;
-		*)
-			exit 1 #return 1 to completion function to prevent completion is we don't know what to do
-	esac
-}
+DSH_VERSION=1.12.11
 
 # Console colors
 red='\033[0;31m'
@@ -72,15 +8,30 @@ green='\033[0;32m'
 yellow='\033[1;33m'
 NC='\033[0m'
 
-#-------------------------- Testing --------------------------------
+#---------------------------- Global Variables --------------------------------
+
+DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
+# boot2docker-vagrant does not support Docker TLS.
+# Make sure it is disabled for the current terminal session.
+unset DOCKER_TLS_VERIFY
+unset DOCKER_CERT_PATH
+
 if [[ $DRUDE_BRANCH == "" ]]; then
 	DRUDE_BRANCH='master'
 fi
+
 if [[ $B2D_BRANCH == "" ]]; then
 	B2D_BRANCH='master'
 fi
 
-# Check whether shell is interactive (otherwise we are running in a non-interactive script environment)
+#---------------------------- Helper functions --------------------------------
+
+echo-red () { echo -e "${red}$1${NC}"; }
+echo-green () { echo -e "${green}$1${NC}"; }
+echo-yellow () { echo -e "${yellow}$1${NC}"; }
+
+# Check whether shell is interactive
+# Otherwise we are running in a non-interactive script environment
 is_tty ()
 {
 	# Override option via $DRUDE_IS_TTY (true|false) env variable.
@@ -109,34 +60,7 @@ testing_warn ()
 	fi
 }
 
-#---------------- Docker Compose Global Settings ----------------------
-DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
-
-# Display dsh version
-# @option --short - Display only the version number
-version ()
-{
-	if [[ $1 == '--short' ]]; then
-		echo "$DSH_VERSION"
-	else
-		testing_warn
-		echo "dsh version: $DSH_VERSION"
-	fi
-}
-
-# Use this function for every docker-compose invocation.
-docker_compose ()
-{
-	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
-	docker-compose $* | tr -d '\r'
-}
-
-#-------------------------- Helper functions --------------------------------
-
-echo-red () { echo -e "${red}$1${NC}"; }
-echo-green () { echo -e "${green}$1${NC}"; }
-echo-yellow () { echo -e "${yellow}$1${NC}"; }
-
+# Exits dsh if previous command exited with non-zero code
 if_failed ()
 {
 	if [ ! $? -eq 0 ]; then
@@ -159,6 +83,7 @@ upfind ()
 	)
 }
 
+# Get path to docker-compose.yml using upfind
 yml_get_path ()
 {
 	local yml_path=''
@@ -168,6 +93,7 @@ yml_get_path ()
 }
 
 # Returns absolute path
+# @param $1 file/dir relative path
 get_abs_path ()
 {
 	local _dir
@@ -183,21 +109,6 @@ get_abs_path ()
 	echo "$absolute"
 }
 
-# TODO: DEPRECATED
-# Returns project root absolute path without trailing slash or "." if couldn't find real path
-get_project_root_path ()
-{
-	yml_path=$(yml_get_path)
-	if [ ! -f "${yml_path}/docker-compose.yml" ]; then
-		echo "."
-		return
-	fi
-	# get relative project root path from docker-compose.yml config
-	local project_root_relative=$(grep "&project_root" ${yml_path}/docker-compose.yml | sed 's/.*"\(.*\):.*$/\1/')
-	local project_root_absolute=$( cd "${yml_path}/${project_root_relative}" ; pwd )
-	echo "$project_root_absolute"
-}
-
 # Return current path relative to project root with trailing slash
 get_current_relative_path ()
 {
@@ -211,7 +122,7 @@ get_current_relative_path ()
 	echo $pathdiff
 }
 
-# check that command is run inside project folder
+# Check that command is run inside project folder
 get_drush_path ()
 {
 	local pathdiff=$(get_current_relative_path)
@@ -238,7 +149,30 @@ get_mysql_connect ()
 	echo "$(DRUDE_IS_TTY=false _run drush sql-connect)"
 }
 
-#----------------------- Basics check functions -----------------------------
+# Use this function for every docker-compose invocation.
+docker_compose ()
+{
+	# TODO: remove this
+	# if is_windows; then
+	# 	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
+	# 	docker-compose $* | tr -d '\r'
+	# else
+	# 	docker-compose $*
+	# fi
+	
+	docker-compose $*
+}
+
+# Get container id by service name
+# @param $1 docker compose service name (e.g. cli)
+# @return docker container id 
+get_container_id ()
+{
+	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
+	echo $(docker_compose ps -q $1 | tr -d '\r')
+}
+
+#------------------------- Basics check functions -----------------------------
 
 is_linux ()
 {
@@ -288,20 +222,25 @@ is_mac ()
 }
 
 # checks if binary exists and callable in PATH
-binary_found ()
+is_binary_found ()
 {
 	if [[ "$1" == "" ]]; then
 		return 1;
 	fi
 
-	local bpath=$(which $1)
+	local bpath=$(which $1 2>/dev/null)
 
 	if [[ "$bpath" != "" ]] && [ -f $(which $1) ]; then
 		return 0
 	else
-		echo-red "dsh: \"$1\" executable not found."
 		return 1
 	fi
+}
+
+binary_found ()
+{
+	is_binary_found $1
+	if_failed "$1 executable not found."
 }
 
 # check that vagrant binary exists
@@ -329,27 +268,41 @@ is_docker ()
 
 is_docker_running ()
 {
-	binary_found 'nc'
-	if is_linux; then
-		# on linux check that pid file exists and process with that pid exists
-		local pid='/var/run/docker.pid'
-		if [ ! -f $pid ]; then return 1; fi
-		local status=$(ps ax | grep $(cat "/var/run/docker.pid" 2>&1 1>/dev/null) 2>&1 1>/dev/null | grep -v "grep");
-		return $?
+	if is_linux || is_windows; then
+		local err
+		local errcode
+		# On Linux check if docker is running via docker info.
+		# We use "timeout 1" to get a faster response (1s) if docker is down.
+		# This can be used on Windows (Babun) as well, however Mac does not have the timeout util...
+		err=$(timeout 1 docker info 2>&1 >/dev/null); errcode=$?
+		# Print error details if available. We are looking for a specific case here:
+		# e.g. "Error response from daemon: client is newer than server (client API version: 1.22, server API version: 1.21)"
+		if [[ $err =~ 'Error' ]]; then echo $err; fi
+		return $errcode
 	else
-		# on mac and win extract host and port from $DOCKER_HOST
-		local host=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/\([a-z0-9\.]*\):[0-9]*/\1/')
-		local port=$(echo $DOCKER_HOST | sed -e 's/tcp:\/\/[a-z0-9\.]*:\([0-9]*\)/\1/')
-		# then use netcat to check that port
-		nc -z -w5 $host $port 2>/dev/null 1>/dev/null
-		return $?
+		# Then use netcat to check the host:port
+		# nc on Mac needs -G for the connections timeout argument.
+		binary_found 'nc'
+		if [[ $DOCKER_HOST == "" ]]; then
+			echo-red "dsh: $DOCKER_HOST variable is empty"
+			return 1
+		fi
+
+		# Extract host and port from $DOCKER_HOST
+		local host=$(echo $DOCKER_HOST | sed -e 's/\(tcp:\/\/\)*\([a-z0-9\.]*\):[0-9]*/\2/')
+		local port=$(echo $DOCKER_HOST | sed -e 's/\(tcp:\/\/\)*[a-z0-9\.]*:\([0-9]*\)/\2/')
+		nc -z -G 1 $host $port 2>/dev/null 1>/dev/null
 	fi
+
+	return $?
 }
+
+#---------------------------- Control functions -------------------------------
 
 check_docker_running ()
 {
 	if ! is_docker_running; then
-		echo-red "dsh: Docker is not running";
+		echo-red "dsh: Unable to connect to the docker daemon";
 		exit 1
 	fi
 }
@@ -358,7 +311,7 @@ is_vagrantfile_absent ()
 {
 	vagrant_path=$(upfind "Vagrantfile")
 	if [[ "$vagrant_path" == "" ]] ; then
-		echo-red "dsh: [error] Vagrantfile not found in your directory tree"
+		echo-red "dsh: Vagrantfile not found in your directory tree"
 		return 0
 	fi
 
@@ -394,7 +347,7 @@ _confirm ()
 {
 	# Skip checks if not a tty
 	if ! is_tty ; then return 0; fi
-	
+
 	while true; do
 		read -p "$1 [y/n]: " answer
 		case $answer in
@@ -434,7 +387,7 @@ check_docker_host ()
 }
 check_docker_host #perform this check in any case
 
-#-- Containers management --
+#-------------------------- Containers management -----------------------------
 
 _start_containers ()
 {
@@ -475,8 +428,109 @@ _remove_containers ()
 	docker_compose kill $* && docker_compose rm -v --force $*
 }
 
-#------------------------------- Commands -----------------------------------
-# bring box up
+#------------------------------ Help functions --------------------------------
+
+show_help ()
+{
+	echo "Drude Shell $DSH_VERSION. Usage: dsh <command> [params]"
+	echo
+	if is_linux; then
+		echo "	start (up)		Start project services (containers)"
+	else
+		echo "	start (up)		Start vagrant vm (if stopped) and project services (containers)"
+	fi
+	echo "	stop (down)		Stop project services (containers)"
+	echo "	    -a (--all)		Stop all running containers from all Docker projects (except where group=system)"
+	echo "	restart	[service]	Restart all current project services (containers) or specified service"
+	if ! is_linux; then
+		echo "	reload			Restart vagrant vm"
+		echo "	halt			Stop vagrant vm"
+	fi
+	echo "	status (st, ps)		Show project services (containers) status"
+	echo "	    -a (--all)		Show status of all running containers from all Docker projects"
+	echo "	reset [service]		Recreate (stop, remove, start) all services (containers) or specified service"
+	echo "	remove [service]	Remove all project services (containers) or specified service"
+	if ! is_linux; then
+		echo "	vmstat			Show vagrant vm usage statistics"
+	fi
+	echo
+	echo "	bash [service]		Open bash to service (container). If no service specified defaults to 'cli'"
+	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
+	echo "	logs [service]		Show docker logs for service (container)"
+	echo
+	echo "	init [params]		Execute project init script .drude/scripts/drude-init.sh (params will be passed to script)"
+	echo "	exec-url <url>		Download script from URL and run it. URL should be public."
+	echo "	  (init-url <url>)"
+	echo
+	echo "	drush [command]		Execute Drush command (usage: dsh drush [command] [option] [option]...)"
+	echo "	cc [cache_type]		Clear Drupal 7 caches (\"dsh cc\" is equal to \"dsh cc all\")"
+	echo "	drupal [command]	Execute Drupal Console command (Drupal 8)"
+	echo
+	echo "	mysql (sqlc)		Opens mysql shell to current project database"
+	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
+	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
+	echo
+	echo "	behat [--path=path]	Run Behat tests from path (relative to project root). Default: tests/behat"
+	echo
+	if is_linux; then
+		echo "	install			Install/check prerequisites and drude config"
+	else
+		echo "	install			Install/check prerequisites, boot2docker and drude config"
+	fi
+	echo "	install prerequisites 	Only install prerequisites"
+	if ! is_linux; then
+		echo "	install boot2docker 	Only install boot2docker"
+	fi
+	echo "	install drude-config 	Only install the latest default docker-compose.yml"
+	echo "	install autocomplete 	Install commands autocomplete for Bash"
+	echo
+	echo "	update prerequisites 	Update prerequisites"
+	if ! is_linux; then
+		echo "	update boot2docker	Update boot2docker-vagrant box"
+	fi
+	echo "	update images		Update container images"
+	echo "	update dsh		Update dsh itself (ex. dsh self-update)"
+	echo
+	echo "	version	(-v)		Print dsh version"
+	echo
+}
+
+# Display dsh version
+# @option --short - Display only the version number
+version ()
+{
+	if [[ $1 == '--short' ]]; then
+		echo "$DSH_VERSION"
+	else
+		testing_warn
+		echo "dsh version: $DSH_VERSION"
+	fi
+}
+
+# return bash completion words
+# @param $1 command to return words for
+bash_comp_words ()
+{
+	case $1 in
+		install)
+			echo "prerequisites boot2docker drude-config"
+			exit 0
+			;;
+		update)
+			echo "prerequisites boot2docker images dsh"
+			exit 0
+			;;
+		dsh)
+			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli init exec-url drush drupal behat install update self-update version help"
+			exit 0
+			;;
+		*)
+			exit 1 #return 1 to completion function to prevent completion is we don't know what to do
+	esac
+}
+
+#------------------------------- User Commands -----------------------------------
+# Start containers
 up ()
 {
 	if is_yml_absent ; then return 2; fi
@@ -577,7 +631,7 @@ vmstat ()
 	vboxmanage metrics query "$id" $metrics
 }
 
-### Installation and updates
+#----- Installations and updates -----
 
 # Install required software on Mac or Win. Check installed software on Linux
 install_prerequisites ()
@@ -599,14 +653,16 @@ install_prerequisites ()
 
 	if is_windows ; then
 		# installing prerequisites
-		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-win.sh)
+		local presetup_script
+		presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-win.sh)
 		if_failed "Could not get 'presetup-win.sh'. Please check your internet connection"
 		bash <(echo "$presetup_script")
 		read -p "Press any key when the installation in another console window is done..."
 	elif is_linux ; then
 		install_ubuntu
 	else # mac
-		local presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-mac.sh)
+		local presetup_script
+		presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-mac.sh)
 		if_failed "Could not get 'presetup-mac.sh'. Please check your internet connection"
 		bash <(echo "$presetup_script")
 	fi
@@ -659,14 +715,14 @@ EOF
 	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always \
 	-v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
 	if_failed "Drude HTTP/HTTPS reverse proxy setup failed."
-	
+
 	echo-green "Creating Drude DNS service..."
 	sudo docker rm -f dns || true
 	sudo docker run -d --name dns -p 192.168.10.10:53:53/udp --cap-add=NET_ADMIN --dns 8.8.8.8 --restart=always \
 	-v /var/run/docker.sock:/var/run/docker.sock blinkreaction/dns-discovery:stable
 	if [[ $? == 0 ]]; then
 		echo-green "Configuring host DNS resolver for .drude domain..."
-		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head 
+		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head
 		sudo resolvconf -u
 	else
 		echo-red "Drude DNS service setup failed."
@@ -676,7 +732,6 @@ EOF
 }
 
 # Install Vagrantfile and vagrant.yml required by boot2docker
-# TODO: refactor to not rely on setup.sh as dsh only needs those 2 files
 install_boot2docker ()
 {
 	testing_warn
@@ -688,7 +743,8 @@ install_boot2docker ()
 	if is_windows ; then
 		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh -o ~/setup.sh
 	else
-		local b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
+		local b2d_setup_script
+		b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
 	fi
 	if_failed "Could not get 'setup.sh'. Please check your internet connection"
 
@@ -709,9 +765,10 @@ install_boot2docker ()
 }
 
 # Download latest Drude config file
-install_drude ()
+install_drude_config ()
 {
 	testing_warn
+	local docker_compose_yml
 	docker_compose_yml=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
 	if_failed  "Could not get latest docker-compose.yml version."
 
@@ -720,8 +777,10 @@ install_drude ()
 	echo-green "Latest version of docker-compose.yml was downloaded."
 }
 
+# Install shell commands autocomplete script
 install_autocomplete ()
 {
+	local autocomplete_script
 	autocomplete_script=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh-bash-complete")
 	if_failed "Autocomplete script download has failed"
 
@@ -737,11 +796,11 @@ install_autocomplete ()
 		echo -e ". $destination" >> $HOME/$SOURCE_FILE
 		if_failed "Failed to write file to $HOME/$SOURCE_FILE"
 		echo-green "Autocomplete appended to $HOME/$SOURCE_FILE"
-		echo-yellow "dsh: Please restart you bash session to apply"
+		echo-yellow "dsh: Please restart your bash session to apply"
 	fi
 }
 
-# Install prerequisites, boot2docker, Drude
+# Install everything: prerequisites, boot2docker and drude config
 install ()
 {
 	if [[ "$1" == "prerequisites" ]]; then
@@ -751,8 +810,8 @@ install ()
 		echo -e "           If that is not correct please cancel, cd to proper dir and re-run command."
 		_confirm "Continue with download to $(pwd)?"
 		install_boot2docker
-	elif [[ "$1" == "drude" ]]; then
-		install_drude
+	elif [[ "$1" == "drude-config" ]]; then
+		install_drude_config
 	elif [[ "$1" == "autocomplete" ]]; then
 		install_autocomplete
 	else # Full setup
@@ -765,13 +824,20 @@ install ()
 			cd $cwd
 		fi
 		_confirm "Install default docker-compose.yml to $(pwd) (This should be your <drupal_site> folder)?"
-		install_drude
+		install_drude_config
 		echo-green "Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude"
 	fi
 }
 
-# Update Drude
-update ()
+# Update container images
+update_images ()
+{
+	docker_compose pull
+	up
+}
+
+# Update Vagrant Box
+update_boot2docker ()
 {
 	testing_warn
 	if ! is_tty ; then
@@ -789,14 +855,15 @@ update ()
 		echo-green "Installing boot2docker update..."
 		# Make sure ~/.drude folder exists
 		mkdir -p $HOME/.drude
-		
+
 		# get current version
 		local b2d_version_path=$HOME/.drude/b2d_version
 		local b2d_version=$(cat $b2d_version_path 2>/dev/null)
 		if [[ "$b2d_version" = "" ]]; then b2d_version="undetected version"; fi
 
 		# get new version
-		local b2d_new_version=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/VERSION)
+		local b2d_new_version
+		b2d_new_version=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/VERSION)
 		if_failed "Could not get latest boot2docker version. Please check your internet connection"
 
 		# update boot2docker
@@ -821,7 +888,8 @@ update ()
 			echo "Vagrantfile is found in "$(pwd)
 
 			echo-green "dsh: Downloading boot2docker install script..."
-			local b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
+			local b2d_setup_script
+			b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
 			if_failed  "Could not get latest boot2docker version. Please check your internet connection"
 
 			echo "dsh: Creating backups..."
@@ -851,29 +919,25 @@ update ()
 
 	# Update drude
 	cd $cwd # we need to bo back if we were installing boot2docker
-	# if install_drude ; then
-	# 	if [[ ! "$b2d_new_version" == "$b2d_version" ]] && [ $destroy_box -eq 1 ] && ! is_linux; then
-	# 		# if vagrant box was updated containers will be downloaded again
-	# 		_confirm "Starting Vagrant box. Downloading and starting containers."
-	# 	else
-	# 		_confirm "Starting containers. If there's an update to container images it will be downloaded."
-	# 	fi
-	# 	up
-	# else
-	# 	echo -e "${red}Update interrupted. Could not get latest Drude version. Please check your internet connection${NC}"
-	# 	return 1
-	# fi
 }
 
 # Update dsh itself
-update_self ()
+update_dsh ()
 {
 	testing_warn
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh -o /usr/local/bin/dsh
-    if_failed "New version download has failed."
-    sudo chmod +x /usr/local/bin/dsh
-	echo-green "dsh successfully updated to version: "
-	echo "dsh version --short" | bash
+	echo "Downloading..."
+	local new_dsh
+	new_dsh=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
+	if_failed "Download has failed."
+
+	# saving to file
+	echo "$new_dsh" | sudo tee /usr/local/bin/dsh > /dev/null
+	if_failed "Could not write /usr/local/bin/dsh."
+	sudo chmod +x /usr/local/bin/dsh
+
+	local new_version=$(head /usr/local/bin/dsh | grep "^DSH_VERSION=" | cut -f 2 -d "=")
+	echo-green "dsh updated to ${new_version}"
+	exit
 }
 
 # Start interactive bash in container
@@ -883,25 +947,9 @@ _bash ()
 	if is_yml_absent ; then return 2; fi
 	cd $(yml_get_path)
 
-	# workaround through vagrant until docker solves the issue with cygwin
-	if is_windows; then
-		check_docker_running
-		local container_name
-		if [[ "$1" == "" ]]; then
-			container_name='cli'
-		else
-			container_name="$1"
-		fi
-		local container_id
-		container_id=$(docker_compose ps -q $container_name);
-		# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
-		cwd=$(pwd); cwd=${cwd#/cygdrive}
-		command="cd $cwd && docker exec -it $container_id bash -i";
-		vagrant ssh -c "$command"
-		return
-	fi
-
-	if ! is_tty ; then
+	# Interactive shell requires a tty.
+	# On Windows we assume we run interactively via winpty (console.exe).
+	if ! (is_tty || is_windows) ; then
 		echo "Interactive bash console in a non-interactive enveronment!? Nope, won't happen."
 		return 1
 	fi
@@ -915,8 +963,16 @@ _bash ()
 			container_name="$1"
 		fi
 		local container_id
-		container_id=$(docker_compose ps -q $container_name)
-		docker exec -it $container_id bash -i
+		container_id=$(get_container_id $container_name)
+		if is_windows && is_binary_found console; then
+			# Workaround - run docker via winpty (console.exe) to get a tty console in cygwin.
+			console docker exec -it $container_id bash -i
+		else
+			# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
+			cwd=$(pwd); cwd=${cwd#/cygdrive}
+			command="cd $cwd && docker exec -it $container_id bash -i";
+			vagrant ssh -c "$command"
+		fi
 	fi
 }
 
@@ -927,11 +983,11 @@ run ()
 	if is_docker && is_docker_compose ; then
 		check_docker_running
 		cd $(yml_get_path)
-		container_id=$(docker_compose ps -q cli)
+		container_id=$(get_container_id cli)
 
 		if is_tty ; then
-			# need to use $* here to finally resolve slash-escaped string if any. 
-			# passing $@ will not work properly if $@ contains slash espaped string from _drush command
+			# need to use $* here to finally resolve slash-escaped string if any.
+			# passing $@ will not work properly if $@ contains slash espaped string from drush command
 			docker exec -it $container_id bash -ic "$*"
 		else
 			docker exec $container_id bash -c "$*"
@@ -1006,7 +1062,7 @@ mysql_import ()
 
 	check_docker_running
 
-	_drush sql-drop -y
+	_run drush sql-drop -y
 	local sql_connect
 	sql_connect=$(get_mysql_connect)
 	echo "Importing $filename into the database..."
@@ -1050,25 +1106,7 @@ clear_cache ()
 		type=$1
 	fi
 
-	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
-		cd docroot
-	fi
-	_run 'drush cc '$type
-}
-
-# Shorthand for executing drush commands
-# @param $* arguments and params passed to Drush
-_drush ()
-{
-	if is_yml_absent ; then return 2; fi
-	#if ! get_drush_path; then return; fi
-
-	cwd=$(pwd)
-	if [[ "$(get_current_relative_path)" == "" ]] && [ -d docroot ]; then # we're on top level, let's cd to docroot for drush to work
-		cd docroot
-	fi
-	_run "drush $@"
-	cd $cwd
+	_run "drush cc $type"
 }
 
 # Run Behat tests (also install dependencies through Composer)
@@ -1119,7 +1157,8 @@ init ()
 exec_url ()
 {
 	if [[ "$1" != "" ]]; then
-		local script=$(curl -fsS $1)
+		local script
+		script=$(curl -kfsS $1)
 		if_failed "Failed downloading script $1"
 		bash <(echo "$script")
 	else
@@ -1173,21 +1212,26 @@ logs ()
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
 {
+	if [[ $DRUDE_SET_UID == "" ]] ; then
+		DRUDE_SET_UID=$(id -u)
+	fi
 	# Let uid to be set with the DRUDE_SET_UID env variable
-	if [[ $DRUDE_SET_UID != "" ]]; then
+	if [[ $DRUDE_SET_UID != 0 ]] ; then
 		local host_uid=$DRUDE_SET_UID
-		local container_uid=$(docker exec $(docker_compose ps -q cli) id -u)
+		local container_uid=$(docker exec $(get_container_id cli) id -u)
 
 		if [[ $container_uid != $host_uid ]]; then
 			echo-green "Changing user uid in cli from $container_uid to $host_uid..."
-			docker exec -u root $(docker_compose ps -q cli) usermod -u $host_uid docker
+			docker exec -u root $(get_container_id cli) usermod -u $host_uid docker
 			echo-green "Reseting permissions on /var/www..."
-			docker exec -u root $(docker_compose ps -q cli) chown -R docker:users /var/www
+			docker exec -u root $(get_container_id cli) chown -R docker:users /var/www
 			echo-green "Restarting php daemon..."
-			docker exec -u root $(docker_compose ps -q cli) supervisorctl restart php5-fpm
+			docker exec -u root $(get_container_id cli) supervisorctl restart php5-fpm
 		else
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
+	else
+		echo-yellow "Running Drude as root is not recommended. Please run as a regular user with docker access."
 	fi
 }
 
@@ -1239,10 +1283,20 @@ case $1 in
 		;;
 	update)
 		shift
-		update $*
+		if [[ "$1" == "prerequisites" ]]; then
+			install_prerequisites
+		elif [[ "$1" == "boot2docker" ]]; then
+			update_boot2docker
+		elif [[ "$1" == "images" ]]; then
+			update_images
+		elif [[ "$1" == "dsh" ]]; then
+			update_dsh
+		else
+			echo "Use dsh update [prerequisites|boot2docker|images|dsh]"
+		fi
 		;;
 	self-update)
-		update_self
+		update_dsh
 		;;
 	bash)
 		shift
@@ -1250,11 +1304,11 @@ case $1 in
 		;;
 	exec)
 		shift
-		_run $*
+		_run "$*"
 		;;
 	run)
 		shift
-		_run $*
+		_run "$*"
 		;;
 	mysql)
 		mysql
@@ -1273,9 +1327,23 @@ case $1 in
 		;;
 	drush)
 		shift
-		# slash escape space-delimited parameters for safe passing between functions
-		cmd=$(printf " %q" "$@")
-		_drush $cmd
+		if [[ $1 == "" ]]; then
+			_run drush
+		else
+			# slash escape space-delimited parameters for safe passing between functions
+			cmd=$(printf " %q" "$@")
+			_run drush $cmd
+		fi
+		;;
+	drupal)
+		shift
+		if [[ "$1" == "" ]]; then
+			_run drupal
+		else
+			# slash escape space-delimited parameters for safe passing between functions
+			cmd=$(printf " %q" "$@")
+			_run drupal $cmd
+		fi
 		;;
 	behat)
 		shift
@@ -1287,7 +1355,7 @@ case $1 in
 		;;
 	exec-url)
 		shift
-		exec_url $*
+		exec_url "$*"
 		;;
 	reset)
 		shift
@@ -1308,19 +1376,19 @@ case $1 in
 		;;
 	bash_comp_words)
 		shift
-		bash_comp_words $*
+		bash_comp_words "$*"
 		;;
 	logs)
 		shift
 		logs $@
 		;;
 	"")
-		help
+		show_help
 		;;
 	help)
-		help
+		show_help
 		;;
 	*)
-		echo "Unknown command '"$*"'. See 'dsh help' for list of available commands"
+		echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands"
 		exit 1
 esac
