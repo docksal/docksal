@@ -54,7 +54,7 @@ Babun should be installed and run **as a regular user (do not use admin command 
     dsh install boot2docker
     ```
     
-    On Mac and Widnows you should see two files created in the `projects` folder:
+    On Mac and Windows you should see two files created in the `projects` folder:
     
     ```
     Vagrantfile
