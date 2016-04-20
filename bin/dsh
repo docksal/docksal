@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.12.11
+DSH_VERSION=1.12.12
 
 # Console colors
 red='\033[0;31m'
@@ -29,36 +29,6 @@ fi
 echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
-
-# Check whether shell is interactive
-# Otherwise we are running in a non-interactive script environment
-is_tty ()
-{
-	# Override option via $DRUDE_IS_TTY (true|false) env variable.
-	if [[ $DRUDE_IS_TTY == 'true' ]]; then
-		return 0;
-	fi
-	if [[ $DRUDE_IS_TTY == 'false' ]]; then
-		return 1;
-	fi
-
-	# disable interactive shell on windows for now
-	# known Docker issue: https://github.com/docker/docker/issues/12469
-	res=$(uname | grep 'CYGWIN_NT')
-	if [[ "$res" != '' ]]; then
-		return 1;
-	fi
-
-	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
-}
-
-testing_warn ()
-{
-	if ! is_tty ; then return; fi
-	if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
-		echo-yellow "dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}"
-	fi
-}
 
 # Exits dsh if previous command exited with non-zero code
 if_failed ()
@@ -152,14 +122,6 @@ get_mysql_connect ()
 # Use this function for every docker-compose invocation.
 docker_compose ()
 {
-	# TODO: remove this
-	# if is_windows; then
-	# 	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
-	# 	docker-compose $* | tr -d '\r'
-	# else
-	# 	docker-compose $*
-	# fi
-	
 	docker-compose $*
 }
 
@@ -297,6 +259,37 @@ is_docker_running ()
 	return $?
 }
 
+# Check whether shell is interactive
+# Otherwise we are running in a non-interactive script environment
+is_tty ()
+{
+	# Override option via $DRUDE_IS_TTY (true|false) env variable.
+	if [[ $DRUDE_IS_TTY == 'true' ]]; then
+		return 0;
+	fi
+	if [[ $DRUDE_IS_TTY == 'false' ]]; then
+		return 1;
+	fi
+
+	# disable interactive shell on windows for now
+	# known Docker issue: https://github.com/docker/docker/issues/12469
+	if is_windows; then
+		return 1;
+	fi
+
+	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
+}
+
+#---------------------------- Other helper functions -------------------------------
+
+testing_warn ()
+{
+	if ! ( is_tty || is_windows ); then return; fi
+	if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
+		echo-yellow "dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}"
+	fi
+}
+
 #---------------------------- Control functions -------------------------------
 
 check_docker_running ()
@@ -345,8 +338,8 @@ is_yml_absent ()
 # @param $1 confirmation message
 _confirm ()
 {
-	# Skip checks if not a tty
-	if ! is_tty ; then return 0; fi
+	# Skip checks if not running interactively (not a tty or not on Windows)
+	if ! ( is_tty || is_windows ); then return 0; fi
 
 	while true; do
 		read -p "$1 [y/n]: " answer
@@ -840,7 +833,7 @@ update_images ()
 update_boot2docker ()
 {
 	testing_warn
-	if ! is_tty ; then
+	if ! ( is_tty || is_windows ); then
 		echo "'update' is not allowed in a non-interactive environment."
 		return 1
 	fi
@@ -949,7 +942,7 @@ _bash ()
 
 	# Interactive shell requires a tty.
 	# On Windows we assume we run interactively via winpty (console.exe).
-	if ! (is_tty || is_windows) ; then
+	if ! ( is_tty || is_windows ); then
 		echo "Interactive bash console in a non-interactive enveronment!? Nope, won't happen."
 		return 1
 	fi
