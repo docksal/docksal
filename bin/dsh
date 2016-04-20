@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.12.12
+DSH_VERSION=1.12.13
 
 # Console colors
 red='\033[0;31m'
@@ -269,12 +269,6 @@ is_tty ()
 		return 1;
 	fi
 
-	# disable interactive shell on windows for now
-	# known Docker issue: https://github.com/docker/docker/issues/12469
-	if is_windows; then
-		return 1;
-	fi
-
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
 }
 
@@ -282,7 +276,7 @@ is_tty ()
 
 testing_warn ()
 {
-	if ! ( is_tty || is_windows ); then return; fi
+	if ! is_tty; then return; fi
 	if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
 		echo-yellow "dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}"
 	fi
@@ -347,7 +341,7 @@ check_yml()
 _confirm ()
 {
 	# Skip checks if not running interactively (not a tty or not on Windows)
-	if ! ( is_tty || is_windows ); then return 0; fi
+	if ! is_tty; then return 0; fi
 
 	while true; do
 		read -p "$1 [y/n]: " answer
@@ -836,7 +830,7 @@ update_images ()
 update_boot2docker ()
 {
 	testing_warn
-	if ! ( is_tty || is_windows ); then
+	if ! is_tty; then
 		echo "'update' is not allowed in a non-interactive environment."
 		return 1
 	fi
@@ -936,85 +930,83 @@ update_dsh ()
 	exit
 }
 
-# Start interactive bash in container
-# @param $1 container name (defaults to cli)
+# Start an interactive bash session in a container
+# @param $1 container name
 _bash ()
 {
 	# Interactive shell requires a tty.
 	# On Windows we assume we run interactively via winpty (console.exe).
-	if ! ( is_tty || is_windows ); then
+	if ! is_tty; then
 		echo "Interactive bash console in a non-interactive enveronment!? Nope, won't happen."
 		return 1
 	fi
 
-	if is_docker && is_docker_compose ; then
-		check_docker_running
-		local container_name
-		if [[ "$1" == "" ]]; then
-			container_name='cli'
-		else
-			container_name="$1"
-		fi
-		local container_id
-		container_id=$(get_container_id $container_name)
-		# Running docker exec interactively on Windows requires workarounds
-		if is_windows; then
-			# Workaround 1 - run docker exec via winpty (console.exe) to get a tty console in cygwin.
-			if is_binary_found 'console'; then
-				console docker exec -it $container_id bash -i
-			# Workaround 2 - run docker exec via `vagrant ssh -c`
-			else
-				# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
-				cwd=$(pwd); cwd=${cwd#/cygdrive}
-				command="cd $cwd && docker exec -it $container_id bash -i";
-				vagrant ssh -c "$command"
-			fi
-		# Run docker exec interactively directly if not on Windows
-		else
-			docker exec -it $container_id bash -i
-		fi
-	fi
-}
-
-# Run a command in the cli container in the project root
-# @param $* command with it's params to run
-run ()
-{
-	check_docker_running
-
-		if is_tty ; then
-			# need to use $* here to finally resolve slash-escaped string if any.
-			# passing $@ will not work properly if $@ contains slash espaped string from drush command
-			docker exec -it $container_id bash -ic "$*"
-		else
-			docker exec $container_id bash -c "$*"
-		fi
-	fi
+	# Pass container name to _run
+	CONTAINER_NAME=$1 _run bash -i
 }
 
 # Run a command in the cli container changing dir to the same folder
 # @param $* command with it's params to run
 _run ()
 {
-	#get client window width for interactive sessions
-	local COLS=''
-	if is_tty ; then
-		COLS=$(tput cols)
+	check_docker_running
+
+	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
+	container_id=$(get_container_id $CONTAINER_NAME)
+
+	# 1) $winpty_cmd
+	local winpty_cmd
+	# Running docker exec interactively on Windows requires workarounds
+	if is_windows; then
+		# Workaround - run docker exec via winpty (console.exe) to get a tty console in cygwin.
+		if is_binary_found 'console'; then
+			winpty_cmd='console'
+		else
+			echo-red 'Winpty (console.exe) binary missing.'
+			echo 'Run "dsh install prerequisites" to install it.'
+			exit 1
+		fi
 	fi
 
-	if is_yml_absent ; then return 2; fi
-	if is_docker && is_docker_compose ; then
-		local path=$(get_current_relative_path)
-		local cd=''
+	# 2) cmd
+	local cmd
+
+	local cdir
+	if [[ $CONTAINER_NAME == "cli" ]]; then #only chdir to the same dir in cli container
+		local path
+		path=$(get_current_relative_path)
 		if [[ "$path" != "$(pwd)" ]] && [[ "$path" != "" ]] ; then
-			# if we're not outside project folder
-			cd="cd $path &&"
+			# we're inside docroot
+			cdir="cd $path &&"
 		fi
 		if [[ "$path" == "" ]] ; then
-			# if we're on project folder level (outside docroot)
-			cd="cd docroot &&"
+			# we're on project folder level (outside docroot)
+			cdir="cd docroot &&"
 		fi
-		run "$cd export COLUMNS=$COLS && $@"
+	fi
+
+	local columns
+	if is_tty ; then
+		columns="export COLUMNS=$(tput cols) &&"
+	fi
+
+	cmd="$cdir $columns"
+
+	# 3) convert array of parameters into escaped string
+	# Escape spaces that are "spaces" and not parameter delimeters (i.e. param1 param2\ with\ spaces param3)
+	cmd="$cmd "$(printf " %q" "$@")
+
+	# 4) execute
+	if is_tty ; then
+		# interactive
+		if [[ $1 == "" ]]; then
+			$winpty_cmd docker exec -it $container_id bash -i
+		else
+			$winpty_cmd docker exec -it $container_id bash -ic "$cmd"
+		fi
+	else
+		# non-interactive
+		docker exec $container_id bash -c "$cmd"
 	fi
 }
 
@@ -1065,7 +1057,7 @@ mysql_import ()
 	echo "Importing $filename into the database..."
 
 	# Use pv for interactive shells only.
-	if is_tty ; then
+	if is_tty && ! is_windows ; then
 		# Check if we have a gzipped dump and treat it differently.
 		if [[ $filename == *.gz ]]; then
 			file_size=$(gzip -l $1 | sed -n 2p | awk '{print $2}')
@@ -1301,11 +1293,11 @@ case $1 in
 		;;
 	exec)
 		shift
-		_run "$*"
+		_run "$@"
 		;;
 	run)
 		shift
-		_run "$*"
+		_run "$@"
 		;;
 	mysql)
 		mysql
@@ -1327,9 +1319,7 @@ case $1 in
 		if [[ $1 == "" ]]; then
 			_run drush
 		else
-			# slash escape space-delimited parameters for safe passing between functions
-			cmd=$(printf " %q" "$@")
-			_run drush $cmd
+			_run drush "$@"
 		fi
 		;;
 	drupal)
@@ -1337,9 +1327,7 @@ case $1 in
 		if [[ "$1" == "" ]]; then
 			_run drupal
 		else
-			# slash escape space-delimited parameters for safe passing between functions
-			cmd=$(printf " %q" "$@")
-			_run drupal $cmd
+			_run drupal "$@"
 		fi
 		;;
 	behat)
