@@ -972,7 +972,9 @@ _run ()
 	local cmd
 
 	local cdir
-	if [[ $CONTAINER_NAME == "cli" ]]; then #only chdir to the same dir in cli container
+	# Only chdir to the same dir in cli container
+	# RUN_NO_CDIR can be used to override this (used in mysql_import)
+	if [[ $CONTAINER_NAME == "cli" ]] && [[ $RUN_NO_CDIR != 1 ]]; then
 		local path
 		path=$(get_current_relative_path)
 		if [[ "$path" != "$(pwd)" ]] && [[ "$path" != "" ]] ; then
@@ -994,8 +996,13 @@ _run ()
 
 	# 3) convert array of parameters into escaped string
 	# Escape spaces that are "spaces" and not parameter delimeters (i.e. param1 param2\ with\ spaces param3)
-	cmd="$cmd "$(printf " %q" "$@")
-
+	if [[ $2 != "" ]]; then
+		cmd="$cmd "$(printf " %q" "$@")
+	# Do not escape spaces if there is only one parameter (e.g. dsh run "ls -la | grep txt")
+	else
+		cmd="$cmd $@"
+	fi
+	
 	# 4) execute
 	if is_tty ; then
 		# interactive
@@ -1049,38 +1056,36 @@ mysql_import ()
 		_confirm "[!] This will drop the existing database. Continue?"
 	fi
 
-	check_docker_running
-
-	_run drush sql-drop -y
+	#_run drush sql-drop -y
 	local sql_connect
 	sql_connect=$(get_mysql_connect)
 	echo "Importing $filename into the database..."
 
 	# Use pv for interactive shells only.
-	if is_tty && ! is_windows ; then
+	if is_tty ; then
 		# Check if we have a gzipped dump and treat it differently.
 		if [[ $filename == *.gz ]]; then
 			file_size=$(gzip -l $1 | sed -n 2p | awk '{print $2}')
-			run "zcat ./$pathdiff/$filename | pv --size $file_size | "$sql_connect
+			RUN_NO_CDIR=1 _run "zcat ./$pathdiff/$filename | pv --size $file_size | $sql_connect"
 		else
-			run "pv ./$pathdiff/$filename | "$sql_connect
+			RUN_NO_CDIR=1 _run "pv ./$pathdiff/$filename | $sql_connect"
 		fi
 	else
 		# Check if we have a gzipped dump and treat it differently.
 		if [[ $filename == *.gz ]]; then
-			run "zcat ./$pathdiff/$filename | "$sql_connect
+			RUN_NO_CDIR=1 _run "zcat ./$pathdiff/$filename | $sql_connect"
 		else
-			run "cat ./$pathdiff/$filename | "$sql_connect
+			RUN_NO_CDIR=1 _run "cat ./$pathdiff/$filename | $sql_connect"
 		fi
 	fi
 
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then
 		echo-green "dsh: mysql-import finished";
-		_notify "Dsh" "Mysql import finished"
+		if is_tty; then _notify "Dsh" "Mysql import finished"; fi
 	else
 		echo-red "dsh: mysql-import failed";
-		_notify "Dsh" "Mysql import failed!"
+		if is_tty; then _notify "Dsh" "Mysql import failed!"; fi
 	fi
 }
 
