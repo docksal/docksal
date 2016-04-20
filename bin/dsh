@@ -116,7 +116,7 @@ clean_string ()
 get_mysql_connect ()
 {
 	# Run drush forcing tty to false to avoid colored output string from drush.
-	echo "$(DRUDE_IS_TTY=false _run drush sql-connect)"
+	echo "$(DRUDE_IS_TTY=0 _run drush sql-connect)"
 }
 
 # Use this function for every docker-compose invocation.
@@ -262,10 +262,10 @@ is_docker_running ()
 is_tty ()
 {
 	# Override option via $DRUDE_IS_TTY (true|false) env variable.
-	if [[ $DRUDE_IS_TTY == 'true' ]]; then
+	if [[ $DRUDE_IS_TTY == 1 ]]; then
 		return 0;
 	fi
-	if [[ $DRUDE_IS_TTY == 'false' ]]; then
+	if [[ $DRUDE_IS_TTY == 0 ]]; then
 		return 1;
 	fi
 
