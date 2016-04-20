@@ -957,14 +957,21 @@ _bash ()
 		fi
 		local container_id
 		container_id=$(get_container_id $container_name)
-		if is_windows && is_binary_found console; then
-			# Workaround - run docker via winpty (console.exe) to get a tty console in cygwin.
-			console docker exec -it $container_id bash -i
+		# Running docker exec interactively on Windows requires workarounds
+		if is_windows; then
+			# Workaround 1 - run docker exec via winpty (console.exe) to get a tty console in cygwin.
+			if is_binary_found 'console'; then
+				console docker exec -it $container_id bash -i
+			# Workaround 2 - run docker exec via `vagrant ssh -c`
+			else
+				# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
+				cwd=$(pwd); cwd=${cwd#/cygdrive}
+				command="cd $cwd && docker exec -it $container_id bash -i";
+				vagrant ssh -c "$command"
+			fi
+		# Run docker exec interactively directly if not on Windows
 		else
-			# Drop /cygdrive prefix if the working directory is opened as /cygdrive/<driveletter>/.. instead of /<driveletter>.. 
-			cwd=$(pwd); cwd=${cwd#/cygdrive}
-			command="cd $cwd && docker exec -it $container_id bash -i";
-			vagrant ssh -c "$command"
+			docker exec -it $container_id bash -i
 		fi
 	fi
 }
