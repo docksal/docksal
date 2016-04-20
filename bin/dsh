@@ -215,17 +215,15 @@ is_vagrant ()
 }
 
 # check that docker-compose binary exists
-is_docker_compose ()
+check_docker_compose ()
 {
 	binary_found 'docker-compose';
-	return $?
 }
 
 # check that docker binary exists
-is_docker ()
+check_docker ()
 {
 	binary_found 'docker';
-	return $?
 }
 
 is_docker_running ()
@@ -294,6 +292,9 @@ testing_warn ()
 
 check_docker_running ()
 {
+	check_docker
+	check_docker_compose
+	check_yml
 	if ! is_docker_running; then
 		echo-red "dsh: Unable to connect to the docker daemon";
 		exit 1
@@ -332,6 +333,13 @@ is_yml_absent ()
 
 	#if we got here files are present
 	return 1
+}
+
+check_yml() 
+{
+	if is_yml_absent; then
+		exit 2
+	fi
 }
 
 # Yes/no confirmation dialog with an optional message
@@ -526,7 +534,7 @@ bash_comp_words ()
 # Start containers
 up ()
 {
-	if is_yml_absent ; then return 2; fi
+	check_yml
 	if is_vagrant ; then
 		if ! is_docker_running; then
 			echo-green "dsh: Starting vagrant vm..."
@@ -535,10 +543,10 @@ up ()
 		else
 			started=0
 		fi
-		if [ $started -eq 0 ] && is_docker_compose ; then
+		if [ $started -eq 0 ] ; then
 			_start_containers
 		fi
-	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
+	elif ( is_boot2docker || is_linux ) ; then
 		_start_containers
 	fi
 }
@@ -547,17 +555,13 @@ up ()
 down ()
 {
 	check_docker_running
-	if is_yml_absent ; then return 2; fi
-	if is_docker_compose ; then
-		_stop_containers $@
-	fi
+	_stop_containers $@
 }
 
 # Stop Vagrant box
 halt ()
 {
 	check_docker_running
-	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
 		vagrant halt
 	elif ( is_boot2docker || is_linux ) ; then
@@ -569,22 +573,22 @@ halt ()
 # @param $1 container_name
 restart ()
 {
-	if is_yml_absent ; then return 2; fi
+	check_docker_running
 	_restart_containers $*
 }
 
 # Restart Vagrant and start containers again
 reload ()
 {
-	if is_yml_absent ; then return 2; fi
+	check_yml
 	if is_vagrant ; then
 		echo-green "dsh: Restarting vagrant vm..."
 		vagrant reload
 		started=$?
-		if [ $started -eq 0 ] && is_docker_compose ; then
+		if [ $started -eq 0 ] ; then
 			_start_containers
 		fi
-	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
+	elif ( is_boot2docker || is_linux ) ; then
 		_start_containers
 	fi
 }
@@ -598,7 +602,6 @@ status ()
 	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
 		docker ps
 	else
-		if is_yml_absent ; then return 2; fi
 		cd $(yml_get_path)
 		docker_compose ps
 	fi
@@ -937,9 +940,6 @@ update_dsh ()
 # @param $1 container name (defaults to cli)
 _bash ()
 {
-	if is_yml_absent ; then return 2; fi
-	cd $(yml_get_path)
-
 	# Interactive shell requires a tty.
 	# On Windows we assume we run interactively via winpty (console.exe).
 	if ! ( is_tty || is_windows ); then
@@ -980,10 +980,7 @@ _bash ()
 # @param $* command with it's params to run
 run ()
 {
-	if is_docker && is_docker_compose ; then
-		check_docker_running
-		cd $(yml_get_path)
-		container_id=$(get_container_id cli)
+	check_docker_running
 
 		if is_tty ; then
 			# need to use $* here to finally resolve slash-escaped string if any.
@@ -1024,7 +1021,7 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
-	if is_yml_absent ; then return 2; fi
+	check_docker_running
 	if ! get_drush_path; then return; fi
 	_run $(get_mysql_connect)" -A" # -A option to speed up mysql load
 }
@@ -1033,7 +1030,7 @@ mysql ()
 # @param $1 filename of backup file. Should be inside project root
 mysql_import ()
 {
-	if is_yml_absent ; then return 2; fi
+	check_docker_running
 	if ! get_drush_path; then return; fi
 
 	local confirm=1
@@ -1099,7 +1096,7 @@ mysql_import ()
 # @param $1 type of cache to clean (all, css-js, ...)
 clear_cache ()
 {
-	if is_yml_absent ; then return 2; fi
+	check_docker_running
 	#if ! get_drush_path; then return; fi
 	local type='all'
 	if [[ ! "$1" == "" ]]; then
@@ -1113,7 +1110,7 @@ clear_cache ()
 # @param $* arguments and params passed to Behat
 behat ()
 {
-	if is_yml_absent ; then return 2; fi
+	check_docker_running
 	local params=''
 	local path='tests/behat'
 	for i in "$@"; do
@@ -1170,11 +1167,11 @@ exec_url ()
 # @param $1 $2... container names
 remove ()
 {
+	check_docker_running
 	if [[ $1 == "" ]]; then
 		_confirm "[!] This will delete all project containers including the DB one. You will have to re-import DB.";
 	fi
 
-	if is_yml_absent ; then return 2; fi
 	if is_vagrant ; then
 		if ! is_docker_running; then
 			echo-green "dsh: Starting vagrant vm..."
@@ -1184,10 +1181,10 @@ remove ()
 			started=0
 		fi
 
-		if [ $started -eq 0 ] && is_docker_compose ; then
+		if [ $started -eq 0 ] ; then
 			_remove_containers $*
 		fi
-	elif ( is_boot2docker || is_linux ) && is_docker_compose ; then
+	elif ( is_boot2docker || is_linux ) ; then
 		_remove_containers $*
 	fi
 }
