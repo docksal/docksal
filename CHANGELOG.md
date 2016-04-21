@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.1 (2016-04-21)
+
+- A lot of refactoring to bring interactive shell experience to Windows (via winpty, which is a requirement now on Windows)
+  - `dsh update boot2docker` will now ask for a confirmation
+  - `dsh exec` (`dsh run`) can now run interactive commands (try `dsh exec top`)
+  - `dsh bash` now longer relies on `vagrant ssh -c` and thus launches much faster
+  - `dsh mysql-import` now disaplays a progress via `pv` (same as on Mac/Linux)
+- Fixed `dsh bash`regression from v1.3.0 on Mac/Linux
+- Documentation fixes and updates
+
+A full update is recommended. Please follow the updates instructions:
+https://github.com/blinkreaction/drude#updates
+
+
 ## 1.3.0 (2016-04-15)
 
 - Implement dsh drupal shortcut for Drupal Console commands
