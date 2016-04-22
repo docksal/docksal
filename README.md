@@ -69,9 +69,9 @@ dsh bash
 
 Tools available inside the **cli** container:
 
-- php-cli, composer, drush[6,7,8], phpcs
+- php-cli, composer, drush[6,7,8], drupal console, phpcs
 - ruby, bundler
-- node, npm, bower, grunt
+- node, nvm, npm, bower, grunt
 - git, wget, zip, mysql-client
 - python
 
@@ -100,7 +100,7 @@ See [Troubleshooting](/docs/troubleshooting.md) section of the docs.
 
 The MIT License (MIT)
 
-Copyright (c) 2015 BlinkReaction
+Copyright (c) 2016 BlinkReaction
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
