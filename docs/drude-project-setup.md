@@ -4,7 +4,7 @@ Initial configuration is done once per project (e.g. by a team lead) and committ
 
 `docker-compose.yml` file and an optional `.drude` folder are good indicators that a project is using Drude.  
 
-**On Windows** make sure your `projects` folder is **not** inside `%USERPROFILE%/.babun` installation folder.
+**On Windows** make sure your `projects` folder is **not** inside `%USERPROFILE%/.babun` folder.
  
 ## Setup
 
@@ -13,7 +13,7 @@ Initial configuration is done once per project (e.g. by a team lead) and committ
 3. Install Drude's docker stack configuration (this downloads the latest `docker-compose.yml` file):
     
     ```
-    dsh install drude
+    dsh install drude-config
     ```
 
 4. Update `docker-compose.yml` as necessary.
