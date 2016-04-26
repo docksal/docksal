@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.13.0
+DSH_VERSION=1.13.1
 
 # Console colors
 red='\033[0;31m'
@@ -122,7 +122,14 @@ get_mysql_connect ()
 # Use this function for every docker-compose invocation.
 docker_compose ()
 {
+	# docker-compose cannot find docker-compose.yml in the path if there are symlinks on the way
+	cwd=$(pwd)
+	cd $(yml_get_path)
+	
 	docker-compose $*
+	
+	# switch back to the original path
+	cd $cwd
 }
 
 # Get container id by service name
@@ -387,7 +394,6 @@ check_docker_host #perform this check in any case
 _start_containers ()
 {
 	echo-green "Starting containers..."
-	cd $(yml_get_path)
 	docker_compose up -d
 	_set_cli_uid
 }
@@ -396,7 +402,6 @@ _start_containers ()
 _restart_containers ()
 {
 	echo-green "Restarting containers..."
-	cd $(yml_get_path)
 	docker_compose restart $*
 	_set_cli_uid
 }
@@ -409,7 +414,6 @@ _stop_containers ()
 		# stop all but system containers (--label "group=system")
 		docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 	fi
-	cd $(yml_get_path)
 	docker_compose stop
 }
 
@@ -419,7 +423,6 @@ _remove_containers ()
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
-	cd $(yml_get_path)
 	docker_compose kill $* && docker_compose rm -v --force $*
 }
 
@@ -596,7 +599,6 @@ status ()
 	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
 		docker ps
 	else
-		cd $(yml_get_path)
 		docker_compose ps
 	fi
 }
@@ -1198,7 +1200,6 @@ reset ()
 # @param $* container(s) name
 logs ()
 {
-	cd $(yml_get_path)
 	docker_compose logs $*
 }
 
