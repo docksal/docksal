@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.2 (2016-04-26)
+
+- dsh v1.13.1
+  - Fix regression with docker-compose related function calls introduced in dsh v1.13.0
+- Documentation fixes
+
+A full update is recommended. Please follow the updates instructions:
+https://github.com/blinkreaction/drude#updates
+
+
 ## 1.3.1 (2016-04-21)
 
 - A lot of refactoring to bring interactive shell experience to Windows (via winpty, which is a requirement now on Windows)
