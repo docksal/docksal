@@ -5,6 +5,7 @@ DSH_VERSION=1.13.1
 # Console colors
 red='\033[0;31m'
 green='\033[0;32m'
+green_bg='\033[42m'
 yellow='\033[1;33m'
 NC='\033[0m'
 
@@ -24,17 +25,21 @@ if [[ $B2D_BRANCH == "" ]]; then
 	B2D_BRANCH='master'
 fi
 
+DRUDE_LAST_CHECK="$HOME/.drude/last_check"
+
 #---------------------------- Helper functions --------------------------------
 
 echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
+echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
 
 # Exits dsh if previous command exited with non-zero code
 if_failed ()
 {
 	if [ ! $? -eq 0 ]; then
-		if [[ "$1" == "" ]]; then msg="dsh: error"; else msg="$1"; fi
+		msg="error executing last command"
+		if [[ "$1" != "" ]]; then msg="$1"; fi
 		echo-red "dsh: $msg"
 		exit 1
 	fi
@@ -932,6 +937,37 @@ update_dsh ()
 	exit
 }
 
+check_for_updates ()
+{
+	# Never trigger in scripts
+	if ! is_tty; then return; fi
+
+	local timestamp; local last_check; local next_check
+	timestamp=$(date +%s)
+	last_check=$(cat $DRUDE_LAST_CHECK 2>/dev/null)
+	# Set last_check to 0 if empty
+	last_check="${last_check:-0}"
+	# Check once a day
+	next_check=$(($last_check+86400))
+	if [ $timestamp -le $next_check ]; then
+		return;
+	fi
+
+	echo 'dsh: checking for updates...'
+	local new_dsh; local new_version
+	# Always write current timestamp to last check file
+	echo $timestamp > $DRUDE_LAST_CHECK
+	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
+	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
+	new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
+	if [[ $new_version != "" ]] && [[ $new_version != $DSH_VERSION ]]; then
+		echo-green-bg " UPDATE AVAILABLE "
+		echo -e "${green}dsh${NC} [ $DSH_VERSION --> $new_version ] (run ${green}dsh update dsh${NC} to update)"
+		echo "Press any key to continue with your command."
+		read -p ''
+	fi
+}
+
 # Start an interactive bash session in a container
 # @param $1 container name
 _bash ()
@@ -1230,6 +1266,7 @@ _set_cli_uid ()
 	fi
 }
 
+check_for_updates
 # Command bindings
 argv="$@"
 case $1 in
