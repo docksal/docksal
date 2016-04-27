@@ -1240,7 +1240,7 @@ system_information ()
 	_system_information_heading "OS"
 	uname -a
 	if is_linux; then
-		[ -f /etc/issue ] && cat /etc/issue
+		[ -f /etc/os-release ] && cat /etc/os-release
 		[ -f /etc/system-release ] && cat /etc/system-release
 	fi
 	echo -n "Current dir: "
