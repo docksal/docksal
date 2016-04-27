@@ -1242,6 +1242,7 @@ system_information ()
 	if is_linux; then
 		[ -f /etc/issue ] && cat /etc/issue
 		[ -f /etc/centos-release ] && cat /etc/centos-release
+		[ -f /etc/fedora-release ] && cat /etc/fedora-release
 	fi
 	echo -n "Current dir: "
 	pwd
