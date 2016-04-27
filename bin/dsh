@@ -1243,6 +1243,10 @@ system_information ()
 	uname -a
 	echo -n "Current dir: "
 	pwd
+	if is_linux; then
+		[ -f /etc/issue ] && cat /etc/issue
+		[ -f /etc/centos-release ] && cat /etc/centos-release
+	fi
 
 	_system_information_heading "Dsh"
 	version
