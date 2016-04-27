@@ -921,8 +921,8 @@ check_for_updates ()
 	last_check=$(cat $DRUDE_LAST_CHECK 2>/dev/null)
 	# Set last_check to 0 if empty
 	last_check="${last_check:-0}"
-	# Check once a day
-	next_check=$(($last_check+86400))
+	# Check once a week
+	next_check=$(($last_check+604800))
 	if [ $timestamp -le $next_check ]; then
 		return;
 	fi
