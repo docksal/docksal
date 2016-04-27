@@ -1243,6 +1243,7 @@ system_information ()
 		[ -f /etc/issue ] && cat /etc/issue
 		[ -f /etc/centos-release ] && cat /etc/centos-release
 		[ -f /etc/fedora-release ] && cat /etc/fedora-release
+		[ -f /etc/redhat-release ] && cat /etc/redhat-release
 	fi
 	echo -n "Current dir: "
 	pwd
