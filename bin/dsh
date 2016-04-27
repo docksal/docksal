@@ -17,15 +17,17 @@ DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
 unset DOCKER_TLS_VERIFY
 unset DOCKER_CERT_PATH
 
-if [[ $DRUDE_BRANCH == "" ]]; then
-	DRUDE_BRANCH='master'
-fi
+DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
+B2D_BRANCH="${B2D_BRANCH:-master}"
 
-if [[ $B2D_BRANCH == "" ]]; then
-	B2D_BRANCH='master'
-fi
+# Configuration path
+DRUDE_CONFIG_DIR="$HOME/.drude"
+DRUDE_CONFIG_BACKUP_DIR="$DRUDE_CONFIG_DIR/backups"
+# Always try to create this path in case ~/.drude does not exist
+mkdir -p $DRUDE_CONFIG_BACKUP_DIR
 
-DRUDE_LAST_CHECK="$HOME/.drude/last_check"
+DRUDE_LAST_CHECK="$DRUDE_CONFIG_DIR/last_check"
+DRUDE_B2D_VERSION="$DRUDE_CONFIG_DIR/b2d_version"
 
 #---------------------------- Helper functions --------------------------------
 
@@ -857,12 +859,9 @@ update_boot2docker ()
 	# run boot2docker update only on Mac and Win
 	if ! is_linux ; then
 		echo-green "Installing boot2docker update..."
-		# Make sure ~/.drude folder exists
-		mkdir -p $HOME/.drude
 
 		# get current version
-		local b2d_version_path=$HOME/.drude/b2d_version
-		local b2d_version=$(cat $b2d_version_path 2>/dev/null)
+		local b2d_version=$(cat $DRUDE_B2D_VERSION 2>/dev/null)
 		if [[ "$b2d_version" = "" ]]; then b2d_version="undetected version"; fi
 
 		# get new version
@@ -896,11 +895,14 @@ update_boot2docker ()
 			b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
 			if_failed  "Could not get latest boot2docker version. Please check your internet connection"
 
-			echo "dsh: Creating backups..."
+			echo "dsh: Creating backups in $DRUDE_CONFIG_BACKUP_DIR..."
 			local timestamp=$(date +%s)
-			cp -v Vagrantfile $HOME/.drude/Vagrantfile.$timestamp && \
-			cp -v vagrant.yml $HOME/.drude/vagrant.yml.$timestamp
+			cp -v Vagrantfile $DRUDE_CONFIG_BACKUP_DIR/Vagrantfile.$timestamp && \
+			cp -v vagrant.yml $DRUDE_CONFIG_BACKUP_DIR/vagrant.yml.$timestamp
 			if_failed "Unable to perform configuration backups. Aborting..."
+			# contingency. remove old backups
+			rm "$DRUDE_CONFIG_DIR/Vagrantfile.*" 2>/dev/null
+			rm "$DRUDE_CONFIG_DIR/vagrant.yml.*" 2>/dev/null
 
 			if [ $destroy_box -eq 1 ]; then
 				echo-yellow "dsh: Destroying vagrant box..."
@@ -914,7 +916,7 @@ update_boot2docker ()
 			if_failed "boot2docker install script error"
 
 			# update recorded boot2docker version
-			echo $b2d_new_version > $b2d_version_path
+			echo $b2d_new_version > $DRUDE_B2D_VERSION
 			echo -e "boot2docker ${green}$b2d_new_version${NC} was installed"
 		else
 			echo "boot2docker $b2d_version you have is the latest version (-f to force update)"
