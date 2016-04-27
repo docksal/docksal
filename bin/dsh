@@ -141,13 +141,13 @@ get_container_id ()
 
 is_linux ()
 {
-	if [[ $IS_LINUX != "" ]] && [ $IS_LINUX -eq 1 ]; then return 0; fi
+	if [[ $IS_LINUX == "true" ]]; then return 0; fi
 
 	local res=$(uname | grep 'Linux')
 	if [[ ! "$res" == '' ]]; then
+		IS_LINUX="true"
 		return 0;
 	else
-		IS_LINUX=1
 		return 1;
 	fi
 }
