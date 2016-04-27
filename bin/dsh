@@ -1224,6 +1224,65 @@ _set_cli_uid ()
 	fi
 }
 
+_system_information_heading ()
+{
+	local dashes_length=$((32+${#1}))
+	echo
+	printf '–%.0s' $(seq 1 $dashes_length)
+	echo
+	echo "		$1"
+	printf '–%.0s' $(seq 1 $dashes_length)
+	echo
+}
+
+if is_linux; then echo 1; fi
+
+system_information ()
+{
+	_system_information_heading "OS"
+	uname -a
+	echo -n "Current dir: "
+	pwd
+
+	_system_information_heading "Dsh"
+	version
+
+	_system_information_heading "Docker"
+	docker version
+
+	_system_information_heading "Docker Compose"
+	docker-compose version
+
+	if ! is_linux; then
+		_system_information_heading "VirtualBox"
+		VBoxManage --version
+
+		_system_information_heading "Running Virtual Boxes"
+		VBoxManage list runningvms
+
+		_system_information_heading "VirtualBox Network interfaces"
+		VBoxManage list hostonlyifs
+
+		_system_information_heading "Vagrant"
+		vagrant --version
+
+		_system_information_heading "Vagrant Box version"
+		local vagrant_path=$(upfind Vagrantfile)
+		if [[ $vagrant_path == "" ]]; then
+			echo "Vagrantfile not found"
+		else
+			cat $vagrant_path/Vagrantfile | grep box_version
+		fi
+
+		if [[ $vagrant_path != "" ]]; then
+			_system_information_heading "Vagrant Boxes List"
+			vagrant global-status
+		fi
+	fi
+
+	echo
+}
+
 check_for_updates
 # Command bindings
 argv="$@"
@@ -1373,6 +1432,9 @@ case $1 in
 		;;
 	help)
 		show_help
+		;;
+	system-info | diagnose)
+		system_information
 		;;
 	*)
 		echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands"
