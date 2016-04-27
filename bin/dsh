@@ -1239,12 +1239,12 @@ system_information ()
 {
 	_system_information_heading "OS"
 	uname -a
-	echo -n "Current dir: "
-	pwd
 	if is_linux; then
 		[ -f /etc/issue ] && cat /etc/issue
 		[ -f /etc/centos-release ] && cat /etc/centos-release
 	fi
+	echo -n "Current dir: "
+	pwd
 
 	_system_information_heading "Dsh"
 	version
