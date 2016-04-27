@@ -654,7 +654,7 @@ install_prerequisites ()
 		presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-win.sh)
 		if_failed "Could not get 'presetup-win.sh'. Please check your internet connection"
 		bash <(echo "$presetup_script")
-		read -p "Press any key when the installation in another console window is done..."
+		read -p "Press enter after the installation in another console window is done..."
 	elif is_linux ; then
 		install_ubuntu
 	else # mac
@@ -963,7 +963,7 @@ check_for_updates ()
 	if [[ $new_version != "" ]] && [[ $new_version != $DSH_VERSION ]]; then
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}dsh${NC} [ $DSH_VERSION --> $new_version ] (run ${green}dsh update dsh${NC} to update)"
-		echo "Press any key to continue with your command."
+		echo "Press enter to continue with your command."
 		read -p ''
 	fi
 }
