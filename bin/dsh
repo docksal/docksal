@@ -1235,8 +1235,6 @@ _system_information_heading ()
 	echo
 }
 
-if is_linux; then echo 1; fi
-
 system_information ()
 {
 	_system_information_heading "OS"
