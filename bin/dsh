@@ -644,10 +644,10 @@ install_ubuntu ()
 	fi
 
 	if [[ $lsb_dist != 'Ubuntu' || $(ver_to_int $lsb_release) < $(ver_to_int '14.04') ]]; then
-		echo-red "dsh: install prerequisites only supports Ubuntu 14.04+"
+		echo-red "dsh: prerequisites installation is currently supported only on Ubuntu 14.04+"
 		if is_tty; then
-			echo-yellow "You can continue at your own risk if you know it also works for your Linux distribution"
-			_confirm "Are you sure you want to try installing?"
+			echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
+			_confirm "Are you sure you want to continue?"
 		else
 			exit 1
 		fi
