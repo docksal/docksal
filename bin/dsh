@@ -1241,9 +1241,7 @@ system_information ()
 	uname -a
 	if is_linux; then
 		[ -f /etc/issue ] && cat /etc/issue
-		[ -f /etc/centos-release ] && cat /etc/centos-release
-		[ -f /etc/fedora-release ] && cat /etc/fedora-release
-		[ -f /etc/redhat-release ] && cat /etc/redhat-release
+		[ -f /etc/system-release ] && cat /etc/system-release
 	fi
 	echo -n "Current dir: "
 	pwd
