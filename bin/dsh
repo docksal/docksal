@@ -294,6 +294,13 @@ testing_warn ()
 	fi
 }
 
+# Convert version string like 1.2.3 to integer for comparison
+# param $1 version string of 3 components max (e.g. 1.10.3)
+ver_to_int ()
+{
+	printf "%03d%03d%03d" $(echo "$1" | tr '.' ' ')
+}
+
 #---------------------------- Control functions -------------------------------
 
 check_docker_running ()
@@ -960,7 +967,7 @@ check_for_updates ()
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
 	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
 	new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
-	if [[ $new_version != "" ]] && [[ $new_version != $DSH_VERSION ]]; then
+	if [ $(ver_to_int $new_version) -gt $(ver_to_int $DSH_VERSION) ]; then
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}dsh${NC} [ $DSH_VERSION --> $new_version ] (run ${green}dsh update dsh${NC} to update)"
 		echo "Press enter to continue with your command."
