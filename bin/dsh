@@ -1355,7 +1355,7 @@ case $1 in
 		version
 		;;
 	-v)
-		version
+		version --short
 		;;
 	--version)
 		version
