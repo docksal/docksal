@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.3 (2016-04-29)
+
+- dsh v1.13.2
+  - Fix regression with dsh behat
+
+A full update is recommended. Please follow the updates instructions:
+https://github.com/blinkreaction/drude#updates
+
+
 ## 1.3.2 (2016-04-26)
 
 - dsh v1.13.1
