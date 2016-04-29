@@ -1110,6 +1110,8 @@ clear_cache ()
 behat ()
 {
 	check_docker_running
+	cd $(yml_get_path)
+	
 	local params=''
 	local path='tests/behat'
 	for i in "$@"; do
@@ -1118,7 +1120,7 @@ behat ()
 				path="${i#*=}"
 				;;
 			*)
-				params=$params$i" "
+				params="$params$i "
 				;;
 		esac;
 	done
@@ -1129,8 +1131,8 @@ behat ()
 		echo-red "Could not find ${behat_yml_path}"
 		exit 1
 	fi
-	run "cd $path && composer install --prefer-source --no-interaction"
-	run "cd $path && bin/behat -p docker "$params
+	_run "cd $path && composer install --prefer-source --no-interaction"
+	_run "cd $path && bin/behat -p docker $params"
 }
 
 # Execute project init scripts (if it exists)
