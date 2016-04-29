@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.13.1
+DSH_VERSION=1.13.2
 
 # Console colors
 red='\033[0;31m'
@@ -1111,7 +1111,7 @@ behat ()
 {
 	check_docker_running
 	cd $(yml_get_path)
-	
+
 	local params=''
 	local path='tests/behat'
 	for i in "$@"; do
