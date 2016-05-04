@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.4 (2016-05-04)
+
+- dsh v1.13.3
+  - Fix regression with is_docker_running check in boot2docker
+
+A full update is recommended. Please follow the updates instructions:
+https://github.com/blinkreaction/drude#updates
+
+
 ## 1.3.3 (2016-04-29)
 
 - dsh v1.13.2
