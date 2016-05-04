@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.13.2
+DSH_VERSION=1.13.3
 
 # Console colors
 red='\033[0;31m'
@@ -235,20 +235,18 @@ check_docker ()
 
 is_docker_running ()
 {
-	if is_linux || is_windows; then
+	if is_linux; then
 		local err
 		local errcode
-		# On Linux check if docker is running via docker info.
-		# We use "timeout 1" to get a faster response (1s) if docker is down.
-		# This can be used on Windows (Babun) as well, however Mac does not have the timeout util...
-		err=$(timeout 1 docker info 2>&1 >/dev/null); errcode=$?
+		# Check if docker is running via docker info.
+		# This operation is instant even if docker is not running (assuming a socket is used).
+		err=$(docker info 2>&1 >/dev/null); errcode=$?
 		# Print error details if available. We are looking for a specific case here:
 		# e.g. "Error response from daemon: client is newer than server (client API version: 1.22, server API version: 1.21)"
 		if [[ $err =~ 'Error' ]]; then echo $err; fi
 		return $errcode
 	else
-		# Then use netcat to check the host:port
-		# nc on Mac needs -G for the connections timeout argument.
+		# On Mac and Windows - use netcat to check the host:port
 		binary_found 'nc'
 		if [[ $DOCKER_HOST == "" ]]; then
 			echo-red "dsh: $DOCKER_HOST variable is empty"
@@ -258,7 +256,13 @@ is_docker_running ()
 		# Extract host and port from $DOCKER_HOST
 		local host=$(echo $DOCKER_HOST | sed -e 's/\(tcp:\/\/\)*\([a-z0-9\.]*\):[0-9]*/\2/')
 		local port=$(echo $DOCKER_HOST | sed -e 's/\(tcp:\/\/\)*[a-z0-9\.]*:\([0-9]*\)/\2/')
-		nc -z -G 1 $host $port 2>/dev/null 1>/dev/null
+
+		if is_mac; then
+			# nc on Mac needs -G for the connections timeout argument.
+			nc -z -G 1 $host $port 2>/dev/null 1>/dev/null
+		else		
+			nc -z -w 1 $host $port 2>/dev/null 1>/dev/null
+		fi
 	fi
 
 	return $?
