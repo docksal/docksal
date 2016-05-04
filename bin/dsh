@@ -225,7 +225,7 @@ is_docker_running ()
 		return $errcode
 	else
 		# On Mac and Windows - use netcat to check the host:port
-		binary_found 'nc'
+		check_binary_found 'nc'
 		if [[ $DOCKER_HOST == "" ]]; then
 			echo-red "dsh: $DOCKER_HOST variable is empty"
 			return 1
