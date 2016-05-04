@@ -71,9 +71,9 @@ Tools available inside the **cli** container:
 
 - php-cli, composer, drush[6,7,8], drupal console, phpcs
 - ruby, bundler
-- node, nvm, npm, bower, grunt
-- git, wget, zip, mysql-client
-- python
+- node, nvm, npm
+- imagemagick
+- python, git, mc, mysql-client and [more](https://github.com/blinkreaction/docker-drupal-cli)
 
 
 <a name="instructions"></a>
