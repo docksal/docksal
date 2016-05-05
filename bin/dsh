@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.15.0
+DSH_VERSION=1.15.1
 
 # Console colors
 red='\033[0;31m'
@@ -664,7 +664,7 @@ install_ubuntu ()
 	if_failed "Docker installation/upgrade failed."
 
 	echo-green "Installing Docker Compose..."
-	sudo curl -L https://github.com/docker/compose/releases/download/1.5.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
+	sudo curl -L https://github.com/docker/compose/releases/download/1.7.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
 	sudo chmod +x /usr/local/bin/docker-compose && \
 	docker-compose --version
 	if_failed "Docker Compose installation/upgrade failed."
