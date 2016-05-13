@@ -89,6 +89,7 @@ Tools available inside the **cli** container:
 - [MySQL DB access for external tools](/docs/db-access.md)
 - [Sending and capturing email](/docs/mail.md)
 - [Enabling Varnish support](/docs/varnish.md)
+- [Enabling Apache Solr support](/docs/apache-solr.md)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
