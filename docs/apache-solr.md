@@ -4,17 +4,17 @@
 
 1. Add Apache Solr service to `docker-compose.yml`:
 
-Replace `<project_name>` with your project name.
+    Replace `<project_name>` with your project name.
 
-```
-# Solr node
-# Uncomment the service definition section below to start using Solr.
-solr:
-  hostname: solr
-  image: blinkreaction/drupal-solr:3.x-stable
-  environment:
-    - DOMAIN_NAME=solr.<project_name>.drude
-```
+    ```yml
+    # Solr node
+    # Uncomment the service definition section below to start using Solr.
+    solr:
+      hostname: solr
+      image: blinkreaction/drupal-solr:3.x-stable
+      environment:
+        - DOMAIN_NAME=solr.<project_name>.drude
+    ```
 
 2. Apply new configuration with `dsh up`
 
