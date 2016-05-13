@@ -407,9 +407,21 @@ _remove_containers ()
 
 #------------------------------ Help functions --------------------------------
 
+# Show help for dsh or for certain command
+# $1 name of command to show help for
 show_help ()
 {
-	echo "Drude Shell $DSH_VERSION. Usage: dsh <command> [params]"
+	echo "Drude Shell $DSH_VERSION help."
+
+	# if there's a help for certain command show it
+	if [[ ! -z $1 ]]; then
+		type "show_help_$1" > /dev/null
+		if [ $? -eq 0 ]; then
+			show_help_$1
+			exit
+		fi
+	fi
+
 	echo
 	if is_linux; then
 		echo "	start (up)		Start project services (containers)"
@@ -425,11 +437,9 @@ show_help ()
 	fi
 	echo "	status (st, ps)		Show project services (containers) status"
 	echo "	    -a (--all)		Show status of all running containers from all Docker projects"
-	echo "	reset [service]		Recreate (stop, remove, start) all services (containers) or specified service"
-	echo "	remove [service]	Remove all project services (containers) or specified service"
-	if ! is_linux; then
-		echo "	vmstat			Show vagrant vm usage statistics"
-	fi
+	echo "	reset [service]		Recreate service(s). If no parameter given recreates all project services"
+	echo "	    System services:	dns, proxy (See 'dsh help reset' for more details)"
+	echo "	remove [service]	Remove project services (containers). If no parameter given removes all project services"
 	echo
 	echo "	bash [service]		Open bash to service (container). If no service specified defaults to 'cli'"
 	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
@@ -468,8 +478,31 @@ show_help ()
 	echo "	update images		Update container images"
 	echo "	update dsh		Update dsh itself (ex. dsh self-update)"
 	echo
-	echo "	version	(-v)		Print dsh version"
+	echo "	system-information	(sysinfo) Show diagnostics information for bug reporting"
+	if ! is_linux; then
+		echo "	vmstat			Show vagrant vm usage statistics"
+	fi
+	echo "	version	(v, -v)		Print dsh version. [v, -v] - prints short version"
 	echo
+}
+
+show_help_reset ()
+{
+		echo-green "dsh reset -  Recreate services/containers. Equal to dsh stop, dsh remove, dsh start"
+		echo
+		echo-green "Parameters: one or several service/containers names. Examples:"
+		echo "	dsh reset web		Restart service (container) labeled 'web'"
+		echo "	dsh reset web cli	Restart services (containers) labeled 'web' and 'cli'"
+		echo "	dsh reset		Will restart all project services (containers)"
+		echo
+		echo-green "System services"
+		echo -e "Drude has 2 system services required to resolve ${yellow}*.drude${NC} domain names into container IPs"
+		echo -e "Labels ${yellow}'dns'${NC}, ${yellow}'proxy'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use in project containers."
+		echo "	dsh reset dns		Recreate Drude DNS service"
+		echo "	dsh reset proxy		Recreate Drude reverse proxy service"
+		echo "	dsh reset system	Recreate all Drude system services"
+		echo
+		exit
 }
 
 # Display dsh version
@@ -639,6 +672,20 @@ install_prerequisites ()
 	fi
 }
 
+install_proxy_service ()
+{
+	sudo docker rm -f vhost-proxy || true
+	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always \
+		-v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
+}
+
+install_dns_service ()
+{
+	sudo docker rm -f dns || true
+	sudo docker run -d --name dns -p 192.168.10.10:53:53/udp --cap-add=NET_ADMIN --dns 8.8.8.8 --restart=always \
+		-v /var/run/docker.sock:/var/run/docker.sock blinkreaction/dns-discovery:stable
+}
+
 # Install Docker and setup Drude on Ubuntu 14.04+
 install_ubuntu ()
 {
@@ -684,24 +731,18 @@ EOF
 	fi
 
 	echo-green "Creating Drude HTTP/HTTPS reverse proxy..."
-	sudo docker rm -f vhost-proxy || true
-	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always \
-	-v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
+	install_proxy_service
 	if_failed "Drude HTTP/HTTPS reverse proxy setup failed."
 
 	echo-green "Creating Drude DNS service..."
-	sudo docker rm -f dns || true
-	sudo docker run -d --name dns -p 192.168.10.10:53:53/udp --cap-add=NET_ADMIN --dns 8.8.8.8 --restart=always \
-	-v /var/run/docker.sock:/var/run/docker.sock blinkreaction/dns-discovery:stable
-	if [[ $? == 0 ]]; then
-		echo-green "Configuring host DNS resolver for .drude domain..."
-		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head
-		sudo resolvconf -u
-	else
-		echo-red "Drude DNS service setup failed."
-	fi
+	install_dns_service
+	if_failed "Drude DNS service setup failed."
 
-	echo-green "To run docker without sudo log out and back in or run 'newgrp docker' now."
+	echo-green "Configuring host DNS resolver for .drude domain..."
+	echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head
+	sudo resolvconf -u
+
+	echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
 }
 
 # Install Vagrantfile and vagrant.yml required by boot2docker
@@ -1192,6 +1233,26 @@ remove ()
 # @param $1 $2... containers names
 reset ()
 {
+	check_docker_running
+	if [[ "$1" == "proxy" ]] ; then
+		echo-green 'Restarting Drude proxy service (admin access required)'
+		install_proxy_service
+		return
+	fi
+
+	if [[ "$1" == "dns" ]] ; then
+		echo-green 'Restarting Drude DNS service (admin access required)'
+		install_dns_service
+		return
+	fi
+
+	if [[ "$1" == "system" ]] ; then
+		echo-green 'Restarting Drude system services (admin access required)'
+		install_proxy_service
+		install_dns_service
+		return
+	fi
+
 	remove $*
 	_start_containers
 }
@@ -1418,13 +1479,10 @@ case $1 in
 		shift
 		remove $*
 		;;
-	version)
-		version
-		;;
-	-v)
+	-v | v)
 		version --short
 		;;
-	--version)
+	version)
 		version
 		;;
 	bash_comp_words)
@@ -1439,9 +1497,9 @@ case $1 in
 		show_help
 		;;
 	help)
-		show_help
+		show_help $2
 		;;
-	system-info | diagnose)
+	system-info | sysinfo)
 		system_information
 		;;
 	*)
