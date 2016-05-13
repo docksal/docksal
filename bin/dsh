@@ -488,21 +488,20 @@ show_help ()
 
 show_help_reset ()
 {
-		echo-green "dsh reset -  Recreate services/containers. Equal to dsh stop, dsh remove, dsh start"
-		echo
-		echo-green "Parameters: one or several service/containers names. Examples:"
-		echo "	dsh reset web		Restart service (container) labeled 'web'"
-		echo "	dsh reset web cli	Restart services (containers) labeled 'web' and 'cli'"
-		echo "	dsh reset		Will restart all project services (containers)"
-		echo
-		echo-green "System services"
-		echo -e "Drude has 2 system services required to resolve ${yellow}*.drude${NC} domain names into container IPs"
-		echo -e "Labels ${yellow}'dns'${NC}, ${yellow}'proxy'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use in project containers."
-		echo "	dsh reset dns		Recreate Drude DNS service"
-		echo "	dsh reset proxy		Recreate Drude reverse proxy service"
-		echo "	dsh reset system	Recreate all Drude system services"
-		echo
-		exit
+	echo-green "dsh reset -  Recreate services/containers. Equal to dsh stop, dsh remove, dsh start"
+	echo
+	echo-green "Parameters: one or several service/containers names. Examples:"
+	echo "	dsh reset web		Restart service (container) labeled 'web'"
+	echo "	dsh reset web cli	Restart services (containers) labeled 'web' and 'cli'"
+	echo "	dsh reset		Will restart all project services (containers)"
+	echo
+	echo-green "System services"
+	echo -e "Drude has 2 system services required to resolve ${yellow}*.drude${NC} domain names into container IPs"
+	echo -e "Labels ${yellow}'dns'${NC}, ${yellow}'proxy'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use in project containers."
+	echo "	dsh reset dns		Recreate Drude DNS service"
+	echo "	dsh reset proxy		Recreate Drude reverse proxy service"
+	echo "	dsh reset system	Recreate all Drude system services"
+	echo
 }
 
 # Display dsh version
