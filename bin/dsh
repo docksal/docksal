@@ -1505,6 +1505,14 @@ case $1 in
 		system_information
 		;;
 	*)
-		echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands"
-		exit 1
+		# Search for custom command in .drude/commands and execute it passing params if found
+		dsh_command_script="$(yml_get_path)/.drude/commands/$1"
+
+		if [ -f "$dsh_command_script" ]; then
+			shift
+			bash "$dsh_command_script" "$@"
+		else
+			echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands"
+			exit 1
+		fi
 esac
