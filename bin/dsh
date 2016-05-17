@@ -10,8 +10,11 @@ yellow='\033[1;33m'
 NC='\033[0m'
 
 #---------------------------- Global Variables --------------------------------
+DOCKER_BETA="${DOCKER_BETA:-0}"
 
-DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
+if [[ $DOCKER_BETA -eq 0 ]]; then
+	DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
+fi
 # boot2docker-vagrant does not support Docker TLS.
 # Make sure it is disabled for the current terminal session.
 unset DOCKER_TLS_VERIFY
@@ -213,7 +216,7 @@ check_binary_found ()
 
 is_docker_running ()
 {
-	if is_linux; then
+	if is_linux || [[ $DOCKER_BETA -eq 1 ]]; then
 		local err
 		local errcode
 		# Check if docker is running via docker info.
@@ -227,7 +230,7 @@ is_docker_running ()
 		# On Mac and Windows - use netcat to check the host:port
 		check_binary_found 'nc'
 		if [[ $DOCKER_HOST == "" ]]; then
-			echo-red "dsh: $DOCKER_HOST variable is empty"
+			echo-red "dsh: DOCKER_HOST variable is empty"
 			return 1
 		fi
 
@@ -300,7 +303,7 @@ check_yml()
 		exit 1
 	fi
 
-	if is_linux ; then
+	if is_linux || [[ $DOCKER_BETA -eq 1 ]]; then
 		return; # linux does not need vagrant
 	fi
 
@@ -543,7 +546,7 @@ bash_comp_words ()
 up ()
 {
 	check_yml
-	if is_linux || is_boot2docker; then
+	if is_linux || is_boot2docker || [[ $DOCKER_BETA -eq 1 ]]; then
 		_start_containers
 	else
 		check_binary_found vagrant
@@ -591,7 +594,7 @@ restart ()
 reload ()
 {
 	check_yml
-	if is_linux || is_boot2docker; then
+	if is_linux || is_boot2docker || [[ $DOCKER_BETA -eq 1 ]]; then
 		_start_containers
 	else
 		check_binary_found vagrant
