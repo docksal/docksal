@@ -1235,7 +1235,6 @@ remove ()
 # @param $1 $2... containers names
 reset ()
 {
-	check_docker_running
 	if [[ "$1" == "proxy" ]] ; then
 		echo-green 'Restarting Drude proxy service (admin access required)'
 		install_proxy_service
@@ -1255,6 +1254,7 @@ reset ()
 		return
 	fi
 
+	check_docker_running
 	remove $*
 	_start_containers
 }
