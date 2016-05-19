@@ -1549,7 +1549,7 @@ case $1 in
 
 		if [ -f "$dsh_command_script" ]; then
 			shift
-			bash "$dsh_command_script" "$@"
+			exec "$dsh_command_script" "$@"
 		else
 			echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands"
 			exit 1
