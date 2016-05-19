@@ -297,7 +297,11 @@ check_docker_running ()
 	check_binary_found 'docker-compose'
 	check_yml
 	if ! is_docker_running; then
-		echo-red "dsh: Unable to connect to the docker daemon";
+		local msg="dsh: Unable to connect to the Docker daemon"
+		if [ ! -z $DOCKER_HOST ]; then
+			msg="$msg via '$DOCKER_HOST'"
+		fi
+		echo-red "$msg"
 		exit 1
 	fi
 }
