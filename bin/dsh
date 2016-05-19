@@ -291,11 +291,16 @@ ver_to_int ()
 
 #---------------------------- Control functions -------------------------------
 
+check_dsh_environment ()
+{
+	check_docker_running
+	check_yml
+}
+
 check_docker_running ()
 {
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
-	check_yml
 	if ! is_docker_running; then
 		local msg="dsh: Unable to connect to the Docker daemon"
 		if [ ! -z "$DOCKER_HOST" ]; then
@@ -598,14 +603,14 @@ up ()
 # Stop containers
 down ()
 {
-	check_docker_running
+	check_dsh_environment
 	_stop_containers $@
 }
 
 # Stop Vagrant box
 halt ()
 {
-	check_docker_running
+	check_dsh_environment
 	if is_linux || is_boot2docker; then
 		_stop_containers
 	else
@@ -617,7 +622,7 @@ halt ()
 # @param $1 container_name
 restart ()
 {
-	check_docker_running
+	check_dsh_environment
 	_restart_containers $*
 }
 
@@ -641,7 +646,7 @@ reload ()
 # @param $1 Show containers from all projects (-a)
 status ()
 {
-	check_docker_running
+	check_dsh_environment
 
 	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
 		docker ps
@@ -879,7 +884,7 @@ install ()
 # Update container images
 update_images ()
 {
-	check_docker_running
+	check_dsh_environment
 	docker_compose pull
 	up
 }
@@ -1039,7 +1044,7 @@ _bash ()
 # @param $* command with it's params to run
 _run ()
 {
-	check_docker_running
+	check_dsh_environment
 
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
 	container_id=$(get_container_id $CONTAINER_NAME)
@@ -1110,7 +1115,7 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
-	check_docker_running
+	check_dsh_environment
 	check_drush_path
 	_run $(get_mysql_connect)" -A" # -A option to speed up mysql load
 }
@@ -1119,7 +1124,7 @@ mysql ()
 # @param $1 filename of backup file. Should be inside project root
 mysql_import ()
 {
-	check_docker_running
+	check_dsh_environment
 	check_drush_path
 
 	local confirm=1
@@ -1183,7 +1188,7 @@ mysql_import ()
 # @param $1 type of cache to clean (all, css-js, ...)
 clear_cache ()
 {
-	check_docker_running
+	check_dsh_environment
 	local type='all'
 	if [[ ! "$1" == "" ]]; then
 		type=$1
@@ -1196,7 +1201,7 @@ clear_cache ()
 # @param $* arguments and params passed to Behat
 behat ()
 {
-	check_docker_running
+	check_dsh_environment
 	cd $(yml_get_path)
 
 	local params=''
@@ -1256,9 +1261,10 @@ exec_url ()
 # @param $1 $2... container names
 remove ()
 {
-	check_docker_running
+	check_dsh_environment
 	if [[ $1 == "" ]]; then
-		_confirm "[!] This will delete all project containers including the DB one. You will have to re-import DB.";
+		echo -e  "${red}WARNING:${NC} ${yellow}You have chosen to delete or re-create all project containers.${NC}"
+		_confirm "Continue?";
 	fi
 	_remove_containers $*
 }
@@ -1267,6 +1273,7 @@ remove ()
 # @param $1 $2... containers names
 reset ()
 {
+	check_docker_running
 	if [[ "$1" == "proxy" ]] ; then
 		echo-green 'Restarting Drude proxy service (admin access required)'
 		install_proxy_service
@@ -1286,8 +1293,8 @@ reset ()
 		return
 	fi
 
-	check_docker_running
-	remove $*
+	check_yml
+	remove "$*"
 	_start_containers
 }
 
