@@ -90,6 +90,7 @@ Tools available inside the **cli** container:
 - [Sending and capturing email](/docs/mail.md)
 - [Enabling Varnish support](/docs/varnish.md)
 - [Enabling Apache Solr support](/docs/apache-solr.md)
+- [Extending DSH with custom commands](/docs/custom-commands.md)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
