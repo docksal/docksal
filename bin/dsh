@@ -34,6 +34,8 @@ DRUDE_B2D_VERSION="$DRUDE_CONFIG_DIR/b2d_version"
 
 #---------------------------- Helper functions --------------------------------
 
+DRUDE_YML_PATH='' #yml path value will be cached here
+
 echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
 echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
@@ -66,10 +68,16 @@ upfind ()
 # Get path to docker-compose.yml using upfind
 yml_get_path ()
 {
-	local yml_path=''
-	yml_path=$(upfind "docker-compose.yml")
-	if [[ $yml_path == '' ]]; then yml_path=$(upfind ".drude"); fi
-	echo $yml_path
+	if [ -z "$DRUDE_YML_PATH" ]; then
+		DRUDE_YML_PATH=$(upfind "docker-compose.yml")
+	fi
+	echo "$DRUDE_YML_PATH"
+}
+
+# Get path to .drude folder using upfind
+get_drude_path ()
+{
+	echo $(upfind ".drude")
 }
 
 # Returns absolute path
@@ -1196,8 +1204,8 @@ behat ()
 # @param $@ params to pass to init script
 init ()
 {
-	export PROJECT_ROOT=$(yml_get_path)
-	local init_script="$PROJECT_ROOT/.drude/scripts/drude-init.sh"
+
+	local init_script=$(get_drude_path)"/.drude/scripts/drude-init.sh"
 	if [[ -f $init_script ]]; then
 		exec $init_script "$@"
 	else
