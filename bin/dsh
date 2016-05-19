@@ -298,7 +298,7 @@ check_docker_running ()
 	check_yml
 	if ! is_docker_running; then
 		local msg="dsh: Unable to connect to the Docker daemon"
-		if [ ! -z $DOCKER_HOST ]; then
+		if [ ! -z "$DOCKER_HOST" ]; then
 			msg="$msg via '$DOCKER_HOST'"
 		fi
 		echo-red "$msg"
@@ -426,10 +426,15 @@ _remove_containers ()
 # $1 name of command to show help for
 show_help ()
 {
+	local custom_commands_list
+
 	echo "Drude Shell $DSH_VERSION help."
+	if [ ! -z "$(get_drude_path)" ]; then
+		custom_commands_list=$(ls $(get_drude_path)/.drude/commands 2>/dev/null | tr "\n" " ")
+	fi
 
 	# if there's a help for certain command show it
-	if [[ ! -z $1 ]]; then
+	if [[ ! -z "$1" ]]; then
 		type "show_help_$1" > /dev/null
 		if [ $? -eq 0 ]; then
 			show_help_$1
@@ -498,6 +503,11 @@ show_help ()
 		echo "	vmstat			Show vagrant vm usage statistics"
 	fi
 	echo "	version	(v, -v)		Print dsh version. [v, -v] - prints short version"
+	echo
+	if [ ! -z "$custom_commands_list" ]; then
+		echo -e "Custom commands found in ${yellow}.drude/commands${NC}:";
+		echo "	$custom_commands_list"
+	fi
 	echo
 }
 
