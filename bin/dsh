@@ -515,6 +515,15 @@ show_help_reset ()
 	echo
 }
 
+show_help_init ()
+{
+	echo-green "dsh init - Execute project init script (.drude/scripts/drude-init.sh)"
+	echo
+	echo -e "dsh will search for ${yellow}.drude${NC} folder in current and all parent directories."
+	echo -e "When dsh finds first .drude folder it executes ${yellow}scripts/drude-init.sh${NC} from it (if it exists)."
+	echo
+}
+
 # Display dsh version
 # @option --short - Display only the version number
 version ()
@@ -1209,7 +1218,8 @@ init ()
 	if [[ -f $init_script ]]; then
 		exec $init_script "$@"
 	else
-		echo "Project init script is missing: $init_script"
+		echo-red "Project init script is missing: $init_script"
+		echo -e "See ${yellow}dsh help init${NC} for more details."
 		exit 1
 	fi
 }
