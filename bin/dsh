@@ -688,7 +688,8 @@ install_prerequisites ()
 			stopcmd="'dsh halt'"
 		fi
 		echo-yellow "WARNING: Docker is running. It's recommended to stop Docker first with ${stopcmd} "
-		_confirm "Continue without stopping Docker?"
+		_confirm "Stop Docker now?"
+		down
 	fi
 
 	echo-green "Installing prerequisites..."
