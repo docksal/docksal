@@ -66,7 +66,7 @@ upfind ()
 }
 
 # Get path to docker-compose.yml using upfind
-yml_get_path ()
+get_yml_path ()
 {
 	if [ -z "$DRUDE_YML_PATH" ]; then
 		DRUDE_YML_PATH=$(upfind "docker-compose.yml")
@@ -101,7 +101,7 @@ get_abs_path ()
 get_current_relative_path ()
 {
 	# Check that we're inside project folder
-	local proj_root=$(yml_get_path)
+	local proj_root=$(get_yml_path)
 	local cwd=$(pwd)
 	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
 	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
@@ -131,7 +131,7 @@ docker_compose ()
 {
 	# docker-compose cannot find docker-compose.yml in the path if there are symlinks on the way
 	cwd=$(pwd)
-	cd $(yml_get_path)
+	cd $(get_yml_path)
 	
 	docker-compose $*
 	
@@ -314,7 +314,7 @@ check_docker_running ()
 # Check that docker-compose.yml (and Vagrantfile on Win/Mac) present. Fail otherwise
 check_yml()
 {
-	yml_path=$(yml_get_path)
+	yml_path=$(get_yml_path)
 	if [[ "$yml_path" == "" ]] ; then
 		echo-red "dsh: docker-compose.yml was not found in your directory tree"
 		exit 1
@@ -1136,7 +1136,7 @@ mysql_import ()
 		fi
 	fi
 
-	project_root=$(yml_get_path)
+	project_root=$(get_yml_path)
 	local filename=$(basename $1)
 	local filepath=$(get_abs_path $1)
 	#substract project root path from filepath
@@ -1203,7 +1203,7 @@ clear_cache ()
 behat ()
 {
 	check_dsh_environment
-	cd $(yml_get_path)
+	cd $(get_yml_path)
 
 	local params=''
 	local path='tests/behat'
@@ -1218,7 +1218,7 @@ behat ()
 		esac;
 	done
 
-	local project_root_path=$(yml_get_path)
+	local project_root_path=$(get_yml_path)
 	local behat_yml_path="${project_root_path}/${path}/behat.yml"
 	if [[ ! -f "${behat_yml_path}" ]]; then
 		echo-red "Could not find ${behat_yml_path}"
@@ -1546,10 +1546,18 @@ case $1 in
 		;;
 	*)
 		# Search for custom command in .drude/commands and execute it passing params if found
-		dsh_command_script="$(yml_get_path)/.drude/commands/$1"
+		dsh_command_script="$(get_drude_path)/.drude/commands/$1"
 
 		if [ -f "$dsh_command_script" ]; then
+			if [[ ! -x "$dsh_command_script" ]]; then
+				echo -e "${yellow}$dsh_command_script${NC} is not set to be executable."
+				_confirm "Fix automatically?"
+				chmod +x "$dsh_command_script"
+				if_failed "Could not make $dsh_command_script executable"
+			fi
 			shift
+			export YML_PATH="$(get_yml_path)"
+			export DRUDE_PATH="$(get_drude_path)"
 			exec "$dsh_command_script" "$@"
 		else
 			echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands"
