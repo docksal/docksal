@@ -406,6 +406,7 @@ check_docker_host #perform this check in any case
 
 _start_containers ()
 {
+	ssh_add
 	echo-green "Starting services..."
 	docker_compose up -d
 	_vhost_proxy_connect
@@ -736,7 +737,34 @@ vmstat ()
 	vboxmanage metrics query "$id" $metrics
 }
 
-#-------------------------- Installation and updates -----------------------------
+# Add key to ssh-agent or run ssh-add with provided @param
+# @param $1 -D, -l or path to custom key
+ssh_add () {
+    case "$1" in
+        "") if docker exec -it ssh-agent ssh-add -l > /dev/null; then
+                return; # Some key is present
+            fi
+            if is_linux; then
+                fullpath="${HOME}/.ssh/id_rsa"
+            else
+                fullpath="/.home/.ssh/id_rsa"
+            fi
+            ;;
+        -D) docker run --rm --volumes-from=ssh-agent -it blinkreaction/docker-ssh-agent:latest ssh-add -D
+            exit 1
+            ;;
+        -l) docker run --rm --volumes-from=ssh-agent -it blinkreaction/docker-ssh-agent:latest ssh-add -l
+            exit 1
+            ;;
+        *) fullpath=$1
+           ;;
+    esac
+    directory=$(dirname "$fullpath")
+    filename=$(basename "$fullpath")
+    docker run --rm --volumes-from=ssh-agent -v $directory:/root/.ssh -it blinkreaction/docker-ssh-agent:latest ssh-add /root/.ssh/$filename
+}
+
+#----- Installations and updates -----
 
 # Install required software on Mac or Win. Check installed software on Linux
 install_prerequisites ()
@@ -1501,6 +1529,10 @@ case $1 in
 	vmstat)
 		vmstat
 		;;
+	ssh_add)
+	    shift
+	    ssh_add $*
+	    ;;
 	install)
 		shift
 		install $*
