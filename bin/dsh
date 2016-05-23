@@ -238,7 +238,6 @@ is_docker_running ()
 		# On Mac and Windows - use netcat to check the host:port
 		check_binary_found 'nc'
 		if [[ $DOCKER_HOST == "" ]]; then
-			echo-red "dsh: DOCKER_HOST variable is empty"
 			return 1
 		fi
 
@@ -1359,6 +1358,8 @@ system_information ()
 	version
 
 	_system_information_heading "Docker"
+	echo "DOCKER_HOST:	$DOCKER_HOST"
+	echo
 	docker version
 
 	_system_information_heading "Docker Compose"
@@ -1558,6 +1559,12 @@ case $1 in
 			shift
 			export YML_PATH="$(get_yml_path)"
 			export DRUDE_PATH="$(get_drude_path)"
+			if is_docker_running; then
+				export DOCKER_RUNNING="true"
+			else
+				export DOCKER_RUNNING="false"
+			fi
+
 			exec "$dsh_command_script" "$@"
 		else
 			echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands"
