@@ -29,7 +29,9 @@ dsh run phpcs \
     --extensions="php,module,inc,install,test,profile,theme" \
     --ignore="*.features.*,*.pages*.inc" \
     docroot/sites/modules/custom
-    
+```
+
+```bash
 dsh run phpcbf \
     --standard=Drupal -n \
     --extensions="php,module,inc,install,test,profile,theme" \
