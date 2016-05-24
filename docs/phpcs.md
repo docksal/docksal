@@ -1,6 +1,6 @@
-# Using PHP Code Sniffer (phpcs) with Drude
+# Using PHP Code Sniffer with Drude
 
-phpcs is readily available in up-to-date version of cli container.
+phpcs and phpcbf are readily available in up-to-date version of cli container.
 
 ## Using as custom dsh command
 
@@ -16,6 +16,7 @@ From your project's root folder (where `.drude` is):
 6. `cd ../..`
 7. `dsh phpcs`
 8. Modify `.drude/commands/phpcs` script as you need and re-run any time with `dsh phpcs`
+9. In the same way you can create script for phpcbf as it uses the same set of parameters
 
 ## Manual usage
 
@@ -24,6 +25,12 @@ From your project's root folder run
 
 ```bash
 dsh run phpcs \
+    --standard=Drupal -n \
+    --extensions="php,module,inc,install,test,profile,theme" \
+    --ignore="*.features.*,*.pages*.inc" \
+    docroot/sites/modules/custom
+    
+dsh run phpcbf \
     --standard=Drupal -n \
     --extensions="php,module,inc,install,test,profile,theme" \
     --ignore="*.features.*,*.pages*.inc" \
