@@ -23,11 +23,16 @@ DRUDE_B2D_VERSION="$DRUDE_CONFIG_DIR/b2d_version"
 DRUDE_COMMANDS_PATH=".drude/commands"
 DRUDE_COMMANDS_HELP_EXT="1"
 
+# Network settings
+DRUDE_IP="192.168.10.10"
+DRUDE_SUBNET="192.168.10.1/24"
+DRUDE_DNS="8.8.8.8"
+
 #---------------------------- Global Variables --------------------------------
 DOCKER_BETA="${DOCKER_BETA:-0}"
 
 if [[ $DOCKER_BETA -eq 0 ]]; then
-	DEFAULT_DOCKER_HOST='tcp://192.168.10.10:2375'
+	DEFAULT_DOCKER_HOST="tcp://$DRUDE_IP:2375"
 fi
 # boot2docker-vagrant does not support Docker TLS.
 # Make sure it is disabled for the current terminal session.
@@ -736,16 +741,20 @@ install_prerequisites ()
 
 install_proxy_service ()
 {
-	sudo docker rm -f vhost-proxy || true
-	sudo docker run -d --name vhost-proxy -p 192.168.10.10:80:80 -p 192.168.10.10:443:443 --restart=always \
-		-v /var/run/docker.sock:/tmp/docker.sock blinkreaction/nginx-proxy:stable
+	docker rm -f vhost-proxy || true
+	docker run -d --name vhost-proxy --restart=always \
+		-p $DRUDE_IP:80:80 -p $DRUDE_IP:443:443 \
+		-v /var/run/docker.sock:/tmp/docker.sock \
+		blinkreaction/nginx-proxy:stable
 }
 
 install_dns_service ()
 {
-	sudo docker rm -f dns || true
-	sudo docker run -d --name dns -p 192.168.10.10:53:53/udp --cap-add=NET_ADMIN --dns 8.8.8.8 --restart=always \
-		-v /var/run/docker.sock:/var/run/docker.sock blinkreaction/dns-discovery:stable
+	docker rm -f dns || true
+	docker run -d --name dns --restart=always \
+		-p $DRUDE_IP:53:53/udp --cap-add=NET_ADMIN --dns $DRUDE_DNS \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		blinkreaction/dns-discovery:stable
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
@@ -779,12 +788,11 @@ install_ubuntu ()
 	if_failed "Docker Compose installation/upgrade failed."
 
 	echo-green "Adding a subnet for Drude..."
-	ip_mask="192.168.10.1/24"
 	# Make sure we don't do this twice
-	if ! grep -q $ip_mask /etc/network/interfaces; then
+	if ! grep -q $DRUDE_SUBNET /etc/network/interfaces; then
 		cat > /tmp/drude.ip.addr <<EOF
-	up   ip addr add 192.168.10.1/24 dev lo label lo:drude
-	down ip addr del 192.168.10.1/24 dev lo label lo:drude
+	up   ip addr add $DRUDE_SUBNET dev lo label lo:drude
+	down ip addr del $DRUDE_SUBNET dev lo label lo:drude
 EOF
 		sudo sed -i '/iface lo inet loopback/r /tmp/drude.ip.addr' /etc/network/interfaces
 		rm -f /tmp/drude.ip.addr
@@ -801,7 +809,7 @@ EOF
 	if_failed "Drude DNS service setup failed."
 
 	echo-green "Configuring host DNS resolver for .drude domain..."
-	echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head
+	echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head
 	sudo resolvconf -u
 
 	echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
@@ -836,7 +844,7 @@ install_boot2docker ()
 		# Configuring resolver
 		echo-yellow "Configuring *.drude wildcard DNS resolution..."
 		sudo mkdir -p /etc/resolver
-		echo -e "\n# .drude domain resolution\nnameserver 192.168.10.10" | sudo tee 1>/dev/null /etc/resolver/drude
+		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee 1>/dev/null /etc/resolver/drude
 	fi
 }
 
