@@ -10,4 +10,4 @@ dsh run phpcs \
     --standard=Drupal -n \
     --extensions="php,module,inc,install,test,profile,theme" \
     --ignore="*.features.*,*.pages*.inc" \
-    "$DRUDE_PATH/docroot/sites/modules/custom"
+    "$DRUDE_PATH/docroot/sites/all/modules/custom"
