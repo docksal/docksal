@@ -15,9 +15,11 @@ From your project's root folder (where `.drude` is):
 5. `chmod +x phpcs`
 6. `cd ../..`
 7. `dsh phpcs`
+8. Modify `.drude/commands/phpcs` script as you need and re-run any time with `dsh phpcs`
 
 ## Manual usage
 
+Instead of installing custom command you can just enter it manually every time.  
 From your project's root folder run
 
 ```bash
