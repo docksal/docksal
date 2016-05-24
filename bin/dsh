@@ -396,7 +396,7 @@ check_docker_host #perform this check in any case
 
 _start_containers ()
 {
-	echo-green "Starting containers..."
+	echo-green "Starting services..."
 	docker_compose up -d
 	_set_cli_uid
 }
@@ -404,7 +404,7 @@ _start_containers ()
 # @param $1 container_name
 _restart_containers ()
 {
-	echo-green "Restarting containers..."
+	echo-green "Restarting services..."
 	docker_compose restart $*
 	_set_cli_uid
 }
@@ -412,7 +412,7 @@ _restart_containers ()
 # @param $1 "-a" || "--all"
 _stop_containers ()
 {
-	echo-yellow "Stopping containers..."
+	echo-yellow "Stopping services..."
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
 		# stop all but system containers (--label "group=system")
 		docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
@@ -909,7 +909,12 @@ install ()
 update_images ()
 {
 	check_dsh_environment
+	docker pull blinkreaction/nginx-proxy
+	docker pull blinkreaction/dns-discovery
 	docker_compose pull
+	echo-green "Restarting services..."
+	reset proxy
+	reset dns
 	up
 }
 
