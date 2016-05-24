@@ -1311,23 +1311,28 @@ remove ()
 reset ()
 {
 	check_docker_running
-	if [[ "$1" == "proxy" ]] ; then
-		echo-green 'Restarting Drude proxy service (admin access required)'
-		install_proxy_service
-		return
-	fi
+	
+	# These are relevant for Linux users only.
+	# On Mac and Windows these services are defined in Vagrantfile (with slightly different config).
+	if is_linux; then
+		if [[ "$1" == "proxy" ]] ; then
+			echo-green 'Restarting Drude proxy service (admin access required)'
+			install_proxy_service
+			return
+		fi
 
-	if [[ "$1" == "dns" ]] ; then
-		echo-green 'Restarting Drude DNS service (admin access required)'
-		install_dns_service
-		return
-	fi
+		if [[ "$1" == "dns" ]] ; then
+			echo-green 'Restarting Drude DNS service (admin access required)'
+			install_dns_service
+			return
+		fi
 
-	if [[ "$1" == "system" ]] ; then
-		echo-green 'Restarting Drude system services (admin access required)'
-		install_proxy_service
-		install_dns_service
-		return
+		if [[ "$1" == "system" ]] ; then
+			echo-green 'Restarting Drude system services (admin access required)'
+			install_proxy_service
+			install_dns_service
+			return
+		fi
 	fi
 
 	check_yml
