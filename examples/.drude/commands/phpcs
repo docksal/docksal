@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Environment variables passed from dsh:
+#
+#   $DRUDE_PATH - (string) absolute path to NEAREST .drude folder
+#   $YML_PATH - (string) absolute path to NEAREST docker-compose.yml, can be empty
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+dsh run "phpcs \
+    --standard=Drupal -n \
+    --extensions=php,module,inc,install,test,profile,theme \
+    --ignore=*.features.*,*.pages*.inc \
+        $DRUDE_PATH/docroot/sites/modules/custom"
