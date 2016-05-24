@@ -9,6 +9,20 @@ green_bg='\033[42m'
 yellow='\033[1;33m'
 NC='\033[0m'
 
+#---------------------------- Global Constants --------------------------------
+# Configuration path
+DRUDE_CONFIG_DIR="$HOME/.drude"
+DRUDE_CONFIG_BACKUP_DIR="$DRUDE_CONFIG_DIR/backups"
+# Always try to create this path in case ~/.drude does not exist
+mkdir -p $DRUDE_CONFIG_BACKUP_DIR
+
+DRUDE_LAST_CHECK="$DRUDE_CONFIG_DIR/last_check"
+DRUDE_B2D_VERSION="$DRUDE_CONFIG_DIR/b2d_version"
+
+# Where custom commands live
+DRUDE_COMMANDS_PATH=".drude/commands"
+DRUDE_COMMANDS_HELP_EXT="1"
+
 #---------------------------- Global Variables --------------------------------
 DOCKER_BETA="${DOCKER_BETA:-0}"
 
@@ -22,15 +36,6 @@ unset DOCKER_CERT_PATH
 
 DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 B2D_BRANCH="${B2D_BRANCH:-master}"
-
-# Configuration path
-DRUDE_CONFIG_DIR="$HOME/.drude"
-DRUDE_CONFIG_BACKUP_DIR="$DRUDE_CONFIG_DIR/backups"
-# Always try to create this path in case ~/.drude does not exist
-mkdir -p $DRUDE_CONFIG_BACKUP_DIR
-
-DRUDE_LAST_CHECK="$DRUDE_CONFIG_DIR/last_check"
-DRUDE_B2D_VERSION="$DRUDE_CONFIG_DIR/b2d_version"
 
 #---------------------------- Helper functions --------------------------------
 
@@ -430,18 +435,25 @@ _remove_containers ()
 # $1 name of command to show help for
 show_help ()
 {
+	local commands_path="$(get_drude_path)/$DRUDE_COMMANDS_PATH"
 	local custom_commands_list
 
 	echo "Drude Shell $DSH_VERSION help."
-	if [ ! -z "$(get_drude_path)" ]; then
-		custom_commands_list=$(ls $(get_drude_path)/.drude/commands 2>/dev/null | tr "\n" " ")
-	fi
 
-	# if there's a help for certain command show it
+	# Show help for certain command
 	if [[ ! -z "$1" ]]; then
-		type "show_help_$1" > /dev/null
+		# Check for help function for specific command
+		type "show_help_$1" 2>/dev/null
 		if [ $? -eq 0 ]; then
 			show_help_$1
+			exit
+		fi
+		# Check for custom command file
+		local custom_helpfile="$commands_path/$1.$DRUDE_COMMANDS_HELP_EXT"
+		if [ -f "$custom_helpfile" ]; then
+			echo -en "${green}dsh $1${NC} - "
+			cat "$custom_helpfile"
+			echo
 			exit
 		fi
 	fi
@@ -507,11 +519,23 @@ show_help ()
 		echo "	vmstat			Show vagrant vm usage statistics"
 	fi
 	echo "	version	(v, -v)		Print dsh version. [v, -v] - prints short version"
-	echo
-	if [ ! -z "$custom_commands_list" ]; then
-		echo -e "Custom commands found in ${yellow}.drude/commands${NC}:";
-		echo "	$custom_commands_list"
+
+	# Show list of custom commands and their help if available
+	if [ ! -z "$(get_drude_path)" ]; then
+		custom_commands_list=$(ls "$commands_path" 2>/dev/null | grep -v .$DRUDE_COMMANDS_HELP_EXT | tr "\n" " ")
+		if [ ! -z "$custom_commands_list" ]; then
+			echo
+			echo -e "Custom commands found in ${yellow}$DRUDE_COMMANDS_PATH${NC}:";
+			for cmd_name in $custom_commands_list
+			do
+				custom_helpfile="$commands_path/$cmd_name.$DRUDE_COMMANDS_HELP_EXT"
+				local cmd_desc=$(head -1 "$custom_helpfile" 2>/dev/null)
+				cmd_desc=${cmd_desc:-No description}
+				echo "	$cmd_name		$cmd_desc"
+			done
+		fi
 	fi
+
 	echo
 }
 
@@ -1546,8 +1570,8 @@ case $1 in
 		system_information
 		;;
 	*)
-		# Search for custom command in .drude/commands and execute it passing params if found
-		dsh_command_script="$(get_drude_path)/.drude/commands/$1"
+		# Search for custom command and execute it passing params
+		dsh_command_script="$(get_drude_path)/$DRUDE_COMMANDS_PATH/$1"
 
 		if [ -f "$dsh_command_script" ]; then
 			if [[ ! -x "$dsh_command_script" ]]; then
