@@ -742,7 +742,7 @@ install_prerequisites ()
 install_proxy_service ()
 {
 	docker rm -f vhost-proxy || true
-	docker run -d --name vhost-proxy --restart=always \
+	docker run -d --name vhost-proxy --label "group=system" --restart=always \
 		-p $DRUDE_IP:80:80 -p $DRUDE_IP:443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
 		blinkreaction/nginx-proxy:stable
@@ -751,7 +751,7 @@ install_proxy_service ()
 install_dns_service ()
 {
 	docker rm -f dns || true
-	docker run -d --name dns --restart=always \
+	docker run -d --name dns --label "group=system" --restart=always \
 		-p $DRUDE_IP:53:53/udp --cap-add=NET_ADMIN --dns $DRUDE_DNS \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		blinkreaction/dns-discovery:stable
