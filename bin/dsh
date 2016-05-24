@@ -1419,7 +1419,9 @@ system_information ()
 	echo
 }
 
-check_for_updates
+if [[ "$*" != "update dsh" ]]; then
+	check_for_updates
+fi
 # Command bindings
 argv="$@"
 case $1 in
