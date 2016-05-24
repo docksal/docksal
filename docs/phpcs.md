@@ -1,6 +1,6 @@
 # Using PHP Code Sniffer (phpcs) with Drude
 
-phpcs is readily available in up-to-date version cli container.
+phpcs is readily available in up-to-date version of cli container.
 
 ## Using as custom dsh command
 
@@ -14,10 +14,10 @@ It's recommended to see how to [extend dsh with custom commands](custom-commands
 
 From your project's root folder run
 
-```
-dsh run "phpcs \
+```bash
+dsh run phpcs \
     --standard=Drupal -n \
-    --extensions=php,module,inc,install,test,profile,theme \
-    --ignore=*.features.*,*.pages*.inc \
-    docroot/sites/modules/custom"
+    --extensions="php,module,inc,install,test,profile,theme" \
+    --ignore="*.features.*,*.pages*.inc" \
+    docroot/sites/modules/custom
 ```
