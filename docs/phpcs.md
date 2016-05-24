@@ -6,9 +6,15 @@ phpcs is readily available in up-to-date version of cli container.
 
 It's recommended to see how to [extend dsh with custom commands](custom-commands.md) first.
 
-1. Download `phpcs` and `phpcs.1` from [example dsh commands folder](https://github.com/blinkreaction/drude/tree/develop/examples/.drude/commands) into your `.drude/commands` folder.
-2. `chmod +x .drude/commands/phpcs`
-3. Use as `dsh phpcs`
+From your project's root folder (where `.drude` is):
+
+1. `mkdir -p .drude/commands`  
+2. `cd .drude/commands`  
+3. `curl https://raw.githubusercontent.com/blinkreaction/drude/develop/examples/.drude/commands/phpcs -ko phpcs`
+4. `curl https://raw.githubusercontent.com/blinkreaction/drude/develop/examples/.drude/commands/phpcs.1 -ko phpcs.1`
+5. `chmod +x phpcs`
+6. `cd ../..`
+7. `dsh phpcs`
 
 ## Manual usage
 
