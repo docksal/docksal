@@ -86,7 +86,7 @@ Tools available inside the **cli** container:
 - [Public access](/docs/public-access.md)
 - [DB sandbox mode](/docs/db-sandbox.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
-- [Zero-configuration Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
+- [Zero-configuration debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 
 ### Third party utililies
 - [Using Behat](/docs/behat.md)
@@ -106,7 +106,7 @@ See [Troubleshooting](/docs/troubleshooting.md) section of the docs.
 
 The MIT License (MIT)
 
-Copyright (c) 2016 BlinkReaction
+Copyright © 2016 Blink Reaction
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
