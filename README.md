@@ -69,7 +69,7 @@ dsh bash
 
 Tools available inside the **cli** container:
 
-- php-cli, composer, drush[6,7,8], drupal console, phpcs
+- php-cli, composer, drush[6,7,8], drupal console, phpcs, phpcbf
 - ruby, bundler
 - node, nvm, npm
 - imagemagick
@@ -93,7 +93,7 @@ Tools available inside the **cli** container:
 - [Sending and capturing e-mail](/docs/mail.md)
 - [Enabling Varnish support](/docs/varnish.md)
 - [Enabling Apache Solr support](/docs/apache-solr.md)
-- [Using PHP Code Sniffer (phpcs)](/docs/phpcs.md)
+- [Using PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
 - [Extending dsh with custom commands](/docs/custom-commands.md)
 
 <a name="troubleshooting"></a>
