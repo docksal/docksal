@@ -79,18 +79,22 @@ Tools available inside the **cli** container:
 <a name="instructions"></a>
 ## Instructions and tutorials
 
+### Advanced configuration
 - [Drupal settings](/docs/drupal-settings.md)
-- [Running multiple projects](/docs/multiple-projects.md)
 - [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
+- [Running multiple projects](/docs/multiple-projects.md)
 - [Public access](/docs/public-access.md)
 - [DB sandbox mode](/docs/db-sandbox.md)
-- [Using Behat](/docs/behat.md)
-- [Zero-configuration Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
-- [Sending and capturing email](/docs/mail.md)
+- [Zero-configuration Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
+
+### Third party utililies
+- [Using Behat](/docs/behat.md)
+- [Sending and capturing e-mail](/docs/mail.md)
 - [Enabling Varnish support](/docs/varnish.md)
 - [Enabling Apache Solr support](/docs/apache-solr.md)
-- [Extending DSH with custom commands](/docs/custom-commands.md)
+- [Using PHP Code Sniffer (phpcs)](/docs/phpcs.md)
+- [Extending dsh with custom commands](/docs/custom-commands.md)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
