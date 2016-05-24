@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.18.5
+DSH_VERSION=1.18.6
 
 # Console colors
 red='\033[0;31m'
@@ -1270,6 +1270,9 @@ behat ()
 init ()
 {
 
+	# Pass PROJECT_ROOT variable to the init script.
+	export PROJECT_ROOT=$(get_drude_path)
+	
 	local init_script=$(get_drude_path)"/.drude/scripts/drude-init.sh"
 	if [[ -f $init_script ]]; then
 		exec $init_script "$@"
