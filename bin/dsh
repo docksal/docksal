@@ -744,7 +744,8 @@ ssh_add () {
 	local running=$(docker inspect --format="{{ .State.Running }}" ssh-agent 2> /dev/null)
 	if [ $? -eq 0 ] && [ "$running" == "true" ]; then
 		case "$1" in
-			"") if docker exec -it ssh-agent ssh-add -l > /dev/null; then
+			"")
+				if docker exec -it ssh-agent ssh-add -l > /dev/null; then
 					return; # Some key is present
 				fi
 				if is_linux; then
@@ -753,13 +754,16 @@ ssh_add () {
 					local fullpath="/.home/.ssh/id_rsa"
 				fi
 				;;
-			-D) docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -D
+			-D) 
+				docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -D
 				exit 1
 				;;
-			-l) docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -l
+			-l) 
+				docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -l
 				exit 1
 				;;
-			*) local fullpath=$1
+			*) 
+				local fullpath=$1
 				;;
 		esac
 		local directory=$(dirname "$fullpath")
