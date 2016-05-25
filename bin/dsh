@@ -740,29 +740,33 @@ vmstat ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
-    case "$1" in
-        "") if docker exec -it ssh-agent ssh-add -l > /dev/null; then
-                return; # Some key is present
-            fi
-            if is_linux; then
-                fullpath="${HOME}/.ssh/id_rsa"
-            else
-                fullpath="/.home/.ssh/id_rsa"
-            fi
-            ;;
-        -D) docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -D
-            exit 1
-            ;;
-        -l) docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -l
-            exit 1
-            ;;
-        *) fullpath=$1
-           ;;
-    esac
-    directory=$(dirname "$fullpath")
-    filename=$(basename "$fullpath")
-    echo "Press ENTER or CTRL+C to skip entering passphrase."
-    docker run --rm --volumes-from=ssh-agent -v $directory:$directory -it blinkreaction/ssh-agent:stable ssh-add $directory/$filename
+	# Check if ssh-agent container is running
+	local running=$(docker inspect --format="{{ .State.Running }}" ssh-agent 2> /dev/null)
+	if [ $? -eq 0 ] && [ "$running" == "true" ]; then
+		case "$1" in
+			"") if docker exec -it ssh-agent ssh-add -l > /dev/null; then
+					return; # Some key is present
+				fi
+				if is_linux; then
+					local fullpath="${HOME}/.ssh/id_rsa"
+				else
+					local fullpath="/.home/.ssh/id_rsa"
+				fi
+				;;
+			-D) docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -D
+				exit 1
+				;;
+			-l) docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -l
+				exit 1
+				;;
+			*) local fullpath=$1
+				;;
+		esac
+		local directory=$(dirname "$fullpath")
+		local filename=$(basename "$fullpath")
+		echo "Press ENTER or CTRL+C to skip entering passphrase."
+		docker run --rm --volumes-from=ssh-agent -v $directory:$directory -it blinkreaction/ssh-agent:stable ssh-add $directory/$filename
+	fi
 }
 
 #----- Installations and updates -----
