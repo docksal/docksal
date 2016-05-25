@@ -750,10 +750,10 @@ ssh_add () {
                 fullpath="/.home/.ssh/id_rsa"
             fi
             ;;
-        -D) docker run --rm --volumes-from=ssh-agent -it blinkreaction/docker-ssh-agent:latest ssh-add -D
+        -D) docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -D
             exit 1
             ;;
-        -l) docker run --rm --volumes-from=ssh-agent -it blinkreaction/docker-ssh-agent:latest ssh-add -l
+        -l) docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -l
             exit 1
             ;;
         *) fullpath=$1
@@ -761,7 +761,8 @@ ssh_add () {
     esac
     directory=$(dirname "$fullpath")
     filename=$(basename "$fullpath")
-    docker run --rm --volumes-from=ssh-agent -v $directory:/root/.ssh -it blinkreaction/docker-ssh-agent:latest ssh-add /root/.ssh/$filename
+    echo "Press ENTER or CTRL+C to skip entering passphrase."
+    docker run --rm --volumes-from=ssh-agent -v $directory:/root/.ssh -it blinkreaction/ssh-agent:stable ssh-add /root/.ssh/$filename
 }
 
 #----- Installations and updates -----
