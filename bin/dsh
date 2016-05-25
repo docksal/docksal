@@ -45,6 +45,7 @@ B2D_BRANCH="${B2D_BRANCH:-master}"
 #---------------------------- Helper functions --------------------------------
 
 DRUDE_YML_PATH='' #yml path value will be cached here
+DRUDE_PATH='' #drude path value will be cached here
 
 echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
@@ -87,7 +88,10 @@ get_yml_path ()
 # Get path to .drude folder using upfind
 get_drude_path ()
 {
-	echo $(upfind ".drude")
+	if [ -z "$DRUDE_PATH" ]; then
+		DRUDE_PATH=$(upfind ".drude")
+	fi
+	echo "$DRUDE_PATH"
 }
 
 # Returns absolute path
@@ -486,9 +490,7 @@ show_help ()
 	echo "	exec (run) <command>	Execute a command in 'cli' container (Usage: dsh exec <command> [params])"
 	echo "	logs [service]		Show docker logs for service (container)"
 	echo
-	echo "	init [params]		Execute project init script .drude/scripts/drude-init.sh (params will be passed to script)"
 	echo "	exec-url <url>		Download script from URL and run it. URL should be public."
-	echo "	  (init-url <url>)"
 	echo
 	echo "	drush [command]		Execute Drush command (usage: dsh drush [command] [option] [option]...)"
 	echo "	cc [cache_type]		Clear Drupal 7 caches (\"dsh cc\" is equal to \"dsh cc all\")"
@@ -597,7 +599,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli init exec-url drush drupal behat install update self-update version help"
+			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli exec-url drush drupal behat install update self-update version help"
 			exit 0
 			;;
 		*)
@@ -1264,27 +1266,8 @@ behat ()
 	_run "cd $path && bin/behat -p docker $params"
 }
 
-# Execute project init scripts (if it exists)
-# Looks for script at .drude/scripts/drude-init.sh
-# @param $@ params to pass to init script
-init ()
-{
-
-	# Pass PROJECT_ROOT variable to the init script.
-	export PROJECT_ROOT=$(get_drude_path)
-	
-	local init_script=$(get_drude_path)"/.drude/scripts/drude-init.sh"
-	if [[ -f $init_script ]]; then
-		exec $init_script "$@"
-	else
-		echo-red "Project init script is missing: $init_script"
-		echo -e "See ${yellow}dsh help init${NC} for more details."
-		exit 1
-	fi
-}
-
 # Download script by URL and execute it
-# @param $1 url of init script.
+# @param $1 url of script.
 exec_url ()
 {
 	if [[ "$1" != "" ]]; then
@@ -1553,10 +1536,6 @@ case $1 in
 		shift
 		behat "$@"
 		;;
-	init)
-		shift
-		init $@
-		;;
 	exec-url)
 		shift
 		exec_url "$*"
@@ -1592,9 +1571,17 @@ case $1 in
 	system-info | sysinfo)
 		system_information
 		;;
-	*)
-		# Search for custom command and execute it passing params
-		dsh_command_script="$(get_drude_path)/$DRUDE_COMMANDS_PATH/$1"
+	init|*)
+		# Search for custom commands in $DRUDE_COMMANDS_PATH
+
+		legacy_init_path="$(get_drude_path)/.drude/scripts/drude-init.sh"
+		if [[ "$1" == "init" ]] && [[ -f $legacy_init_path ]]; then
+			# Legacy processing for init script
+			dsh_command_script=$legacy_init_path
+		else
+			# Normal search for custom command
+			dsh_command_script="$(get_drude_path)/$DRUDE_COMMANDS_PATH/$1"
+		fi
 
 		if [ -f "$dsh_command_script" ]; then
 			if [[ ! -x "$dsh_command_script" ]]; then
@@ -1606,6 +1593,7 @@ case $1 in
 			shift
 			export YML_PATH="$(get_yml_path)"
 			export DRUDE_PATH="$(get_drude_path)"
+			export PROJECT_ROOT="$(get_drude_path)"
 			if is_docker_running; then
 				export DOCKER_RUNNING="true"
 			else
