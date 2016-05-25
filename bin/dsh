@@ -762,7 +762,7 @@ ssh_add () {
     directory=$(dirname "$fullpath")
     filename=$(basename "$fullpath")
     echo "Press ENTER or CTRL+C to skip entering passphrase."
-    docker run --rm --volumes-from=ssh-agent -v $directory:/root/.ssh -it blinkreaction/ssh-agent:stable ssh-add /root/.ssh/$filename
+    docker run --rm --volumes-from=ssh-agent -v $directory:$directory -it blinkreaction/ssh-agent:stable ssh-add $directory/$filename
 }
 
 #----- Installations and updates -----
