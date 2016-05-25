@@ -1553,7 +1553,7 @@ case $1 in
 	vmstat)
 		vmstat
 		;;
-	ssh_add)
+	ssh-add)
 	    shift
 	    ssh_add $*
 	    ;;
