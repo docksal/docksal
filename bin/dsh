@@ -1397,7 +1397,7 @@ reset ()
 	fi
 
 	if [[ "$1" == "ssh-agent" ]] ; then
-		echo-green 'Setting up system-wide ssh-agent service...'
+		echo-green 'Resetting Drude ssh-agent service...'
 		install_sshagent_service
 		return
 	fi
