@@ -244,7 +244,7 @@ is_docker_running ()
 		local errcode
 		# Check if docker is running via docker info.
 		# This operation is instant even if docker is not running (assuming a socket is used).
-		err=$(docker info 2>&1 >/dev/null); errcode=$?
+		err=$(docker info >/dev/null 2>&1); errcode=$?
 		# Print error details if available. We are looking for a specific case here:
 		# e.g. "Error response from daemon: client is newer than server (client API version: 1.22, server API version: 1.21)"
 		if [[ $err =~ 'Error' ]]; then echo $err; fi
@@ -811,11 +811,11 @@ install_prerequisites ()
 
 install_proxy_service ()
 {
-	docker rm -f vhost-proxy || true
+	docker rm -f vhost-proxy >/dev/null 2>&1 || true
 	docker run -d --name vhost-proxy --label "group=system" --restart=always \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
-		blinkreaction/nginx-proxy:latest 2>&1 >/dev/null
+		blinkreaction/nginx-proxy:latest >/dev/null 2>&1
 }
 
 install_dns_service ()
@@ -824,19 +824,19 @@ install_dns_service ()
 	local dns
 	if is_linux; then dns=$DRUDE_DEFAULT_DNS; else dns=$DRUDE_VBOX_DNS; fi
 
-	docker rm -f dns || true
+	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always \
 		-p 53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		blinkreaction/dns-discovery:latest 2>&1 >/dev/null
+		blinkreaction/dns-discovery:latest >/dev/null 2>&1
 }
 
 install_sshagent_service ()
 {
-	docker rm -f ssh-agent || true
+	docker rm -f ssh-agent >/dev/null 2>&1 || true
 	docker run -d --name ssh-agent --label "group=system" --restart=always \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		blinkreaction/ssh-agent:stable
+		blinkreaction/ssh-agent:latest >/dev/null 2>&1
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
@@ -1404,8 +1404,11 @@ reset ()
 
 	if [[ "$1" == "system" ]] ; then
 		echo-green 'Resetting Drude services...'
+		echo 'vhost-proxy'
 		install_proxy_service
+		echo 'dns'
 		install_dns_service
+		echo 'ssh-agent'
 		install_sshagent_service
 		return
 	fi
