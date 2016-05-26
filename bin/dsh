@@ -1003,12 +1003,12 @@ install ()
 update_images ()
 {
 	check_dsh_environment
-	docker pull blinkreaction/nginx-proxy
-	docker pull blinkreaction/dns-discovery
+	docker pull blinkreaction/nginx-proxy:stable
+	docker pull blinkreaction/dns-discovery:stable
+	docker pull blinkreaction/ssh-agent:stable
 	docker_compose pull
-	echo-green "Restarting services..."
-	reset proxy
-	reset dns
+	echo-green "Resetting system services..."
+	reset system
 	up
 }
 
