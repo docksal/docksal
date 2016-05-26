@@ -836,7 +836,7 @@ install_sshagent_service ()
 	docker rm -f ssh-agent || true
 	docker run -d --name ssh-agent --label "group=system" --restart=always \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		blinkreaction/docker-ssh-agent:stable
+		blinkreaction/ssh-agent:stable
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
