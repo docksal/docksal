@@ -26,7 +26,8 @@ DRUDE_COMMANDS_HELP_EXT="1"
 # Network settings
 DRUDE_IP="192.168.10.10"
 DRUDE_SUBNET="192.168.10.1/24"
-DRUDE_DNS="8.8.8.8"
+DRUDE_DEFAULT_DNS="8.8.8.8"
+DRUDE_VBOX_DNS="10.0.2.3"
 
 #---------------------------- Global Variables --------------------------------
 DOCKER_BETA="${DOCKER_BETA:-0}"
@@ -745,16 +746,20 @@ install_proxy_service ()
 {
 	docker rm -f vhost-proxy || true
 	docker run -d --name vhost-proxy --label "group=system" --restart=always \
-		-p $DRUDE_IP:80:80 -p $DRUDE_IP:443:443 \
+		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
 		blinkreaction/nginx-proxy:stable
 }
 
 install_dns_service ()
 {
+	# Use default DNS on Linux and VirtualBox's buit-in DNS if using boot2docker
+	local dns
+	if is_linux; then dns=$DRUDE_DEFAULT_DNS; else dns=$DRUDE_VBOX_DNS; fi
+
 	docker rm -f dns || true
 	docker run -d --name dns --label "group=system" --restart=always \
-		-p $DRUDE_IP:53:53/udp --cap-add=NET_ADMIN --dns $DRUDE_DNS \
+		-p 53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		blinkreaction/dns-discovery:stable
 }
@@ -1298,27 +1303,23 @@ reset ()
 {
 	check_docker_running
 	
-	# These are relevant for Linux users only.
-	# On Mac and Windows these services are defined in Vagrantfile (with slightly different config).
-	if is_linux; then
-		if [[ "$1" == "proxy" ]] ; then
-			echo-green 'Restarting Drude proxy service (admin access required)'
-			install_proxy_service
-			return
-		fi
+	if [[ "$1" == "proxy" ]] ; then
+		echo-green 'Setting up system-wide vhost-proxy service...'
+		install_proxy_service
+		return
+	fi
 
-		if [[ "$1" == "dns" ]] ; then
-			echo-green 'Restarting Drude DNS service (admin access required)'
-			install_dns_service
-			return
-		fi
+	if [[ "$1" == "dns" ]] ; then
+		echo-green 'Setting up system-wide DNS service...'
+		install_dns_service
+		return
+	fi
 
-		if [[ "$1" == "system" ]] ; then
-			echo-green 'Restarting Drude system services (admin access required)'
-			install_proxy_service
-			install_dns_service
-			return
-		fi
+	if [[ "$1" == "system" ]] ; then
+		echo-green 'Setting up system-wide services...'
+		install_proxy_service
+		install_dns_service
+		return
 	fi
 
 	check_yml
