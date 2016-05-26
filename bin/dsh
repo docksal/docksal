@@ -1302,21 +1302,21 @@ remove ()
 reset ()
 {
 	check_docker_running
-	
+
 	if [[ "$1" == "proxy" ]] ; then
-		echo-green 'Setting up system-wide vhost-proxy service...'
+		echo-green 'Resetting Drude HTTP/HTTPS reverse proxy service...'
 		install_proxy_service
 		return
 	fi
 
 	if [[ "$1" == "dns" ]] ; then
-		echo-green 'Setting up system-wide DNS service...'
+		echo-green 'Resetting Drude DNS service...'
 		install_dns_service
 		return
 	fi
 
 	if [[ "$1" == "system" ]] ; then
-		echo-green 'Setting up system-wide services...'
+		echo-green 'Resetting Drude services...'
 		install_proxy_service
 		install_dns_service
 		return
