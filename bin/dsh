@@ -43,6 +43,9 @@ unset DOCKER_CERT_PATH
 DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 B2D_BRANCH="${B2D_BRANCH:-master}"
 
+# Allow image tag overrides for system services. See install_xyz_service()
+DRUDE_ITAG="${DRUDE_ITAG:-stable}"
+
 #---------------------------- Helper functions --------------------------------
 
 DRUDE_YML_PATH='' #yml path value will be cached here
@@ -244,7 +247,7 @@ is_docker_running ()
 		local errcode
 		# Check if docker is running via docker info.
 		# This operation is instant even if docker is not running (assuming a socket is used).
-		err=$(docker info 2>&1 >/dev/null); errcode=$?
+		err=$(docker info >/dev/null 2>&1); errcode=$?
 		# Print error details if available. We are looking for a specific case here:
 		# e.g. "Error response from daemon: client is newer than server (client API version: 1.22, server API version: 1.21)"
 		if [[ $err =~ 'Error' ]]; then echo $err; fi
@@ -406,6 +409,7 @@ check_docker_host #perform this check in any case
 
 _start_containers ()
 {
+	ssh_add
 	echo-green "Starting services..."
 	docker_compose up -d
 	_vhost_proxy_connect
@@ -512,8 +516,8 @@ show_help ()
 	fi
 	echo "	status (st, ps)		Show project services (containers) status"
 	echo "	    -a (--all)		Show status of all running containers from all Docker projects"
-	echo "	reset [service]		Recreate service(s). If no parameter given recreates all project services"
-	echo "	    System services:	dns, proxy (See 'dsh help reset' for more details)"
+	echo "	reset [service]		Recreate service(s). If no parameter given recreates all project services."
+	echo "	    See 'dsh help reset' for more details on resetting Drude system services."
 	echo "	remove [service]	Remove project services (containers). If no parameter given removes all project services"
 	echo
 	echo "	bash [service]		Open bash to service (container). If no service specified defaults to 'cli'"
@@ -528,9 +532,11 @@ show_help ()
 	echo
 	echo "	mysql (sqlc)		Opens mysql shell to current project database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
-	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
+	echo "	    (sqli)		Note: DB dump file should be inside your project folder"
 	echo
 	echo "	behat [--path=path]	Run Behat tests from path (relative to project root). Default: tests/behat"
+	echo
+	echo "	ssh-add [-lD] [key]	Adds private key identities to the authentication agent. See 'dsh help ssh-add'"
 	echo
 	if is_linux; then
 		echo "	install			Install/check prerequisites and drude config"
@@ -577,20 +583,38 @@ show_help ()
 	echo
 }
 
+show_help_ssh-add ()
+{
+	echo-green "dsh ssh-add - Add private key identities to the ssh-agent."
+	echo "Usage: dsh ssh-add [-lD] [key]"
+	echo
+	echo "When run without arguments, picks up the default key file (~/.ssh/id_rsa or ~/.ssh/id_dsa)."
+	echo "A custom key name can be given as an argument: dsh ssh-add <keyname>."
+	echo 
+	echo -e "${yellow}NOTE${NC}: <keyname> is the file name (not full path) within ${yellow}~/.ssh${NC}."
+	echo "Example: dsh ssh-add my_custom_key_rsa"
+	echo
+	echo "The options are as follows:"
+	echo "	-D      Deletes all identities from the agent."
+	echo "	-l      Lists fingerprints of all identities currently represented by the agent."
+	echo
+}
+
 show_help_reset ()
 {
 	echo-green "dsh reset -  Recreate services/containers. Equal to dsh stop, dsh remove, dsh start"
 	echo
-	echo-green "Parameters: one or several service/containers names. Examples:"
-	echo "	dsh reset web		Restart service (container) labeled 'web'"
-	echo "	dsh reset web cli	Restart services (containers) labeled 'web' and 'cli'"
-	echo "	dsh reset		Will restart all project services (containers)"
+	echo-green "Parameters: one or more service names. Examples:"
+	echo "	dsh reset web		Restart 'web' service"
+	echo "	dsh reset web cli	Restart 'web' and 'cli' services"
+	echo "	dsh reset		Restart all project services"
 	echo
 	echo-green "System services"
-	echo -e "Drude has 2 system services required to resolve ${yellow}*.drude${NC} domain names into container IPs"
-	echo -e "Labels ${yellow}'dns'${NC}, ${yellow}'proxy'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use in project containers."
+	echo -e "Drude has 3 system services."
+	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use."
 	echo "	dsh reset dns		Recreate Drude DNS service"
-	echo "	dsh reset proxy		Recreate Drude reverse proxy service"
+	echo -e "	dsh reset proxy		Recreate Drude HTTP/HTTPS reverse proxy service (resolves ${yellow}*.drude${NC} domain names into container IPs)"
+	echo "	dsh reset ssh-agent	Recreate Drude ssh-agent service"
 	echo "	dsh reset system	Recreate all Drude system services"
 	echo
 }
@@ -736,7 +760,55 @@ vmstat ()
 	vboxmanage metrics query "$id" $metrics
 }
 
-#-------------------------- Installation and updates -----------------------------
+# Add key to ssh-agent or run ssh-add with provided @param
+# @param $1 -D, -l or path to custom key
+ssh_add () {
+	# Check if ssh-agent container is running
+	local running=$(docker inspect --format="{{ .State.Running }}" ssh-agent 2> /dev/null)
+	if [ $? -eq 0 ] && [ "$running" == "true" ]; then
+
+		local ssh_path="$HOME/.ssh"
+		# Home folder mount in boot2docker
+		if ! is_linux; then
+			ssh_path="/.home/.ssh"
+		fi
+		local key_path=""
+
+		case "$1" in
+			"")
+				if docker exec -it ssh-agent ssh-add -l > /dev/null; then
+					return; # Some key is present
+				fi
+				;;
+			-D) 
+				docker run --rm --volumes-from=ssh-agent -it "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add -D
+				exit 1
+				;;
+			-l) 
+				# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
+				docker run --rm --volumes-from=ssh-agent -it "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add -l 2>&1 | sed 's/\/root\/.ssh\///g'
+				exit 1
+				;;
+			*) 
+				key_path="/root/.ssh/$1"
+				# We check $HOME here regardless Linux or Mac/Windows (boot2docker)
+				# $HOME is mounted as /.home in boot2docker
+				if [ ! -f "$HOME/.ssh/$1" ]; then
+					echo-red "SSH key file not found: $HOME/.ssh/$1"
+					exit 1
+				fi
+				;;
+		esac
+		
+		echo "Press ENTER or CTRL+C to skip entering passphrase."
+		# $ssh_path is mounted as /root/.ssh in the ssh-agent containers.
+		# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
+		# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
+		docker run --rm --volumes-from=ssh-agent -it -v "$ssh_path:/root/.ssh" "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add "$key_path" 2>&1 | sed 's/\/root\/.ssh\///g'
+	fi
+}
+
+#----- Installations and updates -----
 
 # Install required software on Mac or Win. Check installed software on Linux
 install_prerequisites ()
@@ -774,11 +846,11 @@ install_prerequisites ()
 
 install_proxy_service ()
 {
-	docker rm -f vhost-proxy || true
+	docker rm -f vhost-proxy >/dev/null 2>&1 || true
 	docker run -d --name vhost-proxy --label "group=system" --restart=always \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
-		blinkreaction/nginx-proxy:latest 2>&1 >/dev/null
+		"blinkreaction/nginx-proxy:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
 install_dns_service ()
@@ -787,11 +859,19 @@ install_dns_service ()
 	local dns
 	if is_linux; then dns=$DRUDE_DEFAULT_DNS; else dns=$DRUDE_VBOX_DNS; fi
 
-	docker rm -f dns || true
+	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always \
 		-p 53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		blinkreaction/dns-discovery:latest 2>&1 >/dev/null
+		"blinkreaction/dns-discovery:${DRUDE_ITAG}" >/dev/null 2>&1
+}
+
+install_sshagent_service ()
+{
+	docker rm -f ssh-agent >/dev/null 2>&1 || true
+	docker run -d --name ssh-agent --label "group=system" --restart=always \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		"blinkreaction/ssh-agent:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
@@ -844,6 +924,10 @@ EOF
 	echo-green "Creating Drude DNS service..."
 	install_dns_service
 	if_failed "Drude DNS service setup failed."
+
+	echo-green "Creating Drude ssh-agent service..."
+	install_sshagent_service
+	if_failed "Drude ssh-agent service setup failed."
 
 	echo-green "Configuring host DNS resolver for .drude domain..."
 	echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head
@@ -954,12 +1038,12 @@ install ()
 update_images ()
 {
 	check_dsh_environment
-	docker pull blinkreaction/nginx-proxy
-	docker pull blinkreaction/dns-discovery
+	docker pull "blinkreaction/nginx-proxy:${DRUDE_ITAG}"
+	docker pull "blinkreaction/dns-discovery:${DRUDE_ITAG}"
+	docker pull "blinkreaction/ssh-agent:${DRUDE_ITAG}"
 	docker_compose pull
-	echo-green "Restarting services..."
-	reset proxy
-	reset dns
+	echo-green "Resetting system services..."
+	reset system
 	up
 }
 
@@ -1347,10 +1431,20 @@ reset ()
 		return
 	fi
 
+	if [[ "$1" == "ssh-agent" ]] ; then
+		echo-green 'Resetting Drude ssh-agent service...'
+		install_sshagent_service
+		return
+	fi
+
 	if [[ "$1" == "system" ]] ; then
 		echo-green 'Resetting Drude services...'
+		echo 'vhost-proxy'
 		install_proxy_service
+		echo 'dns'
 		install_dns_service
+		echo 'ssh-agent'
+		install_sshagent_service
 		return
 	fi
 
@@ -1501,6 +1595,10 @@ case $1 in
 	vmstat)
 		vmstat
 		;;
+	ssh-add)
+	    shift
+	    ssh_add "$*"
+	    ;;
 	install)
 		shift
 		install $*

@@ -58,6 +58,9 @@ cli:
   environment:
     # Optional. Specify a custom SSH RSA key name if necessary. Defaults to 'id_rsa'.
     - SSH_KEY_NAME=id_rsa
+  # Uncomment the next 2 lines to use the shared ssh-agent.
+  # volumes_from:
+  #  - ssh-agent
 
 # Memcached node
 # Uncomment the service definition section below to start using memcached.
