@@ -482,7 +482,7 @@ show_help ()
 	# Show help for certain command
 	if [[ ! -z "$1" ]]; then
 		# Check for help function for specific command
-		type "show_help_$1" 2>/dev/null
+		type "show_help_$1" 1>/dev/null 2>/dev/null
 		if [ $? -eq 0 ]; then
 			show_help_$1
 			exit
