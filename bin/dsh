@@ -1410,6 +1410,12 @@ remove ()
 		echo -e  "${red}WARNING:${NC} ${yellow}You have chosen to delete or re-create all project containers.${NC}"
 		_confirm "Continue?";
 	fi
+
+	# support quiet removal
+	if [[ $1 == "-f" ]]; then
+		shift
+	fi
+
 	_remove_containers $*
 }
 
