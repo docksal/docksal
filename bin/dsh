@@ -1455,7 +1455,13 @@ reset ()
 	fi
 
 	check_yml
-	remove "$*"
+	# support quiet removal
+	if [[ $1 == "-f" ]]; then
+		shift
+		remove -f "$*"
+	else
+		remove "$*"
+	fi
 	_start_containers
 }
 
