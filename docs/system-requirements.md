@@ -4,7 +4,7 @@
 
 ### RAM
 
-8GB (16GB if you keep lost of apps running) for a comfortable work experience.  
+**8GB** (16GB if you keep lost of apps running) for a comfortable work experience.  
 
 It is possible to use Drude with less than 8GB of RAM (e.g. 4GB), however not recommended.  
 
@@ -14,7 +14,7 @@ Please understand that this will be the amount of RAM available to the applicati
 
 ### CPU
 
-Your CPU should support hardware VT-x/AMD-V virtualization (most modern CPUs)
+Your CPU should support hardware **VT-x/AMD-V virtualization** (most modern CPUs) and it should be enabled in BIOS.
 
 ## Software
 

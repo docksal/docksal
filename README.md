@@ -23,10 +23,6 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 
     This is done **one time per project** and should be performed by the project TL.
 
-3. [Initialize a Drude powered project](/docs/drude-project-init.md)
-
-    Follow these instructions to initiallize a Drude powered project.
-
 
 <a name="updates"></a>
 ## Updates
