@@ -439,6 +439,24 @@ _remove_containers ()
 	docker_compose kill $* && docker_compose rm -v --force $*
 }
 
+_docker_cleanup ()
+{
+	if [[ "$1" == "--hard" ]] && [[ "$(docker ps -aqf status=exited)" != "" ]]; then
+		echo -e "${red}WARNING: ${yellow}Preparing to delete all currently stopped containers:${NC}"
+		docker ps -af status=exited --format "{{.Label \"com.docker.compose.project\"}}_{{.Label \"com.docker.compose.service\"}}\t\t{{.Status}} ({{.Image}})"
+		printf '–%.0s' $(seq 1 40)
+		echo -e "${yellow}"
+		_confirm "Continue?"
+		echo -e "${NC}"
+		#--
+		echo-green "Removing stopped containers..."
+		docker ps -aqf status=exited | xargs docker rm -vf
+	fi
+
+	echo-green "Cleaning up images..."
+	docker images -qf dangling=true | xargs docker rmi 2>1
+}
+
 #------------------------------ Help functions --------------------------------
 
 # Show help for dsh or for certain command
@@ -522,6 +540,7 @@ show_help ()
 	echo "	update images		Update container images"
 	echo "	update dsh		Update dsh itself (ex. dsh self-update)"
 	echo
+	echo "	cleanup			Cleanup images to save space (--hard to clean up containers)"
 	echo "	system-information	(sysinfo) Show diagnostics information for bug reporting"
 	if ! is_linux; then
 		echo "	vmstat			Show vagrant vm usage statistics"
@@ -706,7 +725,7 @@ vmstat ()
 	vboxmanage metrics query "$id" $metrics
 }
 
-#----- Installations and updates -----
+#-------------------------- Installation and updates -----------------------------
 
 # Install required software on Mac or Win. Check installed software on Linux
 install_prerequisites ()
@@ -1068,6 +1087,8 @@ check_for_updates ()
 		read -p ''
 	fi
 }
+
+#-------------------------- Execution commands -----------------------------
 
 # Start an interactive bash session in a container
 # @param $1 container name
@@ -1548,6 +1569,10 @@ case $1 in
 	remove)
 		shift
 		remove $*
+		;;
+	cleanup)
+		shift
+		_docker_cleanup $1
 		;;
 	-v | v)
 		version --short
