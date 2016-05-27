@@ -759,38 +759,45 @@ ssh_add () {
 	# Check if ssh-agent container is running
 	local running=$(docker inspect --format="{{ .State.Running }}" ssh-agent 2> /dev/null)
 	if [ $? -eq 0 ] && [ "$running" == "true" ]; then
+
+		local ssh_path="$HOME/.ssh"
+		# Home folder mount in boot2docker
+		if ! is_linux; then
+			ssh_path="/.home/.ssh"
+		fi
+		local key_path=""
+
 		case "$1" in
 			"")
 				if docker exec -it ssh-agent ssh-add -l > /dev/null; then
 					return; # Some key is present
 				fi
-				if is_linux; then
-					local fullpath="${HOME}/.ssh/id_rsa"
-				else
-					local fullpath="/.home/.ssh/id_rsa"
-				fi
-				if [ ! -f "$fullpath" ]; then
-					echo "$fullpath: No such file or directory"
-					echo "Trying to use id_dsa"
-					local fullpath=${fullpath/id_rsa/id_dsa}
-				fi
 				;;
 			-D) 
-				docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:${DRUDE_ITAG} ssh-add -D
+				docker run --rm --volumes-from=ssh-agent -it "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add -D
 				exit 1
 				;;
 			-l) 
-				docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:${DRUDE_ITAG} ssh-add -l
+				# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
+				docker run --rm --volumes-from=ssh-agent -it "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add -l 2>&1 | sed 's/\/root\/.ssh\///g'
 				exit 1
 				;;
 			*) 
-				local fullpath=$1
+				key_path="/root/.ssh/$1"
+				# We check $HOME here regardless Linux or Mac/Windows (boot2docker)
+				# $HOME is mounted as /.home in boot2docker
+				if [ ! -f "$HOME/.ssh/$1" ]; then
+					echo-red "SSH key file not found: $HOME/.ssh/$1"
+					exit 1
+				fi
 				;;
 		esac
-		local directory=$(dirname "$fullpath")
-		local filename=$(basename "$fullpath")
+		
 		echo "Press ENTER or CTRL+C to skip entering passphrase."
-		docker run --rm --volumes-from=ssh-agent -v $directory:$directory -it blinkreaction/ssh-agent:${DRUDE_ITAG} ssh-add $directory/$filename
+		# $ssh_path is mounted as /root/.ssh in the ssh-agent containers.
+		# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
+		# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
+		docker run --rm --volumes-from=ssh-agent -it -v "$ssh_path:/root/.ssh" "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add "$key_path" 2>&1 | sed 's/\/root\/.ssh\///g'
 	fi
 }
 
@@ -836,7 +843,7 @@ install_proxy_service ()
 	docker run -d --name vhost-proxy --label "group=system" --restart=always \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
-		blinkreaction/nginx-proxy:${DRUDE_ITAG} >/dev/null 2>&1
+		"blinkreaction/nginx-proxy:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
 install_dns_service ()
@@ -849,7 +856,7 @@ install_dns_service ()
 	docker run -d --name dns --label "group=system" --restart=always \
 		-p 53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		blinkreaction/dns-discovery:${DRUDE_ITAG} >/dev/null 2>&1
+		"blinkreaction/dns-discovery:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
 install_sshagent_service ()
@@ -857,7 +864,7 @@ install_sshagent_service ()
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
 	docker run -d --name ssh-agent --label "group=system" --restart=always \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		blinkreaction/ssh-agent:${DRUDE_ITAG} >/dev/null 2>&1
+		"blinkreaction/ssh-agent:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
@@ -1024,9 +1031,9 @@ install ()
 update_images ()
 {
 	check_dsh_environment
-	docker pull blinkreaction/nginx-proxy:${DRUDE_ITAG}
-	docker pull blinkreaction/dns-discovery:${DRUDE_ITAG}
-	docker pull blinkreaction/ssh-agent:${DRUDE_ITAG}
+	docker pull "blinkreaction/nginx-proxy:${DRUDE_ITAG}"
+	docker pull "blinkreaction/dns-discovery:${DRUDE_ITAG}"
+	docker pull "blinkreaction/ssh-agent:${DRUDE_ITAG}"
 	docker_compose pull
 	echo-green "Resetting system services..."
 	reset system
