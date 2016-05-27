@@ -43,6 +43,9 @@ unset DOCKER_CERT_PATH
 DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 B2D_BRANCH="${B2D_BRANCH:-master}"
 
+# Allow image tag overrides for system services. See install_xyz_service()
+DRUDE_ITAG="${DRUDE_ITAG:-stable}"
+
 #---------------------------- Helper functions --------------------------------
 
 DRUDE_YML_PATH='' #yml path value will be cached here
@@ -773,11 +776,11 @@ ssh_add () {
 				fi
 				;;
 			-D) 
-				docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -D
+				docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:${DRUDE_ITAG} ssh-add -D
 				exit 1
 				;;
 			-l) 
-				docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -l
+				docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:${DRUDE_ITAG} ssh-add -l
 				exit 1
 				;;
 			*) 
@@ -787,7 +790,7 @@ ssh_add () {
 		local directory=$(dirname "$fullpath")
 		local filename=$(basename "$fullpath")
 		echo "Press ENTER or CTRL+C to skip entering passphrase."
-		docker run --rm --volumes-from=ssh-agent -v $directory:$directory -it blinkreaction/ssh-agent:stable ssh-add $directory/$filename
+		docker run --rm --volumes-from=ssh-agent -v $directory:$directory -it blinkreaction/ssh-agent:${DRUDE_ITAG} ssh-add $directory/$filename
 	fi
 }
 
@@ -833,7 +836,7 @@ install_proxy_service ()
 	docker run -d --name vhost-proxy --label "group=system" --restart=always \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
-		blinkreaction/nginx-proxy:latest >/dev/null 2>&1
+		blinkreaction/nginx-proxy:${DRUDE_ITAG} >/dev/null 2>&1
 }
 
 install_dns_service ()
@@ -846,7 +849,7 @@ install_dns_service ()
 	docker run -d --name dns --label "group=system" --restart=always \
 		-p 53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		blinkreaction/dns-discovery:latest >/dev/null 2>&1
+		blinkreaction/dns-discovery:${DRUDE_ITAG} >/dev/null 2>&1
 }
 
 install_sshagent_service ()
@@ -854,7 +857,7 @@ install_sshagent_service ()
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
 	docker run -d --name ssh-agent --label "group=system" --restart=always \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		blinkreaction/ssh-agent:latest >/dev/null 2>&1
+		blinkreaction/ssh-agent:${DRUDE_ITAG} >/dev/null 2>&1
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
@@ -1021,9 +1024,9 @@ install ()
 update_images ()
 {
 	check_dsh_environment
-	docker pull blinkreaction/nginx-proxy:stable
-	docker pull blinkreaction/dns-discovery:stable
-	docker pull blinkreaction/ssh-agent:stable
+	docker pull blinkreaction/nginx-proxy:${DRUDE_ITAG}
+	docker pull blinkreaction/dns-discovery:${DRUDE_ITAG}
+	docker pull blinkreaction/ssh-agent:${DRUDE_ITAG}
 	docker_compose pull
 	echo-green "Resetting system services..."
 	reset system
