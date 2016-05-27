@@ -767,7 +767,7 @@ install_proxy_service ()
 	docker run -d --name vhost-proxy --label "group=system" --restart=always \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
-		blinkreaction/nginx-proxy:stable
+		blinkreaction/nginx-proxy:latest 2>&1 >/dev/null
 }
 
 install_dns_service ()
@@ -780,7 +780,7 @@ install_dns_service ()
 	docker run -d --name dns --label "group=system" --restart=always \
 		-p 53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		blinkreaction/dns-discovery:stable
+		blinkreaction/dns-discovery:latest 2>&1 >/dev/null
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
