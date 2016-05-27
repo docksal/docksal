@@ -533,8 +533,8 @@ show_help ()
 	echo
 	echo "	behat [--path=path]	Run Behat tests from path (relative to project root). Default: tests/behat"
 	echo
-    echo "	ssh-add [-lD][file]	Adds private key identities to the authentication agent"
-    echo
+	echo "	ssh-add [-lD][file]	Adds private key identities to the authentication agent"
+	echo
 	if is_linux; then
 		echo "	install			Install/check prerequisites and drude config"
 	else
@@ -767,10 +767,10 @@ ssh_add () {
 					local fullpath="/.home/.ssh/id_rsa"
 				fi
 				if [ ! -f "$fullpath" ]; then
-                    echo "$fullpath: No such file or directory"
-                    echo "Trying to use id_dsa"
-                    local fullpath=${fullpath/id_rsa/id_dsa}
-                fi
+					echo "$fullpath: No such file or directory"
+					echo "Trying to use id_dsa"
+					local fullpath=${fullpath/id_rsa/id_dsa}
+				fi
 				;;
 			-D) 
 				docker run --rm --volumes-from=ssh-agent -it blinkreaction/ssh-agent:stable ssh-add -D
@@ -1579,9 +1579,9 @@ case $1 in
 		vmstat
 		;;
 	ssh-add)
-	    shift
-	    ssh_add $*
-	    ;;
+		shift
+		ssh_add $*
+		;;
 	install)
 		shift
 		install $*
