@@ -580,6 +580,17 @@ show_help ()
 	echo
 }
 
+show_help_ssh-add ()
+{
+	echo-green "dsh ssh-add -  Adds private key identities to the authentication agent."
+	echo
+	echo "When run without arguments, it adds the file ~/.ssh/id_rsa or ~/.ssh/id_dsa. Alternative file names can be given on the command line."
+	echo "The options are as follows:"
+	echo "-D      Deletes all identities from the agent."
+	echo "-l      Lists fingerprints of all identities currently represented by the agent."
+	echo
+}
+
 show_help_reset ()
 {
 	echo-green "dsh reset -  Recreate services/containers. Equal to dsh stop, dsh remove, dsh start"
