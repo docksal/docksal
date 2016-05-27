@@ -516,8 +516,8 @@ show_help ()
 	fi
 	echo "	status (st, ps)		Show project services (containers) status"
 	echo "	    -a (--all)		Show status of all running containers from all Docker projects"
-	echo "	reset [service]		Recreate service(s). If no parameter given recreates all project services"
-	echo "	    System services:	dns, proxy (See 'dsh help reset' for more details)"
+	echo "	reset [service]		Recreate service(s). If no parameter given recreates all project services."
+	echo "	    See 'dsh help reset' for more details on resetting Drude system services."
 	echo "	remove [service]	Remove project services (containers). If no parameter given removes all project services"
 	echo
 	echo "	bash [service]		Open bash to service (container). If no service specified defaults to 'cli'"
@@ -532,11 +532,11 @@ show_help ()
 	echo
 	echo "	mysql (sqlc)		Opens mysql shell to current project database"
 	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
-	echo "	  (sqli)		Note: DB dump file should be inside your project folder"
+	echo "	    (sqli)		Note: DB dump file should be inside your project folder"
 	echo
 	echo "	behat [--path=path]	Run Behat tests from path (relative to project root). Default: tests/behat"
 	echo
-	echo "	ssh-add [-lD][file]	Adds private key identities to the authentication agent"
+	echo "	ssh-add [-lD] [key]	Adds private key identities to the authentication agent. See 'dsh help ssh-add'"
 	echo
 	if is_linux; then
 		echo "	install			Install/check prerequisites and drude config"
@@ -585,12 +585,18 @@ show_help ()
 
 show_help_ssh-add ()
 {
-	echo-green "dsh ssh-add -  Adds private key identities to the authentication agent."
+	echo-green "dsh ssh-add - Add private key identities to the ssh-agent."
+	echo "Usage: dsh ssh-add [-lD] [key]"
 	echo
-	echo "When run without arguments, it adds the file ~/.ssh/id_rsa or ~/.ssh/id_dsa. Alternative file names can be given on the command line."
+	echo "When run without arguments, picks up the default key file (~/.ssh/id_rsa or ~/.ssh/id_dsa)."
+	echo "A custom key name can be given as an argument: dsh ssh-add <keyname>."
+	echo 
+	echo -e "${yellow}NOTE${NC}: <keyname> is the file name (not full path) within ${yellow}~/.ssh${NC}."
+	echo "Example: dsh ssh-add my_custom_key_rsa"
+	echo
 	echo "The options are as follows:"
-	echo "-D      Deletes all identities from the agent."
-	echo "-l      Lists fingerprints of all identities currently represented by the agent."
+	echo "	-D      Deletes all identities from the agent."
+	echo "	-l      Lists fingerprints of all identities currently represented by the agent."
 	echo
 }
 
@@ -598,16 +604,17 @@ show_help_reset ()
 {
 	echo-green "dsh reset -  Recreate services/containers. Equal to dsh stop, dsh remove, dsh start"
 	echo
-	echo-green "Parameters: one or several service/containers names. Examples:"
-	echo "	dsh reset web		Restart service (container) labeled 'web'"
-	echo "	dsh reset web cli	Restart services (containers) labeled 'web' and 'cli'"
-	echo "	dsh reset		Will restart all project services (containers)"
+	echo-green "Parameters: one or more service names. Examples:"
+	echo "	dsh reset web		Restart 'web' service"
+	echo "	dsh reset web cli	Restart 'web' and 'cli' services"
+	echo "	dsh reset		Restart all project services"
 	echo
 	echo-green "System services"
-	echo -e "Drude has 2 system services required to resolve ${yellow}*.drude${NC} domain names into container IPs"
-	echo -e "Labels ${yellow}'dns'${NC}, ${yellow}'proxy'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use in project containers."
+	echo -e "Drude has 3 system services."
+	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use."
 	echo "	dsh reset dns		Recreate Drude DNS service"
-	echo "	dsh reset proxy		Recreate Drude reverse proxy service"
+	echo -e "	dsh reset proxy		Recreate Drude HTTP/HTTPS reverse proxy service (resolves ${yellow}*.drude${NC} domain names into container IPs)"
+	echo "	dsh reset ssh-agent	Recreate Drude ssh-agent service"
 	echo "	dsh reset system	Recreate all Drude system services"
 	echo
 }
