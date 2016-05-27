@@ -408,6 +408,7 @@ _start_containers ()
 {
 	echo-green "Starting services..."
 	docker_compose up -d
+	_vhost_proxy_connect
 	_set_cli_uid
 }
 
@@ -416,6 +417,7 @@ _restart_containers ()
 {
 	echo-green "Restarting services..."
 	docker_compose restart $*
+	_vhost_proxy_connect
 	_set_cli_uid
 }
 
@@ -455,6 +457,14 @@ _docker_cleanup ()
 
 	echo-green "Cleaning up images..."
 	docker images -qf dangling=true | xargs docker rmi 2>1
+
+# Connect vhost-proxy to all bridge networks on the host
+_vhost_proxy_connect ()
+{
+	echo-green "Connecting vhost-proxy to networks..."
+	docker network ls -q --filter name=_default | while read network; do 
+		docker network connect $network vhost-proxy > /dev/null 2>&1 || true
+	done
 }
 
 #------------------------------ Help functions --------------------------------
