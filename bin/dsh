@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.18.9
+DSH_VERSION=1.19.0
 
 # Console colors
 red='\033[0;31m'
