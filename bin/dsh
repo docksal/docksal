@@ -1579,9 +1579,9 @@ case $1 in
 		vmstat
 		;;
 	ssh-add)
-		shift
-		ssh_add $*
-		;;
+	    shift
+	    ssh_add "$*"
+	    ;;
 	install)
 		shift
 		install $*
