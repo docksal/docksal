@@ -1730,7 +1730,8 @@ case $1 in
 			dsh_command_script="$(get_drude_path)/$DRUDE_COMMANDS_PATH/$1"
 		fi
 
-		if [ -f "$dsh_command_script" ]; then
+		# second condition does not allow to pass command documentation file as command name
+		if [ -f "$dsh_command_script" ] && [[ "$1" != *".1" ]]; then
 			if [[ ! -x "$dsh_command_script" ]]; then
 				echo -e "${yellow}$dsh_command_script${NC} is not set to be executable."
 				_confirm "Fix automatically?"
