@@ -1393,7 +1393,7 @@ exec_url ()
 {
 	if [[ "$1" != "" ]]; then
 		local script
-		script=$(curl -kfsSL $1)
+		script=$(curl -kfsSL "$1")
 		if_failed "Failed downloading script $1"
 		bash <(echo "$script")
 	else
