@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+## Run Code Sniffer (phpcs) against given path
+##
+## Usage: dsh phpcs <path>
+##
+## Uses Drupal standards.
+##
+## Includes extensions:	php, module, inc, install, test, profile, theme
+## Ignores:		features.*, *.pages*.inc
+
 # Environment variables passed from dsh:
 #
 #   $DRUDE_PATH - (string) absolute path to NEAREST .drude folder

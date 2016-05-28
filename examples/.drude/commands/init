@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+## Sample init script
+
 # Set to the appropriate site directory
 SITE_DIRECTORY='project'
 # Set to the appropriate site directory

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.19.0
+DSH_VERSION=1.19.1
 
 # Console colors
 red='\033[0;31m'
@@ -21,7 +21,6 @@ DRUDE_B2D_VERSION="$DRUDE_CONFIG_DIR/b2d_version"
 
 # Where custom commands live
 DRUDE_COMMANDS_PATH=".drude/commands"
-DRUDE_COMMANDS_HELP_EXT="1"
 
 # Network settings
 DRUDE_IP="192.168.10.10"
@@ -492,10 +491,9 @@ show_help ()
 			exit
 		fi
 		# Check for custom command file
-		local custom_helpfile="$commands_path/$1.$DRUDE_COMMANDS_HELP_EXT"
-		if [ -f "$custom_helpfile" ]; then
+		if [ -f "$commands_path/$1" ]; then
 			echo -en "${green}dsh $1${NC} - "
-			cat "$custom_helpfile"
+			cat "$commands_path/$1" | grep '^##' | sed "s/^##[ ]*//g"
 			echo
 			exit
 		fi
@@ -566,16 +564,16 @@ show_help ()
 
 	# Show list of custom commands and their help if available
 	if [ ! -z "$(get_drude_path)" ]; then
-		custom_commands_list=$(ls "$commands_path" 2>/dev/null | grep -v .$DRUDE_COMMANDS_HELP_EXT | tr "\n" " ")
+		custom_commands_list=$(ls "$commands_path" 2>/dev/null | tr "\n" " ")
 		if [ ! -z "$custom_commands_list" ]; then
 			echo
 			echo -e "Custom commands found in ${yellow}$DRUDE_COMMANDS_PATH${NC}:";
 			for cmd_name in $custom_commands_list
 			do
-				custom_helpfile="$commands_path/$cmd_name.$DRUDE_COMMANDS_HELP_EXT"
-				local cmd_desc=$(head -1 "$custom_helpfile" 2>/dev/null)
-				cmd_desc=${cmd_desc:-No description}
-				echo "	$cmd_name		$cmd_desc"
+				# command description is lines that start with ##
+				local cmd_desc=$(cat "$commands_path/$cmd_name" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
+				printf "\t%-23s" $cmd_name
+				echo "	$cmd_desc"
 			done
 		fi
 	fi
@@ -616,15 +614,6 @@ show_help_reset ()
 	echo -e "	dsh reset proxy		Recreate Drude HTTP/HTTPS reverse proxy service (resolves ${yellow}*.drude${NC} domain names into container IPs)"
 	echo "	dsh reset ssh-agent	Recreate Drude ssh-agent service"
 	echo "	dsh reset system	Recreate all Drude system services"
-	echo
-}
-
-show_help_init ()
-{
-	echo-green "dsh init - Execute project init script (.drude/scripts/drude-init.sh)"
-	echo
-	echo -e "dsh will search for ${yellow}.drude${NC} folder in current and all parent directories."
-	echo -e "When dsh finds first .drude folder it executes ${yellow}scripts/drude-init.sh${NC} from it (if it exists)."
 	echo
 }
 
@@ -1730,8 +1719,7 @@ case $1 in
 			dsh_command_script="$(get_drude_path)/$DRUDE_COMMANDS_PATH/$1"
 		fi
 
-		# second condition does not allow to pass command documentation file as command name
-		if [ -f "$dsh_command_script" ] && [[ "$1" != *".1" ]]; then
+		if [ -f "$dsh_command_script" ]; then
 			if [[ ! -x "$dsh_command_script" ]]; then
 				echo -e "${yellow}$dsh_command_script${NC} is not set to be executable."
 				_confirm "Fix automatically?"
