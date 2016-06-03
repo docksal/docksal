@@ -811,7 +811,7 @@ install_prerequisites ()
 		fi
 		echo-yellow "WARNING: Docker is running. It's recommended to stop Docker first with ${stopcmd} "
 		_confirm "Stop Docker now?"
-		down
+		halt
 	fi
 
 	echo-green "Installing prerequisites..."
