@@ -187,6 +187,20 @@ is_linux ()
 	fi
 }
 
+is_ubuntu ()
+{
+	if [ -r /etc/lsb-release ]; then
+		lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
+		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
+	fi
+
+	if [[ $lsb_dist != 'Ubuntu' || $(ver_to_int $lsb_release) < $(ver_to_int '14.04') ]]; then
+		return 1
+	fi
+
+	return 0
+}
+
 is_windows ()
 {
 	local res=$(uname | grep 'CYGWIN_NT')
@@ -694,7 +708,8 @@ docker_machine_create ()
 			;; #-- end virtualbox
 
 		digitalocean)
-			echo "Digital Ocean will be supported soon"
+			echo-error "Digital Ocean will be supported soon"
+			exit 1
 			;;
 
 		*)
@@ -724,6 +739,7 @@ docker_machine_kill ()
 	return $?
 }
 
+# @param $1 --recreate [optional]
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
@@ -735,11 +751,19 @@ docker_machine_start ()
 			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="$HOME"
 	else
 		echo-green "Creating Docker Machine '$DOCKER_MACHINE_NAME'..."
-		docker_machine_create && \
+		docker_machine_create "$1" && \
 			docker_machine_env && \
+			reset system && \
 			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="$HOME"
 	fi
-	return $?
+
+	local err=$?
+	if [[ $err -eq 0 ]] && is_docker_machine_running; then
+		configure_resolver
+		err=$?
+	fi
+
+	return $err
 }
 
 #------------------------------- User Commands -----------------------------------
@@ -928,6 +952,23 @@ install_dns_service ()
 		"blinkreaction/dns-discovery:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
+# Configuring sytem-wide *.drude resolver (Windows not supported)
+configure_resolver ()
+{
+	check_docker_running
+	local DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
+
+	if is_mac; then
+		echo-green "Configuring host DNS resolver for .drude domain..."
+		sudo mkdir -p /etc/resolver
+		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee 1>/dev/null /etc/resolver/drude
+	elif is_linux; then
+		echo-green "Configuring host DNS resolver for .drude domain..."
+		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee -a /etc/resolvconf/resolv.conf.d/head
+		sudo resolvconf -u
+	fi
+}
+
 install_sshagent_service ()
 {
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
@@ -987,12 +1028,7 @@ install_mac ()
 # Install Docker and setup Drude on Ubuntu 14.04+
 install_ubuntu ()
 {
-	if [ -r /etc/lsb-release ]; then
-		lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
-		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
-	fi
-
-	if [[ $lsb_dist != 'Ubuntu' || $(ver_to_int $lsb_release) < $(ver_to_int '14.04') ]]; then
+	if ! is_ubuntu; then
 		echo-red "dsh: prerequisites installation is currently supported only on Ubuntu 14.04+"
 		if is_tty; then
 			echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
@@ -1039,9 +1075,7 @@ EOF
 	install_sshagent_service
 	if_failed "Drude ssh-agent service setup failed."
 
-	echo-green "Configuring host DNS resolver for .drude domain..."
-	echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee -a  /etc/resolvconf/resolv.conf.d/head
-	sudo resolvconf -u
+	configure_resolver
 
 	echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
 }
@@ -1052,7 +1086,7 @@ install_boot2docker ()
 	testing_warn
 	if is_linux ; then
 		echo "Skipping boot2docker installation on Linux."
-		return 0; # not needed on Linux
+		return 0 # not needed on Linux
 	fi
 
 	if is_windows ; then
@@ -1061,13 +1095,7 @@ install_boot2docker ()
 		chmod +x ~/setup.sh
 		B2D_NO_AUTOSTART=1 ~/setup.sh
 	else
-		docker_machine_create --recreate
-
-		# TODO: fix resolver
-		# Configuring resolver
-		# echo-yellow "Configuring *.drude wildcard DNS resolution..."
-		#sudo mkdir -p /etc/resolver
-		#echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee 1>/dev/null /etc/resolver/drude
+		docker_machine_start --recreate
 	fi
 }
 
@@ -1075,12 +1103,13 @@ install_boot2docker ()
 install_drude_config ()
 {
 	testing_warn
+	[ -f "docker-compose.yml" ] && _confirm "Overwrite existing docker-compose.yml?"
 	local docker_compose_yml
 	docker_compose_yml=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
-	if_failed  "Could not get latest docker-compose.yml version."
+	if_failed "Could not get latest docker-compose.yml version."
 
 	echo "$docker_compose_yml" | tee "docker-compose.yml" >/dev/null
-	if_failed  "Could not write to docker-compose.yml"
+	if_failed "Could not write to docker-compose.yml"
 	echo-green "Latest version of docker-compose.yml was downloaded."
 }
 
@@ -1107,32 +1136,17 @@ install_autocomplete ()
 	fi
 }
 
-# Install everything: prerequisites, boot2docker and drude config
+# Install prerequisites, boot2docker, drude config or autocomplete
 install ()
 {
 	if [[ "$1" == "prerequisites" ]]; then
 		install_prerequisites
 	elif [[ "$1" == "boot2docker" ]]; then
-		echo -e "${green}ATTENTION:${NC} Vagrantfile and vagrant.yml will be downloaded to ${green}$(pwd)${NC}"
-		echo -e "           If that is not correct please cancel, cd to proper dir and re-run command."
-		_confirm "Continue with download to $(pwd)?"
 		install_boot2docker
 	elif [[ "$1" == "drude-config" ]]; then
 		install_drude_config
 	elif [[ "$1" == "autocomplete" ]]; then
 		install_autocomplete
-	else # Full setup
-		local cwd=$(pwd)
-		install_prerequisites
-		if ! is_linux ; then
-			cd ..
-			_confirm "Install Vagrantfile to $(pwd) (This should be your <Projects> folder)?"
-			install_boot2docker
-			cd $cwd
-		fi
-		_confirm "Install default docker-compose.yml to $(pwd) (This should be your <drupal_site> folder)?"
-		install_drude_config
-		echo-green "Please restart you terminal shell to pick up DOCKER_HOST environment variable and then use 'dsh up' to start Drude"
 	fi
 }
 
