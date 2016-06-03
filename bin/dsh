@@ -1084,17 +1084,19 @@ EOF
 install_boot2docker ()
 {
 	testing_warn
-	if is_linux ; then
+	if is_linux; then
 		echo "Skipping boot2docker installation on Linux."
 		return 0 # not needed on Linux
-	fi
-
-	if is_windows ; then
+	elif is_windows; then
 		echo-yellow "Running boot2docker install script..."
 		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh -o ~/setup.sh
 		chmod +x ~/setup.sh
 		B2D_NO_AUTOSTART=1 ~/setup.sh
-	else
+	elif is_mac; then
+		if is_docker_machine_exist; then
+			echo-yellow "Docker Machine '$DOCKER_MACHINE_NAME' already exists. Going to re-create it."
+			_confirm "Continue?"
+		fi
 		docker_machine_start --recreate
 	fi
 }
