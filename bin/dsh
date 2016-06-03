@@ -368,7 +368,7 @@ check_vbox_version ()
 		exit 1
 }
 
-# Check that docker-compose.yml (and Vagrantfile on Win/Mac) present. Fail otherwise
+# Check that docker-compose.yml is present
 check_yml()
 {
 	yml_path=$(get_yml_path)
@@ -522,16 +522,16 @@ show_help ()
 
 	echo
 	if is_linux; then
-		echo "	start (up)		Start project services (containers)"
+		echo "	start (up)		Start project services"
 	else
-		echo "	start (up)		Start vagrant vm (if stopped) and project services (containers)"
+		echo "	start (up)		Start docker machine and project services"
 	fi
 	echo "	stop (down)		Stop project services (containers)"
 	echo "	    -a (--all)		Stop all running containers from all Docker projects (except where group=system)"
 	echo "	restart	[service]	Restart all current project services (containers) or specified service"
 	if ! is_linux; then
-		echo "	reload			Restart vagrant vm"
-		echo "	halt			Stop vagrant vm"
+		echo "	reload			Restart docker machine"
+		echo "	halt			Stop docker machine"
 	fi
 	echo "	status (st, ps)		Show project services (containers) status"
 	echo "	    -a (--all)		Show status of all running containers from all Docker projects"
@@ -571,15 +571,15 @@ show_help ()
 	echo
 	echo "	update prerequisites 	Update prerequisites"
 	if ! is_linux; then
-		echo "	update boot2docker	Update boot2docker-vagrant box"
+		echo "	update boot2docker	Update docker machine (boot2docker) box"
 	fi
 	echo "	update images		Update container images"
 	echo "	update dsh		Update dsh itself (ex. dsh self-update)"
 	echo
 	echo "	cleanup			Cleanup images to save space (--hard to clean up containers)"
 	echo "	system-information	(sysinfo) Show diagnostics information for bug reporting"
-	if ! is_linux; then
-		echo "	vmstat			Show vagrant vm usage statistics"
+	if ! is_linux && [[ "$DOCKER_MACHINE_PROVIDER" == "virtualbox" ]]; then
+		echo "	vmstat			Show virtualbox vm usage statistics"
 	fi
 	echo "	version	(v, -v)		Print dsh version. [v, -v] - prints short version"
 
@@ -1080,7 +1080,7 @@ EOF
 	echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
 }
 
-# Install Vagrantfile and vagrant.yml required by boot2docker
+# Install boot2docker docker-machine
 install_boot2docker ()
 {
 	testing_warn
@@ -1163,7 +1163,7 @@ update_images ()
 	up
 }
 
-# Update Vagrant Box
+# Update boot2docker docker machine
 update_boot2docker ()
 {
 	testing_warn
@@ -1177,76 +1177,8 @@ update_boot2docker ()
 		return 1
 	fi
 
-	# don't download update if we can't locate Vagrantfile
-	vagrant_path=$(upfind "Vagrantfile")
-	if [[ "$vagrant_path" == "" ]] ; then
-		echo-red "dsh: Vagrantfile not found in your directory tree"
-		return 1
-	fi
-
-	local cwd=$(pwd)
-	echo-green "Installing boot2docker update..."
-
-	# get current version
-	local b2d_version=$(cat $DRUDE_B2D_VERSION 2>/dev/null)
-	if [[ "$b2d_version" = "" ]]; then b2d_version="undetected version"; fi
-
-	# get new version
-	local b2d_new_version
-	b2d_new_version=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/VERSION)
-	if_failed "Could not get latest boot2docker version. Please check your internet connection"
-
-	# update boot2docker
-	local forced_update='';
-	local destroy_box=1;
-	if [[ "$1" == "-f" ]] || [[ "$2" == "-f" ]]; then forced_update="(forced update)"; fi
-	if [[ "$1" == "-n" ]] || [[ "$2" == "-n" ]]; then destroy_box=0; fi
-
-	if [[ ! "$b2d_new_version" == "$b2d_version" ]] || [ -n "$forced_update" ]; then
-		echo -e "boot2docker update available: ${green}$b2d_new_version $forced_update${NC} (you have $b2d_version)."
-		if [ $destroy_box -eq 1 ]; then
-			echo -e "${red}Update will destroy and re-create your Vagrant box${NC} (run with -n if you know re-creation can be skipped this time)"
-			_confirm "Please confirm."
-		else
-			echo-green "Vagrant box will not be re-created"
-		fi
-
-		cd $vagrant_path
-		echo "Vagrantfile is found in "$(pwd)
-
-		echo-green "dsh: Downloading boot2docker install script..."
-		local b2d_setup_script
-		b2d_setup_script=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
-		if_failed  "Could not get latest boot2docker version. Please check your internet connection"
-
-		echo "dsh: Creating backups in $DRUDE_CONFIG_BACKUP_DIR..."
-		local timestamp=$(date +%s)
-		cp -v Vagrantfile $DRUDE_CONFIG_BACKUP_DIR/Vagrantfile.$timestamp && \
-		cp -v vagrant.yml $DRUDE_CONFIG_BACKUP_DIR/vagrant.yml.$timestamp
-		if_failed "Unable to perform configuration backups. Aborting..."
-		# contingency. remove old backups
-		rm "$DRUDE_CONFIG_DIR/Vagrantfile.*" 2>/dev/null
-		rm "$DRUDE_CONFIG_DIR/vagrant.yml.*" 2>/dev/null
-
-		if [ $destroy_box -eq 1 ]; then
-			echo-yellow "dsh: Destroying vagrant box..."
-			vagrant destroy -f
-		fi
-
-		echo-green "dsh: Running boot2docker install script..."
-		# calling bash interactively
-		bash <(echo "$b2d_setup_script")
-
-		if_failed "boot2docker install script error"
-
-		# update recorded boot2docker version
-		echo $b2d_new_version > $DRUDE_B2D_VERSION
-		echo -e "boot2docker ${green}$b2d_new_version${NC} was installed"
-	else
-		echo "boot2docker $b2d_version you have is the latest version (-f to force update)"
-	fi
-
-	cd $cwd # go back where we were
+	check_docker_running
+	docker-machine upgrade "$DOCKER_MACHINE_NAME"
 }
 
 # Update dsh itself
@@ -1670,21 +1602,10 @@ system_information ()
 		_system_information_heading "VirtualBox Network interfaces"
 		VBoxManage list hostonlyifs
 
-		_system_information_heading "Vagrant"
-		vagrant --version
-
-		_system_information_heading "Vagrant Box version"
-		local vagrant_path=$(upfind Vagrantfile)
-		if [[ $vagrant_path == "" ]]; then
-			echo "Vagrantfile not found"
-		else
-			cat $vagrant_path/Vagrantfile | grep box_version
-		fi
-
-		if [[ $vagrant_path != "" ]]; then
-			_system_information_heading "Vagrant Boxes List"
-			vagrant global-status
-		fi
+		_system_information_heading "Docker Machine"
+		docker-machine --version
+		echo
+		docker-machine ls
 	fi
 
 	echo
