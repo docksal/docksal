@@ -11,6 +11,10 @@ yellow='\033[1;33m'
 NC='\033[0m'
 
 #---------------------------- Global Constants --------------------------------
+DSH_REQUIREMENTS_VBOX='5.0.4'
+DSH_REQUIREMENTS_DOCKER='1.10.3'
+DSH_REQUIREMENTS_DOCKER_COMPOSE='1.6.2'
+
 # Configuration path
 DRUDE_CONFIG_DIR="$HOME/.drude"
 DRUDE_CONFIG_BACKUP_DIR="$DRUDE_CONFIG_DIR/backups"
@@ -29,16 +33,14 @@ DRUDE_SUBNET="192.168.10.1/24"
 DRUDE_DEFAULT_DNS="8.8.8.8"
 DRUDE_VBOX_DNS="10.0.2.3"
 
+DOCKER_MACHINE_NAME='drude'
+DOCKER_MACHINE_PROVIDER='virtualbox'
+
+DOCKER_MACHINE_VBOX_RAM='1024' #mb
+DOCKER_MACHINE_VBOX_HDD='20000' #mb
+
 #---------------------------- Global Variables --------------------------------
 DOCKER_BETA="${DOCKER_BETA:-0}"
-
-if [[ $DOCKER_BETA -eq 0 ]]; then
-	DEFAULT_DOCKER_HOST="tcp://$DRUDE_IP:2375"
-fi
-# boot2docker-vagrant does not support Docker TLS.
-# Make sure it is disabled for the current terminal session.
-unset DOCKER_TLS_VERIFY
-unset DOCKER_CERT_PATH
 
 DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 B2D_BRANCH="${B2D_BRANCH:-master}"
@@ -55,6 +57,7 @@ echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
 echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
+echo-error () { echo -e "${red_bg} DSH ERROR: ${NC} ${red}$1${NC}"; }
 
 # Exits dsh if previous command exited with non-zero code
 if_failed ()
@@ -254,36 +257,17 @@ check_binary_found ()
 
 is_docker_running ()
 {
-	if is_linux || is_docker_beta; then
-		local err
-		local errcode
-		# Check if docker is running via docker info.
-		# This operation is instant even if docker is not running (assuming a socket is used).
-		err=$(docker info >/dev/null 2>&1); errcode=$?
-		# Print error details if available. We are looking for a specific case here:
-		# e.g. "Error response from daemon: client is newer than server (client API version: 1.22, server API version: 1.21)"
-		if [[ $err =~ 'Error' ]]; then echo $err; fi
-		return $errcode
-	else
-		# On Mac and Windows - use netcat to check the host:port
-		check_binary_found 'nc'
-		if [[ $DOCKER_HOST == "" ]]; then
-			return 1
-		fi
-
-		# Extract host and port from $DOCKER_HOST
-		local host=$(echo $DOCKER_HOST | sed -e 's/\(tcp:\/\/\)*\([a-z0-9\.]*\):[0-9]*/\2/')
-		local port=$(echo $DOCKER_HOST | sed -e 's/\(tcp:\/\/\)*[a-z0-9\.]*:\([0-9]*\)/\2/')
-
-		if is_mac; then
-			# nc on Mac needs -G for the connections timeout argument.
-			nc -z -G 1 $host $port 2>/dev/null 1>/dev/null
-		else		
-			nc -z -w 1 $host $port 2>/dev/null 1>/dev/null
-		fi
-	fi
-
-	return $?
+	if ! is_docker_machine_running; then return 1; fi
+	local err
+	local errcode
+	eval $(docker-machine env "$DOCKER_MACHINE_NAME")
+	# Check if docker is running via docker info.
+	# This operation is instant even if docker is not running (assuming a socket is used).
+	err=$(docker info >/dev/null 2>&1); errcode=$?
+	# Print error details if available. We are looking for a specific case here:
+	# e.g. "Error response from daemon: client is newer than server (client API version: 1.22, server API version: 1.21)"
+	if [[ $err =~ 'Error' ]]; then echo $err; fi
+	return $errcode
 }
 
 # Check whether shell is interactive
@@ -330,24 +314,44 @@ check_docker_running ()
 {
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
+	# Check cached value
+	if [[ $DOCKER_RUNNING == "true" ]]; then
+		return 0;
+	fi
+
 	if ! is_docker_running; then
-		local msg="dsh: Unable to connect to the Docker daemon"
+		local msg="Unable to connect to the Docker daemon"
 		if [ ! -z "$DOCKER_HOST" ]; then
 			msg="$msg via '$DOCKER_HOST'"
 		fi
-		echo-red "$msg"
-		
-		if is_docker_beta; then
-			echo-red "Make sure the Docker Beta app is running"
-		elif is_mac || is_windows; then
-			echo-red "Drude VM may not be running. It can be started with 'dsh up'"
-			_confirm "Run 'dsh up' now?"
-			up
-			if_failed "Could not start the VM properly"
-		fi
-
-		exit 1
+		echo-yellow "Looks like Drude docker machine is not running."
+		_confirm "Run 'dsh up' to start it now?"
+		up
+		if_failed "Could not start Drude docker machine properly"
 	fi
+
+	DOCKER_RUNNING="true"
+	if ! is_linux; then
+		docker_machine_env
+	fi
+}
+
+is_vbox_version ()
+{
+	! is_binary_found 'VBoxManage' && return 1
+
+	local virtualbox_version=$(VBoxManage -v | sed "s/r.*//" 2>/dev/null)
+	[[ $(ver_to_int $virtualbox_version) < $(ver_to_int $DSH_REQUIREMENTS_VBOX) ]] && \
+		return 1
+
+	return 0
+}
+
+check_vbox_version ()
+{
+	! is_vbox_version && \
+		echo-error "VirtualBox version should be $DSH_REQUIREMENTS_VBOX or higher" && \
+		exit 1
 }
 
 # Check that docker-compose.yml (and Vagrantfile on Win/Mac) present. Fail otherwise
@@ -356,16 +360,6 @@ check_yml()
 	yml_path=$(get_yml_path)
 	if [[ "$yml_path" == "" ]] ; then
 		echo-red "dsh: docker-compose.yml was not found in your directory tree"
-		exit 1
-	fi
-
-	if is_linux || is_docker_beta; then
-		return; # linux does not need vagrant
-	fi
-
-	vagrant_path=$(upfind "Vagrantfile")
-	if [[ "$vagrant_path" == "" ]] ; then
-		echo-red "dsh: Vagrantfile was not found in your directory tree"
 		exit 1
 	fi
 }
@@ -412,25 +406,11 @@ _notify ()
 	fi
 }
 
-# Make sure $DOCKER_HOST is not empty
-check_docker_host ()
-{
-	if is_linux ; then return 0; fi
-	# don't change DOCKER_HOST if it's nonempty
-	if [[ "$DOCKER_HOST" != "" ]]; then
-		return 0;
-	else
-		# set Drude's default DOCKER_HOST var
-		DOCKER_HOST=$DEFAULT_DOCKER_HOST
-		export DOCKER_HOST=$DEFAULT_DOCKER_HOST
-	fi
-}
-check_docker_host #perform this check in any case
-
 #-------------------------- Containers management -----------------------------
 
 _start_containers ()
 {
+	check_docker_running
 	ssh_add
 	echo-green "Starting services..."
 	docker_compose up -d && \
@@ -441,6 +421,7 @@ _start_containers ()
 # @param $1 container_name
 _restart_containers ()
 {
+	check_docker_running
 	echo-green "Restarting services..."
 	docker_compose restart $* && \
 		_vhost_proxy_connect && \
@@ -450,6 +431,7 @@ _restart_containers ()
 # @param $1 "-a" || "--all"
 _stop_containers ()
 {
+	check_docker_running
 	echo-yellow "Stopping services..."
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
 		# stop all but system containers (--label "group=system")
@@ -461,6 +443,7 @@ _stop_containers ()
 # @param $1 container_name
 _remove_containers ()
 {
+	check_docker_running
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
@@ -469,6 +452,7 @@ _remove_containers ()
 
 _docker_cleanup ()
 {
+	check_docker_running
 	if [[ "$1" == "--hard" ]] && [[ "$(docker ps -aqf status=exited)" != "" ]]; then
 		echo -e "${red}WARNING: ${yellow}Preparing to delete all currently stopped containers:${NC}"
 		docker ps -af status=exited --format "{{.Label \"com.docker.compose.project\"}}_{{.Label \"com.docker.compose.service\"}}\t\t{{.Status}} ({{.Image}})"
@@ -674,7 +658,92 @@ bash_comp_words ()
 	esac
 }
 
+#------------------------------- Docker-Machine -----------------------------------
+
+is_docker_machine_running ()
+{
+	docker-machine status "$DOCKER_MACHINE_NAME" | grep "Running" 2>&1 1>/dev/null
+	return $?
+}
+
+# Create drude
+# @param $1 --recreate
+docker_machine_create ()
+{
+	check_binary_found 'docker-machine'
+
+	if is_docker_machine_exist; then
+		if [[ "$1" == "--recreate" ]]; then
+			echo-green "Recreating Docker Machine '$DOCKER_MACHINE_NAME'..."
+			docker-machine rm "$DOCKER_MACHINE_NAME"
+		else
+			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' already exists"
+			return 1
+		fi
+	fi
+
+	case $DOCKER_MACHINE_PROVIDER in
+		virtualbox)
+			check_vbox_version
+
+			docker-machine create --driver=virtualbox \
+				--virtualbox-disk-size "$DOCKER_MACHINE_VBOX_HDD" \
+				--virtualbox-memory "$DOCKER_MACHINE_VBOX_RAM" \
+				--virtualbox-no-share \
+				"$DOCKER_MACHINE_NAME"
+			;; #-- end virtualbox
+
+		digitalocean)
+			echo "Digital Ocean will be supported soon"
+			;;
+
+		*)
+			echo-error "$DOCKER_MACHINE_PROVIDER provider is not supported by this version of dsh"
+			;;
+	esac
+
+}
+
+is_docker_machine_exist ()
+{
+	docker-machine ls | grep "$DOCKER_MACHINE_NAME" 1>/dev/null 2>/dev/null
+	return $?
+}
+
+docker_machine_env ()
+{
+	eval $(docker-machine env "$DOCKER_MACHINE_NAME")
+	return $?
+}
+
+# Stop docker machine
+docker_machine_kill ()
+{
+	check_binary_found 'docker-machine'
+	docker-machine kill "$DOCKER_MACHINE_NAME"
+	return $?
+}
+
+docker_machine_start ()
+{
+	check_binary_found 'docker-machine'
+	check_binary_found 'docker-machine-nfs'
+
+	if is_docker_machine_exist; then
+		docker-machine start "$DOCKER_MACHINE_NAME" && \
+			docker_machine_env && \
+			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="$HOME"
+	else
+		echo-green "Creating Docker Machine '$DOCKER_MACHINE_NAME'..."
+		docker_machine_create && \
+			docker_machine_env && \
+			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="$HOME"
+	fi
+	return $?
+}
+
 #------------------------------- User Commands -----------------------------------
+
 # Start containers
 up ()
 {
@@ -682,17 +751,10 @@ up ()
 	if is_linux || is_boot2docker || is_docker_beta; then
 		_start_containers
 	else
-		check_binary_found 'vagrant'
-		local started
-		if ! is_docker_running; then
-			echo-green "dsh: Starting vagrant vm..."
-			vagrant up
-			started=$?
-		else
-			started=0
-		fi
-		if [ $started -eq 0 ] ; then
+		if is_docker_machine_running; then
 			_start_containers
+		else
+			docker_machine_start && _start_containers
 		fi
 	fi
 }
@@ -701,17 +763,17 @@ up ()
 down ()
 {
 	check_dsh_environment
-	_stop_containers $@
+	_stop_containers "$@"
 }
 
-# Stop Vagrant box
+# Stop docker-machine
 halt ()
 {
 	check_dsh_environment
 	if is_linux || is_boot2docker; then
 		_stop_containers
 	else
-		vagrant halt
+		docker_machine_kill
 	fi
 }
 
@@ -723,19 +785,16 @@ restart ()
 	_restart_containers $*
 }
 
-# Restart Vagrant and start containers again
+# Restart docker-machine and start containers again
 reload ()
 {
 	check_yml
 	if is_linux || is_boot2docker || is_docker_beta; then
 		_start_containers
 	else
-		check_binary_found 'vagrant'
-		echo-green "dsh: Restarting vagrant vm..."
-		vagrant reload
-		if [ $? -eq 0 ]; then
+		docker_machine_kill && \
+			docker_machine_start && \
 			_start_containers
-		fi
 	fi
 }
 
@@ -754,22 +813,12 @@ status ()
 
 vmstat ()
 {
-	local vagrant_path=$(upfind Vagrantfile)
-	if [[ $vagrant_path == "" ]]; then
-		echo-red "dsh: Vagrantfile was not found in your directory tree"
-		exit 1
-	fi
+	check_docker_running
 	check_binary_found vboxmanage
-	local machine_id="${vagrant_path}/.vagrant/machines/boot2docker/virtualbox/id"
-	if [ ! -f $machine_id ]; then
-		echo-red "Could not find id file $machine_id"
-		exit 1
-	fi
-	local id=$(cat $machine_id)
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
-	vboxmanage metrics setup --period 1 --samples 1 "$id"
+	vboxmanage metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
 	sleep 1
-	vboxmanage metrics query "$id" $metrics
+	vboxmanage metrics query "$DOCKER_MACHINE_NAME" $metrics
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
@@ -834,12 +883,7 @@ install_prerequisites ()
 		fi
 		echo-yellow "WARNING: Docker is running. It's recommended to stop Docker first with ${stopcmd} "
 		_confirm "Stop Docker now?"
-		
-		if is_linux || is_boot2docker; then
-			_stop_containers
-		else
-			vagrant halt
-		fi
+		halt
 	fi
 
 	echo-green "Installing prerequisites..."
@@ -854,10 +898,7 @@ install_prerequisites ()
 	elif is_linux ; then
 		install_ubuntu
 	else # mac
-		local presetup_script
-		presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-mac.sh)
-		if_failed "Could not get 'presetup-mac.sh'. Please check your internet connection"
-		bash <(echo "$presetup_script")
+		install_mac
 	fi
 }
 
@@ -893,6 +934,54 @@ install_sshagent_service ()
 	docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"blinkreaction/ssh-agent:${DRUDE_ITAG}" >/dev/null 2>&1
+}
+
+# Install prerequisites on Mac
+install_mac ()
+{
+	# Install brew
+	if ! is_binary_found 'brew'; then
+		echo-green "Installing Homebrew..."
+		ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	fi
+
+	# Install VirtualBox
+	if ! is_binary_found 'VBoxManage'; then
+		echo-green "Updating brew formulae..."
+		brew update
+		echo-green "Installing Virtualbox..."
+		brew cask install virtualbox
+		# Kill the default adapter and DHCP server to avoid network issues down the road
+		VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
+		VBoxManage hostonlyif remove vboxnet0 > /dev/null 2>&1
+	else
+		if ! is_vbox_version; then
+			brew list | grep virtualbox 2>/dev/null 1>/dev/null
+			if [[ $? -eq 0 ]]; then
+				echo-green "Updating Virtualbox..."
+				brew cask update virtualbox
+			else
+				echo-error "Your Virtual Box version is out of date"
+				echo "	     Can not auto-update as it was not installed with brew."
+				echo "	     Update to VirtualBox $DSH_REQUIREMENTS_VBOX or higher manually or uninstall your version of VirtualBox first."
+				exit 1
+			fi
+		fi
+	fi
+
+	# Install docker-machine
+	if [[ ! -x $(which docker-machine) ]]; then
+		rm -f /usr/local/bin/docker-machine
+		curl -L https://github.com/docker/machine/releases/download/v0.7.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine && \
+			chmod +x /usr/local/bin/docker-machine
+	fi
+
+	# Install docker-machine-nfs
+	if [[ ! -x $(which docker-machine-nfs) ]]; then
+		curl -s https://raw.githubusercontent.com/adlogix/docker-machine-nfs/master/docker-machine-nfs.sh |
+			sudo tee /usr/local/bin/docker-machine-nfs > /dev/null && \
+			sudo chmod +x /usr/local/bin/docker-machine-nfs
+	fi
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
@@ -962,31 +1051,23 @@ install_boot2docker ()
 {
 	testing_warn
 	if is_linux ; then
+		echo "Skipping boot2docker installation on Linux."
 		return 0; # not needed on Linux
 	fi
-	echo-green "Downloading boot2docker install script..."
 
 	if is_windows ; then
+		echo-yellow "Running boot2docker install script..."
 		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh -o ~/setup.sh
-	else
-		local b2d_setup_script
-		b2d_setup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh)
-	fi
-	if_failed "Could not get 'setup.sh'. Please check your internet connection"
-
-	echo "done"
-	echo-yellow "Running boot2docker install script..."
-	if is_windows ; then
 		chmod +x ~/setup.sh
 		B2D_NO_AUTOSTART=1 ~/setup.sh
 	else
-		# calling bash interactively. B2D_NO_AUTOSTART prevents vagrant up after download
-		B2D_NO_AUTOSTART=1 bash <(echo "$b2d_setup_script")
+		docker_machine_create --recreate
 
+		# TODO: fix resolver
 		# Configuring resolver
-		echo-yellow "Configuring *.drude wildcard DNS resolution..."
-		sudo mkdir -p /etc/resolver
-		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee 1>/dev/null /etc/resolver/drude
+		# echo-yellow "Configuring *.drude wildcard DNS resolution..."
+		#sudo mkdir -p /etc/resolver
+		#echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee 1>/dev/null /etc/resolver/drude
 	fi
 }
 
