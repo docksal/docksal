@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.20.0
+DSH_VERSION=1.99.0
 
 # Console colors
 red='\033[0;91m'
@@ -681,19 +681,13 @@ is_docker_machine_running ()
 }
 
 # Create drude
-# @param $1 --recreate
 docker_machine_create ()
 {
 	check_binary_found 'docker-machine'
 
 	if is_docker_machine_exist; then
-		if [[ "$1" == "--recreate" ]]; then
-			echo-green "Recreating Docker Machine '$DOCKER_MACHINE_NAME'..."
-			docker-machine rm "$DOCKER_MACHINE_NAME"
-		else
-			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' already exists"
-			return 1
-		fi
+		echo-error "Docker Machine '$DOCKER_MACHINE_NAME' already exists"
+		return 1
 	fi
 
 	case $DOCKER_MACHINE_PROVIDER in
@@ -739,7 +733,6 @@ docker_machine_kill ()
 	return $?
 }
 
-# @param $1 --recreate [optional]
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
@@ -748,13 +741,13 @@ docker_machine_start ()
 	if is_docker_machine_exist; then
 		docker-machine start "$DOCKER_MACHINE_NAME" && \
 			docker_machine_env && \
-			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="$HOME"
+			docker_machine_nfs_setup
 	else
 		echo-green "Creating Docker Machine '$DOCKER_MACHINE_NAME'..."
-		docker_machine_create "$1" && \
+		docker_machine_create && \
 			docker_machine_env && \
 			reset system && \
-			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="$HOME"
+			docker_machine_nfs_setup
 	fi
 
 	local err=$?
@@ -764,6 +757,13 @@ docker_machine_start ()
 	fi
 
 	return $err
+}
+
+docker_machine_nfs_setup ()
+{
+	if [[ $DOCKER_MACHINE_PROVIDER == 'virtualbox' ]]; then
+		docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
+	fi
 }
 
 #------------------------------- User Commands -----------------------------------
