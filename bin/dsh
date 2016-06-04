@@ -11,9 +11,11 @@ yellow='\033[1;33m'
 NC='\033[0m'
 
 #---------------------------- Global Constants --------------------------------
+DSH_REQUIREMENTS_DOCKER='1.11.2'
+DSH_REQUIREMENTS_DOCKER_COMPOSE='1.7.1'
+DSH_REQUIREMENTS_DOCKER_MACHINE='0.7.0'
 DSH_REQUIREMENTS_VBOX='5.0.4'
-DSH_REQUIREMENTS_DOCKER='1.10.3'
-DSH_REQUIREMENTS_DOCKER_COMPOSE='1.6.2'
+DSH_REQUIREMENTS_WINPTY='0.3.1'
 
 # Configuration path
 DRUDE_CONFIG_DIR="$HOME/.drude"
@@ -171,6 +173,13 @@ get_container_id ()
 	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
 	echo $(docker_compose ps -q $1 | tr -d '\r')
 }
+
+# Run command on Windows with elevated privileges
+winsudo ()
+{
+	cygstart --action=runas cmd /c "$@"
+}
+
 
 #------------------------- Basics check functions -----------------------------
 
@@ -922,12 +931,7 @@ install_prerequisites ()
 	echo-green "Installing prerequisites..."
 
 	if is_windows ; then
-		# installing prerequisites
-		local presetup_script
-		presetup_script=$(curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/presetup-win.sh)
-		if_failed "Could not get 'presetup-win.sh'. Please check your internet connection"
-		bash <(echo "$presetup_script")
-		read -p "Press enter after the installation in another console window is done..."
+		install_windows
 	elif is_linux ; then
 		install_ubuntu
 	else # mac
@@ -1032,6 +1036,56 @@ install_mac ()
 			sudo tee /usr/local/bin/docker-machine-nfs > /dev/null && \
 			sudo chmod +x /usr/local/bin/docker-machine-nfs
 	fi
+}
+
+install_windows ()
+{
+	# Install Choco
+	echo-green "Installing Chocolatey" #packet manager
+	winsudo "@powershell -NoProfile -ExecutionPolicy unrestricted -Command \"iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))\" && SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+
+	# Install VirtulBox
+	echo-green "Installing VirtualBox"
+	winsudo "choco upgrade virtualbox -y"
+
+	echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
+	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+	winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
+	winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
+
+	# Remove old docker version
+	rm -f /usr/local/bin/docker >/dev/null 2>&1 || true
+	# Install Docker
+	echo-green "Installing Docker cli v${DSH_REQUIREMENTS_DOCKER}..."
+	curl -sSL -O https://get.docker.com/builds/Windows/i386/docker-$DSH_REQUIREMENTS_DOCKER.zip
+	unzip docker-$DSH_REQUIREMENTS_DOCKER.zip
+	mv docker/* /usr/local/bin
+	rm -rf docker-$DSH_REQUIREMENTS_DOCKER*
+
+	# Remove old docker-compose version
+	rm -f /usr/local/bin/docker-compose >/dev/null 2>&1 || true
+	# Install Docker Compose
+	echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
+	curl -sSL https://github.com/docker/compose/releases/download/$DSH_REQUIREMENTS_DOCKER_COMPOSE/docker-compose-Windows-x86_64.exe -o /usr/local/bin/docker-compose.exe
+	chmod +x /usr/local/bin/docker-compose.exe
+
+	# Install Docker Machine
+	echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
+	curl -L https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe \
+		-o "/usr/local/bin/docker-machine.exe" && \
+	chmod +x "/usr/local/bin/docker-machine.exe"
+
+	# Install winpty
+	echo-green "Installing winpty (console) v${DSH_REQUIREMENTS_WINPTY}..."
+	curl -sSL -O https://github.com/rprichard/winpty/releases/download/${DSH_REQUIREMENTS_WINPTY}/winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32.tar.gz
+	tar -xf winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32.tar.gz
+	mv winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32/bin/* /usr/local/bin
+	rm -rf winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32*
+
+	# Git settings
+	echo-green "Adjusting git defaults..."
+	git config --global core.autocrlf input
+	git config --system core.longpaths true
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
