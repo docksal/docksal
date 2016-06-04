@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.1
+DSH_VERSION=1.99.2
 
 # Console colors
 red='\033[0;91m'
@@ -540,7 +540,7 @@ show_help ()
 	else
 		printh "start (up)" "Start docker machine and project services"
 	fi
-	printh "stop (down) [-a (--all)]" "Stop project services. -a stops all running containers except Drude system ones"
+	printh "stop (down) [-a (--all)]" "Stop project services. -a stops all containers except Drude system services"
 	printh "restart	[service]" "Restart all current project services or specified service"
 	if ! is_linux; then
 		printh "reload" "Restart docker machine"
@@ -549,7 +549,7 @@ show_help ()
 	printh "status (st, ps) [-a (--all)]" "Show project services status. -a shows all running containers"
 	printh "reset [service]" "Recreate service(s). If no parameter given recreates all project services."
 	printh "" "See ${yellow}'dsh help reset'${NC} for more details on resetting Drude system services."
-	printh "remove [service]" "Remove project services (containers). If no parameter given removes all project services"
+	printh "remove [service]" "Remove given project services (containers) or all of them"
 	echo
 	printh "bash [service]" "Open bash to service (container). If no service specified defaults to ${yellow}'cli'${NC}"
 	printh "exec (run) <command> [params]" "Execute a command in ${yellow}'cli'${NC} service"
@@ -567,20 +567,14 @@ show_help ()
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
 	echo
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}'dsh help ssh-add'${NC}"
+
 	echo
-	printh "install prerequisites" "Install software required to run Drude"
 	if ! is_linux; then
-		printh "install boot2docker" "Create docker machine that will hold Drude"
+		local help_component_b2d=' boot2docker |'
 	fi
-	printh "install drude-config" "Download latest default docker-compose.yml"
-	printh "install autocomplete" "Install dsh commands autocomplete for Bash"
-	echo
-	printh "update prerequisites" "Update software required to run Drude"
-	if ! is_linux; then
-		printh "update boot2docker" "Upgrade docker machine that holds Drude"
-	fi
-	printh "update images" "Update container images"
-	printh "update dsh" "Update dsh itself (dsh self-update)"
+	printh "install <component>" "<prerequisites |${help_component_b2d} drude-config | autocomplete> (${yellow}'dsh help install'${NC})" "yellow"
+	printh "update  <component>" "<prerequisites |${help_component_b2d} images | dsh> (${yellow}'dsh help update'${NC})" "yellow"
+
 	echo
 	printh "cleanup" "Cleanup images to save space (--hard to clean up containers)"
 	printh "system-information (sysinfo)" "Show diagnostics information for bug reporting"
@@ -646,6 +640,32 @@ show_help_reset ()
 	echo
 }
 
+show_help_install ()
+{
+	echo-green "dsh install -  Automated install of Drude system components"
+	echo
+	printh "dsh install prerequisites" "Install software required to run Drude"
+	if ! is_linux; then
+		printh "dsh install boot2docker" "Create docker machine that will hold Drude"
+	fi
+	printh "dsh install drude-config" "Download latest default docker-compose.yml"
+	printh "dsh install autocomplete" "Install dsh commands autocomplete for Bash"
+	echo
+}
+
+show_help_update ()
+{
+	echo-green "dsh install -  Automated update of Drude system components"
+	echo
+	printh "dsh update prerequisites" "Update software required to run Drude"
+	if ! is_linux; then
+		printh "dsh update boot2docker" "Upgrade docker machine that holds Drude"
+	fi
+	printh "dsh update images" "Update container images <https://docs.docker.com/engine/understanding-docker/#what-is-docker-s-architecture>"
+	printh "dsh update dsh" "Update dsh itself (Used to be named: dsh self-update)"
+	echo
+}
+
 # Display dsh version
 # @option --short - Display only the version number
 version ()
@@ -672,11 +692,11 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down halt reload restart status vmstat reset remove bash exec logs run mysql sqlc mysql-import sqli exec-url drush drupal behat install update self-update version help"
+			echo "start up stop down halt reload restart status reset remove bash exec logs run mysql mysql-import exec-url drush drupal behat ssh-add install update self-update version cleanup vmstat system-information sysinfo"
 			exit 0
 			;;
 		*)
-			exit 1 #return 1 to completion function to prevent completion is we don't know what to do
+			exit 1 #return 1 to completion function to prevent completion if we don't know what to do
 	esac
 }
 
@@ -1294,7 +1314,7 @@ check_for_updates ()
 	if [ $(ver_to_int $new_version) -gt $(ver_to_int $DSH_VERSION) ]; then
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}dsh${NC} [ $DSH_VERSION --> $new_version ] (run ${green}dsh update dsh${NC} to update)"
-		echo "Press enter to continue with your command."
+		echo "Press Enter."
 		read -p ''
 	fi
 }
