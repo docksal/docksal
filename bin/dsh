@@ -19,9 +19,6 @@ DSH_REQUIREMENTS_WINPTY='0.3.1'
 
 # Configuration path
 DRUDE_CONFIG_DIR="$HOME/.drude"
-DRUDE_CONFIG_BACKUP_DIR="$DRUDE_CONFIG_DIR/backups"
-# Always try to create this path in case ~/.drude does not exist
-mkdir -p $DRUDE_CONFIG_BACKUP_DIR
 
 DRUDE_LAST_CHECK="$DRUDE_CONFIG_DIR/last_check"
 DRUDE_B2D_VERSION="$DRUDE_CONFIG_DIR/b2d_version"
@@ -30,10 +27,9 @@ DRUDE_B2D_VERSION="$DRUDE_CONFIG_DIR/b2d_version"
 DRUDE_COMMANDS_PATH=".drude/commands"
 
 # Network settings
-DRUDE_IP="192.168.10.10"
 DRUDE_SUBNET="192.168.10.1/24"
 DRUDE_DEFAULT_DNS="8.8.8.8"
-DRUDE_VBOX_DNS="10.0.2.3"
+DRUDE_VBOX_DNS="10.0.2.3" # TODO: check this
 
 DOCKER_MACHINE_NAME='drude'
 DOCKER_MACHINE_PROVIDER='virtualbox'
@@ -43,10 +39,7 @@ DOCKER_MACHINE_VBOX_HDD='20000' #mb
 
 #---------------------------- Global Variables --------------------------------
 DOCKER_BETA="${DOCKER_BETA:-0}"
-
 DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
-B2D_BRANCH="${B2D_BRANCH:-master}"
-
 # Allow image tag overrides for system services. See install_xyz_service()
 DRUDE_ITAG="${DRUDE_ITAG:-stable}"
 
@@ -313,8 +306,8 @@ is_tty ()
 testing_warn ()
 {
 	if ! is_tty; then return; fi
-	if [[ ! $B2D_BRANCH == 'master' ]] || [[ ! $DRUDE_BRANCH == 'master' ]]; then
-		echo-yellow "dsh: boot2docker - ${B2D_BRANCH}, drude - ${DRUDE_BRANCH}"
+	if [[ ! $DRUDE_BRANCH == 'master' ]]; then
+		echo-yellow "drude - ${DRUDE_BRANCH} branch"
 	fi
 }
 
@@ -1150,12 +1143,7 @@ install_boot2docker ()
 	if is_linux; then
 		echo "Skipping boot2docker installation on Linux."
 		return 0 # not needed on Linux
-	elif is_windows; then
-		echo-yellow "Running boot2docker install script..."
-		curl -fsS https://raw.githubusercontent.com/blinkreaction/boot2docker-vagrant/$B2D_BRANCH/scripts/setup.sh -o ~/setup.sh
-		chmod +x ~/setup.sh
-		B2D_NO_AUTOSTART=1 ~/setup.sh
-	elif is_mac; then
+	elif is_windows || is_mac; then
 		if is_docker_machine_exist; then
 			echo-red "Docker Machine '$DOCKER_MACHINE_NAME' already exists. Going to re-create it."
 		fi
