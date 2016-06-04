@@ -218,17 +218,6 @@ is_windows ()
 	fi
 }
 
-# cheсks wether we are in boot2docker console
-is_boot2docker ()
-{
-	local res=$(uname -a|grep 'boot2docker')
-	if [[ ! "$res" == '' ]]; then
-		return 0;
-	else
-		return 1;
-	fi
-}
-
 is_mac ()
 {
 	local res=$(uname | grep 'Darwin')
@@ -799,7 +788,7 @@ down ()
 halt ()
 {
 	check_dsh_environment
-	if is_linux || is_boot2docker; then
+	if is_linux; then
 		_stop_containers
 	else
 		docker_machine_kill
