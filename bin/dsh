@@ -455,6 +455,8 @@ _remove_containers ()
 	docker_compose kill $* && docker_compose rm -vaf $*
 }
 
+# Cleanup unused images and containters
+# @param $1 --hard if set removes all stopped containers
 _docker_cleanup ()
 {
 	check_docker_running
@@ -540,32 +542,26 @@ show_help ()
 	echo "	cc [cache_type]		Clear Drupal 7 caches (\"dsh cc\" is equal to \"dsh cc all\")"
 	echo "	drupal [command]	Execute Drupal Console command (Drupal 8)"
 	echo
-	echo "	mysql (sqlc)		Opens mysql shell to current project database"
-	echo "	mysql-import <file>	Truncate database and import from sql dump (usage: dsh mysql-import <dbdump.sql|dbdump.sql.gz>)"
-	echo "	    (sqli)		Note: DB dump file should be inside your project folder"
+	echo "	mysql			(sqlc) Opens mysql shell to current project database"
+	echo "	mysql-import <file>	(sqli) Truncate database and import from sql dump (file should be accessible to Drude)"
 	echo
 	echo "	behat [--path=path]	Run Behat tests from path (relative to project root). Default: tests/behat"
 	echo
 	echo "	ssh-add [-lD] [key]	Adds private key identities to the authentication agent. See 'dsh help ssh-add'"
 	echo
-	if is_linux; then
-		echo "	install			Install/check prerequisites and drude config"
-	else
-		echo "	install			Install/check prerequisites, boot2docker and drude config"
-	fi
-	echo "	install prerequisites 	Only install prerequisites"
+	echo "	install prerequisites 	Install software required to run Drude"
 	if ! is_linux; then
-		echo "	install boot2docker 	Only install boot2docker"
+		echo "	install boot2docker 	Create docker machine that will hold Drude"
 	fi
-	echo "	install drude-config 	Only install the latest default docker-compose.yml"
-	echo "	install autocomplete 	Install commands autocomplete for Bash"
+	echo "	install drude-config 	Download latest default docker-compose.yml"
+	echo "	install autocomplete 	Install dsh commands autocomplete for Bash"
 	echo
-	echo "	update prerequisites 	Update prerequisites"
+	echo "	update prerequisites 	Update software required to run Drude"
 	if ! is_linux; then
-		echo "	update boot2docker	Update docker machine (boot2docker) box"
+		echo "	update boot2docker	Upgrade docker machine that holds Drude"
 	fi
 	echo "	update images		Update container images"
-	echo "	update dsh		Update dsh itself (ex. dsh self-update)"
+	echo "	update dsh		Update dsh itself (dsh self-update)"
 	echo
 	echo "	cleanup			Cleanup images to save space (--hard to clean up containers)"
 	echo "	system-information	(sysinfo) Show diagnostics information for bug reporting"
