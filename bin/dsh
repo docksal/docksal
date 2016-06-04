@@ -1458,6 +1458,12 @@ behat ()
 	_run "cd $path && bin/behat -p docker $params"
 }
 
+_docker ()
+{
+	check_docker_running
+	docker "$@"
+}
+
 # Download script by URL and execute it
 # @param $1 url of script.
 exec_url ()
@@ -1741,6 +1747,10 @@ case $1 in
 	behat)
 		shift
 		behat "$@"
+		;;
+	docker)
+		shift
+		_docker "$@"
 		;;
 	exec-url)
 		shift
