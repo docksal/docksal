@@ -515,7 +515,7 @@ show_help ()
 	local commands_path="$(get_drude_path)/$DRUDE_COMMANDS_PATH"
 	local custom_commands_list
 
-	echo "Drude Shell $DSH_VERSION help."
+	printh "Drude Shell v$DSH_VERSION commands reference" "" "green"
 
 	# Show help for certain command
 	if [[ ! -z "$1" ]]; then
