@@ -581,6 +581,9 @@ show_help ()
 	if ! is_linux && [[ "$DOCKER_MACHINE_PROVIDER" == "virtualbox" ]]; then
 		echo "	vmstat			Show virtualbox vm usage statistics"
 	fi
+	if ! is_linux; then
+		echo "	ip			Show Drude's docker machine ip address"
+	fi
 	echo "	version	(v, -v)		Print dsh version. [v, -v] - prints short version"
 
 	# Show list of custom commands and their help if available
@@ -843,6 +846,12 @@ vmstat ()
 	vboxmanage metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
 	sleep 1
 	vboxmanage metrics query "$DOCKER_MACHINE_NAME" $metrics
+}
+
+_ip ()
+{
+	check_docker_running
+	docker-machine ip "$DOCKER_MACHINE_NAME"
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
@@ -1657,6 +1666,9 @@ case $1 in
 		;;
 	vmstat)
 		vmstat
+		;;
+	ip)
+		_ip
 		;;
 	ssh-add)
 		shift
