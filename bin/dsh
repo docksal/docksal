@@ -1103,10 +1103,10 @@ install_boot2docker ()
 		B2D_NO_AUTOSTART=1 ~/setup.sh
 	elif is_mac; then
 		if is_docker_machine_exist; then
-			echo-yellow "Docker Machine '$DOCKER_MACHINE_NAME' already exists. Going to re-create it."
-			_confirm "Continue?"
+			echo-red "Docker Machine '$DOCKER_MACHINE_NAME' already exists. Going to re-create it."
 		fi
-		docker_machine_start --recreate
+		docker-machine rm "$DOCKER_MACHINE_NAME"
+		docker_machine_start
 	fi
 }
 
