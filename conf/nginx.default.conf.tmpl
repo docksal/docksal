@@ -1,28 +1,43 @@
+{{ $CurrentContainer := where $ "ID" .Docker.CurrentContainerID | first }}
+
+{{ define "upstream" }}
+	{{ if .Address }}
+		{{/* If we got the containers from swarm and this container's port is published to host, use host IP:PORT */}}
+		{{ if and .Container.Node.ID .Address.HostPort }}
+			# {{ .Container.Node.Name }}/{{ .Container.Name }}
+			server {{ .Container.Node.Address.IP }}:{{ .Address.HostPort }};
+		{{/* If there is no swarm node or the port is not published on host, use container's IP:PORT */}}
+		{{ else if .Network }}
+			# {{ .Container.Name }}
+			server {{ .Network.IP }}:{{ .Address.Port }};
+		{{ end }}
+	{{ else if .Network }}
+		# {{ .Container.Name }}
+		server {{ .Network.IP }} down;
+	{{ end }}
+{{ end }}
+
 {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
 
 upstream {{ $host }} {
 {{ range $container := $containers }}
 	{{ $addrLen := len $container.Addresses }}
-	{{/* If only 1 port exposed, use that */}}
-	{{ if eq $addrLen 1 }}
-		{{ with $address := index $container.Addresses 0 }}
-		   # {{$container.Name}}
-		   server {{ $address.IP }}:{{ $address.Port }};
-		{{ end }}
-	{{/* If more than one port exposed, use the one matching VIRTUAL_PORT env var */}}
-	{{ else if $container.Env.VIRTUAL_PORT }}
-		{{ range $address := .Addresses }}
-		   {{ if eq $address.Port $container.Env.VIRTUAL_PORT }}
-		   # {{$container.Name}}
-		   server {{ $address.IP }}:{{ $address.Port }};
-		   {{ end }}
-		{{ end }}
-	{{/* Else default to standard web port 80 */}}
-	{{ else }}
-		{{ range $address := $container.Addresses }}
-			{{ if eq $address.Port "80" }}
-			# {{$container.Name}}
-			server {{ $address.IP }}:{{ $address.Port }};
+
+	{{ range $knownNetwork := $CurrentContainer.Networks }}
+		{{ range $containerNetwork := $container.Networks }}
+			{{ if eq $knownNetwork.Name $containerNetwork.Name }}
+				## Reachable via "{{ $containerNetwork.Name }}" network
+
+				{{/* If only 1 port exposed, use that */}}
+				{{ if eq $addrLen 1 }}
+					{{ $address := index $container.Addresses 0 }}
+					{{ template "upstream" (dict "Container" $container "Address" $address "Network" $containerNetwork) }}
+				{{/* If more than one port exposed, use the one matching VIRTUAL_PORT env var, falling back to standard web port 80 */}}
+				{{ else }}
+					{{ $port := coalesce $container.Env.VIRTUAL_PORT "80" }}
+					{{ $address := where $container.Addresses "Port" $port | first }}
+					{{ template "upstream" (dict "Container" $container "Address" $address "Network" $containerNetwork) }}
+				{{ end }}
 			{{ end }}
 		{{ end }}
 	{{ end }}
