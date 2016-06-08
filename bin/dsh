@@ -460,7 +460,7 @@ _remove_containers ()
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
-	docker_compose kill $* && docker_compose rm -v --force $*
+	docker_compose kill $* && docker_compose rm -vaf $*
 }
 
 _docker_cleanup ()
