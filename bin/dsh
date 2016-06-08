@@ -836,7 +836,7 @@ install_prerequisites ()
 install_proxy_service ()
 {
 	docker rm -f vhost-proxy >/dev/null 2>&1 || true
-	docker run -d --name vhost-proxy --label "group=system" --restart=always \
+	docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
 		"blinkreaction/nginx-proxy:${DRUDE_ITAG}" >/dev/null 2>&1
@@ -849,7 +849,7 @@ install_dns_service ()
 	if is_linux; then dns=$DRUDE_DEFAULT_DNS; else dns=$DRUDE_VBOX_DNS; fi
 
 	docker rm -f dns >/dev/null 2>&1 || true
-	docker run -d --name dns --label "group=system" --restart=always \
+	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
 		-p 53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"blinkreaction/dns-discovery:${DRUDE_ITAG}" >/dev/null 2>&1
@@ -858,7 +858,7 @@ install_dns_service ()
 install_sshagent_service ()
 {
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
-	docker run -d --name ssh-agent --label "group=system" --restart=always \
+	docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"blinkreaction/ssh-agent:${DRUDE_ITAG}" >/dev/null 2>&1
 }
