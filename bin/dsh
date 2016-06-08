@@ -216,6 +216,15 @@ is_mac ()
 	fi
 }
 
+is_docker_beta ()
+{
+	if [[ "$DOCKER_BETA" == "1" ]]; then
+		return 0;
+	else
+		return 1;
+	fi
+}
+
 # searches if binary exists and callable in PATH
 is_binary_found ()
 {
@@ -241,7 +250,7 @@ check_binary_found ()
 
 is_docker_running ()
 {
-	if is_linux || [[ $DOCKER_BETA -eq 1 ]]; then
+	if is_linux || is_docker_beta; then
 		local err
 		local errcode
 		# Check if docker is running via docker info.
@@ -336,7 +345,7 @@ check_yml()
 		exit 1
 	fi
 
-	if is_linux || [[ $DOCKER_BETA -eq 1 ]]; then
+	if is_linux || is_docker_beta; then
 		return; # linux does not need vagrant
 	fi
 
@@ -656,7 +665,7 @@ bash_comp_words ()
 up ()
 {
 	check_yml
-	if is_linux || is_boot2docker || [[ $DOCKER_BETA -eq 1 ]]; then
+	if is_linux || is_boot2docker || is_docker_beta; then
 		_start_containers
 	else
 		check_binary_found vagrant
@@ -704,7 +713,7 @@ restart ()
 reload ()
 {
 	check_yml
-	if is_linux || is_boot2docker || [[ $DOCKER_BETA -eq 1 ]]; then
+	if is_linux || is_boot2docker || is_docker_beta; then
 		_start_containers
 	else
 		check_binary_found vagrant
