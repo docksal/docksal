@@ -332,6 +332,16 @@ check_docker_running ()
 			msg="$msg via '$DOCKER_HOST'"
 		fi
 		echo-red "$msg"
+		
+		if is_docker_beta; then
+			echo-red "Make sure the Docker Beta app is running"
+		elif is_mac || is_windows; then
+			echo-red "Drude VM may not be running. It can be started with 'dsh up'"
+			_confirm "Run 'dsh up' now?"
+			up
+			if_failed "Could not start the VM properly"
+		fi
+
 		exit 1
 	fi
 }
