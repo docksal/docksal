@@ -668,7 +668,7 @@ up ()
 	if is_linux || is_boot2docker || is_docker_beta; then
 		_start_containers
 	else
-		check_binary_found vagrant
+		check_binary_found 'vagrant'
 		local started
 		if ! is_docker_running; then
 			echo-green "dsh: Starting vagrant vm..."
@@ -716,7 +716,7 @@ reload ()
 	if is_linux || is_boot2docker || is_docker_beta; then
 		_start_containers
 	else
-		check_binary_found vagrant
+		check_binary_found 'vagrant'
 		echo-green "dsh: Restarting vagrant vm..."
 		vagrant reload
 		if [ $? -eq 0 ]; then
@@ -1606,9 +1606,9 @@ case $1 in
 		vmstat
 		;;
 	ssh-add)
-	    shift
-	    ssh_add "$*"
-	    ;;
+		shift
+		ssh_add "$*"
+		;;
 	install)
 		shift
 		install $*
