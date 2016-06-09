@@ -40,6 +40,12 @@ On Mac and Windows only (skip for Linux) also run:
 dsh update boot2docker
 ```
 
+Finally, you will probably need to re-initialize your environment with:
+
+```
+dsh init
+```
+
 
 <a name="dsh"></a>
 ## Drude Shell Helper (dsh)
