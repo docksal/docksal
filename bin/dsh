@@ -475,19 +475,21 @@ _restart_containers ()
 # @param $1 "-a" || "--all"
 _stop_containers ()
 {
-	check_docker_running
 	echo-yellow "Stopping services..."
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
+		check_docker_running
 		# stop all but system containers (--label "group=system")
 		docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
+	else
+		check_dsh_environment
+		docker_compose stop
 	fi
-	docker_compose stop
 }
 
 # @param $1 container_name
 _remove_containers ()
 {
-	check_docker_running
+	check_dsh_environment
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
