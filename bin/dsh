@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.2
+DSH_VERSION=1.99.3
 
 # Console colors
 red='\033[0;91m'
@@ -754,10 +754,10 @@ docker_machine_env ()
 }
 
 # Stop docker machine
-docker_machine_kill ()
+docker_machine_stop ()
 {
 	check_binary_found 'docker-machine'
-	docker-machine kill "$DOCKER_MACHINE_NAME"
+	docker-machine stop "$DOCKER_MACHINE_NAME"
 	return $?
 }
 
@@ -789,6 +789,8 @@ docker_machine_start ()
 
 docker_machine_nfs_setup ()
 {
+	# TODO: make nfs not write into docker machine startup
+	# TODO: make this function docker_machine_mounts and amke it use smb for win
 	if [[ $DOCKER_MACHINE_PROVIDER == 'virtualbox' ]]; then
 		docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
 	fi
@@ -825,7 +827,7 @@ halt ()
 	if is_linux; then
 		_stop_containers
 	else
-		docker_machine_kill
+		docker_machine_stop
 	fi
 }
 
@@ -840,11 +842,11 @@ restart ()
 # Restart docker-machine and start containers again
 reload ()
 {
-	check_yml
+	check_dsh_environment
 	if is_linux || is_boot2docker || is_docker_beta; then
 		_start_containers
 	else
-		docker_machine_kill && \
+		docker_machine_stop && \
 			docker_machine_start && \
 			_start_containers
 	fi
@@ -854,11 +856,12 @@ reload ()
 # @param $1 Show containers from all projects (-a)
 status ()
 {
-	check_dsh_environment
 
 	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
+		check_docker_running
 		docker ps
 	else
+		check_dsh_environment
 		docker_compose ps
 	fi
 }
@@ -964,10 +967,12 @@ install_proxy_service ()
 		"blinkreaction/nginx-proxy:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
+# @param $1 ip address defaults to 0.0.0.0
 install_dns_service ()
 {
 	# Use default DNS on Linux and VirtualBox's buit-in DNS if using boot2docker
 	local dns
+	local ip="${1:-0.0.0.0}"
 	if is_linux; then dns=$DRUDE_DEFAULT_DNS; else dns=$DRUDE_VBOX_DNS; fi
 
 	# Support for boot2docker-vagrant
@@ -976,7 +981,7 @@ install_dns_service ()
 	   
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
-		-p $DRUDE_IP:53:53/udp $docker_ip_map --cap-add=NET_ADMIN --dns $dns \
+		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"blinkreaction/dns-discovery:${DRUDE_ITAG}" >/dev/null 2>&1
 }
@@ -986,6 +991,7 @@ configure_resolver ()
 {
 	check_docker_running
 	local DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
+	install_dns_service "$DRUDE_IP"
 
 	if is_mac; then
 		echo-green "Configuring host DNS resolver for .drude domain..."
@@ -1147,14 +1153,13 @@ EOF
 	if_failed "Drude HTTP/HTTPS reverse proxy setup failed."
 
 	echo-green "Creating Drude DNS service..."
-	install_dns_service
+	configure_resolver
 	if_failed "Drude DNS service setup failed."
 
 	echo-green "Creating Drude ssh-agent service..."
 	install_sshagent_service
 	if_failed "Drude ssh-agent service setup failed."
 
-	configure_resolver
 
 	echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
 }
