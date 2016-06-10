@@ -152,9 +152,12 @@ docker_compose ()
 	cd $(get_yml_path)
 	
 	docker-compose $*
+	res=$?
 	
 	# switch back to the original path
 	cd $cwd
+	
+	return $res
 }
 
 # Get container id by service name
@@ -430,18 +433,18 @@ _start_containers ()
 {
 	ssh_add
 	echo-green "Starting services..."
-	docker_compose up -d
-	_vhost_proxy_connect
-	_set_cli_uid
+	docker_compose up -d && \
+	    _vhost_proxy_connect && \
+	    _set_cli_uid
 }
 
 # @param $1 container_name
 _restart_containers ()
 {
 	echo-green "Restarting services..."
-	docker_compose restart $*
-	_vhost_proxy_connect
-	_set_cli_uid
+	docker_compose restart $* && \
+	    _vhost_proxy_connect && \
+	    _set_cli_uid
 }
 
 # @param $1 "-a" || "--all"
