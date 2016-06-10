@@ -11,7 +11,7 @@ You can give this URL to anyone to allow them to try out a web site you're devel
 
 ## How to use
 
-Uncomment the **share** service definition section in [`docker-compose.yml`](../../docker-compose.yml) to start using ngrok.
+Uncomment the **share** service definition section in [`docker-compose.yml`](../docker-compose.yml) to start using ngrok.
 
 To get the *.ngrok.com address, check the container's logs:
 
