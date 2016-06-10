@@ -810,13 +810,13 @@ docker_machine_start ()
 	if is_docker_machine_exist; then
 		docker-machine start "$DOCKER_MACHINE_NAME" && \
 			docker_machine_env && \
-			docker_machine_nfs_setup
+			docker_machine_mounts
 	else
 		echo-green "Creating Docker Machine '$DOCKER_MACHINE_NAME'..."
 		docker_machine_create && \
 			docker_machine_env && \
 			reset system && \
-			docker_machine_nfs_setup
+			docker_machine_mounts
 	fi
 
 	local err=$?
@@ -828,12 +828,16 @@ docker_machine_start ()
 	return $err
 }
 
-docker_machine_nfs_setup ()
+docker_machine_mounts ()
 {
-	# TODO: make nfs not write into docker machine startup
-	# TODO: make this function docker_machine_mounts and amke it use smb for win
 	if [[ $DOCKER_MACHINE_PROVIDER == 'virtualbox' ]]; then
-		docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
+		if is_mac; then
+			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
+		elif is_windows; then
+			# TODO: implement docker-machine-smb
+			# docker-machine-smb "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
+			echo-red "dsh: mount shares manually with docker-machine-smb"
+		fi
 	fi
 }
 
