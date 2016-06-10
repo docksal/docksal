@@ -1,7 +1,6 @@
 # Debugging with Drude, Xdebug and PhpStorm
 
-`cli` container has `xdebug` extension inbuilt but it is disabled by default for better performance.  
-Performance difference with and without Xdebug is ~20%.  
+`xdebug` extension is disabled by default as it causes about 20% performance hit.
 
 ## Prerequisites
 
@@ -12,14 +11,16 @@ Performance difference with and without Xdebug is ~20%.
 
 ## Setup
 
-1. Set environment variable on `cli` container to enable Xdebug
+1. Set environment variable on the `cli` service
+
     ```yml
     cli:
       ...
       environment:
         - XDEBUG_ENABLED=1
+      ...
     ```
-1. Restart services with `dsh up`
+1. Update container configuration with `dsh up`
 1. Open your project in PHPStorm
 1. Set a breakpoint wherever you like
 1. Click on the **Start Listening for PHP Debug Connections** button in PHPStorm
