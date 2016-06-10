@@ -343,13 +343,52 @@ check_docker_running ()
 
 is_vbox_version ()
 {
-	! is_binary_found 'VBoxManage' && return 1
+	if is_windows; then
+		local VBoxManage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+		[[ ! -f "$VBoxManage" ]] && return 1
+	else
+		! is_binary_found 'VBoxManage' && return 1
+		local VBoxManage='VBoxManage'
+	fi
 
-	local virtualbox_version=$(VBoxManage -v | sed "s/r.*//" 2>/dev/null)
+	local virtualbox_version=$("$VBoxManage" -v | sed "s/r.*//" 2>/dev/null)
 	[[ $(ver_to_int $virtualbox_version) < $(ver_to_int $DSH_REQUIREMENTS_VBOX) ]] && \
 		return 1
 
 	return 0
+}
+
+is_docker_version ()
+{
+	! is_binary_found 'docker' && return 1
+
+	local version=$(docker -v | sed "s/^Docker version \(.*\),.*/\1/")
+	[[ $version == $DSH_REQUIREMENTS_DOCKER ]] && \
+		return 0;
+
+	return 1;
+}
+
+is_docker_compose_version ()
+{
+	! is_binary_found 'docker-compose' && return 1
+
+	local version=$(docker-compose -v | sed "s/^docker-compose version \(.*\),.*/\1/")
+	[[ $version == $DSH_REQUIREMENTS_DOCKER_COMPOSE ]] && \
+		return 0;
+
+	return 1;
+}
+
+is_docker_machine_version ()
+{
+	! is_binary_found 'docker-machine' && return 1
+
+	local version=$(docker-machine -v | sed "s/^docker-machine version \(.*\),.*/\1/")
+	[[ $version == $DSH_REQUIREMENTS_DOCKER_MACHINE ]] && \
+		return 0;
+
+	return 1;
 }
 
 check_vbox_version ()
@@ -937,25 +976,22 @@ install_prerequisites ()
 {
 	testing_warn
 	if is_docker_running; then
-		if is_linux; then
-			stopcmd="'dsh stop'"
-		else
-			stopcmd="'dsh halt'"
-		fi
-		echo-yellow "WARNING: Docker is running. It's recommended to stop Docker first with ${stopcmd} "
+		echo-red "dsh: Docker services should be stopped to continue."
 		_confirm "Stop Docker now?"
-		halt
+		if is_linux; then
+			_stop_containers
+		else
+			docker_machine_stop
+		fi
 	fi
 
 	echo-green "Installing prerequisites..."
 
-	if is_windows ; then
-		install_windows
-	elif is_linux ; then
-		install_ubuntu
-	else # mac
-		install_mac
-	fi
+	is_windows && install_windows && return
+	is_linux && install_ubuntu && return
+	is_mac && install_mac && return
+
+	echo-red "Your OS is not supported" && return 1
 }
 
 install_proxy_service ()
@@ -1045,15 +1081,37 @@ install_mac ()
 		fi
 	fi
 
+	# Install Docker client
+	if ! is_docker_version; then
+		echo-green "Installing docker client v${DSH_REQUIREMENTS_DOCKER}..."
+		sudo rm -f /usr/local/bin/docker >/dev/null 2>&1 || true
+		curl -sSL -O "https://get.docker.com/builds/$(uname -s)/$(uname -m)/docker-$DSH_REQUIREMENTS_DOCKER.tgz"
+		tar zxf docker-$DSH_REQUIREMENTS_DOCKER.tgz
+		sudo mv docker/* /usr/local/bin
+		rm -rf docker-$DSH_REQUIREMENTS_DOCKER*
+	fi
+
+	# Install docker-compose
+	if ! is_docker_compose_version; then
+		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
+		sudo rm -f /usr/local/bin/docker-compose >/dev/null 2>&1 || true
+		sudo curl -sSL "https://github.com/docker/compose/releases/download/$DSH_REQUIREMENTS_DOCKER_COMPOSE/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+		sudo chmod +x /usr/local/bin/docker-compose
+	fi
+
 	# Install docker-machine
-	if [[ ! -x $(which docker-machine) ]]; then
-		rm -f /usr/local/bin/docker-machine
-		curl -L https://github.com/docker/machine/releases/download/v0.7.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine && \
-			chmod +x /usr/local/bin/docker-machine
+	if ! is_docker_machine_version; then
+		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
+		sudo rm -f /usr/local/bin/docker-machine >/dev/null 2>&1 || true
+		curl -L https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$(uname -s)-$(uname -m) |
+			sudo tee /usr/local/bin/docker-machine > /dev/null && \
+			sudo chmod +x /usr/local/bin/docker-machine
 	fi
 
 	# Install docker-machine-nfs
 	if [[ ! -x $(which docker-machine-nfs) ]]; then
+		echo-green "Installing docker-machine-nfs..."
+		sudo rm -f /usr/local/bin/docker-machine-nfs >/dev/null 2>&1 || true
 		curl -s https://raw.githubusercontent.com/adlogix/docker-machine-nfs/master/docker-machine-nfs.sh |
 			sudo tee /usr/local/bin/docker-machine-nfs > /dev/null && \
 			sudo chmod +x /usr/local/bin/docker-machine-nfs
@@ -1063,39 +1121,58 @@ install_mac ()
 install_windows ()
 {
 	# Install Choco
-	echo-green "Installing Chocolatey" #packet manager
-	winsudo "@powershell -NoProfile -ExecutionPolicy unrestricted -Command \"iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))\" && SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+	if ! is_binary_found 'choco'; then
+		echo-green "Installing Chocolatey..." #packet manager
+		winsudo "@powershell -NoProfile -ExecutionPolicy unrestricted -Command \"iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))\" && SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+	fi
 
 	# Install VirtulBox
-	echo-green "Installing VirtualBox"
-	winsudo "choco upgrade virtualbox -y"
+	if ! is_vbox_version; then
+		echo-green "Installing VirtualBox..."
+		winsudo "choco upgrade virtualbox -y"
 
-	echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
-	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
-	winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
-	winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
+		echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
+		vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+		winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
+		winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
+	fi
 
-	# Remove old docker version
-	rm -f /usr/local/bin/docker >/dev/null 2>&1 || true
-	# Install Docker
-	echo-green "Installing Docker cli v${DSH_REQUIREMENTS_DOCKER}..."
-	curl -sSL -O https://get.docker.com/builds/Windows/i386/docker-$DSH_REQUIREMENTS_DOCKER.zip
-	unzip docker-$DSH_REQUIREMENTS_DOCKER.zip
-	mv docker/* /usr/local/bin
-	rm -rf docker-$DSH_REQUIREMENTS_DOCKER*
+	# Install Docker client
+	if ! is_docker_version; then
+		echo-green "Installing Docker cli v${DSH_REQUIREMENTS_DOCKER}..."
+		rm -f /usr/local/bin/docker >/dev/null 2>&1 || true
+		curl -sSL -O https://get.docker.com/builds/Windows/i386/docker-$DSH_REQUIREMENTS_DOCKER.zip && \
+			unzip "docker-$DSH_REQUIREMENTS_DOCKER.zip" && \
+			mv docker/* /usr/local/bin && \
+			chmod +x "/usr/local/bin/docker.exe" && \
+			rm -rf "docker-$DSH_REQUIREMENTS_DOCKER*"
+	fi
 
-	# Remove old docker-compose version
-	rm -f /usr/local/bin/docker-compose >/dev/null 2>&1 || true
-	# Install Docker Compose
-	echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
-	curl -sSL https://github.com/docker/compose/releases/download/$DSH_REQUIREMENTS_DOCKER_COMPOSE/docker-compose-Windows-x86_64.exe -o /usr/local/bin/docker-compose.exe
-	chmod +x /usr/local/bin/docker-compose.exe
+		# Install Docker Compose
+	if ! is_docker_compose_version; then
+		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
+		rm -f /usr/local/bin/docker-compose >/dev/null 2>&1 || true
+		curl -sSL https://github.com/docker/compose/releases/download/$DSH_REQUIREMENTS_DOCKER_COMPOSE/docker-compose-Windows-x86_64.exe \
+			-o "/usr/local/bin/docker-compose.exe" && \
+			chmod +x "/usr/local/bin/docker-compose.exe"
+	fi
 
-	# Install Docker Machine
-	echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
-	curl -L https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe \
-		-o "/usr/local/bin/docker-machine.exe" && \
-	chmod +x "/usr/local/bin/docker-machine.exe"
+		# Install Docker Machine
+	if ! is_docker_machine_version; then
+		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
+		curl -L https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe \
+			-o "/usr/local/bin/docker-machine.exe" && \
+			chmod +x "/usr/local/bin/docker-machine.exe"
+	fi
+
+	# Install docker-machine-smb
+	if [[ ! -x $(which docker-machine-smb) ]]; then
+		echo-green "Installing docker-machine-smb..."
+		rm -f /usr/local/bin/docker-machine-smb >/dev/null 2>&1 || true
+		curl -s https://raw.githubusercontent.com/drude/docker-machine-smb/master/docker-machine-smb |
+			tee /usr/local/bin/docker-machine-smb > /dev/null && \
+			chmod +x /usr/local/bin/docker-machine-smb
+	fi
 
 	# Install winpty
 	echo-green "Installing winpty (console) v${DSH_REQUIREMENTS_WINPTY}..."
@@ -1123,21 +1200,26 @@ install_ubuntu ()
 		fi
 	fi
 
-	echo-green "Installing Docker..."
-	curl -sSL https://get.docker.com/ | sh && \
-	sudo usermod -aG docker $(whoami) && \
-	sudo docker version
-	if_failed "Docker installation/upgrade failed."
+	# Install Docker client
+	if ! is_docker_version; then
+		echo-green "Installing Docker client..."
+		curl -sSL https://get.docker.com/ | sh && \
+			sudo usermod -aG docker $(whoami) && \
+			sudo docker version
+		if_failed "Docker installation/upgrade failed."
+	fi
 
-	echo-green "Installing Docker Compose..."
-	sudo curl -L https://github.com/docker/compose/releases/download/1.7.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
-	sudo chmod +x /usr/local/bin/docker-compose && \
-	docker-compose --version
-	if_failed "Docker Compose installation/upgrade failed."
+	if ! is_docker_compose_version; then
+		echo-green "Installing Docker Compose..."
+		sudo curl -L https://github.com/docker/compose/releases/download/1.7.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
+			sudo chmod +x /usr/local/bin/docker-compose && \
+			docker-compose --version
+		if_failed "Docker Compose installation/upgrade failed."
+	fi
 
-	echo-green "Adding a subnet for Drude..."
-	# Make sure we don't do this twice
+	# Adding a subnet for Drude. Make sure we don't do this twice
 	if ! grep -q $DRUDE_SUBNET /etc/network/interfaces; then
+		echo-green "Adding a subnet for Drude..."
 		cat > /tmp/drude.ip.addr <<EOF
 	up   ip addr add $DRUDE_SUBNET dev lo label lo:drude
 	down ip addr del $DRUDE_SUBNET dev lo label lo:drude
@@ -1159,7 +1241,6 @@ EOF
 	echo-green "Creating Drude ssh-agent service..."
 	install_sshagent_service
 	if_failed "Drude ssh-agent service setup failed."
-
 
 	echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
 }
