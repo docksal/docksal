@@ -1,9 +1,10 @@
 #!/bin/bash
 
-DSH_VERSION=1.19.3
+DSH_VERSION=1.20.0
 
 # Console colors
-red='\033[0;31m'
+red='\033[0;91m'
+red_bg='\033[101m'
 green='\033[0;32m'
 green_bg='\033[42m'
 yellow='\033[1;33m'
@@ -1147,8 +1148,20 @@ update_dsh ()
 	testing_warn
 	echo "Downloading..."
 	local new_dsh
-	new_dsh=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
+	new_dsh=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh")
 	if_failed "Download has failed."
+
+	# Check if update is a major version. Show warning is needed
+	local new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
+	local current_major_version=$(echo $DSH_VERSION | cut -d "." -f 1)
+	local new_major_version=$(echo $new_version | cut -d "." -f 1)
+	if [[ "$current_major_version" != "$new_major_version" ]]; then
+		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
+		echo -e "Updating from ${yellow}$DSH_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwards compatible update."
+		echo "You might be not able to use you current Drude environment if you proceed."
+		echo -e "Please read update documentation: ${yellow}https://github.com/blinkreaction/drude#updates${NC}"
+		_confirm "Continue with update?"
+	fi
 
 	# saving to file
 	echo "$new_dsh" | sudo tee /usr/local/bin/dsh > /dev/null
