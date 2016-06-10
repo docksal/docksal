@@ -834,7 +834,12 @@ install_prerequisites ()
 		fi
 		echo-yellow "WARNING: Docker is running. It's recommended to stop Docker first with ${stopcmd} "
 		_confirm "Stop Docker now?"
-		halt
+		
+		if is_linux || is_boot2docker; then
+		    _stop_containers
+	    else
+		    vagrant halt
+	    fi
 	fi
 
 	echo-green "Installing prerequisites..."
