@@ -88,7 +88,7 @@ Tools available inside the **cli** container:
 - [Public access](/docs/public-access.md)
 - [DB sandbox mode](/docs/db-sandbox.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
-- [Zero-configuration debugging with Xdebug and PhpStorm](/docs/xdebug.md)
+- [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 
 ### Third party utililies
 - [Using Behat](/docs/behat.md)
