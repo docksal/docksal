@@ -2,6 +2,7 @@
 
 ## 1.4.0 (2016-06-10)
 
+- dsh v1.20.0
 - Added update checker (once a week, currently dsh only)
 - Allow install prerequisites on other Linux versions if user takes the risk
 - dsh -v will now show short version
