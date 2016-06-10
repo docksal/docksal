@@ -1024,6 +1024,7 @@ install_dns_service ()
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns $dns \
+		-e DRUDE_IP="$ip" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"blinkreaction/dns-discovery:${DRUDE_ITAG}" >/dev/null 2>&1
 }
@@ -1041,6 +1042,7 @@ configure_resolver ()
 		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee 1>/dev/null /etc/resolver/drude
 	elif is_linux; then
 		echo-green "Configuring host DNS resolver for .drude domain..."
+		# TODO remove old record
 		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee -a /etc/resolvconf/resolv.conf.d/head
 		sudo resolvconf -u
 	fi
@@ -1667,7 +1669,7 @@ reset ()
 
 	if [[ "$1" == "dns" ]] ; then
 		echo-green 'Resetting Drude DNS service...'
-		install_dns_service
+		configure_resolver
 		return
 	fi
 
@@ -1682,7 +1684,7 @@ reset ()
 		echo 'vhost-proxy'
 		install_proxy_service
 		echo 'dns'
-		install_dns_service
+		configure_resolver
 		echo 'ssh-agent'
 		install_sshagent_service
 		return
