@@ -434,8 +434,8 @@ _start_containers ()
 	ssh_add
 	echo-green "Starting services..."
 	docker_compose up -d && \
-	    _vhost_proxy_connect && \
-	    _set_cli_uid
+		_vhost_proxy_connect && \
+		_set_cli_uid
 }
 
 # @param $1 container_name
@@ -443,8 +443,8 @@ _restart_containers ()
 {
 	echo-green "Restarting services..."
 	docker_compose restart $* && \
-	    _vhost_proxy_connect && \
-	    _set_cli_uid
+		_vhost_proxy_connect && \
+		_set_cli_uid
 }
 
 # @param $1 "-a" || "--all"
@@ -836,10 +836,10 @@ install_prerequisites ()
 		_confirm "Stop Docker now?"
 		
 		if is_linux || is_boot2docker; then
-		    _stop_containers
-	    else
-		    vagrant halt
-	    fi
+			_stop_containers
+		else
+			vagrant halt
+		fi
 	fi
 
 	echo-green "Installing prerequisites..."
@@ -876,10 +876,10 @@ install_dns_service ()
 	local dns
 	if is_linux; then dns=$DRUDE_DEFAULT_DNS; else dns=$DRUDE_VBOX_DNS; fi
 
-    # Support for boot2docker-vagrant
-    local docker_ip_map="-p 172.17.42.1:53:53/udp"
-    if is_linux; then docker_ip_map=""; fi
-       
+	# Support for boot2docker-vagrant
+	local docker_ip_map="-p 172.17.42.1:53:53/udp"
+	if is_linux; then docker_ip_map=""; fi
+	   
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
 		-p $DRUDE_IP:53:53/udp $docker_ip_map --cap-add=NET_ADMIN --dns $dns \
