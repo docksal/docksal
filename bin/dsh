@@ -868,9 +868,13 @@ install_dns_service ()
 	local dns
 	if is_linux; then dns=$DRUDE_DEFAULT_DNS; else dns=$DRUDE_VBOX_DNS; fi
 
+    # Support for boot2docker-vagrant
+    local docker_ip_map="-p 172.17.42.1:53:53/udp"
+    if is_linux; then docker_ip_map=""; fi
+       
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
-		-p 53:53/udp --cap-add=NET_ADMIN --dns $dns \
+		-p $DRUDE_IP:53:53/udp $docker_ip_map --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"blinkreaction/dns-discovery:${DRUDE_ITAG}" >/dev/null 2>&1
 }
