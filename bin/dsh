@@ -37,7 +37,30 @@ DOCKER_MACHINE_PROVIDER='virtualbox'
 DOCKER_MACHINE_VBOX_RAM='1024' #mb
 DOCKER_MACHINE_VBOX_HDD='20000' #mb
 
+# URL-s
+OS_NAME=$(uname -s)
+HARDWARE=$(uname -m)
+URL_DSH="https://raw.githubusercontent.com/blinkreaction/drude/${DRUDE_BRANCH}/bin/dsh"
+
+URL_HOMEBREW="https://raw.githubusercontent.com/Homebrew/install/master/install"
+URL_DOCKER_MAC="https://get.docker.com/builds/$(uname -s)/$(uname -m)/docker-${DSH_REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_NIX="https://get.docker.com/"
+URL_DOCKER_WIN="https://get.docker.com/builds/Windows/i386/docker-${DSH_REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${DSH_REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-$(uname -s)-$(uname -m)"
+URL_DOCKER_COMPOSE_NIX="$URL_DOCKER_COMPOSE_MAC"
+URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${DSH_REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
+URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$(uname -s)-$(uname -m)"
+URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
+
+URL_DOCKER_MACHINE_NFS="https://raw.githubusercontent.com/adlogix/docker-machine-nfs/master/docker-machine-nfs.sh"
+URL_DOCKER_MACHINE_SMB="https://raw.githubusercontent.com/drude/docker-machine-smb/master/docker-machine-smb"
+URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DSH_REQUIREMENTS_WINPTY}/winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32.tar.gz"
+
+URL_DRUDE_CONFIG="https://raw.githubusercontent.com/blinkreaction/drude/${DRUDE_BRANCH}/docker-compose.yml"
+URL_BASH_AUTOCOMPLETE="https://raw.githubusercontent.com/blinkreaction/drude/${DRUDE_BRANCH}/bin/dsh-bash-complete"
+
 #---------------------------- Global Variables --------------------------------
+
 DOCKER_BETA="${DOCKER_BETA:-0}"
 DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 # Allow image tag overrides for system services. See install_xyz_service()
@@ -1062,7 +1085,7 @@ install_mac ()
 	# Install brew
 	if ! is_binary_found 'brew'; then
 		echo-green "Installing Homebrew..."
-		ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+		ruby -e "$(curl -fsSL $URL_HOMEBREW)"
 	fi
 
 	# Install VirtualBox
@@ -1093,7 +1116,7 @@ install_mac ()
 	if ! is_docker_version; then
 		echo-green "Installing docker client v${DSH_REQUIREMENTS_DOCKER}..."
 		sudo rm -f /usr/local/bin/docker >/dev/null 2>&1 || true
-		curl -sSL -O "https://get.docker.com/builds/$(uname -s)/$(uname -m)/docker-$DSH_REQUIREMENTS_DOCKER.tgz"
+		curl -sSL -O "$URL_DOCKER_MAC"
 		tar zxf docker-$DSH_REQUIREMENTS_DOCKER.tgz
 		sudo mv docker/* /usr/local/bin
 		rm -rf docker-$DSH_REQUIREMENTS_DOCKER*
@@ -1103,7 +1126,7 @@ install_mac ()
 	if ! is_docker_compose_version; then
 		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
 		sudo rm -f /usr/local/bin/docker-compose >/dev/null 2>&1 || true
-		sudo curl -sSL "https://github.com/docker/compose/releases/download/$DSH_REQUIREMENTS_DOCKER_COMPOSE/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+		sudo curl -sSL "$URL_DOCKER_COMPOSE_MAC" -o /usr/local/bin/docker-compose
 		sudo chmod +x /usr/local/bin/docker-compose
 	fi
 
@@ -1111,7 +1134,7 @@ install_mac ()
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
 		sudo rm -f /usr/local/bin/docker-machine >/dev/null 2>&1 || true
-		curl -L https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$(uname -s)-$(uname -m) |
+		curl -L "$URL_DOCKER_MACHINE_MAC" |
 			sudo tee /usr/local/bin/docker-machine > /dev/null && \
 			sudo chmod +x /usr/local/bin/docker-machine
 	fi
@@ -1120,7 +1143,7 @@ install_mac ()
 	if [[ ! -x $(which docker-machine-nfs) ]]; then
 		echo-green "Installing docker-machine-nfs..."
 		sudo rm -f /usr/local/bin/docker-machine-nfs >/dev/null 2>&1 || true
-		curl -s https://raw.githubusercontent.com/adlogix/docker-machine-nfs/master/docker-machine-nfs.sh |
+		curl -s "$URL_DOCKER_MACHINE_NFS" |
 			sudo tee /usr/local/bin/docker-machine-nfs > /dev/null && \
 			sudo chmod +x /usr/local/bin/docker-machine-nfs
 	fi
@@ -1149,7 +1172,7 @@ install_windows ()
 	if ! is_docker_version; then
 		echo-green "Installing Docker cli v${DSH_REQUIREMENTS_DOCKER}..."
 		rm -f /usr/local/bin/docker >/dev/null 2>&1 || true
-		curl -sSL -O https://get.docker.com/builds/Windows/i386/docker-$DSH_REQUIREMENTS_DOCKER.zip && \
+		curl -sSL -O "$URL_DOCKER_WIN" && \
 			unzip "docker-$DSH_REQUIREMENTS_DOCKER.zip" && \
 			mv docker/* /usr/local/bin && \
 			chmod +x "/usr/local/bin/docker.exe" && \
@@ -1160,7 +1183,7 @@ install_windows ()
 	if ! is_docker_compose_version; then
 		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
 		rm -f /usr/local/bin/docker-compose >/dev/null 2>&1 || true
-		curl -sSL https://github.com/docker/compose/releases/download/$DSH_REQUIREMENTS_DOCKER_COMPOSE/docker-compose-Windows-x86_64.exe \
+		curl -sSL "$URL_DOCKER_COMPOSE_WIN" \
 			-o "/usr/local/bin/docker-compose.exe" && \
 			chmod +x "/usr/local/bin/docker-compose.exe"
 	fi
@@ -1168,7 +1191,7 @@ install_windows ()
 		# Install Docker Machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -L https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe \
+		curl -L "$URL_DOCKER_MACHINE_WIN" \
 			-o "/usr/local/bin/docker-machine.exe" && \
 			chmod +x "/usr/local/bin/docker-machine.exe"
 	fi
@@ -1177,14 +1200,14 @@ install_windows ()
 	if [[ ! -x $(which docker-machine-smb) ]]; then
 		echo-green "Installing docker-machine-smb..."
 		rm -f /usr/local/bin/docker-machine-smb >/dev/null 2>&1 || true
-		curl -s https://raw.githubusercontent.com/drude/docker-machine-smb/master/docker-machine-smb |
+		curl -s "$URL_DOCKER_MACHINE_SMB" |
 			tee /usr/local/bin/docker-machine-smb > /dev/null && \
 			chmod +x /usr/local/bin/docker-machine-smb
 	fi
 
 	# Install winpty
 	echo-green "Installing winpty (console) v${DSH_REQUIREMENTS_WINPTY}..."
-	curl -sSL -O https://github.com/rprichard/winpty/releases/download/${DSH_REQUIREMENTS_WINPTY}/winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32.tar.gz
+	curl -sSL -O "$URL_WINPTY"
 	tar -xf winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32.tar.gz
 	mv winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32/bin/* /usr/local/bin
 	rm -rf winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32*
@@ -1211,7 +1234,7 @@ install_ubuntu ()
 	# Install Docker client
 	if ! is_docker_version; then
 		echo-green "Installing Docker client..."
-		curl -sSL https://get.docker.com/ | sh && \
+		curl -sSL "$URL_DOCKER_NIX" | sh && \
 			sudo usermod -aG docker $(whoami) && \
 			sudo docker version
 		if_failed "Docker installation/upgrade failed."
@@ -1219,7 +1242,7 @@ install_ubuntu ()
 
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -L https://github.com/docker/compose/releases/download/1.7.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
+		sudo curl -L "$URL_DOCKER_COMPOSE_NIX" && \
 			sudo chmod +x /usr/local/bin/docker-compose && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade failed."
@@ -1275,7 +1298,7 @@ install_drude_config ()
 	testing_warn
 	[ -f "docker-compose.yml" ] && _confirm "Overwrite existing docker-compose.yml?"
 	local docker_compose_yml
-	docker_compose_yml=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/docker-compose.yml")
+	docker_compose_yml=$(curl -kfsS "$URL_DRUDE_CONFIG")
 	if_failed "Could not get latest docker-compose.yml version."
 
 	echo "$docker_compose_yml" | tee "docker-compose.yml" >/dev/null
@@ -1287,7 +1310,7 @@ install_drude_config ()
 install_autocomplete ()
 {
 	local autocomplete_script
-	autocomplete_script=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh-bash-complete")
+	autocomplete_script=$(curl -kfsS "$URL_BASH_AUTOCOMPLETE")
 	if_failed "Autocomplete script download has failed"
 
 	destination="/usr/local/bin/dsh-bash-autocomplete"
@@ -1357,7 +1380,7 @@ update_dsh ()
 	testing_warn
 	echo "Downloading..."
 	local new_dsh
-	new_dsh=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh")
+	new_dsh=$(curl -kfsS "$URL_DSH")
 	if_failed "Download has failed."
 
 	# Check if update is a major version. Show warning is needed
@@ -1403,7 +1426,7 @@ check_for_updates ()
 	# Always write current timestamp to last check file
 	echo $timestamp > $DRUDE_LAST_CHECK
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
+	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH")
 	new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
 	if [ $(ver_to_int $new_version) -gt $(ver_to_int $DSH_VERSION) ]; then
 		echo-green-bg " UPDATE AVAILABLE "
