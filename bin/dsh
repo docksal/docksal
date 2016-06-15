@@ -422,7 +422,7 @@ check_vbox_version ()
 }
 
 # Check that docker-compose.yml is present
-check_yml()
+check_yml ()
 {
 	yml_path=$(get_yml_path)
 	if [[ "$yml_path" == "" ]] ; then
@@ -640,13 +640,14 @@ show_help ()
 	printh "update  <component>" "<prerequisites |${help_component_b2d} images | dsh> (${yellow}'dsh help update'${NC})" "yellow"
 
 	echo
-	printh "cleanup" "Cleanup images to save space (--hard to clean up containers)"
+	printh "cleanup [--hard]" "Cleanup images to save space (--hard will also remove all stopped containers)"
 	printh "system-information (sysinfo)" "Show diagnostics information for bug reporting"
 	if ! is_linux && [[ "$DOCKER_MACHINE_PROVIDER" == "virtualbox" ]]; then
 		printh "vmstat" "Show virtualbox vm usage statistics"
 	fi
 	if ! is_linux; then
 		printh "ip" "Show Drude's docker machine ip address"
+		printh "env" "Display the commands to set up the environment for the Docker client"
 	fi
 	printh "version	(v, -v)" "Print dsh version. [v, -v] - prints short version"
 
@@ -719,7 +720,7 @@ show_help_install ()
 
 show_help_update ()
 {
-	echo-green "dsh install -  Automated update of Drude system components"
+	echo-green "dsh update -  Automated update of Drude system components"
 	echo
 	printh "dsh update prerequisites" "Update software required to run Drude"
 	if ! is_linux; then
@@ -948,6 +949,12 @@ _ip ()
 {
 	check_docker_running
 	docker-machine ip "$DOCKER_MACHINE_NAME"
+}
+
+_env ()
+{
+	check_docker_running
+	docker-machine env "$DOCKER_MACHINE_NAME"
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
@@ -1857,6 +1864,9 @@ case $1 in
 		;;
 	ip)
 		_ip
+		;;
+	env)
+		_env
 		;;
 	ssh-add)
 		shift
