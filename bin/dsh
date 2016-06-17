@@ -1523,7 +1523,11 @@ _set_cli_uid ()
 			echo-green "Reseting permissions on /var/www..."
 			docker exec -u root $(get_container_id cli) chown -R docker:users /var/www
 			echo-green "Restarting php daemon..."
-			docker exec -u root $(get_container_id cli) supervisorctl restart php5-fpm
+			# TODO: Remove. This code is to support legacy cli image version, where php5-fpm service name was used.
+			local php_service='php-fpm';
+			local local res=$(docker exec $(get_container_id cli) grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf)
+			if [[ "$res" != '' ]]; then php_service='php5-fpm'; fi
+            docker exec -u root $(get_container_id cli) supervisorctl restart $php_service
 		else
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
