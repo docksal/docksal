@@ -1252,7 +1252,7 @@ _run ()
 		elif is_binary_found 'winpty'; then
 			winpty_cmd='winpty'
 		else
-			echo-red 'Winpty (console.exe) binary missing.'
+			echo-red 'Winpty binary is missing.'
 			echo 'Run "dsh install prerequisites" to install it.'
 			exit 1
 		fi
