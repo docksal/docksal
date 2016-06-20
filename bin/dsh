@@ -1249,6 +1249,8 @@ _run ()
 		# Workaround - run docker exec via winpty (console.exe) to get a tty console in cygwin.
 		if is_binary_found 'console'; then
 			winpty_cmd='console'
+		elif is_binary_found 'winpty'; then
+			winpty_cmd='winpty'
 		else
 			echo-red 'Winpty (console.exe) binary missing.'
 			echo 'Run "dsh install prerequisites" to install it.'
