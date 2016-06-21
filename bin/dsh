@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.20.1
+DSH_VERSION=1.20.2
 
 # Console colors
 red='\033[0;91m'
@@ -455,6 +455,23 @@ _stop_containers ()
 		# stop all but system containers (--label "group=system")
 		docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 	fi
+	if [[ "$1" == "proxy" ]] ; then
+		echo-green 'Stopping Drude HTTP/HTTPS reverse proxy service...'
+		docker stop vhost-proxy
+		return
+	fi
+
+	if [[ "$1" == "dns" ]] ; then
+		echo-green 'Stopping Drude DNS service...'
+		docker stop dns
+		return
+	fi
+
+	if [[ "$1" == "ssh-agent" ]] ; then
+		echo-green 'Stopping Drude ssh-agent service...'
+		docker stop ssh-agent
+		return
+	fi
 	docker_compose stop
 }
 
@@ -701,7 +718,7 @@ up ()
 down ()
 {
 	check_dsh_environment
-	_stop_containers $@
+	_stop_containers "$@"
 }
 
 # Stop Vagrant box
