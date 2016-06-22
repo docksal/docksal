@@ -106,6 +106,7 @@ docker:
 If you use selenium with browser from docker container, you can recieve test screenshots but you cann't see how test are running in browser.
 Sometimes it is very useful to see running test in browser (for example: when you are creating new test and want to see how it works in browser).
 You can use VNC (https://en.wikipedia.org/wiki/Virtual_Network_Computing) in this case:
+
 1. Install VNC client on your computer (there are many version for all platforms).
 2. Update docker-compose.yml file in you project folder:
 ```yml
@@ -134,7 +135,92 @@ Also you can configure any other port (if you have few running projects, it is u
 ```
 
 ## Integration with PHPstrom
-@todo
+It is possible to connect PhpStorm with cli container and running behat-test from PhpStorm.
+PhpStorm uses ssh for connecting and you need to use cli-container with ssh-server.
+For now latest version of cli-image contains ssh-server.
+
+### Cli with ssh-server
+Please update **docker-compose.yml**:
+```yml
+# CLI node
+cli:
+  hostname: cli
+  image: blinkreaction/drupal-cli:latest
+  ...
+  ports:
+    - "2223:22"
+  ...
+```
+After restarting containers (**dsh up**) you should be able to connect to cli-container with ssh. Use username *docker* and pasword *docker*:
+> ssh docker@localhost -p 2223
+
+You can use any other port (not only 2223).
+
+### Add new deployment server
+Open settings (menu item *File->Settings...*). In openned windows on left side select item *Build, Execution, Deployment->Deployment*:
+
+![](img/behat-phpstorm-deployment-configure.png)
+
+Create new SFTP connection and fill form. Don't foget to fill *Web server root URL*.
+Press *Test SFTP connection...* button and if everything is ok, you will see that test is successful.
+
+On the second tab you should to check and correct mapping:
+
+![](img/behat-phpstorm-deployment-configure-mapping.png)
+
+Local path is path to your project on the host machine.
+Deployment path is */var/www*
+
+### Add new PHP interpreter
+Open settings (menu item *File->Settings...*). In openned windows on left side select item *Languages & Frameworks->PHP*:
+
+![](img/behat-phpstorm-PHP-configuration.png)
+
+To add new interpreter click on **...** button on *Interpreter:* line.
+
+![](img/behat-phpstorm-PHP-configuration-deployment.png)
+
+In new openned window add new interpreter and choose **Deployment configuration** option and deployment server from select list (it should be server from previous step).
+
+### Add Behat interpreter configuration
+Open settings (menu item *File->Settings...*). In openned windows on left side select item *Languages & Frameworks->PHP->Behat*:
+
+![](img/behat-phpstorm-PHP-Behat-configuration.png)
+
+Add new PHP interpreter for Behat (it should be interpreter from previous step).
+
+Path to behat is path in cli-container - **/var/www/tests/behat/bin/behat**
+
+Default configuration file: **/var/www/tests/behat/behat.yml**
+
+Please check that you **behat.yml** contains wd_host for selenium in *Behat\MinkExtension* part:
+
+![](img/behat-behat-yml.png)
+
+It should be same as in **behat.common.yml** for docker part.
+
+### Add Behat debug configuration
+Open *Run/Debug Configurations* (menu item *Run->Edit Configurations...*). In openned windows on left side add new Behat configuration:
+
+![](img/behat-run-debug-configuration.png)
+
+Just choose Test Runner option *Defined in the configuration file*.
+
+### Run tests
+On the PhpStorm panel choose Behat debug configuration and run it:
+
+![](img/behat-run-tests.png)
+
+If everything is ok, you will see openned windows with tests result (all tests are runned in this case):
+
+![](img/behat-run-window.png)
+
+You can re-run any scenario from this windows. If you click on scenario or test, PhpStorm will open window with this scenario/test.
+
+You can also open folder with Behat Features (directory in your projects **tests/behat/features**) and
+run any feature tests by right clicking on it and choosing **Run 'feature-name'** option.
+
+![](img/behat-test-features.png)
 
 ## Using host selenium2-driver
 @todo
