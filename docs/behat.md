@@ -134,7 +134,7 @@ Also you can configure any other port (if you have few running projects, it is u
 ...
 ```
 
-## Integration with PhpStrom
+## Integration with PhpStorm
 It is possible to connect PhpStorm with cli container and then you can run behat-test from PhpStorm.
 PhpStorm uses ssh for connecting and you need to use cli-container with ssh-server.
 For now latest version of cli-image contains ssh-server.
