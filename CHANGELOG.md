@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.4.0 (2016-06-10)
+
+- dsh v1.20.0
+- Added update checker (once a week, currently dsh only)
+- Allow install prerequisites on other Linux versions if user takes the risk
+- dsh -v will now show short version
+- New command `dsh system-info` for debugging purposes
+- System-wide services
+  - New service: `ssh-agent`. See [ssh-agent docs](docs/ssh-agent.md) for more details.
+  - Bind system-wide services to 0.0.0.0 for simplicity
+  - `dsh reset` can now install/reset system-wide services (dns, vhost-proxy, ssh-agent)
+- Support for [custom commands](docs/custom-commands.md) in dsh
+- Support for overlay networks for vhost-proxy (v2 compose file format)
+- Other improvements
+  - dsh remove -f to quietly remove containers
+  - Support dsh reset -f to quietly reset containers
+- Documentation updates
+ - [Docs](docs/apache-solr.md) for Apache Solr
+ - [Docs](docs/settings.md) on switching PHP and MySQL versions
+- Many other small updates and fixes 
+
+
 ## 1.3.4 (2016-05-04)
 
 - dsh v1.13.3

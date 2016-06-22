@@ -1,10 +1,9 @@
-# Zero-configuration Debugging with Xdebug and PhpStorm
+# Debugging with Drude, Xdebug and PhpStorm
 
-With Drude and PHPStorm you are **3 clicks away** from being able to debug your Drupal site or app.
+`xdebug` extension is disabled by default as it causes about 20% performance hit.
 
 ## Prerequisites
 
-- [Drude](https://github.com/blinkreaction/drude)
 - [PHPStorm](https://www.jetbrains.com/phpstorm/)
 - [Xdebug Helper](https://chrome.google.com/extensions/detail/eadndfjplgieldjbigjakmdgkmoaaaoc) extension for Chrome
 
@@ -12,21 +11,29 @@ With Drude and PHPStorm you are **3 clicks away** from being able to debug your 
 
 ## Setup
 
-1. Open your project in PHPStorm
-2. Set a breakpoint whereever you like
-3. Click (#1) on the **Start Listening for PHP Debug Connections** button in PHPStorm
+1. Set environment variable on the `cli` service
+
+    ```yml
+    cli:
+      ...
+      environment:
+        - XDEBUG_ENABLED=1
+      ...
+    ```
+2. Update container configuration with `dsh up`
+3. Open your project in PHPStorm
+4. Set a breakpoint wherever you like
+5. Click on the **Start Listening for PHP Debug Connections** button in PHPStorm
 
     <img src="img/xdebug-toggle-listener.png" />
 
-4. Click (#2) on **Debug** in **Xdebug Helper** in Chrome
+6. Click on **Debug** in **Xdebug Helper** in Chrome
 
     <img src="img/xdebug-toggle-debugger.png" />
 
-5. Click (#3) on **Accept** in the **Incoming Connection From Xdebug** dialogue in PHPStorm
+7. Click on **Accept** in the **Incoming Connection From Xdebug** dialogue in PHPStorm
 
     <img src="img/xdebug-mapping.png" />
-
-6. Done.
 
 Happy debugging!
 

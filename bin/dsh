@@ -1,9 +1,10 @@
 #!/bin/bash
 
-DSH_VERSION=1.19.1
+DSH_VERSION=1.20.2
 
 # Console colors
-red='\033[0;31m'
+red='\033[0;91m'
+red_bg='\033[101m'
 green='\033[0;32m'
 green_bg='\033[42m'
 yellow='\033[1;33m'
@@ -151,9 +152,12 @@ docker_compose ()
 	cd $(get_yml_path)
 	
 	docker-compose $*
+	res=$?
 	
 	# switch back to the original path
 	cd $cwd
+	
+	return $res
 }
 
 # Get container id by service name
@@ -216,6 +220,15 @@ is_mac ()
 	fi
 }
 
+is_docker_beta ()
+{
+	if [[ "$DOCKER_BETA" == "1" ]]; then
+		return 0;
+	else
+		return 1;
+	fi
+}
+
 # searches if binary exists and callable in PATH
 is_binary_found ()
 {
@@ -241,7 +254,7 @@ check_binary_found ()
 
 is_docker_running ()
 {
-	if is_linux || [[ $DOCKER_BETA -eq 1 ]]; then
+	if is_linux || is_docker_beta; then
 		local err
 		local errcode
 		# Check if docker is running via docker info.
@@ -323,6 +336,16 @@ check_docker_running ()
 			msg="$msg via '$DOCKER_HOST'"
 		fi
 		echo-red "$msg"
+		
+		if is_docker_beta; then
+			echo-red "Make sure the Docker Beta app is running"
+		elif is_mac || is_windows; then
+			echo-red "Drude VM may not be running. It can be started with 'dsh up'"
+			_confirm "Run 'dsh up' now?"
+			up
+			if_failed "Could not start the VM properly"
+		fi
+
 		exit 1
 	fi
 }
@@ -336,7 +359,7 @@ check_yml()
 		exit 1
 	fi
 
-	if is_linux || [[ $DOCKER_BETA -eq 1 ]]; then
+	if is_linux || is_docker_beta; then
 		return; # linux does not need vagrant
 	fi
 
@@ -410,18 +433,18 @@ _start_containers ()
 {
 	ssh_add
 	echo-green "Starting services..."
-	docker_compose up -d
-	_vhost_proxy_connect
-	_set_cli_uid
+	docker_compose up -d && \
+		_vhost_proxy_connect && \
+		_set_cli_uid
 }
 
 # @param $1 container_name
 _restart_containers ()
 {
 	echo-green "Restarting services..."
-	docker_compose restart $*
-	_vhost_proxy_connect
-	_set_cli_uid
+	docker_compose restart $* && \
+		_vhost_proxy_connect && \
+		_set_cli_uid
 }
 
 # @param $1 "-a" || "--all"
@@ -432,6 +455,23 @@ _stop_containers ()
 		# stop all but system containers (--label "group=system")
 		docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 	fi
+	if [[ "$1" == "proxy" ]] ; then
+		echo-green 'Stopping Drude HTTP/HTTPS reverse proxy service...'
+		docker stop vhost-proxy
+		return
+	fi
+
+	if [[ "$1" == "dns" ]] ; then
+		echo-green 'Stopping Drude DNS service...'
+		docker stop dns
+		return
+	fi
+
+	if [[ "$1" == "ssh-agent" ]] ; then
+		echo-green 'Stopping Drude ssh-agent service...'
+		docker stop ssh-agent
+		return
+	fi
 	docker_compose stop
 }
 
@@ -441,7 +481,7 @@ _remove_containers ()
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
-	docker_compose kill $* && docker_compose rm -v --force $*
+	docker_compose kill $* && docker_compose rm -vaf $*
 }
 
 _docker_cleanup ()
@@ -656,10 +696,10 @@ bash_comp_words ()
 up ()
 {
 	check_yml
-	if is_linux || is_boot2docker || [[ $DOCKER_BETA -eq 1 ]]; then
+	if is_linux || is_boot2docker || is_docker_beta; then
 		_start_containers
 	else
-		check_binary_found vagrant
+		check_binary_found 'vagrant'
 		local started
 		if ! is_docker_running; then
 			echo-green "dsh: Starting vagrant vm..."
@@ -678,7 +718,7 @@ up ()
 down ()
 {
 	check_dsh_environment
-	_stop_containers $@
+	_stop_containers "$@"
 }
 
 # Stop Vagrant box
@@ -704,10 +744,10 @@ restart ()
 reload ()
 {
 	check_yml
-	if is_linux || is_boot2docker || [[ $DOCKER_BETA -eq 1 ]]; then
+	if is_linux || is_boot2docker || is_docker_beta; then
 		_start_containers
 	else
-		check_binary_found vagrant
+		check_binary_found 'vagrant'
 		echo-green "dsh: Restarting vagrant vm..."
 		vagrant reload
 		if [ $? -eq 0 ]; then
@@ -811,7 +851,12 @@ install_prerequisites ()
 		fi
 		echo-yellow "WARNING: Docker is running. It's recommended to stop Docker first with ${stopcmd} "
 		_confirm "Stop Docker now?"
-		down
+		
+		if is_linux || is_boot2docker; then
+			_stop_containers
+		else
+			vagrant halt
+		fi
 	fi
 
 	echo-green "Installing prerequisites..."
@@ -836,7 +881,7 @@ install_prerequisites ()
 install_proxy_service ()
 {
 	docker rm -f vhost-proxy >/dev/null 2>&1 || true
-	docker run -d --name vhost-proxy --label "group=system" --restart=always \
+	docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
 		"blinkreaction/nginx-proxy:${DRUDE_ITAG}" >/dev/null 2>&1
@@ -848,9 +893,13 @@ install_dns_service ()
 	local dns
 	if is_linux; then dns=$DRUDE_DEFAULT_DNS; else dns=$DRUDE_VBOX_DNS; fi
 
+	# Support for boot2docker-vagrant
+	local docker_ip_map="-p 172.17.42.1:53:53/udp"
+	if is_linux; then docker_ip_map=""; fi
+	   
 	docker rm -f dns >/dev/null 2>&1 || true
-	docker run -d --name dns --label "group=system" --restart=always \
-		-p 53:53/udp --cap-add=NET_ADMIN --dns $dns \
+	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
+		-p $DRUDE_IP:53:53/udp $docker_ip_map --cap-add=NET_ADMIN --dns $dns \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"blinkreaction/dns-discovery:${DRUDE_ITAG}" >/dev/null 2>&1
 }
@@ -858,7 +907,7 @@ install_dns_service ()
 install_sshagent_service ()
 {
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
-	docker run -d --name ssh-agent --label "group=system" --restart=always \
+	docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"blinkreaction/ssh-agent:${DRUDE_ITAG}" >/dev/null 2>&1
 }
@@ -1128,8 +1177,20 @@ update_dsh ()
 	testing_warn
 	echo "Downloading..."
 	local new_dsh
-	new_dsh=$(curl -kfsS https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh)
+	new_dsh=$(curl -kfsS "https://raw.githubusercontent.com/blinkreaction/drude/$DRUDE_BRANCH/bin/dsh")
 	if_failed "Download has failed."
+
+	# Check if update is a major version. Show warning is needed
+	local new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
+	local current_major_version=$(echo $DSH_VERSION | cut -d "." -f 1)
+	local new_major_version=$(echo $new_version | cut -d "." -f 1)
+	if [[ "$current_major_version" != "$new_major_version" ]]; then
+		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
+		echo -e "Updating from ${yellow}$DSH_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwards compatible update."
+		echo "You might be not able to use you current Drude environment if you proceed."
+		echo -e "Please read update documentation: ${yellow}https://github.com/blinkreaction/drude#updates${NC}"
+		_confirm "Continue with update?"
+	fi
 
 	# saving to file
 	echo "$new_dsh" | sudo tee /usr/local/bin/dsh > /dev/null
@@ -1205,8 +1266,10 @@ _run ()
 		# Workaround - run docker exec via winpty (console.exe) to get a tty console in cygwin.
 		if is_binary_found 'console'; then
 			winpty_cmd='console'
+		elif is_binary_found 'winpty'; then
+			winpty_cmd='winpty'
 		else
-			echo-red 'Winpty (console.exe) binary missing.'
+			echo-red 'Winpty binary is missing.'
 			echo 'Run "dsh install prerequisites" to install it.'
 			exit 1
 		fi
@@ -1479,7 +1542,11 @@ _set_cli_uid ()
 			echo-green "Reseting permissions on /var/www..."
 			docker exec -u root $(get_container_id cli) chown -R docker:users /var/www
 			echo-green "Restarting php daemon..."
-			docker exec -u root $(get_container_id cli) supervisorctl restart php5-fpm
+			# TODO: Remove. This code is to support legacy cli image version, where php5-fpm service name was used.
+			local php_service='php-fpm';
+			local local res=$(docker exec $(get_container_id cli) grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf)
+			if [[ "$res" != '' ]]; then php_service='php5-fpm'; fi
+            docker exec -u root $(get_container_id cli) supervisorctl restart $php_service
 		else
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
@@ -1597,9 +1664,9 @@ case $1 in
 		vmstat
 		;;
 	ssh-add)
-	    shift
-	    ssh_add "$*"
-	    ;;
+		shift
+		ssh_add "$*"
+		;;
 	install)
 		shift
 		install $*

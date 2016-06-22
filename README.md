@@ -40,6 +40,12 @@ On Mac and Windows only (skip for Linux) also run:
 dsh update boot2docker
 ```
 
+Finally, you will probably need to re-initialize your environment with:
+
+```
+dsh init
+```
+
 
 <a name="dsh"></a>
 ## Drude Shell Helper (dsh)
@@ -82,8 +88,8 @@ Tools available inside the **cli** container:
 - [Public access](/docs/public-access.md)
 - [DB sandbox mode](/docs/db-sandbox.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
-- [Zero-configuration debugging with Xdebug and PhpStorm](/docs/xdebug.md)
-- [using Sass](/docs/sass.md)
+- [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
+- [Using Sass](/docs/sass.md)
 
 ### Third party utililies
 - [Using Behat](/docs/behat.md)
