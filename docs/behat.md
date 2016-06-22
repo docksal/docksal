@@ -65,8 +65,8 @@ If tests are using javascript, selenium2-driver will be used. Also you can use s
 In-browser emulator is used in this case. It works with real browsers, taking full control of them and using them as zombies for its testing needs.
 This way, you’ll have a standard, fully-configured, real browser, which you will be able to control. CSS styling, JS and AJAX execution - all supported out of the box.
 
-The esiest way to enable selenium support is to use preconfigured selenium docker images.
-Please update docker-compose.yml file in you project folder. Example:
+The easiest way to enable selenium support is to use pre-configured selenium docker images.
+Please update docker-compose.yml file in your project folder. Example:
 ```yml
 # selenium2 node
 # Uncomment the service definition section below and the link in the web service above to start using selenium2 driver for Behat tests requiring JS support.
@@ -103,12 +103,12 @@ docker:
 
 
 ## Behat (selenium2-driver) - using VNC
-If you use selenium with browser from docker container, you can recieve test screenshots but you cann't see how test are running in browser.
+If you use selenium with browser from docker container, you can receive test screenshots but you can't see how test are running in browser.
 Sometimes it is very useful to see running test in browser (for example: when you are creating new test and want to see how it works in browser).
 You can use VNC (https://en.wikipedia.org/wiki/Virtual_Network_Computing) in this case:
 
 1. Install VNC client on your computer (there are many version for all platforms).
-2. Update docker-compose.yml file in you project folder:
+2. Update docker-compose.yml file in your project folder:
 ```yml
 # selenium2 node
 # Uncomment the service definition section below and the link in the web service above to start using selenium2 driver for Behat tests requiring JS support.
@@ -125,7 +125,7 @@ You need to use selenium/standalone-chrome-debug or selenium/standalone-firefox-
 For VNC-client please use "localhost:5900" as the host and "secret" as the password.
 Now if you connect with VNC-client and run behat test, you will see browser and running tests.
 
-Also you can configure any other port (if you have few running projects, it is usefull to have separate port per project). For example port is 5901, configuration will be:
+Also you can configure any other port (if you have few running projects, it is useful to have separate port per project). For example port is 5901, configuration will be:
 ```yml
 ..
   ports:
@@ -134,8 +134,8 @@ Also you can configure any other port (if you have few running projects, it is u
 ...
 ```
 
-## Integration with PHPstrom
-It is possible to connect PhpStorm with cli container and running behat-test from PhpStorm.
+## Integration with PhpStrom
+It is possible to connect PhpStorm with cli container and then you can run behat-test from PhpStorm.
 PhpStorm uses ssh for connecting and you need to use cli-container with ssh-server.
 For now latest version of cli-image contains ssh-server.
 
@@ -157,11 +157,11 @@ After restarting containers (**dsh up**) you should be able to connect to cli-co
 You can use any other port (not only 2223).
 
 ### Add new deployment server
-Open settings (menu item *File->Settings...*). In openned windows on left side select item *Build, Execution, Deployment->Deployment*:
+Open settings (menu item *File->Settings...*). In opened windows on left side select item *Build, Execution, Deployment->Deployment*:
 
 ![](img/behat-phpstorm-deployment-configure.png)
 
-Create new SFTP connection and fill form. Don't foget to fill *Web server root URL*.
+Create new SFTP connection and fill form. Don't forget to fill *Web server root URL*.
 Press *Test SFTP connection...* button and if everything is ok, you will see that test is successful.
 
 On the second tab you should to check and correct mapping:
@@ -172,7 +172,7 @@ Local path is path to your project on the host machine.
 Deployment path is */var/www*
 
 ### Add new PHP interpreter
-Open settings (menu item *File->Settings...*). In openned windows on left side select item *Languages & Frameworks->PHP*:
+Open settings (menu item *File->Settings...*). In opened windows on left side select item *Languages & Frameworks->PHP*:
 
 ![](img/behat-phpstorm-PHP-configuration.png)
 
@@ -180,16 +180,16 @@ To add new interpreter click on **...** button on *Interpreter:* line.
 
 ![](img/behat-phpstorm-PHP-configuration-deployment.png)
 
-In new openned window add new interpreter and choose **Deployment configuration** option and deployment server from select list (it should be server from previous step).
+In new opened window add new interpreter and choose **Deployment configuration** option and deployment server from select list (it should be server from previous step).
 
 ### Add Behat interpreter configuration
-Open settings (menu item *File->Settings...*). In openned windows on left side select item *Languages & Frameworks->PHP->Behat*:
+Open settings (menu item *File->Settings...*). In opened windows on left side select item *Languages & Frameworks->PHP->Behat*:
 
 ![](img/behat-phpstorm-PHP-Behat-configuration.png)
 
 Add new PHP interpreter for Behat (it should be interpreter from previous step).
 
-Path to behat is path in cli-container - **/var/www/tests/behat/bin/behat**
+Path to Behat is path in cli-container - **/var/www/tests/behat/bin/behat**
 
 Default configuration file: **/var/www/tests/behat/behat.yml**
 
@@ -200,7 +200,7 @@ Please check that you **behat.yml** contains wd_host for selenium in *Behat\Mink
 It should be same as in **behat.common.yml** for docker part.
 
 ### Add Behat debug configuration
-Open *Run/Debug Configurations* (menu item *Run->Edit Configurations...*). In openned windows on left side add new Behat configuration:
+Open *Run/Debug Configurations* (menu item *Run->Edit Configurations...*). In opened windows on left side add new Behat configuration:
 
 ![](img/behat-run-debug-configuration.png)
 
@@ -211,7 +211,7 @@ On the PhpStorm panel choose Behat debug configuration and run it:
 
 ![](img/behat-run-tests.png)
 
-If everything is ok, you will see openned windows with tests result (all tests are runned in this case):
+If everything is ok, you will see opened windows with tests result (all tests are run in this case):
 
 ![](img/behat-run-window.png)
 
@@ -223,7 +223,7 @@ run any feature tests by right clicking on it and choosing **Run 'feature-name'*
 ![](img/behat-test-features.png)
 
 ## Using host selenium2-driver
-You can use selenium from you host machine instead of selenium from container.
+You can use selenium from your host machine instead of selenium from container.
 
 Selenium Standalone Server is available [here](http://www.seleniumhq.org/download/).
 WebDriver for Chrome is available [here](https://sites.google.com/a/chromium.org/chromedriver/downloads).
