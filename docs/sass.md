@@ -1,21 +1,26 @@
 # Sass with compass
 Cli container already contains `ruby`, `bundler`.
 
-1. Create Gemfile in theme folder
-Example:
-> source "https://rubygems.org"
-> gem 'sass', '~>3.4.0'
-> gem 'compass'
-> gem 'bootstrap-sass', '~>3.2.0'
+**Create Gemfile in theme folder**
 
-2. Every developer runs `bundle install` to pull necessary gem dependencies
+Example:
+```ruby
+source "https://rubygems.org"
+gem 'sass', '~>3.4.0'
+gem 'compass'
+gem 'bootstrap-sass', '~>3.2.0'
+```
+
+**Every developer runs `bundle install` to pull necessary gem dependencies**
+
 This command should be run in the folder with Gemfile:
 > dsh exec bundle install
 
-There are two folder (`.bundle`, `.bundler`) and one file (`Gemfile.lock`) will be created.
+There are two folder (`.bundle`, `.bundler`) and a file (`Gemfile.lock`) will be created.
 Please add this directories (`.bundle`/`.bundler`) to `.gitignore`
 
-3. Compile sass
+**Compile sass**
+
 Please run in the theme folder:
 > dsh exec bundle exec compass compile
 
