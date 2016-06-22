@@ -223,4 +223,28 @@ run any feature tests by right clicking on it and choosing **Run 'feature-name'*
 ![](img/behat-test-features.png)
 
 ## Using host selenium2-driver
-@todo
+You can use selenium from you host machine instead of selenium from container.
+
+Selenium Standalone Server is available [here](http://www.seleniumhq.org/download/).
+WebDriver for Chrome is available [here](https://sites.google.com/a/chromium.org/chromedriver/downloads).
+
+Run selenium with Chrome webdriver:
+
+> java -jar selenium-server-standalone-2.53.0.jar -Dwebdriver.chrome.driver=/path/to/webdriver/chromedriver
+
+By default it is running on 4444 port and you can check it open in browser (http://localhost:4444/wd/hub/static/resource/hub.html)
+Please update **behat.yml** (it should use wd_host from host machine):
+```yml
+# Local overrides to the default profile
+default:
+  extensions:
+    Behat\MinkExtension:
+      # URL of the site when accessed locally.
+      base_url: http://drupal7.drude
+      # Configure browser to be used. Browser must be available on wd_host.
+      browser_name: chrome
+      selenium2:
+        wd_host: http://192.168.10.1:4444/wd/hub/static/resource/hub
+...
+```
+IP 192.168.10.1 is your machine IP in Drude subnet.
