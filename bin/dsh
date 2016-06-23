@@ -845,6 +845,7 @@ docker_machine_start ()
 	if is_docker_machine_exist; then
 		docker-machine start "$DOCKER_MACHINE_NAME" && \
 			docker_machine_env && \
+			configure_resolver && \
 			docker_machine_mounts
 	else
 		echo-green "Creating Docker Machine '$DOCKER_MACHINE_NAME'..."
@@ -852,12 +853,7 @@ docker_machine_start ()
 			docker_machine_env && \
 			reset system && \
 			docker_machine_mounts
-	fi
-
-	local err=$?
-	if [[ $err -eq 0 ]] && is_docker_machine_running; then
-		configure_resolver
-		err=$?
+			# resolver is configured during reset system
 	fi
 
 	return $err
@@ -867,6 +863,7 @@ docker_machine_mounts ()
 {
 	if [[ $DOCKER_MACHINE_PROVIDER == 'virtualbox' ]]; then
 		if is_mac; then
+			echo-green "Configuring NFS mount..."
 			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
 		elif is_windows; then
 			# TODO: implement docker-machine-smb
