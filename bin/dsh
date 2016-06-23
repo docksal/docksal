@@ -1743,6 +1743,7 @@ reset ()
 # @param $* container(s) name
 logs ()
 {
+	check_docker_running
 	docker_compose logs $*
 }
 
