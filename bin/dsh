@@ -935,13 +935,14 @@ install_ubuntu ()
 		curl -sSL https://get.docker.com/ | sh && \
 		sudo usermod -aG docker $(whoami) && \
 		sudo service docker start
-	if_failed "Docker installation/upgrade failed."
+	docker --version
+	if_failed "Docker installation/upgrade has failed."
 
 	echo-green "Installing Docker Compose..."
 	sudo curl -L https://github.com/docker/compose/releases/download/1.7.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
 	sudo chmod +x /usr/local/bin/docker-compose && \
 	docker-compose --version
-	if_failed "Docker Compose installation/upgrade failed."
+	if_failed "Docker Compose installation/upgrade has failed."
 
 	echo-green "Adding a subnet for Drude..."
 	# Make sure we don't do this twice
