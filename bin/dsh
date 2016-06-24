@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.20.2
+DSH_VERSION=1.20.3
 
 # Console colors
 red='\033[0;91m'
@@ -931,9 +931,10 @@ install_ubuntu ()
 	fi
 
 	echo-green "Installing Docker..."
-	curl -sSL https://get.docker.com/ | sh && \
-	sudo usermod -aG docker $(whoami) && \
-	sudo docker version
+	sudo service docker stop && \
+		curl -sSL https://get.docker.com/ | sh && \
+		sudo usermod -aG docker $(whoami) && \
+		sudo service docker start
 	if_failed "Docker installation/upgrade failed."
 
 	echo-green "Installing Docker Compose..."
