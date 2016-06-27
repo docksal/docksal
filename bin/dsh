@@ -299,7 +299,7 @@ is_docker_running ()
 	if ! is_docker_machine_running; then return 1; fi
 	local err
 	local errcode
-	eval $(docker-machine env "$DOCKER_MACHINE_NAME")
+	docker_machine_env
 	# Check if docker is running via docker info.
 	# This operation is instant even if docker is not running (assuming a socket is used).
 	err=$(docker info >/dev/null 2>&1); errcode=$?
@@ -370,9 +370,6 @@ check_docker_running ()
 	fi
 
 	DOCKER_RUNNING="true"
-	if ! is_linux; then
-		docker_machine_env
-	fi
 }
 
 is_vbox_version ()
