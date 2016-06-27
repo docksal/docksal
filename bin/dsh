@@ -799,7 +799,7 @@ bash_comp_words ()
 
 is_docker_machine_running ()
 {
-	docker-machine status "$DOCKER_MACHINE_NAME" | grep "Running" 2>&1 1>/dev/null
+	docker-machine status "$DOCKER_MACHINE_NAME" 2>/dev/null | grep "Running" 2>&1 1>/dev/null
 	return $?
 }
 
@@ -1790,7 +1790,7 @@ _set_cli_uid ()
 			local php_service='php-fpm';
 			local local res=$(docker exec $(get_container_id cli) grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf)
 			if [[ "$res" != '' ]]; then php_service='php5-fpm'; fi
-            docker exec -u root $(get_container_id cli) supervisorctl restart $php_service
+			docker exec -u root $(get_container_id cli) supervisorctl restart $php_service >/dev/null
 		else
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
