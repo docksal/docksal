@@ -97,7 +97,7 @@ upfind ()
 		while [[ ! -f $1 ]] && [[ ! -d $1 ]] && [[ $PWD != / ]]; do
 			cd ".."
 		done;
-		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; fi
+		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; exit; fi
 	)
 }
 
