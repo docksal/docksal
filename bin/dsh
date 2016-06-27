@@ -518,6 +518,25 @@ _stop_containers ()
 		check_dsh_environment
 		docker_compose stop
 	fi
+
+	if [[ "$1" == "proxy" ]] ; then
+		echo-green 'Stopping Drude HTTP/HTTPS reverse proxy service...'
+		docker stop vhost-proxy
+		return
+	fi
+
+	if [[ "$1" == "dns" ]] ; then
+		echo-green 'Stopping Drude DNS service...'
+		docker stop dns
+		return
+	fi
+
+	if [[ "$1" == "ssh-agent" ]] ; then
+		echo-green 'Stopping Drude ssh-agent service...'
+		docker stop ssh-agent
+		return
+	fi
+	docker_compose stop
 }
 
 # @param $1 container_name
@@ -1484,8 +1503,10 @@ _run ()
 		# Workaround - run docker exec via winpty (console.exe) to get a tty console in cygwin.
 		if is_binary_found 'console'; then
 			winpty_cmd='console'
+		elif is_binary_found 'winpty'; then
+			winpty_cmd='winpty'
 		else
-			echo-red 'Winpty (console.exe) binary missing.'
+			echo-red 'Winpty binary is missing.'
 			echo 'Run "dsh install prerequisites" to install it.'
 			exit 1
 		fi
@@ -1765,7 +1786,11 @@ _set_cli_uid ()
 			echo-green "Reseting permissions on /var/www..."
 			docker exec -u root $(get_container_id cli) chown -R docker:users /var/www
 			echo-green "Restarting php daemon..."
-			docker exec -u root $(get_container_id cli) supervisorctl restart php5-fpm
+			# TODO: Remove. This code is to support legacy cli image version, where php5-fpm service name was used.
+			local php_service='php-fpm';
+			local local res=$(docker exec $(get_container_id cli) grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf)
+			if [[ "$res" != '' ]]; then php_service='php5-fpm'; fi
+            docker exec -u root $(get_container_id cli) supervisorctl restart $php_service
 		else
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
