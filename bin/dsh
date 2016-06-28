@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.11
+DSH_VERSION=1.99.12
 
 # Console colors
 red='\033[0;91m'
@@ -1238,10 +1238,11 @@ install_ubuntu ()
 	# Install Docker client
 	if ! is_docker_version; then
 		echo-green "Installing Docker client..."
-		curl -sSL "$URL_DOCKER_NIX" | sh && \
+		sudo service docker stop && \
+			curl -sSL "$URL_DOCKER_NIX" | sh && \
 			sudo usermod -aG docker $(whoami) && \
-			sudo docker version
-		if_failed "Docker installation/upgrade failed."
+			sudo docker --version
+		if_failed "Docker installation/upgrade has failed."
 	fi
 
 	# Install Docker Compose
@@ -1250,7 +1251,7 @@ install_ubuntu ()
 		sudo curl -L "$URL_DOCKER_COMPOSE_NIX" && \
 			sudo chmod +x /usr/local/bin/docker-compose && \
 			docker-compose --version
-		if_failed "Docker Compose installation/upgrade failed."
+		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 
 	# Adding a subnet for Drude. Make sure we don't do this twice
@@ -1263,7 +1264,6 @@ EOF
 		sudo sed -i '/iface lo inet loopback/r /tmp/drude.ip.addr' /etc/network/interfaces
 		rm -f /tmp/drude.ip.addr
 		sudo ifdown lo && sudo ifup lo
-		if_failed "Docker subnet configuration failed failed."
 	fi
 
 	reset proxy
