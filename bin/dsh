@@ -582,11 +582,11 @@ _docker_cleanup ()
 		echo -e "${NC}"
 		#--
 		echo-green "Removing stopped containers..."
-		_docker ps -aqf status=exited | xargs _docker rm -vf
+		_docker ps -aqf status=exited | xargs $DOCKER_BIN rm -vf
 	fi
 
 	echo-green "Cleaning up images..."
-	_docker images -qf dangling=true | xargs _docker rmi 2>1
+	_docker images -qf dangling=true | xargs $DOCKER_BIN rmi 2>1
 	# TODO: remove below lines in 2017
 	rm -f "$DRUDE_CONFIG_DIR/Vagrantfile.*" 2>/dev/null 1>/dev/null
 	rm -f "$DRUDE_CONFIG_DIR/backups/Vagrantfile.*" 2>/dev/null 1>/dev/null
