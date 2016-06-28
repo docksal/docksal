@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.26
+DSH_VERSION=1.99.30
 
 # Console colors
 red='\033[0;91m'
@@ -73,6 +73,7 @@ IMAGE_DNS="blinkreaction/dns-discovery"
 
 #---------------------------- Global Variables --------------------------------
 
+PATH="$DRUDE_BIN_DIR:$PATH"
 DOCKER_BETA="${DOCKER_BETA:-0}"
 DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 # Allow image tag overrides for system services. See install_xyz_service()
@@ -184,22 +185,9 @@ get_mysql_connect ()
 docker_compose ()
 {
 	# docker-compose cannot find docker-compose.yml in the path if there are symlinks on the way
-	cwd=$(pwd)
-	cd $(get_yml_path)
-	
-	"$DOCKER_COMPOSE_BIN" "$@"
-	res=$?
-	
-	# switch back to the original path
-	cd $cwd
-	
-	return $res
+	# get_yml_path can properly find the file. Incapsulate the cd into subshell
+	(cd "$(get_yml_path)" && "$DOCKER_COMPOSE_BIN" "$@")
 }
-
-_docker () { "$DOCKER_BIN" "$@"; }
-docker_machine () { "$DOCKER_MACHINE_BIN" "$@"; }
-docker_machine_nfs () { "$DOCKER_MACHINE_NFS_BIN" "$@"; }
-docker_machine_smb () { "$DOCKER_MACHINE_SMB_BIN" "$@"; }
 
 # Get container id by service name
 # @param $1 docker compose service name (e.g. cli)
@@ -285,7 +273,7 @@ is_docker_running ()
 	fi
 	# Check if docker is running via docker info.
 	# This operation is instant even if docker is not running (assuming a socket is used).
-	_docker info >/dev/null
+	docker info >/dev/null
 	return $?
 }
 
@@ -343,7 +331,7 @@ check_docker_running ()
 		if_failed "Could not start Drude docker machine properly"
 		# re-check status
 		docker_machine_env
-		_docker info >/dev/null
+		docker info >/dev/null
 		docker_status=$?
 	fi
 
@@ -378,7 +366,7 @@ is_docker_version ()
 {
 	[[ ! -x "$DOCKER_BIN" ]] && return 1
 
-	local version=$(_docker -v | sed "s/^Docker version \(.*\),.*/\1/")
+	local version=$(docker -v | sed "s/^Docker version \(.*\),.*/\1/")
 	[[ $version == $DSH_REQUIREMENTS_DOCKER ]] && \
 		return 0;
 
@@ -400,7 +388,7 @@ is_docker_machine_version ()
 {
 	[[ ! -x "$DOCKER_MACHINE_BIN" ]] && return 1
 
-	local version=$(docker_machine -v | sed "s/^docker-machine version \(.*\),.*/\1/")
+	local version=$(docker-machine -v | sed "s/^docker-machine version \(.*\),.*/\1/")
 	[[ $version == $DSH_REQUIREMENTS_DOCKER_MACHINE ]] && \
 		return 0;
 
@@ -495,25 +483,25 @@ _stop_containers ()
 		check_docker_running
 		echo-green "Stopping all running services from all projects..."
 		# stop all but system containers (--label "group=system")
-		_docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs $DOCKER_BIN stop
+		docker ps --format '{{.Names}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 		return
 	fi
 
 	if [[ "$1" == "proxy" ]] ; then
 		echo-green 'Stopping Drude HTTP/HTTPS reverse proxy service...'
-		_docker stop vhost-proxy >/dev/null
+		docker stop vhost-proxy >/dev/null
 		return
 	fi
 
 	if [[ "$1" == "dns" ]] ; then
 		echo-green 'Stopping Drude DNS service...'
-		_docker stop dns >/dev/null
+		docker stop dns >/dev/null
 		return
 	fi
 
 	if [[ "$1" == "ssh-agent" ]] ; then
 		echo-green 'Stopping Drude ssh-agent service...'
-		_docker stop ssh-agent >/dev/null
+		docker stop ssh-agent >/dev/null
 		return
 	fi
 
@@ -537,20 +525,20 @@ _remove_containers ()
 _docker_cleanup ()
 {
 	check_docker_running
-	if [[ "$1" == "--hard" ]] && [[ "$(_docker ps -aqf status=exited)" != "" ]]; then
+	if [[ "$1" == "--hard" ]] && [[ "$(docker ps -aqf status=exited)" != "" ]]; then
 		echo -e "${red}WARNING: ${yellow}Preparing to delete all currently stopped containers:${NC}"
-		_docker ps -af status=exited --format "{{.Label \"com.docker.compose.project\"}}_{{.Label \"com.docker.compose.service\"}}\t\t{{.Status}} ({{.Image}})"
+		docker ps -af status=exited --format "{{.Label \"com.docker.compose.project\"}}_{{.Label \"com.docker.compose.service\"}}\t\t{{.Status}} ({{.Image}})"
 		printf '–%.0s' $(seq 1 40)
 		echo -e "${yellow}"
 		_confirm "Continue?"
 		echo -e "${NC}"
 		#--
 		echo-green "Removing stopped containers..."
-		_docker ps -aqf status=exited | xargs $DOCKER_BIN rm -vf
+		docker ps -aqf status=exited | xargs docker rm -vf
 	fi
 
 	echo-green "Cleaning up images..."
-	_docker images -qf dangling=true | xargs $DOCKER_BIN rmi 2>1
+	docker images -qf dangling=true | xargs docker rmi 2>1
 	# TODO: remove below lines in 2017
 	rm -f "$DRUDE_CONFIG_DIR/Vagrantfile.*" 2>/dev/null 1>/dev/null
 	rm -f "$DRUDE_CONFIG_DIR/backups/Vagrantfile.*" 2>/dev/null 1>/dev/null
@@ -562,8 +550,8 @@ _docker_cleanup ()
 _vhost_proxy_connect ()
 {
 	echo-green "Connecting vhost-proxy to networks..."
-	_docker network ls -q --filter name=_default | while read network; do
-		_docker network connect $network vhost-proxy >/dev/null 2>&1 || true
+	docker network ls -q --filter name=_default | while read network; do
+		docker network connect $network vhost-proxy >/dev/null 2>&1 || true
 	done
 }
 
@@ -788,7 +776,7 @@ bash_comp_words ()
 is_docker_machine_running ()
 {
 	check_binary_found 'docker-machine'
-	docker_machine status "$DOCKER_MACHINE_NAME" 2>/dev/null | grep "Running" 2>&1 1>/dev/null
+	docker-machine status "$DOCKER_MACHINE_NAME" 2>/dev/null | grep "Running" 2>&1 1>/dev/null
 	return $?
 }
 
@@ -806,7 +794,7 @@ docker_machine_create ()
 		virtualbox)
 			check_vbox_version
 
-			docker_machine create --driver=virtualbox \
+			docker-machine create --driver=virtualbox \
 				--virtualbox-disk-size "$DOCKER_MACHINE_VBOX_HDD" \
 				--virtualbox-memory "$DOCKER_MACHINE_VBOX_RAM" \
 				--virtualbox-no-share \
@@ -827,18 +815,18 @@ docker_machine_create ()
 
 docker_machine_destroy ()
 {
-	docker_machine rm "$DOCKER_MACHINE_NAME"
+	docker-machine rm "$DOCKER_MACHINE_NAME"
 }
 
 is_docker_machine_exist ()
 {
-	docker_machine ls | grep "$DOCKER_MACHINE_NAME" 1>/dev/null 2>/dev/null
+	docker-machine ls | grep "$DOCKER_MACHINE_NAME" 1>/dev/null 2>/dev/null
 	return $?
 }
 
 docker_machine_env ()
 {
-	eval $(docker_machine env "$DOCKER_MACHINE_NAME")
+	eval $(docker-machine env "$DOCKER_MACHINE_NAME")
 	return $?
 }
 
@@ -846,7 +834,7 @@ docker_machine_env ()
 docker_machine_stop ()
 {
 	check_binary_found 'docker-machine'
-	docker_machine stop "$DOCKER_MACHINE_NAME"
+	docker-machine stop "$DOCKER_MACHINE_NAME"
 	return $?
 }
 
@@ -857,7 +845,7 @@ docker_machine_start ()
 	is_windows && check_binary_found 'docker-machine-smb'
 
 	if is_docker_machine_exist; then
-		docker_machine start "$DOCKER_MACHINE_NAME" && \
+		docker-machine start "$DOCKER_MACHINE_NAME" && \
 			docker_machine_env && \
 			reset system && \
 			docker_machine_mounts
@@ -876,7 +864,7 @@ docker_machine_mounts ()
 	if [[ $DOCKER_MACHINE_PROVIDER == 'virtualbox' ]]; then
 		if is_mac; then
 			echo-green "Configuring NFS mount..."
-			docker_machine_nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
+			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
 		elif is_windows; then
 			# TODO: implement docker-machine-smb
 			# docker-machine-smb "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
@@ -948,7 +936,7 @@ status ()
 
 	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
 		check_docker_running
-		_docker ps
+		docker ps
 	else
 		check_dsh_environment
 		docker_compose ps
@@ -970,20 +958,20 @@ vmstat ()
 _ip ()
 {
 	check_docker_running
-	docker_machine ip "$DOCKER_MACHINE_NAME"
+	docker-machine ip "$DOCKER_MACHINE_NAME"
 }
 
 _env ()
 {
 	check_docker_running
-	docker_machine env "$DOCKER_MACHINE_NAME"
+	docker-machine env "$DOCKER_MACHINE_NAME"
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
 	# Check if ssh-agent container is running
-	local running=$(_docker inspect --format="{{ .State.Running }}" ssh-agent 2> /dev/null)
+	local running=$(docker inspect --format="{{ .State.Running }}" ssh-agent 2> /dev/null)
 	if [ $? -eq 0 ] && [ "$running" == "true" ]; then
 
 		local ssh_path="$HOME/.ssh"
@@ -995,17 +983,17 @@ ssh_add () {
 
 		case "$1" in
 			"")
-				if _docker exec -it ssh-agent ssh-add -l > /dev/null; then
+				if docker exec -it ssh-agent ssh-add -l > /dev/null; then
 					return; # Some key is present
 				fi
 				;;
 			-D) 
-				_docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add -D
+				docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add -D
 				exit
 				;;
 			-l) 
 				# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
-				_docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add -l 2>&1 | sed 's/\/root\/.ssh\///g'
+				docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add -l 2>&1 | sed 's/\/root\/.ssh\///g'
 				exit
 				;;
 			*) 
@@ -1023,7 +1011,7 @@ ssh_add () {
 		# $ssh_path is mounted as /root/.ssh in the ssh-agent containers.
 		# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
 		# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
-		_docker run --rm --volumes-from=ssh-agent -it -v "$ssh_path:/root/.ssh" "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add "$key_path" 2>&1 | sed 's/\/root\/.ssh\///g'
+		docker run --rm --volumes-from=ssh-agent -it -v "$ssh_path:/root/.ssh" "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add "$key_path" 2>&1 | sed 's/\/root\/.ssh\///g'
 	fi
 }
 
@@ -1064,8 +1052,8 @@ install_prerequisites ()
 
 install_proxy_service ()
 {
-	_docker rm -f vhost-proxy >/dev/null 2>&1 || true
-	_docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
+	docker rm -f vhost-proxy >/dev/null 2>&1 || true
+	docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
 		"${IMAGE_VHOST_PROXY}:${DRUDE_ITAG}" >/dev/null
@@ -1083,8 +1071,8 @@ install_dns_service ()
 	local docker_ip_map="-p 172.17.42.1:53:53/udp"
 	if is_linux; then docker_ip_map=""; fi
 	   
-	_docker rm -f dns >/dev/null 2>&1 || true
-	_docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
+	docker rm -f dns >/dev/null 2>&1 || true
+	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-e DRUDE_IP="$ip" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -1098,7 +1086,7 @@ configure_resolver ()
 	local DRUDE_IP="0.0.0.0"
 
 	if is_mac; then
-		DRUDE_IP=$(docker_machine ip "$DOCKER_MACHINE_NAME")
+		DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
 		install_dns_service "$DRUDE_IP"
 		sudo mkdir -p /etc/resolver
 		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | \
@@ -1112,7 +1100,7 @@ configure_resolver ()
 			sudo tee -a /etc/resolvconf/resolv.conf.d/head
 		sudo resolvconf -u
 	elif is_windows; then
-		DRUDE_IP=$(docker_machine ip "$DOCKER_MACHINE_NAME")
+		DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
 		install_dns_service "$DRUDE_IP"
 		echo -e "You can configure ${yellow}.drude${NC} domain resolution manually"
 		echo -e "by setting ${yellow}$DRUDE_IP${NC} as your primary DNS server in network settings."
@@ -1121,8 +1109,8 @@ configure_resolver ()
 
 install_sshagent_service ()
 {
-	_docker rm -f ssh-agent >/dev/null 2>&1 || true
-	_docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
+	docker rm -f ssh-agent >/dev/null 2>&1 || true
+	docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" >/dev/null
 }
@@ -1182,7 +1170,7 @@ install_prerequisites_mac ()
 	# If it was an upgrade
 	is_docker_machine_running && \
 		( echo-green "Upgrading Docker Machine..." && \
-			docker_machine upgrade "$DOCKER_MACHINE_NAME") && \
+			docker-machine upgrade "$DOCKER_MACHINE_NAME") && \
 			reset system
 
 	echo-green "Prerequisites installation finished."
@@ -1253,7 +1241,7 @@ install_prerequisites_windows ()
 	# If it was an upgrade
 	is_docker_machine_running && \
 		( echo-green "Upgrading Docker Machine..." && \
-			docker_machine upgrade "$DOCKER_MACHINE_NAME") && \
+			docker-machine upgrade "$DOCKER_MACHINE_NAME") && \
 			reset system
 
 	echo-green "Prerequisites installation finished."
@@ -1360,9 +1348,9 @@ install ()
 update_system_images ()
 {
 	check_docker_running
-	_docker pull "${IMAGE_VHOST_PROXY}:${DRUDE_ITAG}"
-	_docker pull "${IMAGE_DNS}:${DRUDE_ITAG}"
-	_docker pull "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}"
+	docker pull "${IMAGE_VHOST_PROXY}:${DRUDE_ITAG}"
+	docker pull "${IMAGE_DNS}:${DRUDE_ITAG}"
+	docker pull "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}"
 }
 
 # Update all containers images
@@ -1507,10 +1495,10 @@ _run ()
 	# 4) execute
 	if is_tty ; then
 		# interactive
-		$winpty_cmd $DOCKER_BIN exec -it $container_id bash -ic "$cmd"
+		$winpty_cmd docker exec -it $container_id bash -ic "$cmd"
 	else
 		# non-interactive
-		$DOCKER_BIN exec $container_id bash -c "$cmd"
+		docker exec $container_id bash -c "$cmd"
 	fi
 }
 
@@ -1626,7 +1614,7 @@ behat ()
 		exit 1
 	fi
 	_run "cd $path && composer install --prefer-source --no-interaction"
-	_run "cd $path && bin/behat -p $DOCKER_BIN $params"
+	_run "cd $path && bin/behat -p docker $params"
 }
 
 # Download script by URL and execute it
@@ -1725,19 +1713,19 @@ _set_cli_uid ()
 	# Let uid to be set with the DRUDE_SET_UID env variable
 	if [[ $DRUDE_SET_UID != 0 ]] ; then
 		local host_uid=$DRUDE_SET_UID
-		local container_uid=$($DOCKER_BIN exec $(get_container_id cli) id -u)
+		local container_uid=$(docker exec $(get_container_id cli) id -u)
 
 		if [[ $container_uid != $host_uid ]]; then
 			echo-green "Changing user uid in cli from $container_uid to $host_uid..."
-			_docker exec -u root $(get_container_id cli) usermod -u $host_uid docker
+			docker exec -u root $(get_container_id cli) usermod -u $host_uid docker
 			echo-green "Reseting permissions on /var/www..."
-			_docker exec -u root $(get_container_id cli) chown -R docker:users /var/www
+			docker exec -u root $(get_container_id cli) chown -R docker:users /var/www
 			echo-green "Restarting php daemon..."
 			# TODO: Remove. This code is to support legacy cli image version, where php5-fpm service name was used.
 			local php_service='php-fpm';
-			local local res=$($DOCKER_BIN exec $(get_container_id cli) grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf)
+			local local res=$(docker exec $(get_container_id cli) grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf)
 			if [[ "$res" != '' ]]; then php_service='php5-fpm'; fi
-			_docker exec -u root $(get_container_id cli) supervisorctl restart $php_service >/dev/null
+			docker exec -u root $(get_container_id cli) supervisorctl restart $php_service >/dev/null
 		else
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
@@ -1774,7 +1762,7 @@ system_information ()
 	_system_information_heading "Docker & Docker Compose"
 	echo "DOCKER_HOST:	$DOCKER_HOST"
 	echo
-	echo "Docker: $(_docker version)"
+	echo "Docker: $(docker version)"
 	echo "Docker Compose: $(docker_compose version)"
 
 	if ! is_linux; then
@@ -1788,9 +1776,9 @@ system_information ()
 		VBoxManage list hostonlyifs
 
 		_system_information_heading "Docker Machine"
-		docker_machine --version
+		docker-machine --version
 		echo
-		docker_machine ls
+		docker-machine ls
 	fi
 
 	echo
@@ -1920,7 +1908,7 @@ case $1 in
 	docker)
 		shift
 		is_docker_running # exports env
-		_docker "$@"
+		docker "$@"
 		;;
 	docker-compose)
 		shift
