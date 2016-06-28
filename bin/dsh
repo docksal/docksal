@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.10
+DSH_VERSION=1.99.11
 
 # Console colors
 red='\033[0;91m'
@@ -1275,16 +1275,14 @@ EOF
 # Install boot2docker docker-machine
 install_boot2docker ()
 {
+	#TODO: test this function. It re-creates boot2docker machine
 	testing_warn
-	if is_linux; then
-		echo "Skipping boot2docker installation on Linux."
-		return 0 # not needed on Linux
-	elif is_windows || is_mac; then
-		if is_docker_machine_exist; then
-			echo-red "Docker Machine '$DOCKER_MACHINE_NAME' already exists. Going to re-create it."
-		fi
-		docker-machine rm "$DOCKER_MACHINE_NAME"
-		docker_machine_start
+	if is_mac || is_windows; then
+		# Remove machine if exists
+		is_docker_machine_exist && \
+			echo-red "Docker Machine '$DOCKER_MACHINE_NAME' already exists. Going to re-create it." && \
+			docker-machine rm "$DOCKER_MACHINE_NAME" && \
+			up
 	fi
 }
 
