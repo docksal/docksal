@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.24
+DSH_VERSION=1.99.25
 
 # Console colors
 red='\033[0;91m'
@@ -92,6 +92,7 @@ echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
 echo-error () {
 	echo -e "${red_bg} DSH ERROR: ${NC} ${red}$1${NC}";
+	local unused="$2" # avoid IDE warning
 	shift
 	# echo other parameters indented s error description or remedy
 	while [[ "$1" != "" ]]; do
@@ -278,8 +279,10 @@ check_binary_found ()
 
 is_docker_running ()
 {
-	if ! is_docker_machine_running; then return 1; fi
-	docker_machine_env
+	if ! is_linux; then
+		if ! is_docker_machine_running; then return 255; fi
+		docker_machine_env
+	fi
 	# Check if docker is running via docker info.
 	# This operation is instant even if docker is not running (assuming a socket is used).
 	_docker info >/dev/null
@@ -319,9 +322,8 @@ check_dsh_environment ()
 check_docker_running ()
 {
 	# Check cached value
-	if [[ $DOCKER_RUNNING == "true" ]]; then
-		return 0;
-	fi
+	[[ $DOCKER_RUNNING == "true" ]] && return 0
+	local docker_status
 
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
@@ -331,18 +333,27 @@ check_docker_running ()
 		exit 1
 	fi
 
-	if ! is_docker_running; then
-		local msg="Unable to connect to the Docker daemon"
-		if [ ! -z "$DOCKER_HOST" ]; then
-			msg="$msg via '$DOCKER_HOST'"
-		fi
+	is_docker_running
+	docker_status=$?
+
+	if [[ $docker_status -eq 255 ]]; then
 		echo-yellow "Looks like Drude docker machine is not running."
 		_confirm "Run 'dsh up' to start it now?"
 		up
 		if_failed "Could not start Drude docker machine properly"
+		# re-check status
+		docker_machine_env
+		_docker info >/dev/null
+		docker_status=$?
 	fi
 
-	DOCKER_RUNNING="true"
+	if [[ $docker_status -eq 0 ]]; then
+		DOCKER_RUNNING="true"
+	else
+		echo-error "Looks like your Docker client and Docker server are incompatible." \
+			"Run ${yellow}dsh install prerequisites${NC} to update."
+		exit 1
+	fi
 }
 
 is_vbox_version ()
@@ -837,7 +848,7 @@ docker_machine_start ()
 	if is_docker_machine_exist; then
 		docker_machine start "$DOCKER_MACHINE_NAME" && \
 			docker_machine_env && \
-			configure_resolver && \
+			reset system && \
 			docker_machine_mounts
 	else
 		echo-green "Creating Docker Machine '$DOCKER_MACHINE_NAME'..."
@@ -1012,16 +1023,17 @@ install_prerequisites ()
 {
 	echo-green "Installing prerequisites..."
 
-	if [[ -x $DOCKER_BIN ]] && [[ -x $DOCKER_COMPOSE_BIN ]] && [[ -x $DOCKER_MACHINE_BIN ]] && \
-		is_docker_machine_exist && ! is_docker_running; then
+	if [[ -x $DOCKER_BIN ]] && [[ -x $DOCKER_COMPOSE_BIN ]] && [[ -x $DOCKER_MACHINE_BIN ]]; then
+		if is_docker_machine_exist && ! is_docker_machine_running; then
 			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but is not running" \
 				"Please start it with ${yellow}dsh up${NC} first (or destroy it with ${yellow}dsh destroy${NC} if you want it re-created)."
 			return 1
-	elif is_docker_running; then
-		# it's an upgrade
-		_stop_containers --all
-		echo-green "Updating Drude system containers..."
-		update_system_images
+		elif is_docker_running; then
+			# it's an upgrade
+			_stop_containers --all
+			echo-green "Updating Drude system containers..."
+			update_system_images
+		fi
 	fi
 
 	is_windows && \
@@ -1076,7 +1088,6 @@ configure_resolver ()
 	install_dns_service "$DRUDE_IP"
 
 	if is_mac; then
-		echo-green "Configuring host DNS resolver for .drude domain..."
 		sudo mkdir -p /etc/resolver
 		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | sudo tee 1>/dev/null /etc/resolver/drude
 	elif is_linux; then
@@ -1148,12 +1159,10 @@ install_mac ()
 	rm -rf "$DRUDE_DOWNLOADS_DIR" >/dev/null 2>&1
 
 	# If it was an upgrade
-	is_docker_running && \
+	is_docker_machine_running && \
 		( echo-green "Upgrading Docker Machine..." && \
-			docker_machine upgrade "$DOCKER_MACHINE_NAME";
-			reset proxy;
-			reset dns;
-			reset ssh-agent )
+			docker_machine upgrade "$DOCKER_MACHINE_NAME") && \
+			reset system
 
 	echo-green "Prerequisites installation finished."
 }
@@ -1221,12 +1230,10 @@ install_windows ()
 	git config --system core.longpaths true # support long paths
 
 	# If it was an upgrade
-	is_docker_running && \
+	is_docker_machine_running && \
 		( echo-green "Upgrading Docker Machine..." && \
-			docker_machine upgrade "$DOCKER_MACHINE_NAME";
-			reset proxy;
-			reset dns;
-			reset ssh-agent )
+			docker_machine upgrade "$DOCKER_MACHINE_NAME") && \
+			reset system
 
 	echo-green "Prerequisites installation finished."
 }
