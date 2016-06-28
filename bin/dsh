@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.6
+DSH_VERSION=1.99.10
 
 # Console colors
 red='\033[0;91m'
@@ -16,6 +16,7 @@ DSH_REQUIREMENTS_DOCKER_COMPOSE='1.7.1'
 DSH_REQUIREMENTS_DOCKER_MACHINE='0.7.0'
 DSH_REQUIREMENTS_VBOX='5.0.4'
 DSH_REQUIREMENTS_WINPTY='0.3.1'
+DSH_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
 
 # Configuration path
 DRUDE_CONFIG_DIR="$HOME/.drude"
@@ -54,7 +55,7 @@ URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${D
 
 URL_DOCKER_MACHINE_NFS="https://raw.githubusercontent.com/adlogix/docker-machine-nfs/master/docker-machine-nfs.sh"
 URL_DOCKER_MACHINE_SMB="https://raw.githubusercontent.com/drude/docker-machine-smb/master/docker-machine-smb"
-URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DSH_REQUIREMENTS_WINPTY}/winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32.tar.gz"
+URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DSH_REQUIREMENTS_WINPTY}/winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
 URL_DRUDE_CONFIG="https://raw.githubusercontent.com/blinkreaction/drude/${DRUDE_BRANCH}/docker-compose.yml"
 URL_BASH_AUTOCOMPLETE="https://raw.githubusercontent.com/blinkreaction/drude/${DRUDE_BRANCH}/bin/dsh-bash-complete"
@@ -241,17 +242,6 @@ is_windows ()
 	fi
 }
 
-# cheсks wether we are in boot2docker console
-is_boot2docker ()
-{
-	local res=$(uname -a|grep 'boot2docker')
-	if [[ ! "$res" == '' ]]; then
-		return 0;
-	else
-		return 1;
-	fi
-}
-
 is_mac ()
 {
 	local res=$(uname | grep 'Darwin')
@@ -291,7 +281,7 @@ is_binary_found ()
 check_binary_found ()
 {
 	is_binary_found $1
-	if_failed "$1 executable not found."
+	if_failed "$1 executable was not found. (Try running 'dsh install prerequisites')"
 }
 
 is_docker_running ()
@@ -354,8 +344,8 @@ check_docker_running ()
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
 	if ! is_docker_version; then
-		echo-error "You need to update your Docker version to $DSH_REQUIREMENTS_DOCKER or higher"
-		echo -e "Run ${yellow}dsh update prerequisites${NC}"
+		echo-error "Required Docker version is $DSH_REQUIREMENTS_DOCKER or higher"
+		echo -e "Run ${yellow}dsh update prerequisites${NC} to update"
 		exit 1
 	fi
 	# Check cached value
@@ -673,7 +663,7 @@ show_help ()
 
 	echo
 	printh "cleanup [--hard]" "Cleanup images to save space (--hard will also remove all stopped containers)"
-	printh "system-information (sysinfo)" "Show diagnostics information for bug reporting"
+	printh "sysinfo" "Show diagnostics information for bug reporting"
 	if ! is_linux && [[ "$DOCKER_MACHINE_PROVIDER" == "virtualbox" ]]; then
 		printh "vmstat" "Show virtualbox vm usage statistics"
 	fi
@@ -861,7 +851,8 @@ docker_machine_stop ()
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
-	check_binary_found 'docker-machine-nfs'
+	is_mac && check_binary_found 'docker-machine-nfs'
+	is_windows && check_binary_found 'docker-machine-smb'
 
 	if is_docker_machine_exist; then
 		docker-machine start "$DOCKER_MACHINE_NAME" && \
@@ -900,7 +891,7 @@ docker_machine_mounts ()
 up ()
 {
 	check_yml
-	if is_linux || is_boot2docker || is_docker_beta; then
+	if is_linux || is_docker_beta; then
 		_start_containers
 	else
 		if is_docker_machine_running; then
@@ -941,7 +932,7 @@ restart ()
 reload ()
 {
 	check_dsh_environment
-	if is_linux || is_boot2docker || is_docker_beta; then
+	if is_linux || is_docker_beta; then
 		_start_containers
 	else
 		docker_machine_stop && \
@@ -967,7 +958,9 @@ status ()
 vmstat ()
 {
 	check_docker_running
-	check_binary_found vboxmanage
+	if ! is_binary_found vboxmanage; then
+		echo-error "vboxmanage was not found" && exit 1
+	fi
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
 	vboxmanage metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
 	sleep 1
@@ -1118,52 +1111,35 @@ install_sshagent_service ()
 # Install prerequisites on Mac
 install_mac ()
 {
-	# Install brew
-	if ! is_binary_found 'brew'; then
-		echo-green "Installing Homebrew..."
-		ruby -e "$(curl -fsSL $URL_HOMEBREW)"
-	fi
-
-	# Install VirtualBox
+	# Check VirtualBox
 	if ! is_binary_found 'VBoxManage'; then
-		echo-green "Updating brew formulae..."
-		brew update
-		echo-green "Installing Virtualbox..."
-		brew cask install virtualbox
+		echo-error "VBoxManage executable was not found. Virtual Box is required to run Drude on Mac." \
+			&& exit 1
+	elif ! is_vbox_version; then
+		echo-error "Required Virtual Box version is $DSH_REQUIREMENTS_VBOX or higher" \
+			&& exit 1
+	else
 		# Kill the default adapter and DHCP server to avoid network issues down the road
 		VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
 		VBoxManage hostonlyif remove vboxnet0 > /dev/null 2>&1
-	else
-		if ! is_vbox_version; then
-			brew list | grep virtualbox 2>/dev/null 1>/dev/null
-			if [[ $? -eq 0 ]]; then
-				echo-green "Updating Virtualbox..."
-				brew cask update virtualbox
-			else
-				echo-error "Your Virtual Box version is out of date"
-				echo "	     Can not auto-update as it was not installed with brew."
-				echo "	     Update to VirtualBox $DSH_REQUIREMENTS_VBOX or higher manually or uninstall your version of VirtualBox first."
-				exit 1
-			fi
-		fi
 	fi
 
 	# Install Docker client
 	if ! is_docker_version; then
 		echo-green "Installing docker client v${DSH_REQUIREMENTS_DOCKER}..."
 		sudo rm -f /usr/local/bin/docker >/dev/null 2>&1 || true
-		curl -sSL -O "$URL_DOCKER_MAC"
-		tar zxf docker-$DSH_REQUIREMENTS_DOCKER.tgz
-		sudo mv docker/* /usr/local/bin
-		rm -rf docker-$DSH_REQUIREMENTS_DOCKER*
+		curl -sSL -O "$URL_DOCKER_MAC" && \
+			tar zxf docker-$DSH_REQUIREMENTS_DOCKER.tgz && \
+			sudo mv docker/* /usr/local/bin && \
+			rm -rf docker-$DSH_REQUIREMENTS_DOCKER*
 	fi
 
 	# Install docker-compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
 		sudo rm -f /usr/local/bin/docker-compose >/dev/null 2>&1 || true
-		sudo curl -sSL "$URL_DOCKER_COMPOSE_MAC" -o /usr/local/bin/docker-compose
-		sudo chmod +x /usr/local/bin/docker-compose
+		sudo curl -sSL "$URL_DOCKER_COMPOSE_MAC" -o /usr/local/bin/docker-compose && \
+			sudo chmod +x /usr/local/bin/docker-compose
 	fi
 
 	# Install docker-machine
@@ -1187,17 +1163,11 @@ install_mac ()
 
 install_windows ()
 {
-	# Install Choco
-	if ! is_binary_found 'choco'; then
-		echo-green "Installing Chocolatey..." #packet manager
-		winsudo "@powershell -NoProfile -ExecutionPolicy unrestricted -Command \"iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))\" && SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
-	fi
-
-	# Install VirtulBox
-	if ! is_vbox_version; then
-		echo-green "Installing VirtualBox..."
-		winsudo "choco upgrade virtualbox -y"
-
+	# Check Virtual Box
+	if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
+		echo-error "Required Virtual Box version is $DSH_REQUIREMENTS_VBOX or higher" \
+			&& exit 1
+	else
 		echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
 		vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 		winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
@@ -1242,29 +1212,26 @@ install_windows ()
 	fi
 
 	# Install winpty
-	echo-green "Installing winpty (console) v${DSH_REQUIREMENTS_WINPTY}..."
+	echo-green "Installing winpty v${DSH_REQUIREMENTS_WINPTY}..."
 	curl -sSL -O "$URL_WINPTY"
-	tar -xf winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32.tar.gz
-	mv winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32/bin/* /usr/local/bin
-	rm -rf winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-2.4.1-ia32*
+	tar -xf "winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
+	mv "winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32/bin/*" /usr/local/bin
+	rm -rf "winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32*"
 
 	# Git settings
 	echo-green "Adjusting git defaults..."
-	git config --global core.autocrlf input
-	git config --system core.longpaths true
+	git config --global core.autocrlf input # do not convert line breaks. treat as is
+	git config --system core.longpaths true # support long paths
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
 install_ubuntu ()
 {
+	is_tty || exit 1 # only allow in interactive shell
 	if ! is_ubuntu; then
 		echo-red "dsh: prerequisites installation is currently supported only on Ubuntu 14.04+"
-		if is_tty; then
-			echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
-			_confirm "Are you sure you want to continue?"
-		else
-			exit 1
-		fi
+		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
+		_confirm "Are you sure you want to continue?"
 	fi
 
 	# Install Docker client
@@ -1276,6 +1243,7 @@ install_ubuntu ()
 		if_failed "Docker installation/upgrade failed."
 	fi
 
+	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
 		sudo curl -L "$URL_DOCKER_COMPOSE_NIX" && \
@@ -1297,17 +1265,9 @@ EOF
 		if_failed "Docker subnet configuration failed failed."
 	fi
 
-	echo-green "Creating Drude HTTP/HTTPS reverse proxy..."
-	install_proxy_service
-	if_failed "Drude HTTP/HTTPS reverse proxy setup failed."
-
-	echo-green "Creating Drude DNS service..."
-	configure_resolver
-	if_failed "Drude DNS service setup failed."
-
-	echo-green "Creating Drude ssh-agent service..."
-	install_sshagent_service
-	if_failed "Drude ssh-agent service setup failed."
+	reset proxy
+	reset dns
+	reset ssh-agent
 
 	echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
 }
@@ -1745,11 +1705,11 @@ reset ()
 
 	if [[ "$1" == "system" ]] ; then
 		echo-green 'Resetting Drude services...'
-		echo 'vhost-proxy'
+		echo ' * vhost-proxy'
 		install_proxy_service
-		echo 'dns'
+		echo ' * dns'
 		configure_resolver
-		echo 'ssh-agent'
+		echo ' * ssh-agent'
 		install_sshagent_service
 		return
 	fi
@@ -2019,7 +1979,7 @@ case $1 in
 	help)
 		show_help $2
 		;;
-	system-info | sysinfo)
+	sysinfo)
 		system_information
 		;;
 	init|*)
