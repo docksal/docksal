@@ -6,17 +6,18 @@ phpcs and phpcbf are readily available in up-to-date version of cli container.
 
 It's recommended to see how to [extend dsh with custom commands](custom-commands.md) first.
 
-From your project's root folder (where `.drude` is):
+From your project's root folder (where `.drude` folder is):
 
-1. `mkdir -p .drude/commands`  
-2. `cd .drude/commands`  
-3. `curl https://raw.githubusercontent.com/blinkreaction/drude/develop/examples/.drude/commands/phpcs -ko phpcs`
-4. `curl https://raw.githubusercontent.com/blinkreaction/drude/develop/examples/.drude/commands/phpcs.1 -ko phpcs.1`
-5. `chmod +x phpcs`
-6. `cd ../..`
-7. `dsh phpcs docroot/sites/all/modules/custom` or any path you want to run sniffer against. See `dsh help phpcs`
-8. Modify `.drude/commands/phpcs` script as you need and re-run any time with `dsh phpcs`
-9. In the same way you can create script for phpcbf as it uses the same set of parameters
+1. Download example `phpcs` command
+
+    ```
+    mkdir -p .drude/commands
+    curl https://raw.githubusercontent.com/blinkreaction/drude/develop/examples/.drude/commands/phpcs -ko .drude/commands/phpcs
+    chmod +x .drude/commands/phpcs
+    ```
+2. Use as `dsh phpcs docroot/sites/all/modules/custom` or any path you want to run sniffer against. See `dsh help phpcs`
+3. Modify `.drude/commands/phpcs` script as you need
+4. In the same way you can create script for `phpcbf` as it uses the same set of parameters
 
 ## Manual usage
 
