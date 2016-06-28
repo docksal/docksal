@@ -1461,6 +1461,8 @@ _bash ()
 # @param $* command with it's params to run
 _run ()
 {
+	[[ $1 == "" ]] && \
+		echo -e "See ${yellow}'dsh help run'${NC} for usage." && exit
 	check_dsh_environment
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
@@ -1469,7 +1471,7 @@ _run ()
 
 	# 1) check winpty
 	# Running docker exec interactively on Windows requires workarounds
-	is_windows && check_binary_found 'winpty'
+	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 
 	# 2) cmd
 	local cmd
@@ -1478,15 +1480,10 @@ _run ()
 	# Only chdir to the same dir in cli container
 	# RUN_NO_CDIR can be used to override this (used in mysql_import)
 	if [[ $CONTAINER_NAME == "cli" ]] && [[ $RUN_NO_CDIR != 1 ]]; then
-		local path
-		path=$(get_current_relative_path)
+		local path=$(get_current_relative_path)
 		if [[ "$path" != "$(pwd)" ]] && [[ "$path" != "" ]] ; then
 			# we're inside docroot
 			cdir="cd $path &&"
-		fi
-		if [[ "$path" == "" ]] ; then
-			# we're on project folder level (outside docroot)
-			cdir="cd docroot &&"
 		fi
 	fi
 
@@ -1510,11 +1507,7 @@ _run ()
 	# 4) execute
 	if is_tty ; then
 		# interactive
-		if [[ $1 == "" ]]; then
-			winpty $DOCKER_BIN exec -it $container_id bash -i
-		else
-			winpty $DOCKER_BIN exec -it $container_id bash -ic "$cmd"
-		fi
+		$winpty_cmd $DOCKER_BIN exec -it $container_id bash -ic "$cmd"
 	else
 		# non-interactive
 		$DOCKER_BIN exec $container_id bash -c "$cmd"
