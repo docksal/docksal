@@ -69,11 +69,14 @@ DOCKER_BETA="${DOCKER_BETA:-0}"
 DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 # Allow image tag overrides for system services. See install_xyz_service()
 DRUDE_ITAG="${DRUDE_ITAG:-stable}"
+# UID of user to use in cli continer. Only override if you know what you're doing
+DRUDE_SET_UID=""
 
 #---------------------------- Helper functions --------------------------------
 
 DRUDE_YML_PATH='' #yml path value will be cached here
 DRUDE_PATH='' #drude path value will be cached here
+IS_LINUX='' # is_linux cache
 
 echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
@@ -372,12 +375,13 @@ check_docker_running ()
 
 is_vbox_version ()
 {
+	local VBoxManage
 	if is_windows; then
-		local VBoxManage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+		VBoxManage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 		[[ ! -f "$VBoxManage" ]] && return 1
 	else
 		! is_binary_found 'VBoxManage' && return 1
-		local VBoxManage='VBoxManage'
+		VBoxManage='VBoxManage'
 	fi
 
 	local virtualbox_version=$("$VBoxManage" -v | sed "s/r.*//" 2>/dev/null)
@@ -658,9 +662,8 @@ show_help ()
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}'dsh help ssh-add'${NC}"
 
 	echo
-	if ! is_linux; then
-		local help_component_b2d=' boot2docker |'
-	fi
+	local help_component_b2d
+	! is_linux && local help_component_b2d=' boot2docker |'
 	printh "install <component>" "<prerequisites |${help_component_b2d} drude-config | autocomplete> (${yellow}'dsh help install'${NC})" "yellow"
 	printh "update  <component>" "<prerequisites |${help_component_b2d} images | dsh> (${yellow}'dsh help update'${NC})" "yellow"
 
@@ -870,8 +873,6 @@ docker_machine_start ()
 			docker_machine_mounts
 			# resolver is configured during reset system
 	fi
-
-	return $err
 }
 
 docker_machine_mounts ()
@@ -1459,6 +1460,7 @@ _run ()
 {
 	check_dsh_environment
 
+	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
 	container_id=$(get_container_id $CONTAINER_NAME)
 
@@ -1881,7 +1883,7 @@ case $1 in
 		if [[ "$1" == "prerequisites" ]]; then
 			install_prerequisites
 		elif [[ "$1" == "boot2docker" ]]; then
-			update_boot2docker $*
+			update_boot2docker
 		elif [[ "$1" == "images" ]]; then
 			update_images
 		elif [[ "$1" == "dsh" ]]; then
