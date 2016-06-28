@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.5
+DSH_VERSION=1.99.6
 
 # Console colors
 red='\033[0;91m'
@@ -353,6 +353,11 @@ check_docker_running ()
 {
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
+	if ! is_docker_version; then
+		echo-error "You need to update your Docker version to $DSH_REQUIREMENTS_DOCKER or higher"
+		echo -e "Run ${yellow}dsh update prerequisites${NC}"
+		exit 1
+	fi
 	# Check cached value
 	if [[ $DOCKER_RUNNING == "true" ]]; then
 		return 0;
@@ -1425,6 +1430,9 @@ update_dsh ()
 		echo -e "Please read update documentation: ${yellow}https://github.com/blinkreaction/drude#updates${NC}"
 		_confirm "Continue with update?"
 	fi
+
+	# check for different updates on next run
+	rm -r "$DRUDE_LAST_CHECK" >/dev/null 2>&1
 
 	# saving to file
 	echo "$new_dsh" | sudo tee /usr/local/bin/dsh > /dev/null
