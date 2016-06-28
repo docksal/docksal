@@ -172,15 +172,6 @@ get_current_relative_path ()
 	echo $pathdiff
 }
 
-# Removes invisible residue from the string that remains leftover in Babun+docker-compose sometimes
-# @param $1 string to cleanup
-# @return clean string
-clean_string ()
-{
-	cleaned=$(echo "$1" | sed -e 's/[^a-zA-Z0-9_-]$//')
-	echo ${cleaned}
-}
-
 # Get mysql connection string
 get_mysql_connect ()
 {
