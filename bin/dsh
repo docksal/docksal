@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.21
+DSH_VERSION=1.99.22
 
 # Console colors
 red='\033[0;91m'
@@ -686,10 +686,8 @@ show_help ()
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}'dsh help ssh-add'${NC}"
 
 	echo
-	local help_component_b2d
-	! is_linux && local help_component_b2d=' boot2docker |'
-	printh "install <component>" "<prerequisites |${help_component_b2d} drude-config | autocomplete> (${yellow}'dsh help install'${NC})" "yellow"
-	printh "update  <component>" "<prerequisites |${help_component_b2d} images | dsh> (${yellow}'dsh help update'${NC})" "yellow"
+	printh "install <component>" "<prerequisites | drude-config | autocomplete> (${yellow}'dsh help install'${NC})" "yellow"
+	printh "update  <component>" "<prerequisites | images | dsh> (${yellow}'dsh help update'${NC})" "yellow"
 
 	echo
 	printh "cleanup [--hard]" "Cleanup images to save space (--hard will also remove all stopped containers)"
@@ -762,9 +760,6 @@ show_help_install ()
 	echo-green "dsh install -  Automated install of Drude system components"
 	echo
 	printh "dsh install prerequisites" "Install software required to run Drude"
-	if ! is_linux; then
-		printh "dsh install boot2docker" "Create docker machine that will hold Drude"
-	fi
 	printh "dsh install drude-config" "Download latest default docker-compose.yml"
 	printh "dsh install autocomplete" "Install dsh commands autocomplete for Bash"
 	echo
@@ -775,9 +770,6 @@ show_help_update ()
 	echo-green "dsh update -  Automated update of Drude system components"
 	echo
 	printh "dsh update prerequisites" "Update software required to run Drude"
-	if ! is_linux; then
-		printh "dsh update boot2docker" "Upgrade docker machine that holds Drude"
-	fi
 	printh "dsh update images" "Update container images <https://docs.docker.com/engine/understanding-docker/#what-is-docker-s-architecture>"
 	printh "dsh update dsh" "Update dsh itself (Used to be named: dsh self-update)"
 	echo
@@ -800,11 +792,11 @@ bash_comp_words ()
 {
 	case $1 in
 		install)
-			echo "prerequisites boot2docker drude-config"
+			echo "prerequisites drude-config"
 			exit 0
 			;;
 		update)
-			echo "prerequisites boot2docker images dsh"
+			echo "prerequisites images dsh"
 			exit 0
 			;;
 		dsh)
@@ -1332,19 +1324,6 @@ EOF
 	echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
 }
 
-# Install boot2docker docker-machine
-install_boot2docker ()
-{
-	# TODO: probably not needed anymore as dsh destroy can destroy and it's better have it separate operations
-	if is_mac || is_windows; then
-		# Remove machine if exists
-		is_docker_machine_exist && \
-			echo-red "Docker Machine '$DOCKER_MACHINE_NAME' already exists. Going to re-create it." && \
-			docker_machine rm "$DOCKER_MACHINE_NAME" && \
-			up
-	fi
-}
-
 # Download latest Drude config file
 install_drude_config ()
 {
@@ -1387,8 +1366,6 @@ install ()
 {
 	if [[ "$1" == "prerequisites" ]]; then
 		install_prerequisites
-	elif [[ "$1" == "boot2docker" ]]; then
-		install_boot2docker
 	elif [[ "$1" == "drude-config" ]]; then
 		install_drude_config
 	elif [[ "$1" == "autocomplete" ]]; then
@@ -1413,16 +1390,6 @@ update_images ()
 	docker_compose pull # update project containers images
 	reset system
 	up
-}
-
-# Update boot2docker docker machine
-update_boot2docker () # TODO: probably not needed anymore as we update it in instll prerequisites
-{
-	is_linux && return
-	is_mac && ! is_tty && return 1
-
-	check_docker_running
-	docker_machine upgrade "$DOCKER_MACHINE_NAME"
 }
 
 # Update dsh itself
@@ -1927,8 +1894,6 @@ case $1 in
 		shift
 		if [[ "$1" == "prerequisites" ]]; then
 			install_prerequisites
-		elif [[ "$1" == "boot2docker" ]]; then
-			update_boot2docker
 		elif [[ "$1" == "images" ]]; then
 			update_images
 		elif [[ "$1" == "dsh" ]]; then
