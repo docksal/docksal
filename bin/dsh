@@ -528,14 +528,12 @@ _restart_containers ()
 # @param $1 "-a" || "--all"
 _stop_containers ()
 {
-	echo-green "Stopping services..."
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
 		check_docker_running
+		echo-green "Stopping all running services from all projects..."
 		# stop all but system containers (--label "group=system")
 		_docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs $DOCKER_BIN stop
-	else
-		check_dsh_environment
-		docker_compose stop
+		return
 	fi
 
 	if [[ "$1" == "proxy" ]] ; then
@@ -555,6 +553,9 @@ _stop_containers ()
 		_docker stop ssh-agent
 		return
 	fi
+
+	check_dsh_environment
+	echo-green "Stopping services..."
 	docker_compose stop
 }
 
