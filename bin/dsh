@@ -538,19 +538,19 @@ _stop_containers ()
 
 	if [[ "$1" == "proxy" ]] ; then
 		echo-green 'Stopping Drude HTTP/HTTPS reverse proxy service...'
-		_docker stop vhost-proxy
+		_docker stop vhost-proxy >/dev/null
 		return
 	fi
 
 	if [[ "$1" == "dns" ]] ; then
 		echo-green 'Stopping Drude DNS service...'
-		_docker stop dns
+		_docker stop dns >/dev/null
 		return
 	fi
 
 	if [[ "$1" == "ssh-agent" ]] ; then
 		echo-green 'Stopping Drude ssh-agent service...'
-		_docker stop ssh-agent
+		_docker stop ssh-agent >/dev/null
 		return
 	fi
 
