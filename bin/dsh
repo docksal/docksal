@@ -1467,21 +1467,9 @@ _run ()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
 	container_id=$(get_container_id $CONTAINER_NAME)
 
-	# 1) $winpty_cmd
-	local winpty_cmd
+	# 1) check winpty
 	# Running docker exec interactively on Windows requires workarounds
-	if is_windows; then
-		# Workaround - run docker exec via winpty (console.exe) to get a tty console in cygwin.
-		if is_binary_found 'console'; then
-			winpty_cmd='console'
-		elif is_binary_found 'winpty'; then
-			winpty_cmd='winpty'
-		else
-			echo-red 'Winpty binary is missing.'
-			echo 'Run "dsh install prerequisites" to install it.'
-			exit 1
-		fi
-	fi
+	is_windows && check_binary_found 'winpty'
 
 	# 2) cmd
 	local cmd
@@ -1502,12 +1490,13 @@ _run ()
 		fi
 	fi
 
-	local columns
-	if is_tty ; then
-		columns="export COLUMNS=$(tput cols) &&"
-	fi
+# TODO: possibly can be removed
+#	local columns
+#	if is_tty ; then
+#		columns="export COLUMNS=$(tput cols 2>/dev/null || echo 80) &&"
+#	fi
 
-	cmd="$cdir $columns"
+	cmd="$cdir"
 
 	# 3) convert array of parameters into escaped string
 	# Escape spaces that are "spaces" and not parameter delimeters (i.e. param1 param2\ with\ spaces param3)
@@ -1522,9 +1511,9 @@ _run ()
 	if is_tty ; then
 		# interactive
 		if [[ $1 == "" ]]; then
-			$winpty_cmd $DOCKER_BIN exec -it $container_id bash -i
+			winpty $DOCKER_BIN exec -it $container_id bash -i
 		else
-			$winpty_cmd $DOCKER_BIN exec -it $container_id bash -ic "$cmd"
+			winpty $DOCKER_BIN exec -it $container_id bash -ic "$cmd"
 		fi
 	else
 		# non-interactive
