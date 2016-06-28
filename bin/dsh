@@ -630,7 +630,7 @@ show_help ()
 	printh "status (st, ps) [-a (--all)]" "Show project services status. -a shows all running containers"
 	printh "reset [service]" "Recreate service(s). If no parameter given recreates all project services."
 	printh "" "See ${yellow}'dsh help reset'${NC} for more details on resetting Drude system services."
-	printh "remove [service]" "Remove given project services (containers) or all of them"
+	printh "remove [service]" "Remove project or system services. See ${yellow}'dsh help remove'${NC}"
 	echo
 	printh "bash [service]" "Open bash to service container. Defaults to ${yellow}'cli'${NC} service"
 	printh "exec (run) <command> [params]" "Execute a command in ${yellow}'cli'${NC} service container"
@@ -716,6 +716,17 @@ show_help_reset ()
 	echo -e "	dsh reset proxy		Recreate Drude HTTP/HTTPS reverse proxy service (resolves ${yellow}*.drude${NC} domain names into container IPs)"
 	echo "	dsh reset ssh-agent	Recreate Drude ssh-agent service"
 	echo "	dsh reset system	Recreate all Drude system services"
+	echo
+}
+
+show_help_remove ()
+{
+	echo-green "dsh remove -  Remove services/containers"
+	echo
+	echo -e "${green}Parameters:${NC} one or more service names."
+	echo-green "Examples:"
+	echo "	dsh remove web			Remove web service"
+	echo "	dsh remove proxy		Stop Drude reverse proxy service"
 	echo
 }
 
