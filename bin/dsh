@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.23
+DSH_VERSION=1.99.24
 
 # Console colors
 red='\033[0;91m'
@@ -220,15 +220,8 @@ winsudo ()
 
 is_linux ()
 {
-	if [[ $IS_LINUX == "true" ]]; then return 0; fi
-
-	local res=$(uname | grep 'Linux')
-	if [[ ! "$res" == '' ]]; then
-		IS_LINUX="true"
-		return 0;
-	else
-		return 1;
-	fi
+	[[ $IS_LINUX == "true" ]] && return 0
+	uname | grep 'Linux' >/dev/null
 }
 
 is_ubuntu ()
@@ -247,36 +240,17 @@ is_ubuntu ()
 
 is_windows ()
 {
-	local res=$(uname | grep 'CYGWIN_NT')
-	if [[ "$res" != '' ]]; then
-		return 0;
-	else
-		res=$(uname | grep 'MINGW32_NT')
-		if [[ "$res" != '' ]]; then
-			echo-red "dsh: Running from Git Bash is not supported"
-			exit 1
-		fi
-		return 1;
-	fi
+	uname | grep 'CYGWIN_NT' >/dev/null
 }
 
 is_mac ()
 {
-	local res=$(uname | grep 'Darwin')
-	if [[ ! "$res" == '' ]]; then
-		return 0;
-	else
-		return 1;
-	fi
+	uname | grep 'Darwin' >/dev/null
 }
 
 is_docker_beta ()
 {
-	if [[ "$DOCKER_BETA" == "1" ]]; then
-		return 0;
-	else
-		return 1;
-	fi
+	[[ "$DOCKER_BETA" == "1" ]] && return 0 || return 1
 }
 
 # searches if binary exists and callable in PATH
@@ -305,16 +279,11 @@ check_binary_found ()
 is_docker_running ()
 {
 	if ! is_docker_machine_running; then return 1; fi
-	local err
-	local errcode
 	docker_machine_env
 	# Check if docker is running via docker info.
 	# This operation is instant even if docker is not running (assuming a socket is used).
-	err=$(_docker info >/dev/null 2>&1); errcode=$?
-	# Print error details if available. We are looking for a specific case here:
-	# e.g. "Error response from daemon: client is newer than server (client API version: 1.22, server API version: 1.21)"
-	if [[ $err =~ 'Error' ]]; then echo $err; fi
-	return $errcode
+	_docker info >/dev/null
+	return $?
 }
 
 # Check whether shell is interactive
@@ -796,6 +765,7 @@ bash_comp_words ()
 
 is_docker_machine_running ()
 {
+	check_binary_found 'docker-machine'
 	docker_machine status "$DOCKER_MACHINE_NAME" 2>/dev/null | grep "Running" 2>&1 1>/dev/null
 	return $?
 }
@@ -1042,10 +1012,11 @@ install_prerequisites ()
 {
 	echo-green "Installing prerequisites..."
 
-	if is_docker_machine_exist && ! is_docker_running; then
-		echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but is not running" \
-			"Please start it with ${yellow}dsh up${NC} first (or destroy it with ${yellow}dsh destroy${NC} if you want it re-created)."
-		return 1
+	if [[ -x $DOCKER_BIN ]] && [[ -x $DOCKER_COMPOSE_BIN ]] && [[ -x $DOCKER_MACHINE_BIN ]] && \
+		is_docker_machine_exist && ! is_docker_running; then
+			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but is not running" \
+				"Please start it with ${yellow}dsh up${NC} first (or destroy it with ${yellow}dsh destroy${NC} if you want it re-created)."
+			return 1
 	elif is_docker_running; then
 		# it's an upgrade
 		_stop_containers --all
