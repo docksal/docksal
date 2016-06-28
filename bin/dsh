@@ -90,7 +90,15 @@ echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
 echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
-echo-error () { echo -e "${red_bg} DSH ERROR: ${NC} ${red}$1${NC}"; }
+echo-error () {
+	echo -e "${red_bg} DSH ERROR: ${NC} ${red}$1${NC}";
+	shift
+	# echo other parameters indented s error description or remedy
+	while [[ "$1" != "" ]]; do
+		echo -e "             $1";
+		shift
+	done
+}
 
 # Exits dsh if previous command exited with non-zero code
 if_failed ()
@@ -358,16 +366,17 @@ check_dsh_environment ()
 
 check_docker_running ()
 {
+	# Check cached value
+	if [[ $DOCKER_RUNNING == "true" ]]; then
+		return 0;
+	fi
+
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
 	if ! is_docker_version; then
 		echo-error "Required Docker version is $DSH_REQUIREMENTS_DOCKER or higher"
 		echo -e "Run ${yellow}dsh update prerequisites${NC} to update"
 		exit 1
-	fi
-	# Check cached value
-	if [[ $DOCKER_RUNNING == "true" ]]; then
-		return 0;
 	fi
 
 	if ! is_docker_running; then
@@ -519,11 +528,11 @@ _restart_containers ()
 # @param $1 "-a" || "--all"
 _stop_containers ()
 {
-	echo-yellow "Stopping services..."
+	echo-green "Stopping services..."
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
 		check_docker_running
 		# stop all but system containers (--label "group=system")
-		_docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs _docker stop
+		_docker ps --format '{{.ID}} {{.Label "group"}}' | grep -v 'system' | xargs $DOCKER_BIN stop
 	else
 		check_dsh_environment
 		docker_compose stop
@@ -781,7 +790,6 @@ version ()
 	if [[ $1 == '--short' ]]; then
 		echo "$DSH_VERSION"
 	else
-		testing_warn
 		echo "dsh version: $DSH_VERSION"
 	fi
 }
@@ -847,6 +855,11 @@ docker_machine_create ()
 			;;
 	esac
 
+}
+
+docker_machine_destroy ()
+{
+	docker_machine rm "$DOCKER_MACHINE_NAME"
 }
 
 is_docker_machine_exist ()
@@ -1051,24 +1064,32 @@ ssh_add () {
 # Install required software on Mac or Win. Check installed software on Linux
 install_prerequisites ()
 {
-	testing_warn
-	if is_docker_running; then
-		echo-red "dsh: Docker services should be stopped to continue."
-		_confirm "Stop Docker now?"
-		if is_linux; then
-			_stop_containers
-		else
-			docker_machine_stop
-		fi
-	fi
-
 	echo-green "Installing prerequisites..."
 
-	is_windows && install_windows && return
-	is_linux && install_ubuntu && return
-	is_mac && install_mac && return
+	if is_docker_machine_exist && ! is_docker_running; then
+		echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but is not running" \
+			"Please start it with ${yellow}dsh up${NC} first (or destroy it with ${yellow}dsh destroy${NC} if you want it re-created)."
+		return 1
+	elif is_docker_running; then
+		# it's an upgrade
+		_stop_containers --all
+		echo-green "Updating Drude system containers..."
+		update_system_images
+	fi
 
-	echo-red "Your OS is not supported" && return 1
+	is_windows && \
+		install_windows && \
+		return
+
+	is_linux && \
+		install_ubuntu && \
+		return
+
+	is_mac && \
+		install_mac && \
+		return
+
+	echo-error "Your OS is not supported" && return 1
 }
 
 install_proxy_service ()
@@ -1130,6 +1151,7 @@ install_sshagent_service ()
 # Install prerequisites on Mac
 install_mac ()
 {
+	is_tty || return 1 # only allow in interactive shell
 	# Check VirtualBox
 	if ! is_binary_found 'VBoxManage'; then
 		echo-error "VBoxManage executable was not found. Virtual Box is required to run Drude on Mac." \
@@ -1175,9 +1197,18 @@ install_mac ()
 			chmod +x "$DOCKER_MACHINE_NFS_BIN"
 	fi
 
-	# cleanup
-	rm -rf "$DRUDE_DOWNLOADS_DIR"
-	echo-green "Prerequisites installation finished"
+	# Cleanup
+	rm -rf "$DRUDE_DOWNLOADS_DIR" >/dev/null 2>&1
+
+	# If it was an upgrade
+	is_docker_running && \
+		( echo-green "Upgrading Docker Machine..." && \
+			docker_machine upgrade "$DOCKER_MACHINE_NAME";
+			reset proxy;
+			reset dns;
+			reset ssh-agent )
+
+	echo-green "Prerequisites installation finished."
 }
 
 install_windows ()
@@ -1193,60 +1224,70 @@ install_windows ()
 		winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
 	fi
 
+	mkdir -p "$DRUDE_DOWNLOADS_DIR" 2>/dev/null
+	if_failed "Could not create $DRUDE_DOWNLOADS_DIR"
+
 	# Install Docker client
 	if ! is_docker_version; then
-		echo-green "Installing Docker cli v${DSH_REQUIREMENTS_DOCKER}..."
-		rm -f /usr/local/bin/docker >/dev/null 2>&1 || true
-		curl -sSL -O "$URL_DOCKER_WIN" && \
-			unzip "docker-$DSH_REQUIREMENTS_DOCKER.zip" && \
-			mv docker/* /usr/local/bin && \
-			chmod +x "/usr/local/bin/docker.exe" && \
-			rm -rf "docker-$DSH_REQUIREMENTS_DOCKER*"
+		echo-green "Installing docker client v${DSH_REQUIREMENTS_DOCKER}..."
+		(cd "$DRUDE_DOWNLOADS_DIR" && \
+			curl -sSL "$URL_DOCKER_WIN" | tar zxf - && \
+			mv "docker/docker" "$DOCKER_BIN" && \
+			chmod +x "$DOCKER_BIN")
 	fi
 
 		# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
-		rm -f /usr/local/bin/docker-compose >/dev/null 2>&1 || true
-		curl -sSL "$URL_DOCKER_COMPOSE_WIN" \
-			-o "/usr/local/bin/docker-compose.exe" && \
-			chmod +x "/usr/local/bin/docker-compose.exe"
+		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN" && \
+			chmod +x "$DOCKER_COMPOSE_BIN"
 	fi
 
 		# Install Docker Machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -L "$URL_DOCKER_MACHINE_WIN" \
-			-o "/usr/local/bin/docker-machine.exe" && \
-			chmod +x "/usr/local/bin/docker-machine.exe"
+		curl -L "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN" && \
+			chmod +x "$DOCKER_MACHINE_BIN"
 	fi
 
 	# Install docker-machine-smb
-	if [[ ! -x $(which docker-machine-smb) ]]; then
+	if [[ ! -x $($DOCKER_MACHINE_SMB_BIN) ]]; then
 		echo-green "Installing docker-machine-smb..."
-		rm -f /usr/local/bin/docker-machine-smb >/dev/null 2>&1 || true
-		curl -s "$URL_DOCKER_MACHINE_SMB" |
-			tee /usr/local/bin/docker-machine-smb > /dev/null && \
-			chmod +x /usr/local/bin/docker-machine-smb
+		curl -s "$URL_DOCKER_MACHINE_SMB" -o "$DOCKER_MACHINE_SMB_BIN" > /dev/null && \
+			chmod +x "$DOCKER_MACHINE_SMB_BIN"
 	fi
 
 	# Install winpty
 	echo-green "Installing winpty v${DSH_REQUIREMENTS_WINPTY}..."
-	curl -sSL -O "$URL_WINPTY"
-	tar -xf "winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
-	mv "winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32/bin/*" /usr/local/bin
-	rm -rf "winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32*"
+	(cd "$DRUDE_DOWNLOADS_DIR" && \
+		curl -sSL "$URL_WINPTY" | tar -xzf - && \
+		mv "winpty-*/bin/*" "$DRUDE_BIN_DIR/")
+
+	# Cleanup
+	rm -rf "$DRUDE_DOWNLOADS_DIR" >/dev/null 2>&1
 
 	# Git settings
 	echo-green "Adjusting git defaults..."
+	echo "git config --global core.autocrlf input"
 	git config --global core.autocrlf input # do not convert line breaks. treat as is
+	echo "git config --system core.longpaths true"
 	git config --system core.longpaths true # support long paths
+
+	# If it was an upgrade
+	is_docker_running && \
+		( echo-green "Upgrading Docker Machine..." && \
+			docker_machine upgrade "$DOCKER_MACHINE_NAME";
+			reset proxy;
+			reset dns;
+			reset ssh-agent )
+
+	echo-green "Prerequisites installation finished."
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
 install_ubuntu ()
 {
-	is_tty || exit 1 # only allow in interactive shell
+	is_tty || return 1 # only allow in interactive shell
 	if ! is_ubuntu; then
 		echo-red "dsh: prerequisites installation is currently supported only on Ubuntu 14.04+"
 		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
@@ -1294,8 +1335,7 @@ EOF
 # Install boot2docker docker-machine
 install_boot2docker ()
 {
-	#TODO: test this function. It re-creates boot2docker machine
-	testing_warn
+	# TODO: probably not needed anymore as dsh destroy can destroy and it's better have it separate operations
 	if is_mac || is_windows; then
 		# Remove machine if exists
 		is_docker_machine_exist && \
@@ -1356,32 +1396,30 @@ install ()
 	fi
 }
 
-# Update container images
-update_images ()
+# Update system conteainers' images
+update_system_images ()
 {
-	check_dsh_environment
+	check_docker_running
 	_docker pull "${IMAGE_VHOST_PROXY}:${DRUDE_ITAG}"
 	_docker pull "${IMAGE_DNS}:${DRUDE_ITAG}"
 	_docker pull "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}"
-	docker_compose pull
-	echo-green "Resetting system services..."
+}
+
+# Update all containers images
+update_images ()
+{
+	check_dsh_environment
+	update_system_images
+	docker_compose pull # update project containers images
 	reset system
 	up
 }
 
 # Update boot2docker docker machine
-update_boot2docker ()
+update_boot2docker () # TODO: probably not needed anymore as we update it in instll prerequisites
 {
-	testing_warn
-	if ! is_tty; then
-		echo-red "dsh: update is not allowed in a non-interactive environment."
-		return 1
-	fi
-
-	if ! is_windows && ! is_mac ; then
-		echo-red "dsh: drude boot2docker box update should be used on Mac and Win only"
-		return 1
-	fi
+	is_linux && return
+	is_mac && ! is_tty && return 1
 
 	check_docker_running
 	docker_machine upgrade "$DOCKER_MACHINE_NAME"
@@ -1969,6 +2007,9 @@ case $1 in
 	cleanup)
 		shift
 		_docker_cleanup $1
+		;;
+	destroy)
+		docker_machine_destroy
 		;;
 	-v | v)
 		version --short
