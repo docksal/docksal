@@ -20,9 +20,7 @@ DSH_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
 
 # Configuration path
 DRUDE_CONFIG_DIR="$HOME/.drude"
-
 DRUDE_LAST_CHECK="$DRUDE_CONFIG_DIR/last_check"
-DRUDE_B2D_VERSION="$DRUDE_CONFIG_DIR/b2d_version"
 
 # Where custom commands live
 DRUDE_COMMANDS_PATH=".drude/commands"
@@ -38,12 +36,13 @@ DOCKER_MACHINE_PROVIDER='virtualbox'
 DOCKER_MACHINE_VBOX_RAM='1024' #mb
 DOCKER_MACHINE_VBOX_HDD='20000' #mb
 
-# URL-s
+#---------------------------- URL references --------------------------------
 OS_NAME=$(uname -s)
 HARDWARE=$(uname -m)
-URL_DSH="https://raw.githubusercontent.com/blinkreaction/drude/${DRUDE_BRANCH}/bin/dsh"
+URL_DRUDE_REPO="https://raw.githubusercontent.com/blinkreaction/drude"
+URL_DRUDE_REPO_UI="https://github.com/blinkreaction/drude"
+URL_DSH="${URL_DRUDE_REPO}/${DRUDE_BRANCH}/bin/dsh"
 
-URL_HOMEBREW="https://raw.githubusercontent.com/Homebrew/install/master/install"
 URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${DSH_REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
 URL_DOCKER_WIN="https://get.docker.com/builds/Windows/i386/docker-${DSH_REQUIREMENTS_DOCKER}.zip"
@@ -57,8 +56,12 @@ URL_DOCKER_MACHINE_NFS="https://raw.githubusercontent.com/adlogix/docker-machine
 URL_DOCKER_MACHINE_SMB="https://raw.githubusercontent.com/drude/docker-machine-smb/master/docker-machine-smb"
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DSH_REQUIREMENTS_WINPTY}/winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
-URL_DRUDE_CONFIG="https://raw.githubusercontent.com/blinkreaction/drude/${DRUDE_BRANCH}/docker-compose.yml"
-URL_BASH_AUTOCOMPLETE="https://raw.githubusercontent.com/blinkreaction/drude/${DRUDE_BRANCH}/bin/dsh-bash-complete"
+URL_DRUDE_CONFIG="${URL_DRUDE_REPO}/${DRUDE_BRANCH}/docker-compose.yml"
+URL_BASH_AUTOCOMPLETE="${URL_DRUDE_REPO}/${DRUDE_BRANCH}/bin/dsh-bash-complete"
+
+IMAGE_SSH_AGENT="blinkreaction/ssh-agent"
+IMAGE_VHOST_PROXY="blinkreaction/nginx-proxy"
+IMAGE_DNS="blinkreaction/dns-discovery"
 
 #---------------------------- Global Variables --------------------------------
 
@@ -1000,12 +1003,12 @@ ssh_add () {
 				fi
 				;;
 			-D) 
-				docker run --rm --volumes-from=ssh-agent -it "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add -D
+				docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add -D
 				exit 1
 				;;
 			-l) 
 				# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
-				docker run --rm --volumes-from=ssh-agent -it "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add -l 2>&1 | sed 's/\/root\/.ssh\///g'
+				docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add -l 2>&1 | sed 's/\/root\/.ssh\///g'
 				exit 1
 				;;
 			*) 
@@ -1023,7 +1026,7 @@ ssh_add () {
 		# $ssh_path is mounted as /root/.ssh in the ssh-agent containers.
 		# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
 		# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
-		docker run --rm --volumes-from=ssh-agent -it -v "$ssh_path:/root/.ssh" "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add "$key_path" 2>&1 | sed 's/\/root\/.ssh\///g'
+		docker run --rm --volumes-from=ssh-agent -it -v "$ssh_path:/root/.ssh" "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add "$key_path" 2>&1 | sed 's/\/root\/.ssh\///g'
 	fi
 }
 
@@ -1058,7 +1061,7 @@ install_proxy_service ()
 	docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
-		"blinkreaction/nginx-proxy:${DRUDE_ITAG}" >/dev/null 2>&1
+		"${IMAGE_VHOST_PROXY}:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
 # @param $1 ip address defaults to 0.0.0.0
@@ -1078,7 +1081,7 @@ install_dns_service ()
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-e DRUDE_IP="$ip" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"blinkreaction/dns-discovery:${DRUDE_ITAG}" >/dev/null 2>&1
+		"${IMAGE_DNS}:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
 # Configuring sytem-wide *.drude resolver (Windows not supported)
@@ -1105,7 +1108,7 @@ install_sshagent_service ()
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
 	docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"blinkreaction/ssh-agent:${DRUDE_ITAG}" >/dev/null 2>&1
+		"${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" >/dev/null 2>&1
 }
 
 # Install prerequisites on Mac
@@ -1341,9 +1344,9 @@ install ()
 update_images ()
 {
 	check_dsh_environment
-	docker pull "blinkreaction/nginx-proxy:${DRUDE_ITAG}"
-	docker pull "blinkreaction/dns-discovery:${DRUDE_ITAG}"
-	docker pull "blinkreaction/ssh-agent:${DRUDE_ITAG}"
+	docker pull "${IMAGE_VHOST_PROXY}:${DRUDE_ITAG}"
+	docker pull "${IMAGE_DNS}:${DRUDE_ITAG}"
+	docker pull "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}"
 	docker_compose pull
 	echo-green "Resetting system services..."
 	reset system
@@ -1385,8 +1388,8 @@ update_dsh ()
 		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
 		echo -e "Updating from ${yellow}$DSH_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwards compatible update."
 		echo "You might be not able to use you current Drude environment if you proceed."
-		echo -e "Please read update documentation: ${yellow}https://github.com/blinkreaction/drude#updates${NC}"
-		_confirm "Continue with update?"
+		echo -e "Please read update documentation: ${yellow}$URL_DRUDE_REPO_UI#updates${NC}"
+		_confirm "Continue with the update?"
 	fi
 
 	# check for different updates on next run
