@@ -1091,7 +1091,7 @@ install_proxy_service ()
 	_docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/tmp/docker.sock \
-		"${IMAGE_VHOST_PROXY}:${DRUDE_ITAG}" >/dev/null 2>&1
+		"${IMAGE_VHOST_PROXY}:${DRUDE_ITAG}" >/dev/null
 }
 
 # @param $1 ip address defaults to 0.0.0.0
@@ -1111,7 +1111,7 @@ install_dns_service ()
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns $dns \
 		-e DRUDE_IP="$ip" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"${IMAGE_DNS}:${DRUDE_ITAG}" >/dev/null 2>&1
+		"${IMAGE_DNS}:${DRUDE_ITAG}" >/dev/null
 }
 
 # Configuring sytem-wide *.drude resolver (Windows not supported)
@@ -1138,7 +1138,7 @@ install_sshagent_service ()
 	_docker rm -f ssh-agent >/dev/null 2>&1 || true
 	_docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" >/dev/null 2>&1
+		"${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" >/dev/null
 }
 
 # Install prerequisites on Mac
@@ -1250,7 +1250,7 @@ install_windows ()
 			chmod +x "$DOCKER_MACHINE_SMB_BIN"
 	fi
 
-	# Install winpty
+	# Install winpty TODO: check winpty version here
 	echo-green "Installing winpty v${DSH_REQUIREMENTS_WINPTY}..."
 	(cd "$DRUDE_DOWNLOADS_DIR" && \
 		curl -sSL "$URL_WINPTY" | tar -xzf - && \
