@@ -324,10 +324,8 @@ is_tty ()
 
 testing_warn ()
 {
-	if ! is_tty; then return; fi
-	if [[ ! $DRUDE_BRANCH == 'master' ]]; then
+	[[ $DRUDE_BRANCH != 'master' ]] && is_tty && \
 		echo-yellow "drude - ${DRUDE_BRANCH} branch"
-	fi
 }
 
 # Convert version string like 1.2.3 to integer for comparison
@@ -608,8 +606,6 @@ show_help ()
 	local commands_path="$(get_drude_path)/$DRUDE_COMMANDS_PATH"
 	local custom_commands_list
 
-	printh "Drude Shell v$DSH_VERSION commands reference" "" "green"
-
 	# Show help for certain command
 	if [[ ! -z "$1" ]]; then
 		# Check for help function for specific command
@@ -627,6 +623,7 @@ show_help ()
 		fi
 	fi
 
+	printh "Drude Shell v$DSH_VERSION commands reference" "" "green"
 	echo
 	if is_linux; then
 		printh "start (up)" "Start project services"
@@ -644,9 +641,9 @@ show_help ()
 	printh "" "See ${yellow}'dsh help reset'${NC} for more details on resetting Drude system services."
 	printh "remove [service]" "Remove given project services (containers) or all of them"
 	echo
-	printh "bash [service]" "Open bash to service (container). If no service specified defaults to ${yellow}'cli'${NC}"
-	printh "exec (run) <command> [params]" "Execute a command in ${yellow}'cli'${NC} service"
-	printh "logs [service]" "Show docker logs for service (container)"
+	printh "bash [service]" "Open bash to service container. Defaults to ${yellow}'cli'${NC} service"
+	printh "exec (run) <command> [params]" "Execute a command in ${yellow}'cli'${NC} service container"
+	printh "logs [service]" "Show docker logs for service container"
 	echo
 	printh "exec-url <url>" "Download script from URL and run it. URL should be public."
 	echo
@@ -1889,7 +1886,7 @@ case $1 in
 		elif [[ "$1" == "dsh" ]]; then
 			update_dsh
 		else
-			echo "Use dsh update [prerequisites|boot2docker|images|dsh]"
+			show_help_update
 		fi
 		;;
 	self-update)
