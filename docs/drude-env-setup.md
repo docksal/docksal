@@ -19,14 +19,15 @@ Babun should be installed and run **as a regular user (do not use admin command 
 
 ## Setup
 
-1. Install `dsh` (Drude Shell)
+1. Install [VirtualBox](https://www.virtualbox.org)
+2. Install `dsh` (Drude Shell)
 
     ```
     sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/master/bin/dsh  -o /usr/local/bin/dsh
     sudo chmod +x /usr/local/bin/dsh
     ```
 
-2. Create the `<projects>` directory
+3. Create the `<projects>` directory
 
     E.g. `~/projects` on Mac and Linux:
     
@@ -42,23 +43,8 @@ Babun should be installed and run **as a regular user (do not use admin command 
     cd /c/projects
     ```
 
-3. Install Drude's prerequisites
+4. Install Drude's prerequisites
 
-    Mac and Windows: virtualbox, vagrant, boot2docker-vagrant  
-    Linux: docker, docker-compose
-    
-    It is recommended to remove any previous versions of these before proceeding.
-    
     ```
     dsh install prerequisites
-    dsh install boot2docker
     ```
-    
-    On Mac and Windows you should see two files created in the `projects` folder:
-    
-    ```
-    Vagrantfile
-    vagrant.yml
-    ```
-
-    On Linux there's no need in Vagrant (and VirtualBox), so no additional files are created. 

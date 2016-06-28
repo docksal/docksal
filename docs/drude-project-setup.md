@@ -2,7 +2,7 @@
 
 Initial configuration is done once per project (e.g. by a team lead) and committed into the project repo.
 
-`docker-compose.yml` file and an optional `.drude` folder are good indicators that a project is using Drude.  
+`docker-compose.yml` file and `.drude` folder are good indicators that a project is using Drude.  
 
 **On Windows** make sure your `projects` folder is **not** inside `%USERPROFILE%/.babun` folder.
  
