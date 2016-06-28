@@ -29,6 +29,9 @@ DOCKER_COMPOSE_BIN="$DRUDE_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$DRUDE_BIN_DIR/docker-machine"
 DOCKER_MACHINE_NFS_BIN="$DRUDE_BIN_DIR/docker-machine-nfs"
 DOCKER_MACHINE_SMB_BIN="$DRUDE_BIN_DIR/docker-machine-smb"
+vboxmanage="vboxmanage"
+(uname | grep 'CYGWIN_NT' >/dev/null) && \
+	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 
 # Where custom commands live
 DRUDE_COMMANDS_PATH=".drude/commands"
@@ -149,16 +152,15 @@ get_drude_path ()
 get_abs_path ()
 {
 	local _dir
-	if [ -f $1 ]; then
-		_dir=$(dirname $1)
-	elif [ -d $1 ]; then
-		_dir=$1
+	if [[ -f "$1" ]]; then
+		_dir="$(dirname $1)"
+	elif [[ -d "$1" ]]; then
+		_dir="$1"
 	else
 		echo "Path \"$1\" does not exist"
-		return
+		return 1
 	fi
-	local absolute=$( cd "${_dir}" ; pwd )
-	echo "$absolute"
+	echo "$(cd "${_dir}" ; pwd)"
 }
 
 # Return current path relative to project root with trailing slash
@@ -239,7 +241,8 @@ is_mac ()
 
 is_docker_beta ()
 {
-	[[ "$DOCKER_BETA" == "1" ]] && return 0 || return 1
+	# comparison returns error codes
+	[[ "$DOCKER_BETA" == "1" ]]
 }
 
 # searches if binary exists and callable in PATH
@@ -261,7 +264,7 @@ is_binary_found ()
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
-	( [[ ! -x "$DRUDE_BIN_DIR/$1" ]] && exit 1 || exit 0 )
+	[[ -x "$DRUDE_BIN_DIR/$1" ]]
 	if_failed "$1 executable was not found in $DRUDE_BIN_DIR. (Try running 'dsh install prerequisites')"
 }
 
@@ -274,7 +277,6 @@ is_docker_running ()
 	# Check if docker is running via docker info.
 	# This operation is instant even if docker is not running (assuming a socket is used).
 	docker info >/dev/null
-	return $?
 }
 
 # Check whether shell is interactive
@@ -303,8 +305,7 @@ ver_to_int ()
 
 check_dsh_environment ()
 {
-	check_docker_running
-	check_yml
+	check_docker_running && check_yml
 }
 
 check_docker_running ()
@@ -346,16 +347,13 @@ check_docker_running ()
 
 is_vbox_version ()
 {
-	local VBoxManage
 	if is_windows; then
-		VBoxManage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
-		[[ ! -f "$VBoxManage" ]] && return 1
+		[[ ! -f "$vboxmanage" ]] && return 1
 	else
-		! is_binary_found 'VBoxManage' && return 1
-		VBoxManage='VBoxManage'
+		! is_binary_found "$vboxmanage" && return 1
 	fi
 
-	local virtualbox_version=$("$VBoxManage" -v | sed "s/r.*//" 2>/dev/null)
+	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
 	[[ $(ver_to_int $virtualbox_version) < $(ver_to_int $DSH_REQUIREMENTS_VBOX) ]] && \
 		return 1
 
@@ -950,9 +948,9 @@ vmstat ()
 		echo-error "vboxmanage was not found" && exit 1
 	fi
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
-	vboxmanage metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
+	$vboxmanage metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
 	sleep 1
-	vboxmanage metrics query "$DOCKER_MACHINE_NAME" $metrics
+	$vboxmanage metrics query "$DOCKER_MACHINE_NAME" $metrics
 }
 
 _ip ()
@@ -1184,7 +1182,6 @@ install_prerequisites_windows ()
 			&& exit 1
 	else
 		echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
-		vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 		winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
 		winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
 	fi
