@@ -1,12 +1,11 @@
 # Directory structure
 
-Drude enforces a directory structure where all your projects go into subfolders under the main `<projects>` folder.  
-The `<projects>` folder can be arbitrarily located and named. It is best to put it on the fastest drive you have.
+All your Drude projects should be located **under current user's home folder**.
 
-`dsh` will install the necessary boot2docker-vagrant VM files (`Vagrantfile` and `vagrant.yml`) into the `<projects>` folder.
+Drude recommends a directory structure where all your projects go into subfolders under the main `<projects>` folder.  
+The `<projects>` folder can be arbitrarily named.
 
 ```
-+ ...
  - <projects>
  |--- drupal-site
  |      docker-compose.yml
@@ -18,7 +17,4 @@ The `<projects>` folder can be arbitrarily located and named. It is best to put 
  |      docker-compose.yml
  |      docroot
  |      ...
- | 
- |--- Vagrantfile (not needed on Linux)
- |--- vagrant.yml (not needed on Linux)
 ```

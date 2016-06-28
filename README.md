@@ -27,12 +27,25 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 <a name="updates"></a>
 ## Updates
 
-Switch to your `<projects>` folder and run:
+### Regular updates
 
 ```
 dsh update dsh
 dsh update prerequisites
 ```
+
+### Updating dsh 1.x to dsh 2.x
+
+DSH 1.x used to rely on Vagrant and vagrant-boot2docker for running Docker.  
+DSH 2.x uses Docker Machine which is more native and can be easily updated.
+Vagrant machine is not going to be used anymore and needs to be deleted. 
+
+1. Create dumps of databases you need using `drush`
+2. Go to your `<projects>` folder and use `vagrant destroy` to destroy used VM. If you happened to have several of them please destroy them all.
+3. You can uninstall vagrant if you do't need it (`brew uninstall vagrant` on Mac, `choco uninstall vagrant` on Win)
+4. Update dsh: `dsh update dsh`
+5. `dsh install prerequisites`
+6. Start your project just like you did before with `dsh up` and re-import your DB dump. Notice it will use Docker Machine now. New Docker Machine will be created upon run.
 
 <a name="dsh"></a>
 ## Drude Shell Helper (dsh)

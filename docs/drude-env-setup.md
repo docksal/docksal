@@ -5,8 +5,8 @@ Once you have a working Drude environment in place, you can use it for all Drude
 
 ## Directory structure
 
-Drude expects a particular [directory structure](/docs/directory-structure.md).  
-Please review it before proceeding with the setup.
+All your Drude projects should be located **under current user's home folder**.
+Drude recommends a particular [directory structure](/docs/directory-structure.md).  
 
 ## Windows only
 
@@ -20,27 +20,27 @@ Babun should be installed and run **as a regular user (do not use admin command 
 ## Setup
 
 1. Install [VirtualBox](https://www.virtualbox.org)
-2. Install `dsh` (Drude Shell)
+2. Install `dsh` (Drude Shell Helper)
 
     ```
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/master/bin/dsh  -o /usr/local/bin/dsh
+    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/master/bin/dsh -o /usr/local/bin/dsh
     sudo chmod +x /usr/local/bin/dsh
     ```
 
 3. Create the `<projects>` directory
 
-    E.g. `~/projects` on Mac and Linux:
+    E.g. `~/WebProjects` on Mac and Linux:
     
     ```
-    mkdir ~/projects
-    cd ~/projects
+    mkdir ~/WebProjects
+    cd ~/WebProjects
     ```
 
-    `c:\projects` (`/c/projects`) on Windows:
+    `c:\Users\CurrentUser\WebProjects` (`/c/Users/CurrentUser/WebProjects`) on Windows:
 
     ```
-    mkdir /c/projects
-    cd /c/projects
+    mkdir /c/Users/CurrentUser/WebProjects
+    cd /c/Users/CurrentUser/WebProjects
     ```
 
 4. Install Drude's prerequisites
