@@ -978,7 +978,7 @@ ssh_add () {
 
 	case "$1" in
 		"")
-			if docker exec -it ssh-agent ssh-add -l > /dev/null; then
+			if (docker exec -it ssh-agent ssh-add -l >/dev/null); then
 				return; # Some key is present
 			fi
 			;;
