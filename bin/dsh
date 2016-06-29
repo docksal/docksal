@@ -898,9 +898,8 @@ down ()
 # Stop docker-machine
 halt ()
 {
-	check_dsh_environment
 	if is_linux; then
-		_stop_containers
+		down
 	else
 		docker_machine_stop
 	fi
