@@ -914,14 +914,8 @@ restart ()
 # Restart docker-machine and start containers again
 reload ()
 {
-	check_dsh_environment
-	if is_linux || is_docker_beta; then
-		_start_containers
-	else
-		docker_machine_stop && \
-			docker_machine_start && \
-			_start_containers
-	fi
+	(is_mac || is_windows) && halt
+	up
 }
 
 # output status of Drude if stopped or containers if started
