@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.30
+DSH_VERSION=1.99.31
 
 # Console colors
 red='\033[0;91m'
@@ -876,15 +876,13 @@ docker_machine_mounts ()
 # Start containers
 up ()
 {
-	check_yml
-	if is_linux || is_docker_beta; then
+	if is_linux || is_docker_beta || is_docker_machine_running; then
+		check_yml
 		_start_containers
 	else
-		if is_docker_machine_running; then
+		docker_machine_start && \
+			[[ "$(get_yml_path)" != "" ]] && \
 			_start_containers
-		else
-			docker_machine_start && _start_containers
-		fi
 	fi
 }
 
@@ -1786,11 +1784,9 @@ fi
 # Command bindings
 argv="$@"
 case $1 in
-	up)
-		up
-		;;
-	start)
-		up
+	up|start)
+		shift
+		up "$@"
 		;;
 	stop)
 		shift
