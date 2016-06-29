@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.31
+DSH_VERSION=1.99.32
 
 # Console colors
 red='\033[0;91m'
@@ -197,7 +197,7 @@ docker_compose ()
 get_container_id ()
 {
 	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
-	echo $(docker_compose ps -q $1 | tr -d '\r')
+	echo $(docker_compose ps -q $1 2>/dev/null | tr -d '\r')
 }
 
 # Run command on Windows with elevated privileges
@@ -1427,6 +1427,7 @@ check_for_updates ()
 # @param $1 container name
 _bash ()
 {
+	check_docker_running
 	# Interactive shell requires a tty.
 	# On Windows we assume we run interactively via winpty (console.exe).
 	if ! is_tty; then
@@ -1486,12 +1487,18 @@ _run ()
 	fi
 	
 	# 4) execute
+	if [[ "$container_id" == "" ]]; then
+		# try to connect to this out of project container by name
+		$winpty_cmd docker exec -it "$CONTAINER_NAME" sh -i
+		return
+	fi
+
 	if is_tty ; then
 		# interactive
-		$winpty_cmd docker exec -it $container_id bash -ic "$cmd"
+		$winpty_cmd docker exec -it "$container_id" bash -ic "$cmd"
 	else
 		# non-interactive
-		docker exec $container_id bash -c "$cmd"
+		docker exec "$container_id" bash -c "$cmd"
 	fi
 }
 
