@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.40
+DSH_VERSION=1.99.41
 
 # Console colors
 red='\033[0;91m'
@@ -1821,6 +1821,43 @@ system_information ()
 	echo
 }
 
+#-------------------------- Links / Aliases -----------------------------
+
+# param $1 path
+# param $2 alias name
+alias_create ()
+{
+	[[ $# != 2 ]] && echo 'Usage: dsh alias <path> <link_name>' && exit 1
+	mkdir -p "$DRUDE_CONFIG_DIR/links" || exit 1
+	[[ -h "$2" ]] && echo "Alias $2 already exists" && exit 1
+	[[ -e "$2" ]] && echo "Filename is not available" && exit 1
+	[[ ! -d "$1" ]] && echo 'Path should be a valid dir' && exit 1
+
+	! is_windows && \
+		ln -s "$1" "$DRUDE_CONFIG_DIR/links/$2"
+}
+
+alias_remove () {
+	[[ ! -h "$DRUDE_CONFIG_DIR/links/$1" ]] && echo 'Alias not found' && exit
+	[[ -h "$DRUDE_CONFIG_DIR/links/$1" ]] && rm "$DRUDE_CONFIG_DIR/links/$1"
+}
+
+alias_list ()
+{
+	ls -l "$DRUDE_CONFIG_DIR/links" | grep -v total | awk '{printf "%s %s %s\n", $9, $10, $11}'
+}
+
+#-------------------------- Parameters parsing -----------------------------
+
+# Handle alias first
+if [[ "$1" == "@"* ]]; then
+	__alias=${1#@}
+	[[ ! -h "$DRUDE_CONFIG_DIR/links/$__alias" ]] && echo-red "No such alias $1" && exit 1
+	cd "$DRUDE_CONFIG_DIR/links/$__alias"
+	if_failed "Could not cd to alias directory"
+	shift
+fi
+
 if [[ "$*" != "update dsh" ]]; then
 	check_for_updates
 fi
@@ -1989,6 +2026,13 @@ case $1 in
 		;;
 	sysinfo)
 		system_information
+		;;
+	alias)
+		shift
+		[[ "$*" == "" ]] && alias_list && exit
+		[[ "$*" == "list" ]] && alias_list && exit
+		[[ "$1" == "remove" ]] && shift && alias_remove "$@" && exit
+		alias_create "$@"
 		;;
 	init|*)
 		# Search for custom commands in $DRUDE_COMMANDS_PATH
