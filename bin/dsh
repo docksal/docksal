@@ -116,6 +116,16 @@ if_failed ()
 		exit 1
 	fi
 }
+# Like if_failed but with more strict error
+if_failed_error ()
+{
+	if [ ! $? -eq 0 ]; then
+		msg="error executing last command"
+		if [[ "$1" != "" ]]; then msg="$1"; fi
+		echo-error "$msg"
+		exit 1
+	fi
+}
 
 # Search for a file/directory in a directiry tree upwards. Return it's path.
 # @param $1 filename
@@ -1879,8 +1889,8 @@ alias_list ()
 if [[ "$1" == "@"* ]]; then
 	DRUDE_ALIAS=${1#@}
 	[[ ! -h "$DRUDE_CONFIG_ALIAS/$DRUDE_ALIAS" ]] && echo-red "No such alias $1" && exit 1
-	cd "$DRUDE_CONFIG_ALIAS/$DRUDE_ALIAS"
-	if_failed "Could not cd to directory linked by this alias"
+	cd "$DRUDE_CONFIG_ALIAS/$DRUDE_ALIAS" 2>/dev/null
+	if_failed_error "Could not navigate to directory linked by $1 alias"
 	shift
 fi
 
