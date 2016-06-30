@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.41
+DSH_VERSION=1.99.42
 
 # Console colors
 red='\033[0;91m'
@@ -20,6 +20,7 @@ DSH_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
 
 # Configuration path
 DRUDE_CONFIG_DIR="$HOME/.drude"
+DRUDE_CONFIG_ALIAS="$DRUDE_CONFIG_DIR/alias"
 DRUDE_LAST_CHECK="$DRUDE_CONFIG_DIR/last_check"
 # BIN folder
 DRUDE_BIN_DIR="$DRUDE_CONFIG_DIR/bin"
@@ -640,6 +641,7 @@ show_help ()
 	printh "update  <component>" "<prerequisites | images | dsh> (${yellow}'dsh help update'${NC})" "yellow"
 
 	echo
+	printh "alias" "Create/delete aliases (See ${yellow}'dsh help alias'${NC})"
 	printh "cleanup [--hard]" "Cleanup images to save space (--hard will also remove all stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version	(v, -v)" "Print dsh version. [v, -v] - prints short version"
@@ -749,6 +751,27 @@ show_help_vm ()
 	echo
 }
 
+show_help_alias ()
+{
+	echo-green "dsh alias - Create/delete dsh aliases"
+	echo
+	echo "Aliases provide functionality similar to drush aliases."
+	echo "Using alias you are able to execute dsh command for a project without navigating to the project folder."
+	echo "You can precede any command with alias."
+	echo
+	echo-green "Usage:"
+	printh "	dsh alias"	"Show aliases list"
+	printh "	dsh alias list"	"Show aliases list"
+	printh "	dsh alias <path> <alias_name>"	"Create an alias that links to path"
+	printh "	dsh alias delete <alias_name>"	"Delete alias"
+	echo-green "Examples:"
+	printh "	dsh alias ~/Projects/MySite dev"	"Create alias named dev that links to '~/Projects/MySite'"
+	printh "	dsh @dev drush st"	"Execute 'dsh drush st' command in directory linked by 'dev' alias"
+	printh "	dsh delete dev"	"Delete dev alias"
+	echo
+	echo "Aliases are effectively symlinks stored in $DRUDE_CONFIG_ALIAS"
+}
+
 # Display dsh version
 # @option --short - Display only the version number
 version ()
@@ -778,7 +801,8 @@ bash_comp_words ()
 			exit 0
 			;;
 		dsh)
-			echo "start up stop down restart status reset remove bash exec logs run mysql mysql-import exec-url drush drupal behat ssh-add install update self-update version cleanup vm sysinfo"
+			local aliases=$(ls -l "$DRUDE_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
+			echo "start up stop down restart status reset remove bash exec logs run mysql mysql-import exec-url drush drupal behat ssh-add install update self-update version cleanup vm sysinfo $aliases"
 			exit 0
 			;;
 		*)
@@ -1827,34 +1851,36 @@ system_information ()
 # param $2 alias name
 alias_create ()
 {
-	[[ $# != 2 ]] && echo 'Usage: dsh alias <path> <link_name>' && exit 1
-	mkdir -p "$DRUDE_CONFIG_DIR/links" || exit 1
+	[[ $# != 2 ]] && echo 'Usage: dsh alias <path> <alias_name>' && exit 1
+	mkdir -p "$DRUDE_CONFIG_ALIAS" || exit 1
 	[[ -h "$2" ]] && echo "Alias $2 already exists" && exit 1
 	[[ -e "$2" ]] && echo "Filename is not available" && exit 1
 	[[ ! -d "$1" ]] && echo 'Path should be a valid dir' && exit 1
 
 	! is_windows && \
-		ln -s "$1" "$DRUDE_CONFIG_DIR/links/$2"
+		ln -s "$1" "$DRUDE_CONFIG_ALIAS/$2"
 }
 
 alias_remove () {
-	[[ ! -h "$DRUDE_CONFIG_DIR/links/$1" ]] && echo 'Alias not found' && exit
-	[[ -h "$DRUDE_CONFIG_DIR/links/$1" ]] && rm "$DRUDE_CONFIG_DIR/links/$1"
+	[[ ! -h "$DRUDE_CONFIG_ALIAS/$1" ]] && echo 'Alias not found' && exit
+	[[ -h "$DRUDE_CONFIG_ALIAS/$1" ]] && rm "$DRUDE_CONFIG_ALIAS/$1"
 }
 
 alias_list ()
 {
-	ls -l "$DRUDE_CONFIG_DIR/links" | grep -v total | awk '{printf "%s %s %s\n", $9, $10, $11}'
+	local list=$(ls -l "$DRUDE_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "%s %s %s\n", $9, $10, $11}')
+	[[ "$list" == "" ]] && echo "No aliases found" && exit
+	echo "$list"
 }
 
 #-------------------------- Parameters parsing -----------------------------
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
-	__alias=${1#@}
-	[[ ! -h "$DRUDE_CONFIG_DIR/links/$__alias" ]] && echo-red "No such alias $1" && exit 1
-	cd "$DRUDE_CONFIG_DIR/links/$__alias"
-	if_failed "Could not cd to alias directory"
+	DRUDE_ALIAS=${1#@}
+	[[ ! -h "$DRUDE_CONFIG_ALIAS/$DRUDE_ALIAS" ]] && echo-red "No such alias $1" && exit 1
+	cd "$DRUDE_CONFIG_ALIAS/$DRUDE_ALIAS"
+	if_failed "Could not cd to directory linked by this alias"
 	shift
 fi
 
