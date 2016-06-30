@@ -183,8 +183,8 @@ get_current_relative_path ()
 	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
 	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
 	# ex: cwd=/a/b, proj_root=/a/b/c, pathdiff==/a/b
-	local pathdiff=${cwd#$proj_root/}
-	echo $pathdiff
+	local pathdiff=${cwd#${proj_root}/}
+	echo "$pathdiff"
 }
 
 # Get mysql connection string
@@ -233,7 +233,7 @@ is_ubuntu ()
 		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
 	fi
 
-	if [[ $lsb_dist != 'Ubuntu' || $(ver_to_int $lsb_release) < $(ver_to_int '14.04') ]]; then
+	if [[ "$lsb_dist" != 'Ubuntu' || $(ver_to_int "$lsb_release") < $(ver_to_int '14.04') ]]; then
 		return 1
 	fi
 
@@ -301,7 +301,7 @@ is_tty ()
 
 testing_warn ()
 {
-	[[ $DRUDE_BRANCH != 'master' ]] && is_tty && \
+	[[ "$DRUDE_BRANCH" != 'master' ]] && is_tty && \
 		echo-yellow "drude - ${DRUDE_BRANCH} branch"
 }
 
@@ -322,7 +322,7 @@ check_dsh_environment ()
 check_docker_running ()
 {
 	# Check cached value
-	[[ $DOCKER_RUNNING == "true" ]] && return 0
+	[[ "$DOCKER_RUNNING" == "true" ]] && return 0
 	local docker_status
 
 	check_binary_found 'docker'
@@ -365,7 +365,7 @@ is_vbox_version ()
 	fi
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
-	[[ $(ver_to_int $virtualbox_version) < $(ver_to_int $DSH_REQUIREMENTS_VBOX) ]] && \
+	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$DSH_REQUIREMENTS_VBOX") ]] && \
 		return 2
 
 	return 0
@@ -376,7 +376,7 @@ is_docker_version ()
 	[[ ! -x "$DOCKER_BIN" ]] && return 1
 
 	local version=$(docker -v | sed "s/^Docker version \(.*\),.*/\1/")
-	[[ $version == $DSH_REQUIREMENTS_DOCKER ]] && \
+	[[ "$version" == "$DSH_REQUIREMENTS_DOCKER" ]] && \
 		return 0;
 
 	return 1;
@@ -387,7 +387,7 @@ is_docker_compose_version ()
 	[[ ! -x "$DOCKER_COMPOSE_BIN" ]] && return 1
 
 	local version=$(docker_compose -v | sed "s/^docker-compose version \(.*\),.*/\1/")
-	[[ $version == $DSH_REQUIREMENTS_DOCKER_COMPOSE ]] && \
+	[[ "$version" == "$DSH_REQUIREMENTS_DOCKER_COMPOSE" ]] && \
 		return 0;
 
 	return 1;
@@ -398,7 +398,7 @@ is_docker_machine_version ()
 	[[ ! -x "$DOCKER_MACHINE_BIN" ]] && return 1
 
 	local version=$(docker-machine -v | sed "s/^docker-machine version \(.*\),.*/\1/")
-	[[ $version == $DSH_REQUIREMENTS_DOCKER_MACHINE ]] && \
+	[[ "$version" == "$DSH_REQUIREMENTS_DOCKER_MACHINE" ]] && \
 		return 0;
 
 	return 1;
@@ -441,7 +441,7 @@ _confirm ()
 
 	while true; do
 		read -p "$1 [y/n]: " answer
-		case $answer in
+		case "$answer" in
 			[Yy]|[Yy][Ee][Ss] )
 				break
 				;;
@@ -563,7 +563,7 @@ _vhost_proxy_connect ()
 {
 	echo-green "Connecting vhost-proxy to networks..."
 	docker network ls -q --filter name=_default | while read network; do
-		docker network connect $network vhost-proxy >/dev/null 2>&1 || true
+		docker network connect "$network" vhost-proxy >/dev/null 2>&1 || true
 	done
 }
 
@@ -662,7 +662,7 @@ show_help ()
 		if [ ! -z "$custom_commands_list" ]; then
 			echo
 			echo -e "Custom commands found in ${yellow}$DRUDE_COMMANDS_PATH${NC}:";
-			for cmd_name in $custom_commands_list
+			for cmd_name in "$custom_commands_list"
 			do
 				# command description is lines that start with ##
 				local cmd_desc=$(cat "$commands_path/$cmd_name" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
@@ -839,7 +839,7 @@ docker_machine_create ()
 		return 1
 	fi
 
-	case $DOCKER_MACHINE_PROVIDER in
+	case "$DOCKER_MACHINE_PROVIDER" in
 		virtualbox)
 			check_vbox_version
 
@@ -907,7 +907,7 @@ docker_machine_start ()
 
 docker_machine_mounts ()
 {
-	if [[ $DOCKER_MACHINE_PROVIDER == 'virtualbox' ]]; then
+	if [[ "$DOCKER_MACHINE_PROVIDER" == 'virtualbox' ]]; then
 		if is_mac; then
 			echo-green "Configuring NFS mount..."
 			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
@@ -1087,7 +1087,7 @@ install_prerequisites ()
 {
 	echo-green "Installing prerequisites..."
 
-	if [[ -x $DOCKER_BIN ]] && [[ -x $DOCKER_COMPOSE_BIN ]] && [[ -x $DOCKER_MACHINE_BIN ]]; then
+	if [[ -x "$DOCKER_BIN" ]] && [[ -x "$DOCKER_COMPOSE_BIN" ]] && [[ -x "$DOCKER_MACHINE_BIN" ]]; then
 		if is_docker_machine_exist && ! is_docker_machine_running; then
 			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but is not running" \
 				"Please start it with ${yellow}dsh up${NC} first (or destroy it with ${yellow}dsh destroy${NC} if you want it re-created)."
@@ -1130,7 +1130,7 @@ install_dns_service ()
 	# Use default DNS on Linux and VirtualBox's buit-in DNS if using boot2docker
 	local dns
 	local ip="${1:-0.0.0.0}"
-	if is_linux; then dns=$DRUDE_DEFAULT_DNS; else dns=$DRUDE_VBOX_DNS; fi
+	if is_linux; then dns="$DRUDE_DEFAULT_DNS"; else dns="$DRUDE_VBOX_DNS"; fi
 
 	# Support for boot2docker-vagrant
 	local docker_ip_map="-p 172.17.42.1:53:53/udp"
@@ -1138,7 +1138,7 @@ install_dns_service ()
 	   
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
-		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns $dns \
+		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
 		-e DRUDE_IP="$ip" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}:${DRUDE_ITAG}" >/dev/null
@@ -1280,7 +1280,7 @@ install_prerequisites_windows ()
 	fi
 
 	# Install docker-machine-smb
-	if [[ ! -x $($DOCKER_MACHINE_SMB_BIN) ]]; then
+	if [[ ! -x "$DOCKER_MACHINE_SMB_BIN" ]]; then
 		echo-green "Installing docker-machine-smb..."
 		curl -s "$URL_DOCKER_MACHINE_SMB" -o "$DOCKER_MACHINE_SMB_BIN" > /dev/null && \
 			chmod +x "$DOCKER_MACHINE_SMB_BIN"
@@ -1341,11 +1341,11 @@ install_prerequisites_ubuntu ()
 	fi
 
 	# Adding a subnet for Drude. Make sure we don't do this twice
-	if ! grep -q $DRUDE_SUBNET /etc/network/interfaces; then
+	if ! grep -q "$DRUDE_SUBNET" /etc/network/interfaces; then
 		echo-green "Adding a subnet for Drude..."
 		cat > /tmp/drude.ip.addr <<EOF
-	up   ip addr add $DRUDE_SUBNET dev lo label lo:drude
-	down ip addr del $DRUDE_SUBNET dev lo label lo:drude
+	up   ip addr add ${DRUDE_SUBNET} dev lo label lo:drude
+	down ip addr del ${DRUDE_SUBNET} dev lo label lo:drude
 EOF
 		sudo sed -i '/iface lo inet loopback/r /tmp/drude.ip.addr' /etc/network/interfaces
 		rm -f /tmp/drude.ip.addr
@@ -1384,12 +1384,12 @@ install_autocomplete ()
 	echo "$autocomplete_script" | tee "$destination" >/dev/null
 	if_failed "Failed to write file to $destination"
 	echo-green "Script saved to $destination"
-	chmod +x $destination
+	chmod +x "$destination"
 
 	SOURCE_FILE=".bash_profile"
-	grep -q "$destination" $HOME/$SOURCE_FILE
+	grep -q "$destination" "$HOME/$SOURCE_FILE"
 	if [[ $? -ne 0 ]]; then
-		echo -e ". $destination" >> $HOME/$SOURCE_FILE
+		echo -e ". $destination" >> "$HOME/$SOURCE_FILE"
 		if_failed "Failed to write file to $HOME/$SOURCE_FILE"
 		echo-green "Autocomplete appended to $HOME/$SOURCE_FILE"
 		echo-yellow "dsh: Please restart your bash session to apply"
@@ -1438,8 +1438,8 @@ update_dsh ()
 
 	# Check if update is a major version. Show warning is needed
 	local new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
-	local current_major_version=$(echo $DSH_VERSION | cut -d "." -f 1)
-	local new_major_version=$(echo $new_version | cut -d "." -f 1)
+	local current_major_version=$(echo "$DSH_VERSION" | cut -d "." -f 1)
+	local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
 	if [[ "$current_major_version" != "$new_major_version" ]]; then
 		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
 		echo -e "Updating from ${yellow}$DSH_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwards compatible update."
@@ -1480,11 +1480,11 @@ check_for_updates ()
 	echo 'dsh: checking for updates...'
 	local new_dsh; local new_version
 	# Always write current timestamp to last check file
-	echo $timestamp > $DRUDE_LAST_CHECK
+	echo "$timestamp" > "$DRUDE_LAST_CHECK"
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
 	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH")
 	new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
-	if [ $(ver_to_int $new_version) -gt $(ver_to_int $DSH_VERSION) ]; then
+	if [ $(ver_to_int "$new_version") -gt $(ver_to_int $DSH_VERSION) ]; then
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}dsh${NC} [ $DSH_VERSION --> $new_version ] (run ${green}dsh update dsh${NC} to update)"
 		echo "Press Enter."
@@ -1520,7 +1520,7 @@ _run ()
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
-	container_id=$(get_container_id $CONTAINER_NAME)
+	container_id=$(get_container_id "$CONTAINER_NAME")
 
 	# 1) check winpty
 	# Running docker exec interactively on Windows requires workarounds
@@ -1532,7 +1532,7 @@ _run ()
 	local cdir
 	# Only chdir to the same dir in cli container
 	# RUN_NO_CDIR can be used to override this (used in mysql_import)
-	if [[ $CONTAINER_NAME == "cli" ]] && [[ $RUN_NO_CDIR != 1 ]]; then
+	if [[ "$CONTAINER_NAME" == "cli" ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
 		local path=$(get_current_relative_path)
 		if [[ "$path" != "$(pwd)" ]] && [[ "$path" != "" ]] ; then
 			# we're inside docroot
@@ -1602,7 +1602,7 @@ mysql_import ()
 	#substract project root path from filepath
 	local pathdiff=${filepath#$project_root}
 
-	if [[ $pathdiff == $filepath ]] ; then
+	if [[ "$pathdiff" == "$filepath" ]] ; then
 		# substraction did not succeed because file is outside project root
 		echo "\"$filename\" should be inside your project root folder"
 		return
@@ -1620,7 +1620,7 @@ mysql_import ()
 	# Use pv for interactive shells only.
 	if is_tty ; then
 		# Check if we have a gzipped dump and treat it differently.
-		if [[ $filename == *.gz ]]; then
+		if [[ "$filename" == *.gz ]]; then
 			file_size=$(gzip -l $1 | sed -n 2p | awk '{print $2}')
 			RUN_NO_CDIR=1 _run "zcat ./$pathdiff/$filename | pv --size $file_size | $sql_connect"
 		else
@@ -1628,7 +1628,7 @@ mysql_import ()
 		fi
 	else
 		# Check if we have a gzipped dump and treat it differently.
-		if [[ $filename == *.gz ]]; then
+		if [[ "$filename" == *.gz ]]; then
 			RUN_NO_CDIR=1 _run "zcat ./$pathdiff/$filename | $sql_connect"
 		else
 			RUN_NO_CDIR=1 _run "cat ./$pathdiff/$filename | $sql_connect"
@@ -1668,7 +1668,7 @@ behat ()
 	local params=''
 	local path='tests/behat'
 	for i in "$@"; do
-		case $i in
+		case "$i" in
 			--path=*)
 				path="${i#*=}"
 				;;
@@ -1778,17 +1778,17 @@ logs ()
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
 {
-	if [[ $DRUDE_SET_UID == "" ]] ; then
+	if [[ "$DRUDE_SET_UID" == "" ]] ; then
 		DRUDE_SET_UID=$(id -u)
 	fi
 	# Let uid to be set with the DRUDE_SET_UID env variable
-	if [[ $DRUDE_SET_UID != 0 ]] ; then
-		local host_uid=$DRUDE_SET_UID
+	if [[ "$DRUDE_SET_UID" != 0 ]] ; then
+		local host_uid="$DRUDE_SET_UID"
 		local container_uid=$(docker exec $(get_container_id cli) id -u)
 
-		if [[ $container_uid != $host_uid ]]; then
+		if [[ "$container_uid" != "$host_uid" ]]; then
 			echo-green "Changing user uid in cli from $container_uid to $host_uid..."
-			docker exec -u root $(get_container_id cli) usermod -u $host_uid docker
+			docker exec -u root $(get_container_id cli) usermod -u "$host_uid" docker
 			echo-green "Reseting permissions on /var/www..."
 			docker exec -u root $(get_container_id cli) chown -R docker:users /var/www
 			echo-green "Restarting php daemon..."
@@ -1796,7 +1796,7 @@ _set_cli_uid ()
 			local php_service='php-fpm';
 			local local res=$(docker exec $(get_container_id cli) grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf)
 			if [[ "$res" != '' ]]; then php_service='php5-fpm'; fi
-			docker exec -u root $(get_container_id cli) supervisorctl restart $php_service >/dev/null
+			docker exec -u root $(get_container_id cli) supervisorctl restart "$php_service" >/dev/null
 		else
 			echo-green "Container and host uids already match ($container_uid)."
 		fi
@@ -1809,10 +1809,10 @@ _system_information_heading ()
 {
 	local dashes_length=$((32+${#1}))
 	echo
-	printf '–%.0s' $(seq 1 $dashes_length)
+	printf '–%.0s' $(seq 1 ${dashes_length})
 	echo
 	echo "		$1"
-	printf '–%.0s' $(seq 1 $dashes_length)
+	printf '–%.0s' $(seq 1 ${dashes_length})
 	echo
 }
 
@@ -1902,7 +1902,7 @@ argv="$@"
 case $1 in
 	up|start)
 		shift
-		up "$@"
+		up
 		;;
 	stop)
 		shift
@@ -2074,9 +2074,9 @@ case $1 in
 		# Search for custom commands in $DRUDE_COMMANDS_PATH
 
 		legacy_init_path="$(get_drude_path)/.drude/scripts/drude-init.sh"
-		if [[ "$1" == "init" ]] && [[ -f $legacy_init_path ]]; then
+		if [[ "$1" == "init" ]] && [[ -f "$legacy_init_path" ]]; then
 			# Legacy processing for init script
-			dsh_command_script=$legacy_init_path
+			dsh_command_script="$legacy_init_path"
 		else
 			# Normal search for custom command
 			dsh_command_script="$(get_drude_path)/$DRUDE_COMMANDS_PATH/$1"
