@@ -46,6 +46,7 @@ Vagrant machine is not going to be used anymore and needs to be deleted.
 4. Update dsh: `dsh update dsh`
 5. `dsh install prerequisites`
 6. Start your project just like you did before with `dsh up` and re-import your DB dump. Notice it will use Docker Machine now. New Docker Machine will be created upon run.
+7. Run `dsh cleanup` to delete old unused files and images
 
 <a name="dsh"></a>
 ## Drude Shell Helper (dsh)

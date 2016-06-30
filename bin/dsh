@@ -539,10 +539,12 @@ _docker_cleanup ()
 	echo-green "Cleaning up images..."
 	docker images -qf dangling=true | xargs docker rmi 2>1
 	# TODO: remove below lines in 2017
-	rm -f "$DRUDE_CONFIG_DIR/Vagrantfile.*" 2>/dev/null 1>/dev/null
-	rm -f "$DRUDE_CONFIG_DIR/backups/Vagrantfile.*" 2>/dev/null 1>/dev/null
-	rm -f "$DRUDE_CONFIG_DIR/vagrant.yml.*" 2>/dev/null 1>/dev/null
-	rm -f "$DRUDE_CONFIG_DIR/backups/vagrant.yml.*" 2>/dev/null 1>/dev/null
+	rm -f "$DRUDE_CONFIG_DIR/Vagrantfile."* 2>/dev/null 1>/dev/null
+	rm -f "$DRUDE_CONFIG_DIR/backups/Vagrantfile."* 2>/dev/null 1>/dev/null
+	rm -r "$DRUDE_CONFIG_DIR/backups" 2>/dev/null 1>/dev/null
+	rm -f "$DRUDE_CONFIG_DIR/vagrant.yml."* 2>/dev/null 1>/dev/null
+	rm -f "$DRUDE_CONFIG_DIR/backups/vagrant.yml."* 2>/dev/null 1>/dev/null
+	rm -f "$DRUDE_CONFIG_DIR/b2d_version" 2>/dev/null 1>/dev/null
 }
 
 # Connect vhost-proxy to all bridge networks on the host
