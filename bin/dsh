@@ -355,7 +355,7 @@ is_vbox_version ()
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
 	[[ $(ver_to_int $virtualbox_version) < $(ver_to_int $DSH_REQUIREMENTS_VBOX) ]] && \
-		return 1
+		return 2
 
 	return 0
 }
@@ -395,9 +395,10 @@ is_docker_machine_version ()
 
 check_vbox_version ()
 {
-	! is_vbox_version && \
-		echo-error "VirtualBox version should be $DSH_REQUIREMENTS_VBOX or higher" && \
-		exit 1
+	is_vbox_version
+	local res=$?
+	[[ $res == 1 ]] && echo-error "$vboxmanage binary was not found" && exit 1
+	[[ $res == 2 ]] && echo-error "VirtualBox version should be $DSH_REQUIREMENTS_VBOX or higher" && exit 1
 }
 
 # Check that docker-compose.yml is present
@@ -887,7 +888,10 @@ docker_machine_mounts ()
 vm ()
 {
 	check_binary_found 'docker-machine'
-	! is_docker_machine_exist && echo-yellow "Docker machine is not created yet" && return 1
+	if [[ "$1" != "start" ]]; then
+		! is_docker_machine_exist && echo-yellow "Docker machine is not running. Use 'dsh up' to start." && return 1
+	fi
+
 	case $1 in
 		start)
 			! is_docker_machine_running && docker_machine_start || echo "Machine \"$DOCKER_MACHINE_NAME\" is already running."
@@ -928,10 +932,8 @@ vm ()
 
 vm-stats ()
 {
-	check_docker_running
-	if ! is_binary_found vboxmanage; then
-		echo-error "vboxmanage was not found" && exit 1
-	fi
+	check_docker_running # should be running
+	check_vbox_version
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
 	$vboxmanage metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
 	sleep 1
