@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.44
+DSH_VERSION=1.99.45
 
 # Console colors
 red='\033[0;91m'
@@ -1741,7 +1741,8 @@ exec_url ()
 		local script
 		script=$(curl -kfsSL "$1")
 		if_failed "Failed downloading script $1"
-		bash <(echo "$script")
+		shift
+		(eval "${script}")
 	else
 		echo-red "URL is required"
 	fi
