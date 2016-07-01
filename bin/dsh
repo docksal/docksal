@@ -1371,8 +1371,8 @@ install_prerequisites_ubuntu ()
 		echo-green "Installing Docker client..."
 		sudo service docker stop && \
 			curl -sSL "$URL_DOCKER_NIX" | sh && \
-			sudo usermod -aG docker $(whoami) && \
-			sudo docker --version
+			sudo usermod -aG docker $(whoami)
+		sudo docker --version
 		if_failed "Docker installation/upgrade has failed."
 	fi
 
