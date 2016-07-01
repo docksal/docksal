@@ -1924,7 +1924,7 @@ alias_remove () {
 
 alias_list ()
 {
-	local list=$(ls -l "$DRUDE_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "%s %s %s\n", $9, $10, $11}')
+	local list=$(ls -l "$DRUDE_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "    %-15s %s %s\n", $9, $10, $11}')
 	[[ "$list" == "" ]] && echo "No aliases found" && exit
 	echo "$list"
 }
