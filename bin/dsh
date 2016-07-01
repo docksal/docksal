@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.42
+DSH_VERSION=1.99.43
 
 # Console colors
 red='\033[0;91m'
@@ -641,7 +641,7 @@ show_help ()
 	echo
 	printh "mysql (sqlc)" "Opens mysql shell to current project database"
 	printh "mysql-import (sqli) <file>" "Truncate database and import from sql dump (file should be accessible to Drude)"
-	echo
+	printh "" "See ${yellow}dsh help sqli${NC} for advanced usage (multisite, gz)."
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
 	echo
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}'dsh help ssh-add'${NC}"
@@ -741,6 +741,19 @@ show_help_update ()
 	echo
 }
 
+show_help_sqli ()
+{
+	echo-green "dsh sqli <db_dump> - Import DB dump into database truncating it first"
+	echo
+	echo -e "DB dump can be either plain ${yellow}.sql${NC} file or gzipped dump ending with ${yellow}.gz${NC} extension."
+	echo -e "To import dump into subsite in multisite first cd to that site folder (e.g docroot/sites/subsite)"
+	echo
+	echo-green "Examples:"
+	printh "dsh sqli ../../mydump.sql" "Import plaintext sql dump"
+	printh "dsh sqli ~/otherdump.sql.gz" "Import gzipped sql dump"
+	echo
+}
+
 show_help_vm ()
 {
 	echo-green "dsh vm <command> - Control docker machine directly"
@@ -753,11 +766,12 @@ show_help_vm ()
 	printh "ssh" "Log into or run a command on a machine with SSH"
 	printh "stats" "Show current HDD/RAM usage stats"
 	printh "kill" "Forcibely stop a machine"
+	printh "rm" "Remove a machine"
 	printh "ip" "Get the IP address of a machine"
 	printh "env" "Display the commands to set up the shell for direct use of Docker client"
 	echo
 	printh "ram" "Display machine's memory size"
-	printh "ram [megabytes]" "Set machine's memory size. Default is 1024"
+	printh "ram [megabytes]" "Set machine's memory size. Default is 1024 (requires vm restart)"
 	echo
 }
 
@@ -807,12 +821,15 @@ bash_comp_words ()
 			exit 0
 			;;
 		vm)
-			echo "start restart status stop ssh stats kill ip env ram"
+			echo "start restart status stop ssh stats kill rm ip env ram"
 			exit 0
 			;;
+		alias)
+			echo "list remove"
+		;;
 		dsh)
 			local aliases=$(ls -l "$DRUDE_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
-			echo "start up stop down restart status reset remove bash exec logs run mysql mysql-import exec-url drush drupal behat ssh-add install update self-update version cleanup vm sysinfo $aliases"
+			echo "start up stop down restart status reset remove bash exec logs run mysql mysql-import exec-url drush drupal behat ssh-add install update self-update version cleanup vm sysinfo alias $aliases"
 			exit 0
 			;;
 		*)
@@ -860,11 +877,6 @@ docker_machine_create ()
 			;;
 	esac
 
-}
-
-docker_machine_destroy ()
-{
-	docker-machine rm "$DOCKER_MACHINE_NAME"
 }
 
 is_docker_machine_exist ()
@@ -924,11 +936,17 @@ docker_machine_mounts ()
 vm ()
 {
 	check_binary_found 'docker-machine'
-	if [[ "$1" != "start" ]]; then
-		! is_docker_machine_exist && echo-yellow "Docker machine is not running. Use 'dsh up' to start." && return 1
+
+	if ! is_docker_machine_exist && [[ "$1" != "start" ]] && [[ "$1" != "create" ]]; then
+		 echo-yellow "Docker machine is not created. Use 'dsh up' or 'dsh vm start'."
+		 return 1
 	fi
 
 	case $1 in
+		create)
+			is_docker_machine_exist && echo "Machine \"$DOCKER_MACHINE_NAME\" already exists." && return 1
+			docker_machine_create
+			;;
 		start)
 			! is_docker_machine_running && docker_machine_start || echo "Machine \"$DOCKER_MACHINE_NAME\" is already running."
 			;;
@@ -949,6 +967,9 @@ vm ()
 			;;
 		kill)
 			docker-machine kill "$DOCKER_MACHINE_NAME"
+			;;
+		rm)
+			docker-machine rm "$DOCKER_MACHINE_NAME"
 			;;
 		ip)
 			docker-machine ip "$DOCKER_MACHINE_NAME"
@@ -1868,7 +1889,7 @@ alias_create ()
 	[[ ! -d "$1" ]] && echo 'Path should be a valid dir' && exit 1
 
 	! is_windows && \
-		ln -s "$1" "$DRUDE_CONFIG_ALIAS/$2"
+		ln -s $(get_abs_path "$1") "$DRUDE_CONFIG_ALIAS/$2"
 }
 
 alias_remove () {
@@ -1894,21 +1915,18 @@ if [[ "$1" == "@"* ]]; then
 	shift
 fi
 
+# Check for updates if not updating already
 if [[ "$*" != "update dsh" ]]; then
 	check_for_updates
 fi
-# Command bindings
-argv="$@"
-case $1 in
+
+# Parse other parameters
+case "$1" in
 	up|start)
 		shift
 		up
 		;;
-	stop)
-		shift
-		down "$@"
-		;;
-	down)
+	stop|down)
 		shift
 		down "$@"
 		;;
@@ -1916,34 +1934,21 @@ case $1 in
 		shift
 		restart "$@"
 		;;
-	status)
+	status|st|ps)
 		shift
 		status "$@"
 		;;
-	st)
+	reset)
 		shift
-		status "$@"
+		reset "$@"
 		;;
-	ps)
+	remove)
 		shift
-		status "$@"
+		remove "$@"
 		;;
 	vm)
 		shift
 		vm "$@"
-		;;
-	vmstat)
-		vmstat
-		;;
-	ip)
-		_ip
-		;;
-	env)
-		_env
-		;;
-	ssh-add)
-		shift
-		ssh_add "$@"
 		;;
 	install)
 		shift
@@ -1968,28 +1973,18 @@ case $1 in
 		shift
 		_bash "$@"
 		;;
-	exec)
+	exec|run)
 		shift
 		_run "$@"
 		;;
-	run)
-		shift
-		_run "$@"
-		;;
-	mysql)
+	mysql|sqlc)
 		mysql
 		;;
-	sqlc)
-		mysql
-		;;
-	mysql-import)
-		mysql_import $2 $3
-		;;
-	sqli)
-		mysql_import $2 $3
+	mysql-import|sqli)
+		mysql_import "$2" "$3"
 		;;
 	cc)
-		clear_cache $2
+		clear_cache "$2"
 		;;
 	drush)
 		shift
@@ -2011,6 +2006,10 @@ case $1 in
 		shift
 		behat "$@"
 		;;
+	ssh-add)
+		shift
+		ssh_add "$@"
+		;;
 	docker)
 		shift
 		is_docker_running # exports env
@@ -2025,20 +2024,9 @@ case $1 in
 		shift
 		exec_url "$@"
 		;;
-	reset)
-		shift
-		reset "$@"
-		;;
-	remove)
-		shift
-		remove "$@"
-		;;
 	cleanup)
 		shift
 		_docker_cleanup $1
-		;;
-	destroy)
-		docker_machine_destroy
 		;;
 	-v | v)
 		version --short
@@ -2058,7 +2046,7 @@ case $1 in
 		show_help
 		;;
 	help)
-		show_help $2
+		show_help "$2"
 		;;
 	sysinfo)
 		system_information
