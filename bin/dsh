@@ -933,9 +933,8 @@ install_ubuntu ()
 	echo-green "Installing Docker..."
 	sudo service docker stop && \
 		curl -sSL https://get.docker.com/ | sh && \
-		sudo usermod -aG docker $(whoami) && \
-		sudo service docker start
-	docker --version
+		sudo usermod -aG docker $(whoami)
+	sudo docker version
 	if_failed "Docker installation/upgrade has failed."
 
 	echo-green "Installing Docker Compose..."
