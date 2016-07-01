@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.43
+DSH_VERSION=1.99.44
 
 # Console colors
 red='\033[0;91m'
@@ -594,10 +594,11 @@ printh ()
 # $1 name of command to show help for
 show_help ()
 {
-	local commands_path="$(get_drude_path)/$DRUDE_COMMANDS_PATH"
+	local project_commands_path="$(get_drude_path)/$DRUDE_COMMANDS_PATH"
+	local global_commands_path="$HOME/$DRUDE_COMMANDS_PATH"
 	local custom_commands_list
 
-	# Show help for certain command
+	# If nonempty param then show help for a certain command
 	if [[ ! -z "$1" ]]; then
 		# Check for help function for specific command
 		type "show_help_$1" 1>/dev/null 2>/dev/null
@@ -606,9 +607,14 @@ show_help ()
 			exit
 		fi
 		# Check for custom command file
-		if [ -f "$commands_path/$1" ]; then
+		# Try global command
+		local _command="$global_commands_path/$1"
+		# But if local command exists then override
+		[ -f "$project_commands_path/$1" ] && _command="$project_commands_path/$1"
+		#
+		if [ -f "$_command" ]; then
 			echo -en "${green}dsh $1${NC} - "
-			cat "$commands_path/$1" | grep '^##' | sed "s/^##[ ]*//g"
+			cat "$_command" | grep '^##' | sed "s/^##[ ]*//g"
 			echo
 			exit
 		fi
@@ -658,20 +664,38 @@ show_help ()
 
 	# Show list of custom commands and their help if available
 	if [ ! -z "$(get_drude_path)" ]; then
-		custom_commands_list=$(ls "$commands_path" 2>/dev/null | tr "\n" " ")
-		if [ ! -z "$custom_commands_list" ]; then
-			echo
-			echo -e "Custom commands found in ${yellow}$DRUDE_COMMANDS_PATH${NC}:";
-			for cmd_name in "$custom_commands_list"
-			do
-				# command description is lines that start with ##
-				local cmd_desc=$(cat "$commands_path/$cmd_name" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
-				printh "$cmd_name" "$cmd_desc"
-			done
-		fi
+		show_help_list_of_custom_commands 'project'
+	fi
+	if [ ! -z "$HOME/$DRUDE_COMMANDS_PATH" ]; then
+		show_help_list_of_custom_commands 'global'
 	fi
 
 	echo
+}
+
+# param $1 - 'project' or 'global'
+show_help_list_of_custom_commands ()
+{
+	local _path
+	if [[ "$1" == 'project' ]]; then
+		_path="$(get_drude_path)/$DRUDE_COMMANDS_PATH"
+		# avoid taking global .drude folder for project one
+		if [[ "$_path" == "$HOME/$DRUDE_COMMANDS_PATH" ]]; then return; fi
+	else
+		_path="$HOME/$DRUDE_COMMANDS_PATH"
+	fi
+
+	custom_commands_list=$(ls "$_path" 2>/dev/null | tr "\n" " ")
+	if [ ! -z "$custom_commands_list" ]; then
+		echo
+		echo -e "Custom commands found in ${yellow}$1 commands${NC}:";
+		for cmd_name in $(ls "$_path")
+		do
+			# command description is lines that start with ##
+			local cmd_desc=$(cat "$_path/$cmd_name" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
+			printh "$cmd_name" "$cmd_desc"
+		done
+	fi
 }
 
 show_help_ssh-add ()
@@ -2067,29 +2091,31 @@ case "$1" in
 			dsh_command_script="$legacy_init_path"
 		else
 			# Normal search for custom command
+			# First search project commands folder
 			dsh_command_script="$(get_drude_path)/$DRUDE_COMMANDS_PATH/$1"
+			# If not found search global drude commands folder
+			[ ! -f "$dsh_command_script" ] && dsh_command_script="$HOME/$DRUDE_COMMANDS_PATH/$1"
+			# If not found there as well then it is a wrong command
+			[ ! -f "$dsh_command_script" ] && \
+				echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands" && \
+				exit 1
 		fi
 
-		if [ -f "$dsh_command_script" ]; then
-			if [[ ! -x "$dsh_command_script" ]]; then
-				echo -e "${yellow}$dsh_command_script${NC} is not set to be executable."
-				_confirm "Fix automatically?"
-				chmod +x "$dsh_command_script"
-				if_failed "Could not make $dsh_command_script executable"
-			fi
-			shift
-			export YML_PATH="$(get_yml_path)"
-			export DRUDE_PATH="$(get_drude_path)"
-			export PROJECT_ROOT="$(get_drude_path)"
-			if is_docker_running; then
-				export DOCKER_RUNNING="true"
-			else
-				export DOCKER_RUNNING="false"
-			fi
-
-			exec "$dsh_command_script" "$@"
+		if [[ ! -x "$dsh_command_script" ]]; then
+			echo -e "${yellow}$dsh_command_script${NC} is not set to be executable."
+			_confirm "Fix automatically?"
+			chmod +x "$dsh_command_script"
+			if_failed "Could not make $dsh_command_script executable"
+		fi
+		shift
+		export YML_PATH="$(get_yml_path)"
+		export DRUDE_PATH="$(get_drude_path)"
+		export PROJECT_ROOT="$(get_drude_path)"
+		if is_docker_running; then
+			export DOCKER_RUNNING="true"
 		else
-			echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands"
-			exit 1
+			export DOCKER_RUNNING="false"
 		fi
+
+		exec "$dsh_command_script" "$@"
 esac
