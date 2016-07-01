@@ -65,6 +65,11 @@ Rest of lines will be available as advanced help via `dsh help command_name`
 
 See example of command documentation in [phpcs command](../examples/.drude/commands/phpcs)
 
+## Global custom commands
+
+Put your command to `~/.drude/commands` and it will be accessible globally.  
+Useful for tedious tasks that you need in every project.
+
 ## Advanced use
 
 It is not imperative to use bash. You can use any interpreter for your custom command scripts
