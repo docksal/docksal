@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.45
+DSH_VERSION=1.99.50
 
 # Console colors
 red='\033[0;91m'
@@ -18,10 +18,12 @@ DSH_REQUIREMENTS_VBOX='5.0.4'
 DSH_REQUIREMENTS_WINPTY='0.3.1'
 DSH_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
 
-# Configuration path
+# Configuration paths
 DRUDE_CONFIG_DIR="$HOME/.drude"
 DRUDE_CONFIG_ALIAS="$DRUDE_CONFIG_DIR/alias"
 DRUDE_LAST_CHECK="$DRUDE_CONFIG_DIR/last_check"
+DRUDE_MACHINE="$DRUDE_CONFIG_DIR/machines"
+DRUDE_MACHINE_ACTIVE="$DRUDE_MACHINE/.active"
 # BIN folder
 DRUDE_BIN_DIR="$DRUDE_CONFIG_DIR/bin"
 DRUDE_DOWNLOADS_DIR="$DRUDE_BIN_DIR/downloads"
@@ -34,7 +36,7 @@ vboxmanage="vboxmanage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
 	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 
-# Where custom commands live
+# Where custom commands live (relative path)
 DRUDE_COMMANDS_PATH=".drude/commands"
 
 # Network settings
@@ -42,11 +44,12 @@ DRUDE_SUBNET="192.168.10.1/24"
 DRUDE_DEFAULT_DNS="8.8.8.8"
 DRUDE_VBOX_DNS="10.0.2.3" # TODO: check this
 
-DOCKER_MACHINE_NAME='drude'
-DOCKER_MACHINE_PROVIDER='virtualbox'
-
-DOCKER_MACHINE_VBOX_RAM='1024' #mb
-DOCKER_MACHINE_VBOX_HDD='20000' #mb
+DEFAULT_MACHINE_NAME='drude'
+DEFAULT_MACHINE_PROVIDER='virtualbox'
+DEFAULT_MACHINE_VBOX_RAM='1024' #mb
+DEFAULT_MACHINE_VBOX_HDD='20000' #mb
+DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
+DEFAULT_MACHINE_DO_USER='drude' # digitalocean default size (512mb, 1gb, 2gb...)
 
 #---------------------------- URL references --------------------------------
 OS_NAME=$(uname -s)
@@ -84,6 +87,12 @@ DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 DRUDE_ITAG="${DRUDE_ITAG:-stable}"
 # UID of user to use in cli continer. Only override if you know what you're doing
 DRUDE_SET_UID=""
+
+__drude_active_machine=$(cat "$DRUDE_MACHINE_ACTIVE" 2>/dev/null)
+DOCKER_MACHINE_NAME="${__drude_active_machine:-$DEFAULT_MACHINE_NAME}"
+DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>/dev/null)"
+[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
+	eval $(docker-machine env "$DOCKER_MACHINE_NAME") &&
 
 #---------------------------- Helper functions --------------------------------
 
@@ -283,7 +292,6 @@ is_docker_running ()
 {
 	if ! is_linux; then
 		if ! is_docker_machine_running; then return 255; fi
-		docker_machine_env
 	fi
 	# Check if docker is running via docker info.
 	# This operation is instant even if docker is not running (assuming a socket is used).
@@ -337,12 +345,11 @@ check_docker_running ()
 	docker_status=$?
 
 	if [[ $docker_status -eq 255 ]]; then
-		echo-yellow "Looks like Drude docker machine is not running."
-		_confirm "Run 'dsh up' to start it now?"
-		up
+		echo-yellow "It looks like your docker machine is not running."
+		_confirm "Run 'dsh vm start' to start it now?"
+		vm start
 		if_failed "Could not start Drude docker machine properly"
 		# re-check status
-		docker_machine_env
 		docker info >/dev/null
 		docker_status=$?
 	fi
@@ -865,47 +872,72 @@ bash_comp_words ()
 
 is_docker_machine_running ()
 {
-	check_binary_found 'docker-machine'
-	docker-machine status "$DOCKER_MACHINE_NAME" 2>/dev/null | grep "Running" 2>&1 1>/dev/null
-	return $?
+#	check_binary_found 'docker-machine'
+#	docker-machine status "$DOCKER_MACHINE_NAME" 2>/dev/null | grep "Running" 2>&1 1>/dev/null
+	[[ $DOCKER_MACHINE_STATUS == 'Running' ]]
 }
 
-# Create drude
+# Create docker machine
+# param $1 machine name
+# param $2 provider (virtualbox | digitalocean). Defaults to virtualbox
 docker_machine_create ()
 {
 	check_binary_found 'docker-machine'
 
-	if is_docker_machine_exist; then
-		echo-error "Docker Machine '$DOCKER_MACHINE_NAME' already exists"
+	local machine_name="${1:-$DEFAULT_MACHINE_NAME}"
+	local provider="${2:-$DEFAULT_MACHINE_PROVIDER}"
+
+	if is_docker_machine_exist "$machine_name"; then
+		echo-error "Docker Machine '$machine_name' already exists"
 		return 1
 	fi
 
-	case "$DOCKER_MACHINE_PROVIDER" in
+	echo-green "Creating docker machine '$machine_name' ($provider)..."
+	case "$provider" in
 		virtualbox)
 			check_vbox_version
 
 			docker-machine create --driver=virtualbox \
-				--virtualbox-disk-size "$DOCKER_MACHINE_VBOX_HDD" \
-				--virtualbox-memory "$DOCKER_MACHINE_VBOX_RAM" \
+				--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
+				--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 				--virtualbox-no-share \
-				"$DOCKER_MACHINE_NAME"
+				"$machine_name"
 			;; #-- end virtualbox
 
 		digitalocean)
-			echo-error "Digital Ocean will be supported soon"
-			exit 1
+			[[ ! "$machine_name" =~ ^[0-9a-zA-Z.-]*$ ]] && echo "Invalid hostname specified. Allowed hostname chars are: 0-9a-zA-Z . -" && return 1
+			local token
+			echo -n "Provide Digital Ocean access token: "
+			read token
+			[[ "$token" == "" ]] && echo "Invalid token" && return 1
+			echo docker-machine create --driver=digitalocean \
+				--digitalocean-access-token="$token" \
+				--digitalocean-ssh-user="$DEFAULT_MACHINE_DO_USER" \
+				--digitalocean-size="$DEFAULT_MACHINE_DO_SIZE" \
+				"$machine_name"
 			;;
 
 		*)
-			echo-error "$DOCKER_MACHINE_PROVIDER provider is not supported by this version of dsh"
+			echo-error "$1 provider is not supported by this version of dsh"
 			;;
 	esac
 
 }
 
+# param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
 is_docker_machine_exist ()
 {
-	docker-machine ls | grep "$DOCKER_MACHINE_NAME" 1>/dev/null 2>/dev/null
+	if [[ "$1" != "" ]]; then
+		docker-machine ls | grep "$1" 1>/dev/null 2>/dev/null
+	else
+		[[ ! "$DOCKER_MACHINE_STATUS" =~ "not exist" ]]
+	fi
+}
+
+# Return docker machine provider
+docker_machine_provider ()
+{
+	docker-machine ls | grep "$DOCKER_MACHINE_NAME" | awk '{print $3}' 2>/dev/null
 }
 
 docker_machine_env ()
@@ -932,18 +964,16 @@ docker_machine_start ()
 			reset system && \
 			docker_machine_mounts
 	else
-		echo-green "Creating Docker Machine '$DOCKER_MACHINE_NAME'..."
 		docker_machine_create && \
 			docker_machine_env && \
 			reset system && \
 			docker_machine_mounts
-			# resolver is configured during reset system
 	fi
 }
 
 docker_machine_mounts ()
 {
-	if [[ "$DOCKER_MACHINE_PROVIDER" == 'virtualbox' ]]; then
+	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
 		if is_mac; then
 			echo-green "Configuring NFS mount..."
 			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
@@ -962,14 +992,31 @@ vm ()
 	check_binary_found 'docker-machine'
 
 	if ! is_docker_machine_exist && [[ "$1" != "start" ]] && [[ "$1" != "create" ]]; then
-		 echo-yellow "Docker machine is not created. Use 'dsh up' or 'dsh vm start'."
+		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME is not created. Use 'dsh up' or 'dsh vm start'."
 		 return 1
 	fi
 
 	case $1 in
 		create)
-			is_docker_machine_exist && echo "Machine \"$DOCKER_MACHINE_NAME\" already exists." && return 1
-			docker_machine_create
+			# usage: dsh vm create <machine_name> --provider="<provider_name>"
+			shift
+			local PARAMS=();
+			local provider="$DEFAULT_MACHINE_PROVIDER";
+			eval $(parse_params "$@")
+			is_docker_machine_exist "${PARAMS[1]}" && echo "Machine \"${PARAMS[1]}\" already exists." && return 1
+			docker_machine_create "${PARAMS[1]}" "$provider"
+			;;
+		active)
+			# Get/Set active vm
+			shift
+			if [[ "$1" == "" ]]; then
+				echo "$DOCKER_MACHINE_NAME"
+			else
+				[[ "$1" == "$DOCKER_MACHINE_NAME" ]] && echo "$1 is already active" && return 1
+				! is_docker_machine_exist "$1" && echo "No docker machine with name $1"
+				mkdir -p "$DRUDE_MACHINE" || return 1
+				echo "$1" | tee "$DRUDE_MACHINE_ACTIVE" >/dev/null && echo "$1 is set active"
+			fi
 			;;
 		start)
 			! is_docker_machine_running && docker_machine_start || echo "Machine \"$DOCKER_MACHINE_NAME\" is already running."
@@ -992,8 +1039,13 @@ vm ()
 		kill)
 			docker-machine kill "$DOCKER_MACHINE_NAME"
 			;;
+		ls)
+			docker-machine ls
+			;;
 		rm)
-			docker-machine rm "$DOCKER_MACHINE_NAME"
+			shift
+			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
+			docker-machine rm "$machine_name"
 			;;
 		ip)
 			docker-machine ip "$DOCKER_MACHINE_NAME"
@@ -1930,6 +1982,37 @@ alias_list ()
 }
 
 #-------------------------- Parameters parsing -----------------------------
+
+# Parse equal separated params into named local variables
+# Standalone named parameter value will equal param name (--force makes variable $force=="force")
+# Parses unnamed params into ${PARAMS[*]} array
+parse_params ()
+{
+	local counter=1
+	local PARAMS=()
+	echo "local PARAMS=(); "
+	while [[ "$1" != "" ]]; do
+		# If equal delimited parameter
+		if [[ "$1" =~ ^..*=..* ]]; then
+			# key is part before first =
+			local _key=$(echo "$1" | cut -d = -f 1)
+			# val is everything after key and = (protext from double = error)
+			local _val=${1/$_key=}
+			# remove dashes from key name
+			_key=${_key//\-}
+			echo "local $_key=\"$_val\";"
+		# If standalone named parameter
+		elif [[ "$1" =~ ^\-. ]]; then
+			# remove dashes
+			local _key=${1//\-}
+			echo "local $_key=\"$_key\""
+		else
+			echo "PARAMS[${counter}]=\"$1\";"
+			counter=$((counter+1))
+		fi
+		shift
+	done
+}
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
