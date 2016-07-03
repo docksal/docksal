@@ -49,7 +49,6 @@ DEFAULT_MACHINE_PROVIDER='virtualbox'
 DEFAULT_MACHINE_VBOX_RAM='1024' #mb
 DEFAULT_MACHINE_VBOX_HDD='20000' #mb
 DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
-DEFAULT_MACHINE_DO_USER='drude' # digitalocean default size (512mb, 1gb, 2gb...)
 
 #---------------------------- URL references --------------------------------
 OS_NAME=$(uname -s)
@@ -345,7 +344,7 @@ check_docker_running ()
 	docker_status=$?
 
 	if [[ $docker_status -eq 255 ]]; then
-		echo-yellow "It looks like your docker machine is not running."
+		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
 		_confirm "Run 'dsh vm start' to start it now?"
 		vm start
 		if_failed "Could not start Drude docker machine properly"
@@ -910,9 +909,9 @@ docker_machine_create ()
 			echo -n "Provide Digital Ocean access token: "
 			read token
 			[[ "$token" == "" ]] && echo "Invalid token" && return 1
-			echo docker-machine create --driver=digitalocean \
+			# TODO: sync folder on windows is not $HOME
+			docker-machine create --driver=digitalocean \
 				--digitalocean-access-token="$token" \
-				--digitalocean-ssh-user="$DEFAULT_MACHINE_DO_USER" \
 				--digitalocean-size="$DEFAULT_MACHINE_DO_SIZE" \
 				"$machine_name"
 			;;
@@ -1031,7 +1030,8 @@ vm ()
 			docker_machine_stop
 			;;
 		ssh)
-			docker-machine ssh "$DOCKER_MACHINE_NAME"
+			shift
+			docker-machine ssh "$DOCKER_MACHINE_NAME" "$@"
 			;;
 		stats)
 			vm-stats
@@ -1876,6 +1876,7 @@ logs ()
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
 {
+	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && return # only run for virtualbox. others will sync other ways
 	if [[ "$DRUDE_SET_UID" == "" ]] ; then
 		DRUDE_SET_UID=$(id -u)
 	fi
