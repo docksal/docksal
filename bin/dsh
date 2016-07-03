@@ -811,12 +811,10 @@ ssh_add () {
 				;;
 			-D) 
 				docker run --rm --volumes-from=ssh-agent -it "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add -D
-				exit 1
 				;;
 			-l) 
 				# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
 				docker run --rm --volumes-from=ssh-agent -it "blinkreaction/ssh-agent:${DRUDE_ITAG}" ssh-add -l 2>&1 | sed 's/\/root\/.ssh\///g'
-				exit 1
 				;;
 			*) 
 				key_path="/root/.ssh/$1"
