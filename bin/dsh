@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.20.4
+DSH_VERSION=1.20.5
 
 # Console colors
 red='\033[0;91m'
@@ -938,6 +938,7 @@ install_ubuntu ()
 	fi
 	curl -sSL https://get.docker.com/ | sh && \
 	sudo usermod -aG docker $(whoami)
+	sudo service docker start 2>/dev/null
 	sudo docker version
 	if_failed "Docker installation/upgrade has failed."
 
