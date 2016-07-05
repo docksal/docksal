@@ -85,19 +85,20 @@ Tools available inside the **cli** container:
 - [Drupal settings](/docs/drupal-settings.md)
 - [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
 - [Running multiple projects](/docs/multiple-projects.md)
-- [Public access](/docs/public-access.md)
 - [DB sandbox mode](/docs/db-sandbox.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
-- [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
-- [Using Sass](/docs/sass.md)
+- [Extending dsh with custom commands](/docs/custom-commands.md)
 
 ### Third party utililies
+- [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
+- [Using PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
+- [Using Blackfire profiler](/docs/blackfire.md)
+- [Public access via ngrok](/docs/public-access.md)
 - [Using Behat](/docs/behat.md)
 - [Sending and capturing e-mail](/docs/mail.md)
 - [Enabling Varnish support](/docs/varnish.md)
 - [Enabling Apache Solr support](/docs/apache-solr.md)
-- [Using PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
-- [Extending dsh with custom commands](/docs/custom-commands.md)
+- [Using Sass](/docs/sass.md)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
