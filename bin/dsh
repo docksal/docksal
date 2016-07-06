@@ -1535,6 +1535,7 @@ update_images ()
 # Update dsh itself
 update_dsh ()
 {
+	[[ "$1" != "" ]] && DRUDE_BRANCH="$1"
 	testing_warn
 	echo "Downloading..."
 	local new_dsh
@@ -2078,13 +2079,15 @@ case "$1" in
 		elif [[ "$1" == "images" ]]; then
 			update_images
 		elif [[ "$1" == "dsh" ]]; then
-			update_dsh
+			shift
+			update_dsh "$@"
 		else
 			show_help_update
 		fi
 		;;
 	self-update)
-		update_dsh
+		shift
+		update_dsh "$@"
 		;;
 	bash)
 		shift
