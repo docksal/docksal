@@ -24,6 +24,6 @@ Please add this directories (`.bundle`/`.bundler`) to `.gitignore`
 Please run in the theme folder:
 > dsh exec bundle exec compass compile
 
-This is very important, do not run `compass compile` directly, run it via `bindle exec` so the proper gem versions are used (defined in the Gemfile).
+This is very important, do not run `compass compile` directly, run it via `bundle exec` so the proper gem versions are used (defined in the Gemfile).
 Also you can run watcher to keep your CSS files up to date as changes are made:
 > dsh exec bundle exec compass watch
