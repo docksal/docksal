@@ -1041,7 +1041,7 @@ vm ()
 		kill)
 			docker-machine kill "$DOCKER_MACHINE_NAME"
 			;;
-		ls)
+		ls|list)
 			docker-machine ls
 			;;
 		rm)
