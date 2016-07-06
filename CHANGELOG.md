@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.1 (2016-07-01)
+
+- Hotfixes
+  - Addressed an issue with php5 vs php7 supervisord service name
+  - Account that winpty executable was renamed in 0.3.0 to "winpty.exe"
+  - Added ability to stop Drude system containers with dsh
+  - Stop docker daemon before running prerequsite updates on Ubuntu to prevent client-server difference error
+- Documentation updates
+  - Massive updates to [Behat docs](docs/behat.md)
+    - PHPStorm integration
+    - Use hosts's Selenium server and browsers 
+  - phpcs docs updates
+
+
 ## 1.4.0 (2016-06-10)
 
 - dsh v1.20.0
