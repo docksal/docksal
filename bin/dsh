@@ -824,7 +824,7 @@ ssh_add () {
 				# $HOME is mounted as /.home in boot2docker
 				if [ ! -f "$HOME/.ssh/$1" ]; then
 					echo-red "SSH key file not found: $HOME/.ssh/$1"
-					exit 1
+					return 1
 				fi
 				;;
 		esac
