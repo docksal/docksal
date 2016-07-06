@@ -856,10 +856,12 @@ bash_comp_words ()
 			;;
 		alias)
 			echo "list remove"
+			exit 0
 		;;
 		dsh)
 			local aliases=$(ls -l "$DRUDE_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
-			echo "start up stop down restart status reset remove bash exec logs run mysql mysql-import exec-url drush drupal behat ssh-add install update self-update version cleanup vm sysinfo alias $aliases"
+			echo "start up stop down restart status reset remove bash exec logs run mysql mysql-import exec-url drush drupal \
+			behat ssh-add install update self-update version cleanup vm sysinfo alias $aliases"
 			exit 0
 			;;
 		*)
@@ -2187,7 +2189,7 @@ case "$1" in
 			[ ! -f "$dsh_command_script" ] && dsh_command_script="$HOME/$DRUDE_COMMANDS_PATH/$1"
 			# If not found there as well then it is a wrong command
 			[ ! -f "$dsh_command_script" ] && \
-				echo-yellow "dsh: unknown command '"$*"'. See 'dsh help' for list of available commands" && \
+				echo-yellow "dsh: unknown command '$*'. See 'dsh help' for list of available commands" && \
 				exit 1
 		fi
 
