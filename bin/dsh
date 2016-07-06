@@ -1245,6 +1245,7 @@ install_dns_service ()
 }
 
 # Configuring sytem-wide *.drude resolver (Windows not supported)
+# TODO: change this function to work properly with DO provider
 configure_resolver ()
 {
 	check_docker_running
