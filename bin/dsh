@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.50
+DSH_VERSION=1.99.51
 
 # Console colors
 red='\033[0;91m'
@@ -9,6 +9,8 @@ green='\033[0;32m'
 green_bg='\033[42m'
 yellow='\033[1;33m'
 NC='\033[0m'
+
+DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 
 #---------------------------- Global Constants --------------------------------
 DSH_REQUIREMENTS_DOCKER='1.11.2'
@@ -81,7 +83,6 @@ IMAGE_DNS="blinkreaction/dns-discovery"
 
 PATH="$DRUDE_BIN_DIR:$PATH"
 DOCKER_BETA="${DOCKER_BETA:-0}"
-DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 # Allow image tag overrides for system services. See install_xyz_service()
 DRUDE_ITAG="${DRUDE_ITAG:-stable}"
 # UID of user to use in cli continer. Only override if you know what you're doing
