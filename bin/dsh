@@ -913,10 +913,24 @@ docker_machine_create ()
 			read token
 			[[ "$token" == "" ]] && echo "Invalid token" && return 1
 			# TODO: sync folder on windows is not $HOME
+			local syncthing_id
 			docker-machine create --driver=digitalocean \
 				--digitalocean-access-token="$token" \
 				--digitalocean-size="$DEFAULT_MACHINE_DO_SIZE" \
-				"$machine_name"
+				"$machine_name" &&
+				eval $(docker-machine env "$machine_name") &&
+				# install syncthing container
+				docker run -d --restart=always \
+					-v "$HOME":"/srv/data" \
+					-v /root/.drude/syncthing:/srv/config \
+					-p 22000:22000  -p 21025:21025/udp -p 8080:8080 \
+					--name drude-syncthing \
+					joeybaker/syncthing &&
+				echo "+ sleep 10" &&
+				sleep 10 &&
+				# Set up env variables
+				syncthing_id=$(docker-machine ssh "$machine_name" 'cat /root/.drude/syncthing/config.xml | grep introducer' | cut -d \" -f 2) &&
+				echo "Syncthing ID: $syncthing_id"
 			;;
 
 		*)
@@ -1009,6 +1023,7 @@ vm ()
 			docker_machine_create "${PARAMS[1]}" "$provider"
 			;;
 		active)
+			# TODO: ability to set to NONE for linux to use docker directly
 			# Get/Set active vm
 			shift
 			if [[ "$1" == "" ]]; then
