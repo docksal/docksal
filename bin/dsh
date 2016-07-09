@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.51
+DSH_VERSION=1.99.52
 
 # Console colors
 red='\033[0;91m'
@@ -90,7 +90,7 @@ DRUDE_SET_UID=""
 
 __drude_active_machine=$(cat "$DRUDE_MACHINE_ACTIVE" 2>/dev/null)
 DOCKER_MACHINE_NAME="${__drude_active_machine:-$DEFAULT_MACHINE_NAME}"
-DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>/dev/null)"
+DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
 [[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
 	eval $(docker-machine env "$DOCKER_MACHINE_NAME")
 
@@ -963,7 +963,7 @@ is_docker_machine_exist ()
 	if [[ "$1" != "" ]]; then
 		docker-machine ls | grep "$1" 1>/dev/null 2>/dev/null
 	else
-		[[ ! "$DOCKER_MACHINE_STATUS" =~ "not exist" ]]
+		[[ "$DOCKER_MACHINE_STATUS" == *"not exist"* ]] && return 1 || return 0
 	fi
 }
 
@@ -997,6 +997,9 @@ docker_machine_start ()
 			reset system && \
 			docker_machine_mounts
 	else
+		[[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]] &&
+			echo-error "Machine '$DOCKER_MACHINE_NAME' does not exist" && exit 1
+		# only auto-create default machine
 		docker_machine_create && \
 			docker_machine_env && \
 			reset system && \
@@ -1042,16 +1045,20 @@ vm ()
 			# Get/Set active vm
 			shift
 			if [[ "$1" == "" ]]; then
-				echo "$DOCKER_MACHINE_NAME"
+				echo "$DOCKER_MACHINE_NAME ($(docker_machine_provider))"
 			else
 				[[ "$1" == "$DOCKER_MACHINE_NAME" ]] && echo "$1 is already active" && return 1
-				! is_docker_machine_exist "$1" && echo "No docker machine with name $1"
+				! is_docker_machine_exist "$1" && echo "No docker machine with name $1" && return 1
 				mkdir -p "$DRUDE_MACHINE" || return 1
 				echo "$1" | tee "$DRUDE_MACHINE_ACTIVE" >/dev/null && echo "$1 is set active"
 			fi
 			;;
 		start)
-			! is_docker_machine_running && docker_machine_start || echo "Machine \"$DOCKER_MACHINE_NAME\" is already running."
+			if is_docker_machine_running; then
+				echo "Machine \"$DOCKER_MACHINE_NAME\" is already running."
+			else
+				docker_machine_start
+			fi
 			;;
 		restart)
 			docker_machine_stop && docker_machine_start
