@@ -92,7 +92,7 @@ __drude_active_machine=$(cat "$DRUDE_MACHINE_ACTIVE" 2>/dev/null)
 DOCKER_MACHINE_NAME="${__drude_active_machine:-$DEFAULT_MACHINE_NAME}"
 DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>/dev/null)"
 [[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
-	eval $(docker-machine env "$DOCKER_MACHINE_NAME") &&
+	eval $(docker-machine env "$DOCKER_MACHINE_NAME")
 
 #---------------------------- Helper functions --------------------------------
 
@@ -876,7 +876,7 @@ is_docker_machine_running ()
 {
 #	check_binary_found 'docker-machine'
 #	docker-machine status "$DOCKER_MACHINE_NAME" 2>/dev/null | grep "Running" 2>&1 1>/dev/null
-	[[ $DOCKER_MACHINE_STATUS == 'Running' ]]
+	[[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]
 }
 
 # Create docker machine
@@ -918,26 +918,43 @@ docker_machine_create ()
 				--digitalocean-access-token="$token" \
 				--digitalocean-size="$DEFAULT_MACHINE_DO_SIZE" \
 				"$machine_name" &&
-				eval $(docker-machine env "$machine_name") &&
-				# install syncthing container
-				docker run -d --restart=always \
-					-v "$HOME":"/srv/data" \
-					-v /root/.drude/syncthing:/srv/config \
-					-p 22000:22000  -p 21025:21025/udp -p 8080:8080 \
-					--name drude-syncthing \
-					joeybaker/syncthing &&
-				echo "+ sleep 10" &&
-				sleep 10 &&
 				# Set up env variables
-				syncthing_id=$(docker-machine ssh "$machine_name" 'cat /root/.drude/syncthing/config.xml | grep introducer' | cut -d \" -f 2) &&
-				echo "Syncthing ID: $syncthing_id"
-			;;
+				eval $(docker-machine env "$machine_name")
+			if_failed "New docker machine creation has failed"
+
+			# Install syncthing container
+			echo "Installing Syncthing container..."
+			docker run -d --restart=always \
+				-v "$HOME":"/srv/data" \
+				-v /root/.drude/syncthing:/srv/config \
+				-p 22000:22000  -p 21025:21025/udp -p 8080:8080 \
+				--name drude-syncthing \
+				joeybaker/syncthing &&
+			# Wait 10 seconds for syncthing to start
+			echo "Waiting for syncthing container to start..." &&
+			sleep 10 &&
+			# Get Syncthing ID
+			syncthing_id=$(docker-machine ssh "$machine_name" 'cat /root/.drude/syncthing/config.xml | grep introducer' | cut -d \" -f 2) &&
+			echo-green "($machine_name) Syncthing ID: $syncthing_id"
+			echo-green "($machine_name) Syncthing UI: http://$(docker-machine ip ${machine_name}):8080"
+			echo "Use Syncthing ID above to add device and share folders."
+			# add device automatically
+			# [ ! -f "$HOME/Library/Application Support/Syncthing/config.xml" ] && echo "Use Syncthing ID above to pair." && return
+			# local apikey=$(grep apikey "$HOME/Library/Application Support/Syncthing/config.xml" | sed "s/<\/*apikey>//g" | tr -d " ")
+			;; #-- end digitalocean
 
 		*)
-			echo-error "$1 provider is not supported by this version of dsh"
+			echo-error "$provider provider is not supported" && (exit 1)
 			;;
 	esac
 
+	if [[ $? -eq 0 ]]; then
+		DOCKER_MACHINE_NAME="$machine_name"
+		DOCKER_MACHINE_STATUS='Running'
+		vm active "$machine_name"
+	else
+		return 1
+	fi
 }
 
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
@@ -1016,8 +1033,6 @@ vm ()
 		create)
 			# usage: dsh vm create <machine_name> --provider="<provider_name>"
 			shift
-			local PARAMS=();
-			local provider="$DEFAULT_MACHINE_PROVIDER";
 			eval $(parse_params "$@")
 			is_docker_machine_exist "${PARAMS[1]}" && echo "Machine \"${PARAMS[1]}\" already exists." && return 1
 			docker_machine_create "${PARAMS[1]}" "$provider"
@@ -1042,7 +1057,9 @@ vm ()
 			docker_machine_stop && docker_machine_start
 			;;
 		status)
-			docker-machine status "$DOCKER_MACHINE_NAME"
+			shift
+			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
+			docker-machine status "$machine_name"
 			;;
 		stop)
 			docker_machine_stop
@@ -1055,7 +1072,9 @@ vm ()
 			vm-stats
 			;;
 		kill)
-			docker-machine kill "$DOCKER_MACHINE_NAME"
+			shift
+			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
+			docker-machine kill "$machine_name"
 			;;
 		ls|list)
 			docker-machine ls
@@ -1066,10 +1085,14 @@ vm ()
 			docker-machine rm "$machine_name"
 			;;
 		ip)
-			docker-machine ip "$DOCKER_MACHINE_NAME"
+			shift
+			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
+			docker-machine ip "$machine_name"
 			;;
 		env)
-			docker-machine env "$DOCKER_MACHINE_NAME"
+			shift
+			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
+			docker-machine env "$machine_name"
 			;;
 		ram)
 			shift
