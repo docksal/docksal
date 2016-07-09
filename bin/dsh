@@ -997,8 +997,12 @@ docker_machine_start ()
 			reset system && \
 			docker_machine_mounts
 	else
-		[[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]] &&
-			echo-error "Machine '$DOCKER_MACHINE_NAME' does not exist" && exit 1
+		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
+			echo-error "Machine '$DOCKER_MACHINE_NAME' does not exist"
+			echo-yellow "Removing reference to non-existent machine... Run your command again."
+			rm -f "$DRUDE_MACHINE_ACTIVE"
+			exit 1
+		fi
 		# only auto-create default machine
 		docker_machine_create && \
 			docker_machine_env && \
