@@ -92,7 +92,7 @@ __drude_active_machine=$(cat "$DRUDE_MACHINE_ACTIVE" 2>/dev/null)
 DOCKER_MACHINE_NAME="${__drude_active_machine:-$DEFAULT_MACHINE_NAME}"
 DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
 [[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
-	eval $(docker-machine env "$DOCKER_MACHINE_NAME")
+	eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
 
 #---------------------------- Helper functions --------------------------------
 
@@ -919,7 +919,7 @@ docker_machine_create ()
 				--digitalocean-size="$DEFAULT_MACHINE_DO_SIZE" \
 				"$machine_name" &&
 				# Set up env variables
-				eval $(docker-machine env "$machine_name")
+				eval $(docker-machine env --shell=bash "$machine_name")
 			if_failed "New docker machine creation has failed"
 
 			# Install syncthing container
@@ -975,7 +975,7 @@ docker_machine_provider ()
 
 docker_machine_env ()
 {
-	eval $(docker-machine env "$DOCKER_MACHINE_NAME")
+	eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
 }
 
 # Stop docker machine
