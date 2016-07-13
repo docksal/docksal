@@ -2,7 +2,7 @@ _dsh_completion()
 {
 	local cur=${COMP_WORDS[COMP_CWORD]} #current word part
 	local prev=${COMP_WORDS[COMP_CWORD-1]} #previous word
-	local compwords=$(dsh bash_comp_words $prev) #get completions for previos word
+	local compwords=$(dsh bash_comp_words $prev) #get completions for previous word
 	if [ ! $? -eq 0 ]; then
 		return 1;
 	else
