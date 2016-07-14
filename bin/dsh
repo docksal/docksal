@@ -32,7 +32,6 @@ DRUDE_DOWNLOADS_DIR="$DRUDE_BIN_DIR/downloads"
 DOCKER_BIN="$DRUDE_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$DRUDE_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$DRUDE_BIN_DIR/docker-machine"
-DOCKER_MACHINE_NFS_BIN="$DRUDE_BIN_DIR/docker-machine-nfs"
 DOCKER_MACHINE_SMB_BIN="$DRUDE_BIN_DIR/docker-machine-smb"
 vboxmanage="vboxmanage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
@@ -68,7 +67,6 @@ URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${DS
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$OS_NAME-$HARDWARE"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
 
-URL_DOCKER_MACHINE_NFS="https://raw.githubusercontent.com/adlogix/docker-machine-nfs/master/docker-machine-nfs.sh"
 URL_DOCKER_MACHINE_SMB="https://raw.githubusercontent.com/drude/docker-machine-smb/master/docker-machine-smb"
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DSH_REQUIREMENTS_WINPTY}/winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
@@ -1059,7 +1057,6 @@ docker_machine_stop ()
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
-	is_mac && check_binary_found 'docker-machine-nfs'
 	is_windows && check_binary_found 'docker-machine-smb'
 
 	if is_docker_machine_exist; then
@@ -1528,13 +1525,6 @@ install_prerequisites_mac ()
 		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
 		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
 			chmod +x "$DOCKER_MACHINE_BIN"
-	fi
-
-	# Install docker-machine-nfs
-	if [[ ! -x "$DOCKER_MACHINE_NFS_BIN" ]]; then
-		echo-green "Installing docker-machine-nfs..."
-		curl -sSL "$URL_DOCKER_MACHINE_NFS" -o "$DOCKER_MACHINE_NFS_BIN" && \
-			chmod +x "$DOCKER_MACHINE_NFS_BIN"
 	fi
 
 	# Cleanup
