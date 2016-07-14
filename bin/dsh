@@ -1134,7 +1134,7 @@ docker_machine_mount_nfs ()
 	fi
 
 	echo-green "Writing /etc/exports..."
-	echo "$exports" | sudo tee /etc/exports >/dev/null
+	echo -e "$exports" | sudo tee /etc/exports >/dev/null
 	echo-green "Restarting nfsd..."
 	sudo nfsd restart
 	sleep 2
