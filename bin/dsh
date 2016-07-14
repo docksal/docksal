@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.54
+DSH_VERSION=1.99.55
 
 # Console colors
 red='\033[0;91m'
@@ -226,6 +226,53 @@ winsudo ()
 	cygstart --action=runas cmd /c "$@"
 }
 
+# Universal Bash parameter parsing
+# Parse equals separated params into named local variables
+# Standalone named parameter value will equal param name (--force creates variable $force=="force")
+# Parses multi-valued named params into array (--path=path1 --path=path2 creates ${path[*]} array)
+# Parses un-named params into ${ARGV[*]} array
+# @author Oleksii Chekulaiev
+# @version v1.1 (Jul-14-2016)
+parse_params ()
+{
+	local existing_named
+	local ARGV=()
+	echo "local ARGV=(); "
+	while [[ "$1" != "" ]]; do
+		# If equals delimited named parameter
+		if [[ "$1" =~ ^..*=..* ]]; then
+			# key is part before first =
+			local _key=$(echo "$1" | cut -d = -f 1)
+			# val is everything after key and = (protect from param==value error)
+			local _val=${1/$_key=}
+			# remove dashes from key name
+			_key=${_key//\-}
+			# search for existing parameter name
+			if (echo "$existing_named" | grep "\b$_key\b" >/dev/null); then
+				# if name already exists then it's a multi-value named parameter
+				# re-declare it as an array if needed
+				if ! (declare -p _key 2> /dev/null | grep -q 'declare \-a'); then
+					echo "$_key=(\"\$$_key\");"
+				fi
+				# append new value
+				echo "$_key+=('$_val');"
+			else
+				# single-value named parameter
+				echo "local $_key=\"$_val\";"
+				existing_named=" $_key"
+			fi
+		# If standalone named parameter
+		elif [[ "$1" =~ ^\-. ]]; then
+			# remove dashes
+			local _key=${1//\-}
+			echo "local $_key=\"$_key\";"
+		# non-named parameter
+		else
+			echo "ARGV+=('$1');"
+		fi
+		shift
+	done
+}
 
 #------------------------- Basics check functions -----------------------------
 
@@ -1035,12 +1082,98 @@ docker_machine_start ()
 	fi
 }
 
+# Mount folder inside docker-machine by NFS
+# Unnamed params - shares in format "$LOCAL_FOLDER:$MOUNT_POINT_NAME"
+# Named --no-export param(s) - will try to mount those mount points without exporting $LOCAL_FOLDER
+docker_machine_mount_nfs ()
+{
+	local machine_name="$DOCKER_MACHINE_NAME"
+	local network_name
+	local nfs_ip
+	eval $(parse_params "$@")
+
+	network_name=$(VBoxManage showvminfo "$machine_name" --machinereadable | grep hostonlyadapter | cut -d \" -f2)
+	if [[ "$network_name" == "" ]]; then
+		echo-error "Could not find virtualbox net name." && exit 1
+	fi
+	# nfs_ip is an internal IP of localhost as docker machine sees it.
+	nfs_ip=$(VBoxManage list hostonlyifs | grep "$network_name" -A 3 | grep IPAddress | cut -d ':' -f2 | xargs)
+	if [[ "$nfs_ip" == "" ]]; then
+		echo-error "Could not find virtualbox internal net IP address." && exit 1
+	fi
+	machine_ip=$(docker-machine ip "$machine_name")
+
+	local exports_open="# <dsh-nfs $machine_name"
+	local exports_close="# dsh-nfs>"
+	# Remove our own old exports
+	local exports=$(cat /etc/exports | \
+		tr "\n" "\r" | \
+		sed "s/${exports_open}.*${exports_close}//" | \
+		tr "\r" "\n"
+	)
+	# Prepare new exports file
+	local shares=("$@")
+	exports="${exports}\n${exports_open}\n"
+	for share in ${ARGV[@]}; do
+		local share_export=(${share//:/ });
+		# Add new exports
+		exports="${exports}$share_export $machine_ip -alldirs -mapall=$(id -u):$(id -g)\n"
+	done
+	exports="${exports}${exports_close}"
+
+	# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
+	local exports_test="/tmp/etc.exports.$RANDOM"
+	echo -e "$exports" | tee "$exports_test" >/dev/null
+	exports_errors=$(nfsd -F "$exports_test" checkexports 2>&1)
+
+	# If no errors then apply changes otherwise fail
+	if [[ "$exports_errors" == '' ]]; then
+		echo-green "Writing /etc/exports..."
+		echo "$exports" | sudo tee /etc/exports >/dev/null
+		echo-green "Restarting nfsd..."
+		sudo nfsd restart
+		sleep 2
+		echo-green "Mounting shares..."
+		# Mount exported folders
+		for share in ${ARGV[@]}; do
+			local share_=(${share//:/ });
+			local share_export="${share_[0]}"
+			local share_mount="${share_[1]}"
+			# Add new exports
+			echo "Mounting local $share_export to $share_mount..."
+			docker-machine ssh "$machine_name" \
+				"sudo mkdir -p $share_mount ;
+				sudo umount $share_mount 2>/dev/null ;
+				sudo mount -t nfs -o noacl,async $nfs_ip:$share_export $share_mount"
+		done
+		# Mount no-export folders (should be inside exported folders)
+		for share in ${noexport[@]}; do
+			local share_=(${share//:/ });
+			local share_export="${share_[0]}"
+			local share_mount="${share_[1]}"
+			# Add new exports
+			echo "Mounting local $share_export to $share_mount..."
+			docker-machine ssh "$machine_name" \
+				"sudo mkdir -p $share_mount ;
+				sudo umount $share_mount 2>/dev/null ;
+				sudo mount -t nfs -o noacl,async $nfs_ip:$share_export $share_mount"
+		done
+	else
+		echo-error "$exports_errors"
+		echo "-----------------"
+		echo -e "$exports"
+		echo "-----------------"
+	fi
+	# Cleanup
+	rm -f "$exports_test" 2>/dev/null 1>/dev/null
+}
+
 docker_machine_mounts ()
 {
 	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
 		if is_mac; then
-			echo-green "Configuring NFS mount..."
-			docker-machine-nfs "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
+			echo-green "Configuring NFS mounts..."
+			docker_machine_mount_nfs "/Users:/Users" --no-export="$HOME:/.home"
 		elif is_windows; then
 			# TODO: implement docker-machine-smb
 			# docker-machine-smb "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
@@ -1065,8 +1198,8 @@ vm ()
 			# usage: dsh vm create <machine_name> --provider="<provider_name>"
 			shift
 			eval $(parse_params "$@")
-			is_docker_machine_exist "${PARAMS[1]}" && echo "Machine \"${PARAMS[1]}\" already exists." && return 1
-			docker_machine_create "${PARAMS[1]}" "$provider"
+			is_docker_machine_exist "${ARGV[0]}" && echo "Machine \"${ARGV[0]}\" already exists." && return 1
+			docker_machine_create "${ARGV[0]}" "$provider"
 			;;
 		active)
 			# TODO: ability to set to NONE for linux to use docker directly
@@ -2055,37 +2188,6 @@ alias_list ()
 }
 
 #-------------------------- Parameters parsing -----------------------------
-
-# Parse equal separated params into named local variables
-# Standalone named parameter value will equal param name (--force makes variable $force=="force")
-# Parses unnamed params into ${PARAMS[*]} array
-parse_params ()
-{
-	local counter=1
-	local PARAMS=()
-	echo "local PARAMS=(); "
-	while [[ "$1" != "" ]]; do
-		# If equal delimited parameter
-		if [[ "$1" =~ ^..*=..* ]]; then
-			# key is part before first =
-			local _key=$(echo "$1" | cut -d = -f 1)
-			# val is everything after key and = (protext from double = error)
-			local _val=${1/$_key=}
-			# remove dashes from key name
-			_key=${_key//\-}
-			echo "local $_key=\"$_val\";"
-		# If standalone named parameter
-		elif [[ "$1" =~ ^\-. ]]; then
-			# remove dashes
-			local _key=${1//\-}
-			echo "local $_key=\"$_key\""
-		else
-			echo "PARAMS[${counter}]=\"$1\";"
-			counter=$((counter+1))
-		fi
-		shift
-	done
-}
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
