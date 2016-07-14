@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.52
+DSH_VERSION=1.99.53
 
 # Console colors
 red='\033[0;91m'
@@ -992,7 +992,7 @@ docker_machine_start ()
 	is_windows && check_binary_found 'docker-machine-smb'
 
 	if is_docker_machine_exist; then
-		docker-machine start "$DOCKER_MACHINE_NAME" && \
+		docker-machine start "$DOCKER_MACHINE_NAME" && DOCKER_MACHINE_STATUS='Running' && \
 			docker_machine_env && \
 			reset system && \
 			docker_machine_mounts
