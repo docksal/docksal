@@ -712,12 +712,27 @@ show_help_ssh-add ()
 	echo "When run without arguments, picks up the default key file (~/.ssh/id_rsa or ~/.ssh/id_dsa)."
 	echo "A custom key name can be given as an argument: dsh ssh-add <keyname>."
 	echo 
-	echo -e "${yellow}NOTE${NC}: <keyname> is the file name (not full path) within ${yellow}~/.ssh${NC}."
+	echo -e "${yellow}NOTE${NC}: <keyname> is the file name within ${yellow}~/.ssh${NC} (not full path to file)."
 	echo "Example: dsh ssh-add my_custom_key_rsa"
 	echo
 	echo "The options are as follows:"
-	echo "	-D      Deletes all identities from the agent."
-	echo "	-l      Lists fingerprints of all identities currently represented by the agent."
+	printh "-D" "Deletes all identities from the agent."
+	printh "-l" "Lists fingerprints of all identities currently represented by the agent."
+	echo
+}
+
+show_help_exec ()
+{
+	echo-green "dsh exec <command> - Execute command in ${yellow}cli${green} service container."
+	echo
+	echo "Command is a required parameter."
+	echo "Command will be executed in the path that matches your local current path."
+	echo
+	echo-green "Examples:"
+	printh "dsh exec pwd" "Show current path"
+	printh "dsh exec ls -la" "Current directory listing"
+	printh "dsh exec compass compile" "Compile SASS/SCSS"
+	printh "dsh exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or redirects inside cli"
 	echo
 }
 
@@ -746,8 +761,8 @@ show_help_remove ()
 	echo
 	echo -e "${green}Parameters:${NC} one or more service names."
 	echo-green "Examples:"
-	echo "	dsh remove web			Remove web service"
-	echo "	dsh remove proxy		Stop Drude reverse proxy service"
+	printh "dsh remove web" "Remove web service"
+	printh "dsh remove proxy" "Stop Drude reverse proxy service"
 	echo
 }
 
@@ -823,14 +838,15 @@ show_help_alias ()
 	echo "You can precede any command with alias."
 	echo
 	echo-green "Usage:"
-	printh "	dsh alias"	"Show aliases list"
-	printh "	dsh alias list"	"Show aliases list"
-	printh "	dsh alias <path> <alias_name>"	"Create an alias that links to path"
-	printh "	dsh alias delete <alias_name>"	"Delete alias"
+	printh "dsh alias" "Show aliases list"
+	printh "dsh alias list" "Show aliases list"
+	printh "dsh alias <path> <alias_name>" "Create an alias that links to path"
+	printh "dsh alias delete <alias_name>" "Delete alias"
 	echo-green "Examples:"
-	printh "	dsh alias ~/Projects/MySite dev"	"Create alias named dev that links to '~/Projects/MySite'"
-	printh "	dsh @dev drush st"	"Execute 'dsh drush st' command in directory linked by 'dev' alias"
-	printh "	dsh delete dev"	"Delete dev alias"
+	printh "dsh alias ~/Projects/Site dev" "Create alias named 'dev' that links to '~/Projects/Site'"
+	printh "dsh @dev drush st" "Execute 'dsh drush st' command in directory linked by 'dev' alias"
+	printh "" "Hint: link alias to sub-site folder to work with that sub-site directly"
+	printh "dsh delete dev"	"Delete 'dev' alias"
 	echo
 	echo "Aliases are effectively symlinks stored in $DRUDE_CONFIG_ALIAS"
 }
@@ -1680,7 +1696,7 @@ _bash ()
 _run ()
 {
 	[[ $1 == "" ]] && \
-		echo -e "See ${yellow}'dsh help run'${NC} for usage." && exit
+		show_help_exec && exit
 	check_dsh_environment
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
