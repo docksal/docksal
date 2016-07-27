@@ -392,9 +392,10 @@ check_docker_running ()
 	if [[ $docker_status -eq 255 ]]; then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
 		_confirm "Run 'dsh vm start' to start it now?"
-		vm start
+		docker_machine_start
 		if_failed "Could not start Drude docker machine properly"
 		# re-check status
+		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
 		docker info >/dev/null
 		docker_status=$?
 	fi
@@ -403,7 +404,7 @@ check_docker_running ()
 		DOCKER_RUNNING="true"
 	else
 		echo-error "Looks like your Docker client and Docker server are incompatible." \
-			"Run ${yellow}dsh install prerequisites${NC} to update."
+			"{$green}Run ${NC}${yellow}dsh install prerequisites${NC}{$green} to update.${NC}"
 		exit 1
 	fi
 }
