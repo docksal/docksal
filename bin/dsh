@@ -2106,7 +2106,7 @@ _set_cli_uid ()
 			if [[ "$res" != '' ]]; then php_service='php5-fpm'; fi
 			docker exec -u root $(get_container_id cli) supervisorctl restart "$php_service" >/dev/null
 		else
-			echo-green "Container and host uids already match ($container_uid)."
+			echo "Container and host uids already match ($container_uid)."
 		fi
 	else
 		echo-yellow "Running Drude as root is not recommended. Please run as a regular user with docker access."
