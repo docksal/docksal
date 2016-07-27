@@ -369,7 +369,7 @@ ver_to_int ()
 
 check_dsh_environment ()
 {
-	check_docker_running && check_yml
+	check_yml && check_docker_running
 }
 
 check_docker_running ()
