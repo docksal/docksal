@@ -673,6 +673,7 @@ show_help ()
 	fi
 
 	printh "Drude Shell v$DSH_VERSION commands reference" "" "green"
+
 	echo
 	if is_linux; then
 		printh "start (up)" "Start project services"
@@ -687,19 +688,23 @@ show_help ()
 	printh "remove [service]" "Remove project or system services. See ${yellow}'dsh help remove'${NC}"
 	! is_linux && \
 		printh "vm <command>" "Control docker machine vm. See ${yellow}'dsh help vm'${NC} for commands list" "yellow"
+
 	echo
 	printh "bash [service]" "Open bash to service container. Defaults to ${yellow}'cli'${NC} service"
 	printh "exec <command> [params]" "Execute a command in ${yellow}'cli'${NC} service container"
 	printh "exec-url <url>" "Download script from URL and run it. URL should be public."
 	printh "logs [service]" "Show docker logs for service container"
+
 	echo
 	printh "drush [command] [options...]" "Execute Drush command"
 	printh "drupal [command]" "Execute Drupal Console command (Drupal 8)"
+
 	echo
 	printh "mysql (sqlc)" "Opens mysql shell to current project database"
 	printh "mysql-import (sqli) <file>" "Truncate database and import from sql dump (file should be accessible to Drude)"
 	printh "" "See ${yellow}dsh help sqli${NC} for advanced usage (multisite, gz)."
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
+
 	echo
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}'dsh help ssh-add'${NC}"
 
@@ -1141,6 +1146,8 @@ docker_machine_mount_nfs ()
 		echo-green "Restarting nfsd..."
 		sudo nfsd restart
 		sleep 2
+	else
+		echo "Already configured"
 	fi
 
 	# Mount exported folders
