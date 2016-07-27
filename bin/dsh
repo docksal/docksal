@@ -96,7 +96,6 @@ DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
 
 DRUDE_YML_PATH='' #yml path value will be cached here
 DRUDE_PATH='' #drude path value will be cached here
-IS_LINUX='' # is_linux cache
 
 echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
@@ -276,7 +275,6 @@ parse_params ()
 
 is_linux ()
 {
-	[[ $IS_LINUX == "true" ]] && return 0
 	uname | grep 'Linux' >/dev/null
 }
 
