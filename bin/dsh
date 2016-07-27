@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.57
+DSH_VERSION=1.99.58
 
 # Console colors
 red='\033[0;91m'
@@ -522,7 +522,6 @@ _notify ()
 _start_containers ()
 {
 	check_docker_running
-	ssh_add
 	echo-green "Starting services..."
 	docker_compose up -d && \
 		_vhost_proxy_connect && \
@@ -1079,9 +1078,17 @@ docker_machine_start ()
 		fi
 		# only auto-create default machine
 		docker_machine_create && \
+			echo-green "Exporting env variables for '$DOCKER_MACHINE_NAME'..." && \
 			docker_machine_env && \
+			echo-green "Pulling system images..." && \
+			update_system_images && \
 			reset system && \
 			docker_machine_mounts
+	fi
+
+	if [[ $? -eq 0 ]]; then
+		echo-green "Importing ssh keys..."
+		ssh_add
 	fi
 }
 
