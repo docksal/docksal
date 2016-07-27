@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.56
+DSH_VERSION=1.99.57
 
 # Console colors
 red='\033[0;91m'
@@ -1153,6 +1153,9 @@ docker_machine_mount_nfs ()
 
 	# Mount exported folders
 	echo-green "Mounting NFS shares..."
+	# Start NFS client on docker-machine
+	docker-machine ssh "$machine_name" \
+		"sudo /usr/local/etc/init.d/nfs-client start"
 	for share in ${ARGV[@]}; do
 		local share_=(${share//:/ });
 		local share_export="${share_[0]}"
