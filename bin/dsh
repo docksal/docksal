@@ -1310,14 +1310,8 @@ vm-ram () {
 # Start containers
 up ()
 {
-	if is_linux || is_docker_beta || is_docker_machine_running; then
-		check_yml
-		_start_containers
-	else
-		docker_machine_start && \
-			[[ "$(get_yml_path)" != "" ]] && \
-			_start_containers
-	fi
+	check_dsh_environment
+	_start_containers
 }
 
 # Stop containers
