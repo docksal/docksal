@@ -1218,7 +1218,7 @@ vm ()
 			if [[ "$1" == "" ]]; then
 				echo "$DOCKER_MACHINE_NAME ($(docker_machine_provider))"
 			else
-				[[ "$1" == "$DOCKER_MACHINE_NAME" ]] && echo "$1 is already active" && return 1
+				[[ "$1" == "$DOCKER_MACHINE_NAME" ]] && echo "$1 is already active" && return 0
 				! is_docker_machine_exist "$1" && echo "No docker machine with name $1" && return 1
 				mkdir -p "$DRUDE_MACHINE" || return 1
 				echo "$1" | tee "$DRUDE_MACHINE_ACTIVE" >/dev/null && echo "$1 is set active"
