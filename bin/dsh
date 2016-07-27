@@ -1198,8 +1198,8 @@ vm ()
 {
 	check_binary_found 'docker-machine'
 
-	if ! is_docker_machine_exist && [[ "$1" != "start" ]] && [[ "$1" != "create" ]]; then
-		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME is not created. Use 'dsh up' or 'dsh vm start'."
+	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] ; then
+		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME is not created. Use 'dsh vm start' or 'dsh up'."
 		 return 1
 	fi
 
