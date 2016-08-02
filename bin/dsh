@@ -380,7 +380,7 @@ check_docker_running ()
 
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
-	if ! is_docker_version; then
+	if ! is_docker_beta && ! is_docker_version; then
 		echo-error "Required Docker version is $DSH_REQUIREMENTS_DOCKER or higher"
 		echo -e "Run ${yellow}dsh update prerequisites${NC} to update"
 		exit 1
@@ -389,7 +389,7 @@ check_docker_running ()
 	is_docker_running
 	docker_status=$?
 
-	if [[ $docker_status -eq 255 ]]; then
+	if [[ $docker_status -eq 255 ]] && ! is_docker_beta; then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
 		_confirm "Run 'dsh vm start' to start it now?"
 		docker_machine_start
@@ -403,9 +403,13 @@ check_docker_running ()
 	if [[ $docker_status -eq 0 ]]; then
 		DOCKER_RUNNING="true"
 	else
-		echo-error "Looks like your Docker client and Docker server are incompatible." \
-			"{$green}Run ${NC}${yellow}dsh install prerequisites${NC}{$green} to update.${NC}"
-		exit 1
+		if is_docker_beta; then
+			exit 1
+		else
+			echo-error "Looks like your Docker client and Docker server are incompatible." \
+				"${green}Run ${NC}${yellow}dsh install prerequisites${NC}${green} to update.${NC}"
+			exit 1
+		fi
 	fi
 }
 
