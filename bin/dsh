@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.60
+DSH_VERSION=1.99.61
 
 # Console colors
 red='\033[0;91m'
@@ -2218,7 +2218,8 @@ alias_list ()
 if [[ "$1" == "@"* ]]; then
 	DRUDE_ALIAS=${1#@}
 	[[ ! -h "$DRUDE_CONFIG_ALIAS/$DRUDE_ALIAS" ]] && echo-red "No such alias $1" && exit 1
-	cd "$DRUDE_CONFIG_ALIAS/$DRUDE_ALIAS" 2>/dev/null
+	_alias_cd=$(readlink "$DRUDE_CONFIG_ALIAS/$DRUDE_ALIAS")
+	cd "$_alias_cd" 2>/dev/null
 	if_failed_error "Could not navigate to directory linked by $1 alias"
 	shift
 fi
