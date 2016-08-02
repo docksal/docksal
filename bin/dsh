@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.58
+DSH_VERSION=1.99.59
 
 # Console colors
 red='\033[0;91m'
@@ -1477,8 +1477,11 @@ configure_resolver ()
 			return
 		fi
 		sudo mkdir -p /etc/resolver
-		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | \
+		# NO \n at the begginning of line here!
+		echo -e "# .drude domain resolution\nnameserver $DRUDE_IP" | \
 			sudo tee 1>/dev/null /etc/resolver/drude
+		sudo dscacheutil -flushcache
+		# to check: scutil --dns
 	elif is_linux; then
 		DRUDE_IP="192.168.10.10"
 		install_dns_service "$DRUDE_IP"
