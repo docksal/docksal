@@ -82,7 +82,9 @@ IMAGE_DNS="blinkreaction/dns-discovery"
 PATH="$DRUDE_BIN_DIR:$PATH"
 DOCKER_BETA="${DOCKER_BETA:-0}"
 # Allow image tag overrides for system services. See install_xyz_service()
-DRUDE_ITAG="${DRUDE_ITAG:-stable}"
+# TODO: revert this to stable before release
+#DRUDE_ITAG="${DRUDE_ITAG:-stable}"
+DRUDE_ITAG="${DRUDE_ITAG:-latest}"
 # UID of user to use in cli continer. Only override if you know what you're doing
 DRUDE_SET_UID=""
 
