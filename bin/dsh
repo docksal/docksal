@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.59
+DSH_VERSION=1.99.60
 
 # Console colors
 red='\033[0;91m'
@@ -86,11 +86,13 @@ DRUDE_ITAG="${DRUDE_ITAG:-stable}"
 # UID of user to use in cli continer. Only override if you know what you're doing
 DRUDE_SET_UID=""
 
-__drude_active_machine=$(cat "$DRUDE_MACHINE_ACTIVE" 2>/dev/null)
-DOCKER_MACHINE_NAME="${__drude_active_machine:-$DEFAULT_MACHINE_NAME}"
-DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
-[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
-	eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+if [[ "$DOCKER_BETA" != "1" ]]; then
+	__drude_active_machine=$(cat "$DRUDE_MACHINE_ACTIVE" 2>/dev/null)
+	DOCKER_MACHINE_NAME="${__drude_active_machine:-$DEFAULT_MACHINE_NAME}"
+	DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
+	[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
+		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+fi
 
 #---------------------------- Helper functions --------------------------------
 
@@ -333,7 +335,7 @@ check_binary_found ()
 
 is_docker_running ()
 {
-	if ! is_linux; then
+	if ! is_linux && ! is_docker_beta; then
 		if ! is_docker_machine_running; then return 255; fi
 	fi
 	# Check if docker is running via docker info.
@@ -1320,6 +1322,7 @@ vm-ram () {
 up ()
 {
 	check_dsh_environment
+	[[ is_linux || is_docker_beta ]] && reset system
 	_start_containers
 }
 
@@ -1471,12 +1474,18 @@ configure_resolver ()
 	local DRUDE_IP="0.0.0.0"
 
 	if is_mac; then
-		DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
+		if is_docker_beta; then
+			DRUDE_IP="127.0.0.1"
+		else
+			DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
+		fi
 		install_dns_service "$DRUDE_IP"
 		if (grep "nameserver $DRUDE_IP" /etc/resolver/drude 2>/dev/null 1>/dev/null); then
 			return
 		fi
 		sudo mkdir -p /etc/resolver
+		# deleting old resolver is the only way to get mac to update config
+		sudo rm -r /etc/resolver/drude >/dev/null 2>/dev/null
 		# NO \n at the begginning of line here!
 		echo -e "# .drude domain resolution\nnameserver $DRUDE_IP" | \
 			sudo tee 1>/dev/null /etc/resolver/drude
