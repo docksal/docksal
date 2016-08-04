@@ -1661,7 +1661,7 @@ install_prerequisites_ubuntu ()
 	if ! is_docker_version; then
 	echo-green "Installing Docker..."
 		# Stop docker dervice if it exists
-		if sudo service docker status 2>/dev/null; then
+		if ps aux | grep dockerd | grep -v grep 2>/dev/null; then
 			echo "Stopping docker service..."
 			sudo service docker stop 2>/dev/null
 		fi
