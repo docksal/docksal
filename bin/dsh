@@ -1740,6 +1740,8 @@ install_autocomplete ()
 # Install prerequisites, drude config or autocomplete
 install ()
 {
+	if [[ "$1" == "" ]]; then
+		show_help install
 	if [[ "$1" == "prerequisites" ]]; then
 		install_prerequisites
 	elif [[ "$1" == "drude-config" ]]; then
