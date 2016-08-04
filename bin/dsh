@@ -1675,7 +1675,7 @@ install_prerequisites_ubuntu ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -sSL "$URL_DOCKER_COMPOSE_NIX" && \
+		sudo curl -sSL "$URL_DOCKER_COMPOSE_NIX" -o /usr/local/bin/docker-compose && \
 			sudo chmod +x /usr/local/bin/docker-compose && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
