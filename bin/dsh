@@ -1687,6 +1687,7 @@ install_prerequisites_ubuntu ()
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
 	else
+		echo "Starting Docker service if stopped..."
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if [[ ! $? -eq 0 ]]; then
