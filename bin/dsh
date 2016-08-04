@@ -334,7 +334,7 @@ is_binary_found ()
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
-	if [[ -x "$DRUDE_BIN_DIR/$1" ]] || (is_linux && $(which $1)); then
+	if [[ -x "$DRUDE_BIN_DIR/$1" ]] || (is_linux && which "$1" >/dev/null); then
 		return 0
 	else
 		if is_linux; then
