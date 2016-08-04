@@ -1687,6 +1687,14 @@ install_prerequisites_ubuntu ()
 	else
 		sudo service docker start 2>/dev/null
 		sudo docker version
+		if [[ ! $? -eq 0 ]]; then
+			_confirm 'There is some problem with your Docker installation. Do you want to try re-installing?'
+			curl -sSL https://get.docker.com/ | sh && \
+				sudo usermod -aG docker $(whoami)
+			sudo service docker start 2>/dev/null
+			sudo docker version
+			if_failed "Docker installation/upgrade has failed."
+		fi
 	fi
 
 	# Install Docker Compose
