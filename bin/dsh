@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.61
+DSH_VERSION=1.99.62
 
 # Console colors
 red='\033[0;91m'
@@ -1826,7 +1826,7 @@ check_for_updates ()
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$DRUDE_LAST_CHECK"
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH")
+	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH?r=$RANDOM")
 	new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
 	if [ $(ver_to_int "$new_version") -gt $(ver_to_int $DSH_VERSION) ]; then
 		echo-green-bg " UPDATE AVAILABLE "
