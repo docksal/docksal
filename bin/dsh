@@ -1684,6 +1684,9 @@ install_prerequisites_ubuntu ()
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
+	else
+		sudo service docker start 2>/dev/null
+		sudo docker version
 	fi
 
 	# Install Docker Compose
