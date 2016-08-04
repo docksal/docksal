@@ -1049,6 +1049,7 @@ docker_machine_create ()
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
 is_docker_machine_exist ()
 {
+	! which 'docker-machine' >/dev/null && return 1
 	if [[ "$1" != "" ]]; then
 		docker-machine ls | grep "$1" 1>/dev/null 2>/dev/null
 	else
@@ -2129,7 +2130,6 @@ logs ()
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
 {
-	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && return # only run for virtualbox. others will sync other ways
 	if [[ "$DRUDE_SET_UID" == "" ]] ; then
 		DRUDE_SET_UID=$(id -u)
 	fi
