@@ -88,7 +88,9 @@ DRUDE_ITAG="${DRUDE_ITAG:-latest}"
 # UID of user to use in cli continer. Only override if you know what you're doing
 DRUDE_SET_UID=""
 
-if [[ "$DOCKER_BETA" != "1" ]]; then
+if [[ "$DOCKER_BETA" == "1" ]]; then
+	export DOCKER_HOST=""
+else
 	__drude_active_machine=$(cat "$DRUDE_MACHINE_ACTIVE" 2>/dev/null)
 	DOCKER_MACHINE_NAME="${__drude_active_machine:-$DEFAULT_MACHINE_NAME}"
 	DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
