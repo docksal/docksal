@@ -444,7 +444,9 @@ is_docker_version ()
 
 is_docker_compose_version ()
 {
-	if ! is_linux; then
+	if is_linux; then
+		! which 'docker-compose' >/dev/null && return 1
+	else
 		[[ ! -x "$DOCKER_COMPOSE_BIN" ]] && return 1
 	fi
 
@@ -457,7 +459,9 @@ is_docker_compose_version ()
 
 is_docker_machine_version ()
 {
-	if ! is_linux; then
+	if is_linux; then
+		! which 'docker-machine' >/dev/null && return 1
+	else
 		[[ ! -x "$DOCKER_MACHINE_BIN" ]] && return 1
 	fi
 
