@@ -2158,7 +2158,7 @@ _set_cli_uid ()
 	echo-green "Restarting php daemon..."
 	# TODO: Remove. This code is to support legacy cli image version, where php5-fpm service name was used.
 	local php_service
-	if (docker exec ${cli} grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf); then
+	if (docker exec ${cli} grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf >/dev/null); then
 		php_service='php5-fpm';
 	else
 		php_service='php-fpm';
