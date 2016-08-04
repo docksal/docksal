@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.63
+DSH_VERSION=1.99.64
 
 # Console colors
 red='\033[0;91m'
@@ -317,22 +317,6 @@ is_docker_beta ()
 	[[ "$DOCKER_BETA" == "1" ]]
 }
 
-# searches if binary exists and callable in PATH
-is_binary_found ()
-{
-	if [[ "$1" == "" ]]; then
-		return 1;
-	fi
-
-	local bpath=$(which $1 2>/dev/null)
-
-	if [[ "$bpath" != "" ]] && [ -f $(which $1) ]; then
-		return 0
-	else
-		return 1
-	fi
-}
-
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
@@ -433,7 +417,7 @@ is_vbox_version ()
 	if is_windows; then
 		[[ ! -f "$vboxmanage" ]] && return 1
 	else
-		! is_binary_found "$vboxmanage" && return 1
+		! which "$vboxmanage" >/dev/null && return 1
 	fi
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
@@ -445,7 +429,9 @@ is_vbox_version ()
 
 is_docker_version ()
 {
-	if ! is_linux; then
+	if is_linux; then
+		! which 'docker' >/dev/null && return 1
+	else
 		[[ ! -x "$DOCKER_BIN" ]] && return 1
 	fi
 
@@ -1544,7 +1530,7 @@ install_prerequisites_mac ()
 {
 	is_tty || return 1 # only allow in interactive shell
 	# Check VirtualBox
-	if ! is_binary_found 'VBoxManage'; then
+	if ! which 'VBoxManage' >/dev/null; then
 		echo-error "VBoxManage executable was not found. Virtual Box is required to run Drude on Mac." \
 			&& exit 1
 	elif ! is_vbox_version; then
@@ -1675,7 +1661,7 @@ install_prerequisites_ubuntu ()
 
 	# Install Docker client
 	if ! is_docker_version; then
-	echo-green "Installing Docker..."
+		echo-green "Installing Docker..."
 		# Stop docker dervice if it exists
 		if ps aux | grep dockerd | grep -v grep >/dev/null 2>/dev/null; then
 			echo "Stopping docker service..."
