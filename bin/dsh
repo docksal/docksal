@@ -373,6 +373,7 @@ check_dsh_environment ()
 
 check_docker_running ()
 {
+	[[ "$INSTALLATION_IN_PROGRESS" == "1" ]] && return 0
 	# Check cached value
 	[[ "$DOCKER_RUNNING" == "true" ]] && return 0
 	local docker_status
@@ -728,7 +729,7 @@ show_help ()
 	printh "update  <component>" "<prerequisites | images | dsh> (${yellow}'dsh help update'${NC})" "yellow"
 
 	echo
-	printh "alias" "Create/delete aliases (See ${yellow}'dsh help alias'${NC})"
+	printh "alias" "Create/remove aliases (See ${yellow}'dsh help alias'${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version	(v, -v)" "Print dsh version. [v, -v] - prints short version"
@@ -906,7 +907,7 @@ show_help_alias ()
 	printh "dsh alias" "Show aliases list"
 	printh "dsh alias list" "Show aliases list"
 	printh "dsh alias <path> <alias_name>" "Create an alias that links to path"
-	printh "dsh alias delete <alias_name>" "Delete alias"
+	printh "dsh alias remove <alias_name>" "Remove alias"
 	echo-green "Examples:"
 	printh "dsh alias ~/Projects/Site dev" "Create alias named 'dev' that links to '~/Projects/Site'"
 	printh "dsh @dev drush st" "Execute 'dsh drush st' command in directory linked by 'dev' alias"
@@ -1425,15 +1426,18 @@ install_prerequisites ()
 {
 	echo-green "Installing prerequisites..."
 
-	if [[ -x "$DOCKER_BIN" ]] && [[ -x "$DOCKER_COMPOSE_BIN" ]] && [[ -x "$DOCKER_MACHINE_BIN" ]]; then
+	if which 'docker-machine' >/dev/null; then
 		if is_docker_machine_exist && ! is_docker_machine_running; then
-			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but is not running" \
-				"Please start it with ${yellow}dsh up${NC} first (or destroy it with ${yellow}dsh destroy${NC} if you want it re-created)."
+			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
+				"Start it with ${yellow}dsh vm start${NC} first or destroy it with ${yellow}dsh vm rm${NC} if you want it re-created."
 			return 1
 		elif is_docker_running; then
+			_confirm "All containers will be stopped for an upgrade. Continue? "
+			INSTALLATION_IN_PROGRESS=1
 			# it's an upgrade
-			_stop_containers --all
-			echo-green "Updating Drude system containers..."
+			echo "Stopping all containers..."
+			docker ps --format '{{.Names}}' | xargs docker stop
+			echo-green "Updating Drude system images..."
 			update_system_images
 		fi
 	fi
@@ -1579,6 +1583,8 @@ install_prerequisites_mac ()
 	is_docker_machine_running && \
 		( echo-green "Upgrading Docker Machine..." && \
 			docker-machine upgrade "$DOCKER_MACHINE_NAME") && \
+			# give some time for machine to start containers
+			sleep 2 && \
 			reset system
 
 	echo-green "Prerequisites installation finished."
@@ -2230,6 +2236,9 @@ alias_create ()
 
 	! is_windows && \
 		ln -s $(get_abs_path "$1") "$DRUDE_CONFIG_ALIAS/$2"
+
+	[[ $? -eq 0 ]] && \
+		echo "$2 -> $(get_abs_path $1)"
 }
 
 alias_remove () {
