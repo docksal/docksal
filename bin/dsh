@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.64
+DSH_VERSION=1.99.65
 
 # Console colors
 red='\033[0;91m'
@@ -2130,31 +2130,40 @@ logs ()
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
 {
-	if [[ "$DRUDE_SET_UID" == "" ]] ; then
-		DRUDE_SET_UID=$(id -u)
-	fi
 	# Let uid to be set with the DRUDE_SET_UID env variable
-	if [[ "$DRUDE_SET_UID" != 0 ]] ; then
-		local host_uid="$DRUDE_SET_UID"
-		local container_uid=$(docker exec $(get_container_id cli) id -u)
+	local host_uid=${DRUDE_SET_UID:-$(id -u)}
+	local cli=$(get_container_id cli)
+	local container_uid
 
-		if [[ "$container_uid" != "$host_uid" ]]; then
-			echo-green "Changing user uid in cli from $container_uid to $host_uid..."
-			docker exec -u root $(get_container_id cli) usermod -u "$host_uid" docker
-			echo-green "Reseting permissions on /var/www..."
-			docker exec -u root $(get_container_id cli) chown -R docker:users /var/www
-			echo-green "Restarting php daemon..."
-			# TODO: Remove. This code is to support legacy cli image version, where php5-fpm service name was used.
-			local php_service='php-fpm';
-			local local res=$(docker exec $(get_container_id cli) grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf)
-			if [[ "$res" != '' ]]; then php_service='php5-fpm'; fi
-			docker exec -u root $(get_container_id cli) supervisorctl restart "$php_service" >/dev/null
-		else
-			echo "Container and host uids already match ($container_uid)."
-		fi
-	else
-		echo-yellow "Running Drude as root is not recommended. Please run as a regular user with docker access."
+	container_uid=$(docker exec ${cli} id -u)
+	if [[ ! $? -eq 0 ]]; then
+		echo-red 'Error getting uid from cli container'
+		return
 	fi
+
+	if [[ "$container_uid" == "$host_uid" ]]; then
+		return
+	fi
+
+	if [[ "$host_uid" != "0" ]] ; then
+		echo-green "Changing user id in cli to $host_uid to match host user id..."
+		docker exec -u root ${cli} usermod -u "$host_uid" -o docker
+		echo-green "Reseting permissions on /var/www..."
+		docker exec -u root ${cli} chown -R docker:users /var/www
+	else
+		echo -e "${green}Changing user id in cli to 0 to match host user id ${NC}${yellow}(running as root is not recommended)...${NC}"
+		docker exec -u root ${cli} usermod -u 0 -o docker
+	fi
+
+	echo-green "Restarting php daemon..."
+	# TODO: Remove. This code is to support legacy cli image version, where php5-fpm service name was used.
+	local php_service
+	if (docker exec ${cli} grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf); then
+		php_service='php5-fpm';
+	else
+		php_service='php-fpm';
+	fi
+	docker exec -u root ${cli} supervisorctl restart "$php_service" >/dev/null
 }
 
 _system_information_heading ()
