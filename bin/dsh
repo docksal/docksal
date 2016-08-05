@@ -1433,15 +1433,17 @@ install_prerequisites ()
 			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
 				"Start it with ${yellow}dsh vm start${NC} first or destroy it with ${yellow}dsh vm rm${NC} if you want it re-created."
 			return 1
-		elif is_docker_running; then
-			_confirm "All containers will be stopped for an upgrade. Continue? "
-			INSTALLATION_IN_PROGRESS=1
-			# it's an upgrade
-			echo "Stopping all containers..."
-			docker ps --format '{{.Names}}' | xargs docker stop
-			echo-green "Updating Drude system images..."
-			update_system_images
 		fi
+	fi
+
+	if is_docker_running; then
+		_confirm "All containers will be stopped for an upgrade. Continue? "
+		INSTALLATION_IN_PROGRESS=1
+		# it's an upgrade
+		echo "Stopping all containers..."
+		docker ps --format '{{.Names}}' | xargs docker stop
+		echo-green "Updating Drude system images..."
+		update_system_images
 	fi
 
 	is_windows && \
@@ -1521,10 +1523,12 @@ configure_resolver ()
 			sudo tee -a /etc/resolvconf/resolv.conf.d/head
 		sudo resolvconf -u
 	elif is_windows; then
-		DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
+		if is_docker_beta; then
+			DRUDE_IP="127.0.0.1"
+		else
+			DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
+		fi
 		install_dns_service "$DRUDE_IP"
-		echo -e "You can configure ${yellow}.drude${NC} domain resolution manually"
-		echo -e "by setting ${yellow}$DRUDE_IP${NC} as your primary DNS server in network settings."
 	fi
 }
 
@@ -1657,6 +1661,8 @@ install_prerequisites_windows ()
 	is_docker_machine_running && \
 		( echo-green "Upgrading Docker Machine..." && \
 			docker-machine upgrade "$DOCKER_MACHINE_NAME") && \
+			# give some time for machine to start containers
+			sleep 2 && \
 			reset system
 
 	echo-green "Prerequisites installation finished."
