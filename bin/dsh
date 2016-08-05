@@ -1322,6 +1322,7 @@ vm ()
 
 vm-stats ()
 {
+	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
 	check_docker_running # should be running
 	check_vbox_version
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
@@ -1331,6 +1332,7 @@ vm-stats ()
 }
 
 vm-ram () {
+	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
 	echo "Current $(VBoxManage showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
 		local running
