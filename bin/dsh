@@ -1209,6 +1209,15 @@ docker_machine_mount_nfs ()
 	done
 }
 
+docker_machine_mount_smb ()
+{
+	# add share \\hostname\c writable to current user
+	# ask user for his password
+	# use his password for mount -t cifs ...
+	return
+}
+
+}
 docker_machine_mounts ()
 {
 	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
@@ -1216,9 +1225,8 @@ docker_machine_mounts ()
 			echo-green "Configuring NFS shares..."
 			docker_machine_mount_nfs "/Users:/Users" --no-export="$HOME:/.home"
 		elif is_windows; then
-			# TODO: implement docker-machine-smb
-			# docker-machine-smb "$DOCKER_MACHINE_NAME" --shared-folder="/Users"
-			echo-red "dsh: mount shares manually with docker-machine-smb"
+			echo-green "Configuring SMB shares..."
+			docker_machine_mount_smb
 		fi
 	fi
 }
@@ -1519,10 +1527,6 @@ configure_resolver ()
 	elif is_linux; then
 		DRUDE_IP="192.168.10.10"
 		install_dns_service "$DRUDE_IP"
-		# TODO remove old record
-		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | \
-			sudo tee -a /etc/resolvconf/resolv.conf.d/head >/dev/null
-		sudo resolvconf -u
 	elif is_windows; then
 		if is_docker_beta; then
 			DRUDE_IP="127.0.0.1"
@@ -1736,10 +1740,12 @@ install_prerequisites_ubuntu ()
 		cat > /tmp/drude.ip.addr <<EOF
 	up   ip addr add ${DRUDE_SUBNET} dev lo label lo:drude
 	down ip addr del ${DRUDE_SUBNET} dev lo label lo:drude
+	dns-nameservers 192.168.10.10
 EOF
 		sudo sed -i '/iface lo inet loopback/r /tmp/drude.ip.addr' /etc/network/interfaces
 		rm -f /tmp/drude.ip.addr
 		sudo ifdown lo && sudo ifup lo
+		sudo resolvconf -u
 	fi
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
