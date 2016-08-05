@@ -488,7 +488,7 @@ check_yml ()
 {
 	yml_path=$(get_yml_path)
 	if [[ "$yml_path" == "" ]] ; then
-		echo-red "dsh: docker-compose.yml was not found in your directory tree"
+		echo "docker-compose.yml was not found in current or any parent directory"
 		exit 1
 	fi
 }
@@ -2202,15 +2202,10 @@ _set_cli_uid ()
 	docker exec -u root ${cli} supervisorctl restart "$php_service" >/dev/null
 }
 
-_sysinfo_heading ()
-{
-	echo "███  $1"
-}
-
 sysinfo ()
 {
 	# os
-	_sysinfo_heading "OS & BASICS"
+	echi "███  OS & BASICS"
 	uname -a
 	if is_linux; then
 		[ -f /etc/os-release ] && cat /etc/os-release
@@ -2220,31 +2215,31 @@ sysinfo ()
 	version
 
 	(which 'docker-machine' >/dev/null) && \
-		_sysinfo_heading "INSTANCES" && \
+		echo "███  INSTANCES" && \
 		docker-machine ls
 
-	_sysinfo_heading "DOCKER"
+	echo "███  DOCKER"
 	echo "DOCKER_HOST:	$DOCKER_HOST"
 	echo
 	echo "Docker: $(docker version)"
 
-	_sysinfo_heading "DOCKER COMPOSE"
+	echo "███  DOCKER COMPOSE"
 	echo "Docker Compose: $(docker_compose version)"
 
 	(which 'docker-machine' >/dev/null) && \
-		_sysinfo_heading "DOCKER MACHINE" && \
+		echo "███  DOCKER MACHINE" && \
 		docker-machine --version
 
 	if which "$vboxmanage" >/dev/null; then
-		_sysinfo_heading "VIRTUAL BOX"
+		echo "███  VIRTUAL BOX"
 		VBoxManage --version
 
-		_sysinfo_heading "NETWORK INTERFACES"
+		echo "███  NETWORK INTERFACES"
 		VBoxManage list hostonlyifs
 	fi
 
 	if is_docker_machine_running; then
-		_sysinfo_heading "MOUNTS"
+		echo "███  MOUNTS"
 		vm ssh mount
 	fi
 }
