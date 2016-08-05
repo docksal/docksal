@@ -391,7 +391,7 @@ check_docker_running ()
 	is_docker_running
 	docker_status=$?
 
-	if [[ $docker_status -eq 255 ]] && ! is_docker_beta; then
+	if [[ ${docker_status} -eq 255 ]] && ! is_docker_beta; then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
 		_confirm "Run 'dsh vm start' to start it now?"
 		docker_machine_start
@@ -1865,7 +1865,7 @@ check_for_updates ()
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
 	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH?r=$RANDOM")
 	new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
-	if [ $(ver_to_int "$new_version") -gt $(ver_to_int $DSH_VERSION) ]; then
+	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${DSH_VERSION}) ]; then
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}dsh${NC} [ $DSH_VERSION --> $new_version ] (run ${green}dsh update dsh${NC} to update)"
 		echo "Press Enter."
@@ -1941,13 +1941,13 @@ _run ()
 	# 4) execute
 	if [[ "$container_id" == "" ]]; then
 		# try to connect to this out of project container by name
-		$winpty_cmd docker exec -it "$CONTAINER_NAME" sh -i
+		${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -i
 		return
 	fi
 
 	if is_tty ; then
 		# interactive
-		$winpty_cmd docker exec -it "$container_id" bash -ic "$cmd"
+		${winpty_cmd} docker exec -it "$container_id" bash -ic "$cmd"
 	else
 		# non-interactive
 		docker exec "$container_id" bash -c "$cmd"
@@ -1989,7 +1989,7 @@ mysql_import ()
 		return
 	fi
 
-	if [ $confirm -eq 1 ]; then
+	if [ ${confirm} -eq 1 ]; then
 		_confirm "[!] This will drop the existing database. Continue?"
 	fi
 
