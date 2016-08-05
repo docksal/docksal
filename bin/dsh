@@ -1621,7 +1621,9 @@ install_prerequisites_windows ()
 	if ! is_docker_version; then
 		echo-green "Installing docker client v${DSH_REQUIREMENTS_DOCKER}..."
 		(cd "$DRUDE_DOWNLOADS_DIR" && \
-			curl -sSL "$URL_DOCKER_WIN" | tar zxf - && \
+			curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
+			unzip docker.zip && \
+			rm docker.zip && \
 			mv "docker/docker" "$DOCKER_BIN" && \
 			chmod +x "$DOCKER_BIN")
 	fi
