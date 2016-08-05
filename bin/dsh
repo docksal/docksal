@@ -375,7 +375,7 @@ check_dsh_environment ()
 
 check_docker_running ()
 {
-	[[ "$INSTALLATION_IN_PROGRESS" == "1" ]] && return 0
+	[[ "$UPGRADE_IN_PROGRESS" == "1" ]] && return 0
 	# Check cached value
 	[[ "$DOCKER_RUNNING" == "true" ]] && return 0
 	local docker_status
@@ -1436,10 +1436,9 @@ install_prerequisites ()
 		fi
 	fi
 
-	if is_docker_running; then
+	if (which 'docker' >/dev/null) && is_docker_running; then
+		UPGRADE_IN_PROGRESS=1
 		_confirm "All containers will be stopped for an upgrade. Continue? "
-		INSTALLATION_IN_PROGRESS=1
-		# it's an upgrade
 		echo "Stopping all containers..."
 		docker ps --format '{{.Names}}' | xargs docker stop
 		echo-green "Updating Drude system images..."
@@ -1520,7 +1519,7 @@ configure_resolver ()
 		install_dns_service "$DRUDE_IP"
 		# TODO remove old record
 		echo -e "\n# .drude domain resolution\nnameserver $DRUDE_IP" | \
-			sudo tee -a /etc/resolvconf/resolv.conf.d/head
+			sudo tee -a /etc/resolvconf/resolv.conf.d/head >/dev/null
 		sudo resolvconf -u
 	elif is_windows; then
 		if is_docker_beta; then
@@ -1582,6 +1581,11 @@ install_prerequisites_mac ()
 			chmod +x "$DOCKER_MACHINE_BIN"
 	fi
 
+	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+		echo-green "Updating Drude system images..."
+		update_system_images
+	fi
+
 	# Cleanup
 	rm -rf "$DRUDE_DOWNLOADS_DIR" >/dev/null 2>&1
 
@@ -1603,9 +1607,11 @@ install_prerequisites_windows ()
 		echo-error "Required Virtual Box version is $DSH_REQUIREMENTS_VBOX or higher" \
 			&& exit 1
 	else
-		echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
-		winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
-		winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
+		if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+			echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
+			winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
+			winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
+		fi
 	fi
 
 	mkdir -p "$DRUDE_DOWNLOADS_DIR" 2>/dev/null
@@ -1646,6 +1652,11 @@ install_prerequisites_windows ()
 	(cd "$DRUDE_DOWNLOADS_DIR" && \
 		curl -sSL "$URL_WINPTY" | tar -xzf - && \
 		mv "winpty-*/bin/*" "$DRUDE_BIN_DIR/")
+
+	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+		echo-green "Updating Drude system images..."
+		update_system_images
+	fi
 
 	# Cleanup
 	rm -rf "$DRUDE_DOWNLOADS_DIR" >/dev/null 2>&1
@@ -1726,11 +1737,16 @@ EOF
 		sudo ifdown lo && sudo ifup lo
 	fi
 
-	reset proxy
-	reset dns
-	reset ssh-agent
+	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+		echo-green "Updating Drude system images..."
+		update_system_images
+	fi
 
-	echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
+	reset system
+
+	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]] && [[ "$(id -u)" != "0" ]]; then
+		echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
+	fi
 }
 
 # Download latest Drude config file
