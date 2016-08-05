@@ -1596,8 +1596,6 @@ install_prerequisites_mac ()
 			# give some time for machine to start containers
 			sleep 2 && \
 			reset system
-
-	echo-green "Prerequisites installation finished."
 }
 
 install_prerequisites_windows ()
@@ -1675,8 +1673,6 @@ install_prerequisites_windows ()
 			# give some time for machine to start containers
 			sleep 2 && \
 			reset system
-
-	echo-green "Prerequisites installation finished."
 }
 
 # Install Docker and setup Drude on Ubuntu 14.04+
@@ -1745,7 +1741,7 @@ EOF
 	reset system
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]] && [[ "$(id -u)" != "0" ]]; then
-		echo-green "To run docker without sudo please re-login or run 'newgrp docker' now."
+		echo-yellow "To run docker without sudo please re-login or run 'newgrp docker' now."
 	fi
 }
 
