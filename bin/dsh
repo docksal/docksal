@@ -1441,7 +1441,8 @@ install_prerequisites ()
 		UPGRADE_IN_PROGRESS=1
 		_confirm "All containers will be stopped for an upgrade. Continue? "
 		echo "Stopping all containers..."
-		docker ps --format '{{.Names}}' | xargs docker stop
+		# not stoppig system because for example on Linux this will break dns
+		docker ps --format '{{.Names}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 		echo-green "Updating Drude system images..."
 		update_system_images
 	fi
