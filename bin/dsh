@@ -2079,7 +2079,7 @@ behat ()
 exec_url ()
 {
 	if [[ "$1" != "" ]]; then
-		_confirm "Are you sure you want to run script from '$1'?"
+		_confirm "Run script from '$1'?"
 		local script
 		script=$(curl -kfsSL "$1")
 		if_failed "Failed downloading script $1"
