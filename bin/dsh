@@ -37,6 +37,7 @@ DOCKER_BIN="$DRUDE_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$DRUDE_BIN_DIR/docker-compose"
 DOCKER_COMPOSE_BIN_NIX="/usr/local/bin/docker-compose"
 DOCKER_MACHINE_BIN="$DRUDE_BIN_DIR/docker-machine"
+DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 DOCKER_MACHINE_SMB_BIN="$DRUDE_BIN_DIR/docker-machine-smb"
 vboxmanage="vboxmanage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
@@ -1724,8 +1725,8 @@ install_prerequisites_ubuntu ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
-			chmod +x "$DOCKER_MACHINE_BIN"
+		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN_NIX" && \
+			chmod +x "$DOCKER_MACHINE_BIN_NIX"
 	fi
 
 	# Adding a subnet for Drude. Make sure we don't do this twice
