@@ -1217,7 +1217,6 @@ docker_machine_mount_smb ()
 	return
 }
 
-}
 docker_machine_mounts ()
 {
 	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
