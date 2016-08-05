@@ -1721,6 +1721,13 @@ install_prerequisites_ubuntu ()
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 
+	# Install docker-machine
+	if ! is_docker_machine_version; then
+		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
+		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
+			chmod +x "$DOCKER_MACHINE_BIN"
+	fi
+
 	# Adding a subnet for Drude. Make sure we don't do this twice
 	if ! grep -q "$DRUDE_SUBNET" /etc/network/interfaces; then
 		echo-green "Adding a subnet for Drude..."
