@@ -222,7 +222,7 @@ docker_compose ()
 
 # Get container id by service name
 # @param $1 docker compose service name (e.g. cli)
-# @return docker container id 
+# @return docker container id
 get_container_id ()
 {
 	# Trim CR(\r) from the output, otherwise there will be issues passing it to the docker binary on Windows.
@@ -780,7 +780,7 @@ show_help_ssh-add ()
 	echo
 	echo "When run without arguments, picks up the default key file (~/.ssh/id_rsa or ~/.ssh/id_dsa)."
 	echo "A custom key name can be given as an argument: dsh ssh-add <keyname>."
-	echo 
+	echo
 	echo -e "${yellow}NOTE${NC}: <keyname> is the file name within ${yellow}~/.ssh${NC} (not full path to file)."
 	echo "Example: dsh ssh-add my_custom_key_rsa"
 	echo
@@ -1482,7 +1482,7 @@ install_dns_service ()
 	# Support for boot2docker-vagrant
 	local docker_ip_map="-p 172.17.42.1:53:53/udp"
 	if is_linux; then docker_ip_map=""; fi
-	   
+
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
@@ -1651,7 +1651,7 @@ install_prerequisites_windows ()
 	echo-green "Installing winpty v${DSH_REQUIREMENTS_WINPTY}..."
 	(cd "$DRUDE_DOWNLOADS_DIR" && \
 		curl -sSL "$URL_WINPTY" | tar -xzf - && \
-		mv "winpty-*/bin/*" "$DRUDE_BIN_DIR/")
+		mv winpty-*/bin/* "$DRUDE_BIN_DIR/")
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-green "Updating Drude system images..."
@@ -1964,7 +1964,7 @@ _run ()
 	else
 		cmd="$cmd $@"
 	fi
-	
+
 	# 4) execute
 	if [[ "$container_id" == "" ]]; then
 		# try to connect to this out of project container by name
