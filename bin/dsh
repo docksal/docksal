@@ -1629,22 +1629,22 @@ install_prerequisites_windows ()
 			curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
 			unzip docker.zip && \
 			rm docker.zip && \
-			mv "docker/docker" "$DOCKER_BIN" && \
+			mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
 			chmod +x "$DOCKER_BIN")
 	fi
 
 		# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
-		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN"
+		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
+			chmod +x "$DOCKER_COMPOSE_BIN.exe"
 	fi
 
 		# Install Docker Machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -L "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN" && \
-			chmod +x "$DOCKER_MACHINE_BIN"
+		curl -L "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
+			chmod +x "$DOCKER_MACHINE_BIN.exe"
 	fi
 
 	# Install docker-machine-smb
