@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.65
+DSH_VERSION=1.99.66
 
 # Console colors
 red='\033[0;91m'
@@ -20,6 +20,9 @@ DSH_REQUIREMENTS_VBOX='5.0.4'
 DSH_REQUIREMENTS_WINPTY='0.3.1'
 DSH_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
 
+# Self Paths
+DSH_PATH="/usr/local/bin/dsh"
+DSH_AUTOCOMPLETE_PATH="/usr/local/bin/dsh-bash-autocomplete"
 # Configuration paths
 DRUDE_CONFIG_DIR="$HOME/.drude"
 DRUDE_CONFIG_ALIAS="$DRUDE_CONFIG_DIR/alias"
@@ -73,7 +76,6 @@ URL_DOCKER_MACHINE_SMB="https://raw.githubusercontent.com/drude/docker-machine-s
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DSH_REQUIREMENTS_WINPTY}/winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
 URL_DRUDE_CONFIG="${URL_DRUDE_REPO}/${DRUDE_BRANCH}/docker-compose.yml"
-URL_BASH_AUTOCOMPLETE="${URL_DRUDE_REPO}/${DRUDE_BRANCH}/bin/dsh-bash-complete"
 
 IMAGE_SSH_AGENT="blinkreaction/ssh-agent"
 IMAGE_VHOST_PROXY="blinkreaction/nginx-proxy"
@@ -951,8 +953,8 @@ bash_comp_words ()
 		;;
 		dsh)
 			local aliases=$(ls -l "$DRUDE_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
-			echo "start up stop down restart status reset remove bash exec logs run mysql mysql-import exec-url drush drupal \
-			behat ssh-add install update self-update version cleanup vm sysinfo alias $aliases"
+			echo "$aliases alias start stop restart status reset remove bash exec logs mysql mysql-import exec-url drush drupal \
+			behat ssh-add install update version cleanup sysinfo"
 			exit 0
 			;;
 		*)
@@ -1326,10 +1328,10 @@ vm-ram () {
 		local running
 		is_docker_machine_running && running=1
 		_confirm "Continue changing Memory size to ${1}MB?"
-		[[ $running == 1 ]] && docker_machine_stop
+		[[ ${running} == 1 ]] && docker_machine_stop
 		$vboxmanage modifyvm "$DOCKER_MACHINE_NAME" --memory "$1" && \
 			echo "Memory size updated."
-		[[ $running == 1 ]] && docker_machine_start
+		[[ ${running} == 1 ]] && docker_machine_start
 	fi
 }
 
@@ -1742,12 +1744,22 @@ install_drude_config ()
 # Install shell commands autocomplete script
 install_autocomplete ()
 {
-	local autocomplete_script
-	autocomplete_script=$(curl -kfsS "$URL_BASH_AUTOCOMPLETE")
-	if_failed "Autocomplete script download has failed"
-
-	destination="/usr/local/bin/dsh-bash-autocomplete"
-	echo "$autocomplete_script" | tee "$destination" >/dev/null
+	local destination="$DSH_AUTOCOMPLETE_PATH"
+	tee "$destination" >/dev/null << 'EOF'
+_dsh_completion()
+{
+	local cur=${COMP_WORDS[COMP_CWORD]} #current word part
+	local prev=${COMP_WORDS[COMP_CWORD-1]} #previous word
+	local compwords=$(dsh bash_comp_words $prev) #get completions for previous word
+	if [ ! $? -eq 0 ]; then
+		return 1;
+	else
+		COMPREPLY=( $(compgen -W "$compwords" -- $cur) )
+		return 0
+	fi
+}
+complete -o bashdefault -o default -F _dsh_completion dsh
+EOF
 	if_failed "Failed to write file to $destination"
 	echo-green "Script saved to $destination"
 	chmod +x "$destination"
@@ -1821,11 +1833,11 @@ update_dsh ()
 	rm -r "$DRUDE_LAST_CHECK" >/dev/null 2>&1
 
 	# saving to file
-	echo "$new_dsh" | sudo tee /usr/local/bin/dsh > /dev/null
-	if_failed "Could not write /usr/local/bin/dsh."
-	sudo chmod +x /usr/local/bin/dsh
+	echo "$new_dsh" | sudo tee "$DSH_PATH" > /dev/null
+	if_failed "Could not write $DSH_PATH."
+	sudo chmod +x "$DSH_PATH"
 
-	local new_version=$(head /usr/local/bin/dsh | grep "^DSH_VERSION=" | cut -f 2 -d "=")
+	local new_version=$(head "$DSH_PATH" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
 	echo-green "dsh updated to ${new_version}"
 	exit
 }
@@ -1837,12 +1849,12 @@ check_for_updates ()
 
 	local timestamp; local last_check; local next_check
 	timestamp=$(date +%s)
-	last_check=$(cat $DRUDE_LAST_CHECK 2>/dev/null)
+	last_check=$(cat "$DRUDE_LAST_CHECK" 2>/dev/null)
 	# Set last_check to 0 if empty
 	last_check="${last_check:-0}"
 	# Check once a week
 	next_check=$(($last_check+604800))
-	if [ $timestamp -le $next_check ]; then
+	if [ ${timestamp} -le ${next_check} ]; then
 		return;
 	fi
 
@@ -2266,12 +2278,16 @@ if [[ "$1" == "@"* ]]; then
 fi
 
 # Check for updates if not updating already
-if [[ "$*" != "update dsh" ]]; then
+if [[ "$*" != "update dsh" ]] && [[ "$1" != "bash_comp_words" ]]; then
 	check_for_updates
 fi
 
 # Parse other parameters
 case "$1" in
+	bash_comp_words)
+		shift
+		bash_comp_words "$@"
+		;;
 	up|start)
 		shift
 		up
@@ -2382,10 +2398,6 @@ case "$1" in
 		;;
 	version)
 		version
-		;;
-	bash_comp_words)
-		shift
-		bash_comp_words "$@"
 		;;
 	logs)
 		shift
