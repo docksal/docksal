@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.66
+DSH_VERSION=1.99.67
 
 # Console colors
 red='\033[0;91m'
@@ -708,7 +708,7 @@ show_help ()
 		printh "vm <command>" "Control docker machine vm. See ${yellow}'dsh help vm'${NC} for commands list" "yellow"
 
 	echo
-	printh "bash [service]" "Open bash to service container. Defaults to ${yellow}'cli'${NC} service"
+	printh "bash [service]" "Open shell into container. Defaults to ${yellow}'cli'${NC} service"
 	printh "exec <command> [params]" "Execute a command in ${yellow}'cli'${NC} service container"
 	printh "exec-url <url>" "Download script from URL and run it. URL should be public."
 	printh "logs [service]" "Show docker logs for service container"
@@ -2184,54 +2184,51 @@ _set_cli_uid ()
 	docker exec -u root ${cli} supervisorctl restart "$php_service" >/dev/null
 }
 
-_system_information_heading ()
+_sysinfo_heading ()
 {
-	local dashes_length=$((32+${#1}))
-	echo
-	printf '–%.0s' $(seq 1 ${dashes_length})
-	echo
-	echo "		$1"
-	printf '–%.0s' $(seq 1 ${dashes_length})
-	echo
+	echo "███  $1"
 }
 
-system_information ()
+sysinfo ()
 {
-	_system_information_heading "OS"
+	# os
+	_sysinfo_heading "OS & BASICS"
 	uname -a
 	if is_linux; then
 		[ -f /etc/os-release ] && cat /etc/os-release
 		[ -f /etc/system-release ] && cat /etc/system-release
 	fi
-	echo -n "Current dir: "
-	pwd
-
-	_system_information_heading "Dsh"
+	# dsh version
 	version
 
-	_system_information_heading "Docker & Docker Compose"
+	(which 'docker-machine' >/dev/null) && \
+		_sysinfo_heading "INSTANCES" && \
+		docker-machine ls
+
+	_sysinfo_heading "DOCKER"
 	echo "DOCKER_HOST:	$DOCKER_HOST"
 	echo
 	echo "Docker: $(docker version)"
+
+	_sysinfo_heading "DOCKER COMPOSE"
 	echo "Docker Compose: $(docker_compose version)"
 
-	if ! is_linux; then
-		_system_information_heading "VirtualBox"
+	(which 'docker-machine' >/dev/null) && \
+		_sysinfo_heading "DOCKER MACHINE" && \
+		docker-machine --version
+
+	if which "$vboxmanage" >/dev/null; then
+		_sysinfo_heading "VIRTUAL BOX"
 		VBoxManage --version
 
-		_system_information_heading "Running Virtual Boxes"
-		VBoxManage list runningvms
-
-		_system_information_heading "VirtualBox Network interfaces"
+		_sysinfo_heading "NETWORK INTERFACES"
 		VBoxManage list hostonlyifs
-
-		_system_information_heading "Docker Machine"
-		docker-machine --version
-		echo
-		docker-machine ls
 	fi
 
-	echo
+	if is_docker_machine_running; then
+		_sysinfo_heading "MOUNTS"
+		vm ssh mount
+	fi
 }
 
 #-------------------------- Links / Aliases -----------------------------
@@ -2410,7 +2407,7 @@ case "$1" in
 		show_help "$2"
 		;;
 	sysinfo)
-		system_information
+		sysinfo
 		;;
 	alias)
 		shift
