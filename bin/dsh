@@ -15,7 +15,7 @@ DRUDE_BRANCH="${DRUDE_BRANCH:-master}"
 #---------------------------- Global Constants --------------------------------
 DSH_REQUIREMENTS_DOCKER='1.12.0'
 DSH_REQUIREMENTS_DOCKER_COMPOSE='1.7.1'
-DSH_REQUIREMENTS_DOCKER_MACHINE='0.7.0'
+DSH_REQUIREMENTS_DOCKER_MACHINE='0.8.0'
 DSH_REQUIREMENTS_VBOX='5.0.4'
 DSH_REQUIREMENTS_WINPTY='0.3.1'
 DSH_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
@@ -464,9 +464,9 @@ is_docker_compose_version ()
 is_docker_machine_version ()
 {
 	if is_linux; then
-		! which 'docker-machine' >/dev/null && return 1
+		! which 'docker-machine' >/dev/null && return 2
 	else
-		[[ ! -x "$DOCKER_MACHINE_BIN" ]] && return 1
+		[[ ! -x "$DOCKER_MACHINE_BIN" ]] && return 2
 	fi
 
 	local version=$(docker-machine -v | sed "s/^docker-machine version \(.*\),.*/\1/")
@@ -1882,6 +1882,8 @@ check_for_updates ()
 {
 	# Never trigger in scripts
 	if ! is_tty; then return; fi
+	local DSH_UPDATE_AVAILABLE=0
+	local UPDATES_AVAILABLE=0
 
 	local timestamp; local last_check; local next_check
 	timestamp=$(date +%s)
@@ -1894,7 +1896,7 @@ check_for_updates ()
 		return;
 	fi
 
-	echo 'dsh: checking for updates...'
+	echo 'One second! Checking for updates...'
 	local new_dsh; local new_version
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$DRUDE_LAST_CHECK"
@@ -1902,11 +1904,25 @@ check_for_updates ()
 	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH?r=$RANDOM")
 	new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
 	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${DSH_VERSION}) ]; then
+		DSH_UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}dsh${NC} [ $DSH_VERSION --> $new_version ] (run ${green}dsh update dsh${NC} to update)"
 		echo "Press Enter."
 		read -p ''
 	fi
+
+	if [[ ${DSH_UPDATE_AVAILABLE} -eq 0 ]]; then
+		is_docker_machine_version
+		if [[ $? -eq 1 ]]; then
+			UPDATES_AVAILABLE=1
+			echo-green "Update available for docker-machine to $DSH_REQUIREMENTS_DOCKER_MACHINE"
+		fi
+	fi
+
+	[[ ${UPDATES_AVAILABLE} == "1" ]] && \
+		echo -e "Run ${yellow}dsh update prerequisites${NC} to install updates to docker tools" && \
+		echo "(Press Enter to continue)" && \
+		read -p ''
 }
 
 #-------------------------- Execution commands -----------------------------
@@ -2306,9 +2322,11 @@ if [[ "$1" == "@"* ]]; then
 fi
 
 # Check for updates if not updating already
-if [[ "$*" != "update dsh" ]] && [[ "$1" != "bash_comp_words" ]]; then
+[[ "$*" != "update dsh" ]] && \
+	[[ "$*" != "install prerequisites" ]] && \
+	[[ "$*" != "update prerequisites" ]] && \
+	[[ "$1" != "bash_comp_words" ]] && \
 	check_for_updates
-fi
 
 # Parse other parameters
 case "$1" in
