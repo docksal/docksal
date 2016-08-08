@@ -1689,14 +1689,14 @@ install_prerequisites_windows ()
 		# Install Docker Machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -L "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
+		curl -sSL "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
 			chmod +x "$DOCKER_MACHINE_BIN.exe"
 	fi
 
 	# Install docker-machine-smb
 	if [[ ! -x "$DOCKER_MACHINE_SMB_BIN" ]]; then
 		echo-green "Installing docker-machine-smb..."
-		curl -s "$URL_DOCKER_MACHINE_SMB" -o "$DOCKER_MACHINE_SMB_BIN" > /dev/null && \
+		curl -sSL "$URL_DOCKER_MACHINE_SMB" -o "$DOCKER_MACHINE_SMB_BIN" > /dev/null && \
 			chmod +x "$DOCKER_MACHINE_SMB_BIN"
 	fi
 
