@@ -1080,6 +1080,13 @@ docker_machine_stop ()
 	docker-machine stop "$DOCKER_MACHINE_NAME"
 }
 
+docker_machine_change_ip ()
+{
+	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
+		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 192.168.10.10 netmask 255.255.255.0 broadcast 192.168.1.255 up" && \
+		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
+}
+
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
@@ -1087,6 +1094,7 @@ docker_machine_start ()
 
 	if is_docker_machine_exist; then
 		docker-machine start "$DOCKER_MACHINE_NAME" && DOCKER_MACHINE_STATUS='Running' && \
+			docker_machine_change_ip && \
 			docker_machine_env && \
 			reset system && \
 			docker_machine_mounts
@@ -1099,6 +1107,7 @@ docker_machine_start ()
 		fi
 		# only auto-create default machine
 		docker_machine_create && \
+			docker_machine_change_ip && \
 			echo-green "Exporting env variables for '$DOCKER_MACHINE_NAME'..." && \
 			docker_machine_env && \
 			echo-green "Pulling system images..." && \
