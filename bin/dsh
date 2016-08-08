@@ -1492,7 +1492,7 @@ install_prerequisites ()
 		fi
 	fi
 
-	if (which 'docker' >/dev/null) && is_docker_running; then
+	if (which 'docker' 2>/dev/null >/dev/null) && is_docker_running; then
 		UPGRADE_IN_PROGRESS=1
 		_confirm "All containers will be stopped for an upgrade. Continue? "
 		echo "Stopping all containers..."
