@@ -995,6 +995,7 @@ docker_machine_create ()
 			docker-machine create --driver=virtualbox \
 				--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
 				--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
+				--virtualbox-hostonly-cidr "$DRUDE_SUBNET" \
 				--virtualbox-no-share \
 				"$machine_name"
 			;; #-- end virtualbox
@@ -1079,6 +1080,13 @@ docker_machine_stop ()
 	docker-machine stop "$DOCKER_MACHINE_NAME"
 }
 
+docker_machine_change_ip ()
+{
+	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
+		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 192.168.10.10 netmask 255.255.255.0 broadcast 192.168.1.255 up" && \
+		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
+}
+
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
@@ -1086,6 +1094,7 @@ docker_machine_start ()
 
 	if is_docker_machine_exist; then
 		docker-machine start "$DOCKER_MACHINE_NAME" && DOCKER_MACHINE_STATUS='Running' && \
+			docker_machine_change_ip && \
 			docker_machine_env && \
 			reset system && \
 			docker_machine_mounts
@@ -1098,6 +1107,7 @@ docker_machine_start ()
 		fi
 		# only auto-create default machine
 		docker_machine_create && \
+			docker_machine_change_ip && \
 			echo-green "Exporting env variables for '$DOCKER_MACHINE_NAME'..." && \
 			docker_machine_env && \
 			echo-green "Pulling system images..." && \
@@ -1209,11 +1219,47 @@ docker_machine_mount_nfs ()
 	done
 }
 
+# Method to create the user and SMB network share on Windows.
+# @param share_name, path
+smb_share_add()
+{
+	# Add SMB share if it does not exist.
+	command_share="net share ${1} || net share ${1}=${2} /grant:${USERNAME},FULL"
+	echo-green "Adding docker SMB share..."
+	winsudo "$command_share"
+}
+
+# Method to mount the SMB share in Docker machine.
+# @param path, password
+smb_share_mount()
+{
+	DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
+	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
+	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
+
+	command_mount="sudo mkdir -p /$1 && sudo mount -t cifs -o noperm,sec=ntlm,username='${USERNAME}',pass='$2',dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 /$1"
+	# sudo mount -t cifs -o noperm,sec=ntlm,username=docker,pass="P@ssW0rd1!",dir_mode=0777,file_mode=0777 //192.168.99.1/projects2 /c/projects2
+	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+}
+
 docker_machine_mount_smb ()
 {
 	# add share \\hostname\c writable to current user
 	# ask user for his password
 	# use his password for mount -t cifs ...
+
+	local DRIVES=$(wmic logicaldisk get name | sed 's/\r//g')
+	read -s -p "Enter Windows account password: " PASSWORD
+
+	for DRIVE in ${DRIVES}; do
+		if [ "$DRIVE" != "Name" ]; then
+			local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
+			smb_share_add "$MOUNT_POINT" "$DRIVE" && \
+				smb_share_mount "$MOUNT_POINT" "$PASSWORD" || \
+				(echo-red "Error creating share" && exit 1)
+		fi
+	done
+
 	return
 }
 
@@ -1629,22 +1675,22 @@ install_prerequisites_windows ()
 			curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
 			unzip docker.zip && \
 			rm docker.zip && \
-			mv "docker/docker" "$DOCKER_BIN" && \
+			mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
 			chmod +x "$DOCKER_BIN")
 	fi
 
 		# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
-		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN"
+		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
+			chmod +x "$DOCKER_COMPOSE_BIN.exe"
 	fi
 
 		# Install Docker Machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -L "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN" && \
-			chmod +x "$DOCKER_MACHINE_BIN"
+		curl -L "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
+			chmod +x "$DOCKER_MACHINE_BIN.exe"
 	fi
 
 	# Install docker-machine-smb
