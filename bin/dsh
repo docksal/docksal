@@ -1484,7 +1484,7 @@ install_prerequisites ()
 {
 	echo-green "Installing prerequisites..."
 
-	if which 'docker-machine' >/dev/null; then
+	if which 'docker-machine' 2>/dev/null >/dev/null; then
 		if is_docker_machine_exist && ! is_docker_machine_running; then
 			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
 				"Start it with ${yellow}dsh vm start${NC} first or destroy it with ${yellow}dsh vm rm${NC} if you want it re-created."
