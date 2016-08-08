@@ -1634,11 +1634,6 @@ install_prerequisites_mac ()
 			chmod +x "$DOCKER_MACHINE_BIN"
 	fi
 
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo-green "Updating Drude system images..."
-		update_system_images
-	fi
-
 	# Cleanup
 	rm -rf "$DRUDE_DOWNLOADS_DIR" >/dev/null 2>&1
 
@@ -1705,11 +1700,6 @@ install_prerequisites_windows ()
 	(cd "$DRUDE_DOWNLOADS_DIR" && \
 		curl -sSL "$URL_WINPTY" | tar -xzf - && \
 		mv winpty-*/bin/* "$DRUDE_BIN_DIR/")
-
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo-green "Updating Drude system images..."
-		update_system_images
-	fi
 
 	# Cleanup
 	rm -rf "$DRUDE_DOWNLOADS_DIR" >/dev/null 2>&1
