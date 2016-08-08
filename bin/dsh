@@ -323,7 +323,7 @@ is_docker_beta ()
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
-	if [[ -x "$DRUDE_BIN_DIR/$1" ]] || (is_linux && which "$1" >/dev/null); then
+	if [[ -x "$DRUDE_BIN_DIR/$1" ]] || (is_linux && which "$1" 2>/dev/null >/dev/null); then
 		return 0
 	else
 		if is_linux; then
@@ -421,7 +421,7 @@ is_vbox_version ()
 	if is_windows; then
 		[[ ! -f "$vboxmanage" ]] && return 1
 	else
-		! which "$vboxmanage" >/dev/null && return 1
+		! which "$vboxmanage" 2>/dev/null >/dev/null && return 1
 	fi
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
@@ -434,7 +434,7 @@ is_vbox_version ()
 is_docker_version ()
 {
 	if is_linux; then
-		! which 'docker' >/dev/null && return 1
+		! which 'docker' 2>/dev/null >/dev/null && return 1
 	else
 		[[ ! -x "$DOCKER_BIN" ]] && return 1
 	fi
@@ -449,7 +449,7 @@ is_docker_version ()
 is_docker_compose_version ()
 {
 	if is_linux; then
-		! which 'docker-compose' >/dev/null && return 1
+		! which 'docker-compose' 2>/dev/null >/dev/null && return 1
 	else
 		[[ ! -x "$DOCKER_COMPOSE_BIN" ]] && return 1
 	fi
@@ -464,7 +464,7 @@ is_docker_compose_version ()
 is_docker_machine_version ()
 {
 	if is_linux; then
-		! which 'docker-machine' >/dev/null && return 2
+		! which 'docker-machine' 2>/dev/null >/dev/null && return 2
 	else
 		[[ ! -x "$DOCKER_MACHINE_BIN" ]] && return 2
 	fi
@@ -1054,7 +1054,7 @@ docker_machine_create ()
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
 is_docker_machine_exist ()
 {
-	! which 'docker-machine' >/dev/null && return 1
+	! which 'docker-machine' 2>/dev/null >/dev/null && return 1
 	if [[ "$1" != "" ]]; then
 		docker-machine ls | grep "$1" 1>/dev/null 2>/dev/null
 	else
@@ -1597,7 +1597,7 @@ install_prerequisites_mac ()
 {
 	is_tty || return 1 # only allow in interactive shell
 	# Check VirtualBox
-	if ! which 'VBoxManage' >/dev/null; then
+	if ! which 'VBoxManage' 2>/dev/null >/dev/null; then
 		echo-error "VBoxManage executable was not found. Virtual Box is required to run Drude on Mac." \
 			&& exit 1
 	elif ! is_vbox_version; then
@@ -2284,7 +2284,7 @@ sysinfo ()
 	# dsh version
 	version
 
-	(which 'docker-machine' >/dev/null) && \
+	(which 'docker-machine' 2>/dev/null >/dev/null) && \
 		echo "███  INSTANCES" && \
 		docker-machine ls
 
@@ -2296,11 +2296,11 @@ sysinfo ()
 	echo "███  DOCKER COMPOSE"
 	echo "Docker Compose: $(docker_compose version)"
 
-	(which 'docker-machine' >/dev/null) && \
+	(which 'docker-machine' 2>/dev/null >/dev/null) && \
 		echo "███  DOCKER MACHINE" && \
 		docker-machine --version
 
-	if which "$vboxmanage" >/dev/null; then
+	if which "$vboxmanage" 2>/dev/null >/dev/null; then
 		echo "███  VIRTUAL BOX"
 		VBoxManage --version
 
