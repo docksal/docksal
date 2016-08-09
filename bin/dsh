@@ -1515,7 +1515,8 @@ install_prerequisites ()
 		install_prerequisites_mac && \
 		return
 
-	echo-error "Your OS is not supported" && return 1
+	! is_windows && ! is_linux && ! is_mac && \
+		(echo-error "Your OS is not supported" && exit 1)
 }
 
 install_proxy_service ()
