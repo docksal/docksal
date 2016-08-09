@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.68
+DSH_VERSION=1.99.69
 
 # Console colors
 red='\033[0;91m'
@@ -2468,6 +2468,11 @@ case "$1" in
 		shift
 		is_docker_running # exports env
 		docker_compose "$@"
+		;;
+	docker-machine)
+		shift
+		is_docker_running # exports env
+		docker-machine "$@"
 		;;
 	exec-url)
 		shift
