@@ -1224,9 +1224,12 @@ docker_machine_mount_nfs ()
 smb_share_add()
 {
 	# Add SMB share if it does not exist.
-	command_share="net share ${1} || net share ${1}=${2} /grant:${USERNAME},FULL"
-	echo-green "Adding docker SMB share..."
-	winsudo "$command_share"
+	if [[ "$(net share)" != *"${1}"*"${2}\\"* ]];
+	then
+		command_share="net share ${1}=${2} /grant:${USERNAME},FULL /REMARK:\"Drude ${1} ${2}\""
+		echo-green "Adding docker SMB share..."
+		winsudo "$command_share"
+	fi
 }
 
 # Method to mount the SMB share in Docker machine.
