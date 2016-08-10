@@ -1295,7 +1295,10 @@ vm ()
 			# usage: dsh vm create <machine_name> --provider="<provider_name>"
 			shift
 			eval $(parse_params "$@")
+			# errors handling
+			[[ "${ARGV[0]}" == "" ]] && echo "Please provide a name for a new vm." && return 1
 			is_docker_machine_exist "${ARGV[0]}" && echo "Machine \"${ARGV[0]}\" already exists." && return 1
+			# create
 			docker_machine_create "${ARGV[0]}" "$provider"
 			;;
 		active)
