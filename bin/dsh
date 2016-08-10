@@ -1055,7 +1055,7 @@ docker_machine_create ()
 is_docker_machine_exist ()
 {
 	! which 'docker-machine' 2>/dev/null >/dev/null && return 1
-	if [[ "$1" != "" ]]; then
+	if [[ "$1" != "" ]] && [[ "$1" != "$DOCKER_MACHINE_NAME" ]]; then
 		docker-machine ls | grep "$1" 1>/dev/null 2>/dev/null
 	else
 		[[ "$DOCKER_MACHINE_STATUS" == *"not exist"* ]] && return 1 || return 0
