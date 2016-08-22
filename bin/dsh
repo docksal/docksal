@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.70
+DSH_VERSION=1.99.71
 
 # Console colors
 red='\033[0;91m'
@@ -2017,11 +2017,10 @@ _run ()
 		fi
 	fi
 
-# TODO: possibly can be removed
-#	local columns
-#	if is_tty ; then
-#		columns="export COLUMNS=$(tput cols 2>/dev/null || echo 80) &&"
-#	fi
+	local columns
+	if is_tty && $(which tput 2>/dev/null 1>dev/null); then
+		columns="export COLUMNS=$(tput cols 2>/dev/null || echo 80) &&"
+	fi
 
 	cmd="$cdir"
 
@@ -2043,7 +2042,7 @@ _run ()
 
 	if is_tty ; then
 		# interactive
-		${winpty_cmd} docker exec -it "$container_id" bash -ic "$cmd"
+		${winpty_cmd} docker exec -it "$container_id" bash -ic "${columns} $cmd"
 	else
 		# non-interactive
 		docker exec "$container_id" bash -c "$cmd"
