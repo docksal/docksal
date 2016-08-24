@@ -2282,7 +2282,7 @@ _set_cli_uid ()
 sysinfo ()
 {
 	# os
-	echi "███  OS & BASICS"
+	echo "███  OS & BASICS"
 	uname -a
 	if is_linux; then
 		[ -f /etc/os-release ] && cat /etc/os-release
