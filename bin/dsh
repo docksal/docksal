@@ -886,6 +886,7 @@ show_help_vm ()
 	printh "restart" "Restart a machine"
 	printh "status" "Get the status of a machine"
 	printh "stop" "Stop a machine"
+	printh "ls" "List all docker machines"
 	printh "ssh" "Log into or run a command on a machine with SSH"
 	printh "stats" "Show current HDD/RAM usage stats"
 	printh "kill" "Forcibely stop a machine"
