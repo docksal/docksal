@@ -1084,7 +1084,7 @@ docker_machine_stop ()
 docker_machine_change_ip ()
 {
 	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
-		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 192.168.10.10 netmask 255.255.255.0 broadcast 192.168.1.255 up" && \
+		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 192.168.10.10 netmask 255.255.255.0 broadcast 192.168.10.255 up" && \
 		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
 }
 
