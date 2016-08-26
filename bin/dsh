@@ -1569,7 +1569,7 @@ configure_resolver ()
 			DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
 		fi
 		install_dns_service "$DRUDE_IP"
-		if (grep "nameserver $DRUDE_IP" /etc/resolver/drude 2>/dev/null 1>/dev/null); then
+		if (grep "^nameserver $DRUDE_IP$" /etc/resolver/drude 2>/dev/null 1>/dev/null); then
 			return
 		fi
 		sudo mkdir -p /etc/resolver
