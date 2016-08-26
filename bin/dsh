@@ -1649,9 +1649,10 @@ install_prerequisites_mac ()
 	# If it was an upgrade
 	is_docker_machine_running && \
 		( echo-green "Upgrading Docker Machine..." && \
-			docker-machine upgrade "$DOCKER_MACHINE_NAME") && \
+			docker-machine upgrade "$DOCKER_MACHINE_NAME") && docker_machine_change_ip && \
 			# give some time for machine to start containers
 			sleep 2 && \
+			docker_machine_env && \
 			reset system
 }
 
@@ -1723,9 +1724,10 @@ install_prerequisites_windows ()
 	# If it was an upgrade
 	is_docker_machine_running && \
 		( echo-green "Upgrading Docker Machine..." && \
-			docker-machine upgrade "$DOCKER_MACHINE_NAME") && \
+			docker-machine upgrade "$DOCKER_MACHINE_NAME") && docker_machine_change_ip && \
 			# give some time for machine to start containers
 			sleep 2 && \
+			docker_machine_env && \
 			reset system
 }
 
