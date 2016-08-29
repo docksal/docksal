@@ -1,6 +1,7 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.72
+DS_VERSION=1.99.72
+DSH_VERSION=1.99.72 # TODO: for temporary update compatibility. remove before release
 
 # Console colors
 red='\033[0;91m'
@@ -13,16 +14,16 @@ NC='\033[0m'
 DS_BRANCH="${DS_BRANCH:-master}"
 
 #---------------------------- Global Constants --------------------------------
-DSH_REQUIREMENTS_DOCKER='1.12.0'
-DSH_REQUIREMENTS_DOCKER_COMPOSE='1.7.1'
-DSH_REQUIREMENTS_DOCKER_MACHINE='0.8.0'
-DSH_REQUIREMENTS_VBOX='5.0.4'
-DSH_REQUIREMENTS_WINPTY='0.3.1'
-DSH_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
+DS_REQUIREMENTS_DOCKER='1.12.0'
+DS_REQUIREMENTS_DOCKER_COMPOSE='1.7.1'
+DS_REQUIREMENTS_DOCKER_MACHINE='0.8.0'
+DS_REQUIREMENTS_VBOX='5.0.4'
+DS_REQUIREMENTS_WINPTY='0.3.1'
+DS_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
 
 # Self Paths
-DSH_PATH="/usr/local/bin/dsh"
-DSH_AUTOCOMPLETE_PATH="/usr/local/bin/dsh-bash-autocomplete"
+DS_PATH="/usr/local/bin/dsh"
+DS_AUTOCOMPLETE_PATH="/usr/local/bin/dsh-bash-autocomplete"
 # Configuration paths
 OLD_CONFIG_DIR="$HOME/.drude"
 DS_CONFIG_DIR="$HOME/.drude"
@@ -65,17 +66,17 @@ URL_DRUDE_REPO="https://raw.githubusercontent.com/blinkreaction/drude"
 URL_DRUDE_REPO_UI="https://github.com/blinkreaction/drude"
 URL_DSH="${URL_DRUDE_REPO}/${DS_BRANCH}/bin/dsh"
 
-URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${DSH_REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${DS_REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
-URL_DOCKER_WIN="https://get.docker.com/builds/Windows/i386/docker-${DSH_REQUIREMENTS_DOCKER}.zip"
-URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${DSH_REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-$OS_NAME-$HARDWARE"
+URL_DOCKER_WIN="https://get.docker.com/builds/Windows/i386/docker-${DS_REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${DS_REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-$OS_NAME-$HARDWARE"
 URL_DOCKER_COMPOSE_NIX="$URL_DOCKER_COMPOSE_MAC"
-URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${DSH_REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
-URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$OS_NAME-$HARDWARE"
-URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${DSH_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
+URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${DS_REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
+URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${DS_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$OS_NAME-$HARDWARE"
+URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${DS_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
 
 URL_DOCKER_MACHINE_SMB="https://raw.githubusercontent.com/drude/docker-machine-smb/master/docker-machine-smb"
-URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DSH_REQUIREMENTS_WINPTY}/winpty-${DSH_REQUIREMENTS_WINPTY}-cygwin-${DSH_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
+URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DS_REQUIREMENTS_WINPTY}/winpty-${DS_REQUIREMENTS_WINPTY}-cygwin-${DS_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
 URL_DRUDE_CONFIG="${URL_DRUDE_REPO}/${DS_BRANCH}/docker-compose.yml"
 
@@ -114,7 +115,7 @@ echo-green () { echo -e "${green}$1${NC}"; }
 echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
 echo-error () {
-	echo -e "${red_bg} DSH ERROR: ${NC} ${red}$1${NC}";
+	echo -e "${red_bg} DS ERROR: ${NC} ${red}$1${NC}";
 	local unused="$2" # avoid IDE warning
 	shift
 	# echo other parameters indented s error description or remedy
@@ -124,13 +125,13 @@ echo-error () {
 	done
 }
 
-# Exits dsh if previous command exited with non-zero code
+# Exits ds if previous command exited with non-zero code
 if_failed ()
 {
 	if [ ! $? -eq 0 ]; then
 		msg="error executing last command"
 		if [[ "$1" != "" ]]; then msg="$1"; fi
-		echo-red "dsh: $msg"
+		echo-red "ds: $msg"
 		exit 1
 	fi
 }
@@ -328,9 +329,9 @@ check_binary_found ()
 		return 0
 	else
 		if is_linux; then
-			echo-red "$1 executable was not found. (Try running 'dsh install prerequisites')"
+			echo-red "$1 executable was not found. (Try running 'ds install prerequisites')"
 		else
-			echo-red "$1 executable was not found in $DS_BIN_DIR. (Try running 'dsh install prerequisites')"
+			echo-red "$1 executable was not found in $DS_BIN_DIR. (Try running 'ds install prerequisites')"
 		fi
 		exit 1
 	fi
@@ -370,7 +371,7 @@ ver_to_int ()
 
 #---------------------------- Control functions -------------------------------
 
-check_dsh_environment ()
+check_ds_environment ()
 {
 	check_yml && check_docker_running
 }
@@ -385,8 +386,8 @@ check_docker_running ()
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
 	if ! is_docker_beta && ! is_docker_version; then
-		echo-error "Required Docker version is $DSH_REQUIREMENTS_DOCKER or higher"
-		echo -e "Run ${yellow}dsh update prerequisites${NC} to update"
+		echo-error "Required Docker version is $DS_REQUIREMENTS_DOCKER or higher"
+		echo -e "Run ${yellow}ds update prerequisites${NC} to update"
 		exit 1
 	fi
 
@@ -395,7 +396,7 @@ check_docker_running ()
 
 	if [[ ${docker_status} -eq 255 ]] && ! is_docker_beta; then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
-		_confirm "Run 'dsh vm start' to start it now?"
+		_confirm "Run 'ds vm start' to start it now?"
 		docker_machine_start
 		if_failed "Could not start Docksal docker machine properly"
 		# re-check status
@@ -411,7 +412,7 @@ check_docker_running ()
 			exit 1
 		else
 			echo-error "Looks like your Docker client and Docker server are incompatible." \
-				"${green}Run ${NC}${yellow}dsh install prerequisites${NC}${green} to update.${NC}"
+				"${green}Run ${NC}${yellow}ds install prerequisites${NC}${green} to update.${NC}"
 			exit 1
 		fi
 	fi
@@ -426,7 +427,7 @@ is_vbox_version ()
 	fi
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
-	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$DSH_REQUIREMENTS_VBOX") ]] && \
+	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$DS_REQUIREMENTS_VBOX") ]] && \
 		return 2
 
 	return 0
@@ -441,7 +442,7 @@ is_docker_version ()
 	fi
 
 	local version=$(docker -v | sed "s/^Docker version \(.*\),.*/\1/")
-	[[ "$version" == "$DSH_REQUIREMENTS_DOCKER" ]] && \
+	[[ "$version" == "$DS_REQUIREMENTS_DOCKER" ]] && \
 		return 0;
 
 	return 1;
@@ -456,7 +457,7 @@ is_docker_compose_version ()
 	fi
 
 	local version=$(docker_compose -v | sed "s/^docker-compose version \(.*\),.*/\1/")
-	[[ "$version" == "$DSH_REQUIREMENTS_DOCKER_COMPOSE" ]] && \
+	[[ "$version" == "$DS_REQUIREMENTS_DOCKER_COMPOSE" ]] && \
 		return 0;
 
 	return 1;
@@ -471,7 +472,7 @@ is_docker_machine_version ()
 	fi
 
 	local version=$(docker-machine -v | sed "s/^docker-machine version \(.*\),.*/\1/")
-	[[ "$version" == "$DSH_REQUIREMENTS_DOCKER_MACHINE" ]] && \
+	[[ "$version" == "$DS_REQUIREMENTS_DOCKER_MACHINE" ]] && \
 		return 0;
 
 	return 1;
@@ -482,7 +483,7 @@ check_vbox_version ()
 	is_vbox_version
 	local res=$?
 	[[ $res == 1 ]] && echo-error "$vboxmanage binary was not found" && exit 1
-	[[ $res == 2 ]] && echo-error "VirtualBox version should be $DSH_REQUIREMENTS_VBOX or higher" && exit 1
+	[[ $res == 2 ]] && echo-error "VirtualBox version should be $DS_REQUIREMENTS_VBOX or higher" && exit 1
 }
 
 # Check that docker-compose.yml is present
@@ -500,7 +501,7 @@ check_drush_path ()
 {
 	local pathdiff=$(get_current_relative_path)
 	if [[ "$(pwd)" == "$pathdiff" ]]; then
-		echo-red "dsh: This command must be run inside Drupal's document root"
+		echo-red "ds: This command must be run inside Drupal's document root"
 		exit 1
 	fi
 }
@@ -587,7 +588,7 @@ _stop_containers ()
 		return
 	fi
 
-	check_dsh_environment
+	check_ds_environment
 	echo-green "Stopping services..."
 	docker_compose stop
 }
@@ -595,7 +596,7 @@ _stop_containers ()
 # @param $1 container_name
 _remove_containers ()
 {
-	check_dsh_environment
+	check_ds_environment
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
@@ -662,7 +663,7 @@ printh ()
 	echo -e "	$2"
 }
 
-# Show help for dsh or for certain command
+# Show help for ds or for certain command
 # $1 name of command to show help for
 show_help ()
 {
@@ -685,14 +686,14 @@ show_help ()
 		[ -f "$project_commands_path/$1" ] && _command="$project_commands_path/$1"
 		#
 		if [ -f "$_command" ]; then
-			echo -en "${green}dsh $1${NC} - "
+			echo -en "${green}ds $1${NC} - "
 			cat "$_command" | grep '^##' | sed "s/^##[ ]*//g"
 			echo
 			exit
 		fi
 	fi
 
-	printh "Docksal Shell v$DSH_VERSION commands reference" "" "green"
+	printh "Docksal Shell v$DS_VERSION commands reference" "" "green"
 
 	echo
 	if is_linux; then
@@ -704,10 +705,10 @@ show_help ()
 	printh "restart	[service]" "Restart all current project services or specified service"
 	printh "status (st, ps) [-a (--all)]" "Show project services status. -a shows all running containers"
 	printh "reset [service]" "Recreate service(s). If no parameter given recreates all project services."
-	printh "" "See ${yellow}'dsh help reset'${NC} for more details on resetting Docksal system services."
-	printh "remove [service]" "Remove project or system services. See ${yellow}'dsh help remove'${NC}"
+	printh "" "See ${yellow}'ds help reset'${NC} for more details on resetting Docksal system services."
+	printh "remove [service]" "Remove project or system services. See ${yellow}'ds help remove'${NC}"
 	! is_linux && \
-		printh "vm <command>" "Control docker machine vm. See ${yellow}'dsh help vm'${NC} for commands list" "yellow"
+		printh "vm <command>" "Control docker machine vm. See ${yellow}'ds help vm'${NC} for commands list" "yellow"
 
 	echo
 	printh "bash [service]" "Open shell into container. Defaults to ${yellow}'cli'${NC} service"
@@ -722,21 +723,21 @@ show_help ()
 	echo
 	printh "mysql (sqlc)" "Opens mysql shell to current project database"
 	printh "mysql-import (sqli) <file>" "Truncate database and import from sql dump (file should be accessible to Docksal)"
-	printh "" "See ${yellow}dsh help sqli${NC} for advanced usage (multisite, gz)."
+	printh "" "See ${yellow}ds help sqli${NC} for advanced usage (multisite, gz)."
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
 
 	echo
-	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}'dsh help ssh-add'${NC}"
+	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}'ds help ssh-add'${NC}"
 
 	echo
-	printh "install <component>" "<prerequisites | docksal-config | autocomplete> (${yellow}'dsh help install'${NC})" "yellow"
-	printh "update  <component>" "<prerequisites | images | dsh> (${yellow}'dsh help update'${NC})" "yellow"
+	printh "install <component>" "<prerequisites | docksal-config | autocomplete> (${yellow}'ds help install'${NC})" "yellow"
+	printh "update  <component>" "<prerequisites | images | ds> (${yellow}'ds help update'${NC})" "yellow"
 
 	echo
-	printh "alias" "Create/remove aliases (See ${yellow}'dsh help alias'${NC})"
+	printh "alias" "Create/remove aliases (See ${yellow}'ds help alias'${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
-	printh "version	(v, -v)" "Print dsh version. [v, -v] - prints short version"
+	printh "version	(v, -v)" "Print ds version. [v, -v] - prints short version"
 
 	# Show list of custom commands and their help if available
 	if [ ! -z "$(get_docksal_path)" ]; then
@@ -776,14 +777,14 @@ show_help_list_of_custom_commands ()
 
 show_help_ssh-add ()
 {
-	echo-green "dsh ssh-add - Add private key identities to the ssh-agent."
-	echo "Usage: dsh ssh-add [-lD] [key]"
+	echo-green "ds ssh-add - Add private key identities to the ssh-agent."
+	echo "Usage: ds ssh-add [-lD] [key]"
 	echo
 	echo "When run without arguments, picks up the default key file (~/.ssh/id_rsa or ~/.ssh/id_dsa)."
-	echo "A custom key name can be given as an argument: dsh ssh-add <keyname>."
+	echo "A custom key name can be given as an argument: ds ssh-add <keyname>."
 	echo
 	echo -e "${yellow}NOTE${NC}: <keyname> is the file name within ${yellow}~/.ssh${NC} (not full path to file)."
-	echo "Example: dsh ssh-add my_custom_key_rsa"
+	echo "Example: ds ssh-add my_custom_key_rsa"
 	echo
 	echo "The options are as follows:"
 	printh "-D" "Deletes all identities from the agent."
@@ -793,72 +794,72 @@ show_help_ssh-add ()
 
 show_help_exec ()
 {
-	echo-green "dsh exec <command> - Execute command in ${yellow}cli${green} service container."
+	echo-green "ds exec <command> - Execute command in ${yellow}cli${green} service container."
 	echo
 	echo "Command is a required parameter."
 	echo "Command will be executed in the path that matches your local current path."
 	echo
 	echo-green "Examples:"
-	printh "dsh exec pwd" "Show current path"
-	printh "dsh exec ls -la" "Current directory listing"
-	printh "dsh exec compass compile" "Compile SASS/SCSS"
-	printh "dsh exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or redirects inside cli"
+	printh "ds exec pwd" "Show current path"
+	printh "ds exec ls -la" "Current directory listing"
+	printh "ds exec compass compile" "Compile SASS/SCSS"
+	printh "ds exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or redirects inside cli"
 	echo
 }
 
 show_help_reset ()
 {
-	echo-green "dsh reset - Recreate services/containers. Equal to dsh stop, dsh remove, dsh start"
+	echo-green "ds reset - Recreate services/containers. Equal to ds stop, ds remove, ds start"
 	echo
 	echo-green "Parameters: one or more service names. Examples:"
-	echo "	dsh reset web		Restart 'web' service"
-	echo "	dsh reset web cli	Restart 'web' and 'cli' services"
-	echo "	dsh reset		Restart all project services"
+	echo "	ds reset web		Restart 'web' service"
+	echo "	ds reset web cli	Restart 'web' and 'cli' services"
+	echo "	ds reset		Restart all project services"
 	echo
 	echo-green "System services"
 	echo -e "Docksal has 3 system services."
 	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use."
-	echo "	dsh reset dns		Recreate Docksal DNS service"
-	echo -e "	dsh reset proxy		Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.drude${NC} domain names into container IPs)"
-	echo "	dsh reset ssh-agent	Recreate Docksal ssh-agent service"
-	echo "	dsh reset system	Recreate all Docksal system services"
+	echo "	ds reset dns		Recreate Docksal DNS service"
+	echo -e "	ds reset proxy		Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.drude${NC} domain names into container IPs)"
+	echo "	ds reset ssh-agent	Recreate Docksal ssh-agent service"
+	echo "	ds reset system	Recreate all Docksal system services"
 	echo
 }
 
 show_help_remove ()
 {
-	echo-green "dsh remove - Remove services/containers"
+	echo-green "ds remove - Remove services/containers"
 	echo
 	echo -e "${green}Parameters:${NC} one or more service names."
 	echo-green "Examples:"
-	printh "dsh remove web" "Remove web service"
-	printh "dsh remove proxy" "Stop Docksal reverse proxy service"
+	printh "ds remove web" "Remove web service"
+	printh "ds remove proxy" "Stop Docksal reverse proxy service"
 	echo
 }
 
 show_help_install ()
 {
-	echo-green "dsh install - Automated install of Docksal system components"
+	echo-green "ds install - Automated install of Docksal system components"
 	echo
-	printh "dsh install prerequisites" "Install software required to run Docksal"
-	printh "dsh install docksal-config" "Download latest default docker-compose.yml"
-	printh "dsh install autocomplete" "Install dsh commands autocomplete for Bash"
+	printh "ds install prerequisites" "Install software required to run Docksal"
+	printh "ds install docksal-config" "Download latest default docker-compose.yml"
+	printh "ds install autocomplete" "Install ds commands autocomplete for Bash"
 	echo
 }
 
 show_help_update ()
 {
-	echo-green "dsh update - Automated update of Docksal system components"
+	echo-green "ds update - Automated update of Docksal system components"
 	echo
-	printh "dsh update prerequisites" "Update software required to run Docksal"
-	printh "dsh update images" "Update container images <https://docs.docker.com/engine/understanding-docker/#what-is-docker-s-architecture>"
-	printh "dsh update dsh" "Update dsh itself (Used to be named: dsh self-update)"
+	printh "ds update prerequisites" "Update software required to run Docksal"
+	printh "ds update images" "Update container images <https://docs.docker.com/engine/understanding-docker/#what-is-docker-s-architecture>"
+	printh "ds update ds" "Update ds itself"
 	echo
 }
 
 show_help_exec-url ()
 {
-	echo-green "dsh exec-url <url> - Fetch script and evaluate locally"
+	echo-green "ds exec-url <url> - Fetch script and evaluate locally"
 	echo
 	echo -e "URL is required parameter. Useful for demos or installations."
 	echo
@@ -867,20 +868,20 @@ show_help_exec-url ()
 
 show_help_sqli ()
 {
-	echo-green "dsh sqli <db_dump_file> - Import DB dump into database truncating it first"
+	echo-green "ds sqli <db_dump_file> - Import DB dump into database truncating it first"
 	echo
 	echo -e "DB dump file can be either plain ${yellow}.sql${NC} file or gzipped ${yellow}.sql.gz${NC}."
-	echo -e "To import dump into sub-site cd into sub-site folder ${yellow}cd docroot/sites/sub-site${NC} and run dsh sqli from there."
+	echo -e "To import dump into sub-site cd into sub-site folder ${yellow}cd docroot/sites/sub-site${NC} and run ds sqli from there."
 	echo
 	echo-green "Examples:"
-	printh "dsh sqli ../../mydump.sql" "Import plaintext sql dump"
-	printh "dsh sqli otherdump.sql.gz" "Import gzipped sql dump"
+	printh "ds sqli ../../mydump.sql" "Import plaintext sql dump"
+	printh "ds sqli otherdump.sql.gz" "Import gzipped sql dump"
 	echo
 }
 
 show_help_vm ()
 {
-	echo-green "dsh vm <command> - Control docker machine directly"
+	echo-green "ds vm <command> - Control docker machine directly"
 	echo
 	echo-green "Commands:"
 	printh "start" "Start a machine"
@@ -902,34 +903,34 @@ show_help_vm ()
 
 show_help_alias ()
 {
-	echo-green "dsh alias - Create/delete dsh aliases"
+	echo-green "ds alias - Create/delete ds aliases"
 	echo
 	echo "Aliases provide functionality similar to drush aliases."
-	echo "Using alias you are able to execute dsh command for a project without navigating to the project folder."
+	echo "Using alias you are able to execute ds command for a project without navigating to the project folder."
 	echo "You can precede any command with alias."
 	echo
 	echo-green "Usage:"
-	printh "dsh alias" "Show aliases list"
-	printh "dsh alias list" "Show aliases list"
-	printh "dsh alias <path> <alias_name>" "Create an alias that links to path"
-	printh "dsh alias remove <alias_name>" "Remove alias"
+	printh "ds alias" "Show aliases list"
+	printh "ds alias list" "Show aliases list"
+	printh "ds alias <path> <alias_name>" "Create an alias that links to path"
+	printh "ds alias remove <alias_name>" "Remove alias"
 	echo-green "Examples:"
-	printh "dsh alias ~/Projects/Site dev" "Create alias named 'dev' that links to '~/Projects/Site'"
-	printh "dsh @dev drush st" "Execute 'dsh drush st' command in directory linked by 'dev' alias"
+	printh "ds alias ~/Projects/Site dev" "Create alias named 'dev' that links to '~/Projects/Site'"
+	printh "ds @dev drush st" "Execute 'ds drush st' command in directory linked by 'dev' alias"
 	printh "" "Hint: link alias to sub-site folder to work with that sub-site directly"
-	printh "dsh delete dev"	"Delete 'dev' alias"
+	printh "ds delete dev"	"Delete 'dev' alias"
 	echo
 	echo "Aliases are effectively symlinks stored in $DS_CONFIG_ALIAS"
 }
 
-# Display dsh version
+# Display ds version
 # @option --short - Display only the version number
 version ()
 {
 	if [[ $1 == '--short' ]]; then
-		echo "$DSH_VERSION"
+		echo "$DS_VERSION"
 	else
-		echo "dsh version: $DSH_VERSION"
+		echo "ds version: $DS_VERSION"
 	fi
 }
 
@@ -943,7 +944,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		update)
-			echo "prerequisites images dsh"
+			echo "prerequisites images ds"
 			exit 0
 			;;
 		vm)
@@ -954,7 +955,7 @@ bash_comp_words ()
 			echo "list remove"
 			exit 0
 		;;
-		dsh)
+		ds)
 			local aliases=$(ls -l "$DS_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			echo "$aliases alias start stop restart status reset remove bash exec logs mysql mysql-import exec-url drush drupal \
 			behat ssh-add install update version cleanup sysinfo"
@@ -1288,13 +1289,13 @@ vm ()
 	check_binary_found 'docker-machine'
 
 	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] && [[ "$1" != "rm" ]] && [[ "$1" != "active" ]] ; then
-		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME is not created. Use 'dsh vm start' or 'dsh up'."
+		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME is not created. Use 'ds vm start' or 'ds up'."
 		 return 1
 	fi
 
 	case $1 in
 		create)
-			# usage: dsh vm create <machine_name> --provider="<provider_name>"
+			# usage: ds vm create <machine_name> --provider="<provider_name>"
 			shift
 			eval $(parse_params "$@")
 			# errors handling
@@ -1404,7 +1405,7 @@ vm-ram () {
 # Start containers
 up ()
 {
-	check_dsh_environment
+	check_ds_environment
 	[[ is_linux || is_docker_beta ]] && reset system
 	_start_containers
 }
@@ -1412,7 +1413,7 @@ up ()
 # Stop containers
 down ()
 {
-	check_dsh_environment
+	check_ds_environment
 	_stop_containers "$@"
 }
 
@@ -1420,7 +1421,7 @@ down ()
 # @param $1 container_name
 restart ()
 {
-	check_dsh_environment
+	check_ds_environment
 	_restart_containers "$@"
 }
 
@@ -1433,7 +1434,7 @@ status ()
 		check_docker_running
 		docker ps
 	else
-		check_dsh_environment
+		check_ds_environment
 		docker_compose ps
 	fi
 }
@@ -1496,7 +1497,7 @@ install_prerequisites ()
 	if which 'docker-machine' 2>/dev/null >/dev/null; then
 		if is_docker_machine_exist && ! is_docker_machine_running; then
 			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
-				"Start it with ${yellow}dsh vm start${NC} first or destroy it with ${yellow}dsh vm rm${NC} if you want it re-created."
+				"Start it with ${yellow}ds vm start${NC} first or destroy it with ${yellow}ds vm rm${NC} if you want it re-created."
 			return 1
 		fi
 	fi
@@ -1611,7 +1612,7 @@ install_prerequisites_mac ()
 		echo-error "VBoxManage executable was not found. Virtual Box is required to run Docksal on Mac." \
 			&& exit 1
 	elif ! is_vbox_version; then
-		echo-error "Required Virtual Box version is $DSH_REQUIREMENTS_VBOX or higher" \
+		echo-error "Required Virtual Box version is $DS_REQUIREMENTS_VBOX or higher" \
 			&& exit 1
 	else
 		# Kill the default adapter and DHCP server to avoid network issues down the road
@@ -1624,7 +1625,7 @@ install_prerequisites_mac ()
 
 	# Install Docker client
 	if ! is_docker_version; then
-		echo-green "Installing docker client v${DSH_REQUIREMENTS_DOCKER}..."
+		echo-green "Installing docker client v${DS_REQUIREMENTS_DOCKER}..."
 		(cd "$DS_DOWNLOADS_DIR" && \
 			curl -sSL "$URL_DOCKER_MAC" | tar zxf - && \
 			mv "docker/docker" "$DS_BIN_DIR/")
@@ -1632,14 +1633,14 @@ install_prerequisites_mac ()
 
 	# Install docker-compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Installing docker-compose v${DS_REQUIREMENTS_DOCKER_COMPOSE}..."
 		curl -sSL "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
 			chmod +x "$DOCKER_COMPOSE_BIN"
 	fi
 
 	# Install docker-machine
 	if ! is_docker_machine_version; then
-		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Installing docker-machine v${DS_REQUIREMENTS_DOCKER_MACHINE}..."
 		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
 			chmod +x "$DOCKER_MACHINE_BIN"
 	fi
@@ -1661,7 +1662,7 @@ install_prerequisites_windows ()
 {
 	# Check Virtual Box
 	if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
-		echo-error "Required Virtual Box version is $DSH_REQUIREMENTS_VBOX or higher" \
+		echo-error "Required Virtual Box version is $DS_REQUIREMENTS_VBOX or higher" \
 			&& exit 1
 	else
 		if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
@@ -1676,7 +1677,7 @@ install_prerequisites_windows ()
 
 	# Install Docker client
 	if ! is_docker_version; then
-		echo-green "Installing docker client v${DSH_REQUIREMENTS_DOCKER}..."
+		echo-green "Installing docker client v${DS_REQUIREMENTS_DOCKER}..."
 		(cd "$DS_DOWNLOADS_DIR" && \
 			curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
 			unzip docker.zip && \
@@ -1687,14 +1688,14 @@ install_prerequisites_windows ()
 
 		# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing docker-compose v${DSH_REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Installing docker-compose v${DS_REQUIREMENTS_DOCKER_COMPOSE}..."
 		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
 			chmod +x "$DOCKER_COMPOSE_BIN.exe"
 	fi
 
 		# Install Docker Machine
 	if ! is_docker_machine_version; then
-		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Installing docker-machine v${DS_REQUIREMENTS_DOCKER_MACHINE}..."
 		curl -sSL "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
 			chmod +x "$DOCKER_MACHINE_BIN.exe"
 	fi
@@ -1707,7 +1708,7 @@ install_prerequisites_windows ()
 	fi
 
 	# Install winpty TODO: check winpty version here
-	echo-green "Installing winpty v${DSH_REQUIREMENTS_WINPTY}..."
+	echo-green "Installing winpty v${DS_REQUIREMENTS_WINPTY}..."
 	(cd "$DS_DOWNLOADS_DIR" && \
 		curl -sSL "$URL_WINPTY" | tar -xzf - && \
 		mv winpty-*/bin/* "$DS_BIN_DIR/")
@@ -1737,7 +1738,7 @@ install_prerequisites_ubuntu ()
 {
 	is_tty || return 1 # only allow in interactive shell
 	if ! is_ubuntu; then
-		echo-red "dsh: prerequisites installation is currently supported only on Ubuntu 14.04+"
+		echo-red "ds: prerequisites installation is currently supported only on Ubuntu 14.04+"
 		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
 		_confirm "Are you sure you want to continue?"
 	fi
@@ -1780,7 +1781,7 @@ install_prerequisites_ubuntu ()
 
 	# Install docker-machine
 	if ! is_docker_machine_version; then
-		echo-green "Installing docker-machine v${DSH_REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Installing docker-machine v${DS_REQUIREMENTS_DOCKER_MACHINE}..."
 		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN_NIX" && \
 			chmod +x "$DOCKER_MACHINE_BIN_NIX"
 	fi
@@ -1828,13 +1829,13 @@ install_docksal_config ()
 # Install shell commands autocomplete script
 install_autocomplete ()
 {
-	local destination="$DSH_AUTOCOMPLETE_PATH"
+	local destination="$DS_AUTOCOMPLETE_PATH"
 	tee "$destination" >/dev/null << 'EOF'
-_dsh_completion()
+_ds_completion()
 {
 	local cur=${COMP_WORDS[COMP_CWORD]} #current word part
 	local prev=${COMP_WORDS[COMP_CWORD-1]} #previous word
-	local compwords=$(dsh bash_comp_words $prev) #get completions for previous word
+	local compwords=$(ds bash_comp_words $prev) #get completions for previous word
 	if [ ! $? -eq 0 ]; then
 		return 1;
 	else
@@ -1842,7 +1843,7 @@ _dsh_completion()
 		return 0
 	fi
 }
-complete -o bashdefault -o default -F _dsh_completion dsh
+complete -o bashdefault -o default -F _ds_completion ds
 EOF
 	if_failed "Failed to write file to $destination"
 	echo-green "Script saved to $destination"
@@ -1854,7 +1855,7 @@ EOF
 		echo -e ". $destination" >> "$HOME/$SOURCE_FILE"
 		if_failed "Failed to write file to $HOME/$SOURCE_FILE"
 		echo-green "Autocomplete appended to $HOME/$SOURCE_FILE"
-		echo-yellow "dsh: Please restart your bash session to apply"
+		echo-yellow "ds: Please restart your bash session to apply"
 	fi
 }
 
@@ -1884,30 +1885,30 @@ update_system_images ()
 # Update all containers images
 update_images ()
 {
-	check_dsh_environment
+	check_ds_environment
 	update_system_images
 	docker_compose pull # update project containers images
 	reset system
 	up
 }
 
-# Update dsh itself
-update_dsh ()
+# Update ds itself
+update_ds ()
 {
 	[[ "$1" != "" ]] && DS_BRANCH="$1"
 	testing_warn
 	echo "Downloading..."
-	local new_dsh
-	new_dsh=$(curl -kfsS "$URL_DSH")
+	local new_ds
+	new_ds=$(curl -kfsS "$URL_DSH")
 	if_failed "Download has failed."
 
 	# Check if update is a major version. Show warning is needed
-	local new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
-	local current_major_version=$(echo "$DSH_VERSION" | cut -d "." -f 1)
+	local new_version=$(echo "$new_ds" | grep "^DS_VERSION=" | cut -f 2 -d "=")
+	local current_major_version=$(echo "$DS_VERSION" | cut -d "." -f 1)
 	local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
 	if [[ "$current_major_version" != "$new_major_version" ]]; then
 		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
-		echo -e "Updating from ${yellow}$DSH_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwards compatible update."
+		echo -e "Updating from ${yellow}$DS_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwards compatible update."
 		echo "You might be not able to use you current Docksal environment if you proceed."
 		echo -e "Please read update documentation: ${yellow}$URL_DRUDE_REPO_UI#updates${NC}"
 		_confirm "Continue with the update?"
@@ -1917,12 +1918,12 @@ update_dsh ()
 	rm -r "$DS_LAST_CHECK" >/dev/null 2>&1
 
 	# saving to file
-	echo "$new_dsh" | sudo tee "$DSH_PATH" > /dev/null
-	if_failed "Could not write $DSH_PATH."
-	sudo chmod +x "$DSH_PATH"
+	echo "$new_ds" | sudo tee "$DS_PATH" > /dev/null
+	if_failed "Could not write $DS_PATH."
+	sudo chmod +x "$DS_PATH"
 
-	local new_version=$(head "$DSH_PATH" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
-	echo-green "dsh updated to ${new_version}"
+	local new_version=$(head "$DS_PATH" | grep "^DS_VERSION=" | cut -f 2 -d "=")
+	echo-green "ds updated to ${new_version}"
 	exit
 }
 
@@ -1930,7 +1931,7 @@ check_for_updates ()
 {
 	# Never trigger in scripts
 	if ! is_tty; then return; fi
-	local DSH_UPDATE_AVAILABLE=0
+	local UPDATE_AVAILABLE=0
 	local UPDATES_AVAILABLE=0
 
 	local timestamp; local last_check; local next_check
@@ -1945,30 +1946,30 @@ check_for_updates ()
 	fi
 
 	echo 'One second! Checking for updates...'
-	local new_dsh; local new_version
+	local new_ds; local new_version
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$DS_LAST_CHECK"
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_dsh=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH?r=$RANDOM")
-	new_version=$(echo "$new_dsh" | grep "^DSH_VERSION=" | cut -f 2 -d "=")
-	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${DSH_VERSION}) ]; then
-		DSH_UPDATE_AVAILABLE=1
+	new_ds=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH?r=$RANDOM")
+	new_version=$(echo "$new_ds" | grep "^DS_VERSION=" | cut -f 2 -d "=")
+	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${DS_VERSION}) ]; then
+		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
-		echo -e "${green}dsh${NC} [ $DSH_VERSION --> $new_version ] (run ${green}dsh update dsh${NC} to update)"
+		echo -e "${green}ds${NC} [ $DS_VERSION --> $new_version ] (run ${green}ds update ds${NC} to update)"
 		echo "Press Enter."
 		read -p ''
 	fi
 
-	if [[ ${DSH_UPDATE_AVAILABLE} -eq 0 ]]; then
+	if [[ ${UPDATE_AVAILABLE} -eq 0 ]]; then
 		is_docker_machine_version
 		if [[ $? -eq 1 ]]; then
 			UPDATES_AVAILABLE=1
-			echo-green "Update available for docker-machine to $DSH_REQUIREMENTS_DOCKER_MACHINE"
+			echo-green "Update available for docker-machine to $DS_REQUIREMENTS_DOCKER_MACHINE"
 		fi
 	fi
 
 	[[ ${UPDATES_AVAILABLE} == "1" ]] && \
-		echo -e "Run ${yellow}dsh update prerequisites${NC} to install updates to docker tools" && \
+		echo -e "Run ${yellow}ds update prerequisites${NC} to install updates to docker tools" && \
 		echo "(Press Enter to continue)" && \
 		read -p ''
 }
@@ -1997,7 +1998,7 @@ _run ()
 {
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
-	check_dsh_environment
+	check_ds_environment
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
@@ -2032,7 +2033,7 @@ _run ()
 	# Escape spaces that are "spaces" and not parameter delimeters (i.e. param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
-	# Do not escape spaces if there is only one parameter (e.g. dsh run "ls -la | grep txt")
+	# Do not escape spaces if there is only one parameter (e.g. ds run "ls -la | grep txt")
 	else
 		cmd="$cmd $@"
 	fi
@@ -2056,7 +2057,7 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
-	check_dsh_environment
+	check_ds_environment
 	check_drush_path
 	_run $(get_mysql_connect)" -A" # -A option to speed up mysql load
 }
@@ -2065,7 +2066,7 @@ mysql ()
 # @param $1 filename of backup file. Should be inside project root
 mysql_import ()
 {
-	check_dsh_environment
+	check_ds_environment
 	check_drush_path
 
 	local confirm=1
@@ -2117,11 +2118,11 @@ mysql_import ()
 
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then
-		echo-green "dsh: mysql-import finished";
-		if is_tty; then _notify "Dsh" "Mysql import finished"; fi
+		echo-green "ds: mysql-import finished";
+		if is_tty; then _notify "Docksal" "Mysql import finished"; fi
 	else
-		echo-red "dsh: mysql-import failed";
-		if is_tty; then _notify "Dsh" "Mysql import failed!"; fi
+		echo-red "ds: mysql-import failed";
+		if is_tty; then _notify "Docksal" "Mysql import failed!"; fi
 	fi
 }
 
@@ -2129,7 +2130,7 @@ mysql_import ()
 # @param $* arguments and params passed to Behat
 behat ()
 {
-	check_dsh_environment
+	check_ds_environment
 	cd $(get_yml_path)
 
 	local params=''
@@ -2175,7 +2176,7 @@ exec_url ()
 # @param $1 $2... container names
 remove ()
 {
-	check_dsh_environment
+	check_ds_environment
 	if [[ $1 == "" ]]; then
 		echo -e  "${red}WARNING:${NC} ${yellow}You have chosen to delete or re-create all project containers.${NC}"
 		_confirm "Continue?";
@@ -2292,7 +2293,7 @@ sysinfo ()
 		[ -f /etc/os-release ] && cat /etc/os-release
 		[ -f /etc/system-release ] && cat /etc/system-release
 	fi
-	# dsh version
+	# ds version
 	version
 
 	(which 'docker-machine' 2>/dev/null >/dev/null) && \
@@ -2331,7 +2332,7 @@ sysinfo ()
 # param $2 alias name
 alias_create ()
 {
-	[[ $# != 2 ]] && echo 'Usage: dsh alias <path> <alias_name>' && exit 1
+	[[ $# != 2 ]] && echo 'Usage: ds alias <path> <alias_name>' && exit 1
 	mkdir -p "$DS_CONFIG_ALIAS" || exit 1
 	[[ -h "$2" ]] && echo "Alias $2 already exists" && exit 1
 	[[ -e "$2" ]] && echo "Filename is not available" && exit 1
@@ -2369,7 +2370,7 @@ if [[ "$1" == "@"* ]]; then
 fi
 
 # Check for updates if not updating already
-[[ "$*" != "update dsh" ]] && \
+[[ "$*" != "update ds" ]] && \
 	[[ "$*" != "install prerequisites" ]] && \
 	[[ "$*" != "update prerequisites" ]] && \
 	[[ "$1" != "bash_comp_words" ]] && \
@@ -2419,16 +2420,16 @@ case "$1" in
 			install_prerequisites
 		elif [[ "$1" == "images" ]]; then
 			update_images
-		elif [[ "$1" == "dsh" ]]; then
+		elif [[ "$1" == "ds" ]]; then
 			shift
-			update_dsh "$@"
+			update_ds "$@"
 		else
 			show_help_update
 		fi
 		;;
 	self-update)
 		shift
-		update_dsh "$@"
+		update_ds "$@"
 		;;
 	bash)
 		shift
@@ -2523,24 +2524,24 @@ case "$1" in
 		legacy_init_path="$(get_docksal_path)/.drude/scripts/drude-init.sh"
 		if [[ "$1" == "init" ]] && [[ -f "$legacy_init_path" ]]; then
 			# Legacy processing for init script
-			dsh_command_script="$legacy_init_path"
+			ds_command_script="$legacy_init_path"
 		else
 			# Normal search for custom command
 			# First search project commands folder
-			dsh_command_script="$(get_docksal_path)/$DS_COMMANDS_PATH/$1"
+			ds_command_script="$(get_docksal_path)/$DS_COMMANDS_PATH/$1"
 			# If not found search global drude commands folder
-			[ ! -f "$dsh_command_script" ] && dsh_command_script="$HOME/$DS_COMMANDS_PATH/$1"
+			[ ! -f "$ds_command_script" ] && ds_command_script="$HOME/$DS_COMMANDS_PATH/$1"
 			# If not found there as well then it is a wrong command
-			[ ! -f "$dsh_command_script" ] && \
-				echo-yellow "dsh: unknown command '$*'. See 'dsh help' for list of available commands" && \
+			[ ! -f "$ds_command_script" ] && \
+				echo-yellow "ds: unknown command '$*'. See 'ds help' for list of available commands" && \
 				exit 1
 		fi
 
-		if [[ ! -x "$dsh_command_script" ]]; then
-			echo -e "${yellow}$dsh_command_script${NC} is not set to be executable."
+		if [[ ! -x "$ds_command_script" ]]; then
+			echo -e "${yellow}$ds_command_script${NC} is not set to be executable."
 			_confirm "Fix automatically?"
-			chmod +x "$dsh_command_script"
-			if_failed "Could not make $dsh_command_script executable"
+			chmod +x "$ds_command_script"
+			if_failed "Could not make $ds_command_script executable"
 		fi
 		shift
 		export YML_PATH="$(get_yml_path)"
@@ -2552,5 +2553,5 @@ case "$1" in
 			export DOCKER_RUNNING="false"
 		fi
 
-		exec "$dsh_command_script" "$@"
+		exec "$ds_command_script" "$@"
 esac
