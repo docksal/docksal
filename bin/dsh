@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DSH_VERSION=1.99.72
+DSH_VERSION=1.99.73
 
 # Console colors
 red='\033[0;91m'
@@ -50,6 +50,7 @@ DRUDE_COMMANDS_PATH=".drude/commands"
 DRUDE_SUBNET="192.168.10.1/24"
 DRUDE_DEFAULT_DNS="8.8.8.8"
 DRUDE_VBOX_DNS="10.0.2.3" # TODO: check this
+DRUDE_DNS_ZONE="drude"
 
 DEFAULT_MACHINE_NAME='drude'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
@@ -1550,12 +1551,12 @@ install_dns_service ()
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
-		-e DRUDE_IP="$ip" \
+		-e DNS_IP="$ip" -e DNS_ZONE="$DRUDE_DNS_ZONE" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}:${DRUDE_ITAG}" >/dev/null
 }
 
-# Configuring sytem-wide *.drude resolver (Windows not supported)
+# Configuring sytem-wide *.$DRUDE_DNS_ZONE resolver (Windows not supported)
 # TODO: change this function to work properly with DO provider
 configure_resolver ()
 {
@@ -1569,15 +1570,15 @@ configure_resolver ()
 			DRUDE_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
 		fi
 		install_dns_service "$DRUDE_IP"
-		if (grep "^nameserver $DRUDE_IP$" /etc/resolver/drude 2>/dev/null 1>/dev/null); then
+		if (grep "^nameserver $DRUDE_IP" /etc/resolver/$DRUDE_DNS_ZONE 2>/dev/null 1>/dev/null); then
 			return
 		fi
 		sudo mkdir -p /etc/resolver
 		# deleting old resolver is the only way to get mac to update config
-		sudo rm -r /etc/resolver/drude >/dev/null 2>/dev/null
+		sudo rm -r /etc/resolver/$DRUDE_DNS_ZONE >/dev/null 2>/dev/null
 		# NO \n at the begginning of line here!
-		echo -e "# .drude domain resolution\nnameserver $DRUDE_IP" | \
-			sudo tee 1>/dev/null /etc/resolver/drude
+		echo -e "# .$DRUDE_DNS_ZONE domain resolution\nnameserver $DRUDE_IP" | \
+			sudo tee 1>/dev/null /etc/resolver/$DRUDE_DNS_ZONE
 		sudo dscacheutil -flushcache
 		# to check: scutil --dns
 	elif is_linux; then
