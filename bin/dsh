@@ -62,9 +62,9 @@ DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
 #---------------------------- URL references --------------------------------
 OS_NAME=$(uname -s)
 HARDWARE=$(uname -m)
-URL_DRUDE_REPO="https://raw.githubusercontent.com/blinkreaction/drude"
-URL_DRUDE_REPO_UI="https://github.com/blinkreaction/drude"
-URL_DSH="${URL_DRUDE_REPO}/${DS_BRANCH}/bin/dsh"
+URL_DS_REPO="https://raw.githubusercontent.com/docksal/docksal"
+URL_DS_REPO_UI="https://github.com/docksal/docksal"
+URL_DSH="${URL_DS_REPO}/${DS_BRANCH}/bin/dsh"
 
 URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${DS_REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
@@ -75,10 +75,9 @@ URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${DS
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${DS_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$OS_NAME-$HARDWARE"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${DS_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
 
-URL_DOCKER_MACHINE_SMB="https://raw.githubusercontent.com/drude/docker-machine-smb/master/docker-machine-smb"
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DS_REQUIREMENTS_WINPTY}/winpty-${DS_REQUIREMENTS_WINPTY}-cygwin-${DS_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
-URL_DRUDE_CONFIG="${URL_DRUDE_REPO}/${DS_BRANCH}/docker-compose.yml"
+URL_DS_CONFIG="${URL_DS_REPO}/${DS_BRANCH}/docker-compose.yml"
 
 IMAGE_SSH_AGENT="blinkreaction/ssh-agent"
 IMAGE_VHOST_PROXY="blinkreaction/nginx-proxy"
@@ -1818,7 +1817,7 @@ install_docksal_config ()
 	testing_warn
 	[ -f "docker-compose.yml" ] && _confirm "Overwrite existing docker-compose.yml?"
 	local docker_compose_yml
-	docker_compose_yml=$(curl -kfsS "$URL_DRUDE_CONFIG")
+	docker_compose_yml=$(curl -kfsS "$URL_DS_CONFIG")
 	if_failed "Could not get latest docker-compose.yml version."
 
 	echo "$docker_compose_yml" | tee "docker-compose.yml" >/dev/null
@@ -1910,7 +1909,7 @@ update_ds ()
 		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
 		echo -e "Updating from ${yellow}$DS_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwards compatible update."
 		echo "You might be not able to use you current Docksal environment if you proceed."
-		echo -e "Please read update documentation: ${yellow}$URL_DRUDE_REPO_UI#updates${NC}"
+		echo -e "Please read update documentation: ${yellow}$URL_DS_REPO_UI#updates${NC}"
 		_confirm "Continue with the update?"
 	fi
 
