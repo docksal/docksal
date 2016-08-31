@@ -21,8 +21,8 @@ DS_REQUIREMENTS_WINPTY='0.3.1'
 DS_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
 
 # Self Paths
-DS_PATH="/usr/local/bin/dsh"
-DS_AUTOCOMPLETE_PATH="/usr/local/bin/dsh-bash-autocomplete"
+DS_PATH="/usr/local/bin/ds"
+DS_AUTOCOMPLETE_PATH="/usr/local/bin/ds-bash-autocomplete"
 # Configuration paths
 OLD_CONFIG_DIR="$HOME/.docksal"
 DS_CONFIG_DIR="$HOME/.docksal"
@@ -63,7 +63,7 @@ OS_NAME=$(uname -s)
 HARDWARE=$(uname -m)
 URL_DS_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_DS_REPO_UI="https://github.com/docksal/docksal"
-URL_DSH="${URL_DS_REPO}/${DS_BRANCH}/bin/dsh"
+URL_DS="${URL_DS_REPO}/${DS_BRANCH}/bin/ds"
 
 URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${DS_REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
@@ -1146,8 +1146,8 @@ docker_machine_mount_nfs ()
 	machine_ip=$(docker-machine ip "$machine_name")
 
 	# Remove our own old exports
-	local exports_open="# <dsh-nfs $machine_name"
-	local exports_close="# dsh-nfs>"
+	local exports_open="# <ds-nfs $machine_name"
+	local exports_close="# ds-nfs>"
 	local exports=$(cat /etc/exports | \
 		tr "\n" "\r" | \
 		sed "s/${exports_open}.*${exports_close}//" | \
@@ -1897,7 +1897,7 @@ update_ds ()
 	testing_warn
 	echo "Downloading..."
 	local new_ds
-	new_ds=$(curl -kfsS "$URL_DSH")
+	new_ds=$(curl -kfsS "$URL_DS")
 	if_failed "Download has failed."
 
 	# Check if update is a major version. Show warning is needed
@@ -1948,7 +1948,7 @@ check_for_updates ()
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$DS_LAST_CHECK"
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_ds=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH?r=$RANDOM")
+	new_ds=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DS?r=$RANDOM")
 	new_version=$(echo "$new_ds" | grep "^DS_VERSION=" | cut -f 2 -d "=")
 	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${DS_VERSION}) ]; then
 		UPDATE_AVAILABLE=1
