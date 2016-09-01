@@ -1235,14 +1235,14 @@ smb_share_add()
 }
 
 # Method to mount the SMB share in Docker machine.
-# @param path, password
+# @param share_path, mount_point, password
 smb_share_mount()
 {
 	DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
-	command_mount="sudo mkdir -p /$1 && sudo mount -t cifs -o noperm,sec=ntlm,username='${USERNAME}',pass='$2',dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 /$1"
+	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o noperm,sec=ntlm,username='${USERNAME}',pass='$3',dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 $2"
 	# sudo mount -t cifs -o noperm,sec=ntlm,username=docker,pass="P@ssW0rd1!",dir_mode=0777,file_mode=0777 //192.168.99.1/projects2 /c/projects2
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 }
@@ -1260,12 +1260,14 @@ docker_machine_mount_smb ()
 		if [ "$DRIVE" != "Name" ]; then
 			local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
 			smb_share_add "$MOUNT_POINT" "$DRIVE" && \
-				smb_share_mount "$MOUNT_POINT" "$PASSWORD" || \
+				smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
 				(echo-red "Error creating share" && exit 1)
 		fi
 	done
 
-	return
+	# Mount user's home directory
+	SHARE_PATH=$(echo $CYGWIN_HOME$HOME | sed 's/\://')
+	smb_share_mount "$SHARE_PATH" "/.home" "$PASSWORD"
 }
 
 docker_machine_mounts ()
@@ -1447,43 +1449,20 @@ ssh_add () {
 
 	local ssh_path="$HOME/.ssh"
 	local key_path=""
-	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	# Home folder mount in boot2docker
 	if ! is_linux; then
 		ssh_path="/.home/.ssh"
 	fi
 
-	case "$1" in
-		"")
-			if (docker exec ssh-agent ssh-add -l >/dev/null); then
-				return; # Some key is present
-			fi
-			;;
-		-D)
-			${winpty_cmd} docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add -D
-			exit
-			;;
-		-l)
-			# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
-			${winpty_cmd} docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add -l 2>&1 | sed 's/\/root\/.ssh\///g'
-			exit
-			;;
-		*)
-			key_path="/root/.ssh/$1"
-			# We check $HOME here regardless Linux or Mac/Windows (boot2docker)
-			# $HOME is mounted as /.home in boot2docker
-			if [ ! -f "$HOME/.ssh/$1" ]; then
-				echo-red "SSH key file not found: $HOME/.ssh/$1"
-				exit
-			fi
-			;;
-	esac
+	# When no arguments provided, check if ssh-agent already has at least one identity. If so, stop here.
+	docker exec ssh-agent ssh-add -l >/dev/null
+	if [[ $1 == "" && $? == 0 ]]; then return; fi
 
-	echo "Press ENTER or CTRL+C to skip entering passphrase."
-	# $ssh_path is mounted as /root/.ssh in the ssh-agent containers.
+	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
+	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-	# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
-	${winpty_cmd} docker run --rm --volumes-from=ssh-agent -it -v "$ssh_path:/root/.ssh" "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add "$key_path" 2>&1 | sed 's/\/root\/.ssh\///g'
+	$winpty_cmd docker run --rm -it --volumes-from=ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}:${DRUDE_ITAG}" ssh-add "$@"
+	return $?
 }
 
 #----- Installations and updates -----
