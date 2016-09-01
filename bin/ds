@@ -1268,8 +1268,8 @@ docker_machine_mount_smb ()
 	done
 
 	# Mount user's home directory
-	SHARE_PATH=$(cygpath -m ~ | sed 's/\://')
-	smb_share_mount "$SHARE_PATH" "/.home" "$PASSWORD"
+	local HOME_PATH=$(cygpath -m ~ | sed 's/\://')
+	smb_share_mount "$HOME_PATH" "/.home" "$PASSWORD"
 }
 
 docker_machine_mounts ()
