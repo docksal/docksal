@@ -114,7 +114,7 @@ echo-green () { echo -e "${green}$1${NC}"; }
 echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
 echo-error () {
-	echo -e "${red_bg} DS ERROR: ${NC} ${red}$1${NC}";
+	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}";
 	local unused="$2" # avoid IDE warning
 	shift
 	# echo other parameters indented s error description or remedy
@@ -2514,7 +2514,7 @@ case "$1" in
 		fi
 		shift
 		export YML_PATH="$(get_yml_path)"
-		export DS_PATH="$(get_docksal_path)"
+		export DOCKSAL_PATH="$(get_docksal_path)"
 		export PROJECT_ROOT="$(get_docksal_path)"
 		if is_docker_running; then
 			export DOCKER_RUNNING="true"
