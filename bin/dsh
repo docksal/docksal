@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DS_VERSION=1.99.72
-DSH_VERSION=1.99.72 # TODO: for temporary update compatibility. remove before release
+DS_VERSION=1.99.74
+DSH_VERSION=1.99.74 # TODO: for temporary update compatibility. remove before release
 
 # Console colors
 red='\033[0;91m'
@@ -14,12 +14,12 @@ NC='\033[0m'
 DS_BRANCH="${DS_BRANCH:-master}"
 
 #---------------------------- Global Constants --------------------------------
-DS_REQUIREMENTS_DOCKER='1.12.0'
-DS_REQUIREMENTS_DOCKER_COMPOSE='1.7.1'
-DS_REQUIREMENTS_DOCKER_MACHINE='0.8.0'
-DS_REQUIREMENTS_VBOX='5.0.4'
-DS_REQUIREMENTS_WINPTY='0.3.1'
-DS_REQUIREMENTS_WINPTY_CYGWIN='2.5.1'
+DS_REQUIREMENTS_DOCKER='1.12.1'
+DS_REQUIREMENTS_DOCKER_COMPOSE='1.8.0'
+DS_REQUIREMENTS_DOCKER_MACHINE='0.8.1'
+DS_REQUIREMENTS_VBOX='5.1.2'
+DS_REQUIREMENTS_WINPTY='0.4.0'
+DS_REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
 
 # Self Paths
 DS_PATH="/usr/local/bin/dsh"
@@ -52,6 +52,7 @@ DS_COMMANDS_PATH=".drude/commands"
 DS_SUBNET="192.168.10.1/24"
 DS_DEFAULT_DNS="8.8.8.8"
 DS_VBOX_DNS="10.0.2.3" # TODO: check this
+DRUDE_DNS_ZONE="drude"
 
 DEFAULT_MACHINE_NAME='drude'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
@@ -1235,14 +1236,14 @@ smb_share_add()
 }
 
 # Method to mount the SMB share in Docker machine.
-# @param path, password
+# @param share_path, mount_point, password
 smb_share_mount()
 {
 	DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
-	command_mount="sudo mkdir -p /$1 && sudo mount -t cifs -o noperm,sec=ntlm,username='${USERNAME}',pass='$2',dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 /$1"
+	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o noperm,sec=ntlm,username='${USERNAME}',pass='$3',dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 $2"
 	# sudo mount -t cifs -o noperm,sec=ntlm,username=docker,pass="P@ssW0rd1!",dir_mode=0777,file_mode=0777 //192.168.99.1/projects2 /c/projects2
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 }
@@ -1260,12 +1261,14 @@ docker_machine_mount_smb ()
 		if [ "$DRIVE" != "Name" ]; then
 			local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
 			smb_share_add "$MOUNT_POINT" "$DRIVE" && \
-				smb_share_mount "$MOUNT_POINT" "$PASSWORD" || \
+				smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
 				(echo-red "Error creating share" && exit 1)
 		fi
 	done
 
-	return
+	# Mount user's home directory
+	SHARE_PATH=$(echo $CYGWIN_HOME$HOME | sed 's/\://')
+	smb_share_mount "$SHARE_PATH" "/.home" "$PASSWORD"
 }
 
 docker_machine_mounts ()
@@ -1441,7 +1444,25 @@ status ()
 # @param $1 -D, -l or path to custom key
 ssh_add () {
 	# Check if ssh-agent container is running
-	${winpty_cmd} docker run --rm --volumes-from=ssh-agent -it -v "$ssh_path:/root/.ssh" "${IMAGE_SSH_AGENT}:${DS_ITAG}" ssh-add "$key_path" 2>&1 | sed 's/\/root\/.ssh\///g'
+	local running=$(docker inspect --format="{{ .State.Running }}" ssh-agent 2>/dev/null)
+	[[ "$running" != "true" ]] && return
+
+	local ssh_path="$HOME/.ssh"
+	local key_path=""
+	# Home folder mount in boot2docker
+	if ! is_linux; then
+		ssh_path="/.home/.ssh"
+	fi
+
+	# When no arguments provided, check if ssh-agent already has at least one identity. If so, stop here.
+	docker exec ssh-agent ssh-add -l >/dev/null
+	if [[ $1 == "" && $? == 0 ]]; then return; fi
+
+	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
+	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
+	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
+	${winpty_cmd} docker run --rm -it --volumes-from=ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}:${DS_ITAG}" ssh-add "$@"
+	return $?
 }
 
 #----- Installations and updates -----
@@ -1509,12 +1530,12 @@ install_dns_service ()
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
-		-e DRUDE_IP="$ip" \
+		-e DNS_IP="$ip" -e DNS_ZONE="$DRUDE_DNS_ZONE" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}:${DS_ITAG}" >/dev/null
 }
 
-# Configuring sytem-wide *.drude resolver (Windows not supported)
+# Configuring sytem-wide *.$DRUDE_DNS_ZONE resolver (Windows not supported)
 # TODO: change this function to work properly with DO provider
 configure_resolver ()
 {
@@ -1528,15 +1549,15 @@ configure_resolver ()
 			TARGET_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
 		fi
 		install_dns_service "$TARGET_IP"
-		if (grep "^nameserver $TARGET_IP$" /etc/resolver/drude 2>/dev/null 1>/dev/null); then
+		if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DRUDE_DNS_ZONE 2>/dev/null 1>/dev/null); then
 			return
 		fi
 		sudo mkdir -p /etc/resolver
 		# deleting old resolver is the only way to get mac to update config
-		sudo rm -r /etc/resolver/drude >/dev/null 2>/dev/null
+		sudo rm -r /etc/resolver/$DRUDE_DNS_ZONE >/dev/null 2>/dev/null
 		# NO \n at the begginning of line here!
-		echo -e "# .drude domain resolution\nnameserver $TARGET_IP" | \
-			sudo tee 1>/dev/null /etc/resolver/drude
+		echo -e "# .$DRUDE_DNS_ZONE domain resolution\nnameserver $TARGET_IP" | \
+			sudo tee 1>/dev/null /etc/resolver/$DRUDE_DNS_ZONE
 		sudo dscacheutil -flushcache
 		# to check: scutil --dns
 	elif is_linux; then
