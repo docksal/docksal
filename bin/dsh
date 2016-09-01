@@ -1441,47 +1441,6 @@ status ()
 # @param $1 -D, -l or path to custom key
 ssh_add () {
 	# Check if ssh-agent container is running
-	local running=$(docker inspect --format="{{ .State.Running }}" ssh-agent 2>/dev/null)
-	[[ "$running" != "true" ]] && return
-
-	local ssh_path="$HOME/.ssh"
-	local key_path=""
-	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
-	# Home folder mount in boot2docker
-	if ! is_linux; then
-		ssh_path="/.home/.ssh"
-	fi
-
-	case "$1" in
-		"")
-			if (docker exec ssh-agent ssh-add -l >/dev/null); then
-				return; # Some key is present
-			fi
-			;;
-		-D)
-			${winpty_cmd} docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DS_ITAG}" ssh-add -D
-			exit
-			;;
-		-l)
-			# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
-			${winpty_cmd} docker run --rm --volumes-from=ssh-agent -it "${IMAGE_SSH_AGENT}:${DS_ITAG}" ssh-add -l 2>&1 | sed 's/\/root\/.ssh\///g'
-			exit
-			;;
-		*)
-			key_path="/root/.ssh/$1"
-			# We check $HOME here regardless Linux or Mac/Windows (boot2docker)
-			# $HOME is mounted as /.home in boot2docker
-			if [ ! -f "$HOME/.ssh/$1" ]; then
-				echo-red "SSH key file not found: $HOME/.ssh/$1"
-				exit
-			fi
-			;;
-	esac
-
-	echo "Press ENTER or CTRL+C to skip entering passphrase."
-	# $ssh_path is mounted as /root/.ssh in the ssh-agent containers.
-	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-	# We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this path may confuse people.
 	${winpty_cmd} docker run --rm --volumes-from=ssh-agent -it -v "$ssh_path:/root/.ssh" "${IMAGE_SSH_AGENT}:${DS_ITAG}" ssh-add "$key_path" 2>&1 | sed 's/\/root\/.ssh\///g'
 }
 

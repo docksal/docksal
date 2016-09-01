@@ -26,25 +26,20 @@ Sending/capturing email support can be added via [MailHog](https://github.com/ma
 
     Apply new configuration with `dsh up`
 
-2. Install and configure sSMPT in `cli`
-
+2. Add to `.drude/etc/php5/php.ini` in the project repo
+    
     Replace `<project_name>` with your project name.
-
-    ```
-    dsh exec "sudo apt-get update && sudo apt-get install ssmtp -y"
-    dsh exec "sudo sed -i -e '/mailhub=/c mailhub=mail.<project_name>.docker:1025' -e '/#FromLineOverride=/c FromLineOverride=YES' /etc/ssmtp/ssmtp.conf"
-    ```
-
-3. Configure `sendmail_path` in `php.ini`
-
-    Add to `.drude/etc/php5/php.ini` in the project repo
     
     ```
     ; Mail settings
-    sendmail_path = "/usr/sbin/ssmtp -t"
+    sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail.<project_name>.docker:1025'
+    ```
+
+    Note: if using `version 2` docker-compose file format, then you may use this instead
+    
+    ```
+    ; Mail settings
+    sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail:1025'
     ```
 
 MailHog web UI will be available at `http://webmail.<project_name>.drude`
-
-    These instructions are temporary. Tread them as a POC for using MailHog with Drude.
-    Steps 2 has to be performed any time the cli container gets reconfigured, updated or reset.
