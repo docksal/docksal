@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DS_VERSION=0.1.0
+DS_VERSION=0.1.1
 
 # Console colors
 red='\033[0;91m'
