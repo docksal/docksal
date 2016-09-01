@@ -39,7 +39,6 @@ DOCKER_COMPOSE_BIN="$DS_BIN_DIR/docker-compose"
 DOCKER_COMPOSE_BIN_NIX="/usr/local/bin/docker-compose"
 DOCKER_MACHINE_BIN="$DS_BIN_DIR/docker-machine"
 DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
-DOCKER_MACHINE_SMB_BIN="$DS_BIN_DIR/docker-machine-smb"
 vboxmanage="vboxmanage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
 	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
@@ -1092,7 +1091,6 @@ docker_machine_change_ip ()
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
-	is_windows && check_binary_found 'docker-machine-smb'
 
 	if is_docker_machine_exist; then
 		docker-machine start "$DOCKER_MACHINE_NAME" && DOCKER_MACHINE_STATUS='Running' && \
@@ -1675,13 +1673,6 @@ install_prerequisites_windows ()
 		echo-green "Installing docker-machine v${DS_REQUIREMENTS_DOCKER_MACHINE}..."
 		curl -sSL "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
 			chmod +x "$DOCKER_MACHINE_BIN.exe"
-	fi
-
-	# Install docker-machine-smb
-	if [[ ! -x "$DOCKER_MACHINE_SMB_BIN" ]]; then
-		echo-green "Installing docker-machine-smb..."
-		curl -sSL "$URL_DOCKER_MACHINE_SMB" -o "$DOCKER_MACHINE_SMB_BIN" > /dev/null && \
-			chmod +x "$DOCKER_MACHINE_SMB_BIN"
 	fi
 
 	# Install winpty TODO: check winpty version here
