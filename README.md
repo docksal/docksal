@@ -1,6 +1,6 @@
-# Drude (**Dru**pal **D**ocker **E**nvironment)
+# Docksal
 
-Docker and Docker Compose based environment for Drupal.
+Docker and Docker Compose based environment.
 
 **For a fully working example of Drude setup take a look at:**
 - [Drupal 7 sample project](https://github.com/blinkreaction/drude-d7-testing)
