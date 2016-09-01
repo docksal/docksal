@@ -214,10 +214,13 @@ get_mysql_connect ()
 # Use this function for every docker-compose invocation.
 docker_compose ()
 {
+	# Running docker exec interactively on Windows requires workarounds
+	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	is_linux && DOCKER_COMPOSE_BIN="$DOCKER_COMPOSE_BIN_NIX"
 	# docker-compose cannot find docker-compose.yml in the path if there are symlinks on the way
 	# get_yml_path can properly find the file. Incapsulate the cd into subshell
 	(cd "$(get_yml_path)" && "$DOCKER_COMPOSE_BIN" "$@")
+	#(cd "$(get_yml_path)" && "$winpty_cmd" "$DOCKER_COMPOSE_BIN" "$@")
 }
 
 # Get container id by service name
@@ -1846,9 +1849,13 @@ install ()
 update_system_images ()
 {
 	check_docker_running
-	docker pull "${IMAGE_VHOST_PROXY}:${DS_ITAG}"
-	docker pull "${IMAGE_DNS}:${DS_ITAG}"
-	docker pull "${IMAGE_SSH_AGENT}:${DS_ITAG}"
+	
+	# Running docker exec interactively on Windows requires workarounds
+	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
+
+	${winpty_cmd} docker pull "${IMAGE_VHOST_PROXY}:${DS_ITAG}"
+	${winpty_cmd} docker pull "${IMAGE_DNS}:${DS_ITAG}"
+	${winpty_cmd} docker pull "${IMAGE_SSH_AGENT}:${DS_ITAG}"
 }
 
 # Update all containers images
