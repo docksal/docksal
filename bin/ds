@@ -1253,6 +1253,7 @@ docker_machine_mount_smb ()
 
 	local DRIVES=$(wmic logicaldisk get name | sed 's/\r//g')
 	read -s -p "Enter Windows account password: " PASSWORD
+	echo  # Add a new line after user input.
 
 	for DRIVE in ${DRIVES}; do
 		if [ "$DRIVE" != "Name" ]; then
