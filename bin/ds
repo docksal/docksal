@@ -1227,9 +1227,9 @@ docker_machine_mount_nfs ()
 smb_share_add()
 {
 	# Add SMB share if it does not exist.
-	if [[ "$(net share)" != *"${1}"*"${2}\\"* ]];
+	if [[ "$(net share)" != *"${1}"*"Docksal ${2} drive"* ]];
 	then
-		command_share="net share ${1}=${2} /grant:${USERNAME},FULL /REMARK:\"Docksal ${1} ${2}\""
+		command_share="net share ${1}=${2} /grant:${USERNAME},FULL /REMARK:\"Docksal ${2} drive\""
 		echo-green "Adding docker SMB share..."
 		winsudo "$command_share"
 	fi
@@ -1241,7 +1241,7 @@ smb_share_mount()
 {
 	DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
-	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
+	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
 	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o noperm,sec=ntlm,username='${USERNAME}',pass='$3',dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 $2"
 	# sudo mount -t cifs -o noperm,sec=ntlm,username=docker,pass="P@ssW0rd1!",dir_mode=0777,file_mode=0777 //192.168.99.1/projects2 /c/projects2
