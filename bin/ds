@@ -21,11 +21,11 @@ DS_REQUIREMENTS_WINPTY='0.4.0'
 DS_REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
 
 # Self Paths
-DS_PATH="/usr/local/bin/dsh"
-DS_AUTOCOMPLETE_PATH="/usr/local/bin/dsh-bash-autocomplete"
+DS_PATH="/usr/local/bin/ds"
+DS_AUTOCOMPLETE_PATH="/usr/local/bin/ds-bash-autocomplete"
 # Configuration paths
-OLD_CONFIG_DIR="$HOME/.drude"
-DS_CONFIG_DIR="$HOME/.drude"
+OLD_CONFIG_DIR="$HOME/.docksal"
+DS_CONFIG_DIR="$HOME/.docksal"
 DS_CONFIG_ALIAS="$DS_CONFIG_DIR/alias"
 DS_LAST_CHECK="$DS_CONFIG_DIR/last_check"
 DS_MACHINES="$DS_CONFIG_DIR/machines"
@@ -45,15 +45,15 @@ vboxmanage="vboxmanage"
 	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 
 # Where custom commands live (relative path)
-DS_COMMANDS_PATH=".drude/commands"
+DS_COMMANDS_PATH=".docksal/commands"
 
 # Network settings
 DS_SUBNET="192.168.10.1/24"
 DS_DEFAULT_DNS="8.8.8.8"
 DS_VBOX_DNS="10.0.2.3" # TODO: check this
-DS_DNS_ZONE="drude"
+DS_DNS_ZONE="docksal"
 
-DEFAULT_MACHINE_NAME='drude'
+DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
 DEFAULT_MACHINE_VBOX_RAM='1024' #mb
 DEFAULT_MACHINE_VBOX_HDD='20000' #mb
@@ -64,7 +64,7 @@ OS_NAME=$(uname -s)
 HARDWARE=$(uname -m)
 URL_DS_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_DS_REPO_UI="https://github.com/docksal/docksal"
-URL_DSH="${URL_DS_REPO}/${DS_BRANCH}/bin/dsh"
+URL_DS="${URL_DS_REPO}/${DS_BRANCH}/bin/ds"
 
 URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${DS_REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
@@ -167,11 +167,11 @@ get_yml_path ()
 	echo "$DS_YML_PATH"
 }
 
-# Get path to .drude folder using upfind
+# Get path to .docksal folder using upfind
 get_docksal_path ()
 {
 	if [ -z "$DS_PATH" ]; then
-		DS_PATH=$(upfind ".drude")
+		DS_PATH=$(upfind ".docksal")
 	fi
 	echo "$DS_PATH"
 }
@@ -755,7 +755,7 @@ show_help_list_of_custom_commands ()
 	local _path
 	if [[ "$1" == 'project' ]]; then
 		_path="$(get_docksal_path)/$DS_COMMANDS_PATH"
-		# avoid taking global .drude folder for project one
+		# avoid taking global .docksal folder for project one
 		if [[ "$_path" == "$HOME/$DS_COMMANDS_PATH" ]]; then return; fi
 	else
 		_path="$HOME/$DS_COMMANDS_PATH"
@@ -819,7 +819,7 @@ show_help_reset ()
 	echo -e "Docksal has 3 system services."
 	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use."
 	echo "	ds reset dns		Recreate Docksal DNS service"
-	echo -e "	ds reset proxy		Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.drude${NC} domain names into container IPs)"
+	echo -e "	ds reset proxy		Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
 	echo "	ds reset ssh-agent	Recreate Docksal ssh-agent service"
 	echo "	ds reset system	Recreate all Docksal system services"
 	echo
@@ -1147,8 +1147,8 @@ docker_machine_mount_nfs ()
 	machine_ip=$(docker-machine ip "$machine_name")
 
 	# Remove our own old exports
-	local exports_open="# <dsh-nfs $machine_name"
-	local exports_close="# dsh-nfs>"
+	local exports_open="# <ds-nfs $machine_name"
+	local exports_close="# ds-nfs>"
 	local exports=$(cat /etc/exports | \
 		tr "\n" "\r" | \
 		sed "s/${exports_open}.*${exports_close}//" | \
@@ -1534,7 +1534,7 @@ install_dns_service ()
 		"${IMAGE_DNS}:${DS_ITAG}" >/dev/null
 }
 
-# Configuring sytem-wide *.$DRUDE_DNS_ZONE resolver (Windows not supported)
+# Configuring sytem-wide *.$DS_DNS_ZONE resolver (Windows not supported)
 # TODO: change this function to work properly with DO provider
 configure_resolver ()
 {
@@ -1767,8 +1767,8 @@ install_prerequisites_ubuntu ()
 	if ! grep -q "$DS_SUBNET" /etc/network/interfaces; then
 		echo-green "Adding a subnet for Docksal..."
 		cat > /tmp/docksal.ip.addr <<EOF
-	up   ip addr add ${DS_SUBNET} dev lo label lo:drude
-	down ip addr del ${DS_SUBNET} dev lo label lo:drude
+	up   ip addr add ${DS_SUBNET} dev lo label lo:docksal
+	down ip addr del ${DS_SUBNET} dev lo label lo:docksal
 	dns-nameservers 192.168.10.10
 EOF
 		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
@@ -1876,7 +1876,7 @@ update_ds ()
 	testing_warn
 	echo "Downloading..."
 	local new_ds
-	new_ds=$(curl -kfsS "$URL_DSH")
+	new_ds=$(curl -kfsS "$URL_DS")
 	if_failed "Download has failed."
 
 	# Check if update is a major version. Show warning is needed
@@ -1927,7 +1927,7 @@ check_for_updates ()
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$DS_LAST_CHECK"
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_ds=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DSH?r=$RANDOM")
+	new_ds=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DS?r=$RANDOM")
 	new_version=$(echo "$new_ds" | grep "^DS_VERSION=" | cut -f 2 -d "=")
 	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${DS_VERSION}) ]; then
 		UPDATE_AVAILABLE=1
@@ -2180,7 +2180,7 @@ reset ()
 	fi
 
 	if [[ "$1" == "dns" ]] ; then
-		echo-green 'Resetting Docksal DNS service and configuring resolver for .drude domain...'
+		echo-green 'Resetting Docksal DNS service and configuring resolver for .docksal domain...'
 		configure_resolver
 		return
 	fi
@@ -2195,7 +2195,7 @@ reset ()
 		echo-green 'Resetting Docksal services...'
 		echo ' * vhost-proxy'
 		install_proxy_service
-		echo ' * dns and resolver for .drude domain'
+		echo ' * dns and resolver for .docksal domain'
 		configure_resolver
 		echo ' * ssh-agent'
 		install_sshagent_service
@@ -2497,22 +2497,14 @@ case "$1" in
 		;;
 	init|*)
 		# Search for custom commands in $DS_COMMANDS_PATH
-
-		legacy_init_path="$(get_docksal_path)/.drude/scripts/drude-init.sh"
-		if [[ "$1" == "init" ]] && [[ -f "$legacy_init_path" ]]; then
-			# Legacy processing for init script
-			ds_command_script="$legacy_init_path"
-		else
-			# Normal search for custom command
-			# First search project commands folder
-			ds_command_script="$(get_docksal_path)/$DS_COMMANDS_PATH/$1"
-			# If not found search global drude commands folder
-			[ ! -f "$ds_command_script" ] && ds_command_script="$HOME/$DS_COMMANDS_PATH/$1"
-			# If not found there as well then it is a wrong command
-			[ ! -f "$ds_command_script" ] && \
-				echo-yellow "ds: unknown command '$*'. See 'ds help' for list of available commands" && \
-				exit 1
-		fi
+		# First search project commands folder
+		ds_command_script="$(get_docksal_path)/$DS_COMMANDS_PATH/$1"
+		# If not found search global docksal commands folder
+		[ ! -f "$ds_command_script" ] && ds_command_script="$HOME/$DS_COMMANDS_PATH/$1"
+		# If not found there as well then it is a wrong command
+		[ ! -f "$ds_command_script" ] && \
+			echo-yellow "ds: unknown command '$*'. See 'ds help' for list of available commands" && \
+			exit 1
 
 		if [[ ! -x "$ds_command_script" ]]; then
 			echo -e "${yellow}$ds_command_script${NC} is not set to be executable."
