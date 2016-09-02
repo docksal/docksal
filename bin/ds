@@ -47,9 +47,10 @@ vboxmanage="vboxmanage"
 DS_COMMANDS_PATH=".docksal/commands"
 
 # Network settings
-DS_SUBNET="192.168.10.1/24"
-DS_DEFAULT_DNS="8.8.8.8"
-DS_VBOX_DNS="10.0.2.3" # TODO: check this
+DS_DEFAULT_IP="192.168.10.10"
+DS_DEFAULT_SUBNET="192.168.10.1/24"
+DS_DEFAULT_DNS="10.0.2.3"
+DS_DEFAULT_DNS_NIX="8.8.8.8"
 DS_DNS_ZONE="docksal"
 
 DEFAULT_MACHINE_NAME='docksal'
@@ -94,13 +95,21 @@ DS_ITAG="${DS_ITAG:-latest}"
 DS_SET_UID=""
 
 if [[ "$DOCKER_BETA" == "1" ]]; then
+	# no vm used
 	export DOCKER_HOST=""
 else
+	# get active machine and it's status
 	__current_active_machine=$(cat "$DS_MACHINE_ACTIVE" 2>/dev/null)
 	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
 	DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
 	[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
 		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+	# get desired ip
+	__current_ip_filename="$DS_MACHINES/$DOCKER_MACHINE_NAME/ip"
+	if [[ -f ${__current_ip_filename} ]]; then
+		DOCKER_MACHINE_IP=$(cat ${__current_ip_filename})
+	fi
+	DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DS_DEFAULT_IP}
 fi
 
 #---------------------------- Helper functions --------------------------------
@@ -999,7 +1008,7 @@ docker_machine_create ()
 			docker-machine create --driver=virtualbox \
 				--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
 				--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
-				--virtualbox-hostonly-cidr "$DS_SUBNET" \
+				--virtualbox-hostonly-cidr "$DS_DEFAULT_SUBNET" \
 				--virtualbox-no-share \
 				"$machine_name"
 			;; #-- end virtualbox
@@ -1086,8 +1095,10 @@ docker_machine_stop ()
 
 docker_machine_change_ip ()
 {
+	# extract first three parts of IP and append 255 to get broadcast mask
+	local BROADCAST_MASK=`expr "$DOCKER_MACHINE_IP" : '\([0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.\)'`'255';
 	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
-		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 192.168.10.10 netmask 255.255.255.0 broadcast 192.168.10.255 up" && \
+		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 $DOCKER_MACHINE_IP netmask 255.255.255.0 broadcast $BROADCAST_MASK up" && \
 		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
 }
 
@@ -1522,7 +1533,7 @@ install_dns_service ()
 	# Use default DNS on Linux and VirtualBox's buit-in DNS if using boot2docker
 	local dns
 	local ip="${1:-0.0.0.0}"
-	if is_linux; then dns="$DS_DEFAULT_DNS"; else dns="$DS_VBOX_DNS"; fi
+	if is_linux; then dns="$DS_DEFAULT_DNS_NIX"; else dns="$DS_DEFAULT_DNS"; fi
 
 	# Support for boot2docker-vagrant
 	local docker_ip_map="-p 172.17.42.1:53:53/udp"
@@ -1562,7 +1573,7 @@ configure_resolver ()
 		sudo dscacheutil -flushcache
 		# to check: scutil --dns
 	elif is_linux; then
-		TARGET_IP="192.168.10.10"
+		TARGET_IP="$DS_DEFAULT_IP"
 		install_dns_service "$TARGET_IP"
 	elif is_windows; then
 		if is_docker_beta; then
@@ -1759,12 +1770,12 @@ install_prerequisites_ubuntu ()
 	fi
 
 	# Adding a subnet for Docksal. Make sure we don't do this twice
-	if ! grep -q "$DS_SUBNET" /etc/network/interfaces; then
+	if ! grep -q "$DS_DEFAULT_SUBNET" /etc/network/interfaces; then
 		echo-green "Adding a subnet for Docksal..."
 		cat > /tmp/docksal.ip.addr <<EOF
-	up   ip addr add ${DS_SUBNET} dev lo label lo:docksal
-	down ip addr del ${DS_SUBNET} dev lo label lo:docksal
-	dns-nameservers 192.168.10.10
+	up   ip addr add ${DS_DEFAULT_SUBNET} dev lo label lo:docksal
+	down ip addr del ${DS_DEFAULT_SUBNET} dev lo label lo:docksal
+	dns-nameservers ${DS_DEFAULT_IP}
 EOF
 		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
 		rm -f /tmp/docksal.ip.addr
