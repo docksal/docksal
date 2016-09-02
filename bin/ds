@@ -928,9 +928,9 @@ show_help_alias ()
 	printh "ds alias <path> <alias_name>" "Create an alias that links to path"
 	printh "ds alias remove <alias_name>" "Remove alias"
 	echo-green "Examples:"
-	printh "ds alias ~/Projects/Site dev" "Create alias named 'dev' that links to '~/Projects/Site'"
+	printh "ds alias ~/site1/docroot dev" "Create alias named 'dev' that links to '~/site1/docroot'"
 	printh "ds @dev drush st" "Execute 'ds drush st' command in directory linked by 'dev' alias"
-	printh "" "Hint: link alias to sub-site folder to work with that sub-site directly"
+	printh "" "Hint: to work sub-site link to it's folder e.g. ~/site1/docroot/sites/subsite1"
 	printh "ds delete dev"	"Delete 'dev' alias"
 	echo
 	echo "Aliases are effectively symlinks stored in $DS_CONFIG_ALIAS"
