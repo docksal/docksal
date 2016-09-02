@@ -104,10 +104,12 @@ else
 	DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
 	[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
 		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+	# current active machine folder
+	DOCKER_MACHINE_FOLDER="$DS_MACHINES/$DOCKER_MACHINE_NAME"
+	mkdir -p "$DOCKER_MACHINE_FOLDER"
 	# get desired ip
-	__current_ip_filename="$DS_MACHINES/$DOCKER_MACHINE_NAME/ip"
-	if [[ -f ${__current_ip_filename} ]]; then
-		DOCKER_MACHINE_IP=$(cat ${__current_ip_filename})
+	if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
+		DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
 	fi
 	DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DS_DEFAULT_IP}
 fi
@@ -894,20 +896,21 @@ show_help_vm ()
 	echo-green "ds vm <command> - Control docker machine directly"
 	echo
 	echo-green "Commands:"
-	printh "start" "Start a machine"
+	printh "start" "Start a machine (create if needed)"
+	printh "stop" "Stop active machine"
+	printh "kill" "Forcibely stop active machine"
 	printh "restart" "Restart a machine"
 	printh "status" "Get the status of a machine"
-	printh "stop" "Stop a machine"
 	printh "ls" "List all docker machines"
-	printh "ssh" "Log into or run a command on a machine with SSH"
-	printh "stats" "Show current HDD/RAM usage stats"
-	printh "kill" "Forcibely stop a machine"
-	printh "rm" "Remove a machine"
-	printh "ip" "Get the IP address of a machine"
+	printh "ssh" "Log into or run a command on the active machine with SSH"
+	printh "rm" "Remove active machine"
+	printh "ip" "Get machine IP address"
+	printh "ip [new ip]" "Set machine IP address (requires vm restart)"
 	printh "env" "Display the commands to set up the shell for direct use of Docker client"
 	echo
-	printh "ram" "Display machine's memory size"
-	printh "ram [megabytes]" "Set machine's memory size. Default is 1024 (requires vm restart)"
+	printh "ram" "Get machine memory size"
+	printh "ram [megabytes]" "Set machine memory size. Default is 1024 (requires vm restart)"
+	printh "stats" "Show machine HDD/RAM usage stats"
 	echo
 }
 
@@ -1113,13 +1116,13 @@ docker_machine_start ()
 			reset system && \
 			docker_machine_mounts
 	else
+		# only auto-create default machine
 		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
 			echo-error "Machine '$DOCKER_MACHINE_NAME' does not exist"
 			echo-yellow "Removing reference to non-existent machine... Run your command again."
 			rm -f "$DS_MACHINE_ACTIVE"
 			exit 1
 		fi
-		# only auto-create default machine
 		docker_machine_create && \
 			docker_machine_change_ip && \
 			echo-green "Exporting env variables for '$DOCKER_MACHINE_NAME'..." && \
@@ -1372,7 +1375,15 @@ vm ()
 		ip)
 			shift
 			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			docker-machine ip "$machine_name"
+			if [[ "$1" =~ [0-9][0-9]*[0-9]*.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9] ]]; then
+				# set ip
+				echo-green "Setting ip to $1..."
+				echo "$1" > "$DOCKER_MACHINE_FOLDER/ip"
+				echo-yellow "IP change will take effect on next machine start."
+			else
+				docker-machine ip "$machine_name"
+			fi
+
 			;;
 		env)
 			shift
@@ -1566,10 +1577,10 @@ configure_resolver ()
 		fi
 		sudo mkdir -p /etc/resolver
 		# deleting old resolver is the only way to get mac to update config
-		sudo rm -r /etc/resolver/$DS_DNS_ZONE >/dev/null 2>/dev/null
+		sudo rm -r "/etc/resolver/$DS_DNS_ZONE" >/dev/null 2>/dev/null
 		# NO \n at the begginning of line here!
 		echo -e "# .$DS_DNS_ZONE domain resolution\nnameserver $TARGET_IP" | \
-			sudo tee 1>/dev/null /etc/resolver/$DS_DNS_ZONE
+			sudo tee 1>/dev/null "/etc/resolver/$DS_DNS_ZONE"
 		sudo dscacheutil -flushcache
 		# to check: scutil --dns
 	elif is_linux; then
