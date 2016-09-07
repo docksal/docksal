@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DS_VERSION=0.1.1
+DS_VERSION=0.1.2
 
 # Console colors
 red='\033[0;91m'
@@ -129,7 +129,7 @@ echo-error () {
 	shift
 	# echo other parameters indented s error description or remedy
 	while [[ "$1" != "" ]]; do
-		echo -e "             $1";
+		echo -e "         $1";
 		shift
 	done
 }
@@ -717,14 +717,14 @@ show_help ()
 	printh "restart	[service]" "Restart all current project services or specified service"
 	printh "status (st, ps) [-a (--all)]" "Show project services status. -a shows all running containers"
 	printh "reset [service]" "Recreate service(s). If no parameter given recreates all project services."
-	printh "" "See ${yellow}'ds help reset'${NC} for more details on resetting Docksal system services."
-	printh "remove [service]" "Remove project or system services. See ${yellow}'ds help remove'${NC}"
+	printh "" "See ${yellow}ds help reset${NC} for more details on resetting Docksal system services."
+	printh "remove [service]" "Remove project or system services. See ${yellow}ds help remove${NC}"
 	! is_linux && \
-		printh "vm <command>" "Control docker machine vm. See ${yellow}'ds help vm'${NC} for commands list" "yellow"
+		printh "vm <command>" "Control docker machine vm. See ${yellow}ds help vm${NC} for commands list" "yellow"
 
 	echo
-	printh "bash [service]" "Open shell into container. Defaults to ${yellow}'cli'${NC} service"
-	printh "exec <command> [params]" "Execute a command in ${yellow}'cli'${NC} service container"
+	printh "bash [service]" "Open shell into container. Defaults to ${yellow}cli${NC} service"
+	printh "exec <command> [params]" "Execute a command in ${yellow}cli${NC} service container"
 	printh "exec-url <url>" "Download script from URL and run it. URL should be public."
 	printh "logs [service]" "Show docker logs for service container"
 
@@ -734,19 +734,20 @@ show_help ()
 
 	echo
 	printh "mysql (sqlc)" "Opens mysql shell to current project database"
+	printh "mysql-dump [file]" "Dump current project database into file (${yellow}ds help mysql-dump${NC})"
 	printh "mysql-import (sqli) <file>" "Truncate database and import from sql dump (file should be accessible to Docksal)"
 	printh "" "See ${yellow}ds help sqli${NC} for advanced usage (multisite, gz)."
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
 
 	echo
-	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}'ds help ssh-add'${NC}"
+	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}ds help ssh-add${NC}"
 
 	echo
-	printh "install <component>" "<prerequisites | docksal-config | autocomplete> (${yellow}'ds help install'${NC})" "yellow"
-	printh "update  <component>" "<prerequisites | images | ds> (${yellow}'ds help update'${NC})" "yellow"
+	printh "install <component>" "<prerequisites | docksal-config | autocomplete> (${yellow}ds help install${NC})" "yellow"
+	printh "update  <component>" "<prerequisites | images | ds> (${yellow}ds help update${NC})" "yellow"
 
 	echo
-	printh "alias" "Create/remove aliases (See ${yellow}'ds help alias'${NC})"
+	printh "alias" "Create/remove aliases (See ${yellow}ds help alias${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version	(v, -v)" "Print ds version. [v, -v] - prints short version"
@@ -888,6 +889,29 @@ show_help_sqli ()
 	echo-green "Examples:"
 	printh "ds sqli ../../mydump.sql" "Import plaintext sql dump"
 	printh "ds sqli otherdump.sql.gz" "Import gzipped sql dump"
+	echo
+}
+
+show_help_mysql-import ()
+{
+	show_help_sqli
+}
+
+show_help_mysql-dump ()
+{
+	echo-green "ds mysql-dump [dump_file] - Export current database into file"
+	echo
+	echo "Current database depends on context. Running from docroot will use default subsite"
+	echo "while running this command from specific subsite folder will use that subsite's db settings."
+	echo
+	echo-green "Parameters:"
+	printh "--db-user=admin" "Use another mysql username (default is 'drupal')"
+	printh "--db-password=p4\$\$" "Use another database password (default is '123')"
+	printh "--db-name=mydb2" "Specify database name to dump. Default is currently used one."
+	echo
+	echo-green "Examples:"
+	printh "ds mysql-dump /tmp/dump.sql" "Export into /tmp/dump.sql"
+	printh "ds mysql-dump" "Export into stdout"
 	echo
 }
 
@@ -2039,7 +2063,11 @@ _run ()
 	# 4) execute
 	if [[ "$container_id" == "" ]]; then
 		# try to connect to this out of project container by name
-		${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -i
+		if [[ "$cmd" != "" ]]; then
+			${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -ic "$cmd"
+		else
+			${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -i
+		fi
 		return
 	fi
 
@@ -2122,6 +2150,42 @@ mysql_import ()
 		echo-red "ds: mysql-import failed";
 		if is_tty; then _notify "Docksal" "Mysql import failed!"; fi
 	fi
+}
+
+# Dump mysql database
+# Params
+# --db-name="otherdb" to override database name. default is currenly used db
+# --db-user="admin" to override mysql username
+# --db-password="otherpass" to override mysql password
+mysql_dump ()
+{
+	eval $(parse_params "$@")
+
+	echo-green "Looking for database..."
+	local database_name=$(_run drush "status" | grep "Database name" | sed "s/^.*\://")
+	# trim whitespace
+	database_name=$(echo -n "${database_name//[[:space:]]/}")
+	if [[ "$database_name" == "" ]]; then
+		echo-error "Could not find database name" "Are you running from docroot?"
+		return 1
+	fi
+
+	if [[ "$dbname" != '' ]]; then
+		database_name="$dbname"
+	fi
+	local __dump_user="${dbuser:-drupal}"
+	local __dump_password="${dbpassword:-123}"
+
+	echo-green "Exporting..."
+	if [[ "${ARGV[0]}" != "" ]]; then
+		_RUN_NO_CDIR=1 CONTAINER_NAME="db" _run \
+			"mysqldump -u $__dump_user -p${__dump_password} $database_name" | tee 1>/dev/null "${ARGV[0]}"
+	else
+		_RUN_NO_CDIR=1 CONTAINER_NAME="db" _run \
+			"mysqldump -u $__dump_user -p${__dump_password} $database_name"
+	fi
+
+	echo-green "Done"
 }
 
 # Run Behat tests (also install dependencies through Composer)
@@ -2442,6 +2506,10 @@ case "$1" in
 		;;
 	mysql-import|sqli)
 		mysql_import "$2" "$3"
+		;;
+	mysql-dump)
+		shift
+		mysql_dump "$@"
 		;;
 	drush)
 		shift
