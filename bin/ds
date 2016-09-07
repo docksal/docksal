@@ -916,11 +916,11 @@ show_help_vm ()
 
 show_help_alias ()
 {
-	echo-green "ds alias - Create/delete ds aliases"
+	echo-green "ds alias - Create/delete aliases"
 	echo
-	echo "Aliases provide functionality similar to drush aliases."
-	echo "Using alias you are able to execute ds command for a project without navigating to the project folder."
-	echo "You can precede any command with alias."
+	echo "Aliases provide functionality that is similar to drush aliases."
+	echo "Using alias you are able to execute a command for a project without navigating to the project folder."
+	echo "You can precede any command with an alias."
 	echo
 	echo-green "Usage:"
 	printh "ds alias" "Show aliases list"
