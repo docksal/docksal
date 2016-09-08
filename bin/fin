@@ -26,7 +26,7 @@ DS_REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
 DS_PATH="/usr/local/bin/ds"
 DS_AUTOCOMPLETE_PATH="/usr/local/bin/ds-bash-autocomplete"
 # Configuration paths
-OLD_CONFIG_DIR="$HOME/.docksal"
+OLD_CONFIG_DIR="$HOME/.drude"
 DS_CONFIG_DIR="$HOME/.docksal"
 DS_CONFIG_ALIAS="$DS_CONFIG_DIR/alias"
 DS_LAST_CHECK="$DS_CONFIG_DIR/last_check"
