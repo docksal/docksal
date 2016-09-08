@@ -15,11 +15,11 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 <a name="setup"></a>
 ## Setup
 
-1. [Docksal environment setup](/docs/drude-env-setup.md)
+1. [Docksal environment setup](/docs/env-setup.md)
     
     This is done **one time per host** and should be performed by everyone.
 
-2. [Configure a project to use Docksal](/docs/drude-project-setup.md)
+2. [Configure a project to use Docksal](/docs/project-setup.md)
 
     This is done **one time per project** and should be performed by the project TL.
 
@@ -34,24 +34,24 @@ fin update fin
 fin update prerequisites
 ```
 
-### Updating fin 1.x to fin 2.x
+### Updating from Drude to Docksal 2.x
 
-DSH 1.x used to rely on Vagrant and vagrant-boot2docker for running Docker.  
-DSH 2.x uses Docker Machine which is more native and can be easily updated.
-Vagrant machine is not going to be used anymore and needs to be deleted. 
+Drude used to rely on Vagrant and vagrant-boot2docker for running Docker.  
+Docksal uses Docker Machine, which is more native and can be easily updated.
+Vagrant machine is not going to be used anymore and should be deleted. 
 
 1. Create dumps of databases you need using `drush`
-2. Go to your `<projects>` folder and use `vagrant destroy` to destroy used VM. If you happened to have several of them please destroy them all.
-3. You can uninstall vagrant if you do't need it (`brew uninstall vagrant` on Mac, `choco uninstall vagrant` on Win)
-4. Update fin: `fin update fin`
+2. Go to your `<projects>` folder and use `vagrant destroy` to destroy the old (Drude) VM. If you happened to have several of them, please destroy all.
+3. You can uninstall vagrant if you do't need it (manually or `brew uninstall vagrant` on Mac, `choco uninstall vagrant` on Win)
+4. Install fin
 5. `fin install prerequisites`
-6. Start your project just like you did before with `fin up` and re-import your DB dump. Notice it will use Docker Machine now. New Docker Machine will be created upon run.
-7. Run `fin cleanup` to delete old unused files and images
+6. Start your project just like you did before with `fin up` and re-import your DB dump. Notice it will use Docker Machine now. New Docker Machine will be created upon first start.
+7. Run `fin cleanup` to delete old unused files and backups
 
 <a name="fin"></a>
-## Docksal Shell Helper (fin)
+## Docksal Fin (fin)
 
-Docksal shell helper is a console tool that simplifies day-to-day work with Docksal.
+Docksal Fin is a console tool that simplifies day-to-day work with Docksal.
 It provides a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush or other commands inside the **cli** container. (**Note**: fin requires cli container to function properly)
 
 See `fin help` for a complete list.
@@ -61,7 +61,7 @@ It runs on Mac/Linux directly. On Windows `fin` runs inside the Babun Shell.
 
 
 <a name="cli"></a>
-## Console tools (cli)
+## Console tools (cli container)
 
 The **cli** container is meant to serve as a single console to access all necessary command line tools.
 You can access **cli** container's console with `fin`:

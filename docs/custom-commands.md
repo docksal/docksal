@@ -1,6 +1,6 @@
-# DSH custom commands
+# Fin custom commands
 
-Extending DSH with your custom commands is supported in DSH 1.17 and higher.
+It is possible to extend fin with custom commands (per project).
 
 1. Create a custom command
 
