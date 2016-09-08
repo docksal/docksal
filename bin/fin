@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DS_VERSION=0.1.2
+DS_VERSION=0.1.3
 
 # Console colors
 red='\033[0;91m'
@@ -559,8 +559,8 @@ _start_containers ()
 	check_docker_running
 	echo-green "Starting services..."
 	docker_compose up -d && \
-		_vhost_proxy_connect && \
-		_set_cli_uid
+		_set_cli_uid && \
+		_vhost_proxy_connect
 }
 
 # @param $1 container_name
@@ -569,7 +569,6 @@ _restart_containers ()
 	check_docker_running
 	echo-green "Restarting services..."
 	docker_compose restart "$@" && \
-		_vhost_proxy_connect && \
 		_set_cli_uid
 }
 
@@ -648,10 +647,19 @@ _docker_cleanup ()
 # Connect vhost-proxy to all bridge networks on the host
 _vhost_proxy_connect ()
 {
-	echo-green "Connecting vhost-proxy to networks..."
-	docker network ls -q --filter name=_default | while read network; do
-		docker network connect "$network" vhost-proxy >/dev/null 2>&1 || true
-	done
+	# Figure out the default project network name
+	# TODO: refactor into something less hacky
+	network="$(docker-compose ps cli | awk 'NR==3 {print $1}' | sed 's/_cli_1//')_default"
+	docker network connect "$network" vhost-proxy >/dev/null 2>&1
+	# Restart services if vhost-proxy was connected (first time) to the project network
+	# TODO: figure out how to avoid doing a restart
+	if [[ $? == 0 ]]; then
+		echo-green "Connected vhost-proxy to \"${network}\" network..."
+		docker_compose restart
+	else
+		return 0
+		# Already connected
+	fi
 }
 
 #------------------------------ Help functions --------------------------------
