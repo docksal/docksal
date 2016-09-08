@@ -38,7 +38,7 @@
     ...
     ```
 
-4. Apply new configuration with `dsh up`
+4. Apply new configuration with `fin up`
 
 5. Follow instruction to install and use blackfire via a [Chrome extension](https://blackfire.io/docs/integrations/chrome).
 

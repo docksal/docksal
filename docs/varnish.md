@@ -2,7 +2,7 @@
 
 ## Setup
 
-1. Comment out `VIRTUAL_HOST=<project_name>.drude` in the `web` service definition in `docker-compose.yml`.
+1. Comment out `VIRTUAL_HOST=<project_name>.docksal` in the `web` service definition in `docker-compose.yml`.
 
 2. Add `varnish` service in `docker-compose.yml`
 
@@ -17,10 +17,10 @@
         - web
       environment:
         - VARNISH_BACKEND_HOST=web.<project_name>.docker
-        - VIRTUAL_HOST=<project_name>.drude
+        - VIRTUAL_HOST=<project_name>.docksal
     ```
 
-3. Apply new configuration with `dsh up`
+3. Apply new configuration with `fin up`
 
 
 See https://github.com/blinkreaction/docker-drupal-varnish for additional configuration options.

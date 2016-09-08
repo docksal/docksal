@@ -1,12 +1,12 @@
-# Drude environment setup
+# Docksal environment setup
 
 **This is a one time setup.**  
-Once you have a working Drude environment in place, you can use it for all Drude powered projects.
+Once you have a working Docksal environment in place, you can use it for all Docksal powered projects.
 
 ## Directory structure
 
-All your Drude projects should be located **under current user's home folder**.
-Drude recommends a particular [directory structure](/docs/directory-structure.md).  
+All your Docksal projects should be located **under current user's home folder**.
+Docksal recommends a particular [directory structure](/docs/directory-structure.md).  
 
 ## Windows only
 
@@ -20,11 +20,11 @@ Babun should be installed and run **as a regular user (do not use admin command 
 ## Setup
 
 1. Install [VirtualBox](https://www.virtualbox.org)
-2. Install `dsh` (Drude Shell Helper)
+2. Install `fin` (Docksal Shell Helper)
 
     ```
-    sudo curl -L https://raw.githubusercontent.com/blinkreaction/drude/master/bin/dsh -o /usr/local/bin/dsh
-    sudo chmod +x /usr/local/bin/dsh
+    sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin
+    sudo chmod +x /usr/local/bin/fin
     ```
 
 3. Create the `<projects>` directory
@@ -43,8 +43,8 @@ Babun should be installed and run **as a regular user (do not use admin command 
     cd /c/Users/CurrentUser/WebProjects
     ```
 
-4. Install Drude's prerequisites
+4. Install Docksal's prerequisites
 
     ```
-    dsh install prerequisites
+    fin install prerequisites
     ```

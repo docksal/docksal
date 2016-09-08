@@ -15,9 +15,9 @@ Your CPU should support hardware **VT-x/AMD-V virtualization** (most modern CPUs
 
 While Docker is supported natively on Linux, Mac and Windows users will need a Docker Machine layer to be able to run Docker containers.
 
-Drude software requirements for Mac and Windows:
+Docksal software requirements for Mac and Windows:
 
 - [VirtualBox](https://www.virtualbox.org) 5.0+
 
-**You need to install it manually before running Drude.**  
+**You need to install it manually before running Docksal.**  
 Please refer to the [setup instructions](/README.md#setup) for further steps.

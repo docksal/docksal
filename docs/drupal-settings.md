@@ -1,6 +1,6 @@
 # Drupal settings
 
-Below you will find instructions on configuring you Drupal project to work with Drude.
+Below you will find instructions on configuring you Drupal project to work with Docksal.
 Some settings are required, others are optional or enahncements. Please review carefully.
 
 <a name="db"></a>
@@ -14,7 +14,7 @@ If you change the DB node name in `docker-compose.yml` (e.g. `mysql` instead of 
 **Drupal 7 and 8**
 
 ```php
-# Drude DB connection settings.
+# Docksal DB connection settings.
 $databases['default']['default'] = array (
   'database' => getenv('DB_1_ENV_MYSQL_DATABASE'),
   'username' => getenv('DB_1_ENV_MYSQL_USER'),
@@ -60,7 +60,7 @@ you are most likely using it's vhost-proxy. In that case add the following to se
 **Drupal 7**
 
 ```php
-# Reverse proxy configuration (Drude's vhost-proxy)
+# Reverse proxy configuration (Docksal's vhost-proxy)
 $conf['reverse_proxy'] = TRUE;
 $conf['reverse_proxy_addresses'] = array($_SERVER['REMOTE_ADDR']);
 // HTTPS behind reverse-proxy
@@ -77,7 +77,7 @@ if (
 **Drupal 8**
 
 ```php
-# Reverse proxy configuration (Drude's vhost-proxy)
+# Reverse proxy configuration (Docksal's vhost-proxy)
 $settings['reverse_proxy'] = TRUE;
 $settings['reverse_proxy_addresses'] = array($_SERVER['REMOTE_ADDR']);
 // HTTPS behind reverse-proxy

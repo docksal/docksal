@@ -1,4 +1,4 @@
-# Debugging with Drude, Xdebug and PhpStorm
+# Debugging with Docksal, Xdebug and PhpStorm
 
 `xdebug` extension is disabled by default as it causes about 20% performance hit.
 
@@ -20,7 +20,7 @@
         - XDEBUG_ENABLED=1
       ...
     ```
-2. Update container configuration with `dsh up`
+2. Update container configuration with `fin up`
 3. Open your project in PHPStorm
 4. Set a breakpoint wherever you like
 5. Click on the **Start Listening for PHP Debug Connections** button in PHPStorm

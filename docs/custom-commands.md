@@ -4,29 +4,29 @@ Extending DSH with your custom commands is supported in DSH 1.17 and higher.
 
 1. Create a custom command
 
-    File `.drude/commands/updb` (Notice **no extension**. Script name should match command name)
+    File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
 
     ```bash
     #!/bin/bash
     
     ## Runs drush updb
     ##
-    ## Usage:	dsh updb [params to passthrough]
+    ## Usage:	fin updb [params to passthrough]
     
-    dsh drush updb $1
+    fin drush updb $1
     ```
 
-2. Set executable bit: `chmod +x .drude/commands/updb`
-3. Use as regular dsh command: `dsh updb`
-4. Passing parameters also works: `dsh updb -y`
-5. See command description in `dsh help` and command full help via `dsh help updb` 
+2. Set executable bit: `chmod +x .docksal/commands/updb`
+3. Use as regular fin command: `fin updb`
+4. Passing parameters also works: `fin updb -y`
+5. See command description in `fin help` and command full help via `fin help updb` 
 
 ## Available variables
 
 These environment variables are available for use inside you custom command scripts:
 
-* `DRUDE_PATH` - absolute path to `.drude` folder  
-* `YML_PATH` - absolute path to `docker-compose.yml`. Usually equals DRUDE_PATH but can be empty is yml is not found.
+* `PROJECT_ROOT` - absolute path to `.docksal` folder  
+* `YML_PATH` - absolute path to `docker-compose.yml`. Usually equals PROJECT_ROOT but can be empty is yml is not found.
 * `DOCKER_RUNNING` - string values "true" and "false"
 
 Example `init` command:  
@@ -41,33 +41,33 @@ if [ -z "$YML_PATH"]; then
 fi
 
 # Start containers
-dsh up
+fin up
 # Install site
-dsh drush site-install -y --site-name="My Drupal site"
+fin drush site-install -y --site-name="My Drupal site"
 # Get login link
 cd docroot 2>dev/null 
-dsh drush uli
+fin drush uli
 ```
 
 ## Documenting custom command
 
-dsh looks for lines starting with `##` for command documentation. 
+fin looks for lines starting with `##` for command documentation. 
 
 ```bash
 ## Custom command description
-## Usage:	dsh mycommand [--force]
+## Usage:	fin mycommand [--force]
 ## Parameters:
 ## 		--force		Try really hard
 ```
 
-dsh will output first line of custom command documentation as a short decription in `dsh help`.  
-Rest of lines will be available as advanced help via `dsh help command_name`
+fin will output first line of custom command documentation as a short decription in `fin help`.  
+Rest of lines will be available as advanced help via `fin help command_name`
 
-See example of command documentation in [phpcs command](../examples/.drude/commands/phpcs)
+See example of command documentation in [phpcs command](../examples/.docksal/commands/phpcs)
 
 ## Global custom commands
 
-Put your command to `~/.drude/commands` and it will be accessible globally.  
+Put your command to `~/.docksal/commands` and it will be accessible globally.  
 Useful for tedious tasks that you need in every project.
 
 ## Advanced use
@@ -89,4 +89,4 @@ console.log("Custom NodeJS command!")
 
 ## More examples
 
-[Custom command examples](../examples/.drude/commands)
+[Custom command examples](../examples/.docksal/commands)

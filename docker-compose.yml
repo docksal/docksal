@@ -1,5 +1,5 @@
 # Docker and Docker Compose based environment for Drupal.
-# See https://github.com/blinkreaction/drude for more information and documentation.
+# See https://github.com/docksal/docksal for more information and documentation.
 
 # Web node
 web:
@@ -17,7 +17,7 @@ web:
   links:
     - cli
   environment:
-    - VIRTUAL_HOST=hello-world.drude
+    - VIRTUAL_HOST=hello-world.docksal
 
 # DB node
 db:
@@ -35,7 +35,7 @@ db:
     - MYSQL_DATABASE=drupal
   volumes:
      # MySQL configuration overrides
-     - "./.drude/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
+     - "./.docksal/etc/mysql/my.cnf:/etc/mysql/conf.d/z_my.cnf"
 
 # CLI node
 # Used for all console commands and tools.
@@ -46,9 +46,9 @@ cli:
     # Project root folder mapping
     - *project_root
     # PHP FPM configuration overrides
-    - "./.drude/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
+    - "./.docksal/etc/php5/php.ini:/etc/php5/fpm/conf.d/z_php.ini"
     # PHP CLI configuration overrides
-    - "./.drude/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
+    - "./.docksal/etc/php5/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini"
     # Host home directory mapping (for SSH keys and ther credentials).
     # We try to map both options (b2d and Linux). The startup.sh script in cli container will decide which one to use.
     - /.home:/.home-b2d  # boot2docker-vagrant
@@ -102,6 +102,6 @@ cli:
 #   # Mapping for custom Solr configuration.
 #   # See https://github.com/blinkreaction/docker-drupal-solr/tree/master/solr3.x/solr/conf for the default one.
 #   #volumes:
-#   #  - "./.drude/etc/solr:/var/lib/solr/conf"
+#   #  - "./.docksal/etc/solr:/var/lib/solr/conf"
 #   environment:
 #     - DOMAIN_NAME=solr.hello-world.docker

@@ -51,7 +51,7 @@ Now you can do any changes to the database you want and each time after the cont
 2. Replace the **db** service base image in `docker-compose.yml` with `blinkreaction/mysql-sandbox`
 3. Reset containers
 
-    `dsh reset`
+    `fin reset`
 
 4. Import the DB dump you created in step 1.
 5. Stop and [commit](https://docs.docker.com/reference/commandline/cli/#commit) the **db** service container (this will turn the container into a reusable docker image)
@@ -63,7 +63,7 @@ Now you can do any changes to the database you want and each time after the cont
 6. Replace the *db* service base image in `docker-compose.yml` with the selected tag. E.g. `image: dbdata/myproject:snapshot1`
 8. Restart containers
 
-    `dsh up`
+    `fin up`
 
 You will now have a sandboxed DB container, which defaults to the DB snapshot you created in step 1 every time the db container is restarted.
 
@@ -81,7 +81,7 @@ Either use the one created before enabling the sandbox mode or take another one 
 1. Revert the changes done to the **db** service in `docker-compose.yml`
 2. Reset containers
 
-    `dsh reset`
+    `fin reset`
 
 5. Import the DB dump.
 

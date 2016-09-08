@@ -2,7 +2,7 @@
 
 ## Expected folder structure
 
-Drude expects your Behat tests to be in `tests/behat` folder of the project repo.
+Docksal expects your Behat tests to be in `tests/behat` folder of the project repo.
 
 >     tests/behat
 >       \_ bin/behat
@@ -10,7 +10,7 @@ Drude expects your Behat tests to be in `tests/behat` folder of the project repo
 >       \_ composer.json
 >       \_ composer.lock
 
-See [Drupal 7 sample project](https://github.com/blinkreaction/drude-d7-testing) repo for a working example.
+See [Drupal 7 sample project](https://github.com/docksal/docksal-drupal7) repo for a working example.
 
 ## Docker profile example
 
@@ -18,44 +18,44 @@ Assuming you are using [Behat Drupal Extension](https://github.com/jhedstrom/dru
 
 ```yml
 # Docker profile.
-# For use inside the CLI container in Drude.
+# For use inside the CLI container in Docksal.
 docker:
   extensions:
     Behat\MinkExtension:
-      # URL of the site when accessed inside Drude.
-      base_url: http://hello-world.drude
+      # URL of the site when accessed inside Docksal.
+      base_url: http://hello-world.docksal
       selenium2:
         wd_host: http://browser.hello-world.docker:4444/wd/hub
       # Stick with chrome by default. It's 2x faster than firefox or phantomjs (your results may vary).
       browser_name: chrome
     Drupal\DrupalExtension:
       drupal:
-        # Site docroot inside Drude.
+        # Site docroot inside Docksal.
         drupal_root: /var/www/docroot
       drush:
-        # Site docroot inside Drude.
+        # Site docroot inside Docksal.
         root: /var/www/docroot
 ```
 
-This will configure Behat for use with Drude.
+This will configure Behat for use with Docksal.
 
 **Important note**
 
-`base_url: http://hello-world.drude` and `wd_host: http://browser.hello-world.docker:4444/wd/hub`
+`base_url: http://hello-world.docksal` and `wd_host: http://browser.hello-world.docker:4444/wd/hub`
 should be configured based on your `docker-compose.yml` settings for `VIRTUAL_HOST` 
 in the web container definition and `DOMAIN_NAME` in the browser container definition.  
 
 ## Running tests
 
-Tests can be launched with `dsh` (Drude Shell):
+Tests can be launched with `fin` (Docksal Shell):
 
-    dsh behat
+    fin behat
 
 This will download composer dependencies and run behat with the docker profile.
 
 ## Behat (goutte-driver)
 
-Basic configuration (see [behat.common.yml](https://github.com/blinkreaction/drude-d7-testing/blob/master/tests/behat/behat.common.yml)) uses goutte as the default driver. Goutte is a very basic browser emulator. It is much faster than real browsers, but also very limited. It can make HTTP requests, but does not parse CSS, execute JS or do any rendering.
+Basic configuration (see [behat.common.yml](https://github.com/docksal/docksal-drupal7/blob/master/tests/behat/behat.common.yml)) uses goutte as the default driver. Goutte is a very basic browser emulator. It is much faster than real browsers, but also very limited. It can make HTTP requests, but does not parse CSS, execute JS or do any rendering.
 
 Goutte can be used in many cases and does not require additional configuration/installation.
 
@@ -76,7 +76,7 @@ browser:
   ports:
     - "4444"
   environment:
-    - DOMAIN_NAME=drude-d7-testing.browser.docker
+    - DOMAIN_NAME=drupal7.browser.docker
 ```
 
 You can also use Firefox image: `selenium/standalone-firefox`
@@ -88,22 +88,22 @@ Example:
 
 ```yml
 # Docker profile.
-# For use inside the CLI container in Drude.
+# For use inside the CLI container in Docksal.
 docker:
   extensions:
     Behat\MinkExtension:
-      # URL of the site when accessed inside Drude.
-      base_url: http://drupal7.drude
+      # URL of the site when accessed inside Docksal.
+      base_url: http://drupal7.docksal
       selenium2:
-        wd_host: http://drude3-d7-testing.browser.docker:4444/wd/hub
+        wd_host: http://drupal7.browser.docker:4444/wd/hub
       # Stick with chrome by default. It's 2x faster than firefox or phantomjs (your results may vary).
       browser_name: chrome
     Drupal\DrupalExtension:
       drupal:
-        # Site docroot inside Drude.
+        # Site docroot inside Docksal.
         drupal_root: /var/www/docroot
       drush:
-        # Site docroot inside Drude.
+        # Site docroot inside Docksal.
         root: /var/www/docroot
 ```
 
@@ -125,7 +125,7 @@ browser:
     - "4444"
     - "5900:5900"
   environment:
-    - DOMAIN_NAME=drude-d7-testing.browser.docker
+    - DOMAIN_NAME=drupal7.browser.docker
 ```
 You have to use `selenium/standalone-chrome-debug` or `selenium/standalone-firefox-debug` images. They both include a VNC server.  
 Use `localhost:5900` as the host and `secret` as the password in your VNC client.  
@@ -147,7 +147,7 @@ PhpStorm uses ssh to connect to and use remote interpreters and tools.
        - "2221:22"
      ...
     ```
-2. Update container configuration with `dsh up`.
+2. Update container configuration with `fin up`.
 3. You should now be able to connect to the `cli` container via ssh. Use username `docker` and pasword `docker`:
 
     ```
@@ -247,7 +247,7 @@ default:
   extensions:
     Behat\MinkExtension:
       # URL of the site when accessed locally.
-      base_url: http://drupal7.drude
+      base_url: http://drupal7.docksal
       # Configure browser to be used. Browser must be available on wd_host.
       browser_name: chrome
       selenium2:
@@ -255,4 +255,4 @@ default:
 ...
 ```
 
-`192.168.10.1` is your machine's IP in Drude subnet.
+`192.168.10.1` is your machine's IP in Docksal subnet.

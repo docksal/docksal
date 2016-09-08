@@ -3,12 +3,12 @@
 ssh-agent service allows adding multiple keys (including ones protected with a passphrase) to a single pool of ssh keys,
 which can be shared across multiple projects.
 
-Required dsh version: `1.20.0+`
+Required fin version: `1.20.0+`
 
 # Setup
 
-1. Make sure dsh version is `1.20.0` or higher.
-2. `dsh reset ssh-agent` (only necessary when updating from older versions) 
+1. Make sure fin version is `1.20.0` or higher.
+2. `fin reset ssh-agent` (only necessary when updating from older versions) 
 3. Add the following configuration option to the `cli` service in your projects `docker-compose.yml` file
 
     ```yml
@@ -18,5 +18,5 @@ Required dsh version: `1.20.0+`
         - ssh-agent
       ...
     ```
-4. Update container configuration with `dsh up`
-5. See `dsh help ssh-agent` for more usage information.
+4. Update container configuration with `fin up`
+5. See `fin help ssh-agent` for more usage information.

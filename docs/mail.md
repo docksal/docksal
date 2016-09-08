@@ -21,12 +21,12 @@ Sending/capturing email support can be added via [MailHog](https://github.com/ma
         - MH_API_BIND_ADDR=0.0.0.0:80
         - MH_UI_BIND_ADDR=0.0.0.0:80
         - DOMAIN_NAME=mail.<project_name>.docker
-        - VIRTUAL_HOST=webmail.<project_name>.drude
+        - VIRTUAL_HOST=webmail.<project_name>.docksal
     ```
 
-    Apply new configuration with `dsh up`
+    Apply new configuration with `fin up`
 
-2. Add to `.drude/etc/php5/php.ini` in the project repo
+2. Add to `.docksal/etc/php5/php.ini` in the project repo
     
     Replace `<project_name>` with your project name.
     
@@ -42,4 +42,4 @@ Sending/capturing email support can be added via [MailHog](https://github.com/ma
     sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail:1025'
     ```
 
-MailHog web UI will be available at `http://webmail.<project_name>.drude`
+MailHog web UI will be available at `http://webmail.<project_name>.docksal`

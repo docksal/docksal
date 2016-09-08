@@ -1,6 +1,6 @@
 # Enabling Apache Solr service
 
-## Drude configuration
+## Docksal configuration
 
 1. Add Apache Solr service to `docker-compose.yml`:
 
@@ -13,10 +13,10 @@
       hostname: solr
       image: blinkreaction/drupal-solr:3.x-stable
       environment:
-        - DOMAIN_NAME=solr.<project_name>.drude
+        - DOMAIN_NAME=solr.<project_name>.docksal
     ```
 
-2. Apply new configuration with `dsh up`
+2. Apply new configuration with `fin up`
 
 ## Drupal configuration
 
@@ -24,4 +24,4 @@
 
 2. Add your Solr server on page `admin/config/search/apachesolr/settings/add` with following server url: 
 
-    Solr server URL: `http://solr.<project_name>.drude:8983/solr`
+    Solr server URL: `http://solr.<project_name>.docksal:8983/solr`

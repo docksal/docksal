@@ -2,9 +2,9 @@
 
 Docker and Docker Compose based environment.
 
-**For a fully working example of Drude setup take a look at:**
-- [Drupal 7 sample project](https://github.com/blinkreaction/drude-d7-testing)
-- [Drupal 8 sample project](https://github.com/blinkreaction/drude-d8-testing)
+**For a fully working example of Docksal setup take a look at:**
+- [Drupal 7 sample project](https://github.com/docksal/docksal-drupal7)
+- [Drupal 8 sample project](https://github.com/docksal/docksal-drupal8)
 
 
 ## System requirements
@@ -15,11 +15,11 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 <a name="setup"></a>
 ## Setup
 
-1. [Drude environment setup](/docs/drude-env-setup.md)
+1. [Docksal environment setup](/docs/drude-env-setup.md)
     
     This is done **one time per host** and should be performed by everyone.
 
-2. [Configure a project to use Drude](/docs/drude-project-setup.md)
+2. [Configure a project to use Docksal](/docs/drude-project-setup.md)
 
     This is done **one time per project** and should be performed by the project TL.
 
@@ -30,11 +30,11 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 ### Regular updates
 
 ```
-dsh update dsh
-dsh update prerequisites
+fin update fin
+fin update prerequisites
 ```
 
-### Updating dsh 1.x to dsh 2.x
+### Updating fin 1.x to fin 2.x
 
 DSH 1.x used to rely on Vagrant and vagrant-boot2docker for running Docker.  
 DSH 2.x uses Docker Machine which is more native and can be easily updated.
@@ -43,31 +43,31 @@ Vagrant machine is not going to be used anymore and needs to be deleted.
 1. Create dumps of databases you need using `drush`
 2. Go to your `<projects>` folder and use `vagrant destroy` to destroy used VM. If you happened to have several of them please destroy them all.
 3. You can uninstall vagrant if you do't need it (`brew uninstall vagrant` on Mac, `choco uninstall vagrant` on Win)
-4. Update dsh: `dsh update dsh`
-5. `dsh install prerequisites`
-6. Start your project just like you did before with `dsh up` and re-import your DB dump. Notice it will use Docker Machine now. New Docker Machine will be created upon run.
-7. Run `dsh cleanup` to delete old unused files and images
+4. Update fin: `fin update fin`
+5. `fin install prerequisites`
+6. Start your project just like you did before with `fin up` and re-import your DB dump. Notice it will use Docker Machine now. New Docker Machine will be created upon run.
+7. Run `fin cleanup` to delete old unused files and images
 
-<a name="dsh"></a>
-## Drude Shell Helper (dsh)
+<a name="fin"></a>
+## Docksal Shell Helper (fin)
 
-Drude shell helper is a console tool that simplifies day-to-day work with Drude.
-It provides a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush or other commands inside the **cli** container. (**Note**: dsh requires cli container to function properly)
+Docksal shell helper is a console tool that simplifies day-to-day work with Docksal.
+It provides a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush or other commands inside the **cli** container. (**Note**: fin requires cli container to function properly)
 
-See `dsh help` for a complete list.
+See `fin help` for a complete list.
 
-`dsh` detects the environment it's launched in and will automatically start the boot2docker VM and launch containers as necessary.
-It runs on Mac/Linux directly. On Windows `dsh` runs inside the Babun Shell.
+`fin` detects the environment it's launched in and will automatically start the boot2docker VM and launch containers as necessary.
+It runs on Mac/Linux directly. On Windows `fin` runs inside the Babun Shell.
 
 
 <a name="cli"></a>
 ## Console tools (cli)
 
 The **cli** container is meant to serve as a single console to access all necessary command line tools.
-You can access **cli** container's console with `dsh`:
+You can access **cli** container's console with `fin`:
 
 ```
-dsh bash
+fin bash
 ```
 
 Tools available inside the **cli** container:
@@ -88,7 +88,7 @@ Tools available inside the **cli** container:
 - [Running multiple projects](/docs/multiple-projects.md)
 - [DB sandbox mode](/docs/db-sandbox.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
-- [Extending dsh with custom commands](/docs/custom-commands.md)
+- [Extending fin with custom commands](/docs/custom-commands.md)
 
 ### Third party utililies
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
@@ -104,7 +104,7 @@ Tools available inside the **cli** container:
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
-[Troubleshooting](https://github.com/blinkreaction/drude/issues)
+[Troubleshooting](https://github.com/docksal/docksal/issues)
 
 
 ## License

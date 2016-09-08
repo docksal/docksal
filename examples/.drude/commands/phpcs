@@ -2,25 +2,25 @@
 
 ## Run Code Sniffer (phpcs) against given path
 ##
-## Usage: dsh phpcs <path>
+## Usage: fin phpcs <path>
 ##
 ## Uses Drupal standards.
 ##
 ## Includes extensions:	php, module, inc, install, test, profile, theme
 ## Ignores:		features.*, *.pages*.inc
 
-# Environment variables passed from dsh:
+# Environment variables passed from fin:
 #
-#   $DRUDE_PATH - (string) absolute path to NEAREST .drude folder
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
 #   $YML_PATH - (string) absolute path to NEAREST docker-compose.yml, can be empty
 #   $DOCKER_RUNNING - (string) "true" or "false"
 
 if [[ "$1" == "" ]]; then
-	echo "Usage: dsh phpcs <path>"
+	echo "Usage: fin phpcs <path>"
 	exit 1
 fi
 
-dsh run phpcs \
+fin run phpcs \
 	--standard=Drupal -n \
 	--extensions="php,module,inc,install,test,profile,theme" \
 	--ignore="*.features.*,*.pages*.inc" \

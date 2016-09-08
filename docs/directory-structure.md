@@ -1,8 +1,8 @@
 # Directory structure
 
-All your Drude projects should be located **under current user's home folder**.
+All your Docksal projects should be located **under current user's home folder**.
 
-Drude recommends a directory structure where all your projects go into subfolders under the main `<projects>` folder.  
+Docksal recommends a directory structure where all your projects go into subfolders under the main `<projects>` folder.  
 The `<projects>` folder can be arbitrarily named.
 
 ```
@@ -13,7 +13,7 @@ The `<projects>` folder can be arbitrarily named.
  |      ...
  | 
  |--- another-drupal-site
- |      .drude
+ |      .docksal
  |      docker-compose.yml
  |      docroot
  |      ...

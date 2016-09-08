@@ -6,7 +6,7 @@ set -e
 # Set to the appropriate site directory
 SITE_DIRECTORY='project'
 # Set to the appropriate site directory
-SITE_DOMAIN='project.drude'
+SITE_DOMAIN='project.docksal'
 # Set to the appropriate site alias for the DB source
 SOURCE_ALIAS='@project.prod'
 
@@ -75,7 +75,7 @@ db_import ()
 
   cd $GIT_ROOT
   cd docroot
-  dsh drush -l ${SITE_DOMAIN} sql-sync ${SOURCE_ALIAS} @self -y
+  fin drush -l ${SITE_DOMAIN} sql-sync ${SOURCE_ALIAS} @self -y
 }
 
 # Local adjustments
@@ -86,13 +86,13 @@ local_settings ()
   cd docroot
   set -x
 
-  dsh drush -l ${SITE_DOMAIN} en stage_file_proxy -y
+  fin drush -l ${SITE_DOMAIN} en stage_file_proxy -y
 
   set +x
 }
 
 init_settings
-dsh reset
+fin reset
 db_import
 local_settings
 
