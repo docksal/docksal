@@ -134,7 +134,7 @@ echo-error () {
 	done
 }
 
-# Exits ds if previous command exited with non-zero code
+# Exits fin if previous command exited with non-zero code
 if_failed ()
 {
 	if [ ! $? -eq 0 ]; then
@@ -341,9 +341,9 @@ check_binary_found ()
 		return 0
 	else
 		if is_linux; then
-			echo-red "$1 executable was not found. (Try running 'ds install prerequisites')"
+			echo-red "$1 executable was not found. (Try running 'fin install prerequisites')"
 		else
-			echo-red "$1 executable was not found in $DS_BIN_DIR. (Try running 'ds install prerequisites')"
+			echo-red "$1 executable was not found in $DS_BIN_DIR. (Try running 'fin install prerequisites')"
 		fi
 		exit 1
 	fi
@@ -399,7 +399,7 @@ check_docker_running ()
 	check_binary_found 'docker-compose'
 	if ! is_docker_beta && ! is_docker_version; then
 		echo-error "Required Docker version is $DS_REQUIREMENTS_DOCKER or higher"
-		echo -e "Run ${yellow}ds update prerequisites${NC} to update"
+		echo -e "Run ${yellow}fin update prerequisites${NC} to update"
 		exit 1
 	fi
 
@@ -408,7 +408,7 @@ check_docker_running ()
 
 	if [[ ${docker_status} -eq 255 ]] && ! is_docker_beta; then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
-		_confirm "Run 'ds vm start' to start it now?"
+		_confirm "Run 'fin vm start' to start it now?"
 		docker_machine_start
 		if_failed "Could not start Docksal docker machine properly"
 		# re-check status
@@ -424,7 +424,7 @@ check_docker_running ()
 			exit 1
 		else
 			echo-error "Looks like your Docker client and Docker server are incompatible." \
-				"${green}Run ${NC}${yellow}ds install prerequisites${NC}${green} to update.${NC}"
+				"${green}Run ${NC}${yellow}fin install prerequisites${NC}${green} to update.${NC}"
 			exit 1
 		fi
 	fi
@@ -675,7 +675,7 @@ printh ()
 	echo -e "	$2"
 }
 
-# Show help for ds or for certain command
+# Show help for fin or for certain command
 # $1 name of command to show help for
 show_help ()
 {
@@ -698,14 +698,14 @@ show_help ()
 		[ -f "$project_commands_path/$1" ] && _command="$project_commands_path/$1"
 		#
 		if [ -f "$_command" ]; then
-			echo -en "${green}ds $1${NC} - "
+			echo -en "${green}fin $1${NC} - "
 			cat "$_command" | grep '^##' | sed "s/^##[ ]*//g"
 			echo
 			exit
 		fi
 	fi
 
-	printh "Docksal Shell v$DS_VERSION commands reference" "" "green"
+	printh "Docksal Fin v$DS_VERSION commands reference" "" "green"
 
 	echo
 	if is_linux; then
@@ -717,10 +717,10 @@ show_help ()
 	printh "restart	[service]" "Restart all current project services or specified service"
 	printh "status (st, ps) [-a (--all)]" "Show project services status. -a shows all running containers"
 	printh "reset [service]" "Recreate service(s). If no parameter given recreates all project services."
-	printh "" "See ${yellow}ds help reset${NC} for more details on resetting Docksal system services."
-	printh "remove [service]" "Remove project or system services. See ${yellow}ds help remove${NC}"
+	printh "" "See ${yellow}fin help reset${NC} for more details on resetting Docksal system services."
+	printh "remove [service]" "Remove project or system services. See ${yellow}fin help remove${NC}"
 	! is_linux && \
-		printh "vm <command>" "Control docker machine vm. See ${yellow}ds help vm${NC} for commands list" "yellow"
+		printh "vm <command>" "Control docker machine vm. See ${yellow}fin help vm${NC} for commands list" "yellow"
 
 	echo
 	printh "bash [service]" "Open shell into container. Defaults to ${yellow}cli${NC} service"
@@ -734,23 +734,23 @@ show_help ()
 
 	echo
 	printh "mysql (sqlc)" "Opens mysql shell to current project database"
-	printh "mysql-dump [file]" "Dump current project database into file (${yellow}ds help mysql-dump${NC})"
+	printh "mysql-dump [file]" "Dump current project database into file (${yellow}fin help mysql-dump${NC})"
 	printh "mysql-import (sqli) <file>" "Truncate database and import from sql dump (file should be accessible to Docksal)"
-	printh "" "See ${yellow}ds help sqli${NC} for advanced usage (multisite, gz)."
+	printh "" "See ${yellow}fin help sqli${NC} for advanced usage (multisite, gz)."
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
 
 	echo
-	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}ds help ssh-add${NC}"
+	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}fin help ssh-add${NC}"
 
 	echo
-	printh "install <component>" "<prerequisites | docksal-config | autocomplete> (${yellow}ds help install${NC})" "yellow"
-	printh "update  <component>" "<prerequisites | images | ds> (${yellow}ds help update${NC})" "yellow"
+	printh "install <component>" "<prerequisites | docksal-config | autocomplete> (${yellow}fin help install${NC})" "yellow"
+	printh "update  <component>" "<prerequisites | images | ds> (${yellow}fin help update${NC})" "yellow"
 
 	echo
-	printh "alias" "Create/remove aliases (See ${yellow}ds help alias${NC})"
+	printh "alias" "Create/remove aliases (See ${yellow}fin help alias${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
-	printh "version	(v, -v)" "Print ds version. [v, -v] - prints short version"
+	printh "version	(v, -v)" "Print fin version. [v, -v] - prints short version"
 
 	# Show list of custom commands and their help if available
 	if [ ! -z "$(get_docksal_path)" ]; then
@@ -790,14 +790,14 @@ show_help_list_of_custom_commands ()
 
 show_help_ssh-add ()
 {
-	echo-green "ds ssh-add - Add private key identities to the ssh-agent."
-	echo "Usage: ds ssh-add [-lD] [key]"
+	echo-green "fin ssh-add - Add private key identities to the ssh-agent."
+	echo "Usage: fin ssh-add [-lD] [key]"
 	echo
 	echo "When run without arguments, picks up the default key file (~/.ssh/id_rsa or ~/.ssh/id_dsa)."
-	echo "A custom key name can be given as an argument: ds ssh-add <keyname>."
+	echo "A custom key name can be given as an argument: fin ssh-add <keyname>."
 	echo
 	echo -e "${yellow}NOTE${NC}: <keyname> is the file name within ${yellow}~/.ssh${NC} (not full path to file)."
-	echo "Example: ds ssh-add my_custom_key_rsa"
+	echo "Example: fin ssh-add my_custom_key_rsa"
 	echo
 	echo "The options are as follows:"
 	printh "-D" "Deletes all identities from the agent."
@@ -807,72 +807,72 @@ show_help_ssh-add ()
 
 show_help_exec ()
 {
-	echo-green "ds exec <command> - Execute command in ${yellow}cli${green} service container."
+	echo-green "fin exec <command> - Execute command in ${yellow}cli${green} service container."
 	echo
 	echo "Command is a required parameter."
 	echo "Command will be executed in the path that matches your local current path."
 	echo
 	echo-green "Examples:"
-	printh "ds exec pwd" "Show current path"
-	printh "ds exec ls -la" "Current directory listing"
-	printh "ds exec compass compile" "Compile SASS/SCSS"
-	printh "ds exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or redirects inside cli"
+	printh "fin exec pwd" "Show current path"
+	printh "fin exec ls -la" "Current directory listing"
+	printh "fin exec compass compile" "Compile SASS/SCSS"
+	printh "fin exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or redirects inside cli"
 	echo
 }
 
 show_help_reset ()
 {
-	echo-green "ds reset - Recreate services/containers. Equal to ds stop, ds remove, ds start"
+	echo-green "fin reset - Recreate services/containers. Equal to fin stop, fin remove, fin start"
 	echo
 	echo-green "Parameters: one or more service names. Examples:"
-	echo "	ds reset web		Restart 'web' service"
-	echo "	ds reset web cli	Restart 'web' and 'cli' services"
-	echo "	ds reset		Restart all project services"
+	echo "	fin reset web		Restart 'web' service"
+	echo "	fin reset web cli	Restart 'web' and 'cli' services"
+	echo "	fin reset		Restart all project services"
 	echo
 	echo-green "System services"
 	echo -e "Docksal has 3 system services."
 	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use."
-	echo "	ds reset dns		Recreate Docksal DNS service"
-	echo -e "	ds reset proxy		Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
-	echo "	ds reset ssh-agent	Recreate Docksal ssh-agent service"
-	echo "	ds reset system	Recreate all Docksal system services"
+	echo "	fin reset dns		Recreate Docksal DNS service"
+	echo -e "	fin reset proxy		Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
+	echo "	fin reset ssh-agent	Recreate Docksal ssh-agent service"
+	echo "	fin reset system	Recreate all Docksal system services"
 	echo
 }
 
 show_help_remove ()
 {
-	echo-green "ds remove - Remove services/containers"
+	echo-green "fin remove - Remove services/containers"
 	echo
 	echo -e "${green}Parameters:${NC} one or more service names."
 	echo-green "Examples:"
-	printh "ds remove web" "Remove web service"
-	printh "ds remove proxy" "Stop Docksal reverse proxy service"
+	printh "fin remove web" "Remove web service"
+	printh "fin remove proxy" "Stop Docksal reverse proxy service"
 	echo
 }
 
 show_help_install ()
 {
-	echo-green "ds install - Automated install of Docksal system components"
+	echo-green "fin install - Automated install of Docksal system components"
 	echo
-	printh "ds install prerequisites" "Install software required to run Docksal"
-	printh "ds install docksal-config" "Download latest default docker-compose.yml"
-	printh "ds install autocomplete" "Install ds commands autocomplete for Bash"
+	printh "fin install prerequisites" "Install software required to run Docksal"
+	printh "fin install docksal-config" "Download latest default docker-compose.yml"
+	printh "fin install autocomplete" "Install fin commands autocomplete for Bash"
 	echo
 }
 
 show_help_update ()
 {
-	echo-green "ds update - Automated update of Docksal system components"
+	echo-green "fin update - Automated update of Docksal system components"
 	echo
-	printh "ds update prerequisites" "Update software required to run Docksal"
-	printh "ds update images" "Update container images <https://docs.docker.com/engine/understanding-docker/#what-is-docker-s-architecture>"
-	printh "ds update ds" "Update ds itself"
+	printh "fin update prerequisites" "Update software required to run Docksal"
+	printh "fin update images" "Update container images <https://docs.docker.com/engine/understanding-docker/#what-is-docker-s-architecture>"
+	printh "fin update ds" "Update fin itself"
 	echo
 }
 
 show_help_exec-url ()
 {
-	echo-green "ds exec-url <url> - Fetch script and evaluate locally"
+	echo-green "fin exec-url <url> - Fetch script and evaluate locally"
 	echo
 	echo -e "URL is required parameter. Useful for demos or installations."
 	echo
@@ -881,14 +881,14 @@ show_help_exec-url ()
 
 show_help_sqli ()
 {
-	echo-green "ds sqli <db_dump_file> - Import DB dump into database truncating it first"
+	echo-green "fin sqli <db_dump_file> - Import DB dump into database truncating it first"
 	echo
 	echo -e "DB dump file can be either plain ${yellow}.sql${NC} file or gzipped ${yellow}.sql.gz${NC}."
-	echo -e "To import dump into sub-site cd into sub-site folder ${yellow}cd docroot/sites/sub-site${NC} and run ds sqli from there."
+	echo -e "To import dump into sub-site cd into sub-site folder ${yellow}cd docroot/sites/sub-site${NC} and run fin sqli from there."
 	echo
 	echo-green "Examples:"
-	printh "ds sqli ../../mydump.sql" "Import plaintext sql dump"
-	printh "ds sqli otherdump.sql.gz" "Import gzipped sql dump"
+	printh "fin sqli ../../mydump.sql" "Import plaintext sql dump"
+	printh "fin sqli otherdump.sql.gz" "Import gzipped sql dump"
 	echo
 }
 
@@ -899,7 +899,7 @@ show_help_mysql-import ()
 
 show_help_mysql-dump ()
 {
-	echo-green "ds mysql-dump [dump_file] - Export current database into file"
+	echo-green "fin mysql-dump [dump_file] - Export current database into file"
 	echo
 	echo "Current database depends on context. Running from docroot will use default subsite"
 	echo "while running this command from specific subsite folder will use that subsite's db settings."
@@ -910,14 +910,14 @@ show_help_mysql-dump ()
 	printh "--db-name=mydb2" "Specify database name to dump. Default is currently used one."
 	echo
 	echo-green "Examples:"
-	printh "ds mysql-dump /tmp/dump.sql" "Export into /tmp/dump.sql"
-	printh "ds mysql-dump" "Export into stdout"
+	printh "fin mysql-dump /tmp/dump.sql" "Export into /tmp/dump.sql"
+	printh "fin mysql-dump" "Export into stdout"
 	echo
 }
 
 show_help_vm ()
 {
-	echo-green "ds vm <command> - Control docker machine directly"
+	echo-green "fin vm <command> - Control docker machine directly"
 	echo
 	echo-green "Commands:"
 	printh "start" "Start a machine (create if needed)"
@@ -940,34 +940,34 @@ show_help_vm ()
 
 show_help_alias ()
 {
-	echo-green "ds alias - Create/delete aliases"
+	echo-green "fin alias - Create/delete aliases"
 	echo
 	echo "Aliases provide functionality that is similar to drush aliases."
 	echo "Using alias you are able to execute a command for a project without navigating to the project folder."
 	echo "You can precede any command with an alias."
 	echo
 	echo-green "Usage:"
-	printh "ds alias" "Show aliases list"
-	printh "ds alias list" "Show aliases list"
-	printh "ds alias <path> <alias_name>" "Create an alias that links to path"
-	printh "ds alias remove <alias_name>" "Remove alias"
+	printh "fin alias" "Show aliases list"
+	printh "fin alias list" "Show aliases list"
+	printh "fin alias <path> <alias_name>" "Create an alias that links to path"
+	printh "fin alias remove <alias_name>" "Remove alias"
 	echo-green "Examples:"
-	printh "ds alias ~/site1/docroot dev" "Create alias named 'dev' that links to '~/site1/docroot'"
-	printh "ds @dev drush st" "Execute 'ds drush st' command in directory linked by 'dev' alias"
+	printh "fin alias ~/site1/docroot dev" "Create alias named 'dev' that links to '~/site1/docroot'"
+	printh "fin @dev drush st" "Execute 'fin drush st' command in directory linked by 'dev' alias"
 	printh "" "Hint: to work sub-site link to it's folder e.g. ~/site1/docroot/sites/subsite1"
-	printh "ds delete dev"	"Delete 'dev' alias"
+	printh "fin delete dev"	"Delete 'dev' alias"
 	echo
 	echo "Aliases are effectively symlinks stored in $DS_CONFIG_ALIAS"
 }
 
-# Display ds version
+# Display fin version
 # @option --short - Display only the version number
 version ()
 {
 	if [[ $1 == '--short' ]]; then
 		echo "$DS_VERSION"
 	else
-		echo "ds version: $DS_VERSION"
+		echo "fin version: $DS_VERSION"
 	fi
 }
 
@@ -1330,13 +1330,13 @@ vm ()
 	check_binary_found 'docker-machine'
 
 	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] && [[ "$1" != "rm" ]] && [[ "$1" != "active" ]] ; then
-		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME is not created. Use 'ds vm start' or 'ds up'."
+		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME is not created. Use 'fin vm start' or 'fin up'."
 		 return 1
 	fi
 
 	case $1 in
 		create)
-			# usage: ds vm create <machine_name> --provider="<provider_name>"
+			# usage: fin vm create <machine_name> --provider="<provider_name>"
 			shift
 			eval $(parse_params "$@")
 			# errors handling
@@ -1522,7 +1522,7 @@ install_prerequisites ()
 	if which 'docker-machine' 2>/dev/null >/dev/null; then
 		if is_docker_machine_exist && ! is_docker_machine_running; then
 			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
-				"Start it with ${yellow}ds vm start${NC} first or destroy it with ${yellow}ds vm rm${NC} if you want it re-created."
+				"Start it with ${yellow}fin vm start${NC} first or destroy it with ${yellow}fin vm rm${NC} if you want it re-created."
 			return 1
 		fi
 	fi
@@ -1914,7 +1914,7 @@ update_images ()
 	up
 }
 
-# Update ds itself
+# Update fin itself
 update_ds ()
 {
 	[[ "$1" != "" ]] && DS_BRANCH="$1"
@@ -1930,7 +1930,7 @@ update_ds ()
 	local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
 	if [[ "$current_major_version" != "$new_major_version" ]]; then
 		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
-		echo -e "Updating from ${yellow}$DS_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwards compatible update."
+		echo -e "Updating from ${yellow}$DS_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwarfin compatible update."
 		echo "You might be not able to use you current Docksal environment if you proceed."
 		echo -e "Please read update documentation: ${yellow}$URL_DS_REPO_UI#updates${NC}"
 		_confirm "Continue with the update?"
@@ -1945,7 +1945,7 @@ update_ds ()
 	sudo chmod +x "$DS_PATH"
 
 	local new_version=$(head "$DS_PATH" | grep "^DS_VERSION=" | cut -f 2 -d "=")
-	echo-green "ds updated to ${new_version}"
+	echo-green "fin updated to ${new_version}"
 	exit
 }
 
@@ -1977,7 +1977,7 @@ check_for_updates ()
 	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${DS_VERSION}) ]; then
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
-		echo -e "${green}ds${NC} [ $DS_VERSION --> $new_version ] (run ${green}ds update ds${NC} to update)"
+		echo -e "${green}ds${NC} [ $DS_VERSION --> $new_version ] (run ${green}fin update ds${NC} to update)"
 		echo "Press Enter."
 		read -p ''
 	fi
@@ -1991,7 +1991,7 @@ check_for_updates ()
 	fi
 
 	[[ ${UPDATES_AVAILABLE} == "1" ]] && \
-		echo -e "Run ${yellow}ds update prerequisites${NC} to install updates to docker tools" && \
+		echo -e "Run ${yellow}fin update prerequisites${NC} to install updates to docker tools" && \
 		echo "(Press Enter to continue)" && \
 		read -p ''
 }
@@ -2055,7 +2055,7 @@ _run ()
 	# Escape spaces that are "spaces" and not parameter delimeters (i.e. param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
-	# Do not escape spaces if there is only one parameter (e.g. ds run "ls -la | grep txt")
+	# Do not escape spaces if there is only one parameter (e.g. fin run "ls -la | grep txt")
 	else
 		cmd="$cmd $@"
 	fi
@@ -2355,7 +2355,7 @@ sysinfo ()
 		[ -f /etc/os-release ] && cat /etc/os-release
 		[ -f /etc/system-release ] && cat /etc/system-release
 	fi
-	# ds version
+	# fin version
 	version
 
 	(which 'docker-machine' 2>/dev/null >/dev/null) && \
@@ -2394,7 +2394,7 @@ sysinfo ()
 # param $2 alias name
 alias_create ()
 {
-	[[ $# != 2 ]] && echo 'Usage: ds alias <path> <alias_name>' && exit 1
+	[[ $# != 2 ]] && echo 'Usage: fin alias <path> <alias_name>' && exit 1
 	mkdir -p "$DS_CONFIG_ALIAS" || exit 1
 	[[ -h "$2" ]] && echo "Alias $2 already exists" && exit 1
 	[[ -e "$2" ]] && echo "Filename is not available" && exit 1
@@ -2592,7 +2592,7 @@ case "$1" in
 		[ ! -f "$ds_command_script" ] && ds_command_script="$HOME/$DS_COMMANDS_PATH/$1"
 		# If not found there as well then it is a wrong command
 		[ ! -f "$ds_command_script" ] && \
-			echo-yellow "ds: unknown command '$*'. See 'ds help' for list of available commands" && \
+			echo-yellow "ds: unknown command '$*'. See 'fin help' for list of available commands" && \
 			exit 1
 
 		if [[ ! -x "$ds_command_script" ]]; then
