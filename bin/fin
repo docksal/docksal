@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DS_VERSION=0.1.3
+FIN_VERSION=0.1.3
 
 # Console colors
 red='\033[0;91m'
@@ -11,49 +11,49 @@ yellow='\033[1;33m'
 NC='\033[0m'
 
 # TODO: change to master before release
-#DS_BRANCH="${DS_BRANCH:-master}"
-DS_BRANCH="${DS_BRANCH:-develop}"
+#FIN_BRANCH="${FIN_BRANCH:-master}"
+FIN_BRANCH="${FIN_BRANCH:-develop}"
 
 #---------------------------- Global Constants --------------------------------
-DS_REQUIREMENTS_DOCKER='1.12.1'
-DS_REQUIREMENTS_DOCKER_COMPOSE='1.8.0'
-DS_REQUIREMENTS_DOCKER_MACHINE='0.8.1'
-DS_REQUIREMENTS_VBOX='5.1.2'
-DS_REQUIREMENTS_WINPTY='0.4.0'
-DS_REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
+REQUIREMENTS_DOCKER='1.12.1'
+REQUIREMENTS_DOCKER_COMPOSE='1.8.0'
+REQUIREMENTS_DOCKER_MACHINE='0.8.1'
+REQUIREMENTS_VBOX='5.1.2'
+REQUIREMENTS_WINPTY='0.4.0'
+REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
 
 # Self Paths
-DS_PATH="/usr/local/bin/fin"
-DS_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
+FIN_PATH="/usr/local/bin/fin"
+FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Configuration paths
 OLD_CONFIG_DIR="$HOME/.drude"
-DS_CONFIG_DIR="$HOME/.docksal"
-DS_CONFIG_ALIAS="$DS_CONFIG_DIR/alias"
-DS_LAST_CHECK="$DS_CONFIG_DIR/last_check"
-DS_MACHINES="$DS_CONFIG_DIR/machines"
-DS_MACHINE_ACTIVE="$DS_MACHINES/.active"
-mkdir -p "$DS_CONFIG_DIR" >/dev/null 2>/dev/null
+CONFIG_DIR="$HOME/.docksal"
+CONFIG_ALIASES="$CONFIG_DIR/alias"
+CONFIG_LAST_CHECK="$CONFIG_DIR/last_check"
+CONFIG_MACHINES="$CONFIG_DIR/machines"
+CONFIG_MACHINE_ACTIVE="$CONFIG_MACHINES/.active"
+mkdir -p "$CONFIG_DIR" >/dev/null 2>/dev/null
 # BIN folder
-DS_BIN_DIR="$DS_CONFIG_DIR/bin"
-DS_DOWNLOADS_DIR="$DS_BIN_DIR/downloads"
-DOCKER_BIN="$DS_BIN_DIR/docker"
-DOCKER_COMPOSE_BIN="$DS_BIN_DIR/docker-compose"
+CONFIG_BIN_DIR="$CONFIG_DIR/bin"
+CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
+DOCKER_BIN="$CONFIG_BIN_DIR/docker"
+DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_COMPOSE_BIN_NIX="/usr/local/bin/docker-compose"
-DOCKER_MACHINE_BIN="$DS_BIN_DIR/docker-machine"
+DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 vboxmanage="vboxmanage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
 	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 
 # Where custom commands live (relative path)
-DS_COMMANDS_PATH=".docksal/commands"
+DOCKSAL_COMMANDS_PATH=".docksal/commands"
 
 # Network settings
-DS_DEFAULT_IP="192.168.10.10"
-DS_DEFAULT_SUBNET="192.168.10.1/24"
-DS_DEFAULT_DNS="10.0.2.3"
-DS_DEFAULT_DNS_NIX="8.8.8.8"
-DS_DNS_ZONE="docksal"
+DOCKSAL_DEFAULT_IP="192.168.10.10"
+DOCKSAL_DEFAULT_SUBNET="192.168.10.1/24"
+DOCKSAL_DEFAULT_DNS="10.0.2.3"
+DOCKSAL_DEFAULT_DNS_NIX="8.8.8.8"
+DOCKSAL_DNS_ZONE="docksal"
 
 DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
@@ -64,22 +64,22 @@ DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
 #---------------------------- URL references --------------------------------
 OS_NAME=$(uname -s)
 HARDWARE=$(uname -m)
-URL_DS_REPO="https://raw.githubusercontent.com/docksal/docksal"
-URL_DS_REPO_UI="https://github.com/docksal/docksal"
-URL_DS="${URL_DS_REPO}/${DS_BRANCH}/bin/fin"
+URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
+URL_REPO_UI="https://github.com/docksal/docksal"
+URL_FIN="${URL_REPO}/${FIN_BRANCH}/bin/fin"
 
-URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${DS_REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
-URL_DOCKER_WIN="https://get.docker.com/builds/Windows/i386/docker-${DS_REQUIREMENTS_DOCKER}.zip"
-URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${DS_REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-$OS_NAME-$HARDWARE"
+URL_DOCKER_WIN="https://get.docker.com/builds/Windows/i386/docker-${REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-$OS_NAME-$HARDWARE"
 URL_DOCKER_COMPOSE_NIX="$URL_DOCKER_COMPOSE_MAC"
-URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${DS_REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
-URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${DS_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$OS_NAME-$HARDWARE"
-URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${DS_REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
+URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
+URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$OS_NAME-$HARDWARE"
+URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
 
-URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${DS_REQUIREMENTS_WINPTY}/winpty-${DS_REQUIREMENTS_WINPTY}-cygwin-${DS_REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
+URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
-URL_DS_CONFIG="${URL_DS_REPO}/${DS_BRANCH}/docker-compose.yml"
+URL_DEFAULT_CONFIG="${URL_REPO}/${FIN_BRANCH}/docker-compose.yml"
 
 IMAGE_SSH_AGENT="blinkreaction/ssh-agent"
 IMAGE_VHOST_PROXY="blinkreaction/nginx-proxy"
@@ -87,39 +87,39 @@ IMAGE_DNS="blinkreaction/dns-discovery"
 
 #---------------------------- Global Variables --------------------------------
 
-PATH="$DS_BIN_DIR:$PATH"
+PATH="$CONFIG_BIN_DIR:$PATH"
 DOCKER_BETA="${DOCKER_BETA:-0}"
 # Allow image tag overrides for system services. See install_xyz_service()
 # TODO: revert this to stable before release
-#DS_ITAG="${DS_ITAG:-stable}"
-DS_ITAG="${DS_ITAG:-latest}"
+#FIN_ITAG="${FIN_ITAG:-stable}"
+FIN_ITAG="${FIN_ITAG:-latest}"
 # UID of user to use in cli continer. Only override if you know what you're doing
-DS_SET_UID=""
+FIN_SET_UID=""
 
 if [[ "$DOCKER_BETA" == "1" ]]; then
 	# no vm used
 	export DOCKER_HOST=""
 else
 	# get active machine and it's status
-	__current_active_machine=$(cat "$DS_MACHINE_ACTIVE" 2>/dev/null)
+	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null)
 	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
 	DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
 	[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
 		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
 	# current active machine folder
-	DOCKER_MACHINE_FOLDER="$DS_MACHINES/$DOCKER_MACHINE_NAME"
+	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
 	mkdir -p "$DOCKER_MACHINE_FOLDER"
 	# get desired ip
 	if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
 		DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
 	fi
-	DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DS_DEFAULT_IP}
+	DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
 fi
 
 #---------------------------- Helper functions --------------------------------
 
-DS_YML_PATH='' #yml path value will be cached here
-DS_PATH='' #docksal path value will be cached here
+CONFIG_YML_PATH='' #yml path value will be cached here
+DOCKSAL_PATH='' #docksal path value will be cached here
 
 echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
@@ -173,19 +173,19 @@ upfind ()
 # Get path to docker-compose.yml using upfind
 get_yml_path ()
 {
-	if [ -z "$DS_YML_PATH" ]; then
-		DS_YML_PATH=$(upfind "docker-compose.yml")
+	if [ -z "$CONFIG_YML_PATH" ]; then
+		CONFIG_YML_PATH=$(upfind "docker-compose.yml")
 	fi
-	echo "$DS_YML_PATH"
+	echo "$CONFIG_YML_PATH"
 }
 
 # Get path to .docksal folder using upfind
 get_docksal_path ()
 {
-	if [ -z "$DS_PATH" ]; then
-		DS_PATH=$(upfind ".docksal")
+	if [ -z "$DOCKSAL_PATH" ]; then
+		DOCKSAL_PATH=$(upfind ".docksal")
 	fi
-	echo "$DS_PATH"
+	echo "$DOCKSAL_PATH"
 }
 
 # Returns absolute path
@@ -339,13 +339,13 @@ is_docker_beta ()
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
-	if [[ -x "$DS_BIN_DIR/$1" ]] || (is_linux && which "$1" 2>/dev/null >/dev/null); then
+	if [[ -x "$CONFIG_BIN_DIR/$1" ]] || (is_linux && which "$1" 2>/dev/null >/dev/null); then
 		return 0
 	else
 		if is_linux; then
 			echo-red "$1 executable was not found. (Try running 'fin install prerequisites')"
 		else
-			echo-red "$1 executable was not found in $DS_BIN_DIR. (Try running 'fin install prerequisites')"
+			echo-red "$1 executable was not found in $CONFIG_BIN_DIR. (Try running 'fin install prerequisites')"
 		fi
 		exit 1
 	fi
@@ -372,8 +372,8 @@ is_tty ()
 
 testing_warn ()
 {
-	[[ "$DS_BRANCH" != 'master' ]] && is_tty && \
-		echo-yellow "[!] Using Docksal ${DS_BRANCH} branch"
+	[[ "$FIN_BRANCH" != 'master' ]] && is_tty && \
+		echo-yellow "[!] Using Docksal ${FIN_BRANCH} branch"
 }
 
 # Convert version string like 1.2.3 to integer for comparison
@@ -400,7 +400,7 @@ check_docker_running ()
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
 	if ! is_docker_beta && ! is_docker_version; then
-		echo-error "Required Docker version is $DS_REQUIREMENTS_DOCKER or higher"
+		echo-error "Required Docker version is $REQUIREMENTS_DOCKER or higher"
 		echo -e "Run ${yellow}fin update prerequisites${NC} to update"
 		exit 1
 	fi
@@ -441,7 +441,7 @@ is_vbox_version ()
 	fi
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
-	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$DS_REQUIREMENTS_VBOX") ]] && \
+	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$REQUIREMENTS_VBOX") ]] && \
 		return 2
 
 	return 0
@@ -456,7 +456,7 @@ is_docker_version ()
 	fi
 
 	local version=$(docker -v | sed "s/^Docker version \(.*\),.*/\1/")
-	[[ "$version" == "$DS_REQUIREMENTS_DOCKER" ]] && \
+	[[ "$version" == "$REQUIREMENTS_DOCKER" ]] && \
 		return 0;
 
 	return 1;
@@ -471,7 +471,7 @@ is_docker_compose_version ()
 	fi
 
 	local version=$(docker_compose -v | sed "s/^docker-compose version \(.*\),.*/\1/")
-	[[ "$version" == "$DS_REQUIREMENTS_DOCKER_COMPOSE" ]] && \
+	[[ "$version" == "$REQUIREMENTS_DOCKER_COMPOSE" ]] && \
 		return 0;
 
 	return 1;
@@ -486,7 +486,7 @@ is_docker_machine_version ()
 	fi
 
 	local version=$(docker-machine -v | sed "s/^docker-machine version \(.*\),.*/\1/")
-	[[ "$version" == "$DS_REQUIREMENTS_DOCKER_MACHINE" ]] && \
+	[[ "$version" == "$REQUIREMENTS_DOCKER_MACHINE" ]] && \
 		return 0;
 
 	return 1;
@@ -497,7 +497,7 @@ check_vbox_version ()
 	is_vbox_version
 	local res=$?
 	[[ $res == 1 ]] && echo-error "$vboxmanage binary was not found" && exit 1
-	[[ $res == 2 ]] && echo-error "VirtualBox version should be $DS_REQUIREMENTS_VBOX or higher" && exit 1
+	[[ $res == 2 ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
 }
 
 # Check that docker-compose.yml is present
@@ -689,8 +689,8 @@ printh ()
 # $1 name of command to show help for
 show_help ()
 {
-	local project_commands_path="$(get_docksal_path)/$DS_COMMANDS_PATH"
-	local global_commands_path="$HOME/$DS_COMMANDS_PATH"
+	local project_commands_path="$(get_docksal_path)/$DOCKSAL_COMMANDS_PATH"
+	local global_commands_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	local custom_commands_list
 
 	# If nonempty param then show help for a certain command
@@ -715,7 +715,7 @@ show_help ()
 		fi
 	fi
 
-	printh "Docksal Fin v$DS_VERSION commands reference" "" "green"
+	printh "Docksal Fin v$FIN_VERSION commands reference" "" "green"
 
 	echo
 	if is_linux; then
@@ -766,7 +766,7 @@ show_help ()
 	if [ ! -z "$(get_docksal_path)" ]; then
 		show_help_list_of_custom_commands 'project'
 	fi
-	if [ ! -z "$HOME/$DS_COMMANDS_PATH" ]; then
+	if [ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]; then
 		show_help_list_of_custom_commands 'global'
 	fi
 
@@ -778,11 +778,11 @@ show_help_list_of_custom_commands ()
 {
 	local _path
 	if [[ "$1" == 'project' ]]; then
-		_path="$(get_docksal_path)/$DS_COMMANDS_PATH"
+		_path="$(get_docksal_path)/$DOCKSAL_COMMANDS_PATH"
 		# avoid taking global .docksal folder for project one
-		if [[ "$_path" == "$HOME/$DS_COMMANDS_PATH" ]]; then return; fi
+		if [[ "$_path" == "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then return; fi
 	else
-		_path="$HOME/$DS_COMMANDS_PATH"
+		_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	fi
 
 	custom_commands_list=$(ls "$_path" 2>/dev/null | tr "\n" " ")
@@ -967,7 +967,7 @@ show_help_alias ()
 	printh "" "Hint: to work sub-site link to it's folder e.g. ~/site1/docroot/sites/subsite1"
 	printh "fin delete dev"	"Delete 'dev' alias"
 	echo
-	echo "Aliases are effectively symlinks stored in $DS_CONFIG_ALIAS"
+	echo "Aliases are effectively symlinks stored in $CONFIG_ALIASES"
 }
 
 # Display fin version
@@ -975,9 +975,9 @@ show_help_alias ()
 version ()
 {
 	if [[ $1 == '--short' ]]; then
-		echo "$DS_VERSION"
+		echo "$FIN_VERSION"
 	else
-		echo "fin version: $DS_VERSION"
+		echo "fin version: $FIN_VERSION"
 	fi
 }
 
@@ -1003,7 +1003,7 @@ bash_comp_words ()
 			exit 0
 		;;
 		ds)
-			local aliases=$(ls -l "$DS_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
+			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			echo "$aliases alias start stop restart status reset remove bash exec logs mysql mysql-import exec-url drush drupal \
 			behat ssh-add install update version cleanup sysinfo"
 			exit 0
@@ -1045,7 +1045,7 @@ docker_machine_create ()
 			docker-machine create --driver=virtualbox \
 				--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
 				--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
-				--virtualbox-hostonly-cidr "$DS_DEFAULT_SUBNET" \
+				--virtualbox-hostonly-cidr "$DOCKSAL_DEFAULT_SUBNET" \
 				--virtualbox-no-share \
 				"$machine_name"
 			;; #-- end virtualbox
@@ -1154,7 +1154,7 @@ docker_machine_start ()
 		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
 			echo-error "Machine '$DOCKER_MACHINE_NAME' does not exist"
 			echo-yellow "Removing reference to non-existent machine... Run your command again."
-			rm -f "$DS_MACHINE_ACTIVE"
+			rm -f "$CONFIG_MACHINE_ACTIVE"
 			exit 1
 		fi
 		docker_machine_create && \
@@ -1364,8 +1364,8 @@ vm ()
 			else
 				[[ "$1" == "$DOCKER_MACHINE_NAME" ]] && echo "$1 is already active" && return 0
 				! is_docker_machine_exist "$1" && echo "No docker machine with name $1" && return 1
-				mkdir -p "$DS_MACHINES" || return 1
-				echo "$1" | tee "$DS_MACHINE_ACTIVE" >/dev/null && echo "$1 is set active"
+				mkdir -p "$CONFIG_MACHINES" || return 1
+				echo "$1" | tee "$CONFIG_MACHINE_ACTIVE" >/dev/null && echo "$1 is set active"
 			fi
 			;;
 		start)
@@ -1518,7 +1518,7 @@ ssh_add () {
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-	${winpty_cmd} docker run --rm -it --volumes-from=ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}:${DS_ITAG}" ssh-add "$@"
+	${winpty_cmd} docker run --rm -it --volumes-from=ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}:${FIN_ITAG}" ssh-add "$@"
 	return $?
 }
 
@@ -1569,7 +1569,7 @@ install_proxy_service ()
 	docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"${IMAGE_VHOST_PROXY}:${DS_ITAG}" >/dev/null
+		"${IMAGE_VHOST_PROXY}:${FIN_ITAG}" >/dev/null
 }
 
 # @param $1 ip address defaults to 0.0.0.0
@@ -1578,7 +1578,7 @@ install_dns_service ()
 	# Use default DNS on Linux and VirtualBox's buit-in DNS if using boot2docker
 	local dns
 	local ip="${1:-0.0.0.0}"
-	if is_linux; then dns="$DS_DEFAULT_DNS_NIX"; else dns="$DS_DEFAULT_DNS"; fi
+	if is_linux; then dns="$DOCKSAL_DEFAULT_DNS_NIX"; else dns="$DOCKSAL_DEFAULT_DNS"; fi
 
 	# Support for boot2docker-vagrant
 	local docker_ip_map="-p 172.17.42.1:53:53/udp"
@@ -1587,12 +1587,12 @@ install_dns_service ()
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
-		-e DNS_IP="$ip" -e DNS_ZONE="$DS_DNS_ZONE" \
+		-e DNS_IP="$ip" -e DNS_ZONE="$DOCKSAL_DNS_ZONE" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"${IMAGE_DNS}:${DS_ITAG}" >/dev/null
+		"${IMAGE_DNS}:${FIN_ITAG}" >/dev/null
 }
 
-# Configuring sytem-wide *.$DS_DNS_ZONE resolver (Windows not supported)
+# Configuring sytem-wide *.$DOCKSAL_DNS_ZONE resolver (Windows not supported)
 # TODO: change this function to work properly with DO provider
 configure_resolver ()
 {
@@ -1606,19 +1606,19 @@ configure_resolver ()
 			TARGET_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
 		fi
 		install_dns_service "$TARGET_IP"
-		if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DS_DNS_ZONE 2>/dev/null 1>/dev/null); then
+		if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DOCKSAL_DNS_ZONE 2>/dev/null 1>/dev/null); then
 			return
 		fi
 		sudo mkdir -p /etc/resolver
 		# deleting old resolver is the only way to get mac to update config
-		sudo rm -r "/etc/resolver/$DS_DNS_ZONE" >/dev/null 2>/dev/null
+		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_ZONE" >/dev/null 2>/dev/null
 		# NO \n at the begginning of line here!
-		echo -e "# .$DS_DNS_ZONE domain resolution\nnameserver $TARGET_IP" | \
-			sudo tee 1>/dev/null "/etc/resolver/$DS_DNS_ZONE"
+		echo -e "# .$DOCKSAL_DNS_ZONE domain resolution\nnameserver $TARGET_IP" | \
+			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_ZONE"
 		sudo dscacheutil -flushcache
 		# to check: scutil --dns
 	elif is_linux; then
-		TARGET_IP="$DS_DEFAULT_IP"
+		TARGET_IP="$DOCKSAL_DEFAULT_IP"
 		install_dns_service "$TARGET_IP"
 	elif is_windows; then
 		if is_docker_beta; then
@@ -1635,7 +1635,7 @@ install_sshagent_service ()
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
 	docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"${IMAGE_SSH_AGENT}:${DS_ITAG}" >/dev/null
+		"${IMAGE_SSH_AGENT}:${FIN_ITAG}" >/dev/null
 }
 
 # Install prerequisites on Mac
@@ -1647,7 +1647,7 @@ install_prerequisites_mac ()
 		echo-error "VBoxManage executable was not found. Virtual Box is required to run Docksal on Mac." \
 			&& exit 1
 	elif ! is_vbox_version; then
-		echo-error "Required Virtual Box version is $DS_REQUIREMENTS_VBOX or higher" \
+		echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
 			&& exit 1
 	else
 		# Kill the default adapter and DHCP server to avoid network issues down the road
@@ -1655,33 +1655,33 @@ install_prerequisites_mac ()
 		VBoxManage hostonlyif remove vboxnet0 > /dev/null 2>&1
 	fi
 
-	mkdir -p "$DS_DOWNLOADS_DIR" 2>/dev/null
-	if_failed "Could not create $DS_DOWNLOADS_DIR"
+	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
+	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
 	# Install Docker client
 	if ! is_docker_version; then
-		echo-green "Installing docker client v${DS_REQUIREMENTS_DOCKER}..."
-		(cd "$DS_DOWNLOADS_DIR" && \
+		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		(cd "$CONFIG_DOWNLOADS_DIR" && \
 			curl -sSL "$URL_DOCKER_MAC" | tar zxf - && \
-			mv "docker/docker" "$DS_BIN_DIR/")
+			mv "docker/docker" "$CONFIG_BIN_DIR/")
 	fi
 
 	# Install docker-compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing docker-compose v${DS_REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		curl -sSL "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
 			chmod +x "$DOCKER_COMPOSE_BIN"
 	fi
 
 	# Install docker-machine
 	if ! is_docker_machine_version; then
-		echo-green "Installing docker-machine v${DS_REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
 			chmod +x "$DOCKER_MACHINE_BIN"
 	fi
 
 	# Cleanup
-	rm -rf "$DS_DOWNLOADS_DIR" >/dev/null 2>&1
+	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
 	# If it was an upgrade
 	is_docker_machine_running && \
@@ -1697,7 +1697,7 @@ install_prerequisites_windows ()
 {
 	# Check Virtual Box
 	if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
-		echo-error "Required Virtual Box version is $DS_REQUIREMENTS_VBOX or higher" \
+		echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
 			&& exit 1
 	else
 		if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
@@ -1707,13 +1707,13 @@ install_prerequisites_windows ()
 		fi
 	fi
 
-	mkdir -p "$DS_DOWNLOADS_DIR" 2>/dev/null
-	if_failed "Could not create $DS_DOWNLOADS_DIR"
+	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
+	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
 	# Install Docker client
 	if ! is_docker_version; then
-		echo-green "Installing docker client v${DS_REQUIREMENTS_DOCKER}..."
-		(cd "$DS_DOWNLOADS_DIR" && \
+		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		(cd "$CONFIG_DOWNLOADS_DIR" && \
 			curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
 			unzip docker.zip && \
 			rm docker.zip && \
@@ -1723,26 +1723,26 @@ install_prerequisites_windows ()
 
 		# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing docker-compose v${DS_REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
 			chmod +x "$DOCKER_COMPOSE_BIN.exe"
 	fi
 
 		# Install Docker Machine
 	if ! is_docker_machine_version; then
-		echo-green "Installing docker-machine v${DS_REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		curl -sSL "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
 			chmod +x "$DOCKER_MACHINE_BIN.exe"
 	fi
 
 	# Install winpty TODO: check winpty version here
-	echo-green "Installing winpty v${DS_REQUIREMENTS_WINPTY}..."
-	(cd "$DS_DOWNLOADS_DIR" && \
+	echo-green "Installing winpty v${REQUIREMENTS_WINPTY}..."
+	(cd "$CONFIG_DOWNLOADS_DIR" && \
 		curl -sSL "$URL_WINPTY" | tar -xzf - && \
-		mv winpty-*/bin/* "$DS_BIN_DIR/")
+		mv winpty-*/bin/* "$CONFIG_BIN_DIR/")
 
 	# Cleanup
-	rm -rf "$DS_DOWNLOADS_DIR" >/dev/null 2>&1
+	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
 	# Git settings
 	echo-green "Adjusting git defaults..."
@@ -1809,18 +1809,18 @@ install_prerequisites_ubuntu ()
 
 	# Install docker-machine
 	if ! is_docker_machine_version; then
-		echo-green "Installing docker-machine v${DS_REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN_NIX" && \
 			chmod +x "$DOCKER_MACHINE_BIN_NIX"
 	fi
 
 	# Adding a subnet for Docksal. Make sure we don't do this twice
-	if ! grep -q "$DS_DEFAULT_SUBNET" /etc/network/interfaces; then
+	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
 		echo-green "Adding a subnet for Docksal..."
 		cat > /tmp/docksal.ip.addr <<EOF
-	up   ip addr add ${DS_DEFAULT_SUBNET} dev lo label lo:docksal
-	down ip addr del ${DS_DEFAULT_SUBNET} dev lo label lo:docksal
-	dns-nameservers ${DS_DEFAULT_IP}
+	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	dns-nameservers ${DOCKSAL_DEFAULT_IP}
 EOF
 		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
 		rm -f /tmp/docksal.ip.addr
@@ -1846,7 +1846,7 @@ install_docksal_config ()
 	testing_warn
 	[ -f "docker-compose.yml" ] && _confirm "Overwrite existing docker-compose.yml?"
 	local docker_compose_yml
-	docker_compose_yml=$(curl -kfsS "$URL_DS_CONFIG")
+	docker_compose_yml=$(curl -kfsS "$URL_DEFAULT_CONFIG")
 	if_failed "Could not get latest docker-compose.yml version."
 
 	echo "$docker_compose_yml" | tee "docker-compose.yml" >/dev/null
@@ -1857,7 +1857,7 @@ install_docksal_config ()
 # Install shell commands autocomplete script
 install_autocomplete ()
 {
-	local destination="$DS_AUTOCOMPLETE_PATH"
+	local destination="$FIN_AUTOCOMPLETE_PATH"
 	tee "$destination" >/dev/null << 'EOF'
 _docksal_completion()
 {
@@ -1909,9 +1909,9 @@ update_system_images ()
 	# Running docker exec interactively on Windows requires workarounds
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 
-	${winpty_cmd} docker pull "${IMAGE_VHOST_PROXY}:${DS_ITAG}"
-	${winpty_cmd} docker pull "${IMAGE_DNS}:${DS_ITAG}"
-	${winpty_cmd} docker pull "${IMAGE_SSH_AGENT}:${DS_ITAG}"
+	${winpty_cmd} docker pull "${IMAGE_VHOST_PROXY}:${FIN_ITAG}"
+	${winpty_cmd} docker pull "${IMAGE_DNS}:${FIN_ITAG}"
+	${winpty_cmd} docker pull "${IMAGE_SSH_AGENT}:${FIN_ITAG}"
 }
 
 # Update all containers images
@@ -1927,34 +1927,34 @@ update_images ()
 # Update fin itself
 update_self ()
 {
-	[[ "$1" != "" ]] && DS_BRANCH="$1"
+	[[ "$1" != "" ]] && FIN_BRANCH="$1"
 	testing_warn
 	echo "Downloading..."
 	local new_ds
-	new_ds=$(curl -kfsS "$URL_DS")
+	new_ds=$(curl -kfsS "$URL_FIN")
 	if_failed "Download has failed."
 
 	# Check if update is a major version. Show warning is needed
-	local new_version=$(echo "$new_ds" | grep "^DS_VERSION=" | cut -f 2 -d "=")
-	local current_major_version=$(echo "$DS_VERSION" | cut -d "." -f 1)
+	local new_version=$(echo "$new_ds" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
+	local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
 	local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
 	if [[ "$current_major_version" != "$new_major_version" ]]; then
 		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
-		echo -e "Updating from ${yellow}$DS_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwarfin compatible update."
+		echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwarfin compatible update."
 		echo "You might be not able to use you current Docksal environment if you proceed."
-		echo -e "Please read update documentation: ${yellow}$URL_DS_REPO_UI#updates${NC}"
+		echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
 		_confirm "Continue with the update?"
 	fi
 
 	# check for different updates on next run
-	rm -r "$DS_LAST_CHECK" >/dev/null 2>&1
+	rm -r "$CONFIG_LAST_CHECK" >/dev/null 2>&1
 
 	# saving to file
-	echo "$new_ds" | sudo tee "$DS_PATH" > /dev/null
-	if_failed "Could not write $DS_PATH."
-	sudo chmod +x "$DS_PATH"
+	echo "$new_ds" | sudo tee "$FIN_PATH" > /dev/null
+	if_failed "Could not write $FIN_PATH."
+	sudo chmod +x "$FIN_PATH"
 
-	local new_version=$(head "$DS_PATH" | grep "^DS_VERSION=" | cut -f 2 -d "=")
+	local new_version=$(head "$FIN_PATH" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
 	echo-green "fin updated to ${new_version}"
 	exit
 }
@@ -1968,7 +1968,7 @@ check_for_updates ()
 
 	local timestamp; local last_check; local next_check
 	timestamp=$(date +%s)
-	last_check=$(cat "$DS_LAST_CHECK" 2>/dev/null)
+	last_check=$(cat "$CONFIG_LAST_CHECK" 2>/dev/null)
 	# Set last_check to 0 if empty
 	last_check="${last_check:-0}"
 	# Check once a week
@@ -1980,14 +1980,14 @@ check_for_updates ()
 	echo 'One second! Checking for updates...'
 	local new_ds; local new_version
 	# Always write current timestamp to last check file
-	echo "$timestamp" > "$DS_LAST_CHECK"
+	echo "$timestamp" > "$CONFIG_LAST_CHECK"
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_ds=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_DS?r=$RANDOM")
-	new_version=$(echo "$new_ds" | grep "^DS_VERSION=" | cut -f 2 -d "=")
-	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${DS_VERSION}) ]; then
+	new_ds=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_FIN?r=$RANDOM")
+	new_version=$(echo "$new_ds" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
+	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${FIN_VERSION}) ]; then
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
-		echo -e "${green}ds${NC} [ $DS_VERSION --> $new_version ] (run ${green}fin update ds${NC} to update)"
+		echo -e "${green}ds${NC} [ $FIN_VERSION --> $new_version ] (run ${green}fin update ds${NC} to update)"
 		echo "Press Enter."
 		read -p ''
 	fi
@@ -1996,7 +1996,7 @@ check_for_updates ()
 		is_docker_machine_version
 		if [[ $? -eq 1 ]]; then
 			UPDATES_AVAILABLE=1
-			echo-green "Update available for docker-machine to $DS_REQUIREMENTS_DOCKER_MACHINE"
+			echo-green "Update available for docker-machine to $REQUIREMENTS_DOCKER_MACHINE"
 		fi
 	fi
 
@@ -2320,8 +2320,8 @@ logs ()
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
 {
-	# Let uid to be set with the DS_SET_UID env variable
-	local host_uid=${DS_SET_UID:-$(id -u)}
+	# Let uid to be set with the FIN_SET_UID env variable
+	local host_uid=${FIN_SET_UID:-$(id -u)}
 	local cli=$(get_container_id cli)
 	local container_uid
 
@@ -2405,26 +2405,26 @@ sysinfo ()
 alias_create ()
 {
 	[[ $# != 2 ]] && echo 'Usage: fin alias <path> <alias_name>' && exit 1
-	mkdir -p "$DS_CONFIG_ALIAS" || exit 1
+	mkdir -p "$CONFIG_ALIASES" || exit 1
 	[[ -h "$2" ]] && echo "Alias $2 already exists" && exit 1
 	[[ -e "$2" ]] && echo "Filename is not available" && exit 1
 	[[ ! -d "$1" ]] && echo 'Path should be a valid dir' && exit 1
 
 	! is_windows && \
-		ln -s $(get_abs_path "$1") "$DS_CONFIG_ALIAS/$2"
+		ln -s $(get_abs_path "$1") "$CONFIG_ALIASES/$2"
 
 	[[ $? -eq 0 ]] && \
 		echo "$2 -> $(get_abs_path $1)"
 }
 
 alias_remove () {
-	[[ ! -h "$DS_CONFIG_ALIAS/$1" ]] && echo 'Alias not found' && exit
-	[[ -h "$DS_CONFIG_ALIAS/$1" ]] && rm "$DS_CONFIG_ALIAS/$1"
+	[[ ! -h "$CONFIG_ALIASES/$1" ]] && echo 'Alias not found' && exit
+	[[ -h "$CONFIG_ALIASES/$1" ]] && rm "$CONFIG_ALIASES/$1"
 }
 
 alias_list ()
 {
-	local list=$(ls -l "$DS_CONFIG_ALIAS" 2>/dev/null | grep -v total | awk '{printf "    %-15s %s %s\n", $9, $10, $11}')
+	local list=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "    %-15s %s %s\n", $9, $10, $11}')
 	[[ "$list" == "" ]] && echo "No aliases found" && exit
 	echo "$list"
 }
@@ -2433,9 +2433,9 @@ alias_list ()
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
-	DS_ALIAS=${1#@}
-	[[ ! -h "$DS_CONFIG_ALIAS/$DS_ALIAS" ]] && echo-red "No such alias $1" && exit 1
-	_alias_cd=$(readlink "$DS_CONFIG_ALIAS/$DS_ALIAS")
+	USED_ALIAS=${1#@}
+	[[ ! -h "$CONFIG_ALIASES/$USED_ALIAS" ]] && echo-red "No such alias $1" && exit 1
+	_alias_cd=$(readlink "$CONFIG_ALIASES/$USED_ALIAS")
 	cd "$_alias_cd" 2>/dev/null
 	if_failed_error "Could not navigate to directory linked by $1 alias"
 	shift
@@ -2591,11 +2591,11 @@ case "$1" in
 		alias_create "$@"
 		;;
 	init|*)
-		# Search for custom commands in $DS_COMMANDS_PATH
+		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
 		# First search project commands folder
-		ds_command_script="$(get_docksal_path)/$DS_COMMANDS_PATH/$1"
+		ds_command_script="$(get_docksal_path)/$DOCKSAL_COMMANDS_PATH/$1"
 		# If not found search global docksal commands folder
-		[ ! -f "$ds_command_script" ] && ds_command_script="$HOME/$DS_COMMANDS_PATH/$1"
+		[ ! -f "$ds_command_script" ] && ds_command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
 		# If not found there as well then it is a wrong command
 		[ ! -f "$ds_command_script" ] && \
 			echo-yellow "ds: unknown command '$*'. See 'fin help' for list of available commands" && \
