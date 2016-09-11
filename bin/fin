@@ -23,8 +23,8 @@ DS_REQUIREMENTS_WINPTY='0.4.0'
 DS_REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
 
 # Self Paths
-DS_PATH="/usr/local/bin/ds"
-DS_AUTOCOMPLETE_PATH="/usr/local/bin/ds-bash-autocomplete"
+DS_PATH="/usr/local/bin/fin"
+DS_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Configuration paths
 OLD_CONFIG_DIR="$HOME/.drude"
 DS_CONFIG_DIR="$HOME/.docksal"
@@ -754,7 +754,7 @@ show_help ()
 
 	echo
 	printh "install <component>" "<prerequisites | docksal-config | autocomplete> (${yellow}fin help install${NC})" "yellow"
-	printh "update  <component>" "<prerequisites | images | ds> (${yellow}fin help update${NC})" "yellow"
+	printh "update  <component>" "<prerequisites | images | self> (${yellow}fin help update${NC})" "yellow"
 
 	echo
 	printh "alias" "Create/remove aliases (See ${yellow}fin help alias${NC})"
@@ -876,7 +876,7 @@ show_help_update ()
 	echo
 	printh "fin update prerequisites" "Update software required to run Docksal"
 	printh "fin update images" "Update container images <https://docs.docker.com/engine/understanding-docker/#what-is-docker-s-architecture>"
-	printh "fin update ds" "Update fin itself"
+	printh "fin update self" "Update fin itself"
 	echo
 }
 
@@ -991,7 +991,7 @@ bash_comp_words ()
 			exit 0
 			;;
 		update)
-			echo "prerequisites images ds"
+			echo "prerequisites images self"
 			exit 0
 			;;
 		vm)
@@ -1859,11 +1859,11 @@ install_autocomplete ()
 {
 	local destination="$DS_AUTOCOMPLETE_PATH"
 	tee "$destination" >/dev/null << 'EOF'
-_ds_completion()
+_docksal_completion()
 {
 	local cur=${COMP_WORDS[COMP_CWORD]} #current word part
 	local prev=${COMP_WORDS[COMP_CWORD-1]} #previous word
-	local compwords=$(ds bash_comp_words $prev) #get completions for previous word
+	local compwords=$(fin bash_comp_words $prev) #get completions for previous word
 	if [ ! $? -eq 0 ]; then
 		return 1;
 	else
@@ -1871,7 +1871,7 @@ _ds_completion()
 		return 0
 	fi
 }
-complete -o bashdefault -o default -F _ds_completion ds
+complete -o bashdefault -o default -F _docksal_completion fin
 EOF
 	if_failed "Failed to write file to $destination"
 	echo-green "Script saved to $destination"
@@ -1925,7 +1925,7 @@ update_images ()
 }
 
 # Update fin itself
-update_ds ()
+update_self ()
 {
 	[[ "$1" != "" ]] && DS_BRANCH="$1"
 	testing_warn
@@ -2492,16 +2492,12 @@ case "$1" in
 			install_prerequisites
 		elif [[ "$1" == "images" ]]; then
 			update_images
-		elif [[ "$1" == "ds" ]]; then
+		elif [[ "$1" == "self" ]]; then
 			shift
-			update_ds "$@"
+			update_self "$@"
 		else
 			show_help_update
 		fi
-		;;
-	self-update)
-		shift
-		update_ds "$@"
 		;;
 	bash)
 		shift
