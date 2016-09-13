@@ -654,7 +654,7 @@ _vhost_proxy_connect ()
 	# Restart services if vhost-proxy was connected (first time) to the project network
 	# TODO: figure out how to avoid doing a restart
 	if [[ $? == 0 ]]; then
-		echo-green "Connected vhost-proxy to \"${network}\" network..."
+		echo-green "Connected vhost-proxy to \"${network}\" network."
 		docker_compose restart
 	else
 		return 0
