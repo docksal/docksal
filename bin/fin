@@ -2014,7 +2014,7 @@ _bash ()
 {
 	check_docker_running
 	# Interactive shell requires a tty.
-	# On Windows we assume we run interactively via winpty (console.exe).
+	# On Windows we assume we run interactively via winpty.
 	if ! is_tty; then
 		echo "Interactive bash console in a non-interactive enveronment!? Nope, won't happen."
 		return 1
