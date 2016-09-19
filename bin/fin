@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.1.5
+FIN_VERSION=0.1.6
 
 # Console colors
 red='\033[0;91m'
@@ -1690,7 +1690,8 @@ install_prerequisites_mac ()
 			# give some time for machine to start containers
 			sleep 2 && \
 			docker_machine_env && \
-			reset system
+			reset system && \
+			docker_machine_mounts
 }
 
 install_prerequisites_windows ()
@@ -1758,7 +1759,8 @@ install_prerequisites_windows ()
 			# give some time for machine to start containers
 			sleep 2 && \
 			docker_machine_env && \
-			reset system
+			reset system && \
+			docker_machine_mounts
 }
 
 # Install everything required on Ubuntu 14.04+
