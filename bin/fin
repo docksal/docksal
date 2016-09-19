@@ -613,7 +613,7 @@ _remove_containers ()
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
-	docker_compose kill "$@" && docker_compose rm -vaf "$@"
+	docker_compose kill "$@" && docker_compose rm -vf "$@"
 }
 
 # Cleanup unused images and containters
