@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.1.6
+FIN_VERSION=0.1.7
 
 # Console colors
 red='\033[0;91m'
@@ -1136,7 +1136,6 @@ docker_machine_change_ip ()
 	local BROADCAST_MASK=`expr "$DOCKER_MACHINE_IP" : '\([0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.\)'`'255';
 	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
 		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 $DOCKER_MACHINE_IP netmask 255.255.255.0 broadcast $BROADCAST_MASK up" && \
-		sleep 2 && \
 		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
 }
 
@@ -1686,13 +1685,10 @@ install_prerequisites_mac ()
 
 	# If it was an upgrade
 	is_docker_machine_running && \
-		( echo-green "Upgrading Docker Machine..." && \
-			docker-machine upgrade "$DOCKER_MACHINE_NAME") && docker_machine_change_ip && \
-			# give some time for machine to start containers
-			sleep 2 && \
-			docker_machine_env && \
-			reset system && \
-			docker_machine_mounts
+		echo-green "Upgrading Docker Machine..." && \
+		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
+		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
+		docker_machine_stop && docker_machine_start
 }
 
 install_prerequisites_windows ()
@@ -1755,13 +1751,10 @@ install_prerequisites_windows ()
 
 	# If it was an upgrade
 	is_docker_machine_running && \
-		( echo-green "Upgrading Docker Machine..." && \
-			docker-machine upgrade "$DOCKER_MACHINE_NAME") && docker_machine_change_ip && \
-			# give some time for machine to start containers
-			sleep 2 && \
-			docker_machine_env && \
-			reset system && \
-			docker_machine_mounts
+		echo-green "Upgrading Docker Machine..." && \
+		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
+		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
+		docker_machine_stop && docker_machine_start
 }
 
 # Install everything required on Ubuntu 14.04+
