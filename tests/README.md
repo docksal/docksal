@@ -5,28 +5,28 @@ You need to have [Drupal 7 sample project](https://github.com/blinkreaction/drud
 You must have next structure of projects directory:
 >     projects
 >       ...
->       \_ drude
->       \_ drude-d7-testing
+>       \_ docksal
+>       \_ drupal7
 >       ...
 
 You need to install additional bats sub-modules. To perform this, perform next actions.
 ```
-cd ~/projects/drude/tests
+cd ~/projects/docksal/tests
 git submodule init
 git submodule update
 ```
 
-You can run any test from **drude-d7-testing** directory using next command:
+You can run any test from **drupal7** directory using next command:
 ```
-bats ../drude/tests/start.bats
+bats ../docksal/tests/start.bats
 ```
 
 By default OS is "OS X" (mac). You can set enviroment for test (OS is mac|linux|win):
 ```
-OS=linux bats ../drude/tests/start.bats
+OS=linux bats ../docksal/tests/start.bats
 ```
 
-You can run all tests using next command (it must be run from **drude/tests directory**):
+You can run all tests using next command (it must be run from **docksal/tests directory**):
 ```
 ./run-tests.sh
 ```

@@ -4,8 +4,8 @@
 setup() {
 	. /usr/local/bin/fin > /dev/null
 
-	# If you check your update in dsh.
-	#. ../drude/bin/fin > /dev/null
+	# If you check your update in fin.
+	#. ../docksal/bin/fin > /dev/null
 
 	# Current system variables.
 	OS="${OS:-mac}"
