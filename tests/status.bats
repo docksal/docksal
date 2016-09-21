@@ -28,9 +28,9 @@ load fin_script
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Name" ]]
 	[[ ${lines[1]} =~ "---" ]]
-	[[ ${lines[2]} =~ "druded7testing" ]]
-	[[ ${lines[3]} =~ "druded7testing" ]]
-	[[ ${lines[4]} =~ "druded7testing" ]]
+	[[ ${lines[2]} =~ "drupal7" ]]
+	[[ ${lines[3]} =~ "drupal7" ]]
+	[[ ${lines[4]} =~ "drupal7" ]]
 }
 
 @test "Checking fin st output" {
@@ -39,9 +39,9 @@ load fin_script
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Name" ]]
 	[[ ${lines[1]} =~ "---" ]]
-	[[ ${lines[2]} =~ "druded7testing" ]]
-	[[ ${lines[3]} =~ "druded7testing" ]]
-	[[ ${lines[4]} =~ "druded7testing" ]]
+	[[ ${lines[2]} =~ "drupal7" ]]
+	[[ ${lines[3]} =~ "drupal7" ]]
+	[[ ${lines[4]} =~ "drupal7" ]]
 }
 
 @test "Checking fin ps output" {
@@ -50,9 +50,9 @@ load fin_script
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Name" ]]
 	[[ ${lines[1]} =~ "---" ]]
-	[[ ${lines[2]} =~ "druded7testing" ]]
-	[[ ${lines[3]} =~ "druded7testing" ]]
-	[[ ${lines[4]} =~ "druded7testing" ]]
+	[[ ${lines[2]} =~ "drupal7" ]]
+	[[ ${lines[3]} =~ "drupal7" ]]
+	[[ ${lines[4]} =~ "drupal7" ]]
 }
 
 @test "Checking fin status -a output" {

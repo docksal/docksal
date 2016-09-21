@@ -11,36 +11,36 @@ load fin_script
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Removing containers..." ]]
-	[[ ${lines[1]} =~ "Killing druded7testing" ]]
-	[[ ${lines[2]} =~ "Killing druded7testing" ]]
-	[[ ${lines[3]} =~ "Killing druded7testing" ]]
-	[[ ${lines[4]} =~ "Removing druded7testing" ]]
-	[[ ${lines[5]} =~ "Removing druded7testing" ]]
-	[[ ${lines[6]} =~ "Removing druded7testing" ]]
+	[[ ${lines[1]} =~ "Killing drupal7" ]]
+	[[ ${lines[2]} =~ "Killing drupal7" ]]
+	[[ ${lines[3]} =~ "Killing drupal7" ]]
+	[[ ${lines[4]} =~ "Removing drupal7" ]]
+	[[ ${lines[5]} =~ "Removing drupal7" ]]
+	[[ ${lines[6]} =~ "Removing drupal7" ]]
 }
 
 @test "Checking output of fin reset cli" {
 	run fin reset cli
 
 	[ $status -eq 0 ]
-	[[ ${lines[0]} =~ "Killing druded7testing" ]]
-	[[ ${lines[1]} =~ "Removing druded7testing" ]]
+	[[ ${lines[0]} =~ "Killing drupal7" ]]
+	[[ ${lines[1]} =~ "Removing drupal7" ]]
 }
 
 @test "Checking output of fin reset db" {
 	run fin reset db
 
 	[ $status -eq 0 ]
-	[[ ${lines[0]} =~ "Killing druded7testing" ]]
-	[[ ${lines[1]} =~ "Removing druded7testing" ]]
+	[[ ${lines[0]} =~ "Killing drupal7" ]]
+	[[ ${lines[1]} =~ "Removing drupal7" ]]
 }
 
 @test "Checking output of fin reset web" {
 	run fin reset web
 
 	[ $status -eq 0 ]
-	[[ ${lines[0]} =~ "Killing druded7testing" ]]
-	[[ ${lines[1]} =~ "Removing druded7testing" ]]
+	[[ ${lines[0]} =~ "Killing drupal7" ]]
+	[[ ${lines[1]} =~ "Removing drupal7" ]]
 }
 
 @test "Checking fin remove function" {
@@ -48,12 +48,12 @@ load fin_script
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Removing containers..." ]]
-	[[ ${lines[1]} =~ "Killing druded7testing" ]]
-	[[ ${lines[2]} =~ "Killing druded7testing" ]]
-	[[ ${lines[3]} =~ "Killing druded7testing" ]]
-	[[ ${lines[4]} =~ "Removing druded7testing" ]]
-	[[ ${lines[5]} =~ "Removing druded7testing" ]]
-	[[ ${lines[6]} =~ "Removing druded7testing" ]]
+	[[ ${lines[1]} =~ "Killing drupal7" ]]
+	[[ ${lines[2]} =~ "Killing drupal7" ]]
+	[[ ${lines[3]} =~ "Killing drupal7" ]]
+	[[ ${lines[4]} =~ "Removing drupal7" ]]
+	[[ ${lines[5]} =~ "Removing drupal7" ]]
+	[[ ${lines[6]} =~ "Removing drupal7" ]]
 
 	# Rerun containers after removing.
 	fin up > /dev/null

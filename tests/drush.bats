@@ -10,7 +10,7 @@ load fin_script
 	run fin drush --version
 
 	[ $status -eq 0 ]
-	[[ ${lines[0]} =~ "Drush Version   :  8.1.3" ]]
+	[[ ${lines[0]} =~ "Drush Version   :  8.0.5" ]]
 }
 
 @test "Checking output of fin drush st (Drupal version)" {
@@ -18,7 +18,7 @@ load fin_script
 	run fin drush st
 
 	[ $status -eq 0 ]
-	[[ ${lines[0]} =~ "Drupal version         :  7.34" ]]
+	[[ ${lines[0]} =~ "Drupal version         :  7.44" ]]
 
 	cd ..
 }

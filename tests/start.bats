@@ -11,11 +11,9 @@ load fin_script
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Starting services..." ]]
-	[[ ${lines[1]} =~ "druded7testing" ]]
-	[[ ${lines[2]} =~ "druded7testing" ]]
-	[[ ${lines[3]} =~ "druded7testing" ]]
-	[[ ${lines[4]} =~ "Connecting vhost-proxy to networks..." ]]
-	[[ ${lines[5]} =~ "Container and host" ]]
+	[[ ${lines[1]} =~ "drupal7" ]]
+	[[ ${lines[2]} =~ "drupal7" ]]
+	[[ ${lines[3]} =~ "drupal7" ]]
 }
 
 @test "Checking output of fin up" {
@@ -23,11 +21,9 @@ load fin_script
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Starting services..." ]]
-	[[ ${lines[1]} =~ "druded7testing" ]]
-	[[ ${lines[2]} =~ "druded7testing" ]]
-	[[ ${lines[3]} =~ "druded7testing" ]]
-	[[ ${lines[4]} =~ "Connecting vhost-proxy to networks..." ]]
-	[[ ${lines[5]} =~ "Container and host" ]]
+	[[ ${lines[1]} =~ "drupal7" ]]
+	[[ ${lines[2]} =~ "drupal7" ]]
+	[[ ${lines[3]} =~ "drupal7" ]]
 }
 
 @test "Checking fin _start_containters function" {
@@ -35,10 +31,8 @@ load fin_script
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Starting services..." ]]
-	[[ ${lines[1]} =~ "druded7testing" ]]
-	[[ ${lines[2]} =~ "druded7testing" ]]
-	[[ ${lines[3]} =~ "druded7testing" ]]
-	[[ ${lines[4]} =~ "Connecting vhost-proxy to networks..." ]]
-	[[ ${lines[5]} =~ "Container and host" ]]
+	[[ ${lines[1]} =~ "drupal7" ]]
+	[[ ${lines[2]} =~ "drupal7" ]]
+	[[ ${lines[3]} =~ "drupal7" ]]
 }
 

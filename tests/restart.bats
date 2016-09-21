@@ -11,11 +11,9 @@ load fin_script
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Restarting services..." ]]
-	[[ ${lines[1]} =~ "Restarting druded7testing" ]]
-	[[ ${lines[2]} =~ "Restarting druded7testing" ]]
-	[[ ${lines[3]} =~ "Restarting druded7testing" ]]
-	[[ ${lines[4]} =~ "Connecting vhost-proxy to networks..." ]]
-	[[ ${lines[5]} =~ "Container and host" ]]
+	[[ ${lines[1]} =~ "Restarting drupal7" ]]
+	[[ ${lines[2]} =~ "Restarting drupal7" ]]
+	[[ ${lines[3]} =~ "Restarting drupal7" ]]
 }
 
 @test "Checking fin _restart_containers function" {
@@ -23,10 +21,8 @@ load fin_script
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Restarting services..." ]]
-	[[ ${lines[1]} =~ "Restarting druded7testing" ]]
-	[[ ${lines[2]} =~ "Restarting druded7testing" ]]
-	[[ ${lines[3]} =~ "Restarting druded7testing" ]]
-	[[ ${lines[4]} =~ "Connecting vhost-proxy to networks..." ]]
-	[[ ${lines[5]} =~ "Container and host" ]]
+	[[ ${lines[1]} =~ "Restarting drupal7" ]]
+	[[ ${lines[2]} =~ "Restarting drupal7" ]]
+	[[ ${lines[3]} =~ "Restarting drupal7" ]]
 }
 

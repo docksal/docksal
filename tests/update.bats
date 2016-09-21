@@ -10,9 +10,8 @@ load fin_script
 	run fin update
 
 	[ $status -eq 0 ]
-	[[ $output =~ "Use fin update" ]]
-	[[ $output =~ "prerequisites" ]]
-	[[ $output =~ "boot2docker" ]]
-	[[ $output =~ "images" ]]
-	[[ $output =~ "dsh" ]]
+	[[ $output =~ "fin update - Automated update of Docksal system components" ]]
+	[[ $output =~ "fin update prerequisites" ]]
+	[[ $output =~ "fin update images" ]]
+	[[ $output =~ "fin update self" ]]
 }

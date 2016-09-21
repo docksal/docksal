@@ -14,14 +14,14 @@ load fin_script
 
 @test "Checking fin ssh-add bats_rsa" {
 	cp ../drude/tests/ssh-key/* ~/.ssh
-	fin ssh-add bats_rsa
+	fin ssh-add /root/.ssh/bats_rsa
 }
 
 @test "Checking fin ssh-add: key doesn't exist" {
 	run fin ssh-add doesnt_exist_rsa
 
 	[ $status -eq 1 ]
-	[[ $output =~ "/.ssh/doesnt_exist_rsa: No such file or directory" ]]
+	[[ $output =~ "doesnt_exist_rsa: No such file or directory" ]]
 }
 
 @test "Checking fin ssh-add -l (one key)" {

@@ -47,5 +47,5 @@ load fin_script
 	run check_drush_path
 
 	[ $status -eq 1 ]
-	[[ $output =~ "dsh: This command must be run inside Drupal's document root" ]]
+	[[ $output =~ "ds: This command must be run inside Drupal's document root" ]]
 }

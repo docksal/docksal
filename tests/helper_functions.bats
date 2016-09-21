@@ -52,8 +52,8 @@ not_true_if_failed() {
 	[ $output = "$(pwd)" ]
 }
 
-@test "Checking get_drude_path function" {
-	run get_drude_path
+@test "Checking get_docksal_path function" {
+	run get_docksal_path
 
 	[ $status -eq 0 ]
 	[ $output = $(pwd) ]
@@ -102,34 +102,7 @@ not_true_if_failed() {
 	[ "$output" = "$cwd" ]
 }
 
-@test "Checking clean_string function." {
-	local string="Abc-123/"
-	run clean_string $string
-
-	# <debug section>
-	local cleaned=$(echo "$string" | sed -e 's/[^a-zA-Z0-9_-]$//')
-	echo ${cleaned}
-	echo "+=============================================================="
-	echo "+ Input string: $string"
-	# </debug section>
-
-	[ $status -eq 0 ]
-	[ "$output" = "Abc-123" ]
-}
-
-@test "Checking get_mysql_connect function. Case#1: Outside of docroot" {
-	run get_mysql_connect
-
-	# <debug section>
-	echo "==============================================================="
-	echo "Output of sql-connect with disabled TTY: $(DRUDE_IS_TTY=0 _run drush sql-connect)"
-	# </debug section>
-
-	[ $status -eq 0 ]
-	[ "${lines[8]}" = "#1 [internal function]: drush_sql_connect()" ]
-}
-
-@test "Checking get_mysql_connect function. Case#2: Inside of docroot" {
+@test "Checking get_mysql_connect function. Inside of docroot" {
 	cd docroot/sites
 	run get_mysql_connect
 
