@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-load dsh_script
+load fin_script
 
 true_if_failed() {
 	true

@@ -1,4 +1,4 @@
-# Bats tests for dsh
+# Bats tests for fin
 
 You need to install [Bats](https://github.com/sstephenson/bats) before running tests.
 You need to have [Drupal 7 sample project](https://github.com/blinkreaction/drude-d7-testing) installed in your projects directory.
@@ -46,12 +46,12 @@ or specify parameter:
 
 In most cases test name is same as commands name:
 ```
-init.bats => dsh init
-start.bats => dsh start
+init.bats => fin init
+start.bats => fin start
 ...
 ```
 
-There are also files with tests for dsh functions:
+There are also files with tests for fin functions:
 ```
 helper_functions.bats - Helper functions
 basics_check_functions.bats - Basics check functions

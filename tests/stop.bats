@@ -1,26 +1,26 @@
 #!/usr/bin/env bats
 
-load dsh_script
+load fin_script
 
-@test "Checking dsh stop" {
-	dsh start
+@test "Checking fin stop" {
+	fin start
 }
 
-@test "Checking output of dsh stop" {
-	run dsh stop
+@test "Checking output of fin stop" {
+	run fin stop
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Stopping services..." ]]
 }
 
-@test "Checking output of dsh down" {
-	run dsh down
+@test "Checking output of fin down" {
+	run fin down
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Stopping services..." ]]
 }
 
-@test "Checking dsh _stop_containers function" {
+@test "Checking fin _stop_containers function" {
 	run _stop_containers
 
 	[ $status -eq 0 ]

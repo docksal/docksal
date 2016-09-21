@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-load dsh_script
+load fin_script
 
 @test "Checking check_yml function. Case#1 Linux docker-compose exists." {
 	if [[ "$OS" = "linux"  || $(is_docker_beta) -ne 0 ]]; then

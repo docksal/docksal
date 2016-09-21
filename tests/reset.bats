@@ -1,13 +1,13 @@
 #!/usr/bin/env bats
 
-load dsh_script
+load fin_script
 
-@test "Checking dsh reset -f" {
-	dsh reset -f
+@test "Checking fin reset -f" {
+	fin reset -f
 }
 
-@test "Checking output of dsh reset -f" {
-	run dsh reset -f
+@test "Checking output of fin reset -f" {
+	run fin reset -f
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Removing containers..." ]]
@@ -19,31 +19,31 @@ load dsh_script
 	[[ ${lines[6]} =~ "Removing druded7testing" ]]
 }
 
-@test "Checking output of dsh reset cli" {
-	run dsh reset cli
+@test "Checking output of fin reset cli" {
+	run fin reset cli
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Killing druded7testing" ]]
 	[[ ${lines[1]} =~ "Removing druded7testing" ]]
 }
 
-@test "Checking output of dsh reset db" {
-	run dsh reset db
+@test "Checking output of fin reset db" {
+	run fin reset db
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Killing druded7testing" ]]
 	[[ ${lines[1]} =~ "Removing druded7testing" ]]
 }
 
-@test "Checking output of dsh reset web" {
-	run dsh reset web
+@test "Checking output of fin reset web" {
+	run fin reset web
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Killing druded7testing" ]]
 	[[ ${lines[1]} =~ "Removing druded7testing" ]]
 }
 
-@test "Checking dsh remove function" {
+@test "Checking fin remove function" {
 	run remove -f
 
 	[ $status -eq 0 ]
@@ -56,6 +56,6 @@ load dsh_script
 	[[ ${lines[6]} =~ "Removing druded7testing" ]]
 
 	# Rerun containers after removing.
-	dsh up > /dev/null
+	fin up > /dev/null
 }
 

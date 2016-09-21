@@ -1,29 +1,29 @@
 #!/usr/bin/env bats
 
-load dsh_script
+load fin_script
 
-@test "Checking dsh status" {
-	dsh status
+@test "Checking fin status" {
+	fin status
 }
 
-@test "Checking dsh st" {
-	dsh st
+@test "Checking fin st" {
+	fin st
 }
 
-@test "Checking dsh ps" {
-	dsh ps
+@test "Checking fin ps" {
+	fin ps
 }
 
-@test "Checking dsh status -a" {
-	dsh status -a
+@test "Checking fin status -a" {
+	fin status -a
 }
 
-@test "Checking dsh status" {
-	dsh status -all
+@test "Checking fin status" {
+	fin status -all
 }
 
-@test "Checking dsh status output" {
-	run dsh status
+@test "Checking fin status output" {
+	run fin status
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Name" ]]
@@ -33,8 +33,8 @@ load dsh_script
 	[[ ${lines[4]} =~ "druded7testing" ]]
 }
 
-@test "Checking dsh st output" {
-	run dsh st
+@test "Checking fin st output" {
+	run fin st
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Name" ]]
@@ -44,8 +44,8 @@ load dsh_script
 	[[ ${lines[4]} =~ "druded7testing" ]]
 }
 
-@test "Checking dsh ps output" {
-	run dsh ps
+@test "Checking fin ps output" {
+	run fin ps
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Name" ]]
@@ -55,8 +55,8 @@ load dsh_script
 	[[ ${lines[4]} =~ "druded7testing" ]]
 }
 
-@test "Checking dsh status -a output" {
-	run dsh status -a
+@test "Checking fin status -a output" {
+	run fin status -a
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "IMAGE" ]]

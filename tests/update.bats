@@ -1,16 +1,16 @@
 #!/usr/bin/env bats
 
-load dsh_script
+load fin_script
 
-@test "Checking dsh update" {
-	dsh update
+@test "Checking fin update" {
+	fin update
 }
 
-@test "Checking dsh update output" {
-	run dsh update
+@test "Checking fin update output" {
+	run fin update
 
 	[ $status -eq 0 ]
-	[[ $output =~ "Use dsh update" ]]
+	[[ $output =~ "Use fin update" ]]
 	[[ $output =~ "prerequisites" ]]
 	[[ $output =~ "boot2docker" ]]
 	[[ $output =~ "images" ]]

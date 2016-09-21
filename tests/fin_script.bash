@@ -1,11 +1,11 @@
 #!/usr/bin/env bats
 
-# Include dsh script for usign internal dsh function.
+# Include fin script for usign internal fin function.
 setup() {
-	. /usr/local/bin/dsh > /dev/null
+	. /usr/local/bin/fin > /dev/null
 
 	# If you check your update in dsh.
-	#. ../drude/bin/dsh > /dev/null
+	#. ../drude/bin/fin > /dev/null
 
 	# Current system variables.
 	OS="${OS:-mac}"

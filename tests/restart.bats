@@ -1,13 +1,13 @@
 #!/usr/bin/env bats
 
-load dsh_script
+load fin_script
 
-@test "Checking dsh restart" {
-	dsh restart
+@test "Checking fin restart" {
+	fin restart
 }
 
-@test "Checking output of dsh restart" {
-	run dsh restart
+@test "Checking output of fin restart" {
+	run fin restart
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Restarting services..." ]]
@@ -18,7 +18,7 @@ load dsh_script
 	[[ ${lines[5]} =~ "Container and host" ]]
 }
 
-@test "Checking dsh _restart_containers function" {
+@test "Checking fin _restart_containers function" {
 	run _restart_containers
 
 	[ $status -eq 0 ]

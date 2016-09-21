@@ -1,13 +1,13 @@
 #!/usr/bin/env bats
 
-load dsh_script
+load fin_script
 
-@test "Checking dsh start" {
-	dsh start
+@test "Checking fin start" {
+	fin start
 }
 
-@test "Checking output of dsh start" {
-	run dsh start
+@test "Checking output of fin start" {
+	run fin start
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Starting services..." ]]
@@ -18,8 +18,8 @@ load dsh_script
 	[[ ${lines[5]} =~ "Container and host" ]]
 }
 
-@test "Checking output of dsh up" {
-	run dsh up
+@test "Checking output of fin up" {
+	run fin up
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "Starting services..." ]]
@@ -30,7 +30,7 @@ load dsh_script
 	[[ ${lines[5]} =~ "Container and host" ]]
 }
 
-@test "Checking dsh _start_containters function" {
+@test "Checking fin _start_containters function" {
 	run _start_containers
 
 	[ $status -eq 0 ]

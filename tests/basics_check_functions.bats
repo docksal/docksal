@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-load dsh_script
+load fin_script
 
 @test "Checking is_linux function." {
 	# Value from preset variable.

@@ -29,9 +29,9 @@ echo "Test command: status"
 OS=$OS bats ../drude/tests/status.bats
 echo "Test command: update"
 OS=$OS bats ../drude/tests/update.bats
-echo "Test dsh helper functions"
+echo "Test fin helper functions"
 OS=$OS bats ../drude/tests/helper_functions.bats
-echo "Tests dsh basics check functions"
+echo "Tests fin basics check functions"
 OS=$OS bats ../drude/tests/basics_check_functions.bats
-echo "Tests dsh control functions"
+echo "Tests fin control functions"
 OS=$OS bats ../drude/tests/control_functions.bats
