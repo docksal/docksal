@@ -1806,8 +1806,8 @@ install_prerequisites_ubuntu ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN_NIX" && \
-			chmod +x "$DOCKER_MACHINE_BIN_NIX"
+		sudo curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN_NIX" && \
+			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
 	fi
 
 	# Adding a subnet for Docksal. Make sure we don't do this twice
