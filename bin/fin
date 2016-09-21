@@ -142,7 +142,7 @@ if_failed ()
 	if [ ! $? -eq 0 ]; then
 		msg="error executing last command"
 		if [[ "$1" != "" ]]; then msg="$1"; fi
-		echo-red "ds: $msg"
+		echo-red "(docksal) $msg"
 		exit 1
 	fi
 }
@@ -515,7 +515,7 @@ check_drush_path ()
 {
 	local pathdiff=$(get_current_relative_path)
 	if [[ "$(pwd)" == "$pathdiff" ]]; then
-		echo-red "ds: This command must be run inside Drupal's document root"
+		echo-red "This command must be run inside Drupal's document root"
 		exit 1
 	fi
 }
@@ -1132,6 +1132,7 @@ docker_machine_stop ()
 
 docker_machine_change_ip ()
 {
+	echo "(docksal) Applying IP address"
 	# extract first three parts of IP and append 255 to get broadcast mask
 	local BROADCAST_MASK=`expr "$DOCKER_MACHINE_IP" : '\([0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.\)'`'255';
 	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
@@ -1762,7 +1763,7 @@ install_prerequisites_ubuntu ()
 {
 	is_tty || return 1 # only allow in interactive shell
 	if ! is_ubuntu; then
-		echo-red "ds: prerequisites installation is currently supported only on Ubuntu 14.04+"
+		echo-red "Prerequisites installation is currently supported only on Ubuntu 14.04+"
 		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
 		_confirm "Are you sure you want to continue?"
 	fi
@@ -1879,7 +1880,7 @@ EOF
 		echo -e ". $destination" >> "$HOME/$SOURCE_FILE"
 		if_failed "Failed to write file to $HOME/$SOURCE_FILE"
 		echo-green "Autocomplete appended to $HOME/$SOURCE_FILE"
-		echo-yellow "ds: Please restart your bash session to apply"
+		echo-yellow "Please restart your bash session to apply"
 	fi
 }
 
@@ -2150,10 +2151,10 @@ mysql_import ()
 
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then
-		echo-green "ds: mysql-import finished";
+		echo-green "mysql-import finished";
 		if is_tty; then _notify "Docksal" "Mysql import finished"; fi
 	else
-		echo-red "ds: mysql-import failed";
+		echo-red "mysql-import failed";
 		if is_tty; then _notify "Docksal" "Mysql import failed!"; fi
 	fi
 }
@@ -2594,7 +2595,7 @@ case "$1" in
 		[ ! -f "$ds_command_script" ] && ds_command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
 		# If not found there as well then it is a wrong command
 		[ ! -f "$ds_command_script" ] && \
-			echo-yellow "ds: unknown command '$*'. See 'fin help' for list of available commands" && \
+			echo-yellow "Unknown command '$*'. See 'fin help' for list of available commands" && \
 			exit 1
 
 		if [[ ! -x "$ds_command_script" ]]; then
