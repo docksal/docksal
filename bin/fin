@@ -1132,7 +1132,7 @@ docker_machine_stop ()
 
 docker_machine_change_ip ()
 {
-	echo "(docksal) Applying IP address"
+	echo "(docksal) Applying IP address $DOCKER_MACHINE_IP"
 	# extract first three parts of IP and append 255 to get broadcast mask
 	local BROADCAST_MASK=`expr "$DOCKER_MACHINE_IP" : '\([0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.\)'`'255';
 	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
