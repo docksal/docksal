@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Switch to drude-d7-testing folder.
-cd ../../drude-d7-testing
+# Switch to drupal7 folder.
+cd ../../drupal7
 
 OS="${OS:-mac}"
 if [ ! -z "$1" ]; then
@@ -10,28 +10,28 @@ fi
 
 # Run tests. Order is important.
 echo "Test command: start"
-OS=$OS bats ../drude/tests/start.bats
+OS=$OS bats ../docksal/tests/start.bats
 echo "Test command: init"
-OS=$OS bats ../drude/tests/init.bats
+OS=$OS bats ../docksal/tests/init.bats
 echo "Test command: stop"
-OS=$OS bats ../drude/tests/stop.bats
+OS=$OS bats ../docksal/tests/stop.bats
 echo "Test command: reset"
-OS=$OS bats ../drude/tests/reset.bats
+OS=$OS bats ../docksal/tests/reset.bats
 echo "Test command: restart"
-OS=$OS bats ../drude/tests/restart.bats
+OS=$OS bats ../docksal/tests/restart.bats
 echo "Test command: drush"
-OS=$OS bats ../drude/tests/drush.bats
+OS=$OS bats ../docksal/tests/drush.bats
 echo "Test command: exec"
-OS=$OS bats ../drude/tests/exec.bats
+OS=$OS bats ../docksal/tests/exec.bats
 echo "Test command: ssh-add"
-OS=$OS bats ../drude/tests/ssh-add.bats
+OS=$OS bats ../docksal/tests/ssh-add.bats
 echo "Test command: status"
-OS=$OS bats ../drude/tests/status.bats
+OS=$OS bats ../docksal/tests/status.bats
 echo "Test command: update"
-OS=$OS bats ../drude/tests/update.bats
+OS=$OS bats ../docksal/tests/update.bats
 echo "Test fin helper functions"
-OS=$OS bats ../drude/tests/helper_functions.bats
+OS=$OS bats ../docksal/tests/helper_functions.bats
 echo "Tests fin basics check functions"
-OS=$OS bats ../drude/tests/basics_check_functions.bats
+OS=$OS bats ../docksal/tests/basics_check_functions.bats
 echo "Tests fin control functions"
-OS=$OS bats ../drude/tests/control_functions.bats
+OS=$OS bats ../docksal/tests/control_functions.bats
