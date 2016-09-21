@@ -3,8 +3,8 @@
 Docker and Docker Compose based environment.
 
 **For a fully working example of Docksal setup take a look at:**
-- [Drupal 7 sample project](https://github.com/docksal/docksal-drupal7)
-- [Drupal 8 sample project](https://github.com/docksal/docksal-drupal8)
+- [Drupal 7 sample project](https://github.com/docksal/drupal7)
+- [Drupal 8 sample project](https://github.com/docksal/drupal8)
 
 
 ## System requirements
