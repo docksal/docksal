@@ -52,5 +52,6 @@ COPY bin/start_project.sh /usr/local/bin/start_project.sh
 
 COPY www/refresh.html /var/www/proxy/refresh.html
 
+ENV SUPERVISOR_DEBUG 0
 
 CMD ["supervisord", "-n"]
