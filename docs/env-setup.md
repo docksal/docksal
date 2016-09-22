@@ -3,11 +3,6 @@
 **This is a one time setup.**  
 Once you have a working Docksal environment in place, you can use it for all Docksal powered projects.
 
-## Directory structure
-
-All your Docksal projects should be located **under current user's home folder**.
-Docksal recommends a particular [directory structure](/docs/directory-structure.md).  
-
 ## Windows only
 
 On Windows you will need a Linux-type shell.
@@ -19,31 +14,15 @@ Babun should be installed and run **as a regular user (do not use admin command 
 
 ## Setup
 
-1. Install [VirtualBox](https://www.virtualbox.org)
-2. Install `fin` (Docksal Shell Helper)
+1. Install [VirtualBox](https://www.virtualbox.org) (**Mac and Windows only**)
+2. Install `fin` (Docksal control utility)
 
     ```
     sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin
     sudo chmod +x /usr/local/bin/fin
     ```
 
-3. Create the `<projects>` directory
-
-    E.g. `~/WebProjects` on Mac and Linux:
-    
-    ```
-    mkdir ~/WebProjects
-    cd ~/WebProjects
-    ```
-
-    `c:\Users\CurrentUser\WebProjects` (`/c/Users/CurrentUser/WebProjects`) on Windows:
-
-    ```
-    mkdir /c/Users/CurrentUser/WebProjects
-    cd /c/Users/CurrentUser/WebProjects
-    ```
-
-4. Install Docksal's prerequisites
+3. Install Docksal prerequisites
 
     ```
     fin install prerequisites
