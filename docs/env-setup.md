@@ -23,7 +23,7 @@ Babun should be installed and run **as a regular user (do not use admin command 
 2. Install `fin` (Docksal Shell Helper)
 
     ```
-    sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin
+    sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin
     sudo chmod +x /usr/local/bin/fin
     ```
 
