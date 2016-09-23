@@ -50,6 +50,11 @@ COPY conf/supervisord.conf /etc/supervisor.d/docker-gen.ini
 
 COPY bin/start_project.sh /usr/local/bin/start_project.sh
 
+# Stop inactive containers.
+ENV INACTIVITY_TIMEOUT 1h
+COPY conf/crontab /var/spool/cron/crontabs/root
+COPY bin/stop_projects.sh /usr/local/bin/stop_projects.sh
+
 COPY www/refresh.html /var/www/proxy/refresh.html
 
 ENV SUPERVISOR_DEBUG 0
