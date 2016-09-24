@@ -6,9 +6,11 @@ if [[ "$SUPERVISOR_DEBUG" -gt "0" ]]; then
 fi
 
 if [[ "$1" != "" && -f "$1" ]]; then
-  export COMPOSE_FILE="$1"
-
-  local LOCK_FILE="$(dirname $COMPOSE_FILE)/.lock"
+  local DC_FILE="$1"
+  local DC_PROJECT="$(dirname $DC_FILE)"
+  local LOCK_FILE="$COMPOSE_PROJECT/.lock"
+  # Switchig to the project directory - docker-compose will pick up settings from there
+  cd $DC_PROJECT
 
   if [[ ! -f "$LOCK_FILE" ]]; then
     echo "Creating lockfile $LOCK_FILE"
