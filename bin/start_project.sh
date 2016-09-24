@@ -16,9 +16,9 @@ if [[ "$1" != "" && -f "$1" ]]; then
 
     # Figure out the default project network name
     # TODO: refactor into something less hacky
-    #local network="$(/usr/local/bin/docker-compose ps cli | awk 'NR==3 {print $1}' | sed 's/_cli_1//')_default"
+    local network="$(/usr/local/bin/docker-compose ps cli | awk 'NR==3 {print $1}' | sed 's/_cli_1//')_default"
     # Docker Compose project name is an alphanumeric string derived from the directory name
-    local network="$(echo $(basename $(dirname $COMPOSE_FILE)) | sed 's/[^[:alnum:]]*//g')_default"
+    #local network="$(echo $(basename $(dirname $COMPOSE_FILE)) | sed 's/[^[:alnum:]]*//g')_default"
     /usr/local/bin/docker network connect "$network" vhost-proxy 2>&1
     # Restart services if vhost-proxy was connected (first time) to the project network
     # TODO: figure out how to avoid doing a restart
