@@ -63,7 +63,7 @@ ENV INACTIVITY_TIMEOUT 1h
 COPY conf/crontab /var/spool/cron/crontabs/root
 COPY bin/stop_projects.sh /usr/local/bin/stop_projects.sh
 
-COPY www/refresh.html /var/www/proxy/refresh.html
+COPY www /var/www/proxy
 
 ENV SUPERVISOR_DEBUG 0
 
