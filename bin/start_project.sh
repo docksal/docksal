@@ -11,7 +11,7 @@ if [[ "$1" != "" && -f "$1" ]]; then
   local LOCK_FILE="$(dirname $COMPOSE_FILE)/.lock"
 
   if [[ ! -f "$LOCK_FILE" ]]; then
-    echo "Create lockfile $LOCK_FILE"
+    echo "Creating lockfile $LOCK_FILE"
     touch "$LOCK_FILE"
 
     # Figure out the default project network name
@@ -24,12 +24,14 @@ if [[ "$1" != "" && -f "$1" ]]; then
     # TODO: figure out how to avoid doing a restart
     if [[ $? == 0 ]]; then
       echo "Connected vhost-proxy to \"${network}\" network."
+      # Restart to trigger docker-gen to regenerate nginx config
+      /usr/local/bin/docker-compose restart
+    else
+      # Start containers
+      /usr/local/bin/docker-compose start
     fi
 
-    # Start containers.
-    /usr/local/bin/docker-compose start
-
-    echo "Remove lockfile $LOCK_FILE"
+    echo "Removing lockfile $LOCK_FILE"
     rm -rf "$LOCK_FILE"
     exit 0
   else
