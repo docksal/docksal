@@ -1,9 +1,12 @@
 #!/bin/sh
 
-if [[ "$SUPERVISOR_DEBUG" -gt "0" ]]; then
+# TODO: this does not work as env variables are not passed/accessible here
+if [[ $SUPERVISOR_DEBUG > 0 ]]; then
   echo "SUPERVISOR DEBUG"
   set -x
 fi
+
+set -x
 
 if [[ "$1" != "" && -f "$1" ]]; then
   local DC_FILE="$1"
@@ -41,4 +44,5 @@ if [[ "$1" != "" && -f "$1" ]]; then
     exit 1
   fi
 fi
+echo "ERROR: Invalid or empty argument"
 exit 1
