@@ -2067,7 +2067,7 @@ _run ()
 	fi
 
 	local columns
-	if is_tty && $(which tput 2>&1 >dev/null); then
+	if is_tty && $(which tput 1>/dev/null 2>/dev/null); then
 		columns="export COLUMNS=$(tput cols 2>/dev/null || echo 80) &&"
 	fi
 
