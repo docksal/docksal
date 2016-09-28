@@ -32,7 +32,7 @@ CONFIG_ALIASES="$CONFIG_DIR/alias"
 CONFIG_LAST_CHECK="$CONFIG_DIR/last_check"
 CONFIG_MACHINES="$CONFIG_DIR/machines"
 CONFIG_MACHINE_ACTIVE="$CONFIG_MACHINES/.active"
-mkdir -p "$CONFIG_DIR" >/dev/null 2>/dev/null
+mkdir -p "$CONFIG_DIR" >/dev/null 2>&1
 # BIN folder
 CONFIG_BIN_DIR="$CONFIG_DIR/bin"
 CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
@@ -339,7 +339,7 @@ is_docker_beta ()
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
-	if [[ -x "$CONFIG_BIN_DIR/$1" ]] || (is_linux && which "$1" 2>/dev/null >/dev/null); then
+	if [[ -x "$CONFIG_BIN_DIR/$1" ]] || (is_linux && which "$1" >/dev/null 2>&1); then
 		return 0
 	else
 		if is_linux; then
@@ -437,7 +437,7 @@ is_vbox_version ()
 	if is_windows; then
 		[[ ! -f "$vboxmanage" ]] && return 1
 	else
-		! which "$vboxmanage" 2>/dev/null >/dev/null && return 1
+		! which "$vboxmanage" >/dev/null 2>&1 && return 1
 	fi
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
@@ -450,7 +450,7 @@ is_vbox_version ()
 is_docker_version ()
 {
 	if is_linux; then
-		! which 'docker' 2>/dev/null >/dev/null && return 1
+		! which 'docker' >/dev/null 2>&1 && return 1
 	else
 		[[ ! -x "$DOCKER_BIN" ]] && return 1
 	fi
@@ -465,7 +465,7 @@ is_docker_version ()
 is_docker_compose_version ()
 {
 	if is_linux; then
-		! which 'docker-compose' 2>/dev/null >/dev/null && return 1
+		! which 'docker-compose' >/dev/null 2>&1 && return 1
 	else
 		[[ ! -x "$DOCKER_COMPOSE_BIN" ]] && return 1
 	fi
@@ -480,7 +480,7 @@ is_docker_compose_version ()
 is_docker_machine_version ()
 {
 	if is_linux; then
-		! which 'docker-machine' 2>/dev/null >/dev/null && return 2
+		! which 'docker-machine' >/dev/null 2>&1 && return 2
 	else
 		[[ ! -x "$DOCKER_MACHINE_BIN" ]] && return 2
 	fi
@@ -634,14 +634,14 @@ _docker_cleanup ()
 	fi
 
 	echo-green "Cleaning up images..."
-	docker images -qf dangling=true | xargs docker rmi 2>1
+	docker images -qf dangling=true | xargs docker rmi 2>/dev/null
 	# TODO: remove below lines in 2017
-	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* 2>/dev/null 1>/dev/null
-	rm -f "$OLD_CONFIG_DIR/backups/Vagrantfile."* 2>/dev/null 1>/dev/null
-	rm -r "$OLD_CONFIG_DIR/backups" 2>/dev/null 1>/dev/null
-	rm -f "$OLD_CONFIG_DIR/vagrant.yml."* 2>/dev/null 1>/dev/null
-	rm -f "$OLD_CONFIG_DIR/backups/vagrant.yml."* 2>/dev/null 1>/dev/null
-	rm -f "$OLD_CONFIG_DIR/b2d_version" 2>/dev/null 1>/dev/null
+	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
+	rm -f "$OLD_CONFIG_DIR/backups/Vagrantfile."* >/dev/null 2>&1
+	rm -r "$OLD_CONFIG_DIR/backups" >/dev/null 2>&1
+	rm -f "$OLD_CONFIG_DIR/vagrant.yml."* >/dev/null 2>&1
+	rm -f "$OLD_CONFIG_DIR/backups/vagrant.yml."* >/dev/null 2>&1
+	rm -f "$OLD_CONFIG_DIR/b2d_version" >/dev/null 2>&1
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -696,7 +696,7 @@ show_help ()
 	# If nonempty param then show help for a certain command
 	if [[ ! -z "$1" ]]; then
 		# Check for help function for specific command
-		type "show_help_$1" 1>/dev/null 2>/dev/null
+		type "show_help_$1" >/dev/null 2>&1
 		if [ $? -eq 0 ]; then
 			show_help_$1
 			exit
@@ -1104,9 +1104,9 @@ docker_machine_create ()
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
 is_docker_machine_exist ()
 {
-	! which 'docker-machine' 2>/dev/null >/dev/null && return 1
+	! which 'docker-machine' >/dev/null 2>&1 && return 1
 	if [[ "$1" != "" ]] && [[ "$1" != "$DOCKER_MACHINE_NAME" ]]; then
-		docker-machine ls | grep "$1" 1>/dev/null 2>/dev/null
+		docker-machine ls | grep "$1" >/dev/null 2>&1
 	else
 		[[ "$DOCKER_MACHINE_STATUS" == *"not exist"* ]] && return 1 || return 0
 	fi
@@ -1220,7 +1220,7 @@ docker_machine_mount_nfs ()
 		local exports_test="/tmp/etc.exports.$RANDOM"
 		echo -e "$exports" | tee "$exports_test" >/dev/null
 		exports_errors=$(nfsd -F "$exports_test" checkexports 2>&1)
-		rm -f "$exports_test" 2>/dev/null 1>/dev/null
+		rm -f "$exports_test" >/dev/null 2>&1
 
 		# Do not write /etc/exports if there are config check errors
 		if [[ "$exports_errors" != '' ]]; then
@@ -1530,7 +1530,7 @@ install_prerequisites ()
 {
 	echo-green "Installing prerequisites..."
 
-	if which 'docker-machine' 2>/dev/null >/dev/null; then
+	if which 'docker-machine' >/dev/null 2>&1; then
 		if is_docker_machine_exist && ! is_docker_machine_running; then
 			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
 				"Start it with ${yellow}fin vm start${NC} first or destroy it with ${yellow}fin vm rm${NC} if you want it re-created."
@@ -1538,7 +1538,7 @@ install_prerequisites ()
 		fi
 	fi
 
-	if (which 'docker' 2>/dev/null >/dev/null) && is_docker_running; then
+	if (which 'docker' >/dev/null 2>&1) && is_docker_running; then
 		UPGRADE_IN_PROGRESS=1
 		_confirm "All containers will be stopped for an upgrade. Continue? "
 		echo "Stopping all containers..."
@@ -1607,12 +1607,12 @@ configure_resolver ()
 			TARGET_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
 		fi
 		install_dns_service "$TARGET_IP"
-		if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DOCKSAL_DNS_ZONE 2>/dev/null 1>/dev/null); then
+		if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DOCKSAL_DNS_ZONE >/dev/null 2>&1); then
 			return
 		fi
 		sudo mkdir -p /etc/resolver
 		# deleting old resolver is the only way to get mac to update config
-		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_ZONE" >/dev/null 2>/dev/null
+		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_ZONE" >/dev/null 2>&1
 		# NO \n at the begginning of line here!
 		echo -e "# .$DOCKSAL_DNS_ZONE domain resolution\nnameserver $TARGET_IP" | \
 			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_ZONE"
@@ -1644,7 +1644,7 @@ install_prerequisites_mac ()
 {
 	is_tty || return 1 # only allow in interactive shell
 	# Check VirtualBox
-	if ! which 'VBoxManage' 2>/dev/null >/dev/null; then
+	if ! which 'VBoxManage' >/dev/null 2>&1; then
 		echo-error "VBoxManage executable was not found. Virtual Box is required to run Docksal on Mac." \
 			&& exit 1
 	elif ! is_vbox_version; then
@@ -1772,7 +1772,7 @@ install_prerequisites_ubuntu ()
 	if ! is_docker_version; then
 		echo-green "Installing Docker..."
 		# Stop docker dervice if it exists
-		if ps aux | grep dockerd | grep -v grep >/dev/null 2>/dev/null; then
+		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
 			echo "Stopping docker service..."
 			sudo service docker stop 2>/dev/null
 		fi
@@ -2052,7 +2052,7 @@ _run ()
 	fi
 
 	local columns
-	if is_tty && $(which tput 2>/dev/null 1>dev/null); then
+	if is_tty && $(which tput 2>&1 >dev/null); then
 		columns="export COLUMNS=$(tput cols 2>/dev/null || echo 80) &&"
 	fi
 
@@ -2186,7 +2186,7 @@ mysql_dump ()
 	echo-green "Exporting..."
 	if [[ "${ARGV[0]}" != "" ]]; then
 		_RUN_NO_CDIR=1 CONTAINER_NAME="db" _run \
-			"mysqldump -u $__dump_user -p${__dump_password} $database_name" | tee 1>/dev/null "${ARGV[0]}"
+			"mysqldump -u $__dump_user -p${__dump_password} $database_name" | tee >/dev/null "${ARGV[0]}"
 	else
 		_RUN_NO_CDIR=1 CONTAINER_NAME="db" _run \
 			"mysqldump -u $__dump_user -p${__dump_password} $database_name"
@@ -2365,7 +2365,7 @@ sysinfo ()
 	# fin version
 	version
 
-	(which 'docker-machine' 2>/dev/null >/dev/null) && \
+	(which 'docker-machine' >/dev/null 2>&1) && \
 		echo "███  INSTANCES" && \
 		docker-machine ls
 
@@ -2377,11 +2377,11 @@ sysinfo ()
 	echo "███  DOCKER COMPOSE"
 	echo "Docker Compose: $(docker_compose version)"
 
-	(which 'docker-machine' 2>/dev/null >/dev/null) && \
+	(which 'docker-machine' >/dev/null 2>&1) && \
 		echo "███  DOCKER MACHINE" && \
 		docker-machine --version
 
-	if which "$vboxmanage" 2>/dev/null >/dev/null; then
+	if which "$vboxmanage" >/dev/null 2>&1; then
 		echo "███  VIRTUAL BOX"
 		VBoxManage --version
 
