@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.1.7
+FIN_VERSION=0.1.8
 
 # Console colors
 red='\033[0;91m'
@@ -230,6 +230,7 @@ docker_compose ()
 	# Running docker exec interactively on Windows requires workarounds
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	is_linux && DOCKER_COMPOSE_BIN="$DOCKER_COMPOSE_BIN_NIX"
+	is_docker_beta && DOCKER_COMPOSE_BIN="docker-compose"
 	# docker-compose cannot find docker-compose.yml in the path if there are symlinks on the way
 	# get_yml_path can properly find the file. Incapsulate the cd into subshell
 	(cd "$(get_yml_path)" && "$DOCKER_COMPOSE_BIN" "$@")
@@ -339,7 +340,7 @@ is_docker_beta ()
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
-	if [[ -x "$CONFIG_BIN_DIR/$1" ]] || (is_linux && which "$1" >/dev/null 2>&1); then
+	if [[ -x "$CONFIG_BIN_DIR/$1" ]] || ( (is_linux || is_docker_beta) && which "$1" 2>/dev/null >/dev/null ); then
 		return 0
 	else
 		if is_linux; then
