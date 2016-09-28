@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.1.8
+FIN_VERSION=0.1.9
 
 # Console colors
 red='\033[0;91m'
@@ -344,9 +344,9 @@ check_binary_found ()
 		return 0
 	else
 		if is_linux; then
-			echo-red "$1 executable was not found. (Try running 'fin install prerequisites')"
+			echo-red "$1 executable was not found. (Try running 'fin install tools')"
 		else
-			echo-red "$1 executable was not found in $CONFIG_BIN_DIR. (Try running 'fin install prerequisites')"
+			echo-red "$1 executable was not found in $CONFIG_BIN_DIR. (Try running 'fin install tools')"
 		fi
 		exit 1
 	fi
@@ -402,7 +402,7 @@ check_docker_running ()
 	check_binary_found 'docker-compose'
 	if ! is_docker_beta && ! is_docker_version; then
 		echo-error "Required Docker version is $REQUIREMENTS_DOCKER or higher"
-		echo -e "Run ${yellow}fin update prerequisites${NC} to update"
+		echo -e "Run ${yellow}fin update tools${NC} to update"
 		exit 1
 	fi
 	if is_docker_beta && ! is_docker_version; then
@@ -430,7 +430,7 @@ check_docker_running ()
 			exit 1
 		else
 			echo-error "Looks like your Docker client and Docker server are incompatible." \
-				"${green}Run ${NC}${yellow}fin install prerequisites${NC}${green} to update.${NC}"
+				"${green}Run ${NC}${yellow}fin update tools${NC}${green} to update.${NC}"
 			exit 1
 		fi
 	fi
@@ -758,8 +758,8 @@ show_help ()
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}fin help ssh-add${NC}"
 
 	echo
-	printh "install <component>" "<prerequisites | docksal-config | autocomplete> (${yellow}fin help install${NC})" "yellow"
-	printh "update  <component>" "<prerequisites | images | self> (${yellow}fin help update${NC})" "yellow"
+	printh "install <component>" "<tools | docksal-config | autocomplete> (${yellow}fin help install${NC})" "yellow"
+	printh "update  <component>" "<tools | images | self> (${yellow}fin help update${NC})" "yellow"
 
 	echo
 	printh "alias" "Create/remove aliases (See ${yellow}fin help alias${NC})"
@@ -869,7 +869,7 @@ show_help_install ()
 {
 	echo-green "fin install - Automated install of Docksal system components"
 	echo
-	printh "fin install prerequisites" "Install software required to run Docksal"
+	printh "fin install tools" "Install software required to run Docksal"
 	printh "fin install docksal-config" "Download latest default docker-compose.yml"
 	printh "fin install autocomplete" "Install fin commands autocomplete for Bash"
 	echo
@@ -879,7 +879,7 @@ show_help_update ()
 {
 	echo-green "fin update - Automated update of Docksal system components"
 	echo
-	printh "fin update prerequisites" "Update software required to run Docksal"
+	printh "fin update tools" "Update software required to run Docksal"
 	printh "fin update images" "Update container images <https://docs.docker.com/engine/understanding-docker/#what-is-docker-s-architecture>"
 	printh "fin update self" "Update fin itself"
 	echo
@@ -992,11 +992,11 @@ bash_comp_words ()
 {
 	case $1 in
 		install)
-			echo "prerequisites docksal-config"
+			echo "tools docksal-config"
 			exit 0
 			;;
 		update)
-			echo "prerequisites images self"
+			echo "tools images self"
 			exit 0
 			;;
 		vm)
@@ -1535,9 +1535,9 @@ ssh_add () {
 #----- Installations and updates -----
 
 # Install required software on Mac or Win. Check installed software on Linux
-install_prerequisites ()
+install_tools ()
 {
-	echo-green "Installing prerequisites..."
+	echo-green "Installing tools..."
 
 	if which 'docker-machine' >/dev/null 2>&1; then
 		if is_docker_machine_exist && ! is_docker_machine_running; then
@@ -1558,15 +1558,15 @@ install_prerequisites ()
 	fi
 
 	is_windows && \
-		install_prerequisites_windows && \
+		install_tools_windows && \
 		return
 
 	is_linux && \
-		install_prerequisites_ubuntu && \
+		install_tools_ubuntu && \
 		return
 
 	is_mac && \
-		install_prerequisites_mac && \
+		install_tools_mac && \
 		return
 
 	! is_windows && ! is_linux && ! is_mac && \
@@ -1648,8 +1648,8 @@ install_sshagent_service ()
 		"${IMAGE_SSH_AGENT}:${FIN_ITAG}" >/dev/null
 }
 
-# Install prerequisites on Mac
-install_prerequisites_mac ()
+# Install tools on Mac
+install_tools_mac ()
 {
 	is_tty || return 1 # only allow in interactive shell
 	is_docker_beta && echo "No tools installation required for native Docker" && return
@@ -1703,7 +1703,7 @@ install_prerequisites_mac ()
 		docker_machine_stop && docker_machine_start
 }
 
-install_prerequisites_windows ()
+install_tools_windows ()
 {
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
@@ -1774,7 +1774,7 @@ install_prerequisites_windows ()
 }
 
 # Install everything required on Ubuntu 14.04+
-install_prerequisites_ubuntu ()
+install_tools_ubuntu ()
 {
 	is_tty || return 1 # only allow in interactive shell
 	if ! is_ubuntu; then
@@ -1899,13 +1899,13 @@ EOF
 	fi
 }
 
-# Install prerequisites, config or autocomplete
+# Install tools, config or autocomplete
 install ()
 {
 	if [[ "$1" == "" ]]; then
 		show_help install
-	elif [[ "$1" == "prerequisites" ]]; then
-		install_prerequisites
+	elif [[ "$1" == "prerequisites" ]] || [[ "$1" == "tools" ]]; then
+		install_tools
 	elif [[ "$1" == "docksal-config" ]]; then
 		install_docksal_config
 	elif [[ "$1" == "autocomplete" ]]; then
@@ -2013,7 +2013,7 @@ check_for_updates ()
 	fi
 
 	[[ ${UPDATES_AVAILABLE} == "1" ]] && \
-		echo -e "Run ${yellow}fin update prerequisites${NC} to install updates to docker tools" && \
+		echo -e "Run ${yellow}fin update tools${NC} to install updates to docker tools" && \
 		echo "(Press Enter to continue)" && \
 		read -p ''
 }
@@ -2456,7 +2456,9 @@ fi
 # Check for updates if not updating already
 [[ "$*" != "update ds" ]] && \
 	[[ "$*" != "install prerequisites" ]] && \
+	[[ "$*" != "install tools" ]] && \
 	[[ "$*" != "update prerequisites" ]] && \
+	[[ "$*" != "update tools" ]] && \
 	[[ "$1" != "bash_comp_words" ]] && \
 	check_for_updates
 
@@ -2500,8 +2502,8 @@ case "$1" in
 		;;
 	update)
 		shift
-		if [[ "$1" == "prerequisites" ]]; then
-			install_prerequisites
+		if [[ "$1" == "prerequisites" ]] || [[ "$1" == "tools" ]]; then
+			install_tools
 		elif [[ "$1" == "images" ]]; then
 			update_images
 		elif [[ "$1" == "self" ]]; then
