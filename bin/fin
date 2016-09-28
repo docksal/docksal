@@ -1649,6 +1649,8 @@ install_sshagent_service ()
 install_prerequisites_mac ()
 {
 	is_tty || return 1 # only allow in interactive shell
+	is_docker_beta && echo "No tools installation required for native Docker" && return
+
 	# Check VirtualBox
 	if ! which 'VBoxManage' >/dev/null 2>&1; then
 		echo-error "VBoxManage executable was not found. Virtual Box is required to run Docksal on Mac." \
@@ -1700,44 +1702,46 @@ install_prerequisites_mac ()
 
 install_prerequisites_windows ()
 {
-	# Check Virtual Box
-	if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
-		echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
-			&& exit 1
-	else
-		if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-			echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
-			winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
-			winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
-		fi
-	fi
-
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
-	# Install Docker client
-	if ! is_docker_version; then
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
-		(cd "$CONFIG_DOWNLOADS_DIR" && \
-			curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
-			unzip docker.zip && \
-			rm docker.zip && \
-			mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
-			chmod +x "$DOCKER_BIN")
-	fi
+	if ! is_docker_beta; then
+		# Check Virtual Box
+		if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
+			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
+				&& exit 1
+		else
+			if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+				echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
+				winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
+				winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
+			fi
+		fi
 
-		# Install Docker Compose
-	if ! is_docker_compose_version; then
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
-		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
-			chmod +x "$DOCKER_COMPOSE_BIN.exe"
-	fi
+		# Install Docker client
+		if ! is_docker_version; then
+			echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+			(cd "$CONFIG_DOWNLOADS_DIR" && \
+				curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
+				unzip docker.zip && \
+				rm docker.zip && \
+				mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
+				chmod +x "$DOCKER_BIN")
+		fi
 
-		# Install Docker Machine
-	if ! is_docker_machine_version; then
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -sSL "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
-			chmod +x "$DOCKER_MACHINE_BIN.exe"
+			# Install Docker Compose
+		if ! is_docker_compose_version; then
+			echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+			curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
+				chmod +x "$DOCKER_COMPOSE_BIN.exe"
+		fi
+
+			# Install Docker Machine
+		if ! is_docker_machine_version; then
+			echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+			curl -sSL "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
+				chmod +x "$DOCKER_MACHINE_BIN.exe"
+		fi
 	fi
 
 	# Install winpty TODO: check winpty version here
@@ -1756,12 +1760,14 @@ install_prerequisites_windows ()
 	echo "git config --system core.longpaths true"
 	git config --system core.longpaths true # support long paths
 
-	# If it was an upgrade
-	is_docker_machine_running && \
-		echo-green "Upgrading Docker Machine..." && \
-		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
-		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
-		docker_machine_stop && docker_machine_start
+	if ! is_docker_beta; then
+		# If it was an upgrade
+		is_docker_machine_running && \
+			echo-green "Upgrading Docker Machine..." && \
+			docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
+			# Restart machine right after upgrade to avoid IP change and cert issues down the road.
+			docker_machine_stop && docker_machine_start
+	fi
 }
 
 # Install everything required on Ubuntu 14.04+
