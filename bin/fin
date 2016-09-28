@@ -405,6 +405,9 @@ check_docker_running ()
 		echo -e "Run ${yellow}fin update prerequisites${NC} to update"
 		exit 1
 	fi
+	if is_docker_beta && ! is_docker_version; then
+		echo-yellow "Your Docker version is out of date. Please update to $REQUIREMENTS_DOCKER"
+	fi
 
 	is_docker_running
 	docker_status=$?
