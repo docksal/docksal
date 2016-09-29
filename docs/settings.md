@@ -24,8 +24,8 @@ To switch to a different image tag:
 
 Available PHP versions:
 
-- `5.6` (`image: blinkreaction/drupal-cli:stable`) - default
-- `7.0` (`image: blinkreaction/drupal-cli:php7`) - experimental
+- `5.6` (`image: docksal/cli:stable`) - default
+- `7.0` (`image: docksal/cli:php7`) - experimental
 
 <a name="mysql-versions"></a>
 ## Using different MySQL versions
@@ -40,6 +40,6 @@ To switch to a different image tag:
 
 Available MySQL versions:
 
-- `5.5` (`image: blinkreaction/drupal-mysql:5.5`)
-- `5.6` (`image: blinkreaction/drupal-mysql:5.6`) - default.
-- `5.7` (`image: blinkreaction/drupal-mysql:5.7`)
+- `5.5` (`image: docksal/mysql:5.5`)
+- `5.6` (`image: docksal/mysql:5.6`) - default.
+- `5.7` (`image: docksal/mysql:5.7`)

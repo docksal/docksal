@@ -76,7 +76,7 @@ Tools available inside the **cli** container:
 - ruby, bundler
 - node, nvm, npm
 - imagemagick
-- python, git, mc, mysql-client and [more](https://github.com/blinkreaction/docker-drupal-cli)
+- python, git, mc, mysql-client and [more](https://github.com/docksal/image-cli)
 
 
 <a name="instructions"></a>

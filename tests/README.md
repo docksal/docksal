@@ -1,7 +1,7 @@
 # Bats tests for fin
 
 You need to install [Bats](https://github.com/sstephenson/bats) before running tests.
-You need to have [Drupal 7 sample project](https://github.com/blinkreaction/drude-d7-testing) installed in your projects directory.
+You need to have [Drupal 7 sample project](https://github.com/docksal/drupal7) installed in your projects directory.
 You must have next structure of projects directory:
 >     projects
 >       ...

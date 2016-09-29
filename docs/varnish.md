@@ -12,7 +12,7 @@
     # Varnish node
     varnish:
       hostname: varnish
-      image: blinkreaction/drupal-varnish:3.0-stable
+      image: docksal/varnish:3.0-stable
       links:
         - web
       environment:
@@ -23,4 +23,4 @@
 3. Apply new configuration with `fin up`
 
 
-See https://github.com/blinkreaction/docker-drupal-varnish for additional configuration options.
+See https://github.com/docksal/image-varnish for additional configuration options.

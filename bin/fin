@@ -81,9 +81,9 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 
 URL_DEFAULT_CONFIG="${URL_REPO}/${FIN_BRANCH}/docker-compose.yml"
 
-IMAGE_SSH_AGENT="blinkreaction/ssh-agent"
-IMAGE_VHOST_PROXY="blinkreaction/nginx-proxy"
-IMAGE_DNS="blinkreaction/dns-discovery"
+IMAGE_SSH_AGENT="docksal/ssh-agent"
+IMAGE_VHOST_PROXY="docksal/nginx-proxy"
+IMAGE_DNS="docksal/dns-discovery"
 
 #---------------------------- Global Variables --------------------------------
 
