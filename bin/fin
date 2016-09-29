@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.1.10
+FIN_VERSION=0.1.11
 
 # Console colors
 red='\033[0;91m'
@@ -1669,10 +1669,11 @@ install_tools_mac ()
 	elif ! is_vbox_version; then
 		echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
 			&& exit 1
-	else
-		# Kill the default adapter and DHCP server to avoid network issues down the road
-		VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
-		VBoxManage hostonlyif remove vboxnet0 > /dev/null 2>&1
+# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
+#	else
+#		 Kill the default adapter and DHCP server to avoid network issues down the road
+#		 VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
+#		 VBoxManage hostonlyif remove vboxnet0 > /dev/null 2>&1
 	fi
 
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
@@ -1722,12 +1723,13 @@ install_tools_windows ()
 		if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
 			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
 				&& exit 1
-		else
-			if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-				echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
-				winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
-				winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
-			fi
+# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
+#		else
+#			if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+#				echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
+#				winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
+#				winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
+#			fi
 		fi
 
 		# Install Docker client
