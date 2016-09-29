@@ -7,7 +7,7 @@ services:
   # Web service
   web:
     hostname: web
-    image: blinkreaction/drupal-apache:2.2-stable
+    image: docksal/apache:2.2-stable
     volumes:
       # Project root folder mapping
       - &project_root ".:/var/www"
@@ -19,7 +19,7 @@ services:
   # DB service
   db:
     hostname: db
-    image: blinkreaction/drupal-mysql:5.5
+    image: docksal/mysql:5.5
     environment:
       - MYSQL_ROOT_PASSWORD=admin123
       - MYSQL_USER=drupal
@@ -30,7 +30,7 @@ services:
   # Used for all console commands and tools.
   cli:
     hostname: cli
-    image: blinkreaction/drupal-cli:stable
+    image: docksal/cli:stable
     volumes:
       # Project root folder mapping
       - *project_root

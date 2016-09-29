@@ -48,7 +48,7 @@ Now you can do any changes to the database you want and each time after the cont
 ## Steps
 
 1. Create a DB dump
-2. Replace the **db** service base image in `docker-compose.yml` with `blinkreaction/mysql-sandbox`
+2. Add '-sandbox' to the image version for the **db** service base in `docker-compose.yml` (example: docksal/mysql:5.5 => docksal/mysql:5.5-sandbox)
 3. Reset containers
 
     `fin reset`

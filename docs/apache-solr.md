@@ -11,7 +11,7 @@
     # Uncomment the service definition section below to start using Solr.
     solr:
       hostname: solr
-      image: blinkreaction/drupal-solr:3.x-stable
+      image: docksal/solr:3.x-stable
       environment:
         - DOMAIN_NAME=solr.<project_name>.docksal
     ```
