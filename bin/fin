@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.1.12
+FIN_VERSION=0.1.13
 
 # Console colors
 red='\033[0;91m'
@@ -1501,7 +1501,7 @@ status ()
 
 	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
 		check_docker_running
-		docker ps
+		docker ps --filter "label=com.docker.compose.project" --format "table {{.Names}}\t{{.Status}}\t{{.Mounts}}" --no-trunc
 	else
 		check_ds_environment
 		docker_compose ps
