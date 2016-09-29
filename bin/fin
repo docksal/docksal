@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.1.9
+FIN_VERSION=0.1.10
 
 # Console colors
 red='\033[0;91m'
@@ -17,7 +17,7 @@ FIN_BRANCH="${FIN_BRANCH:-develop}"
 #---------------------------- Global Constants --------------------------------
 REQUIREMENTS_DOCKER='1.12.1'
 REQUIREMENTS_DOCKER_COMPOSE='1.8.0'
-REQUIREMENTS_DOCKER_MACHINE='0.8.1'
+REQUIREMENTS_DOCKER_MACHINE='0.8.2'
 REQUIREMENTS_VBOX='5.1.2'
 REQUIREMENTS_WINPTY='0.4.0'
 REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
@@ -1142,6 +1142,7 @@ docker_machine_change_ip ()
 	local BROADCAST_MASK=`expr "$DOCKER_MACHINE_IP" : '\([0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.\)'`'255';
 	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
 		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 $DOCKER_MACHINE_IP netmask 255.255.255.0 broadcast $BROADCAST_MASK up" && \
+		sleep 2 && \
 		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
 }
 
@@ -1534,12 +1535,12 @@ ssh_add () {
 
 #----- Installations and updates -----
 
-# Install required software on Mac or Win. Check installed software on Linux
+# Install required software
 install_tools ()
 {
 	echo-green "Installing tools..."
 
-	if which 'docker-machine' >/dev/null 2>&1; then
+	if ! is_linux && ! is_docker_beta && which 'docker-machine' >/dev/null 2>&1; then
 		if is_docker_machine_exist && ! is_docker_machine_running; then
 			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
 				"Start it with ${yellow}fin vm start${NC} first or destroy it with ${yellow}fin vm rm${NC} if you want it re-created."
@@ -1549,12 +1550,19 @@ install_tools ()
 
 	if (which 'docker' >/dev/null 2>&1) && is_docker_running; then
 		UPGRADE_IN_PROGRESS=1
-		_confirm "All containers will be stopped for an upgrade. Continue? "
-		echo "Stopping all containers..."
-		# not stoppig system because for example on Linux this will break dns
-		docker ps --format '{{.Names}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 		echo-green "Updating Docksal system images..."
 		update_system_images
+		# check latest boot2docker version
+		if ! is_linux && ! is_docker_beta; then
+			local b2d_version=$(docker version --format '{{.Server.Version}}')
+			if [[ "$b2d_version" != "$REQUIREMENTS_DOCKER" ]]; then
+				BOOT2DOCKER_NEEDS_AN_UPGRADE=1
+				_confirm "All containers will be stopped for vm upgrade. Continue? "
+				echo "Stopping all containers..."
+				# not stoppig system because for example on Linux this will break dns
+				docker ps --format '{{.Names}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
+			fi
+		fi
 	fi
 
 	is_windows && \
@@ -1688,7 +1696,7 @@ install_tools_mac ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
+		echo curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
 			chmod +x "$DOCKER_MACHINE_BIN"
 	fi
 
@@ -1696,7 +1704,8 @@ install_tools_mac ()
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
 	# If it was an upgrade
-	is_docker_machine_running && \
+	[[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]] && \
+		is_docker_machine_running && \
 		echo-green "Upgrading Docker Machine..." && \
 		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
 		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
@@ -1765,7 +1774,8 @@ install_tools_windows ()
 
 	if ! is_docker_beta; then
 		# If it was an upgrade
-		is_docker_machine_running && \
+		[[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]] && \
+			is_docker_machine_running && \
 			echo-green "Upgrading Docker Machine..." && \
 			docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
 			# Restart machine right after upgrade to avoid IP change and cert issues down the road.
