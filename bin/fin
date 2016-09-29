@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.1.13
+FIN_VERSION=0.1.14
 
 # Console colors
 red='\033[0;91m'
@@ -221,7 +221,8 @@ get_current_relative_path ()
 get_mysql_connect ()
 {
 	# Run drush forcing tty to false to avoid colored output string from drush.
-	echo "$(_run drush sql-connect)"
+	cleaned_string=$(echo $(_run drush sql-connect) | sed -e 's/[^a-zA-Z0-9_-]$//')
+	echo "$cleaned_string"
 }
 
 # Use this function for every docker-compose invocation.
@@ -2119,7 +2120,7 @@ mysql ()
 {
 	check_ds_environment
 	check_drush_path
-	_run $(get_mysql_connect)" -A" # -A option to speed up mysql load
+	_run $(get_mysql_connect)
 }
 
 # Truncate db and import from sql dump
