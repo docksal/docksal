@@ -170,15 +170,6 @@ upfind ()
 	)
 }
 
-# Get path to docker-compose.yml using upfind
-get_yml_path ()
-{
-	if [ -z "$CONFIG_YML_PATH" ]; then
-		CONFIG_YML_PATH=$(upfind "docker-compose.yml")
-	fi
-	echo "$CONFIG_YML_PATH"
-}
-
 # Get path to .docksal folder using upfind
 get_docksal_path ()
 {
@@ -208,7 +199,7 @@ get_abs_path ()
 get_current_relative_path ()
 {
 	# Check that we're inside project folder
-	local proj_root=$(get_yml_path)
+	local proj_root=$(get_docksal_path)
 	local cwd=$(pwd)
 	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
 	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
@@ -232,10 +223,11 @@ docker_compose ()
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	is_linux && DOCKER_COMPOSE_BIN="$DOCKER_COMPOSE_BIN_NIX"
 	is_docker_native && DOCKER_COMPOSE_BIN="docker-compose"
+
 	# docker-compose cannot find docker-compose.yml in the path if there are symlinks on the way
-	# get_yml_path can properly find the file. Incapsulate the cd into subshell
-	(cd "$(get_yml_path)" && "$DOCKER_COMPOSE_BIN" "$@")
-	#(cd "$(get_yml_path)" && "$winpty_cmd" "$DOCKER_COMPOSE_BIN" "$@")
+	# get_docksal_path can properly find the file. Incapsulate the cd into subshell
+	(cd "$(get_docksal_path)" && "$DOCKER_COMPOSE_BIN" "$@")
+	#(cd "$(get_docksal_path)" && "$winpty_cmd" "$DOCKER_COMPOSE_BIN" "$@")
 }
 
 # Get container id by service name
@@ -508,9 +500,11 @@ check_vbox_version ()
 # Check that docker-compose.yml is present
 check_yml ()
 {
-	yml_path=$(get_yml_path)
-	if [[ "$yml_path" == "" ]] ; then
-		echo "docker-compose.yml was not found in current or any parent directory"
+	COMPOSE_FILE=${COMPOSE_FILE:-'docker-compose.yml'}
+	local yml_file="$(get_docksal_path)/$COMPOSE_FILE"
+	if [[ ! -f $yml_file ]] ; then
+		echo-red "Docker Compose configuration file not found at the expected location:"
+		echo $yml_file
 		exit 1
 	fi
 }
@@ -2138,7 +2132,7 @@ mysql_import ()
 		fi
 	fi
 
-	project_root=$(get_yml_path)
+	project_root=$(get_docksal_path)
 	local filename=$(basename $1)
 	local filepath=$(get_abs_path $1)
 	#substract project root path from filepath
@@ -2228,7 +2222,7 @@ mysql_dump ()
 behat ()
 {
 	check_ds_environment
-	cd $(get_yml_path)
+	cd $(get_docksal_path)
 
 	local params=''
 	local path='tests/behat'
@@ -2243,7 +2237,7 @@ behat ()
 		esac;
 	done
 
-	local project_root_path=$(get_yml_path)
+	local project_root_path=$(get_docksal_path)
 	local behat_yml_path="${project_root_path}/${path}/behat.yml"
 	if [[ ! -f "${behat_yml_path}" ]]; then
 		echo-red "Could not find ${behat_yml_path}"
@@ -2454,6 +2448,17 @@ alias_list ()
 	echo "$list"
 }
 
+
+#------------------------ Load project variables ---------------------------
+
+env_file_path="$(get_docksal_path)/.env" 
+if [ -f $env_file_path ]; then
+	# Source and allexport variables in the .env file
+	set -a
+	source $env_file_path
+	set +a
+fi
+
 #-------------------------- Parameters parsing -----------------------------
 
 # Handle alias first
@@ -2635,7 +2640,6 @@ case "$1" in
 			if_failed "Could not make $ds_command_script executable"
 		fi
 		shift
-		export YML_PATH="$(get_yml_path)"
 		export DOCKSAL_PATH="$(get_docksal_path)"
 		export PROJECT_ROOT="$(get_docksal_path)"
 		if is_docker_running; then
