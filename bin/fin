@@ -648,7 +648,7 @@ _vhost_proxy_connect ()
 {
 	# Figure out the default project network name
 	# TODO: refactor into something less hacky
-	network="$(docker-compose ps cli | awk 'NR==3 {print $1}' | sed 's/_cli_1//')_default"
+	network="$(docker-compose ps | awk 'NR==3 {print $1}' | sed 's/\([:alnum:]*\)_.*/\1/')_default"
 	docker network connect "$network" vhost-proxy >/dev/null 2>&1
 	# Restart services if vhost-proxy was connected (first time) to the project network
 	# TODO: figure out how to avoid doing a restart
@@ -2341,9 +2341,15 @@ _set_cli_uid ()
 {
 	# Let uid to be set with the FIN_SET_UID env variable
 	local host_uid=${FIN_SET_UID:-$(id -u)}
-	local cli=$(get_container_id cli)
-	local container_uid
+	local cli=$(get_container_id cli || true)
+	
+	# If there is no cli, move on.
+	if [[ -z $cli ]]; then
+		echo-yellow 'Expected service "cli" is missing.'
+		return;
+	fi
 
+	local container_uid
 	container_uid=$(docker exec ${cli} id -u)
 	if [[ ! $? -eq 0 ]]; then
 		echo-red 'Error getting uid from cli container'
