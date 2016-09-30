@@ -650,15 +650,11 @@ _vhost_proxy_connect ()
 	# TODO: refactor into something less hacky
 	network="$(docker-compose ps | awk 'NR==3 {print $1}' | sed 's/\([:alnum:]*\)_.*/\1/')_default"
 	docker network connect "$network" vhost-proxy >/dev/null 2>&1
-	# Restart services if vhost-proxy was connected (first time) to the project network
-	# TODO: figure out how to avoid doing a restart
 	if [[ $? == 0 ]]; then
 		echo-green "Connected vhost-proxy to \"${network}\" network."
-		docker_compose restart
-	else
-		return 0
-		# Already connected
 	fi
+	# Run a dummy container to trigger docker-gen to refresh vhost-proxy configuration.
+    docker run --rm busybox
 }
 
 #------------------------------ Help functions --------------------------------
