@@ -47,20 +47,6 @@ load fin_script
 	[ $status -eq $mac ]
 }
 
-@test "Checking is_docker_beta function. Case#1 Not beta version" {
-	DOCKER_BETA=0
-	run is_docker_beta
-
-	[ $status -eq 1 ]
-}
-
-@test "Checking is_docker_beta function. Case#2 Beta version" {
-	DOCKER_BETA=1
-	run is_docker_beta
-
-	[ $status -eq 0 ]
-}
-
 @test "Checking check_binary_found function. Case#1: existing binary" {
 	run check_binary_found 'docker'
 

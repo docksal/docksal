@@ -101,19 +101,21 @@ if [[ "$DOCKER_NATIVE" == "1" ]]; then
 	export DOCKER_HOST=""
 else
 	# get active machine and it's status
-	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null)
-	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
-	DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
-	[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
-		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
-	# current active machine folder
-	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
-	mkdir -p "$DOCKER_MACHINE_FOLDER"
-	# get desired ip
-	if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
-		DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
+	if [ -f $CONFIG_MACHINE_ACTIVE ]; then
+		__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null)
+		DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
+		DOCKER_MACHINE_STATUS="$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1)"
+		[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
+			eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+		# current active machine folder
+		DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
+		mkdir -p "$DOCKER_MACHINE_FOLDER"
+		# get desired ip
+		if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
+			DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
+		fi
+		DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
 	fi
-	DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
 fi
 
 #---------------------------- Helper functions --------------------------------

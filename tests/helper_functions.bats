@@ -44,14 +44,6 @@ not_true_if_failed() {
 	[ $status -eq 1 ]
 }
 
-@test "Checking get_yml_path function" {
-	run get_yml_path
-	echo $output
-
-	[ $status -eq 0 ]
-	[ $output = "$(pwd)" ]
-}
-
 @test "Checking get_docksal_path function" {
 	run get_docksal_path
 

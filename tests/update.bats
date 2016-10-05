@@ -11,7 +11,7 @@ load fin_script
 
 	[ $status -eq 0 ]
 	[[ $output =~ "fin update - Automated update of Docksal system components" ]]
-	[[ $output =~ "fin update prerequisites" ]]
+	[[ $output =~ "fin update tools" ]]
 	[[ $output =~ "fin update images" ]]
 	[[ $output =~ "fin update self" ]]
 }
