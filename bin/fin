@@ -105,7 +105,7 @@ else
 	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
 	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
 	[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
-	eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
 	# current active machine folder
 	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
 	mkdir -p "$DOCKER_MACHINE_FOLDER"
