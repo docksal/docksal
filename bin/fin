@@ -1137,12 +1137,15 @@ docker_machine_change_ip ()
 		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
 	sleep 2
 	local i=0
+	local _logs=""
 	for i in `seq 20`; do
-		docker-machine env "$DOCKER_MACHINE_NAME" > /dev/null 2>/dev/null
-		if [[ $? -eq 0 ]]; then break; fi
+		_logs=$(docker-machine env "$DOCKER_MACHINE_NAME" 2>&1)
+		if [[ $? -eq 0 ]]; then return; fi
 		echo "Waiting for IP change (attempt #${i})..."
 		sleep 3
 	done
+	echo "$_logs"
+	return 1
 }
 
 docker_machine_start ()
