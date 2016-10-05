@@ -60,7 +60,7 @@ load fin_script
 
 	[ $status -eq 0 ]
 	[[ ${lines[0]} =~ "IMAGE" ]]
-	[[ ${lines[1]} =~ "blinkreaction" ]]
-	[[ ${lines[2]} =~ "blinkreaction" ]]
-	[[ ${lines[3]} =~ "blinkreaction" ]]
+	[[ ${lines[1]} =~ "docksal" ]]
+	[[ ${lines[2]} =~ "docksal" ]]
+	[[ ${lines[3]} =~ "docksal" ]]
 }

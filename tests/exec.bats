@@ -17,7 +17,7 @@ load fin_script
 	run fin exec uname -r
 
 	[ $status -eq 0 ]
-	[[ $output =~ "3.19.0-56-generic" ]]
+	[[ $output =~ "3.19.0-56-generic" || $output =~ "4.4.17-boot2docker" ]]
 }
 
 @test "Checking fin _run function - pwd test" {
@@ -31,5 +31,5 @@ load fin_script
 	run _run uname -r
 
 	[ $status -eq 0 ]
-	[[ $output =~ "3.19.0-56-generic" ]]
+	[[ $output =~ "3.19.0-56-generic" || $output =~ "4.4.17-boot2docker" ]]
 }
