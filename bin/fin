@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.1.16
+FIN_VERSION=0.1.17
 
 # Console colors
 red='\033[0;91m'
@@ -1135,6 +1135,14 @@ docker_machine_change_ip ()
 		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 $DOCKER_MACHINE_IP netmask 255.255.255.0 broadcast $BROADCAST_MASK up" && \
 		sleep 2 && \
 		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
+	sleep 2
+	local i=0
+	for i in `seq 20`; do
+		docker-machine env "$DOCKER_MACHINE_NAME" > /dev/null 2>/dev/null
+		if [[ $? -eq 0 ]]; then break; fi
+		echo "Waiting for IP change (attempt #${i})..."
+		sleep 3
+	done
 }
 
 docker_machine_start ()
