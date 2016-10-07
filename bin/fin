@@ -243,7 +243,6 @@ get_container_id ()
 winsudo ()
 {
 	cygstart --action=runas cmd /c "$@"
-	return $?
 }
 
 # Universal Bash parameter parsing
