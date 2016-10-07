@@ -1310,7 +1310,8 @@ docker_machine_mount_nfs ()
 	done
 }
 
-# Fix/optimize Windows network settings for file sharing. 
+# Fix/optimize Windows network settings for file sharing.
+# See http://serverfault.com/a/236393 for details.
 smb_windows_fix()
 {
 	! is_windows && return
