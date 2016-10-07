@@ -1825,15 +1825,17 @@ install_tools_windows ()
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
-	# Optimize SMB sharing
-	smb_windows_fix
-	
-	# Git settings
-	echo-green "Adjusting git defaults..."
-	echo "git config --global core.autocrlf input"
-	git config --global core.autocrlf input # do not convert line breaks. treat as is
-	echo "git config --system core.longpaths true"
-	git config --system core.longpaths true # support long paths
+	# Run one-time adjustments during install only.
+	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+		# Optimize SMB sharing
+		smb_windows_fix
+		# Git settings
+		echo-green "Adjusting git defaults..."
+		echo "git config --global core.autocrlf input"
+		git config --global core.autocrlf input # do not convert line breaks. treat as is
+		echo "git config --system core.longpaths true"
+		git config --system core.longpaths true # support long paths
+	fi
 
 	if ! is_docker_native; then
 		# If it was an upgrade
