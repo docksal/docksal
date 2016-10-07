@@ -1822,6 +1822,9 @@ install_tools_windows ()
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
+	# Optimize SMB sharing
+	smb_windows_fix
+	
 	# Git settings
 	echo-green "Adjusting git defaults..."
 	echo "git config --global core.autocrlf input"
