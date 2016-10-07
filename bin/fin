@@ -1314,6 +1314,8 @@ docker_machine_mount_nfs ()
 # Fix/optimize Windows network settings for file sharing. 
 smb_windows_fix()
 {
+	! is_windows && return
+	
 	echo-green "Going to optimize Windows network settings for file sharing..."
 	echo "You may see an elevated command prompt - click Yes."
 	sleep 2
