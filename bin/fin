@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.2.0
+FIN_VERSION=0.2.1
 
 # Console colors
 red='\033[0;91m'
@@ -1308,6 +1308,25 @@ docker_machine_mount_nfs ()
 			sudo umount $share_mount 2>/dev/null ;
 			sudo mount -t nfs -o noacl,async $nfs_ip:$share_export $share_mount"
 	done
+}
+
+# Fix/optimize Windows network settings for file sharing. 
+smb_share_fix()
+{
+	echo-green "Optimizing Windows network settings for file sharing..."
+	
+	local regfile<<EOF
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management]
+"LargeSystemCache"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters]
+"Size"=dword:00000003
+EOF
+	local tmpfile="/tmp/fix-smb.reg"
+	echo $regfile > $tmpfile
+	winsudo regedit /S $(cygpath -w $tmpfile) && rm -f $tmpfile
 }
 
 # Method to create the user and SMB network share on Windows.
