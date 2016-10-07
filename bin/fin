@@ -2013,7 +2013,7 @@ check_for_updates ()
 	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${FIN_VERSION}) ]; then
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
-		echo -e "${green}ds${NC} [ $FIN_VERSION --> $new_version ] (run ${green}fin update ds${NC} to update)"
+		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ] (run ${green}fin update self${NC} to update)"
 		echo "Press Enter."
 		read -p ''
 	fi
