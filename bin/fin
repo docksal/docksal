@@ -1855,11 +1855,11 @@ install_tools_windows ()
 install_tools_ubuntu ()
 {
 	is_tty || return 1 # only allow in interactive shell
-	if [[ "$(id -u)" != "0" ]]; then
-		echo-error "This command must be run as root." \
-			"Please run ${yellow}sudo fin install tools${NC}."
-		exit 1
-	fi
+#	if [[ "$(id -u)" != "0" ]]; then
+#		echo-error "This command must be run as root." \
+#			"Please run ${yellow}sudo fin install tools${NC}."
+#		exit 1
+#	fi
 	if ! is_ubuntu; then
 		echo-red "Prerequisites installation is currently supported only on Ubuntu 14.04+"
 		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
@@ -1875,7 +1875,8 @@ install_tools_ubuntu ()
 			sudo service docker stop 2>/dev/null
 		fi
 		curl -sSL https://get.docker.com/ | sh && \
-			sudo usermod -aG docker $(whoami)
+			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
+			sudo usermod -aG docker $LOGNAME
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
@@ -1886,7 +1887,8 @@ install_tools_ubuntu ()
 		if [[ ! $? -eq 0 ]]; then
 			_confirm 'There is some problem with your Docker installation. Do you want to try re-installing?'
 			curl -sSL https://get.docker.com/ | sh && \
-				sudo usermod -aG docker $(whoami)
+				# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
+				sudo usermod -aG docker $LOGNAME
 			sudo service docker start 2>/dev/null
 			sudo docker version
 			if_failed "Docker installation/upgrade has failed."
@@ -1923,15 +1925,11 @@ EOF
 		sudo resolvconf -u
 	fi
 
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo-green "Updating Docksal system images..."
-		update_system_images
-	fi
-
-	reset system
+	# Update system images and install system service
+	sudo fin update system-images
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo-yellow "To run docker without sudo please re-login or run 'newgrp docker' now."
+		echo-yellow "To run docker without sudo please re-login or run ${green}newgrp docker${yellow} now."
 	fi
 }
 
@@ -2007,16 +2005,22 @@ update_system_images ()
 	${winpty_cmd} docker pull "${IMAGE_VHOST_PROXY}:${FIN_ITAG}"
 	${winpty_cmd} docker pull "${IMAGE_DNS}:${FIN_ITAG}"
 	${winpty_cmd} docker pull "${IMAGE_SSH_AGENT}:${FIN_ITAG}"
+	reset system
 }
 
-# Update all containers images
-update_images ()
+# Update project images
+update_project_images ()
 {
 	check_ds_environment
-	update_system_images
 	docker_compose pull # update project containers images
-	reset system
 	up
+}
+
+# Update system and project images
+update_images ()
+{
+	update_system_images
+	update_project_images
 }
 
 # Update fin itself
@@ -2604,6 +2608,10 @@ case "$1" in
 		shift
 		if [[ "$1" == "prerequisites" ]] || [[ "$1" == "tools" ]]; then
 			install_tools
+		elif [[ "$1" == "system-images" ]]; then
+			update_system_images
+		elif [[ "$1" == "project-images" ]]; then
+			update_project_images
 		elif [[ "$1" == "images" ]]; then
 			update_images
 		elif [[ "$1" == "self" ]]; then
