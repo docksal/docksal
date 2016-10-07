@@ -30,8 +30,8 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 ### Regular updates
 
 ```
-fin update fin
-fin update prerequisites
+fin update self
+fin update tools
 ```
 
 ### Updating from Drude to Docksal 2.x
