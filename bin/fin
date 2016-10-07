@@ -874,7 +874,9 @@ show_help_update ()
 	echo-green "fin update - Automated update of Docksal system components"
 	echo
 	printh "fin update tools" "Update software required to run Docksal"
-	printh "fin update images" "Update container images <https://docs.docker.com/engine/understanding-docker/#what-is-docker-s-architecture>"
+	printh "fin update system-images" "Update Docksal system images only"
+	printh "fin update project-images" "Update project images only"
+	printh "fin update images" "Update both Docksal system and project images"
 	printh "fin update self" "Update fin itself"
 	echo
 }
@@ -1925,11 +1927,11 @@ EOF
 		sudo resolvconf -u
 	fi
 
-	# Update system images and install system service
+	# Update system images and install system service (call self with sudo).
 	sudo fin update system-images
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo-yellow "To run docker without sudo please re-login or run ${green}newgrp docker${yellow} now."
+		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
 	fi
 }
 
@@ -1998,6 +2000,7 @@ install ()
 update_system_images ()
 {
 	check_docker_running
+	echo-green "Updating Docksal system images..."
 	
 	# Running docker exec interactively on Windows requires workarounds
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
@@ -2012,6 +2015,8 @@ update_system_images ()
 update_project_images ()
 {
 	check_ds_environment
+	
+	echo-green "Updating project images..."
 	docker_compose pull # update project containers images
 	up
 }
