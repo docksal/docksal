@@ -243,6 +243,7 @@ get_container_id ()
 winsudo ()
 {
 	cygstart --action=runas cmd /c "$@"
+	return $?
 }
 
 # Universal Bash parameter parsing
@@ -1311,11 +1312,14 @@ docker_machine_mount_nfs ()
 }
 
 # Fix/optimize Windows network settings for file sharing. 
-smb_share_fix()
+smb_windows_fix()
 {
-	echo-green "Optimizing Windows network settings for file sharing..."
-	
-	local regfile<<EOF
+	echo-green "Going to optimize Windows network settings for file sharing..."
+	echo "You may see an elevated command prompt - click Yes."
+	sleep 2
+
+	local tmpfile="/tmp/fix-smb.reg"
+	cat <<EOF > $tmpfile
 Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management]
@@ -1324,9 +1328,7 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters]
 "Size"=dword:00000003
 EOF
-	local tmpfile="/tmp/fix-smb.reg"
-	echo $regfile > $tmpfile
-	winsudo regedit /S $(cygpath -w $tmpfile) && rm -f $tmpfile
+	winsudo "regedit /S $(cygpath -w $tmpfile)"
 }
 
 # Method to create the user and SMB network share on Windows.
@@ -2678,6 +2680,10 @@ case "$1" in
 		;;
 	sysinfo)
 		sysinfo
+		;;
+	fix-smb)
+		shift
+		smb_windows_fix
 		;;
 	alias)
 		shift
