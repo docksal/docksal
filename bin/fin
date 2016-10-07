@@ -1311,7 +1311,8 @@ docker_machine_mount_smb ()
 	# ask user for his password
 	# use his password for mount -t cifs ...
 
-	local DRIVES=$(wmic logicaldisk get name | sed 's/\r//g')
+	# Get a list of logical drives (type 3 = Local disk).
+	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	read -s -p "Enter your Windows account password: " PASSWORD
 	echo  # Add a new line after user input.
 
