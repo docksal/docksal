@@ -421,6 +421,9 @@ check_docker_running ()
 	else
 		if is_docker_native; then
 			exit 1
+		elif is_linux; then
+			echo-error "Docker daemon is not accessible." \
+				"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin install tools${NC}?"
 		else
 			echo-error "Looks like your Docker client and Docker server are incompatible." \
 				"${green}Run ${NC}${yellow}fin update tools${NC}${green} to update.${NC}"
@@ -1852,6 +1855,11 @@ install_tools_windows ()
 install_tools_ubuntu ()
 {
 	is_tty || return 1 # only allow in interactive shell
+	if [[ "$(id -u)" != "0" ]]; then
+		echo-error "This command must be run as root." \
+			"Please run ${yellow}sudo fin install tools${NC}."
+		exit 1
+	fi
 	if ! is_ubuntu; then
 		echo-red "Prerequisites installation is currently supported only on Ubuntu 14.04+"
 		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
@@ -1922,7 +1930,7 @@ EOF
 
 	reset system
 
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]] && [[ "$(id -u)" != "0" ]]; then
+	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "To run docker without sudo please re-login or run 'newgrp docker' now."
 	fi
 }
