@@ -1618,22 +1618,24 @@ install_tools ()
 		fi
 	fi
 
-	if (which 'docker' >/dev/null 2>&1) && is_docker_running; then
+	# Pre-update steps for boot2docker
+	if (is_mac || is_windows) && ! is_docker_native && (which 'docker' >/dev/null 2>&1) && is_docker_running; then
 		UPGRADE_IN_PROGRESS=1
 		update_system_images
 		# check latest boot2docker version
-		if ! is_linux && ! is_docker_native; then
-			local b2d_version=$(docker version --format '{{.Server.Version}}')
-			if [[ "$b2d_version" != "$REQUIREMENTS_DOCKER" ]]; then
-				BOOT2DOCKER_NEEDS_AN_UPGRADE=1
-				_confirm "All containers will be stopped for vm upgrade. Continue? "
-				echo "Stopping all containers..."
-				# not stopping system because for example on Linux this will break dns
-				docker ps --format '{{.Names}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
-			fi
+		local b2d_version=$(docker version --format '{{.Server.Version}}')
+		# If VM needs to be updated, stop all project containers
+		if [[ "$b2d_version" != "$REQUIREMENTS_DOCKER" ]]; then
+			BOOT2DOCKER_NEEDS_AN_UPGRADE=1
+			_confirm "All containers will be stopped for vm upgrade. Continue? "
 		fi
 	fi
 
+	# Only update system images on Docker fro Mac/Windows
+	is_docker_native && \
+		update_system_images
+		# no return here
+	
 	is_windows && \
 		install_tools_windows && \
 		return
