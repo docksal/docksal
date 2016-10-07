@@ -452,7 +452,7 @@ is_docker_version ()
 		[[ ! -x "$DOCKER_BIN" ]] && return 1
 	fi
 
-	local version=$(docker -v | sed "s/^Docker version \(.*\),.*/\1/")
+	local version=$(docker -v | sed "s/.*version \(.*\),.*/\1/")
 	[[ "$version" == "$REQUIREMENTS_DOCKER" ]] && \
 		return 0;
 
@@ -467,7 +467,7 @@ is_docker_compose_version ()
 		[[ ! -x "$DOCKER_COMPOSE_BIN" ]] && return 1
 	fi
 
-	local version=$(docker_compose -v | sed "s/^docker-compose version \(.*\),.*/\1/")
+	local version=$(docker_compose version --short)
 	[[ "$version" == "$REQUIREMENTS_DOCKER_COMPOSE" ]] && \
 		return 0;
 
@@ -482,7 +482,7 @@ is_docker_machine_version ()
 		[[ ! -x "$DOCKER_MACHINE_BIN" ]] && return 2
 	fi
 
-	local version=$(docker-machine -v | sed "s/^docker-machine version \(.*\),.*/\1/")
+	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
 	[[ "$version" == "$REQUIREMENTS_DOCKER_MACHINE" ]] && \
 		return 0;
 
