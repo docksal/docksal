@@ -1618,9 +1618,11 @@ install_tools ()
 		fi
 	fi
 
+	# If docker is already running, then we are doing an upgrade.
+	(which 'docker' >/dev/null 2>&1) && is_docker_running && UPGRADE_IN_PROGRESS=1 
+	
 	# Pre-update steps for boot2docker
-	if (is_mac || is_windows) && ! is_docker_native && (which 'docker' >/dev/null 2>&1) && is_docker_running; then
-		UPGRADE_IN_PROGRESS=1
+	if (is_mac || is_windows) && ! is_docker_native; then
 		update_system_images
 		# check latest boot2docker version
 		local b2d_version=$(docker version --format '{{.Server.Version}}')
