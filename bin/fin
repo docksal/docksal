@@ -426,6 +426,8 @@ check_docker_running ()
 			if ! (id -nG | grep docker >/dev/null 2>&1); then
 				echo-error "Docker daemon is not accessible." \
 					"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin install tools${NC}?"
+			else
+				exit 1
 			fi
 		else
 			echo-error "Looks like your Docker client and Docker server are incompatible." \
@@ -1172,7 +1174,6 @@ docker_machine_start ()
 			# Disable IP change for now
 			#docker_machine_change_ip && \
 			docker_machine_env && \
-			reset system && \
 			docker_machine_mounts
 	else
 		# only auto-create default machine
@@ -1189,7 +1190,6 @@ docker_machine_start ()
 			docker_machine_env && \
 			echo-green "Pulling system images..." && \
 			update_system_images && \
-			reset system && \
 			docker_machine_mounts
 	fi
 
@@ -1616,7 +1616,6 @@ install_tools ()
 
 	if (which 'docker' >/dev/null 2>&1) && is_docker_running; then
 		UPGRADE_IN_PROGRESS=1
-		echo-green "Updating Docksal system images..."
 		update_system_images
 		# check latest boot2docker version
 		if ! is_linux && ! is_docker_native; then
@@ -1625,7 +1624,7 @@ install_tools ()
 				BOOT2DOCKER_NEEDS_AN_UPGRADE=1
 				_confirm "All containers will be stopped for vm upgrade. Continue? "
 				echo "Stopping all containers..."
-				# not stoppig system because for example on Linux this will break dns
+				# not stopping system because for example on Linux this will break dns
 				docker ps --format '{{.Names}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
 			fi
 		fi
