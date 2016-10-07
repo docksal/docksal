@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.2.0
+FIN_VERSION=0.2.1
 
 # Console colors
 red='\033[0;91m'
@@ -1310,6 +1310,30 @@ docker_machine_mount_nfs ()
 	done
 }
 
+# Fix/optimize Windows network settings for file sharing.
+# See http://serverfault.com/a/236393 for details.
+smb_windows_fix()
+{
+	! is_windows && return
+	
+	echo-green "Going to optimize Windows network settings for file sharing..."
+	echo "You may see an elevated command prompt - click Yes."
+	sleep 2
+
+	local tmpfile="/tmp/fix-smb.reg"
+	cat <<EOF > $tmpfile
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management]
+"LargeSystemCache"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters]
+"Size"=dword:00000003
+EOF
+	# Update registry and restart Server and Computer Browser services. 
+	winsudo "regedit /S $(cygpath -w $tmpfile) && net stop server /y && net start server && net start browser"
+}
+
 # Method to create the user and SMB network share on Windows.
 # @param share_name, path
 smb_share_add()
@@ -1801,6 +1825,9 @@ install_tools_windows ()
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
+	# Optimize SMB sharing
+	smb_windows_fix
+	
 	# Git settings
 	echo-green "Adjusting git defaults..."
 	echo "git config --global core.autocrlf input"
@@ -2659,6 +2686,9 @@ case "$1" in
 		;;
 	sysinfo)
 		sysinfo
+		;;
+	fix-smb)
+		smb_windows_fix
 		;;
 	alias)
 		shift
