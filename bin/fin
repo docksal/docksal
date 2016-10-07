@@ -1330,7 +1330,8 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters]
 "Size"=dword:00000003
 EOF
-	winsudo "regedit /S $(cygpath -w $tmpfile)"
+	# Update registry and restart Server and Computer Browser services. 
+	winsudo "regedit /S $(cygpath -w $tmpfile) && net stop server /y && net start server && net start browser"
 }
 
 # Method to create the user and SMB network share on Windows.
