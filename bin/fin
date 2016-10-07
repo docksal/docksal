@@ -423,11 +423,15 @@ check_docker_running ()
 			exit 1
 		elif is_linux; then
 			# Remind the used about running 'newgrp docker' after install.
-			if ! (id -nG | grep docker >/dev/null 2>&1); then
-				echo-error "Docker daemon is not accessible." \
+			if ! (id -nG | grep docker >/dev/null 2>&1) && [[ "$(id -u)" != "0" ]] ; then
+				echo-error "Current user is not part of the docker group." \
 					"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin install tools${NC}?"
-			else
 				exit 1
+			fi
+			# Check if docker daemon is running and offer to start it if not.
+			if ! (ps aux | grep dockerd | grep -v grep); then
+				_confirm "Start docker daemon now ('service docker start')?"
+				sudo service docker start
 			fi
 		else
 			echo-error "Looks like your Docker client and Docker server are incompatible." \
