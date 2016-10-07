@@ -2688,7 +2688,6 @@ case "$1" in
 		sysinfo
 		;;
 	fix-smb)
-		shift
 		smb_windows_fix
 		;;
 	alias)
