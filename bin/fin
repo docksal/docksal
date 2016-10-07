@@ -422,8 +422,11 @@ check_docker_running ()
 		if is_docker_native; then
 			exit 1
 		elif is_linux; then
-			echo-error "Docker daemon is not accessible." \
-				"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin install tools${NC}?"
+			# Remind the used about running 'newgrp docker' after install.
+			if ! (id -nG | grep docker >/dev/null 2>&1); then
+				echo-error "Docker daemon is not accessible." \
+					"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin install tools${NC}?"
+			fi
 		else
 			echo-error "Looks like your Docker client and Docker server are incompatible." \
 				"${green}Run ${NC}${yellow}fin update tools${NC}${green} to update.${NC}"
