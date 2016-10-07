@@ -1860,11 +1860,6 @@ install_tools_windows ()
 install_tools_ubuntu ()
 {
 	is_tty || return 1 # only allow in interactive shell
-#	if [[ "$(id -u)" != "0" ]]; then
-#		echo-error "This command must be run as root." \
-#			"Please run ${yellow}sudo fin install tools${NC}."
-#		exit 1
-#	fi
 	if ! is_ubuntu; then
 		echo-red "Prerequisites installation is currently supported only on Ubuntu 14.04+"
 		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
