@@ -1211,14 +1211,14 @@ docker_machine_remove ()
 	# VirtualBox
 	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
 		# Store host-only interface name before removing the VM.
-		local vboxifname=$("$vboxmanage" showvminfo "$machine_name" >/dev/null 2>&1 | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
+		local vboxifname=$("$vboxmanage" showvminfo "$machine_name" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
 		docker-machine rm "$machine_name"
 		if ! is_docker_machine_exist "$machine_name" "true"; then
 			# If the VM was removed, remove the DHCP server associated with its network interface.
 			# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
 			"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" >/dev/null 2>&1
 			# Killing the network interface also helps to avoid issues when VM is recreated.
-			"$vboxmanage" hostonlyif remove "${vboxifname}" >/dev/null 2>&1
+			"$vboxmanage" hostonlyif remove "$vboxifname" >/dev/null 2>&1
 		fi
 	else
 		docker-machine rm "$machine_name"
