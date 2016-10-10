@@ -100,6 +100,7 @@ Tools available inside the **cli** container:
 - [Enabling Varnish support](/docs/varnish.md)
 - [Enabling Apache Solr support](/docs/apache-solr.md)
 - [Using Sass](/docs/sass.md)
+- [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
