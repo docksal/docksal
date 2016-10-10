@@ -15,8 +15,8 @@ Required fin version: `1.20.0+`
     cli:
       ...
       volumes_from:
-        - ssh-agent
+        - container:ssh-agent
       ...
     ```
-4. Update container configuration with `fin up`
+4. Update container configuration with `fin reset cli`
 5. See `fin help ssh-agent` for more usage information.
