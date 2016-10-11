@@ -13,7 +13,7 @@ pages:
     - Overriding default PHP/MySQL/etc. settings: settings.md
     - Running multiple projects: multiple-projects.md
     - DB sandbox mode: db-sandbox.md
-    - MySQL DB access for external tools: docs/db-access.md
+    - MySQL DB access for external tools: db-access.md
     - Extending fin with custom commands: custom-commands.md
   - Third party utililies
     - Debugging with Xdebug and PhpStorm: xdebug.md
