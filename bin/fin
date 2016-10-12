@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.2.2
+FIN_VERSION=0.2.3
 
 # Console colors
 red='\033[0;91m'
@@ -2163,11 +2163,6 @@ _run ()
 		fi
 	fi
 
-	local columns
-	if is_tty && $(which tput 1>/dev/null 2>/dev/null); then
-		columns="export COLUMNS=$(tput cols 2>/dev/null || echo 80) &&"
-	fi
-
 	cmd="$cdir"
 
 	# 3) convert array of parameters into escaped string
@@ -2183,7 +2178,7 @@ _run ()
 	if [[ "$container_id" == "" ]]; then
 		# try to connect to this out of project container by name
 		if [[ "$cmd" != "" ]]; then
-			${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -ic "$cmd"
+			${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -c "$cmd"
 		else
 			${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -i
 		fi
@@ -2192,7 +2187,7 @@ _run ()
 
 	if is_tty ; then
 		# interactive
-		${winpty_cmd} docker exec -it "$container_id" sh -ic "${columns} $cmd"
+		${winpty_cmd} docker exec -it "$container_id" sh -c "$cmd"
 	else
 		# non-interactive
 		docker exec "$container_id" sh -c "$cmd"
