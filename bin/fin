@@ -53,7 +53,7 @@ DOCKSAL_DEFAULT_IP="192.168.64.100"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
 DOCKSAL_DEFAULT_DNS="10.0.2.3"
 DOCKSAL_DEFAULT_DNS_NIX="8.8.8.8"
-DOCKSAL_DNS_ZONE="docksal"
+DOCKSAL_DNS_DOMAIN="docksal"
 
 DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
@@ -1674,12 +1674,12 @@ install_dns_service ()
 	docker rm -f dns >/dev/null 2>&1 || true
 	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
-		-e DNS_IP="$ip" -e DNS_ZONE="$DOCKSAL_DNS_ZONE" \
+		-e DNS_IP="$ip" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
 }
 
-# Configuring sytem-wide *.$DOCKSAL_DNS_ZONE resolver (Windows not supported)
+# Configuring sytem-wide *.$DOCKSAL_DNS_DOMAIN resolver (Windows not supported)
 # TODO: change this function to work properly with DO provider
 configure_resolver ()
 {
@@ -1693,15 +1693,15 @@ configure_resolver ()
 			TARGET_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
 		fi
 		install_dns_service "$TARGET_IP"
-		if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DOCKSAL_DNS_ZONE >/dev/null 2>&1); then
+		if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
 			return
 		fi
 		sudo mkdir -p /etc/resolver
 		# deleting old resolver is the only way to get mac to update config
-		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_ZONE" >/dev/null 2>&1
+		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
 		# NO \n at the begginning of line here!
-		echo -e "# .$DOCKSAL_DNS_ZONE domain resolution\nnameserver $TARGET_IP" | \
-			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_ZONE"
+		echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $TARGET_IP" | \
+			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 		sudo dscacheutil -flushcache
 		# to check: scutil --dns
 	elif is_linux; then
