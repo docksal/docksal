@@ -44,7 +44,7 @@ Vagrant machine is not going to be used anymore and should be deleted.
 2. Go to your `<projects>` folder and use `vagrant destroy` to destroy the old (Drude) VM. If you happened to have several of them, please destroy all.
 3. You can uninstall vagrant if you do't need it (manually or `brew uninstall vagrant` on Mac, `choco uninstall vagrant` on Win)
 4. Install fin
-5. `fin install prerequisites`
+5. `fin install tools`
 6. Start your project just like you did before with `fin up` and re-import your DB dump. Notice it will use Docker Machine now. New Docker Machine will be created upon first start.
 7. Run `fin cleanup` to delete old unused files and backups
 
