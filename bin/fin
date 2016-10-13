@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.2.3
+FIN_VERSION=0.2.4
 
 # Console colors
 red='\033[0;91m'
@@ -81,18 +81,14 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 
 URL_DEFAULT_CONFIG="${URL_REPO}/${FIN_BRANCH}/docker-compose.yml"
 
-IMAGE_SSH_AGENT="docksal/ssh-agent"
-IMAGE_VHOST_PROXY="docksal/nginx-proxy"
-IMAGE_DNS="docksal/dns-discovery"
+IMAGE_SSH_AGENT="docksal/ssh-agent:1.0"
+IMAGE_VHOST_PROXY="docksal/nginx-proxy:1.0"
+IMAGE_DNS="docksal/dns-discovery:1.0"
 
 #---------------------------- Global Variables --------------------------------
 
 PATH="$CONFIG_BIN_DIR:$PATH"
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
-# Allow image tag overrides for system services. See install_xyz_service()
-# TODO: revert this to stable before release
-#FIN_ITAG="${FIN_ITAG:-stable}"
-FIN_ITAG="${FIN_ITAG:-latest}"
 # UID of user to use in cli continer. Only override if you know what you're doing
 FIN_SET_UID=""
 
@@ -1599,7 +1595,7 @@ ssh_add () {
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-	${winpty_cmd} docker run --rm -it --volumes-from=ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}:${FIN_ITAG}" ssh-add "$@"
+	${winpty_cmd} docker run --rm -it --volumes-from=ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}" ssh-add "$@"
 	return $?
 }
 
@@ -1660,7 +1656,7 @@ install_proxy_service ()
 	docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"${IMAGE_VHOST_PROXY}:${FIN_ITAG}" >/dev/null
+		"${IMAGE_VHOST_PROXY}" >/dev/null
 }
 
 # @param $1 ip address defaults to 0.0.0.0
@@ -1680,7 +1676,7 @@ install_dns_service ()
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
 		-e DNS_IP="$ip" -e DNS_ZONE="$DOCKSAL_DNS_ZONE" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"${IMAGE_DNS}:${FIN_ITAG}" >/dev/null
+		"${IMAGE_DNS}" >/dev/null
 }
 
 # Configuring sytem-wide *.$DOCKSAL_DNS_ZONE resolver (Windows not supported)
@@ -1726,7 +1722,7 @@ install_sshagent_service ()
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
 	docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		"${IMAGE_SSH_AGENT}:${FIN_ITAG}" >/dev/null
+		"${IMAGE_SSH_AGENT}" >/dev/null
 }
 
 # Install tools on Mac
@@ -2010,9 +2006,9 @@ update_system_images ()
 	# Running docker exec interactively on Windows requires workarounds
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 
-	${winpty_cmd} docker pull "${IMAGE_VHOST_PROXY}:${FIN_ITAG}"
-	${winpty_cmd} docker pull "${IMAGE_DNS}:${FIN_ITAG}"
-	${winpty_cmd} docker pull "${IMAGE_SSH_AGENT}:${FIN_ITAG}"
+	${winpty_cmd} docker pull "${IMAGE_VHOST_PROXY}"
+	${winpty_cmd} docker pull "${IMAGE_DNS}"
+	${winpty_cmd} docker pull "${IMAGE_SSH_AGENT}"
 	reset system
 }
 
