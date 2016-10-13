@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.2.8
+FIN_VERSION=0.2.9
 
 # Console colors
 red='\033[0;91m'
@@ -81,9 +81,9 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 
 URL_DEFAULT_CONFIG="${URL_REPO}/${FIN_BRANCH}/docker-compose.yml"
 
-IMAGE_SSH_AGENT="docksal/ssh-agent:1.0"
-IMAGE_VHOST_PROXY="docksal/nginx-proxy:1.0"
-IMAGE_DNS="docksal/dns-discovery:1.0"
+IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.0}
+IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/nginx-proxy:1.0}
+IMAGE_DNS=${IMAGE_DNS:-docksal/dns-discovery:1.0}
 
 #---------------------------- Global Variables --------------------------------
 
