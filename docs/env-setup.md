@@ -25,5 +25,5 @@ Babun should be installed and run **as a regular user (do not use admin command 
 3. Install Docksal prerequisites
 
     ```
-    fin install prerequisites
+    fin install tools
     ```
