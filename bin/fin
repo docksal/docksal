@@ -1314,7 +1314,7 @@ docker_machine_mount_nfs ()
 		docker-machine ssh "$machine_name" \
 			"sudo mkdir -p $share_mount ;
 			sudo umount $share_mount 2>/dev/null ;
-			sudo mount -t nfs -o noacl,async $nfs_ip:$share_export $share_mount"
+			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 	done
 }
 
