@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.2.7
+FIN_VERSION=0.2.8
 
 # Console colors
 red='\033[0;91m'
@@ -462,7 +462,7 @@ is_docker_version ()
 
 	local version=$(docker -v | sed "s/.*version \(.*\),.*/\1/")
 
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -gt $(ver_to_int "$version") ]] && \
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$version") ]] && \
 		return 1;
 
 	return 0;
@@ -477,7 +477,7 @@ is_docker_compose_version ()
 	fi
 
 	local version=$(docker_compose version --short)
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") -gt $(ver_to_int "$version") ]] && \
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") > $(ver_to_int "$version") ]] && \
 		return 1;
 
 	return 0;
@@ -492,7 +492,7 @@ is_docker_machine_version ()
 	fi
 
 	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") -gt $(ver_to_int "$version") ]] && \
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") > $(ver_to_int "$version") ]] && \
 		return 1;
 
 	return 0;
@@ -2089,7 +2089,7 @@ check_for_updates ()
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
 	new_ds=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_FIN?r=$RANDOM")
 	new_version=$(echo "$new_ds" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
-	if [ $(ver_to_int "$new_version") -gt $(ver_to_int ${FIN_VERSION}) ]; then
+	if [[ $(ver_to_int "$new_version") > $(ver_to_int ${FIN_VERSION}) ]]; then
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ] (run ${green}fin update self${NC} to update)"
