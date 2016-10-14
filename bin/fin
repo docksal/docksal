@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.3.0
+FIN_VERSION=0.3.1
 
 # Console colors
 red='\033[0;91m'
@@ -567,18 +567,9 @@ _start_containers ()
 {
 	check_docker_running
 	echo-green "Starting services..."
-	docker_compose up -d && \
+	docker_compose up -d --remove-orphans && \
 		_set_cli_uid && \
 		_vhost_proxy_connect
-}
-
-# @param $1 container_name
-_restart_containers ()
-{
-	check_docker_running
-	echo-green "Restarting services..."
-	docker_compose restart "$@" && \
-		_set_cli_uid
 }
 
 # @param $1 "-a" || "--all"
@@ -613,6 +604,11 @@ _stop_containers ()
 	check_ds_environment
 	echo-green "Stopping services..."
 	docker_compose stop
+}
+
+_restart_containers ()
+{
+	_stop_containers && _start_containers
 }
 
 # @param $1 container_name
@@ -728,8 +724,8 @@ show_help ()
 	else
 		printh "start (up)" "Start docker machine and project services"
 	fi
-	printh "stop (down) [-a (--all)]" "Stop project services. -a stops all containers except Docksal system services"
-	printh "restart	[service]" "Restart all current project services or specified service"
+	printh "stop [-a (--all)]" "Stop project services. -a stops all containers except Docksal system services"
+	printh "restart" "Restart all current project services"
 	printh "status (st, ps) [-a (--all)]" "Show project services status. -a shows all running containers"
 	printh "reset [service]" "Recreate service(s). If no parameter given recreates all project services."
 	printh "" "See ${yellow}fin help reset${NC} for more details on resetting Docksal system services."
@@ -1547,7 +1543,7 @@ up ()
 }
 
 # Stop containers
-down ()
+stop ()
 {
 	check_ds_environment
 	_stop_containers "$@"
@@ -2602,9 +2598,9 @@ case "$1" in
 		shift
 		up
 		;;
-	stop|down)
+	stop)
 		shift
-		down "$@"
+		stop "$@"
 		;;
 	restart)
 		shift
