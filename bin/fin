@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.2.9
+FIN_VERSION=0.3.0
 
 # Console colors
 red='\033[0;91m'
@@ -172,7 +172,10 @@ get_docksal_path ()
 	if [ -z "$DOCKSAL_PATH" ]; then
 		DOCKSAL_PATH=$(upfind ".docksal")
 	fi
-	echo "$DOCKSAL_PATH"
+	# If we reached $HOME, then we did not find the project root.
+	if [[ "$DOCKSAL_PATH" != "$HOME" ]]; then
+		echo "$DOCKSAL_PATH"
+	fi
 }
 
 # Returns absolute path
@@ -377,7 +380,7 @@ ver_to_int ()
 
 check_ds_environment ()
 {
-	check_yml && check_docker_running
+	check_docksal && check_docker_running
 }
 
 check_docker_running ()
@@ -507,13 +510,11 @@ check_vbox_version ()
 }
 
 # Check that docker-compose.yml is present
-check_yml ()
+check_docksal ()
 {
-	COMPOSE_FILE=${COMPOSE_FILE:-'docker-compose.yml'}
-	local yml_file="$(get_docksal_path)/$COMPOSE_FILE"
-	if [[ ! -f $yml_file ]] ; then
-		echo-red "Docker Compose configuration file not found at the expected location:"
-		echo $yml_file
+	if [[ "$(get_docksal_path)" == "" ]] ; then
+		echo-error "Cannot detect project root." \
+			"Please make sure you have a .docksal directory in the root of your project."
 		exit 1
 	fi
 }
@@ -2397,7 +2398,7 @@ reset ()
 		return
 	fi
 
-	check_yml
+	check_docksal
 	# support quiet removal
 	if [[ $1 == "-f" ]]; then
 		shift
@@ -2536,17 +2537,41 @@ alias_list ()
 }
 
 
-#------------------------ Load project variables ---------------------------
+#------------------------ Load project configuration and variables ---------------------------
 
-env_file_path="$(get_docksal_path)/.env" 
-if [ -f $env_file_path ]; then
-	# Source and allexport variables in the .env file
-	set -a
-	source $env_file_path
-	set +a
-fi
+load_configuration ()
+{
+	env_file_path="$(get_docksal_path)/.docksal/docksal.env"
+	if [ -f $env_file_path ]; then
+		# Source and allexport variables in the .env file
+		set -a; source $env_file_path; set +a
+	fi
+	local_env_file_path="$(get_docksal_path)/.docksal/docksal-local.env"
+	if [ -f $local_env_file_path ]; then
+		# Source and allexport variables in the .env file
+		set -a; source $local_env_file_path; set +a
+	fi
+	
+	# Legacy/traditional setups support
+	# TODO: get rid of this in 2017
+	legacy_yml_file_path="$(get_docksal_path)/docker-compose.yml"
+	if [ -f $legacy_yml_file_path ]; then
+		COMPOSE_FILE=docker-compose.yml
+		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml"
+	fi
+	
+	# Give ability to define main compose file. Use .docksal/docksal.yml by default
+	COMPOSE_FILE=${COMPOSE_FILE:-.docksal/docksal.yml}
+	local_yml_file_path="$(get_docksal_path)/.docksal/docksal-local.yml"
+	if [ -f $local_yml_file_path ]; then
+		COMPOSE_FILE=$COMPOSE_FILE:.docksal/docksal-local.yml
+	fi
+	export COMPOSE_FILE
+}
 
-#-------------------------- Parameters parsing -----------------------------
+#-------------------------- RUNTIME STARTS HERE ----------------------------
+
+load_configuration
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
