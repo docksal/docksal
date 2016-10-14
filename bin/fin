@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.3.2
+FIN_VERSION=0.3.3
 
 # Console colors
 red='\033[0;91m'
@@ -653,8 +653,7 @@ _docker_cleanup ()
 _vhost_proxy_connect ()
 {
 	# Figure out the default project network name
-	# TODO: refactor into something less hacky
-	network="$(docker-compose ps | awk 'NR==3 {print $1}' | sed 's/\([:alnum:]*\)_.*/\1/')_default"
+	network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 	docker network connect "$network" vhost-proxy >/dev/null 2>&1
 	if [[ $? == 0 ]]; then
 		echo-green "Connected vhost-proxy to \"${network}\" network."
@@ -2566,9 +2565,13 @@ load_configuration ()
 
 	# Set project name if it was not set previously
 	# TODO: Figure out how to prevent starting projects with duplicate names
-	local project_name=$(basename $(get_docksal_path) | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g')
-	COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
-	export COMPOSE_PROJECT_NAME 
+	if [[ -d $(get_docksal_path) ]]; then 
+		local project_name=$(basename $(get_docksal_path) | tr '[:upper:]' '[:lower:]')
+		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
+		COMPOSE_PROJECT_NAME_SAFE=$(echo $COMPOSE_PROJECT_NAME | sed 's/[^a-z0-9]//g')
+		export COMPOSE_PROJECT_NAME
+		export COMPOSE_PROJECT_NAME_SAFE
+	fi
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
