@@ -1624,7 +1624,7 @@ install_tools ()
 		# check latest boot2docker version
 		local b2d_version=$(docker version --format '{{.Server.Version}}')
 		# If VM needs to be updated, stop all project containers
-		if [[ "$b2d_version" != "$REQUIREMENTS_DOCKER" ]]; then
+		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") ]]; then
 			BOOT2DOCKER_NEEDS_AN_UPGRADE=1
 			_confirm "All containers will be stopped for vm upgrade. Continue? "
 		fi
