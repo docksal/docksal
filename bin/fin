@@ -566,6 +566,11 @@ _notify ()
 _start_containers ()
 {
 	check_docker_running
+	
+	# TODO: WIP to prevent starting projects with duplicate names
+	# local project_name=$(basename $(get_docksal_path) | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g')
+	# COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
+
 	echo-green "Starting services..."
 	docker_compose up -d --remove-orphans && \
 		_set_cli_uid && \
