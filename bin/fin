@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.3.1
+FIN_VERSION=0.3.2
 
 # Console colors
 red='\033[0;91m'
@@ -566,11 +566,6 @@ _notify ()
 _start_containers ()
 {
 	check_docker_running
-	
-	# TODO: WIP to prevent starting projects with duplicate names
-	# local project_name=$(basename $(get_docksal_path) | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g')
-	# COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
-
 	echo-green "Starting services..."
 	docker_compose up -d --remove-orphans && \
 		_set_cli_uid && \
@@ -2568,6 +2563,12 @@ load_configuration ()
 		COMPOSE_FILE=$COMPOSE_FILE:.docksal/docksal-local.yml
 	fi
 	export COMPOSE_FILE
+
+	# Set project name if it was not set previously
+	# TODO: Figure out how to prevent starting projects with duplicate names
+	local project_name=$(basename $(get_docksal_path) | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g')
+	COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
+	export COMPOSE_PROJECT_NAME 
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
