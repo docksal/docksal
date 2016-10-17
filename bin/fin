@@ -2137,10 +2137,13 @@ _run ()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
 	container_id=$(get_container_id "$CONTAINER_NAME")
 
+	# ------------------------------------------------ #
 	# 1) check winpty
 	# Running docker exec interactively on Windows requires workarounds
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
+	# ------------------------------------------------ #
 
+	# ------------------------------------------------ #
 	# 2) cmd
 	local cmd
 
@@ -2156,7 +2159,9 @@ _run ()
 	fi
 
 	cmd="$cdir"
+	# ------------------------------------------------ #
 
+	# ------------------------------------------------ #
 	# 3) convert array of parameters into escaped string
 	# Escape spaces that are "spaces" and not parameter delimeters (i.e. param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
@@ -2165,25 +2170,25 @@ _run ()
 	else
 		cmd="$cmd $@"
 	fi
+	# ------------------------------------------------ #
 
+	# ------------------------------------------------ #
 	# 4) execute
+	# Allow entering arbitrary containers by name (e.g. system containers like vhost-proxy).
 	if [[ "$container_id" == "" ]]; then
-		# try to connect to this out of project container by name
-		if [[ "$cmd" != "" ]]; then
-			${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -c "$cmd"
-		else
-			${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -i
-		fi
+		${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -i
 		return
 	fi
 
+	# Enter project containers
 	if is_tty ; then
 		# interactive
-		${winpty_cmd} docker exec -it "$container_id" sh -c "$cmd"
+		${winpty_cmd} docker exec -it "$container_id" bash -ic "$cmd"
 	else
 		# non-interactive
-		docker exec "$container_id" sh -c "$cmd"
+		docker exec "$container_id" bash -c "$cmd"
 	fi
+	# ------------------------------------------------ #
 }
 
 # start interactive mysql shell
