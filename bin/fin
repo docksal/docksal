@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.3.3
+FIN_VERSION=0.3.4
 
 # Console colors
 red='\033[0;91m'
@@ -2183,7 +2183,8 @@ _run ()
 	# Enter project containers
 	if is_tty ; then
 		# interactive
-		${winpty_cmd} docker exec -it "$container_id" bash -ic "$cmd"
+		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
+		${winpty_cmd} docker exec -it "$container_id" bash -ic "$cmd; (exit \$?)"
 	else
 		# non-interactive
 		docker exec "$container_id" bash -c "$cmd"
