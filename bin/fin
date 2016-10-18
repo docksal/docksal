@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.3.6
+FIN_VERSION=0.3.7
 
 # Console colors
 red='\033[0;91m'
@@ -2566,7 +2566,7 @@ load_configuration ()
 	legacy_yml_file_path="$(get_docksal_path)/docker-compose.yml"
 	if [[ -f $legacy_yml_file_path ]]; then
 		COMPOSE_FILE=docker-compose.yml
-		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml"
+		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml" >&2
 	fi
 	
 	# Give ability to define main compose file. Use .docksal/docksal.yml by default
