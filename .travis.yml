@@ -13,11 +13,9 @@ branches:
   - develop
 
 before_install:
-  - git clone https://github.com/docksal/drupal7.git ../drupal7
-  - cd ../drupal7
-  - sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin
-  - sudo chmod +x /usr/local/bin/fin
+  - sudo cp ./bin/fin -o /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
   - fin install tools
+  - git clone https://github.com/docksal/drupal7.git ../drupal7 && cd ../drupal7
 
 script:
   - bats ../docksal/tests/init.bats
