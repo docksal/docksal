@@ -9,10 +9,10 @@ if [ ! -z "$1" ]; then
 fi
 
 # Run tests. Order is important.
-echo "Test command: start"
-OS=$OS bats ../docksal/tests/start.bats
 echo "Test command: init"
 OS=$OS bats ../docksal/tests/init.bats
+echo "Test command: start"
+OS=$OS bats ../docksal/tests/start.bats
 echo "Test command: stop"
 OS=$OS bats ../docksal/tests/stop.bats
 echo "Test command: reset"
