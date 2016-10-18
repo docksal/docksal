@@ -20,10 +20,6 @@ before_install:
   - sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin
   - sudo chmod +x /usr/local/bin/fin
   - fin install tools
-  - cd ../drupal7
-  - fin init
-  - fin stop
-  - cd ../docksal
 
 script:
   - cd tests
