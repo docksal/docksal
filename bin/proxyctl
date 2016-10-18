@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+# TODO: this does not work as env variables are not passed/accessible here.
+if [[ "$SUPERVISOR_DEBUG" == "1" ]]; then
+  set -x
+fi
+
+# Start containers for a project identified with a virtual host
+# @param $1 virtual host name
+_start ()
+{
+	local vhost="$1"
+	[[ "$vhost" == "" ]] &&  echo "ERROR: Empty virtual host." && return 1
+	
+	local project_name=$(/usr/local/bin/docker ps -a \
+		--filter "label=com.docker.compose.service=web" \
+		--filter "label=virtual.host=$vhost" \
+		--format '{{.Label "com.docker.compose.project"}}')
+	
+	[[ "$project_name" == "" ]] && echo "ERROR: Empty project name." && return 1
+
+	echo "Starting containers for $project_name..."
+	# Dirty hack to avoid using docker-compose and still be able to launch containers with dependencies up to 3 levels deep.
+	for i in `seq 1 3`; do
+		echo "Pass #$i..."
+		/usr/local/bin/docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs /usr/local/bin/docker start
+	done
+
+    # Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
+    local network="${project_name}_default"
+    /usr/local/bin/docker network connect "$network" vhost-proxy 2>&1 >/dev/null
+    if [[ $? == 0 ]]; then
+      echo "Connected proxy to network: ${network}."
+    fi
+    # Trigger docker-gen with a dummy container to refresh nginx configuration.
+    echo "Triggering docker-gen..."
+    /usr/local/bin/docker run --rm busybox
+}
+
+# Stop containers for inactive projects
+_stop ()
+{
+	INACTIVITY_TIMEOUT="${INACTIVITY_TIMEOUT:-30m}"
+	
+	# Get a list of running web containers
+	local running_webs=$(/usr/local/bin/docker ps \
+		--filter "label=com.docker.compose.service=web" \
+		--format '{{.ID}}:{{.Label "com.docker.compose.project"}}')
+	
+	for running_web in $running_webs; do
+		# Read variables
+		IFS=':' read container_id project_name <<< "$running_web";
+		# Skip containers with empty values
+		[[ "$project_name" == "" ]] && continue
+		
+		# See if there was any recent container activity (entries in container logs)
+		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $INACTIVITY_TIMEOUT $container_id)" != "" ]]; then
+			# Active
+			echo "Project: $project_name is active. Skipping."
+		else
+			# Not active
+			echo "Project: $project_name is NOT active. Stopping..."
+			# Stop
+			/usr/local/bin/docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs /usr/local/bin/docker stop
+		fi
+	done
+}
+
+_cron ()
+{
+	_stop
+}
+
+#-------------------------- RUNTIME STARTS HERE ----------------------------
+
+# Parse other parameters
+case "$1" in
+	start)
+		shift
+		_start "$@"
+		;;
+	stop)
+		_stop
+		;;
+	cron)
+		_cron
+		;;
+	*)
+		echo "Usage: $0 start <vhost>|stop"
+esac

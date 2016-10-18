@@ -1,1 +1,1 @@
-*/15 * * * * /usr/local/bin/stop_projects.sh
+*/5 * * * * /usr/local/bin/proxyctl cron
