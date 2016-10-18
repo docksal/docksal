@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.3.5
+FIN_VERSION=0.3.6
 
 # Console colors
 red='\033[0;91m'
@@ -759,6 +759,7 @@ show_help ()
 
 	echo
 	printh "alias" "Create/remove aliases (See ${yellow}fin help alias${NC})"
+	printh "config" "Display effective project configuration"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version	(v, -v)" "Print fin version. [v, -v] - prints short version"
@@ -2538,7 +2539,7 @@ alias_list ()
 }
 
 
-#------------------------ Load project configuration and variables ---------------------------
+#------------------------ Project configuration and variables ---------------------------
 
 load_configuration ()
 {
@@ -2581,6 +2582,26 @@ load_configuration ()
 		export COMPOSE_PROJECT_NAME
 		export COMPOSE_PROJECT_NAME_SAFE
 	fi
+}
+
+show_config ()
+{
+	check_ds_environment
+
+	echo
+	echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
+	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
+	echo "COMPOSE_FILE: ${COMPOSE_FILE}"
+	echo
+	echo "VIRTUAL_HOST:" $VIRTUAL_HOST
+	echo "DOCROOT:" $DOCROOT
+	echo
+	echo "MYSQL_PORT:" $(docker-compose port db 3306)
+	echo 
+	echo "Docker Compose configuration" 
+	echo "---------------------"
+	docker-compose config
+	echo "---------------------"
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
@@ -2744,6 +2765,9 @@ case "$1" in
 		;;
 	sysinfo)
 		sysinfo
+		;;
+	config)
+		show_config
 		;;
 	fix-smb)
 		smb_windows_fix
