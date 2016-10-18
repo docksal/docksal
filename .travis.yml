@@ -1,0 +1,26 @@
+sudo: required
+
+env:
+  OS: linux
+
+services:
+  - docker
+
+branches:
+  only:
+  - develop
+
+before_install:
+  - ls
+  - sudo apt-get install git
+  - git clone https://github.com/sstephenson/bats.git
+  - sudo bats/install.sh /usr/local
+  - git clone https://github.com/docksal/drupal7.git
+  - git clone https://github.com/docksal/docksal.git
+  - sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin
+  - sudo chmod +x /usr/local/bin/fin
+  - fin install tools
+
+script:
+  - cd docksal/tests
+  - bash run-tests.sh
