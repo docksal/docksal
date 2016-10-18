@@ -2049,7 +2049,7 @@ update_self ()
 	fi
 
 	# check for different updates on next run
-	rm -r "$CONFIG_LAST_CHECK" >/dev/null 2>&1
+	rm -f "$CONFIG_LAST_CHECK" >/dev/null 2>&1
 
 	# saving to file
 	echo "$new_ds" | sudo tee "$FIN_PATH" > /dev/null
