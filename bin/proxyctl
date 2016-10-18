@@ -14,7 +14,7 @@ _start ()
 	
 	local project_name=$(/usr/local/bin/docker ps -a \
 		--filter "label=com.docker.compose.service=web" \
-		--filter "label=virtual.host=$vhost" \
+		--filter "label=io.docksal.virtual-host=$vhost" \
 		--format '{{.Label "com.docker.compose.project"}}')
 	
 	[[ "$project_name" == "" ]] && echo "ERROR: Empty project name." && return 1
