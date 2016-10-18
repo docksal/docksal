@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.3.8
+FIN_VERSION=0.4.0
 
 # Console colors
 red='\033[0;91m'
@@ -578,8 +578,8 @@ _stop_containers ()
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
 		check_docker_running
 		echo-green "Stopping all running services from all projects..."
-		# stop all but system containers (--label "group=system")
-		docker ps --format '{{.Names}} {{.Label "group"}}' | grep -v 'system' | xargs docker stop
+		# stop all but system containers (--label "io.docksal.group=system")
+		docker ps --format '{{.Names}} {{.Label "io.docksal.group"}}' | grep -v 'system' | xargs docker stop
 		return
 	fi
 
@@ -1566,7 +1566,7 @@ status ()
 		check_docker_running
 		docker ps --all \
 			--filter 'label=com.docker.compose.service=web' \
-			--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "project.root"}}'
+			--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.project-root"}}'
 	else
 		check_ds_environment
 		docker_compose ps
@@ -1652,7 +1652,7 @@ install_tools ()
 install_proxy_service ()
 {
 	docker rm -f vhost-proxy >/dev/null 2>&1 || true
-	docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
+	docker run -d --name vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
@@ -1671,7 +1671,7 @@ install_dns_service ()
 	if is_linux; then docker_ip_map=""; fi
 
 	docker rm -f dns >/dev/null 2>&1 || true
-	docker run -d --name dns --label "group=system" --restart=always --privileged --userns=host \
+	docker run -d --name dns --label "io.docksal.group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
 		-e DNS_IP="$ip" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -1719,7 +1719,7 @@ configure_resolver ()
 install_sshagent_service ()
 {
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
-	docker run -d --name ssh-agent --label "group=system" --restart=always --privileged --userns=host \
+	docker run -d --name ssh-agent --label "io.docksal.group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_SSH_AGENT}" >/dev/null
 }
