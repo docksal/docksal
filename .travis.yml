@@ -13,14 +13,23 @@ branches:
   - develop
 
 before_install:
-  - DEBIAN_FRONTEND=noninteractive sudo apt-get install git
-  - git clone https://github.com/sstephenson/bats.git ../bats
-  - sudo ../bats/install.sh /usr/local
   - git clone https://github.com/docksal/drupal7.git ../drupal7
+  - cd ../drupal7
   - sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin
   - sudo chmod +x /usr/local/bin/fin
   - fin install tools
 
 script:
-  - cd tests
-  - bash run-tests.sh
+  - bats ../docksal/tests/init.bats
+  - bats ../docksal/tests/start.bats
+  - bats ../docksal/tests/stop.bats
+  - bats ../docksal/tests/reset.bats
+  - bats ../docksal/tests/restart.bats
+  - bats ../docksal/tests/drush.bats
+  - bats ../docksal/tests/exec.bats
+  - bats ../docksal/tests/ssh-add.bats
+  - bats ../docksal/tests/status.bats
+  - bats ../docksal/tests/update.bats
+  - bats ../docksal/tests/helper_functions.bats
+  - bats ../docksal/tests/basics_check_functions.bats
+  - bats ../docksal/tests/control_functions.bats
