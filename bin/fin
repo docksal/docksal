@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.4.0
+FIN_VERSION=0.4.1
 
 # Console colors
 red='\033[0;91m'
@@ -1566,7 +1566,7 @@ status ()
 		check_docker_running
 		docker ps --all \
 			--filter 'label=com.docker.compose.service=web' \
-			--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.project-root"}}'
+			--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
 	else
 		check_ds_environment
 		docker_compose ps
