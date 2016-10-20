@@ -47,7 +47,7 @@ _start ()
 
     # Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
     local network="${project_name}_default"
-    /usr/local/bin/docker network connect "$network" vhost-proxy 2>&1 >/dev/null
+    /usr/local/bin/docker network connect "$network" vhost-proxy >/dev/null 2>&1
     if [[ $? == 0 ]]; then
       echo "Connected proxy to network: ${network}."
     fi
