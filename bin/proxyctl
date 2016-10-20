@@ -12,12 +12,31 @@ _start ()
 	local vhost="$1"
 	[[ "$vhost" == "" ]] &&  echo "ERROR: Empty virtual host." && return 1
 	
-	local project_name=$(/usr/local/bin/docker ps -a \
+	# Match vhost to a running web (exact match only)
+	local project_name
+	project_name=$(/usr/local/bin/docker ps -a \
 		--filter "label=com.docker.compose.service=web" \
 		--filter "label=io.docksal.virtual-host=$vhost" \
 		--format '{{.Label "com.docker.compose.project"}}')
 	
-	[[ "$project_name" == "" ]] && echo "ERROR: Empty project name." && return 1
+	# If exact match was not found, then look for a subdomain match
+	if [[ "$project_name" == "" ]]; then
+		# Get a list of all (running and stopped) web containers with virtual host labels
+		local webs=$(/usr/local/bin/docker ps -a \
+		--filter "label=com.docker.compose.service=web" \
+		--format '{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.virtual-host"}}')
+		
+		for web in $webs; do
+			# Read variables
+			IFS=':' read web_project_name web_project_vhost <<< "$web";
+			# Skip containers with empty values
+			[[ "$web_project_vhost" == "" ]] && continue
+			# Stop searching when a subdomain match is found
+			[[ "$vhost" == *."$web_project_vhost" ]] && project_name="$web_project_name" && break
+		done
+	fi
+
+	[[ "$project_name" == "" ]] && echo "ERROR: No matching projects found for virtual host ${vhost}." && return 1
 
 	echo "Starting containers for $project_name..."
 	# Dirty hack to avoid using docker-compose and still be able to launch containers with dependencies up to 3 levels deep.
