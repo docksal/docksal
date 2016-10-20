@@ -19,23 +19,34 @@ _start ()
 		--filter "label=io.docksal.virtual-host=$vhost" \
 		--format '{{.Label "com.docker.compose.project"}}')
 	
-	# If exact match was not found, then look for a subdomain match
+	# If exact match was not found, then we have multiple domains/wildcards (e.g. example.com,*.example.com,example2.com)
+	# Complex processing goes below.
 	if [[ "$project_name" == "" ]]; then
-		# Get a list of all (running and stopped) web containers with virtual host labels
+		# Get a list of all (running and stopped) web containers and their virtual host label values
 		local webs=$(/usr/local/bin/docker ps -a \
 		--filter "label=com.docker.compose.service=web" \
 		--format '{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.virtual-host"}}')
 		
+		# Look for a matching label among all webs
 		for web in $webs; do
 			# Read variables
 			IFS=':' read web_project_name web_project_vhost <<< "$web";
-			# Skip containers with empty values
-			[[ "$web_project_vhost" == "" ]] && continue
-			# Stop searching when a subdomain match is found
-			[[ "$vhost" == *."$web_project_vhost" ]] && project_name="$web_project_name" && break
+			# Split web_project_vhost
+			IFS=',' read -a web_project_vhost_arr <<< "$web_project_vhost"
+			for i in "${web_project_vhost_arr[@]}"; do
+				# Turn domain name into a regular expression (e.g. *.example.com => .*\.example\.com)
+				i_reg=$(echo $i | sed "s/\./\\\\./g" | sed "s/\*/\.\*/g")
+				# Match vhost using the regular expression we created
+				echo "$vhost" | grep "^$i_reg$" >/dev/null
+				# Store match and break
+				[[ $? -eq 0 ]] && project_name="$web_project_name" && break
+			done
+			# Break if match was found
+			[[ "$project_name" != "" ]] && break
 		done
 	fi
 
+	# No match if project_name is empty here.
 	[[ "$project_name" == "" ]] && echo "ERROR: No matching projects found for virtual host ${vhost}." && return 1
 
 	echo "Starting containers for $project_name..."
