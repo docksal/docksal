@@ -17,17 +17,20 @@
 	{{ end }}
 {{ end }}
 
-{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
+{{ range $hosts, $containers_vhost := groupByLabel $ "io.docksal.virtual-host" }}
 
-upstream {{ $host }} {
+{{ range $service, $containers := groupByLabel $containers_vhost "com.docker.compose.service" }}
+
+{{ $pr_container := $containers | first }}
+{{ $project := index $pr_container.Labels "com.docker.compose.project" }}
+## Reachable via "{{ $project }}_default" network
+upstream {{ $project}}-{{ $service }} {
 {{ range $container := $containers }}
 	{{ $addrLen := len $container.Addresses }}
 
 	{{ range $knownNetwork := $CurrentContainer.Networks }}
 		{{ range $containerNetwork := $container.Networks }}
 			{{ if eq $knownNetwork.Name $containerNetwork.Name }}
-				## Reachable via "{{ $containerNetwork.Name }}" network
-
 				{{/* If only 1 port exposed, use that */}}
 				{{ if eq $addrLen 1 }}
 					{{ $address := index $container.Addresses 0 }}
@@ -47,10 +50,12 @@ upstream {{ $host }} {
 # HTTP
 server {
 	listen 80;
-	server_name {{ $host }};
+	{{ range $server_name := split $hosts "," }}
+	server_name {{ $server_name }};
+	{{ end }}
 
 	location / {
-		proxy_pass http://{{ $host }};
+		proxy_pass http://{{ $project}}-{{ $service }};
 	}
 }
 
@@ -58,7 +63,9 @@ server {
 server {
 
 	listen 443;
-	server_name {{ $host }};
+	{{ range $server_name := split $hosts "," }}
+	server_name {{ $server_name }};
+	{{ end }}
 
 	ssl_certificate           /etc/nginx/server.crt;
 	ssl_certificate_key       /etc/nginx/server.key;
@@ -70,9 +77,10 @@ server {
 	ssl_prefer_server_ciphers on;
 
 	location / {
-	  proxy_pass http://{{ $host }};
+	  proxy_pass http://{{ $project}}-{{ $service }};
 	}
 }
 
+{{ end }}
 
 {{ end }}
