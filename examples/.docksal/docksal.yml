@@ -56,5 +56,8 @@ services:
       # We try to map both options (b2d and Linux). The startup.sh script in cli container will decide which one to use.
       - /.home:/.home-b2d  # boot2docker-vagrant
       - ~/:/.home-linux   # Linux
+    # Mount shared ssh-agent socket
+    volumes_from:
+      - container:ssh-agent
     environment:
       - XDEBUG_ENABLED=${XDEBUG_ENABLED}
