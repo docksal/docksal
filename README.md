@@ -2,6 +2,10 @@
 
 Docker and Docker Compose based environment.
 
+    Docksal is still under active development. Breaking changes and outdated docs are very possible.
+    We plan to have a 1.0 Release Candidate in November 2016.  
+    Please help us by testing, submitting issues and PRs. Thanks!
+
 **For a fully working example of Docksal setup take a look at:**
 - [Drupal 7 sample project](https://github.com/docksal/drupal7)
 - [Drupal 8 sample project](https://github.com/docksal/drupal8)
