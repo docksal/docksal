@@ -733,7 +733,7 @@ show_help ()
 	printh "status (st, ps) [-a (--all)]" "Show project services status. -a shows all running containers"
 	printh "reset [service]" "Recreate service(s). If no parameter given recreates all project services."
 	printh "" "See ${yellow}fin help reset${NC} for more details on resetting Docksal system services."
-	printh "remove [service]" "Remove project or system services. See ${yellow}fin help remove${NC}"
+	printh "rm [service]" "Remove project or system services. See ${yellow}fin help rm${NC}"
 	if ! is_linux && ! is_docker_native; then
 		printh "vm <command>" "Control docker machine vm. See ${yellow}fin help vm${NC} for commands list" "yellow"
 	fi
@@ -847,8 +847,8 @@ show_help_reset ()
 	echo "	fin reset		Restart all project services"
 	echo
 	echo-green "System services"
-	echo -e "Docksal has 3 system services."
-	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and are not recommended for use."
+	echo -e "Docksal has several system services."
+	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and should not be used on projects."
 	echo "	fin reset dns		Recreate Docksal DNS service"
 	echo -e "	fin reset proxy		Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
 	echo "	fin reset ssh-agent	Recreate Docksal ssh-agent service"
@@ -856,14 +856,15 @@ show_help_reset ()
 	echo
 }
 
-show_help_remove ()
+show_help_rm ()
 {
-	echo-green "fin remove - Remove services/containers"
+	echo-green "fin rm - Remove services/containers"
 	echo
 	echo -e "${green}Parameters:${NC} one or more service names."
 	echo-green "Examples:"
-	printh "fin remove web" "Remove web service"
-	printh "fin remove proxy" "Stop Docksal reverse proxy service"
+	printh "fin rm" "Remove all project services"
+	printh "fin rm web" "Remove web service"
+	printh "fin rm proxy" "Remove Docksal reverse proxy service"
 	echo
 }
 
@@ -2710,7 +2711,7 @@ case "$1" in
 		shift
 		reset "$@"
 		;;
-	remove)
+	rm)
 		shift
 		remove "$@"
 		;;
