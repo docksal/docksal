@@ -2663,7 +2663,6 @@ show_config ()
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
-load_configuration
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
@@ -2682,6 +2681,7 @@ fi
 	[[ "$*" != "update prerequisites" ]] && \
 	[[ "$*" != "update tools" ]] && \
 	[[ "$1" != "bash_comp_words" ]] && \
+	load_configuration &&
 	check_for_updates
 
 # Parse other parameters
