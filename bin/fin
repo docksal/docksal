@@ -519,7 +519,8 @@ check_docksal ()
 {
 	if [[ "$(get_docksal_path)" == "" ]] ; then
 		echo-error "Cannot detect project root." \
-			"Please make sure you have a .docksal directory in the root of your project."
+			"Please make sure you have ${yellow}.docksal${NC} directory in the root of your project." \
+			"You can also run ${yellow}touch .docksal${NC} in a directory to designate it as the project root."
 		exit 1
 	fi
 }
