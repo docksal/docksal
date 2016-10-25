@@ -383,7 +383,7 @@ ver_to_int ()
 
 #---------------------------- Control functions -------------------------------
 
-check_ds_environment ()
+check_docksal_environment ()
 {
 	check_docksal && check_docker_running
 }
@@ -606,7 +606,7 @@ _stop_containers ()
 		return
 	fi
 
-	check_ds_environment
+	check_docksal_environment
 	echo-green "Stopping services..."
 	docker_compose stop
 }
@@ -619,7 +619,7 @@ _restart_containers ()
 # @param $1 container_name
 _remove_containers ()
 {
-	check_ds_environment
+	check_docksal_environment
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 	fi
@@ -1011,7 +1011,7 @@ bash_comp_words ()
 			echo "list remove"
 			exit 0
 		;;
-		ds)
+		fin)
 			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			echo "$aliases alias start stop restart status reset remove bash exec logs mysql mysql-import exec-url drush drupal \
 			behat ssh-add install update version cleanup sysinfo"
@@ -1543,14 +1543,14 @@ vm-ram () {
 # Start containers
 up ()
 {
-	check_ds_environment
+	check_docksal_environment
 	_start_containers
 }
 
 # Stop containers
 stop ()
 {
-	check_ds_environment
+	check_docksal_environment
 	_stop_containers "$@"
 }
 
@@ -1558,7 +1558,7 @@ stop ()
 # @param $1 container_name
 restart ()
 {
-	check_ds_environment
+	check_docksal_environment
 	_restart_containers "$@"
 }
 
@@ -1573,7 +1573,7 @@ status ()
 			--filter 'label=com.docker.compose.service=web' \
 			--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
 	else
-		check_ds_environment
+		check_docksal_environment
 		docker_compose ps
 	fi
 }
@@ -2019,7 +2019,7 @@ update_system_images ()
 # Update project images
 update_project_images ()
 {
-	check_ds_environment
+	check_docksal_environment
 	
 	echo-green "Updating project images..."
 	docker_compose pull # update project containers images
@@ -2103,12 +2103,12 @@ check_for_updates ()
 	fi
 
 	echo 'One second! Checking for updates...'
-	local new_ds; local new_version
+	local new_fin; local new_version
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$CONFIG_LAST_CHECK"
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_ds=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_FIN?r=$RANDOM")
-	new_version=$(echo "$new_ds" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
+	new_fin=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_FIN?r=$RANDOM")
+	new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
 	if [[ $(ver_to_int "$new_version") > $(ver_to_int ${FIN_VERSION}) ]]; then
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
@@ -2155,7 +2155,7 @@ _run ()
 {
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
-	check_ds_environment
+	check_docksal_environment
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
@@ -2219,7 +2219,7 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
-	check_ds_environment
+	check_docksal_environment
 	check_drush_path
 	_run $(get_mysql_connect)
 }
@@ -2228,7 +2228,7 @@ mysql ()
 # @param $1 filename of backup file. Should be inside project root
 mysql_import ()
 {
-	check_ds_environment
+	check_docksal_environment
 	check_drush_path
 
 	local confirm=1
@@ -2328,7 +2328,7 @@ mysql_dump ()
 # @param $* arguments and params passed to Behat
 behat ()
 {
-	check_ds_environment
+	check_docksal_environment
 	cd $(get_docksal_path)
 
 	local params=''
@@ -2374,7 +2374,7 @@ exec_url ()
 # @param $1 $2... container names
 remove ()
 {
-	check_ds_environment
+	check_docksal_environment
 	if [[ $1 == "" ]]; then
 		echo -e  "${red}WARNING:${NC} ${yellow}You have chosen to delete or re-create all project containers.${NC}"
 		_confirm "Continue?";
@@ -2640,7 +2640,7 @@ load_configuration ()
 
 show_config ()
 {
-	check_ds_environment
+	check_docksal_environment
 
 	echo
 	echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
@@ -2676,7 +2676,7 @@ if [[ "$1" == "@"* ]]; then
 fi
 
 # Check for updates if not updating already
-[[ "$*" != "update ds" ]] && \
+[[ "$*" != "update self" ]] && \
 	[[ "$*" != "install prerequisites" ]] && \
 	[[ "$*" != "install tools" ]] && \
 	[[ "$*" != "update prerequisites" ]] && \
@@ -2839,20 +2839,20 @@ case "$1" in
 	init|*)
 		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
 		# First search project commands folder
-		ds_command_script="$(get_docksal_path)/$DOCKSAL_COMMANDS_PATH/$1"
+		command_script="$(get_docksal_path)/$DOCKSAL_COMMANDS_PATH/$1"
 		# If not found search global docksal commands folder
-		[ ! -f "$ds_command_script" ] && ds_command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
+		[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
 		# If not found there as well then it is a wrong command
-		[ ! -f "$ds_command_script" ] && \
+		[ ! -f "$command_script" ] && \
 			echo-yellow "Unknown command '$*'. See 'fin help' for list of available commands" && \
 			exit 1
 
-		if [[ ! -x "$ds_command_script" ]]; then
-			echo -e "${yellow}$ds_command_script${NC} is not set to be executable."
+		if [[ ! -x "$command_script" ]]; then
+			echo -e "${yellow}$command_script${NC} is not set to be executable."
 			_confirm "Fix automatically?"
-			chmod +x "$ds_command_script"
-			if_failed "Could not make $ds_command_script executable"
+			chmod +x "$command_script"
+			if_failed "Could not make $command_script executable"
 		fi
 		shift
-		exec "$ds_command_script" "$@"
+		exec "$command_script" "$@"
 esac
