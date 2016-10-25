@@ -745,8 +745,9 @@ show_help ()
 	printh "logs [service]" "Show docker logs for service container"
 
 	echo
-	printh "drush [command] [options...]" "Execute Drush command"
-	printh "drupal [command]" "Execute Drupal Console command (Drupal 8)"
+	printh "drush [command] [options]" "Execute Drush command (Drupal)"
+	printh "drupal [command] [options]" "Execute Drupal Console command (Drupal 8)"
+	printh "wp [command] [options]" "Execute WP-CLI command (WordPress)"
 
 	echo
 	printh "mysql (sqlc)" "Opens mysql shell to current project database"
@@ -2772,6 +2773,14 @@ case "$1" in
 			_run drupal
 		else
 			_run drupal "$@"
+		fi
+		;;
+	wp)
+		shift
+		if [[ "$1" == "" ]]; then
+			_run wp
+		else
+			_run wp "$@"
 		fi
 		;;
 	behat)
