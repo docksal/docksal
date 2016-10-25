@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.4.1
+FIN_VERSION=0.5.0
 
 # Console colors
 red='\033[0;91m'
@@ -44,6 +44,9 @@ DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 vboxmanage="vboxmanage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
 	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+# Stacks folder
+CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
+mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
 
 # Where custom commands live (relative path)
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
@@ -67,6 +70,8 @@ HARDWARE=$(uname -m)
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
 URL_FIN="${URL_REPO}/${FIN_BRANCH}/bin/fin"
+URL_STACKS_SERVICES="${URL_REPO}/${FIN_BRANCH}/stacks/services.yml"
+URL_STACKS_DEFAULT="${URL_REPO}/${FIN_BRANCH}/stacks/default.yml"
 
 URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
@@ -2034,18 +2039,26 @@ update_self ()
 	[[ "$1" != "" ]] && FIN_BRANCH="$1"
 	testing_warn
 	echo "Downloading..."
-	local new_ds
-	new_ds=$(curl -kfsS "$URL_FIN")
-	if_failed "Download has failed."
+	local new_fin
+	new_fin=$(curl -kfsS "$URL_FIN")
+	if_failed "fin download failed."
+
+	local stacks_services
+	stacks_services=$(curl -kfsS "$URL_STACKS_SERVICES")
+	if_failed "services.yml download failed."
+
+	local stacks_default
+	stacks_default=$(curl -kfsS "$URL_STACKS_DEFAULT")
+	if_failed "default.yml download failed."
 
 	# Check if update is a major version. Show warning is needed
-	local new_version=$(echo "$new_ds" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
+	local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
 	local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
 	local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
 	if [[ "$current_major_version" != "$new_major_version" ]]; then
 		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
-		echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is a non-backwarfin compatible update."
-		echo "You might be not able to use you current Docksal environment if you proceed."
+		echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
+		echo "You may not be able to use you current Docksal environment if you proceed."
 		echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
 		_confirm "Continue with the update?"
 	fi
@@ -2054,9 +2067,17 @@ update_self ()
 	rm -f "$CONFIG_LAST_CHECK" >/dev/null 2>&1
 
 	# saving to file
-	echo "$new_ds" | sudo tee "$FIN_PATH" > /dev/null
+	echo "$new_fin" | sudo tee "$FIN_PATH" > /dev/null
 	if_failed "Could not write $FIN_PATH."
 	sudo chmod +x "$FIN_PATH"
+
+	# Saving configs
+	local stacks_services_path="$CONFIG_STACKS_DIR/services.yml"
+	echo "$stacks_services" | sudo tee $stacks_services_path > /dev/null
+	if_failed "Could not write $stacks_services_path."
+	local stacks_default_path="$CONFIG_STACKS_DIR/default.yml"
+	echo "$stacks_default" | sudo tee $stacks_default_path > /dev/null
+	if_failed "Could not write $stacks_default_path."
 
 	local new_version=$(head "$FIN_PATH" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
 	echo-green "fin updated to ${new_version}"
@@ -2563,21 +2584,32 @@ load_configuration ()
 		export ENV_FILE
 	fi
 	
-	# Legacy/traditional setups support
+	# Legacy/traditional setup support
 	# TODO: get rid of this in 2017
 	legacy_yml_file_path="$(get_docksal_path)/docker-compose.yml"
 	if [[ -f $legacy_yml_file_path ]]; then
-		COMPOSE_FILE=docker-compose.yml
+		COMPOSE_FILE=$legacy_yml_file_path
 		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml" >&2
 	fi
-	
-	# Give ability to define main compose file. Use .docksal/docksal.yml by default
-	COMPOSE_FILE=${COMPOSE_FILE:-.docksal/docksal.yml}
-	yml_file_path="$(get_docksal_path)/.docksal/docksal.yml"
-	local_yml_file_path="$(get_docksal_path)/.docksal/docksal-local.yml"
-	# Only include docksal-local.yml if docksal.yml exists.
-	if [[ -f $yml_file_path ]] && [[ -f $local_yml_file_path ]]; then
-		COMPOSE_FILE=$COMPOSE_FILE:.docksal/docksal-local.yml
+	# Set COMPOSE_FILE unless it has been already set by user
+	if [[ "$COMPOSE_FILE" == "" ]]; then
+		default_yml_file_path="$HOME/.docksal/stacks/default.yml"
+		yml_file_path="$(get_docksal_path)/.docksal/docksal.yml"
+		local_yml_file_path="$(get_docksal_path)/.docksal/docksal-local.yml"
+		# Use .docksal/docksal.yml by default (if exists)
+		if [[ -f $yml_file_path ]]; then
+			COMPOSE_FILE=$yml_file_path
+			# Include docksal-local.yml (if exists)
+			[[ -f $local_yml_file_path ]] && COMPOSE_FILE="$COMPOSE_FILE:$local_yml_file_path"
+		# Otherwise use $HOME/.docksal/default.yml (if exists)
+		elif [[ -f $default_yml_file_path ]]; then
+			COMPOSE_FILE=$default_yml_file_path
+		fi
+		# Throw an error if COMPOSE_FILE is empty here
+		if [[ "$COMPOSE_FILE" == "" ]]; then
+			echo-error "No configuration files found." "Expected in $yml_file_path"
+			exit 1
+		fi
 	fi
 	export COMPOSE_FILE
 
@@ -2589,6 +2621,20 @@ load_configuration ()
 		COMPOSE_PROJECT_NAME_SAFE=$(echo $COMPOSE_PROJECT_NAME | sed 's/[^a-z0-9]//g')
 		export COMPOSE_PROJECT_NAME
 		export COMPOSE_PROJECT_NAME_SAFE
+	fi
+
+	# Set defaults
+	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.docksal}
+	export DOCROOT=${DOCROOT:-docroot}
+
+	# Make project root gloablly available
+	export DOCKSAL_PATH="$(get_docksal_path)"
+	export PROJECT_ROOT="$(get_docksal_path)"
+	
+	if is_docker_running; then
+		export DOCKER_RUNNING="true"
+	else
+		export DOCKER_RUNNING="false"
 	fi
 }
 
@@ -2806,13 +2852,5 @@ case "$1" in
 			if_failed "Could not make $ds_command_script executable"
 		fi
 		shift
-		export DOCKSAL_PATH="$(get_docksal_path)"
-		export PROJECT_ROOT="$(get_docksal_path)"
-		if is_docker_running; then
-			export DOCKER_RUNNING="true"
-		else
-			export DOCKER_RUNNING="false"
-		fi
-
 		exec "$ds_command_script" "$@"
 esac
