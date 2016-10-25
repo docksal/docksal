@@ -1,0 +1,41 @@
+# Docker and Docker Compose based environment for Drupal.
+# See https://github.com/docksal/docksal for more information and documentation.
+
+version: "2"
+
+services:
+  # Web node
+  web:
+    hostname: web
+    image: docksal/apache:2.2-stable
+    volumes:
+      # Project root folder mapping
+      - "${PROJECT_ROOT}/:/var/www"
+    labels:
+      - io.docksal.virtual-host=${VIRTUAL_HOST}
+      - io.docksal.project-root=${PROJECT_ROOT}
+    environment:
+      - APACHE_DOCUMENTROOT=/var/www/${DOCROOT}
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+
+  # DB node
+  db:
+    hostname: db
+    image: docksal/mysql:5.5
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=user
+      - MYSQL_DATABASE=default
+
+  # CLI node
+  # Used for all console commands and tools.
+  cli:
+    hostname: cli
+    image: docksal/cli:stable
+    volumes:
+      # Project root folder mapping
+      - "${PROJECT_ROOT}/:/var/www"
+      # Host home directory mapping (for SSH keys and ther credentials).
+      # We try to map both options (b2d and Linux). The startup.sh script in cli container will decide which one to use.
+      - "${HOME}/:/.home"   # Linux
