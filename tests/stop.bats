@@ -2,28 +2,64 @@
 
 load fin_script
 
+# Check if all necessary lines in the output.
+check_stop_output() {
+	[[ $output == *"Stopping services..."* ]]
+	[[ $output == *"Stopping drupal7_cli"* ]]
+	[[ $output == *"Stopping drupal7_db"* ]]
+	[[ $output == *"Stopping drupal7_web"* ]]
+}
+
 @test "Checking fin stop" {
-	fin start
+	# Start containers (result of this command will be skipped).
+	fin start || echo ''
+
+	# Check if containers are running.
+	docker_check_runnign
+
+	# Run command.
+	fin stop
+
+	# Check if containers are not running.
+	docker_check_not_runnign
 }
 
 @test "Checking output of fin stop" {
+	# Start containers (result of this command will be skipped).
+	fin start || echo ''
+
+	# Check if containers are running.
+	docker_check_runnign
+
+	# Run command.
 	run fin stop
 
+	# Check if run is success.
 	[ $status -eq 0 ]
-	[[ ${lines[0]} =~ "Stopping services..." ]]
-}
 
-@test "Checking output of fin down" {
-	run fin down
+	# Check if all necessary lines in the output.
+	check_stop_output
 
-	[ $status -eq 0 ]
-	[[ ${lines[0]} =~ "Stopping services..." ]]
+	# Check if containers are not running.
+	docker_check_not_runnign
 }
 
 @test "Checking fin _stop_containers function" {
+	# Start containers (result of this command will be skipped).
+	fin start || echo ''
+
+	# Check if containers are running.
+	docker_check_runnign
+
+	# Run command.
 	run _stop_containers
 
+	# Check if run is success.
 	[ $status -eq 0 ]
-	[[ ${lines[0]} =~ "Stopping services..." ]]
-}
 
+	# Check if all necessary lines in the output.
+	check_stop_output
+
+	# Check if containers are not running.
+	docker_check_not_runnign
+}

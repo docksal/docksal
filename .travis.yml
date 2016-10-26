@@ -24,3 +24,4 @@ before_script:
 
 script:
   - bats ../docksal/tests/start.bats
+  - bats ../docksal/tests/stop.bats

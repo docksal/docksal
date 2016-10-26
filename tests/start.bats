@@ -5,9 +5,9 @@ load fin_script
 # Check if all necessary lines in the output.
 check_start_output() {
 	[[ $output == *"Starting services..."* ]]
-	[[ $output == *"Starting drupal7_cli"* || $output == *"drupal7_cli_1 is up-to-date"* ]]
-	[[ $output == *"Starting drupal7_db"* || $output == *"drupal7_db_1 is up-to-date"* ]]
-	[[ $output == *"Starting drupal7_web"* || $output == *"drupal7_web_1 is up-to-date"* ]]
+	[[ $output == *"Starting drupal7_cli"* ]]
+	[[ $output == *"Starting drupal7_db"* ]]
+	[[ $output == *"Starting drupal7_web"* ]]
 }
 
 @test "Checking fin start" {
