@@ -20,6 +20,7 @@ install:
 
 before_script:
   - git clone https://github.com/docksal/drupal7.git ../drupal7 && cd ../drupal7
+  - fin reset system
 
 script:
   - bats ../docksal/tests/start.bats
