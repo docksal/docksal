@@ -2683,6 +2683,8 @@ fi
 	[[ "$*" != "install tools" ]] && \
 	[[ "$*" != "update prerequisites" ]] && \
 	[[ "$*" != "update tools" ]] && \
+	[[ "$*" != "version" ]] && \
+	[[ "$*" != "sysinfo" ]] && \
 	[[ "$1" != "bash_comp_words" ]] && \
 	load_configuration &&
 	check_for_updates

@@ -14,6 +14,7 @@ branches:
 
 install:
   - sudo cp ./bin/fin /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
+  - fin version
   - fin install tools
   - fin sysinfo
 
