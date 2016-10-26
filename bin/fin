@@ -2096,9 +2096,8 @@ check_for_updates ()
 
 	local timestamp; local last_check; local next_check
 	timestamp=$(date +%s)
-	last_check=$(cat "$CONFIG_LAST_CHECK" 2>/dev/null)
 	# Set last_check to 0 if empty
-	last_check="${last_check:-0}"
+	last_check=$(cat "$CONFIG_LAST_CHECK" 2>/dev/null || echo 0)
 	# Check once a week
 	next_check=$(($last_check+604800))
 	if [ ${timestamp} -le ${next_check} ]; then
@@ -2128,10 +2127,11 @@ check_for_updates ()
 		fi
 	fi
 
-	[[ ${UPDATES_AVAILABLE} == "1" ]] && \
-		echo -e "Run ${yellow}fin update tools${NC} to install updates to docker tools" && \
-		echo "(Press Enter to continue)" && \
+	if [[ ${UPDATES_AVAILABLE} == "1" ]]; then
+		echo -e "Run ${yellow}fin update tools${NC} to install updates to docker tools"
+		echo "(Press Enter to continue)"
 		read -p ''
+	fi
 }
 
 #-------------------------- Execution commands -----------------------------
