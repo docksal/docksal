@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.5.2
+FIN_VERSION=0.5.3
 
 # Console colors
 red='\033[0;91m'
@@ -2676,15 +2676,31 @@ if [[ "$1" == "@"* ]]; then
 	shift
 fi
 
+# TODO: figure out a better way to determine when to skip load_configuration
 # Check for updates if not updating already
 [[ "$*" != "update self" ]] && \
 	[[ "$*" != "install prerequisites" ]] && \
 	[[ "$*" != "install tools" ]] && \
 	[[ "$*" != "update prerequisites" ]] && \
 	[[ "$*" != "update tools" ]] && \
-	[[ "$*" != "version" ]] && \
-	[[ "$*" != "sysinfo" ]] && \
+	[[ "$1" != "version" ]] && \
+	[[ "$1" != "-v" ]] && \
+	[[ "$1" != "sysinfo" ]] && \
 	[[ "$1" != "bash_comp_words" ]] && \
+	[[ "$*" != "ssh-add" ]] && \
+	[[ "$*" != "vm" ]] && \
+	[[ "$*" != "docker*" ]] && \
+	[[ "$1" != "exec-url" ]] && \
+	[[ "$1" != "cleanup" ]] && \
+	[[ "$1" != "help" ]] && \
+	[[ "$*" != "" ]] && \
+	[[ "$1" != "config" ]] && \
+	[[ "$1" != "fix-smb" ]] && \
+	[[ "$1" != "alias" ]] && \
+	[[ "$*" != "reset dns" ]] && \
+	[[ "$*" != "reset proxy" ]] && \
+	[[ "$*" != "reset ssh-agent" ]] && \
+	[[ "$*" != "reset system" ]] && \
 	load_configuration &&
 	check_for_updates
 
