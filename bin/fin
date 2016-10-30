@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.5.4
+FIN_VERSION=0.5.5
 
 # Console colors
 red='\033[0;91m'
@@ -41,6 +41,7 @@ DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_COMPOSE_BIN_NIX="/usr/local/bin/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
+WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="vboxmanage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
 	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
@@ -501,6 +502,15 @@ is_docker_machine_version ()
 
 	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") > $(ver_to_int "$version") ]] && \
+		return 1;
+
+	return 0;
+}
+
+is_winpty_version ()
+{
+	local version=$(winpty --version | head -1 | sed "s/.*version \(.*\).*/\1/")
+	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") > $(ver_to_int "$version") ]] && \
 		return 1;
 
 	return 0;
@@ -1834,10 +1844,12 @@ install_tools_windows ()
 	fi
 
 	# Install winpty TODO: check winpty version here
-	echo-green "Installing winpty v${REQUIREMENTS_WINPTY}..."
-	(cd "$CONFIG_DOWNLOADS_DIR" && \
-		curl -sSL "$URL_WINPTY" | tar -xzf - && \
-		mv winpty-*/bin/* "$CONFIG_BIN_DIR/")
+	if ! is_winpty_version; then
+		echo-green "Installing winpty v${REQUIREMENTS_WINPTY}..."
+		(cd "$CONFIG_DOWNLOADS_DIR" && \
+			curl -sSL "$URL_WINPTY" | tar -xzf - && \
+			mv winpty-*/bin/* "$CONFIG_BIN_DIR/")
+	fi
 
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
