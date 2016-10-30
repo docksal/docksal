@@ -456,18 +456,14 @@ is_vbox_version ()
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
 	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$REQUIREMENTS_VBOX") ]] && \
-		return 2
+		return 1
 
 	return 0
 }
 
 is_docker_version ()
 {
-	if is_linux; then
-		! which 'docker' >/dev/null 2>&1 && return 1
-	else
-		[[ ! -x "$DOCKER_BIN" ]] && return 1
-	fi
+	! which 'docker' >/dev/null 2>&1 && return 1
 
 	local version=$(docker -v | sed "s/.*version \(.*\),.*/\1/")
 
@@ -479,11 +475,7 @@ is_docker_version ()
 
 is_docker_compose_version ()
 {
-	if is_linux; then
-		! which 'docker-compose' >/dev/null 2>&1 && return 1
-	else
-		[[ ! -x "$DOCKER_COMPOSE_BIN" ]] && return 1
-	fi
+	! which 'docker-compose' >/dev/null 2>&1 && return 1
 
 	# Trim CR ('\r') from docker-compose output (necessary on Windows)
 	local version=$(docker_compose version --short | tr -d '\r')
@@ -495,11 +487,7 @@ is_docker_compose_version ()
 
 is_docker_machine_version ()
 {
-	if is_linux; then
-		! which 'docker-machine' >/dev/null 2>&1 && return 2
-	else
-		[[ ! -x "$DOCKER_MACHINE_BIN" ]] && return 2
-	fi
+	! which 'docker-machine' >/dev/null 2>&1 && return 1
 
 	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") > $(ver_to_int "$version") ]] && \
@@ -510,6 +498,8 @@ is_docker_machine_version ()
 
 is_winpty_version ()
 {
+	! which 'winpty' >/dev/null 2>&1 && return 2
+	
 	local version=$(winpty --version | head -1 | sed "s/.*version \(.*\).*/\1/")
 	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") > $(ver_to_int "$version") ]] && \
 		return 1;
