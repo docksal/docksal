@@ -1227,7 +1227,7 @@ docker_machine_remove ()
 	fi
 }
 
-# Mount folder inside docker-machine by NFS
+# Mount folder inside docker-machine with NFS
 # Unnamed params - shares in format "$LOCAL_FOLDER:$MOUNT_POINT_NAME"
 # Named --no-export param(s) - will try to mount those mount points without exporting $LOCAL_FOLDER
 docker_machine_mount_nfs ()
@@ -2632,7 +2632,7 @@ load_configuration ()
 	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.docksal}
 	export DOCROOT=${DOCROOT:-docroot}
 
-	# Make project root gloablly available
+	# Make project root globally available
 	export DOCKSAL_PATH="$(get_docksal_path)"
 	export PROJECT_ROOT="$(get_docksal_path)"
 	
