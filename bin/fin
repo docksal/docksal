@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.6.2
+FIN_VERSION=0.6.3
 
 # Console colors
 red='\033[0;91m'
@@ -1417,7 +1417,7 @@ docker_machine_mount_smb ()
 	done
 
 	# Mount user's home directory
-	local HOME_PATH=$(cygpath -m ~ | sed 's/\://')
+	local HOME_PATH=$(cygpath -m $HOME | sed 's/\://')
 	smb_share_mount "$HOME_PATH" "/.home" "$PASSWORD"
 }
 
@@ -2619,7 +2619,6 @@ alias_list ()
 
 load_configuration ()
 {
-	
 	local env_file=".docksal/docksal.env"
 	local env_file_path="$(get_docksal_path)/${env_file}"
 	local local_env_file=".docksal/docksal-local.env"
@@ -2672,8 +2671,16 @@ load_configuration ()
 		[[ -f $volumes_yml_file_path ]] && COMPOSE_FILE="$volumes_yml_file_path:$COMPOSE_FILE"
 	fi
 	
-	# Convert paths into Windows native for docker-compose on Windows.
-	is_windows && COMPOSE_FILE=$(echo $COMPOSE_FILE | sed -e "s/:/;/g" -e "s/^\/\([a-z]\)/\1:/g" -e "s/\;\/\([a-z]\)/;\1:/g")
+	# Transformations necessary for docker-compose on Windows
+	if is_windows; then
+		# Convert separators from : to ;
+		COMPOSE_FILE=${COMPOSE_FILE/:/;}
+		# Replace $HOME in paths with it's Windows path equivalent
+		local HOME_PATH=$(cygpath -m $HOME)
+		COMPOSE_FILE=${COMPOSE_FILE/$HOME/$HOME_PATH}
+		# Convert paths into Windows native for docker-compose on Windows.
+		COMPOSE_FILE=$(echo $COMPOSE_FILE | sed -e "s/^\/\([a-z]\)/\1:/g" -e "s/\;\/\([a-z]\)/;\1:/g")
+	fi
 	export COMPOSE_FILE
 
 	# Set project name if it was not set previously
