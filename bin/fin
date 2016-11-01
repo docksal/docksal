@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.6.4
+FIN_VERSION=0.6.5
 
 # Console colors
 red='\033[0;91m'
@@ -2667,12 +2667,18 @@ load_configuration ()
 			echo-error "No configuration files found." "Expected in $yml_file_path"
 			exit 1
 		fi
-		# Include appropriate volumes yml
-		# Use bind by default, which is identical to mounting host directories.
-		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
-		volumes_yml_file_path="$HOST_HOME/.docksal/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-		[[ -f $volumes_yml_file_path ]] && COMPOSE_FILE="$volumes_yml_file_path:$COMPOSE_FILE"
-
+		# Experimental: Include a volumes yml if requested.
+		if [[ $DOCKSAL_VOLUMES != "" ]]; then
+			volumes_yml_file_path="$HOST_HOME/.docksal/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+			if [[ -f $volumes_yml_file_path ]]; then
+				COMPOSE_FILE="$volumes_yml_file_path:$COMPOSE_FILE"
+			else
+				echo-error "Volumes definition not found in ${volumes_yml_file_path}." \
+					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
+					"You may need to run ${yellow}fin update self${NC} to download volume definitions."
+				exit 1
+			fi
+		fi
 		# Transformations necessary for docker-compose on Windows
 		if is_windows; then
 			# Convert separators from : to ;
