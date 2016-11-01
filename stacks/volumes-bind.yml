@@ -1,0 +1,21 @@
+# Bind mount project volumes
+# Same as mounting host folders, but via named volumes.
+
+version: "2"
+
+volumes:
+  db_data:
+
+# Bind volumes
+  host_home:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${HOME}
+      o: bind
+  project_root:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PROJECT_ROOT}
+      o: bind

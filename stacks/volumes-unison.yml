@@ -1,0 +1,31 @@
+# Sync project volumes with Unison
+# For use with Docker for Mac osxfs.
+# Pros: native fs performance, fast file sync, inotify/fs watchers support.
+# Cons: 2x space usage - a mirror of the code base is maintained in a Docker volume.  
+
+version: "2"
+
+volumes:
+  db_data:
+  project_root:
+
+  # Bind mount host_home
+  host_home:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${HOME}
+      o: bind
+
+services:
+  # Sync project_root volume from host with unison 
+  bg-sync:
+    image: cweagans/bg-sync
+    volumes:
+      - "${PROJECT_ROOT}:/source"
+      - project_root:/destination
+    environment:
+      - SYNC_DESTINATION=/destination
+      - SYNC_MAX_INOTIFY_WATCHES=40000
+      - SYNC_VERBOSE=1
+    privileged: true

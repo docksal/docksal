@@ -101,6 +101,8 @@ FIN_SET_UID=""
 if [[ "$DOCKER_NATIVE" == "1" ]]; then
 	# no vm used
 	export DOCKER_HOST=""
+	# Host IP on Docker for Mac
+	export DOCKSAL_HOST_IP="192.168.65.1"
 else
 	# get active machine and it's status
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
@@ -116,6 +118,8 @@ else
 		DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
 	fi
 	DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
+	
+	export DOCKSAL_HOST_IP="192.168.64.1"
 fi
 
 #---------------------------- Helper functions --------------------------------
@@ -627,6 +631,20 @@ _remove_containers ()
 	docker_compose kill "$@" && docker_compose rm -vf "$@"
 }
 
+# Remove dangling images
+_remove_dangling_images ()
+{
+	echo-green "Removing dangling images..."
+	docker images -qf dangling=true | xargs docker rmi 2>/dev/null
+}
+
+# Remove dangling images
+_remove_dangling_volumes ()
+{
+	echo-green "Removing dangling volumes..."
+	docker volume ls -qf dangling=true | xargs docker volume rm 2>/dev/null
+}
+
 # Cleanup unused images and containters
 # @param $1 --hard if set removes all stopped containers
 _docker_cleanup ()
@@ -644,8 +662,9 @@ _docker_cleanup ()
 		docker ps -aqf status=exited | xargs docker rm -vf
 	fi
 
-	echo-green "Cleaning up images..."
-	docker images -qf dangling=true | xargs docker rmi 2>/dev/null
+	_remove_dangling_images
+	_remove_dangling_volumes
+
 	# TODO: remove below lines in 2017
 	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/backups/Vagrantfile."* >/dev/null 2>&1
@@ -1262,7 +1281,8 @@ docker_machine_mount_nfs ()
 	exports="${exports}\n${exports_open}\n"
 	for share in ${ARGV[@]}; do
 		local share_export=(${share//:/ });
-		exports="${exports}$share_export $machine_ip -alldirs -mapall=$(id -u):$(id -g)\n"
+		# TODO: move exports into a separate function and make it work with D4M with or without VirtualBox.
+		exports="${exports}$share_export 127.0.0.1 $machine_ip -alldirs -maproot=0:0\n"
 	done
 	exports="${exports}${exports_close}"
 
@@ -2048,13 +2068,24 @@ update_self ()
 	new_fin=$(curl -kfsS "$URL_FIN")
 	if_failed "fin download failed."
 
+	# Download stack and volume files
 	local stacks_services
 	stacks_services=$(curl -kfsS "$URL_STACKS_SERVICES")
 	if_failed "services.yml download failed."
-
 	local stacks_default
 	stacks_default=$(curl -kfsS "$URL_STACKS_DEFAULT")
 	if_failed "default.yml download failed."
+
+	local stacks_volumes_bind
+	stacks_volumes_bind=$(curl -kfsS "$URL_STACKS_VOLUMES_BIND")
+	if_failed "volumes-bind.yml download failed."
+	local stacks_volumes_nfs
+	stacks_volumes_nfs=$(curl -kfsS "$URL_STACKS_VOLUMES_NFS")
+	if_failed "volumes-nfs.yml download failed."
+	local stacks_volumes_unison
+	stacks_volumes_unison=$(curl -kfsS "$URL_STACKS_VOLUMES_UNISON")
+	if_failed "volumes-unison.yml download failed."
+
 
 	# Check if update is a major version. Show warning is needed
 	local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
@@ -2381,7 +2412,7 @@ remove ()
 {
 	check_docksal_environment
 	if [[ $1 == "" ]]; then
-		echo -e  "${red}WARNING:${NC} ${yellow}You have chosen to delete or re-create all project containers.${NC}"
+		echo -e  "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
 		_confirm "Continue?";
 	fi
 
@@ -2391,6 +2422,8 @@ remove ()
 	fi
 
 	_remove_containers "$@"
+	# Docker Compose currently does not remove project volumes, so we have to do this manually.
+	_remove_dangling_volumes
 }
 
 # Reset container(s) (stop, remove, up)
@@ -2615,6 +2648,11 @@ load_configuration ()
 			echo-error "No configuration files found." "Expected in $yml_file_path"
 			exit 1
 		fi
+		# Include appropriate volumes yml
+		# Use bind by default, which is identical to mounting host directories.
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+		volumes_yml_file_path="$HOME/.docksal/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+		[[ -f $volumes_yml_file_path ]] && COMPOSE_FILE="$volumes_yml_file_path:$COMPOSE_FILE"
 	fi
 	export COMPOSE_FILE
 
