@@ -455,11 +455,7 @@ check_docker_running ()
 
 is_vbox_version ()
 {
-	if is_windows; then
-		[[ ! -f "$vboxmanage" ]] && return 1
-	else
-		! which "$vboxmanage" >/dev/null 2>&1 && return 1
-	fi
+	! which "$vboxmanage" >/dev/null 2>&1 && return 1
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
 	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$REQUIREMENTS_VBOX") ]] && \
@@ -470,9 +466,10 @@ is_vbox_version ()
 
 is_docker_version ()
 {
-	! which 'docker' >/dev/null 2>&1 && return 1
+	is_linux && DOCKER_BIN="docker"
+	! which "$DOCKER_BIN" >/dev/null 2>&1 && return 1
 
-	local version=$(docker -v | sed "s/.*version \(.*\),.*/\1/")
+	local version=$("$DOCKER_BIN" -v | sed "s/.*version \(.*\),.*/\1/")
 
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$version") ]] && \
 		return 1;
@@ -482,10 +479,10 @@ is_docker_version ()
 
 is_docker_compose_version ()
 {
-	! which 'docker-compose' >/dev/null 2>&1 && return 1
+	! which "$DOCKER_COMPOSE_BIN" >/dev/null 2>&1 && return 1
 
 	# Trim CR ('\r') from docker-compose output (necessary on Windows)
-	local version=$(docker_compose version --short | tr -d '\r')
+	local version=$("$DOCKER_COMPOSE_BIN" version --short | tr -d '\r')
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") > $(ver_to_int "$version") ]] && \
 		return 1;
 
@@ -494,9 +491,9 @@ is_docker_compose_version ()
 
 is_docker_machine_version ()
 {
-	! which 'docker-machine' >/dev/null 2>&1 && return 1
+	! which "$DOCKER_MACHINE_BIN" >/dev/null 2>&1 && return 1
 
-	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
+	local version=$("$DOCKER_MACHINE_BIN" -v | sed "s/.*version \(.*\),.*/\1/")
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") > $(ver_to_int "$version") ]] && \
 		return 1;
 
@@ -505,9 +502,9 @@ is_docker_machine_version ()
 
 is_winpty_version ()
 {
-	! which 'winpty' >/dev/null 2>&1 && return 2
+	! which "$WINPTY_BIN" >/dev/null 2>&1 && return 2
 	
-	local version=$(winpty --version | head -1 | sed "s/.*version \(.*\).*/\1/")
+	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/")
 	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") > $(ver_to_int "$version") ]] && \
 		return 1;
 
