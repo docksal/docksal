@@ -2616,6 +2616,12 @@ alias_list ()
 
 load_configuration ()
 {
+	# Export HOME as HOST_HOME.
+	# Mostly necessary on Windows, where ${HOME} is interpolated by docker-compose into a Windows path and not POSIX.
+	HOST_HOME=$HOME
+	is_windows && HOST_HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
+	export HOST_HOME
+
 	local env_file=".docksal/docksal.env"
 	local env_file_path="$(get_docksal_path)/${env_file}"
 	local local_env_file=".docksal/docksal-local.env"
@@ -2644,7 +2650,7 @@ load_configuration ()
 	fi
 	# Set COMPOSE_FILE unless it has been already set by user
 	if [[ "$COMPOSE_FILE" == "" ]]; then
-		default_yml_file_path="$HOME/.docksal/stacks/default.yml"
+		default_yml_file_path="$HOST_HOME/.docksal/stacks/default.yml"
 		yml_file_path="$(get_docksal_path)/.docksal/docksal.yml"
 		local_yml_file_path="$(get_docksal_path)/.docksal/docksal-local.yml"
 		# Use .docksal/docksal.yml by default (if exists)
@@ -2652,7 +2658,7 @@ load_configuration ()
 			COMPOSE_FILE=$yml_file_path
 			# Include docksal-local.yml (if exists)
 			[[ -f $local_yml_file_path ]] && COMPOSE_FILE="$COMPOSE_FILE:$local_yml_file_path"
-		# Otherwise use $HOME/.docksal/default.yml (if exists)
+		# Otherwise use $HOST_HOME/.docksal/default.yml (if exists)
 		elif [[ -f $default_yml_file_path ]]; then
 			COMPOSE_FILE=$default_yml_file_path
 		fi
@@ -2664,7 +2670,7 @@ load_configuration ()
 		# Include appropriate volumes yml
 		# Use bind by default, which is identical to mounting host directories.
 		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
-		volumes_yml_file_path="$HOME/.docksal/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+		volumes_yml_file_path="$HOST_HOME/.docksal/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 		[[ -f $volumes_yml_file_path ]] && COMPOSE_FILE="$volumes_yml_file_path:$COMPOSE_FILE"
 	fi
 	
@@ -2697,7 +2703,7 @@ load_configuration ()
 	# Make project root globally available
 	export DOCKSAL_PATH="$(get_docksal_path)"
 	export PROJECT_ROOT="$(get_docksal_path)"
-	
+
 	if is_docker_running; then
 		export DOCKER_RUNNING="true"
 	else
