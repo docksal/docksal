@@ -2672,17 +2672,14 @@ load_configuration ()
 		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
 		volumes_yml_file_path="$HOST_HOME/.docksal/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 		[[ -f $volumes_yml_file_path ]] && COMPOSE_FILE="$volumes_yml_file_path:$COMPOSE_FILE"
-	fi
-	
-	# Transformations necessary for docker-compose on Windows
-	if is_windows; then
-		# Convert separators from : to ;
-		COMPOSE_FILE=${COMPOSE_FILE/:/;}
-		# Replace $HOME in paths with it's Windows path equivalent
-		local HOME_PATH=$(cygpath -m $HOME)
-		COMPOSE_FILE=${COMPOSE_FILE/$HOME/$HOME_PATH}
-		# Convert paths into Windows native for docker-compose on Windows.
-		COMPOSE_FILE=$(echo $COMPOSE_FILE | sed -e "s/^\/\([a-z]\)/\1:/g" -e "s/\;\/\([a-z]\)/;\1:/g")
+
+		# Transformations necessary for docker-compose on Windows
+		if is_windows; then
+			# Convert separators from : to ;
+			COMPOSE_FILE=${COMPOSE_FILE/:/;}
+			# Convert paths into Windows native for docker-compose on Windows.
+			COMPOSE_FILE=$(echo $COMPOSE_FILE | sed -e "s/^\/\([a-z]\)/\1:/g" -e "s/\;\/\([a-z]\)/;\1:/g")
+		fi
 	fi
 	export COMPOSE_FILE
 
