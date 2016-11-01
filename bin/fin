@@ -2619,6 +2619,8 @@ load_configuration ()
 			# Source and allexport variables in the .env file
 			set -a; source $local_env_file_path; set +a
 		fi
+		# Replace separator from : to ; on Windows
+		is_windows && ENV_FILE=$(echo $ENV_FILE | sed "s/:/;/g")
 		export ENV_FILE
 	fi
 	
@@ -2654,6 +2656,9 @@ load_configuration ()
 		volumes_yml_file_path="$HOME/.docksal/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 		[[ -f $volumes_yml_file_path ]] && COMPOSE_FILE="$volumes_yml_file_path:$COMPOSE_FILE"
 	fi
+	
+	# Convert paths into Windows native for docker-compose on Windows.
+	is_windows && COMPOSE_FILE=$(echo $COMPOSE_FILE | sed -e "s/:/;/g" -e "s/^\/\([a-z]\)/\1:/g" -e "s/\;\/\([a-z]\)/;\1:/g")
 	export COMPOSE_FILE
 
 	# Set project name if it was not set previously
@@ -2688,9 +2693,10 @@ show_config ()
 	echo
 	echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
 	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
-	# Replace colons (:) with new lines (\n)
-	echo -e "COMPOSE_FILE: ${COMPOSE_FILE/:/\n}"
-	echo -e "ENV_FILE: ${ENV_FILE/:/\n}"
+	# Replace separators with new lines
+	local SEPARATOR=':'; is_windows && SEPARATOR=';'
+	echo -e "COMPOSE_FILE:\n$(echo $COMPOSE_FILE | tr $SEPARATOR '\n')"
+	echo -e "ENV_FILE:\n$(echo $ENV_FILE | tr $SEPARATOR '\n')"
 	echo
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
