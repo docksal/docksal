@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.5.5
+FIN_VERSION=0.6.2
 
 # Console colors
 red='\033[0;91m'
@@ -73,6 +73,9 @@ URL_REPO_UI="https://github.com/docksal/docksal"
 URL_FIN="${URL_REPO}/${FIN_BRANCH}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${FIN_BRANCH}/stacks/services.yml"
 URL_STACKS_DEFAULT="${URL_REPO}/${FIN_BRANCH}/stacks/default.yml"
+URL_STACKS_VOLUMES_BIND="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-bind.yml"
+URL_STACKS_VOLUMES_NFS="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-nfs.yml"
+URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-unison.yml"
 
 URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
@@ -2068,6 +2071,7 @@ update_self ()
 	new_fin=$(curl -kfsS "$URL_FIN")
 	if_failed "fin download failed."
 
+	# TODO: refactor this into something less verbose and more efficient.
 	# Download stack and volume files
 	local stacks_services
 	stacks_services=$(curl -kfsS "$URL_STACKS_SERVICES")
@@ -2107,12 +2111,23 @@ update_self ()
 	if_failed "Could not write $FIN_PATH."
 	sudo chmod +x "$FIN_PATH"
 
+	# TODO: refactor this into something less verbose and more efficient.
 	# Saving configs
 	local stacks_services_path="$CONFIG_STACKS_DIR/services.yml"
 	echo "$stacks_services" | sudo tee $stacks_services_path > /dev/null
 	if_failed "Could not write $stacks_services_path."
 	local stacks_default_path="$CONFIG_STACKS_DIR/default.yml"
 	echo "$stacks_default" | sudo tee $stacks_default_path > /dev/null
+	if_failed "Could not write $stacks_default_path."
+
+	local stacks_volumes_bind_path="$CONFIG_STACKS_DIR/volumes-bind.yml"
+	echo "$stacks_volumes_bind" | sudo tee $stacks_volumes_bind_path > /dev/null
+	if_failed "Could not write $stacks_volumes_bind."
+	local stacks_volumes_nfs_path="$CONFIG_STACKS_DIR/volumes-nfs.yml"
+	echo "$stacks_volumes_nfs" | sudo tee $stacks_volumes_nfs_path > /dev/null
+	if_failed "Could not write $stacks_volumes_nfs_path."
+	local stacks_volumes_unison_path="$CONFIG_STACKS_DIR/volumes-unison.yml"
+	echo "$stacks_volumes_unison" | sudo tee $stacks_volumes_unison_path > /dev/null
 	if_failed "Could not write $stacks_default_path."
 
 	local new_version=$(head "$FIN_PATH" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
