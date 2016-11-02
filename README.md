@@ -38,19 +38,34 @@ fin update self
 fin update tools
 ```
 
-### Updating from Drude to Docksal 2.x
+### Updating from Drude to Docksal
 
 Drude used to rely on Vagrant and vagrant-boot2docker for running Docker.  
-Docksal uses Docker Machine, which is more native and can be easily updated.
-Vagrant machine is not going to be used anymore and should be deleted. 
+Docksal uses Docker Machine, which is more native and supports seamless (non-destructive) Docker version updates.  
+Vagrant machine is not going to be used anymore and should be deleted.
 
-1. Create dumps of databases you need using `drush`
-2. Go to your `<projects>` folder and use `vagrant destroy` to destroy the old (Drude) VM. If you happened to have several of them, please destroy all.
-3. You can uninstall vagrant if you do't need it (manually or `brew uninstall vagrant` on Mac, `choco uninstall vagrant` on Win)
-4. Install fin
+1. Create dumps of databases you need with `drush`
+2. `vagrant destroy` the old Drude VM
+
+    Go to your Drude projects folder (the one with `Vagrantfile` and `vagrant.yml`) and use `vagrant destroy` to destroy the Drude VM. 
+    If you happened to have several of them, please destroy all.
+    
+    It is very important to use `vagrant destroy` and not delete the VM manually in VirtualBox.  
+    Vagrant has to clean things up properly and that is what `vagrant destroy` is for.     
+
+3. Uninstall vagrant if you do not plan to use it for other purposes
+
+    Depending on how Vagrant was installed you will either have to uninstall it manually or
+    via `brew uninstall vagrant` on Mac / `choco uninstall vagrant` on Windows
+    
+4. Install fin - see [Docksal environment setup](/docs/env-setup.md)
 5. `fin install tools`
-6. Start your project just like you did before with `fin up` and re-import your DB dump. Notice it will use Docker Machine now. New Docker Machine will be created upon first start.
-7. Run `fin cleanup` to delete old unused files and backups
+6. Start your project just like you did before with `fin up` and re-import your DB dump.
+
+    Notice it will use Docker Machine now.
+    New Docker Machine will be created upon first start.
+    
+7. Run `fin cleanup` to delete Drude files and backups
 
 <a name="fin"></a>
 ## Docksal Fin (fin)
