@@ -121,7 +121,7 @@ else
 		DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
 	fi
 	DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
-	
+
 	export DOCKSAL_HOST_IP="192.168.64.1"
 fi
 
@@ -503,7 +503,7 @@ is_docker_machine_version ()
 is_winpty_version ()
 {
 	! which "$WINPTY_BIN" >/dev/null 2>&1 && return 2
-	
+
 	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/")
 	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") > $(ver_to_int "$version") ]] && \
 		return 1;
@@ -1137,7 +1137,7 @@ docker_machine_create ()
 is_docker_machine_exist ()
 {
 	local refresh="${2:-false}"
-	
+
 	! which 'docker-machine' >/dev/null 2>&1 && return 1
 	if [[ "$1" != "" ]] && [[ "$1" != "$DOCKER_MACHINE_NAME" ]]; then
 		docker-machine ls | grep "$1" >/dev/null 2>&1
@@ -1228,7 +1228,7 @@ docker_machine_start ()
 docker_machine_remove ()
 {
 	local $machine_name="${1:-$DOCKER_MACHINE_NAME}"
-	
+
 	# VirtualBox
 	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
 		# Store host-only interface name before removing the VM.
@@ -1240,6 +1240,11 @@ docker_machine_remove ()
 			"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" >/dev/null 2>&1
 			# Killing the network interface also helps to avoid issues when VM is recreated.
 			"$vboxmanage" hostonlyif remove "$vboxifname" >/dev/null 2>&1
+		fi
+
+		if is_windows; then
+			echo-green "Removing SMB shares..."
+			docker_machine_remove_smb
 		fi
 	else
 		docker-machine rm "$machine_name"
@@ -1349,7 +1354,7 @@ docker_machine_mount_nfs ()
 smb_windows_fix()
 {
 	! is_windows && return
-	
+
 	echo-green "Going to optimize Windows network settings for file sharing..."
 	echo "You may see an elevated command prompt - click Yes."
 	sleep 2
@@ -1364,7 +1369,7 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters]
 "Size"=dword:00000003
 EOF
-	# Update registry and restart Server and Computer Browser services. 
+	# Update registry and restart Server and Computer Browser services.
 	winsudo "regedit /S $(cygpath -w $tmpfile) && net stop server /y && net start server && net start browser"
 }
 
@@ -1416,6 +1421,18 @@ docker_machine_mount_smb ()
 	# Mount user's home directory
 	local HOME_PATH=$(cygpath -m $HOME | sed 's/\://')
 	smb_share_mount "$HOME_PATH" "/.home" "$PASSWORD"
+}
+
+docker_machine_remove_smb ()
+{
+	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	for DRIVE in ${DRIVES}; do
+		if [ "$DRIVE" != "Name" ]; then
+			local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
+			command_share="net share ${MOUNT_POINT} /DELETE"
+			winsudo "$command_share"
+		fi
+	done
 }
 
 docker_machine_mounts ()
@@ -1642,8 +1659,8 @@ install_tools ()
 	fi
 
 	# If docker is already running, then we are doing an upgrade.
-	(which 'docker' >/dev/null 2>&1) && is_docker_running && UPGRADE_IN_PROGRESS=1 
-	
+	(which 'docker' >/dev/null 2>&1) && is_docker_running && UPGRADE_IN_PROGRESS=1
+
 	# Pre-update steps for boot2docker
 	if (is_mac || is_windows) && ! is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		update_system_images
@@ -1660,7 +1677,7 @@ install_tools ()
 	is_docker_native && \
 		update_system_images
 		# no return here
-	
+
 	is_windows && \
 		install_tools_windows && \
 		return
@@ -2031,7 +2048,7 @@ update_system_images ()
 {
 	check_docker_running
 	echo-green "Updating Docksal system images..."
-	
+
 	# Running docker exec interactively on Windows requires workarounds
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 
@@ -2045,7 +2062,7 @@ update_system_images ()
 update_project_images ()
 {
 	check_docksal_environment
-	
+
 	echo-green "Updating project images..."
 	docker_compose pull # update project containers images
 	up
@@ -2499,7 +2516,7 @@ _set_cli_uid ()
 	# Let uid to be set with the FIN_SET_UID env variable
 	local host_uid=${FIN_SET_UID:-$(id -u)}
 	local cli=$(get_container_id cli || true)
-	
+
 	# If there is no cli, move on.
 	if [[ -z $cli ]]; then
 		echo-yellow 'Expected service "cli" is missing.'
@@ -2640,7 +2657,7 @@ load_configuration ()
 		is_windows && ENV_FILE=$(echo $ENV_FILE | sed "s/:/;/g")
 		export ENV_FILE
 	fi
-	
+
 	# Legacy/traditional setup support
 	# TODO: get rid of this in 2017
 	legacy_yml_file_path="$(get_docksal_path)/docker-compose.yml"
@@ -2691,7 +2708,7 @@ load_configuration ()
 
 	# Set project name if it was not set previously
 	# TODO: Figure out how to prevent starting projects with duplicate names
-	if [[ -d $(get_docksal_path) ]]; then 
+	if [[ -d $(get_docksal_path) ]]; then
 		local project_name=$(basename $(get_docksal_path) | tr '[:upper:]' '[:lower:]')
 		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
 		COMPOSE_PROJECT_NAME_SAFE=$(echo $COMPOSE_PROJECT_NAME | sed 's/[^a-z0-9]//g')
@@ -2731,8 +2748,8 @@ show_config ()
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
 	echo
 	echo "MYSQL_PORT:" $(docker-compose port db 3306 2>/dev/null)
-	echo 
-	echo "Docker Compose configuration" 
+	echo
+	echo "Docker Compose configuration"
 	echo "---------------------"
 	docker-compose config
 	echo "---------------------"
