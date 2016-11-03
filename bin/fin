@@ -1409,12 +1409,10 @@ docker_machine_mount_smb ()
 	echo  # Add a new line after user input.
 
 	for DRIVE in ${DRIVES}; do
-		if [ "$DRIVE" != "Name" ]; then
-			local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
-			smb_share_add "$MOUNT_POINT" "$DRIVE" && \
-				smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
-				(echo-red "Error creating share" && exit 1)
-		fi
+		local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
+		smb_share_add "$MOUNT_POINT" "$DRIVE" && \
+			smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
+			(echo-red "Error creating share" && exit 1)
 	done
 
 	# Mount user's home directory
@@ -1426,11 +1424,9 @@ docker_machine_remove_smb ()
 {
 	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	for DRIVE in ${DRIVES}; do
-		if [ "$DRIVE" != "Name" ]; then
-			local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
-			command_share="net share ${MOUNT_POINT} /DELETE"
-			winsudo "$command_share"
-		fi
+		local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
+		command_share="net share ${MOUNT_POINT} /DELETE"
+		winsudo "$command_share"
 	done
 }
 
