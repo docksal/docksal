@@ -780,7 +780,7 @@ show_help ()
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}fin help ssh-add${NC}"
 
 	echo
-	printh "install <component>" "<tools | docksal-config | autocomplete> (${yellow}fin help install${NC})" "yellow"
+	printh "install <component>" "<tools | autocomplete> (${yellow}fin help install${NC})" "yellow"
 	printh "update  <component>" "<tools | images | self> (${yellow}fin help update${NC})" "yellow"
 
 	echo
@@ -894,7 +894,6 @@ show_help_install ()
 	echo-green "fin install - Automated install of Docksal system components"
 	echo
 	printh "fin install tools" "Install software required to run Docksal"
-	printh "fin install docksal-config" "Download latest default docker-compose.yml"
 	printh "fin install autocomplete" "Install fin commands autocomplete for Bash"
 	echo
 }
@@ -1018,7 +1017,7 @@ bash_comp_words ()
 {
 	case $1 in
 		install)
-			echo "tools docksal-config"
+			echo "tools"
 			exit 0
 			;;
 		update)
@@ -1982,20 +1981,6 @@ EOF
 	fi
 }
 
-# Download latest Docksal config file
-install_docksal_config ()
-{
-	testing_warn
-	[ -f "docker-compose.yml" ] && _confirm "Overwrite existing docker-compose.yml?"
-	local docker_compose_yml
-	docker_compose_yml=$(curl -kfsS "$URL_DEFAULT_CONFIG")
-	if_failed "Could not get latest docker-compose.yml version."
-
-	echo "$docker_compose_yml" | tee "docker-compose.yml" >/dev/null
-	if_failed "Could not write to docker-compose.yml"
-	echo-green "Latest version of docker-compose.yml was downloaded."
-}
-
 # Install shell commands autocomplete script
 install_autocomplete ()
 {
@@ -2029,15 +2014,13 @@ EOF
 	fi
 }
 
-# Install tools, config or autocomplete
+# Install tools or autocomplete
 install ()
 {
 	if [[ "$1" == "" ]]; then
 		show_help install
 	elif [[ "$1" == "prerequisites" ]] || [[ "$1" == "tools" ]]; then
 		install_tools
-	elif [[ "$1" == "docksal-config" ]]; then
-		install_docksal_config
 	elif [[ "$1" == "autocomplete" ]]; then
 		install_autocomplete
 	fi
@@ -2062,7 +2045,6 @@ update_system_images ()
 update_project_images ()
 {
 	check_docksal_environment
-
 	echo-green "Updating project images..."
 	docker_compose pull # update project containers images
 	up
