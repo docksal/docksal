@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.6.5
+FIN_VERSION=0.6.6
 
 # Console colors
 red='\033[0;91m'
@@ -127,7 +127,6 @@ fi
 
 #---------------------------- Helper functions --------------------------------
 
-CONFIG_YML_PATH='' #yml path value will be cached here
 DOCKSAL_PATH='' #docksal path value will be cached here
 
 echo-red () { echo -e "${red}$1${NC}"; }
@@ -188,6 +187,30 @@ get_docksal_path ()
 	# If we reached $HOME, then we did not find the project root.
 	if [[ "$DOCKSAL_PATH" != "$HOME" ]]; then
 		echo "$DOCKSAL_PATH"
+	fi
+}
+
+# Get path to project folder
+# Outputs a Windows compatible path on Windows, e.g. "c:/path/subpath", not "/c/path/subpath".
+get_project_path_dc ()
+{
+	if is_windows ; then
+		echo "$(get_docksal_path)" | sed "s/^\/\([a-z]\)/\1:/g"
+	else
+		echo "$(get_docksal_path)"
+	fi
+}
+
+# Get path to global .docksal folder (~/.docksal directory).
+# Outputs a Windows compatible path on Windows, e.g. "c:/path/subpath", not "/c/path/subpath".
+get_config_path_dc ()
+{
+	# Using $HOST_HOME instead of $CONFIG_DIR here
+	# $CONFIG_DIR will translate to /home/<user>/.docksal in Babun and we need full Windows path instead.
+	if is_windows ; then
+		echo $(echo "$HOST_HOME/.docksal" | sed "s/^\/\([a-z]\)/\1:/g")
+	else
+		echo "$HOST_HOME/.docksal"
 	fi
 }
 
@@ -2612,75 +2635,60 @@ alias_list ()
 
 load_configuration ()
 {
-	# Export HOME as HOST_HOME.
-	# Mostly necessary on Windows, where ${HOME} is interpolated by docker-compose into a Windows path and not POSIX.
-	HOST_HOME=$HOME
-	is_windows && HOST_HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
-	export HOST_HOME
-
-	local env_file=".docksal/docksal.env"
-	local env_file_path="$(get_docksal_path)/${env_file}"
-	local local_env_file=".docksal/docksal-local.env"
-	local local_env_file_path="$(get_docksal_path)/${local_env_file}"
-	if [[ -f $env_file_path ]]; then
+	# Mac and Linux use ":"" as a separator, Windows uses ";"
+	local SEPARATOR=':'; is_windows && SEPARATOR=';'
+	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
+	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
+	if [[ -f $env_file ]]; then
 		ENV_FILE=$env_file
 		# Source and allexport variables in the .env file
-		set -a; source $env_file_path; set +a
+		set -a; source $env_file; set +a
 		# Source local env file if both it and the main env file exist
-		if [[ -f $local_env_file_path ]]; then
-			ENV_FILE=$ENV_FILE:$local_env_file
+		if [[ -f $local_env_file ]]; then
+			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
 			# Source and allexport variables in the .env file
-			set -a; source $local_env_file_path; set +a
+			set -a; source $local_env_file; set +a
 		fi
-		# Replace separator from : to ; on Windows
-		is_windows && ENV_FILE=$(echo $ENV_FILE | sed "s/:/;/g")
 		export ENV_FILE
 	fi
 
 	# Legacy/traditional setup support
 	# TODO: get rid of this in 2017
-	legacy_yml_file_path="$(get_docksal_path)/docker-compose.yml"
-	if [[ -f $legacy_yml_file_path ]]; then
-		COMPOSE_FILE=$legacy_yml_file_path
+	legacy_yml_file="$(get_project_path_dc)/docker-compose.yml"
+	if [[ -f $legacy_yml_file ]]; then
+		COMPOSE_FILE=$legacy_yml_file
 		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml" >&2
 	fi
 	# Set COMPOSE_FILE unless it has been already set by user
 	if [[ "$COMPOSE_FILE" == "" ]]; then
-		default_yml_file_path="$HOST_HOME/.docksal/stacks/default.yml"
-		yml_file_path="$(get_docksal_path)/.docksal/docksal.yml"
-		local_yml_file_path="$(get_docksal_path)/.docksal/docksal-local.yml"
+		default_yml_file="$(get_config_path_dc)/stacks/default.yml"
+		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 		# Use .docksal/docksal.yml by default (if exists)
-		if [[ -f $yml_file_path ]]; then
-			COMPOSE_FILE=$yml_file_path
+		if [[ -f $yml_file ]]; then
+			COMPOSE_FILE=$yml_file
 			# Include docksal-local.yml (if exists)
-			[[ -f $local_yml_file_path ]] && COMPOSE_FILE="$COMPOSE_FILE:$local_yml_file_path"
-		# Otherwise use $HOST_HOME/.docksal/default.yml (if exists)
-		elif [[ -f $default_yml_file_path ]]; then
-			COMPOSE_FILE=$default_yml_file_path
+			[[ -f $local_yml_file ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
+		# Otherwise use the default.yml stack config (if exists)
+		elif [[ -f $default_yml_file ]]; then
+			COMPOSE_FILE=$default_yml_file
 		fi
 		# Throw an error if COMPOSE_FILE is empty here
 		if [[ "$COMPOSE_FILE" == "" ]]; then
-			echo-error "No configuration files found." "Expected in $yml_file_path"
+			echo-error "No configuration files found." "Expected in $yml_file"
 			exit 1
 		fi
 		# Experimental: Include a volumes yml if requested.
 		if [[ $DOCKSAL_VOLUMES != "" ]]; then
-			volumes_yml_file_path="$HOST_HOME/.docksal/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-			if [[ -f $volumes_yml_file_path ]]; then
-				COMPOSE_FILE="$volumes_yml_file_path:$COMPOSE_FILE"
+			volumes_yml_file="$(get_config_path_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+			if [[ -f $volumes_yml_file ]]; then
+				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 			else
-				echo-error "Volumes definition not found in ${volumes_yml_file_path}." \
+				echo-error "Volumes definition not found in ${volumes_yml_file}." \
 					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
 					"You may need to run ${yellow}fin update self${NC} to download volume definitions."
 				exit 1
 			fi
-		fi
-		# Transformations necessary for docker-compose on Windows
-		if is_windows; then
-			# Convert separators from : to ;
-			COMPOSE_FILE=${COMPOSE_FILE/:/;}
-			# Convert paths into Windows native for docker-compose on Windows.
-			COMPOSE_FILE=$(echo $COMPOSE_FILE | sed -e "s/^\/\([a-z]\)/\1:/g" -e "s/\;\/\([a-z]\)/;\1:/g")
 		fi
 	fi
 	export COMPOSE_FILE
@@ -2736,6 +2744,11 @@ show_config ()
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
+# Export HOME as HOST_HOME.
+# Mostly necessary on Windows, where ${HOME} is interpolated by docker-compose into a Windows path and not POSIX.
+HOST_HOME=$HOME
+is_windows && HOST_HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
+export HOST_HOME
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
