@@ -2892,17 +2892,17 @@ case "$1" in
 		shift
 		ssh_add "$@"
 		;;
-	docker)
+	docker|d)
 		shift
 		is_docker_running # exports env
 		docker "$@"
 		;;
-	docker-compose)
+	docker-compose|dc)
 		shift
 		is_docker_running # exports env
 		docker_compose "$@"
 		;;
-	docker-machine)
+	docker-machine|dm)
 		shift
 		is_docker_running # exports env
 		docker-machine "$@"
