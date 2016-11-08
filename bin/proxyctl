@@ -58,9 +58,9 @@ _start ()
       echo "Connected proxy to network: ${network}."
     fi
     # Trigger docker-gen with a dummy container to refresh nginx configuration.
-    # TODO: Commented out for now. May not be necessary
-    #echo "Triggering docker-gen..."
-    #/usr/local/bin/docker run --rm busybox
+    # This covers a case when containers are already running, but proxy was just created and connected to project networks.
+    echo "Triggering docker-gen..."
+    /usr/local/bin/docker run --rm busybox
 }
 
 # Stop containers for inactive projects
