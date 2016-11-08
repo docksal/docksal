@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: this does not work as env variables are not passed/accessible here.
-if [[ "$SUPERVISOR_DEBUG" == "1" ]]; then
-  set -x
-fi
-
 # Start containers for a project identified with a virtual host
 # @param $1 virtual host name
 _start ()
@@ -101,6 +96,15 @@ _cron ()
 	_stop
 }
 
+# Trigger nginx config reload
+_notify ()
+{
+	if [[ "$PROXY_DEBUG" == 1 ]]; then
+		cat /etc/nginx/conf.d/default.conf
+	fi
+	nginx -t && nginx -s reload
+}
+
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Parse other parameters
@@ -114,6 +118,9 @@ case "$1" in
 		;;
 	cron)
 		_cron
+		;;
+	notify)
+		_notify
 		;;
 	*)
 		echo "Usage: $0 start <vhost>|stop"

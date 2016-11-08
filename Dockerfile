@@ -47,6 +47,6 @@ COPY www /var/www/proxy
 # Stop inactive containers after timeout
 ENV INACTIVITY_TIMEOUT 30m
 # Disable debug output by default
-ENV SUPERVISOR_DEBUG 0
+ENV PROXY_DEBUG 0
 
 CMD ["supervisord", "-n"]
