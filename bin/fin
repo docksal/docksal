@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.6.6
+FIN_VERSION=0.7.0
 
 # Console colors
 red='\033[0;91m'
@@ -24,6 +24,7 @@ REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
+FIN_PATH_UPDATED="/usr/local/bin/fin.updated"
 FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Configuration paths
 OLD_CONFIG_DIR="$HOME/.drude"
@@ -66,8 +67,6 @@ DEFAULT_MACHINE_VBOX_HDD='20000' #mb
 DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
 
 #---------------------------- URL references --------------------------------
-OS_NAME=$(uname -s)
-HARDWARE=$(uname -m)
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
 URL_FIN="${URL_REPO}/${FIN_BRANCH}/bin/fin"
@@ -77,18 +76,16 @@ URL_STACKS_VOLUMES_BIND="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-bind.yml"
 URL_STACKS_VOLUMES_NFS="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-nfs.yml"
 URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-unison.yml"
 
-URL_DOCKER_MAC="https://get.docker.com/builds/$OS_NAME/$HARDWARE/docker-${REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_MAC="https://get.docker.com/builds/Darwin/x86_64/docker-latest.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
-URL_DOCKER_WIN="https://get.docker.com/builds/Windows/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
-URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-$OS_NAME-$HARDWARE"
-URL_DOCKER_COMPOSE_NIX="$URL_DOCKER_COMPOSE_MAC"
+URL_DOCKER_WIN="https://get.docker.com/builds/Windows/x86_64/docker-latest.zip"
+URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
+URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
-URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-$OS_NAME-$HARDWARE"
+URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
-
-URL_DEFAULT_CONFIG="${URL_REPO}/${FIN_BRANCH}/docker-compose.yml"
 
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.0}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/nginx-proxy:1.0}
@@ -143,14 +140,22 @@ echo-error () {
 		shift
 	done
 }
+# rewrite previous line
+echo-rewrite ()
+{
+	echo -en "\033[1A"
+	echo -e "\033[0K\r""$1"
+}
+echo-rewrite-ok ()
+{
+	echo-rewrite "$1 ${green}[OK]${NC}"
+}
 
 # Exits fin if previous command exited with non-zero code
 if_failed ()
 {
 	if [ ! $? -eq 0 ]; then
-		msg="error executing last command"
-		if [[ "$1" != "" ]]; then msg="$1"; fi
-		echo-red "(docksal) $msg"
+		echo-red "$*"
 		exit 1
 	fi
 }
@@ -158,9 +163,7 @@ if_failed ()
 if_failed_error ()
 {
 	if [ ! $? -eq 0 ]; then
-		msg="error executing last command"
-		if [[ "$1" != "" ]]; then msg="$1"; fi
-		echo-error "$msg"
+		echo-error "$@"
 		exit 1
 	fi
 }
@@ -256,12 +259,10 @@ docker_compose ()
 {
 	# Running docker exec interactively on Windows requires workarounds
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
-	is_linux && DOCKER_COMPOSE_BIN="$DOCKER_COMPOSE_BIN_NIX"
-	is_docker_native && DOCKER_COMPOSE_BIN="docker-compose"
 
 	# docker-compose cannot find docker-compose.yml in the path if there are symlinks on the way
 	# get_docksal_path can properly find the file. Incapsulate the cd into subshell
-	(cd "$(get_docksal_path)" && "$DOCKER_COMPOSE_BIN" "$@")
+	(cd "$(get_docksal_path)" && docker-compose "$@")
 	#(cd "$(get_docksal_path)" && "$winpty_cmd" "$DOCKER_COMPOSE_BIN" "$@")
 }
 
@@ -298,7 +299,7 @@ parse_params ()
 			# key is part before first =
 			local _key=$(echo "$1" | cut -d = -f 1)
 			# val is everything after key and = (protect from param==value error)
-			local _val=${1/$_key=}
+			local _val="${1/$_key=}"
 			# remove dashes from key name
 			_key=${_key//\-}
 			# search for existing parameter name
@@ -368,14 +369,10 @@ is_docker_native ()
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
-	if [[ -x "$CONFIG_BIN_DIR/$1" ]] || ( (is_linux || is_docker_native) && which "$1" 2>/dev/null >/dev/null ); then
+	if ( which "$1" 2>/dev/null >/dev/null ); then
 		return 0
 	else
-		if is_linux; then
-			echo-red "$1 executable was not found. (Try running 'fin install tools')"
-		else
-			echo-red "$1 executable was not found in $CONFIG_BIN_DIR. (Try running 'fin install tools')"
-		fi
+		echo-red "$1 executable was not found. (Try running 'fin update')"
 		exit 1
 	fi
 }
@@ -387,7 +384,7 @@ is_docker_running ()
 	fi
 	# Check if docker is running via docker info.
 	# This operation is instant even if docker is not running (assuming a socket is used).
-	docker info >/dev/null
+	which docker >/dev/null 2>&1 && docker info >/dev/null || return 1
 }
 
 # Check whether shell is interactive
@@ -430,7 +427,7 @@ check_docker_running ()
 	check_binary_found 'docker-compose'
 	if ! is_docker_native && ! is_docker_version; then
 		echo-error "Required Docker version is $REQUIREMENTS_DOCKER or higher"
-		echo -e "Run ${yellow}fin update tools${NC} to update"
+		echo -e "Run ${yellow}fin update${NC} to update"
 		exit 1
 	fi
 	if is_docker_native && ! is_docker_version; then
@@ -460,7 +457,7 @@ check_docker_running ()
 			# Remind the used about running 'newgrp docker' after install.
 			if ! (id -nG | grep docker >/dev/null 2>&1) && [[ "$(id -u)" != "0" ]] ; then
 				echo-error "Current user is not part of the docker group." \
-					"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin install tools${NC}?"
+					"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin update${NC}?"
 				exit 1
 			fi
 			# Check if docker daemon is running and offer to start it if not.
@@ -470,7 +467,7 @@ check_docker_running ()
 			fi
 		else
 			echo-error "Looks like your Docker client and Docker server are incompatible." \
-				"${green}Run ${NC}${yellow}fin update tools${NC}${green} to update.${NC}"
+				"${green}Run ${NC}${yellow}fin update${NC}${green} to update.${NC}"
 			exit 1
 		fi
 	fi
@@ -489,10 +486,9 @@ is_vbox_version ()
 
 is_docker_version ()
 {
-	is_linux && DOCKER_BIN="docker"
-	! which "$DOCKER_BIN" >/dev/null 2>&1 && return 1
+	! which docker >/dev/null 2>&1 && return 1
 
-	local version=$("$DOCKER_BIN" -v | sed "s/.*version \(.*\),.*/\1/")
+	local version=$(docker -v | sed "s/.*version \(.*\),.*/\1/")
 
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$version") ]] && \
 		return 1;
@@ -502,10 +498,10 @@ is_docker_version ()
 
 is_docker_compose_version ()
 {
-	! which "$DOCKER_COMPOSE_BIN" >/dev/null 2>&1 && return 1
+	! which docker-compose >/dev/null 2>&1 && return 1
 
 	# Trim CR ('\r') from docker-compose output (necessary on Windows)
-	local version=$("$DOCKER_COMPOSE_BIN" version --short | tr -d '\r')
+	local version=$(docker-compose version --short | tr -d '\r')
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") > $(ver_to_int "$version") ]] && \
 		return 1;
 
@@ -514,9 +510,9 @@ is_docker_compose_version ()
 
 is_docker_machine_version ()
 {
-	! which "$DOCKER_MACHINE_BIN" >/dev/null 2>&1 && return 1
+	! which docker-machine >/dev/null 2>&1 && return 1
 
-	local version=$("$DOCKER_MACHINE_BIN" -v | sed "s/.*version \(.*\),.*/\1/")
+	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") > $(ver_to_int "$version") ]] && \
 		return 1;
 
@@ -538,8 +534,8 @@ check_vbox_version ()
 {
 	is_vbox_version
 	local res=$?
-	[[ $res == 1 ]] && echo-error "$vboxmanage binary was not found" && exit 1
-	[[ $res == 2 ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
+	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
+	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
 }
 
 # Check that docker-compose.yml is present
@@ -773,9 +769,8 @@ show_help ()
 	fi
 	printh "stop [-a (--all)]" "Stop project services. -a stops all containers except Docksal system services"
 	printh "restart" "Restart all current project services"
-	printh "status (st, ps) [-a (--all)]" "Show project services status. -a shows all running containers"
-	printh "reset [service]" "Recreate service(s). If no parameter given recreates all project services."
-	printh "" "See ${yellow}fin help reset${NC} for more details on resetting Docksal system services."
+	printh "status (ps) [-a (--all)]" "Show project services status. -a shows all running containers"
+	printh "reset [service]" "Recreate all all selected project service(s). (${yellow}fin help reset${NC})"
 	printh "rm [service]" "Remove project or system services. See ${yellow}fin help rm${NC}"
 	if ! is_linux && ! is_docker_native; then
 		printh "vm <command>" "Control docker machine vm. See ${yellow}fin help vm${NC} for commands list" "yellow"
@@ -797,21 +792,18 @@ show_help ()
 	printh "mysql-dump [file]" "Dump current project database into file (${yellow}fin help mysql-dump${NC})"
 	printh "mysql-import (sqli) <file>" "Truncate database and import from sql dump (file should be accessible to Docksal)"
 	printh "" "See ${yellow}fin help sqli${NC} for advanced usage (multisite, gz)."
+
+	echo
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
+	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent (${yellow}fin help ssh-add${NC})"
 
 	echo
-	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent. See ${yellow}fin help ssh-add${NC}"
-
-	echo
-	printh "install <component>" "<tools | autocomplete> (${yellow}fin help install${NC})" "yellow"
-	printh "update  <component>" "<tools | images | self> (${yellow}fin help update${NC})" "yellow"
-
-	echo
-	printh "alias" "Create/remove aliases (See ${yellow}fin help alias${NC})"
+	printh "alias" "Create/remove aliases (${yellow}fin help alias${NC})"
 	printh "config" "Display effective project configuration"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version	(v, -v)" "Print fin version. [v, -v] - prints short version"
+	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
 	# Show list of custom commands and their help if available
 	if [ ! -z "$(get_docksal_path)" ]; then
@@ -912,24 +904,9 @@ show_help_rm ()
 	echo
 }
 
-show_help_install ()
-{
-	echo-green "fin install - Automated install of Docksal system components"
-	echo
-	printh "fin install tools" "Install software required to run Docksal"
-	printh "fin install autocomplete" "Install fin commands autocomplete for Bash"
-	echo
-}
-
 show_help_update ()
 {
 	echo-green "fin update - Automated update of Docksal system components"
-	echo
-	printh "fin update tools" "Update software required to run Docksal"
-	printh "fin update system-images" "Update Docksal system images only"
-	printh "fin update project-images" "Update project images only"
-	printh "fin update images" "Update both Docksal system and project images"
-	printh "fin update self" "Update fin itself"
 	echo
 }
 
@@ -1041,10 +1018,6 @@ bash_comp_words ()
 	case $1 in
 		install)
 			echo "tools"
-			exit 0
-			;;
-		update)
-			echo "tools images self"
 			exit 0
 			;;
 		vm)
@@ -1664,55 +1637,6 @@ ssh_add () {
 
 #----- Installations and updates -----
 
-# Install required software
-install_tools ()
-{
-	echo-green "Installing tools..."
-
-	if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
-		if is_docker_machine_exist && ! is_docker_machine_running; then
-			echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
-				"Start it with ${yellow}fin vm start${NC} first or destroy it with ${yellow}fin vm rm${NC} if you want it re-created."
-			return 1
-		fi
-	fi
-
-	# If docker is already running, then we are doing an upgrade.
-	(which 'docker' >/dev/null 2>&1) && is_docker_running && UPGRADE_IN_PROGRESS=1
-
-	# Pre-update steps for boot2docker
-	if (is_mac || is_windows) && ! is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		update_system_images
-		# check latest boot2docker version
-		local b2d_version=$(docker version --format '{{.Server.Version}}')
-		# If VM needs to be updated, stop all project containers
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") ]]; then
-			BOOT2DOCKER_NEEDS_AN_UPGRADE=1
-			_confirm "All containers will be stopped for vm upgrade. Continue? "
-		fi
-	fi
-
-	# Only update system images on Docker fro Mac/Windows
-	is_docker_native && \
-		update_system_images
-		# no return here
-
-	is_windows && \
-		install_tools_windows && \
-		return
-
-	is_linux && \
-		install_tools_ubuntu && \
-		return
-
-	is_mac && \
-		install_tools_mac && \
-		return
-
-	! is_windows && ! is_linux && ! is_mac && \
-		(echo-error "Your OS is not supported" && exit 1)
-}
-
 install_proxy_service ()
 {
 	docker rm -f vhost-proxy >/dev/null 2>&1 || true
@@ -1792,20 +1716,21 @@ install_sshagent_service ()
 install_tools_mac ()
 {
 	is_tty || return 1 # only allow in interactive shell
-	is_docker_native && echo "No tools installation required for native Docker" && return
 
-	# Check VirtualBox
-	if ! which 'VBoxManage' >/dev/null 2>&1; then
-		echo-error "VBoxManage executable was not found. Virtual Box is required to run Docksal on Mac." \
-			&& exit 1
-	elif ! is_vbox_version; then
-		echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
-			&& exit 1
-# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
-#	else
-#		 Kill the default adapter and DHCP server to avoid network issues down the road
-#		 VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
-#		 VBoxManage hostonlyif remove vboxnet0 > /dev/null 2>&1
+	if ! is_docker_native; then
+		# Check VirtualBox
+		if ! which 'VBoxManage' >/dev/null 2>&1; then
+			echo-error "VBoxManage executable was not found. Virtual Box is required to run Docksal on Mac." \
+				&& exit 1
+		elif ! is_vbox_version; then
+			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
+				&& exit 1
+			# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
+			#	else
+			#		 Kill the default adapter and DHCP server to avoid network issues down the road
+			#		 VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
+			#		 VBoxManage hostonlyif remove vboxnet0 > /dev/null 2>&1
+		fi
 	fi
 
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
@@ -1817,6 +1742,7 @@ install_tools_mac ()
 		(cd "$CONFIG_DOWNLOADS_DIR" && \
 			curl -sSL "$URL_DOCKER_MAC" | tar zxf - && \
 			mv "docker/docker" "$CONFIG_BIN_DIR/")
+		if_failed "Check file permissions and internet connection."
 	fi
 
 	# Install docker-compose
@@ -1824,6 +1750,7 @@ install_tools_mac ()
 		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		curl -sSL "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
 			chmod +x "$DOCKER_COMPOSE_BIN"
+		if_failed "Check file permissions and internet connection."
 	fi
 
 	# Install docker-machine
@@ -1831,6 +1758,7 @@ install_tools_mac ()
 		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
 			chmod +x "$DOCKER_MACHINE_BIN"
+		if_failed "Check file permissions and internet connection."
 	fi
 
 	# Cleanup
@@ -1843,6 +1771,14 @@ install_tools_mac ()
 		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
 		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
 		docker_machine_stop && docker_machine_start
+
+	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
+		local server_version=$(docker version --format '{{.Server.Version}}')
+		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
+			echo-yellow "[IMPORTANT]: update Docker for Mac to the latest version manually"
+			sleep 2
+		fi
+	fi
 }
 
 install_tools_windows ()
@@ -1863,39 +1799,43 @@ install_tools_windows ()
 #				winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
 #			fi
 		fi
-
-		# Install Docker client
-		if ! is_docker_version; then
-			echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
-			(cd "$CONFIG_DOWNLOADS_DIR" && \
-				curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
-				unzip docker.zip && \
-				rm docker.zip && \
-				mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
-				chmod +x "$DOCKER_BIN")
-		fi
-
-			# Install Docker Compose
-		if ! is_docker_compose_version; then
-			echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
-			curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
-				chmod +x "$DOCKER_COMPOSE_BIN.exe"
-		fi
-
-			# Install Docker Machine
-		if ! is_docker_machine_version; then
-			echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-			curl -sSL "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
-				chmod +x "$DOCKER_MACHINE_BIN.exe"
-		fi
 	fi
 
-	# Install winpty TODO: check winpty version here
+	# Install Docker client
+	if ! is_docker_version; then
+		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		(cd "$CONFIG_DOWNLOADS_DIR" && \
+			curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
+			unzip docker.zip && \
+			rm docker.zip && \
+			mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
+			chmod +x "$DOCKER_BIN")
+		if_failed "Check file permissions and internet connection."
+	fi
+
+		# Install Docker Compose
+	if ! is_docker_compose_version; then
+		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
+			chmod +x "$DOCKER_COMPOSE_BIN.exe"
+		if_failed "Check file permissions and internet connection."
+	fi
+
+		# Install Docker Machine
+	if ! is_docker_machine_version; then
+		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		curl -ksS "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
+			chmod +x "$DOCKER_MACHINE_BIN.exe"
+		if_failed "Check file permissions and internet connection."
+	fi
+
+	# Install winpty
 	if ! is_winpty_version; then
 		echo-green "Installing winpty v${REQUIREMENTS_WINPTY}..."
 		(cd "$CONFIG_DOWNLOADS_DIR" && \
 			curl -sSL "$URL_WINPTY" | tar -xzf - && \
 			mv winpty-*/bin/* "$CONFIG_BIN_DIR/")
+		if_failed "Check file permissions and internet connection."
 	fi
 
 	# Cleanup
@@ -1905,6 +1845,7 @@ install_tools_windows ()
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		# Optimize SMB sharing
 		smb_windows_fix
+		[ ! $? -eq 0 ] && echo-red "Failed. Windows shares might not work properly with Docksal."
 		# Git settings
 		echo-green "Adjusting git defaults..."
 		echo "git config --global core.autocrlf input"
@@ -1913,14 +1854,20 @@ install_tools_windows ()
 		git config --system core.longpaths true # support long paths
 	fi
 
-	if ! is_docker_native; then
-		# If it was an upgrade
-		[[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]] && \
-			is_docker_machine_running && \
-			echo-green "Upgrading Docker Machine..." && \
-			docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
-			# Restart machine right after upgrade to avoid IP change and cert issues down the road.
-			docker_machine_stop && docker_machine_start
+	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
+		is_docker_machine_running && \
+		echo-green "Upgrading Docker Machine..." && \
+		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
+		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
+		docker_machine_stop && docker_machine_start
+	fi
+
+	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
+		local server_version=$(docker version --format '{{.Server.Version}}')
+		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
+			echo-green-bg " [IMPORTANT]: update Docker for Windows to the latest version manually "
+			sleep 2
+		fi
 	fi
 }
 
@@ -1994,11 +1941,53 @@ EOF
 	fi
 
 	# Update system images and install system service (call self with sudo).
-	sudo fin update system-images
+	echo-green "Updating system images..."
+	sudo fin update --system-images
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
 	fi
+}
+
+update_tools ()
+{
+	is_windows && \
+		install_tools_windows && \
+		return
+
+	is_linux && \
+		install_tools_ubuntu && \
+		return
+
+	is_mac && \
+		install_tools_mac && \
+		return
+}
+
+update_config_files ()
+{
+	echo-green "Updating default configs..."
+	files_to_download="
+			$URL_STACKS_SERVICES
+			$URL_STACKS_DEFAULT
+			$URL_STACKS_VOLUMES_BIND
+			$URL_STACKS_VOLUMES_NFS
+			$URL_STACKS_VOLUMES_UNISON
+	"
+	(
+		cd "$CONFIG_STACKS_DIR" || exit 1;
+		for f in ${files_to_download}; do
+			echo -n "  $(basename ${f})..."
+			curl -kfsSO "$f"
+			# exit subshell with error if download failed
+			[ ! $? -eq 0 ] && exit 1
+			# otherwise print ok
+			echo "		[OK]"
+		done
+	)
+
+	if_failed_error "One of the default configs was not downloaded." \
+		"Check your internet connection and file permission on $CONFIG_STACKS_DIR"
 }
 
 # Install shell commands autocomplete script
@@ -2034,23 +2023,10 @@ EOF
 	fi
 }
 
-# Install tools or autocomplete
-install ()
-{
-	if [[ "$1" == "" ]]; then
-		show_help install
-	elif [[ "$1" == "prerequisites" ]] || [[ "$1" == "tools" ]]; then
-		install_tools
-	elif [[ "$1" == "autocomplete" ]]; then
-		install_autocomplete
-	fi
-}
-
 # Update system conteainers' images
 update_system_images ()
 {
 	check_docker_running
-	echo-green "Updating Docksal system images..."
 
 	# Running docker exec interactively on Windows requires workarounds
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
@@ -2065,7 +2041,6 @@ update_system_images ()
 update_project_images ()
 {
 	check_docksal_environment
-	echo-green "Updating project images..."
 	docker_compose pull # update project containers images
 	up
 }
@@ -2073,82 +2048,116 @@ update_project_images ()
 # Update system and project images
 update_images ()
 {
+	echo-green "Updating Docksal system images..."
 	update_system_images
+	echo-green "Updating project images..."
 	update_project_images
 }
 
-# Update fin itself
-update_self ()
+# Update Docksal
+update ()
 {
-	[[ "$1" != "" ]] && FIN_BRANCH="$1"
-	testing_warn
-	echo "Downloading..."
-	local new_fin
-	new_fin=$(curl -kfsS "$URL_FIN")
-	if_failed "fin download failed."
+	# Do not run full update is running from $FIN_PATH_UPDATED (self initiated sub-shell)
+	[[ "$0" == "$FIN_PATH_UPDATED" ]] && FULL_UPDATE="exit 1"
 
-	# TODO: refactor this into something less verbose and more efficient.
-	# Download stack and volume files
-	local stacks_services
-	stacks_services=$(curl -kfsS "$URL_STACKS_SERVICES")
-	if_failed "services.yml download failed."
-	local stacks_default
-	stacks_default=$(curl -kfsS "$URL_STACKS_DEFAULT")
-	if_failed "default.yml download failed."
-
-	local stacks_volumes_bind
-	stacks_volumes_bind=$(curl -kfsS "$URL_STACKS_VOLUMES_BIND")
-	if_failed "volumes-bind.yml download failed."
-	local stacks_volumes_nfs
-	stacks_volumes_nfs=$(curl -kfsS "$URL_STACKS_VOLUMES_NFS")
-	if_failed "volumes-nfs.yml download failed."
-	local stacks_volumes_unison
-	stacks_volumes_unison=$(curl -kfsS "$URL_STACKS_VOLUMES_UNISON")
-	if_failed "volumes-unison.yml download failed."
-
-
-	# Check if update is a major version. Show warning is needed
-	local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
-	local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
-	local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
-	if [[ "$current_major_version" != "$new_major_version" ]]; then
-		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
-		echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
-		echo "You may not be able to use you current Docksal environment if you proceed."
-		echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
-		_confirm "Continue with the update?"
+	# Pre-update check #1: check if there is existing but stopped Docksal machine
+	if (${FULL_UPDATE}); then
+		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
+			if is_docker_machine_exist && ! is_docker_machine_running; then
+				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
+					"Start it with ${yellow}fin vm start${NC} first or destroy it with ${yellow}fin vm rm${NC} if you want it re-created."
+				return 1
+			fi
+		fi
 	fi
 
-	# check for different updates on next run
-	rm -f "$CONFIG_LAST_CHECK" >/dev/null 2>&1
+	# Checking docker status
+	if (which 'docker' >/dev/null 2>&1); then
+		is_docker_running
+		RUNNING_CODE=$? # cache status
+		if (exit ${RUNNING_CODE}); then
+			# If docker is already running, then we are doing an upgrade.
+			UPGRADE_IN_PROGRESS=1
+		else
+			# Check out the case when current user on linux does not have access to docker daemon
+			if is_linux; then
+				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
+				[ ! $? -eq 0  ] && LINUX_DAEMON_RUNNING="exit 1"
+				# if daemon is running but docker info does not return 0 then this is the case
+				if (${LINUX_DAEMON_RUNNING}) && ! (exit ${RUNNING_CODE}); then
+					echo-red "Your Docker daemon is running but you don't have access to it."
+					echo-yellow "Please run 'newgrp docker' or reboot."
+					exit 1
+				fi
+			fi
+		fi
+	fi
 
-	# saving to file
-	echo "$new_fin" | sudo tee "$FIN_PATH" > /dev/null
-	if_failed "Could not write $FIN_PATH."
-	sudo chmod +x "$FIN_PATH"
+	# Pre-update check #2: warn if boot2docker will need to be upgraded
+	if (is_mac || is_windows) && ! is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
+		local b2d_version=$(docker version --format '{{.Server.Version}}')
+		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") ]]; then
+			BOOT2DOCKER_NEEDS_AN_UPGRADE=1
+			(${FULL_UPDATE}) &&
+				_confirm "All running projects will be stopped for vm upgrade. Continue?"
+		fi
+	fi
 
-	# TODO: refactor this into something less verbose and more efficient.
-	# Saving configs
-	local stacks_services_path="$CONFIG_STACKS_DIR/services.yml"
-	echo "$stacks_services" | sudo tee $stacks_services_path > /dev/null
-	if_failed "Could not write $stacks_services_path."
-	local stacks_default_path="$CONFIG_STACKS_DIR/default.yml"
-	echo "$stacks_default" | sudo tee $stacks_default_path > /dev/null
-	if_failed "Could not write $stacks_default_path."
+	# [Update - 1] Update fin unless already running fin.updated binary
+	if (${FULL_UPDATE}); then
+		testing_warn
+		echo-green "Updating fin..."
+		local new_fin
+		new_fin=$(curl -kfsS "$URL_FIN?r=$RANDOM")
+		if_failed_error "fin download failed."
 
-	local stacks_volumes_bind_path="$CONFIG_STACKS_DIR/volumes-bind.yml"
-	echo "$stacks_volumes_bind" | sudo tee $stacks_volumes_bind_path > /dev/null
-	if_failed "Could not write $stacks_volumes_bind."
-	local stacks_volumes_nfs_path="$CONFIG_STACKS_DIR/volumes-nfs.yml"
-	echo "$stacks_volumes_nfs" | sudo tee $stacks_volumes_nfs_path > /dev/null
-	if_failed "Could not write $stacks_volumes_nfs_path."
-	local stacks_volumes_unison_path="$CONFIG_STACKS_DIR/volumes-unison.yml"
-	echo "$stacks_volumes_unison" | sudo tee $stacks_volumes_unison_path > /dev/null
-	if_failed "Could not write $stacks_default_path."
+		# Check if fin update is required and whether it is a major version
+		local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
+		# TODO: UNCOMMENT
+		if [[ "$new_version" != "$FIN_VERSION" ]]; then
+			local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
+			local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
+			if [[ "$current_major_version" != "$new_major_version" ]]; then
+				echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
+				echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
+				echo "You may not be able to use you current Docksal environment if you proceed."
+				echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
+				_confirm "Continue with the update?"
+			fi
 
-	local new_version=$(head "$FIN_PATH" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
-	echo-green "fin updated to ${new_version}"
-	exit
+			# saving to file
+			echo "$new_fin" | sudo tee "$FIN_PATH_UPDATED" > /dev/null
+			if_failed_error "Could not write $FIN_PATH_UPDATED"
+			sudo chmod +x "$FIN_PATH_UPDATED"
+			local new_version=$(${FIN_PATH_UPDATED} v)
+			echo "fin $new_version downloaded..."
+
+			# check for different updates on next run
+			# TODO: UNCOMMENT
+			#rm -f "$CONFIG_LAST_CHECK" >/dev/null 2>&1
+
+			# Run other updates with newly downloaded fin version
+			( "$FIN_PATH_UPDATED" update )
+
+			# overwrite old fin
+			sudo mv "$FIN_PATH_UPDATED" "$FIN_PATH"
+			exit
+		else
+			echo-rewrite "Updating fin... $FIN_VERSION ${green}[OK]${NC}"
+		fi
+	fi
+
+	# [Update - 2] Update default configs
+	update_config_files
+
+	# [Update - 3] Update system images (if possible)
+	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && ! is_linux; then
+		echo-green "Updating system images..."
+		update_system_images
+	fi
+
+	# [Update - 4] Update third party tools (if possible)
+	update_tools
 }
 
 check_for_updates ()
@@ -2178,7 +2187,7 @@ check_for_updates ()
 	if [[ $(ver_to_int "$new_version") > $(ver_to_int ${FIN_VERSION}) ]]; then
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
-		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ] (run ${green}fin update self${NC} to update)"
+		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ] (run ${green}fin update${NC} to update)"
 		echo "Press Enter."
 		read -p ''
 	fi
@@ -2192,7 +2201,7 @@ check_for_updates ()
 	fi
 
 	if [[ ${UPDATES_AVAILABLE} == "1" ]]; then
-		echo -e "Run ${yellow}fin update tools${NC} to install updates to docker tools"
+		echo -e "Run ${yellow}fin update${NC} to install updates to Docker tools"
 		echo "(Press Enter to continue)"
 		read -p ''
 	fi
@@ -2686,7 +2695,7 @@ load_configuration ()
 			else
 				echo-error "Volumes definition not found in ${volumes_yml_file}." \
 					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
-					"You may need to run ${yellow}fin update self${NC} to download volume definitions."
+					"You may need to run ${yellow}fin update${NC} to download volume definitions."
 				exit 1
 			fi
 		fi
@@ -2761,29 +2770,30 @@ if [[ "$1" == "@"* ]]; then
 fi
 
 # TODO: figure out a better way to determine when to skip load_configuration
-# Check for updates if not updating already
-[[ "$*" != "update self" ]] && \
-	[[ "$*" != "install prerequisites" ]] && \
-	[[ "$*" != "install tools" ]] && \
-	[[ "$*" != "update prerequisites" ]] && \
-	[[ "$*" != "update tools" ]] && \
-	[[ "$1" != "version" ]] && \
-	[[ "$1" != "-v" ]] && \
-	[[ "$1" != "sysinfo" ]] && \
-	[[ "$1" != "bash_comp_words" ]] && \
-	[[ "$*" != "ssh-add" ]] && \
-	[[ "$*" != "vm" ]] && \
-	[[ "$*" != "docker*" ]] && \
-	[[ "$1" != "exec-url" ]] && \
-	[[ "$1" != "cleanup" ]] && \
-	[[ "$1" != "help" ]] && \
-	[[ "$*" != "" ]] && \
-	[[ "$1" != "fix-smb" ]] && \
-	[[ "$1" != "alias" ]] && \
-	[[ "$*" != "reset dns" ]] && \
-	[[ "$*" != "reset proxy" ]] && \
-	[[ "$*" != "reset ssh-agent" ]] && \
-	[[ "$*" != "reset system" ]] && \
+# Load YML files and check for updates except some cases
+[[ "$1" != "update" ]] &&
+	[[ "$1" != "install" ]] &&
+	[[ "$1" != "version" ]] &&
+	[[ "$1" != "-v" ]] &&
+	[[ "$1" != "v" ]] &&
+	[[ "$1" != "sysinfo" ]] &&
+	[[ "$1" != "bash_comp_words" ]] &&
+	[[ "$*" != "ssh-add" ]] &&
+	[[ "$*" != "vm" ]] &&
+	[[ "$*" != "docker"* ]] &&
+	[[ "$1" != "exec-url" ]] &&
+	[[ "$1" != "cleanup" ]] &&
+	[[ "$1" != "help" ]] &&
+	[[ "$*" != "" ]] &&
+	[[ "$1" != "fix-smb" ]] &&
+	[[ "$1" != "alias" ]] &&
+	[[ "$*" != "reset dns" ]] &&
+	[[ "$*" != "reset proxy" ]] &&
+	[[ "$*" != "reset ssh-agent" ]] &&
+	[[ "$*" != "reset system" ]] &&
+	[[ "$*" != "ps -a" ]] && [[ "$*" != "ps --all" ]] &&
+	[[ "$*" != "st -a" ]] && [[ "$*" != "st --all" ]] &&
+	[[ "$*" != "status -a" ]] && [[ "$*" != "status --all" ]] &&
 	load_configuration &&
 	check_for_updates
 
@@ -2821,25 +2831,21 @@ case "$1" in
 		shift
 		vm "$@"
 		;;
-	install)
+	install|update)
 		shift
-		install "$@"
-		;;
-	update)
-		shift
-		if [[ "$1" == "prerequisites" ]] || [[ "$1" == "tools" ]]; then
-			install_tools
-		elif [[ "$1" == "system-images" ]]; then
+		if [[ "$1" == "--system-images" ]]; then
 			update_system_images
-		elif [[ "$1" == "project-images" ]]; then
-			update_project_images
-		elif [[ "$1" == "images" ]]; then
-			update_images
-		elif [[ "$1" == "self" ]]; then
-			shift
-			update_self "$@"
+		elif [[ "$1" == "--self" ]]; then
+			echo "Downloading $URL_FIN"
+			curl -kfsS "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH" >/dev/null
+			[ $? -eq 0 ] && echo "Done"
+			exit
+		elif [[ "$1" == "--tools" ]]; then
+			update_tools
+		elif [[ "$1" == "--config" ]]; then
+			update_config_files
 		else
-			show_help_update
+			update
 		fi
 		;;
 	bash)
