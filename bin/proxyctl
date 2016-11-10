@@ -7,7 +7,7 @@ _start ()
 	local vhost="$1"
 	[[ "$vhost" == "" ]] &&  echo "ERROR: Empty virtual host." && return 1
 	
-	# Match vhost to a running web (exact match only)
+	# Match vhost to a web container (exact match only)
 	local project_name
 	project_name=$(/usr/local/bin/docker ps -a \
 		--filter "label=com.docker.compose.service=web" \
@@ -15,7 +15,7 @@ _start ()
 		--format '{{.Label "com.docker.compose.project"}}')
 	
 	# If exact match was not found, then we have multiple domains/wildcards (e.g. example.com,*.example.com,example2.com)
-	# Complex processing goes below.
+	# More complex processing goes below.
 	if [[ "$project_name" == "" ]]; then
 		# Get a list of all (running and stopped) web containers and their virtual host label values
 		local webs=$(/usr/local/bin/docker ps -a \
@@ -51,8 +51,11 @@ _start ()
 		/usr/local/bin/docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs /usr/local/bin/docker start
 	done
 
-    # Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
+    # Connecting/re-connecting vhost-ptoxy to the project network
     local network="${project_name}_default"
+    # Making sure the network exists
+    /usr/local/bin/docker network create "$network" >/dev/null 2>&1
+    # Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
     /usr/local/bin/docker network connect "$network" vhost-proxy >/dev/null 2>&1
     if [[ $? == 0 ]]; then
       echo "Connected proxy to network: ${network}."
@@ -88,6 +91,11 @@ _stop ()
 			echo "Project: $project_name is NOT active. Stopping..."
 			# Stop
 			/usr/local/bin/docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs /usr/local/bin/docker stop
+			# Disconnect vhost-proxy from the project network and remove the network.
+			# See https://github.com/docksal/vhost-proxy/issues/6 for more details on why this is necessary.
+			local network="${project_name}_default"
+			/usr/local/bin/docker network disconnect "$network" vhost-proxy
+			/usr/local/bin/docker network rm "$network"
 		fi
 	done
 }
