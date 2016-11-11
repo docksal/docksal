@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.7.0
+FIN_VERSION=0.7.1
 
 # Console colors
 red='\033[0;91m'
@@ -1552,9 +1552,9 @@ vm-stats ()
 	check_docker_running # should be running
 	check_vbox_version
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
-	$vboxmanage metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
+	"$vboxmanage" metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
 	sleep 1
-	$vboxmanage metrics query "$DOCKER_MACHINE_NAME" $metrics
+	"$vboxmanage" metrics query "$DOCKER_MACHINE_NAME" $metrics
 }
 
 vm-ram () {
@@ -1565,7 +1565,7 @@ vm-ram () {
 		is_docker_machine_running && running=1
 		_confirm "Continue changing Memory size to ${1}MB?"
 		[[ ${running} == 1 ]] && docker_machine_stop
-		$vboxmanage modifyvm "$DOCKER_MACHINE_NAME" --memory "$1" && \
+		"$vboxmanage" modifyvm "$DOCKER_MACHINE_NAME" --memory "$1" && \
 			echo "Memory size updated."
 		[[ ${running} == 1 ]] && docker_machine_start
 	fi
