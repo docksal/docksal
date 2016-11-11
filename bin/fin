@@ -2549,7 +2549,7 @@ _set_cli_uid ()
 	if [[ "$host_uid" != "0" ]] ; then
 		echo-green "Changing user id in cli to $host_uid to match host user id..."
 		docker exec -u root ${cli} usermod -u "$host_uid" -o docker
-		echo-green "Reseting permissions on /var/www..."
+		echo-green "Resetting permissions on /var/www..."
 		docker exec -u root ${cli} chown -R docker:users /var/www
 	else
 		echo -e "${green}Changing user id in cli to 0 to match host user id ${NC}${yellow}(running as root is not recommended)...${NC}"
