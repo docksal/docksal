@@ -100,6 +100,14 @@ teardown() {
 	
 	run fin exec uname -a
 	[[ "$output" =~ "Linux cli" ]]
+	
+	run fin exec pwd
+	[[ "$(echo $output | tr -d '[:cntrl:]')" == "/var/www" ]]
+
+	# Test that switching directories on host carries over into cli
+	cd docroot
+	run fin exec pwd
+	[[ "$(echo $output | tr -d '[:cntrl:]')" == "/var/www/docroot" ]]
 }
 
 @test "fin drush" {
