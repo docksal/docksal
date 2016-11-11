@@ -8,20 +8,22 @@ env:
 services:
   - docker
 
-branches:
-  only:
-  - develop
+#branches:
+#  only:
+#  - develop
 
 install:
   - sudo cp ./bin/fin /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
   - fin version
-  - fin install tools
+  - fin update
   - fin sysinfo
 
 before_script:
-  - git clone https://github.com/docksal/drupal7.git ../drupal7 && cd ../drupal7
+  - git clone https://github.com/docksal/drupal8.git ../drupal8 && cd ../drupal8
   - fin reset system
+  - fin docker pull docksal/apache:2.2-stable
+  - fin docker pull mysql:5.5
+  - fin docker pull docksal/cli:php7
 
 script:
-  - bats ../docksal/tests/start.bats
-  - bats ../docksal/tests/stop.bats
+  - bats ../docksal/tests/smoke-test.bats
