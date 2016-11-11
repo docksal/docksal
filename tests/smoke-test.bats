@@ -45,9 +45,10 @@ teardown() {
 
 	# Check that containers are stopped
 	run fin ps
-	echo "$output" | grep "web_1" | grep "Exit 0"
-	echo "$output" | grep "db_1" | grep "Exit 0"
-	echo "$output" | grep "cli_1" | grep "Exit 0"
+	# Sometimes containers would not exit with code 0 (graceful stop), but 137 instead (when docker has to kill the process). 
+	echo "$output" | grep "web_1" | grep "Exit 0\|Exit 137"
+	echo "$output" | grep "db_1" | grep "Exit 0\|Exit 137"
+	echo "$output" | grep "cli_1" | grep "Exit 0\|Exit 137"
 	
 	# Start containers back
 	fin start || true
