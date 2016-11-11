@@ -15,13 +15,13 @@ check_stop_output() {
 	fin start || echo ''
 
 	# Check if containers are running.
-	docker_check_runnign
+	docker_check_running
 
 	# Run command.
 	fin stop
 
 	# Check if containers are not running.
-	docker_check_not_runnign
+	docker_check_not_running
 }
 
 @test "Checking output of fin stop" {
@@ -29,7 +29,7 @@ check_stop_output() {
 	fin start || echo ''
 
 	# Check if containers are running.
-	docker_check_runnign
+	docker_check_running
 
 	# Run command.
 	run fin stop
@@ -41,7 +41,7 @@ check_stop_output() {
 	check_stop_output
 
 	# Check if containers are not running.
-	docker_check_not_runnign
+	docker_check_not_running
 }
 
 @test "Checking fin _stop_containers function" {
@@ -49,7 +49,7 @@ check_stop_output() {
 	fin start || echo ''
 
 	# Check if containers are running.
-	docker_check_runnign
+	docker_check_running
 
 	# Run command.
 	run _stop_containers
@@ -61,5 +61,5 @@ check_stop_output() {
 	check_stop_output
 
 	# Check if containers are not running.
-	docker_check_not_runnign
+	docker_check_not_running
 }

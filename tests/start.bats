@@ -15,13 +15,13 @@ check_start_output() {
 	fin stop || echo ''
 
 	# Check if containers are not running.
-	docker_check_not_runnign
+	docker_check_not_running
 
 	# Run command.
 	fin start
 
 	# Check if containers are running.
-	docker_check_runnign
+	docker_check_running
 }
 
 @test "Checking output of fin start" {
@@ -29,7 +29,7 @@ check_start_output() {
 	fin stop || echo ''
 
 	# Check if containers are not running.
-	docker_check_not_runnign
+	docker_check_not_running
 
 	# Run command.
 	run fin start
@@ -41,7 +41,7 @@ check_start_output() {
 	check_start_output
 
 	# Check if containers are running.
-	docker_check_runnign
+	docker_check_running
 }
 
 @test "Checking output of fin up" {
@@ -49,7 +49,7 @@ check_start_output() {
 	fin stop || echo ''
 
 	# Check if containers are not running.
-	docker_check_not_runnign
+	docker_check_not_running
 
 	# Run command.
 	run fin up
@@ -61,7 +61,7 @@ check_start_output() {
 	check_start_output
 
 	# Check if containers are running.
-	docker_check_runnign
+	docker_check_running
 }
 
 @test "Checking fin _start_containters function" {
@@ -69,7 +69,7 @@ check_start_output() {
 	fin stop || echo ''
 
 	# Check if containers are not running.
-	docker_check_not_runnign
+	docker_check_not_running
 
 	# Run command.
 	run _start_containers
@@ -81,6 +81,5 @@ check_start_output() {
 	check_start_output
 
 	# Check if containers are running.
-	docker_check_runnign
+	docker_check_running
 }
-
