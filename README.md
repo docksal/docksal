@@ -34,8 +34,13 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 ### Regular updates
 
 ```
-fin update self
-fin update tools
+fin update
+```
+
+If updating from versions below 0.7.0
+
+```
+fin update self && fin update
 ```
 
 ### Updating from Drude to Docksal
@@ -58,14 +63,13 @@ Vagrant machine is not going to be used anymore and should be deleted.
     Depending on how Vagrant was installed you will either have to uninstall it manually or
     via `brew uninstall vagrant` on Mac / `choco uninstall vagrant` on Windows
     
-4. Install fin - see [Docksal environment setup](/docs/env-setup.md)
-5. `fin install tools`
-6. Start your project just like you did before with `fin up` and re-import your DB dump.
+4. Follow instructions in [Docksal environment setup](/docs/env-setup.md)
+5. Start your project just like you did before with `fin up` and re-import your DB dump.
 
     Notice it will use Docker Machine now.
     New Docker Machine will be created upon first start.
     
-7. Run `fin cleanup` to delete Drude files and backups
+6. Run `fin cleanup` to delete Drude files and backups
 
 
 ## Uninstalling
