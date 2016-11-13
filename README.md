@@ -37,7 +37,7 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 fin update
 ```
 
-If updating from versions below 0.7.0
+If updating from versions below `v0.7.0`
 
 ```
 fin update self && fin update
