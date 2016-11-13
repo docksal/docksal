@@ -14,16 +14,16 @@ Babun should be installed and run **as a regular user (do not use admin command 
 
 ## Setup
 
-1. Install [VirtualBox](https://www.virtualbox.org) (**Mac and Windows only**)
-2. Install `fin` (Docksal control utility)
+1. Install/update [VirtualBox](https://www.virtualbox.org) (**Mac and Windows only**)
+2. Install/update `fin` (Docksal control utility)
 
     ```
-    sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin
+    sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
     sudo chmod +x /usr/local/bin/fin
     ```
 
-3. Install Docksal prerequisites
+3. Install/update tools and configs
 
     ```
-    fin install tools
+    fin update
     ```
