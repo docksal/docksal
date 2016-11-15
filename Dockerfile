@@ -45,7 +45,7 @@ COPY bin/proxyctl /usr/local/bin/proxyctl
 COPY www /var/www/proxy
 
 # Stop inactive containers after timeout
-ENV INACTIVITY_TIMEOUT 30m
+ENV INACTIVITY_TIMEOUT 24h
 # Disable debug output by default
 ENV PROXY_DEBUG 0
 
