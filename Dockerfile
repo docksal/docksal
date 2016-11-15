@@ -1,6 +1,6 @@
 FROM alpine:3.4
 
-MAINTAINER Leonid Makarov <leonid.makarov@blinkreaction.com>
+MAINTAINER Team Docksal, https://docksal.io
 
 RUN apk add --update --no-cache \
 	bash \
