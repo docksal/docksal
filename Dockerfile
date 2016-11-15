@@ -11,7 +11,7 @@ RUN apk add --update --no-cache \
 	nginx-lua \
 	&& rm -rf /var/cache/apk/*
 
-ENV DOCKER_VERSION 1.12.2
+ENV DOCKER_VERSION 1.12.3
 ENV DOCKER_GEN_VERSION 0.7.3
 
 # Install docker client binary from Github (if not mounting binary from host)
