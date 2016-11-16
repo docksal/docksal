@@ -6,7 +6,6 @@
 version: "2"
 
 volumes:
-  db_data:
   project_root:
 
   # Bind mount host_home

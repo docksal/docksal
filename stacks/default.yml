@@ -21,6 +21,3 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
-    # Mount shared ssh-agent socket
-    volumes_from:
-      - container:docksal-ssh-agent

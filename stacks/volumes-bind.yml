@@ -4,8 +4,6 @@
 version: "2"
 
 volumes:
-  db_data:
-
 # Bind volumes
   host_home:
     driver: local

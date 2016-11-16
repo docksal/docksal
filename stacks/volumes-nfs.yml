@@ -6,8 +6,6 @@
 version: "2"
 
 volumes:
-  db_data:
-
 # NFS volumes
   host_home:
     driver: local
