@@ -19,6 +19,8 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 	
 	run fin start
+	echo "$output" | grep "Creating network \".*_default\" with the default driver"
+	echo "$output" | grep "Creating volume \".*_project_root\" with local driver"
 	echo "$output" | grep "Creating .*_web_1"
 	echo "$output" | grep "Creating .*_db_1"
 	echo "$output" | grep "Creating .*_cli_1"
@@ -27,6 +29,8 @@ teardown() {
 	#echo "$output" | grep "Changing user id in cli to \d* to match host user id"
 	#echo "$output" | grep "Resetting permissions on /var/www"
 	#echo "$output" | grep "Restarting php daemon"
+
+	echo "$output" | grep "Connected vhost-proxy to \".*_default\" network"
 
 	# Check that containers are running
 	run fin ps
@@ -77,14 +81,18 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 	
 	run fin reset -f
-	echo "$output" | grep "Killing .*_web_1"
-	echo "$output" | grep "Killing .*_db_1"
-	echo "$output" | grep "Killing .*_cli_1"
+	echo "$output" | grep "Stopping .*_web_1"
+	echo "$output" | grep "Stopping .*_db_1"
+	echo "$output" | grep "Stopping .*_cli_1"
 
 	echo "$output" | grep "Removing .*_web_1"
 	echo "$output" | grep "Removing .*_db_1"
 	echo "$output" | grep "Removing .*_cli_1"
-	
+
+	echo "$output" | grep "Removing network .*_default"
+	echo "$output" | grep "Removing volume .*_project_root"
+	echo "$output" | grep "Volume docksal_ssh_agent is external, skipping"
+
 	echo "$output" | grep "Creating .*_web_1"
 	echo "$output" | grep "Creating .*_db_1"
 	echo "$output" | grep "Creating .*_cli_1"
@@ -133,20 +141,17 @@ teardown() {
 	
 	# First run
 	run fin rm -f
-	echo "$output" | grep "Killing .*_web_1"
-	echo "$output" | grep "Killing .*_db_1"
-	echo "$output" | grep "Killing .*_cli_1"
+	echo "$output" | grep "Stopping .*_web_1"
+	echo "$output" | grep "Stopping .*_db_1"
+	echo "$output" | grep "Stopping .*_cli_1"
 
 	echo "$output" | grep "Removing .*_web_1"
 	echo "$output" | grep "Removing .*_db_1"
 	echo "$output" | grep "Removing .*_cli_1"
-	
-	echo "$output" | grep "Removing dangling volumes"
 
-	# Second run
-	run fin rm -f
-	echo "$output" | grep "No stopped containers"
-	echo "$output" | grep "Removing dangling volumes"
+	echo "$output" | grep "Removing network .*_default"
+	echo "$output" | grep "Removing volume .*_project_root"
+	echo "$output" | grep "Volume docksal_ssh_agent is external, skipping"
 
 	# Check that there are no containers
 	run fin ps
