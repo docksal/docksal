@@ -23,4 +23,4 @@ services:
       service: cli
     # Mount shared ssh-agent socket
     volumes_from:
-      - container:ssh-agent
+      - container:docksal-ssh-agent

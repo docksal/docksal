@@ -89,7 +89,7 @@ URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${R
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.0}
-IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/nginx-proxy:1.0}
+IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.0}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns-discovery:1.0}
 
 #---------------------------- Global Variables --------------------------------
@@ -615,19 +615,19 @@ _stop_containers ()
 
 	if [[ "$1" == "proxy" ]] ; then
 		echo-green 'Stopping Docksal HTTP/HTTPS reverse proxy service...'
-		docker stop vhost-proxy >/dev/null
+		docker stop docksal-vhost-proxy >/dev/null
 		return
 	fi
 
 	if [[ "$1" == "dns" ]] ; then
 		echo-green 'Stopping Docksal DNS service...'
-		docker stop dns >/dev/null
+		docker stop docksal-dns >/dev/null
 		return
 	fi
 
 	if [[ "$1" == "ssh-agent" ]] ; then
 		echo-green 'Stopping Docksal ssh-agent service...'
-		docker stop ssh-agent >/dev/null
+		docker stop docksal-ssh-agent >/dev/null
 		return
 	fi
 
@@ -699,11 +699,11 @@ _vhost_proxy_connect ()
 {
 	# Figure out the default project network name
 	network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-	docker network connect "$network" vhost-proxy >/dev/null 2>&1
+	docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
 	if [[ $? == 0 ]]; then
 		echo-green "Connected vhost-proxy to \"${network}\" network."
 	fi
-	# Run a dummy container to trigger docker-gen to refresh vhost-proxy configuration.
+	# Run a dummy container to trigger docker-gen to refresh proxy configuration.
     docker run --rm busybox
 }
 
@@ -1615,7 +1615,7 @@ status ()
 # @param $1 -D, -l or path to custom key
 ssh_add () {
 	# Check if ssh-agent container is running
-	local running=$(docker inspect --format="{{ .State.Running }}" ssh-agent 2>/dev/null)
+	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
 	[[ "$running" != "true" ]] && return
 
 	local ssh_path="$HOME/.ssh"
@@ -1626,13 +1626,13 @@ ssh_add () {
 	fi
 
 	# When no arguments provided, check if ssh-agent already has at least one identity. If so, stop here.
-	docker exec ssh-agent ssh-add -l >/dev/null
+	docker exec docksal-ssh-agent ssh-add -l >/dev/null
 	if [[ $1 == "" && $? == 0 ]]; then return; fi
 
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-	${winpty_cmd} docker run --rm -it --volumes-from=ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+	${winpty_cmd} docker run --rm -it --volumes-from=docksal-ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}" ssh-add "$@"
 	return $?
 }
 
@@ -1640,9 +1640,13 @@ ssh_add () {
 
 install_proxy_service ()
 {
+	# TODO: 0.8.0 breaking change. Remove with 1.0 release
 	docker rm -f vhost-proxy >/dev/null 2>&1 || true
-	docker run -d --name vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
+
+	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
+	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
+		-e INACTIVITY_TIMEOUT="${INACTIVITY_TIMEOUT:-24h}" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 }
@@ -1659,8 +1663,11 @@ install_dns_service ()
 	local docker_ip_map="-p 172.17.42.1:53:53/udp"
 	if is_linux; then docker_ip_map=""; fi
 
+	# TODO: 0.8.0 breaking change. Remove with 1.0 release
 	docker rm -f dns >/dev/null 2>&1 || true
-	docker run -d --name dns --label "io.docksal.group=system" --restart=always --privileged --userns=host \
+
+	docker rm -f docksal-dns >/dev/null 2>&1 || true
+	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
 		-e DNS_IP="$ip" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -1707,10 +1714,15 @@ configure_resolver ()
 
 install_sshagent_service ()
 {
+	# TODO: 0.8.0 breaking change. Remove with 1.0 release
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
-	docker run -d --name ssh-agent --label "io.docksal.group=system" --restart=always --privileged --userns=host \
+
+	docker rm -f docksal-ssh-agent >/dev/null 2>&1 || true
+	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always --privileged --userns=host \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_SSH_AGENT}" >/dev/null
+	# Add default keys
+	fin ssh-add
 }
 
 # Install tools on Mac
@@ -2493,7 +2505,7 @@ reset ()
 
 	if [[ "$1" == "system" ]] ; then
 		echo-green 'Resetting Docksal services...'
-		echo ' * vhost-proxy'
+		echo ' * proxy'
 		install_proxy_service
 		echo ' * dns and resolver for .docksal domain'
 		configure_resolver
