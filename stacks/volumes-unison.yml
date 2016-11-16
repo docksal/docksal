@@ -29,3 +29,7 @@ services:
       - SYNC_MAX_INOTIFY_WATCHES=40000
       - SYNC_VERBOSE=1
     privileged: true
+
+  # Shared ssh-agent volume
+  docksal_ssh_agent:
+    external: true

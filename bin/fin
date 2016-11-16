@@ -1632,7 +1632,7 @@ ssh_add () {
 	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-	${winpty_cmd} docker run --rm -it --volumes-from=docksal-ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+	${winpty_cmd} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh" "${IMAGE_SSH_AGENT}" ssh-add "$@"
 	return $?
 }
 
@@ -1718,7 +1718,11 @@ install_sshagent_service ()
 	docker rm -f ssh-agent >/dev/null 2>&1 || true
 
 	docker rm -f docksal-ssh-agent >/dev/null 2>&1 || true
+	docker volume rm docksal_ssh_agent >/dev/null 2>&1 || true
+
+	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always --privileged --userns=host \
+		-v docksal_ssh_agent:/.ssh-agent \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_SSH_AGENT}" >/dev/null
 	# Add default keys
