@@ -1725,8 +1725,8 @@ install_sshagent_service ()
 		-v docksal_ssh_agent:/.ssh-agent \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_SSH_AGENT}" >/dev/null
-	# Add default keys
-	fin ssh-add
+	# Add default keys. Using || true here to suppress errors if there are not keys on the host.
+	fin ssh-add || true
 }
 
 # Install tools on Mac
