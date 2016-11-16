@@ -7,7 +7,7 @@ services:
   # Web node
   web:
     hostname: web
-    image: docksal/apache:2.2-stable
+    image: docksal/web:1.0-apache2.2
     volumes:
       # Project root folder mapping
       - "${PROJECT_ROOT}/:/var/www"
@@ -21,7 +21,7 @@ services:
   # DB node
   db:
     hostname: db
-    image: docksal/mysql:5.5
+    image: docksal/db:1.0-mysql-5.5
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_USER=user
@@ -32,7 +32,7 @@ services:
   # Used for all console commands and tools.
   cli:
     hostname: cli
-    image: docksal/cli:stable
+    image: docksal/cli:1.0-php7
     volumes:
       # Project root folder mapping
       - "${PROJECT_ROOT}/:/var/www"
