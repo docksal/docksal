@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.8.0
+FIN_VERSION=0.8.1
 
 # Console colors
 red='\033[0;91m'
@@ -647,8 +647,18 @@ _remove_containers ()
 	check_docksal_environment
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
+
+        # Disconnect proxy from the project network, otherwise network will not be removed.
+        # Figure out the default project network name
+        network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+        docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
+
+		# Taking the whole docker-compose project down (this removes containers, volumes and networks)
+		docker_compose down --volumes --remove-orphans
+	else
+	    # Removing requested containers only
+	    docker_compose kill "$@" && docker_compose rm -vf "$@"
 	fi
-	docker_compose kill "$@" && docker_compose rm -vf "$@"
 }
 
 # Remove dangling images
@@ -2479,8 +2489,6 @@ remove ()
 	fi
 
 	_remove_containers "$@"
-	# Docker Compose currently does not remove project volumes, so we have to do this manually.
-	_remove_dangling_volumes
 }
 
 # Reset container(s) (stop, remove, up)
