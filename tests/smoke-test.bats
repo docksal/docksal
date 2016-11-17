@@ -67,6 +67,55 @@ teardown() {
   echo "$output" | grep "The agent has no identities."
 }
 
+@test "fin init" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin init
+	echo "$output" | grep "Initializing local project configuration"
+	echo "$output" | grep "Recreating services"
+	echo "$output" | grep "Installing site"
+	echo "$output" | grep "Congratulations, you installed Drupal!"
+
+  # Check if site is available and it's name is correct
+  curl -sL drupal8.docksal | grep "My Drupal 8 Site"
+}
+
+@test "fin mysql-dump" {
+	[[ $SKIP == 1 ]] && skip
+
+  cd docroot
+
+  # Create backup
+  run fin mysql-dump ../dump.sql --db-user=user --db-password=user --db-name=default
+
+	echo "$output" | grep "Looking for database..."
+	echo "$output" | grep "Exporting..."
+	echo "$output" | grep "Done"
+
+  # Update sitename
+  fin drush config-set system.site name 'My Drupal Fin updated 8 Site' -y
+
+  # Check if site is available and it's name is correct
+  curl -sL drupal8.docksal | grep "My Drupal Fin updated 8 Site"
+
+  cd ..
+}
+
+@test "fin mysql-import" {
+	[[ $SKIP == 1 ]] && skip
+
+  cd docroot
+
+  # Import mysql dump
+  run fin mysql-import ../dump.sql -y
+	echo "$output" | grep "Importing dump.sql into the database..."
+	echo "$output" | grep "mysql-import finished"
+  # Check if site is available and it's name is correct
+  curl -sL drupal8.docksal | grep "My Drupal 8 Site"
+
+  cd ..
+}
+
 @test "fin stop" {
 	[[ $SKIP == 1 ]] && skip
 	
