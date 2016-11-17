@@ -57,7 +57,8 @@ services:
       - ${PROJECT_ROOT}/.docksal/etc/php/php.ini:/etc/php5/fpm/conf.d/z_php.ini:ro
       # PHP CLI configuration overrides
       - ${PROJECT_ROOT}/.docksal/etc/php/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini:ro
-      # Shared ssh-agent socket
-      - docksal_ssh_agent:/.ssh-agent:ro
+    # Mount shared ssh-agent socket
+    volumes_from:
+      - container:docksal-ssh-agent
     environment:
       - XDEBUG_ENABLED=${XDEBUG_ENABLED}
