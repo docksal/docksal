@@ -39,6 +39,34 @@ teardown() {
 	echo "$output" | grep "cli_1" | grep "Up"
 }
 
+@test "fin ssh-add" {
+	[[ $SKIP == 1 ]] && skip
+
+  # Checking fin ssh-add -D
+	run fin ssh-add -D
+  echo "$output" | grep "All identities removed."
+
+  # Checking fin ssh-add: key doesn't exist
+  run fin ssh-add doesnt_exist_rsa
+  echo "$output" | grep "doesnt_exist_rsa: No such file or directory"
+
+  # Add test key
+  cp ../docksal/tests/ssh-key/* ~/.ssh
+  run fin ssh-add bats_rsa
+
+  # Checking fin ssh-add -l (one key)
+	run fin ssh-add -l
+  echo "$output" | grep "4096 SHA256"
+
+  # Checking fin ssh-add -D
+	run fin ssh-add -D
+  echo "$output" | grep "All identities removed."
+
+  # Checking fin ssh-add -l (no keys)
+	run fin ssh-add -l
+  echo "$output" | grep "The agent has no identities."
+}
+
 @test "fin stop" {
 	[[ $SKIP == 1 ]] && skip
 	
