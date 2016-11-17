@@ -42,29 +42,29 @@ teardown() {
 @test "fin ssh-add" {
 	[[ $SKIP == 1 ]] && skip
 
-  # Checking fin ssh-add -D
+	# Checking fin ssh-add -D
 	run fin ssh-add -D
-  echo "$output" | grep "All identities removed."
+	echo "$output" | grep "All identities removed."
 
-  # Checking fin ssh-add: key doesn't exist
-  run fin ssh-add doesnt_exist_rsa
-  echo "$output" | grep "doesnt_exist_rsa: No such file or directory"
+	# Checking fin ssh-add: key doesn't exist
+	run fin ssh-add doesnt_exist_rsa
+	echo "$output" | grep "doesnt_exist_rsa: No such file or directory"
 
-  # Add test key
-  cp ../docksal/tests/ssh-key/* ~/.ssh
-  run fin ssh-add bats_rsa
+	# Add test key
+	cp ../docksal/tests/ssh-key/* ~/.ssh
+	run fin ssh-add bats_rsa
 
-  # Checking fin ssh-add -l (one key)
+	# Checking fin ssh-add -l (one key)
 	run fin ssh-add -l
-  echo "$output" | grep "4096 SHA256"
+	echo "$output" | grep "4096 SHA256"
 
-  # Checking fin ssh-add -D
+	# Checking fin ssh-add -D
 	run fin ssh-add -D
-  echo "$output" | grep "All identities removed."
+	echo "$output" | grep "All identities removed."
 
-  # Checking fin ssh-add -l (no keys)
+	# Checking fin ssh-add -l (no keys)
 	run fin ssh-add -l
-  echo "$output" | grep "The agent has no identities."
+	echo "$output" | grep "The agent has no identities."
 }
 
 @test "fin init" {
@@ -76,44 +76,44 @@ teardown() {
 	echo "$output" | grep "Installing site"
 	echo "$output" | grep "Congratulations, you installed Drupal!"
 
-  # Check if site is available and it's name is correct
-  curl -sL drupal8.docksal | grep "My Drupal 8 Site"
+	# Check if site is available and it's name is correct
+	curl -sL drupal8.docksal | grep "My Drupal 8 Site"
 }
 
 @test "fin mysql-dump" {
 	[[ $SKIP == 1 ]] && skip
 
-  cd docroot
+	cd docroot
 
-  # Create backup
-  run fin mysql-dump ../dump.sql --db-user=user --db-password=user --db-name=default
+	# Create backup
+	run fin mysql-dump ../dump.sql --db-user=user --db-password=user --db-name=default
 
 	echo "$output" | grep "Looking for database..."
 	echo "$output" | grep "Exporting..."
 	echo "$output" | grep "Done"
 
-  # Update sitename
-  fin drush config-set system.site name 'My Drupal Fin updated 8 Site' -y
+	# Update sitename
+	fin drush config-set system.site name 'My Drupal Fin updated 8 Site' -y
 
-  # Check if site is available and it's name is correct
-  curl -sL drupal8.docksal | grep "My Drupal Fin updated 8 Site"
+	# Check if site is available and it's name is correct
+	curl -sL drupal8.docksal | grep "My Drupal Fin updated 8 Site"
 
-  cd ..
+	cd ..
 }
 
 @test "fin mysql-import" {
 	[[ $SKIP == 1 ]] && skip
 
-  cd docroot
+	cd docroot
 
-  # Import mysql dump
-  run fin mysql-import ../dump.sql -y
+	# Import mysql dump
+	run fin mysql-import ../dump.sql -y
 	echo "$output" | grep "Importing dump.sql into the database..."
 	echo "$output" | grep "mysql-import finished"
-  # Check if site is available and it's name is correct
-  curl -sL drupal8.docksal | grep "My Drupal 8 Site"
+	# Check if site is available and it's name is correct
+	curl -sL drupal8.docksal | grep "My Drupal 8 Site"
 
-  cd ..
+	cd ..
 }
 
 @test "fin stop" {
