@@ -19,18 +19,18 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 	
 	run fin start
-	echo "$output" | grep "Creating network \".*_default\" with the default driver"
-	echo "$output" | grep "Creating volume \".*_project_root\" with local driver"
-	echo "$output" | grep "Creating .*_web_1"
-	echo "$output" | grep "Creating .*_db_1"
-	echo "$output" | grep "Creating .*_cli_1"
+	echo "$output" | egrep "Creating network \".*_default\" with the default driver"
+	echo "$output" | egrep "Creating volume \".*_project_root\" with local driver"
+	echo "$output" | egrep "Creating .*_web_1"
+	echo "$output" | egrep "Creating .*_db_1"
+	echo "$output" | egrep "Creating .*_cli_1"
 
 	# uid change won't usually happen in Linux, as host uid 1000 matches container uid.
 	#echo "$output" | grep "Changing user id in cli to \d* to match host user id"
 	#echo "$output" | grep "Resetting permissions on /var/www"
 	#echo "$output" | grep "Restarting php daemon"
 
-	echo "$output" | grep "Connected vhost-proxy to \".*_default\" network"
+	echo "$output" | egrep "Connected vhost-proxy to \".*_default\" network"
 
 	# Check that containers are running
 	run fin ps
@@ -92,32 +92,32 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 	
 	run fin stop
-	echo "$output" | grep "Stopping .*_web_1"
-	echo "$output" | grep "Stopping .*_db_1"
-	echo "$output" | grep "Stopping .*_cli_1"
+	echo "$output" | egrep "Stopping .*_web_1"
+	echo "$output" | egrep "Stopping .*_db_1"
+	echo "$output" | egrep "Stopping .*_cli_1"
 
 	# Check that containers are stopped
 	run fin ps
 	# Sometimes containers would not exit with code 0 (graceful stop), but 137 instead (when docker has to kill the process). 
-	echo "$output" | grep "web_1" | grep "Exit 0\|Exit 137"
-	echo "$output" | grep "db_1" | grep "Exit 0\|Exit 137"
-	echo "$output" | grep "cli_1" | grep "Exit 0\|Exit 137"
+	echo "$output" | egrep ".*_web_1 .* (Exit 0|Exit 137)"
+	echo "$output" | egrep ".*_db_1 .* (Exit 0|Exit 137)"
+	echo "$output" | egrep ".*_cli_1 .* (Exit 0|Exit 137)"
 	
 	# Start containers back
-	fin start || true
+	fin start
 }
 
 @test "fin restart" {
 	[[ $SKIP == 1 ]] && skip
 	
 	run fin restart
-	echo "$output" | grep "Stopping .*_web_1"
-	echo "$output" | grep "Stopping .*_db_1"
-	echo "$output" | grep "Stopping .*_cli_1"
+	echo "$output" | egrep "Stopping .*_web_1"
+	echo "$output" | egrep "Stopping .*_db_1"
+	echo "$output" | egrep "Stopping .*_cli_1"
 	
-	echo "$output" | grep "Starting .*_web_1"
-	echo "$output" | grep "Starting .*_db_1"
-	echo "$output" | grep "Starting .*_cli_1"
+	echo "$output" | egrep "Starting .*_web_1"
+	echo "$output" | egrep "Starting .*_db_1"
+	echo "$output" | egrep "Starting .*_cli_1"
 
 	# Check that containers are running
 	run fin ps
@@ -130,21 +130,21 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 	
 	run fin reset -f
-	echo "$output" | grep "Stopping .*_web_1"
-	echo "$output" | grep "Stopping .*_db_1"
-	echo "$output" | grep "Stopping .*_cli_1"
+	echo "$output" | egrep "Stopping .*_web_1"
+	echo "$output" | egrep "Stopping .*_db_1"
+	echo "$output" | egrep "Stopping .*_cli_1"
 
-	echo "$output" | grep "Removing .*_web_1"
-	echo "$output" | grep "Removing .*_db_1"
-	echo "$output" | grep "Removing .*_cli_1"
+	echo "$output" | egrep "Removing .*_web_1"
+	echo "$output" | egrep "Removing .*_db_1"
+	echo "$output" | egrep "Removing .*_cli_1"
 
-	echo "$output" | grep "Removing network .*_default"
-	echo "$output" | grep "Removing volume .*_project_root"
+	echo "$output" | egrep "Removing network .*_default"
+	echo "$output" | egrep "Removing volume .*_project_root"
 	echo "$output" | grep "Volume docksal_ssh_agent is external, skipping"
 
-	echo "$output" | grep "Creating .*_web_1"
-	echo "$output" | grep "Creating .*_db_1"
-	echo "$output" | grep "Creating .*_cli_1"
+	echo "$output" | egrep "Creating .*_web_1"
+	echo "$output" | egrep "Creating .*_db_1"
+	echo "$output" | egrep "Creating .*_cli_1"
 
 	# Check that containers are running
 	run fin ps
@@ -173,15 +173,15 @@ teardown() {
 	
 	# Default drush (8)
 	run fin drush --version
-	echo "$output" | grep "Drush Version   :  8."
+	echo "$output" | egrep "Drush Version   :  8.*"
 
 	# Drush 6
 	run fin exec drush6 --version
-	echo "$output" | grep "Drush Version   :  6."
+	echo "$output" | egrep "Drush Version   :  6.*"
 
 	# Drush 7
 	run fin exec drush7 --version
-	echo "$output" | grep "Drush Version   :  7."
+	echo "$output" | egrep "Drush Version   :  7.*"
 }
 
 
@@ -190,16 +190,16 @@ teardown() {
 	
 	# First run
 	run fin rm -f
-	echo "$output" | grep "Stopping .*_web_1"
-	echo "$output" | grep "Stopping .*_db_1"
-	echo "$output" | grep "Stopping .*_cli_1"
+	echo "$output" | egrep "Stopping .*_web_1"
+	echo "$output" | egrep "Stopping .*_db_1"
+	echo "$output" | egrep "Stopping .*_cli_1"
 
-	echo "$output" | grep "Removing .*_web_1"
-	echo "$output" | grep "Removing .*_db_1"
-	echo "$output" | grep "Removing .*_cli_1"
+	echo "$output" | egrep "Removing .*_web_1"
+	echo "$output" | egrep "Removing .*_db_1"
+	echo "$output" | egrep "Removing .*_cli_1"
 
-	echo "$output" | grep "Removing network .*_default"
-	echo "$output" | grep "Removing volume .*_project_root"
+	echo "$output" | egrep "Removing network .*_default"
+	echo "$output" | egrep "Removing volume .*_project_root"
 	echo "$output" | grep "Volume docksal_ssh_agent is external, skipping"
 
 	# Check that there are no containers
