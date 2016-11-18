@@ -25,15 +25,15 @@
 4. Set a breakpoint wherever you like
 5. Click on the **Start Listening for PHP Debug Connections** button in PHPStorm
 
-    <img src="img/xdebug-toggle-listener.png" />
+    ![Screenshot](img/xdebug-toggle-listener.png)
 
 6. Click on **Debug** in **Xdebug Helper** in Chrome
 
-    <img src="img/xdebug-toggle-debugger.png" />
+    ![Screenshot](img/xdebug-toggle-debugger.png)
 
 7. Click on **Accept** in the **Incoming Connection From Xdebug** dialogue in PHPStorm
 
-    <img src="img/xdebug-mapping.png" />
+    ![Screenshot](img/xdebug-mapping.png)
 
 Happy debugging!
 

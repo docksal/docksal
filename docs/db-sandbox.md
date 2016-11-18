@@ -28,7 +28,7 @@ The image never changes. Thanks to [Union File System](https://docs.docker.com/t
 
 The stock [mysql image](https://registry.hub.docker.com/_/mysql/) defines a data volume (`/var/lib/mysql`). This makes sure the DB data is permanently stored outside of the `db` container on the host and is not lost as the container is (re)launches.
 
-<img src="img/unionfs-container.png" />
+![Screenshot](img/unionfs-container.png)
 
 To make the sandbox DB mode possible we have to remove this permanent storage volume from the image (this is done be using a fork of the image), import the DB and commit the container as a new image with `docker commit` command.  
 The new image will include the base image plus all in-memory changes made i.e. your DB snapshot. It is then used as the base image for the DB node going forward. 
@@ -41,7 +41,7 @@ db:
   ...
   ```
 
-<img src="img/unionfs-your-image.png" />
+![Screenshot](img/unionfs-your-image.png)
 
 Now you can do any changes to the database you want and each time after the container is restarted all changes will be lost (as it doesn't have external persistant storage) and you will be back to your base image `mysql_with_my_database:snapshot1`.
 
