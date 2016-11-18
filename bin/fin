@@ -649,16 +649,16 @@ _remove_containers ()
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 
-        # Disconnect proxy from the project network, otherwise network will not be removed.
-        # Figure out the default project network name
-        network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-        docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
+		# Disconnect proxy from the project network, otherwise network will not be removed.
+		# Figure out the default project network name
+		network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
 
 		# Taking the whole docker-compose project down (this removes containers, volumes and networks)
 		docker_compose down --volumes --remove-orphans
 	else
-	    # Removing requested containers only
-	    docker_compose kill "$@" && docker_compose rm -vf "$@"
+		# Removing requested containers only
+		docker_compose kill "$@" && docker_compose rm -vf "$@"
 	fi
 }
 
@@ -715,7 +715,7 @@ _vhost_proxy_connect ()
 		echo-green "Connected vhost-proxy to \"${network}\" network."
 	fi
 	# Run a dummy container to trigger docker-gen to refresh proxy configuration.
-    docker run --rm busybox
+	docker run --rm busybox
 }
 
 #------------------------------ Help functions --------------------------------
