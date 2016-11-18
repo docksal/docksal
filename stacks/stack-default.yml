@@ -1,3 +1,5 @@
+# Basic LAMP stack
+
 version: "2"
 
 services:

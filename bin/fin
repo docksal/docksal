@@ -71,7 +71,8 @@ URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
 URL_FIN="${URL_REPO}/${FIN_BRANCH}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${FIN_BRANCH}/stacks/services.yml"
-URL_STACKS_DEFAULT="${URL_REPO}/${FIN_BRANCH}/stacks/default.yml"
+URL_STACKS_STACK_ACQUIA="${URL_REPO}/${FIN_BRANCH}/stacks/stack-acquia.yml"
+URL_STACKS_STACK_DEFAULT="${URL_REPO}/${FIN_BRANCH}/stacks/stack-default.yml"
 URL_STACKS_VOLUMES_BIND="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-bind.yml"
 URL_STACKS_VOLUMES_NFS="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-nfs.yml"
 URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-unison.yml"
@@ -1996,11 +1997,13 @@ update_config_files ()
 	echo-green "Updating default configs..."
 	files_to_download="
 			$URL_STACKS_SERVICES
-			$URL_STACKS_DEFAULT
+			$URL_STACKS_STACK_ACQUIA
+			$URL_STACKS_STACK_DEFAULT
 			$URL_STACKS_VOLUMES_BIND
 			$URL_STACKS_VOLUMES_NFS
 			$URL_STACKS_VOLUMES_UNISON
 	"
+	# TODO: cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
 		for f in ${files_to_download}; do

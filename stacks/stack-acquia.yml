@@ -1,0 +1,46 @@
+# Acquia alike stack
+#
+# - Apache 2.2
+# - MySQL 5.5
+# - PHP 5.6 / PHP 7.0
+# - Varnish 3
+# - Memcached 1.4
+
+version: "2"
+
+services:
+  # Web
+  web:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: web
+    # cli has to be up before web
+    depends_on:
+      - cli
+
+  # DB
+  db:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: db
+
+  # CLI
+  cli:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: cli
+
+  # Varnish
+  varnish:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: varnish
+    # web has to be up before varnish
+    depends_on:
+      - web
+
+  # Memcached
+  memcached:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: memcached
