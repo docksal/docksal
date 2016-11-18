@@ -15,7 +15,7 @@ pages:
     - DB sandbox mode: db-sandbox.md
     - MySQL DB access for external tools: db-access.md
     - Extending fin with custom commands: custom-commands.md
-  - Third party utililies
+  - Third party utililies:
     - Debugging with Xdebug and PhpStorm: xdebug.md
     - Using PHP Code Sniffer (phpcs, phpcbf: phpcs.md
     - Using Blackfire profiler: blackfire.md
