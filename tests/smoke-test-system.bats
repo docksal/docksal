@@ -21,7 +21,7 @@ SERVICE_SSH_AGENT_VERSION=1.0
 #SKIP=1
 
 # Add default sample keys on Travis only. We don't want to mess with a real host ssh key.
-[[ "$TRAVIS" == "true" ]] && cp ../docksal/tests/ssh-keys/* ~/.ssh
+[[ "$TRAVIS" == "true" ]] && cp tests/ssh-keys/* ~/.ssh
 
 
 @test "fin reset dns" {
@@ -86,8 +86,6 @@ SERVICE_SSH_AGENT_VERSION=1.0
 	# Adding default keys
 	# Run these tests on Travis only
 	if [[ "$TRAVIS" == "true" ]]; then
-		cp ../docksal/tests/ssh-key/* ~/.ssh
-
 		run fin ssh-add
 		echo "$output" | grep "Identity added: id_dsa (id_dsa)"
 		echo "$output" | grep "Identity added: id_ecdsa (id_ecdsa)"
