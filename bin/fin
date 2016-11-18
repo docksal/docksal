@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.8.3
+FIN_VERSION=0.9.0
 
 # Console colors
 red='\033[0;91m'
@@ -545,7 +545,8 @@ check_docksal ()
 {
 	if [[ "$(get_docksal_path)" == "" ]] ; then
 		echo-error "Cannot detect project root." \
-			"Please make sure you have ${yellow}.docksal${NC} directory in the root of your project."
+			"Please make sure you have ${yellow}.docksal${NC} directory in the root of your project." \
+			"To setup a basic Docksal stack in the current directory run ${yellow}fin config generate${NC}"
 		exit 1
 	fi
 }
@@ -2698,7 +2699,10 @@ load_configuration ()
 	fi
 	# Set COMPOSE_FILE unless it has been already set by user
 	if [[ "$COMPOSE_FILE" == "" ]]; then
-		default_yml_file="$(get_config_path_dc)/stacks/default.yml"
+		# Allow to defined the default stack file.
+		DOCKSAL_STACK=${DOCKSAL_STACK:-default}
+
+		default_yml_file="$(get_config_path_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
 		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 		# Use .docksal/docksal.yml by default (if exists)
@@ -2758,7 +2762,7 @@ load_configuration ()
 	fi
 }
 
-show_config ()
+config_show ()
 {
 	check_docksal_environment
 
@@ -2773,6 +2777,7 @@ show_config ()
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
+	echo "IP: $(fin vm ip)"
 	echo
 	echo "MYSQL_PORT:" $(docker-compose port db 3306 2>/dev/null)
 	echo
@@ -2780,6 +2785,47 @@ show_config ()
 	echo "---------------------"
 	docker-compose config
 	echo "---------------------"
+}
+
+config_generate ()
+{
+	# Allow to defined the default stack file.
+	DOCKSAL_STACK=${DOCKSAL_STACK:-default}
+	yml_file="$(get_config_path_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+
+	_confirm "Set up $DOCKSAL_STACK Docksal stack in the current directory?"
+
+	if [[ -f $yml_file ]]; then
+		if [[ -d .docksal ]]; then
+			echo-yellow ".docksal directory already exists in the current directory."
+			_confirm "Remove it and start from scratch?"
+			rm -rf .docksal
+		fi
+
+		mkdir .docksal && \
+		# Use bind mount volumes by default
+		echo 'DOCKSAL_VOLUMES="bind"' > .docksal/docksal.env && \
+		cp $yml_file .docksal/docksal.yml && \
+		# Setup docroot and a basic index.php
+		mkdir -p docroot && \
+		echo '<?php phpinfo();' > docroot/index.php
+
+		if [[ $? == 0 ]]; then
+			echo-green "$DOCKSAL_STACK stack configuration generated. You can start it with ${yellow}fin start${NC}"
+			_confirm "Run fin start now?"
+			fin start
+
+			if [[ $? == 0 ]]; then
+				echo-green "Done!"
+				echo -e "Review stack configuration with ${yellow}fin config show${NC}"
+				echo -e "Point your browser to ${yellow}http://${VIRTUAL_HOST}${NC} to verify."
+			fi
+		else
+			echo-error "Something went wrong. Try again."
+		fi
+	else
+		echo-error "Stack file does not exist: $yml_file"
+	fi
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
@@ -2972,7 +3018,9 @@ case "$1" in
 		sysinfo
 		;;
 	config)
-		show_config
+		shift
+		if [[ "$*" == "" ]] || [[ "$*" == "show" ]]; then config_show; fi
+		if [[ "$*" == "generate" ]]; then config_generate; fi
 		;;
 	fix-smb)
 		smb_windows_fix
