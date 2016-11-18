@@ -19,7 +19,10 @@ install:
   - fin sysinfo
 
 before_script:
-  - git clone https://github.com/docksal/drupal8.git ../drupal8 && cd ../drupal8
+  - git clone https://github.com/docksal/drupal8.git ../drupal8
 
 script:
-  - bats ../docksal/tests/smoke-test.bats
+  # Testing Docksal system services
+  - bats tests/smoke-test-system.bats
+  # Test a project workflow
+  - cd ../drupal8 && bats ../docksal/tests/smoke-test-general.bats
