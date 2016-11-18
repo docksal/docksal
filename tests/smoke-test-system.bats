@@ -15,6 +15,7 @@ teardown() {
 SERVICE_VHOST_PROXY_VERSION=1.0
 SERVICE_DNS_VERSION=1.0
 SERVICE_SSH_AGENT_VERSION=1.0
+DOCKSAL_IP=192.168.64.100
 
 # Global skip
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
@@ -23,34 +24,58 @@ SERVICE_SSH_AGENT_VERSION=1.0
 # Add default sample keys on Travis only. We don't want to mess with a real host ssh key.
 [[ "$TRAVIS" == "true" ]] && cp tests/ssh-keys/* ~/.ssh
 
+@test "IP: ($DOCKSAL_IP) is reachable" {
+	[[ $SKIP == 1 ]] && skip
 
-@test "fin reset dns" {
+	# Check up is up
+	run ping -c 1 -t 1 $DOCKSAL_IP
+	[ "$status" -eq 0 ]
+
+}
+
+@test "DNS: fin reset dns" {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin reset dns
 	echo "$output" | grep "Resetting Docksal DNS service and configuring resolver for .docksal domain"
 
+  	# Wait 2s to let the service fully initialize
+  	sleep 2
+
 	# Service is running and image version is correct
 	run fin docker ps
-	echo "$output" | grep docksal/dns:$SERVICE_SSH_AGENT_VERSION
-
-	# IP and .docksal domain resolution
-	# TODO: Skipping on Travis. Figure out why Docksal's default IP assignment does not work on Travis.
-	if [[ "$TRAVIS" != "true" ]]; then
-    	run ping -c 1 anything.docksal
-		[[ $(echo "$output" | awk -F'[()]' '/PING/{print $2}') == "192.168.64.100" ]]
-	fi
+	echo "$output" | grep "docksal/dns:$SERVICE_DNS_VERSION"
 }
 
-@test "fin reset proxy" {
+@test "DNS: .docksal name resolution via ping" {
+	[[ $SKIP == 1 ]] && skip
+
+	# .docksal domain resolution via ping
+    run ping -c 1 -t 1 anything.docksal
+    [[ "$(echo \"$output\" | awk -F'[()]' '/PING/{print $2}')" == "$DOCKSAL_IP" ]]
+}
+
+@test "DSN: .docksal name resolution via nslookup" {
+	[[ $SKIP == 1 ]] && skip
+
+    # .docksal domain resolution via nslookup
+    run nslookup anything.docksal
+    #[[ "$(echo \"$output\" | awk '/^Address/ { print $2 }' | tail -1)" == "$DOCKSAL_IP" ]]
+    [[ "$(echo \"$output\" | grep "Address" | tail -1 | tr -d ' ' | awk -F ':' '{print $2}')" == "$DOCKSAL_IP" ]]
+}
+
+@test "VHOST-PROXY: fin reset proxy" {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin reset proxy
 	echo "$output" | grep "Resetting Docksal HTTP/HTTPS reverse proxy service"
 
+  	# Wait 2s to let the service fully initialize
+  	sleep 2
+
 	# Service is running and image version is correct
 	run fin docker ps
-	echo "$output" | grep docksal/vhost-proxy:$SERVICE_VHOST_PROXY_VERSION
+	echo "$output" | grep "docksal/vhost-proxy:$SERVICE_VHOST_PROXY_VERSION"
 
 	# Proxy routes requests properly
 	# Start an nginx container with "nginx.docksal" virtual host assigned
@@ -63,7 +88,7 @@ SERVICE_SSH_AGENT_VERSION=1.0
 	echo "$output" | grep 'Welcome to nginx!'
 }
 
-@test "fin reset ssh-agent" {
+@test "SSH-AGENT: fin reset ssh-agent" {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin reset ssh-agent
@@ -71,12 +96,15 @@ SERVICE_SSH_AGENT_VERSION=1.0
 	# Assuming there is at least one default key
 	echo "$output" | egrep "Identity added: id_.+ \(id_.+\)"
 
+  	# Wait 2s to let the service fully initialize
+  	sleep 2
+
 	# Service is running and image version is correct
 	run fin docker ps
-	echo "$output" | grep docksal/ssh-agent:$SERVICE_SSH_AGENT_VERSION
+	echo "$output" | grep "docksal/ssh-agent:$SERVICE_SSH_AGENT_VERSION"
 }
 
-@test "fin ssh-add" {
+@test "SSH-AGENT: fin ssh-add" {
 	[[ $SKIP == 1 ]] && skip
 
 	# Checking fin ssh-add -D
