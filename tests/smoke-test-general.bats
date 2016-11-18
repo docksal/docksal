@@ -49,7 +49,8 @@ teardown() {
 	echo "$output" | grep "Congratulations, you installed Drupal!"
 
 	# Check if site is available and it's name is correct
-	curl -sL drupal8.docksal | grep "My Drupal 8 Site"
+	run curl -sL http://drupal8.docksal
+	echo "$output" | grep "My Drupal 8 Site"
 }
 
 @test "fin mysql-dump" {
@@ -68,7 +69,8 @@ teardown() {
 	fin drush config-set system.site name 'My Drupal Fin updated 8 Site' -y
 
 	# Check if site is available and it's name is correct
-	curl -sL drupal8.docksal | grep "My Drupal Fin updated 8 Site"
+	run curl -sL http://drupal8.docksal
+	echo "$output" | grep "My Drupal Fin updated 8 Site"
 
 	cd ..
 }
@@ -82,8 +84,10 @@ teardown() {
 	run fin mysql-import ../dump.sql -y
 	echo "$output" | grep "Importing dump.sql into the database..."
 	echo "$output" | grep "mysql-import finished"
+
 	# Check if site is available and it's name is correct
-	curl -sL drupal8.docksal | grep "My Drupal 8 Site"
+	run curl -sL http://drupal8.docksal
+	echo "$output" | grep "My Drupal 8 Site"
 
 	cd ..
 }
