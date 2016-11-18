@@ -22,4 +22,5 @@ before_script:
   - git clone https://github.com/docksal/drupal8.git ../drupal8 && cd ../drupal8
 
 script:
-  - bats ../docksal/tests/smoke-test.bats
+  - bats ../docksal/tests/smoke-test-system.bats
+  - bats ../docksal/tests/smoke-test-general.bats
