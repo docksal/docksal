@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.8.2
+FIN_VERSION=0.8.3
 
 # Console colors
 red='\033[0;91m'
@@ -90,7 +90,7 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.0}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.0}
-IMAGE_DNS=${IMAGE_DNS:-docksal/dns-discovery:1.0}
+IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.0}
 
 #---------------------------- Global Variables --------------------------------
 
