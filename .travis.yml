@@ -20,10 +20,6 @@ install:
 
 before_script:
   - git clone https://github.com/docksal/drupal8.git ../drupal8 && cd ../drupal8
-  - fin reset system
-  - fin docker pull docksal/apache:2.2-stable
-  - fin docker pull docksal/mysql:5.5
-  - fin docker pull docksal/cli:php7
 
 script:
   - bats ../docksal/tests/smoke-test.bats
