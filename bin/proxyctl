@@ -56,7 +56,7 @@ _start ()
     # Making sure the network exists
     /usr/local/bin/docker network create "$network" >/dev/null 2>&1
     # Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
-    /usr/local/bin/docker network connect "$network" vhost-proxy >/dev/null 2>&1
+    /usr/local/bin/docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
     if [[ $? == 0 ]]; then
       echo "Connected proxy to network: ${network}."
     fi
@@ -92,9 +92,9 @@ _stop ()
 			# Stop
 			/usr/local/bin/docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs /usr/local/bin/docker stop
 			# Disconnect vhost-proxy from the project network and remove the network.
-			# See https://github.com/docksal/vhost-proxy/issues/6 for more details on why this is necessary.
+			# See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
 			local network="${project_name}_default"
-			/usr/local/bin/docker network disconnect "$network" vhost-proxy
+			/usr/local/bin/docker network disconnect "$network" docksal-vhost-proxy
 			/usr/local/bin/docker network rm "$network"
 		fi
 	done
