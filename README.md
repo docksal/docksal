@@ -25,13 +25,10 @@ Try one of the preconfigured projects:
 <sup>*</sup>Once you are done with a one-time [Docksal environment setup](/docs/env-setup.md)
 
 
-## System requirements
-
-Please review [system requirements](/docs/system-requirements.md) before proceeding with the setup.
-
-
 <a name="setup"></a>
 ## Setup
+
+Please review [system requirements](/docs/system-requirements.md) before proceeding with the setup.
 
 1. [Docksal environment setup](/docs/env-setup.md)
     
@@ -103,12 +100,12 @@ Docker (on Linux), Docker for Mac/Windows and VirtualBox are not automatically r
 ## Docksal Fin (fin)
 
 Docksal Fin is a console tool that simplifies day-to-day work with Docksal.
-It provides a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush or other commands inside the **cli** container. (**Note**: fin requires cli container to function properly)
+It provides a set of most commonly used commands and operations for controlling the Docksal VM (Mac and Windows), containers, running drush or other commands inside the **cli** container.
 
 See `fin help` for a complete list.
 
-`fin` detects the environment it's launched in and will automatically start the boot2docker VM and launch containers as necessary.
-It runs on Mac/Linux directly. On Windows `fin` runs inside the Babun Shell.
+`fin` detects the environment it is launched in and will automatically start a VM and launch containers as necessary.
+`fin` runs on Mac and Linux directly. On Windows it runs inside the [Babun Shell](http://babun.github.io).
 
 
 <a name="cli"></a>
@@ -121,13 +118,7 @@ You can access **cli** container's console with `fin`:
 fin bash
 ```
 
-Tools available inside the **cli** container:
-
-- php-cli, composer, drush[6,7,8], drupal console, phpcs, phpcbf
-- ruby, bundler
-- node, nvm, npm
-- imagemagick
-- python, git, mc, mysql-client and [more](https://github.com/docksal/image-cli)
+For the list of tools available inside the **cli** container check [here](https://github.com/docksal/service-cli)
 
 
 <a name="instructions"></a>
@@ -156,4 +147,16 @@ Tools available inside the **cli** container:
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
-[Troubleshooting](https://github.com/docksal/docksal/issues)
+If something went wrong, first try one/all these steps in the order listed below.
+Check if the issue went away after each step.
+
+- Update Docksal to the latest version. See [updates](#updates) section.
+- Restart the Docksal VM (Mac and Windows only): `fin vm restart`
+- Reset Docksal system services: `fin reset system`
+- Reboot the host system (your computer or remote server)
+- Reset the Docksal VM (Mac and Windows only): `fin vm rm` then `fin vm start` (**WARNING**: backup your DB data before doing this)
+
+If you are still reading this, then go ahead and search the [issue queue](https://github.com/docksal/docksal/issues). 
+Others may have experienced the same or a similar issue and have already found a solution or a workaround.
+
+File a new issue if your problem looks to be brand new.
