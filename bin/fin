@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.9.0
+FIN_VERSION=0.10.0
 
 # Console colors
 red='\033[0;91m'
@@ -1425,9 +1425,10 @@ docker_machine_mount_smb ()
 			(echo-red "Error creating share" && exit 1)
 	done
 
+	# TODO: remove /.home mount completely once proper adjustments are made in docksal/cli
 	# Mount user's home directory
-	local HOME_PATH=$(cygpath -m $HOME | sed 's/\://')
-	smb_share_mount "$HOME_PATH" "/.home" "$PASSWORD"
+	#local HOME_PATH=$(cygpath -m $HOME | sed 's/\://')
+	#smb_share_mount "$HOME_PATH" "/.home" "$PASSWORD"
 }
 
 docker_machine_remove_smb ()
@@ -1445,7 +1446,9 @@ docker_machine_mounts ()
 	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
 		if is_mac; then
 			echo-green "Configuring NFS shares..."
-			docker_machine_mount_nfs "/Users:/Users" --no-export="$HOME:/.home"
+			# TODO: remove /.home mount completely once proper adjustments are made in docksal/cli
+			#docker_machine_mount_nfs "/Users:/Users" --no-export="$HOME:/.home"
+			docker_machine_mount_nfs "/Users:/Users"
 		elif is_windows; then
 			echo-green "Configuring SMB shares..."
 			docker_machine_mount_smb
@@ -1630,12 +1633,8 @@ ssh_add () {
 	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
 	[[ "$running" != "true" ]] && return
 
-	local ssh_path="$HOME/.ssh"
+	local ssh_path="$HOST_HOME/.ssh"
 	local key_path=""
-	# Home folder mount in boot2docker
-	if ! is_linux; then
-		ssh_path="/.home/.ssh"
-	fi
 
 	# When no arguments provided, check if ssh-agent already has at least one identity. If so, stop here.
 	docker exec docksal-ssh-agent ssh-add -l >/dev/null
