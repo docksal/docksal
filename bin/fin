@@ -2776,7 +2776,8 @@ config_show ()
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
-	echo "IP: $(fin vm ip)"
+	local IP="$(fin vm ip)"; [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
+	echo "IP: $IP"
 	echo
 	echo "MYSQL_PORT:" $(docker-compose port db 3306 2>/dev/null)
 	echo
