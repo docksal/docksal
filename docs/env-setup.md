@@ -27,3 +27,27 @@ Babun should be installed and run **as a regular user (do not use admin command 
     ```
     fin update
     ```
+
+
+## Support for Docker for Mac/Windows
+
+Docker for Mac/Windows support is experimental. Please report any issues in the [issue queue](https://github.com/docksal/docksal/issues)
+
+To try it out:
+
+1. Install Docker for [Mac](https://docs.docker.com/docker-for-mac)/[Windows](https://docs.docker.com/docker-for-windows)
+2. Install `fin` and run `fin update` (unless already installed)
+
+    If you do not have `fin` already installed, then follow steps 2 and 3 from the above **Setup** instructions.
+
+3. Run `export DOCKER_NATIVE=1` in your terminal
+    
+    This applies to a single terminal tab/session and has to be repeated for new ones).
+    All further `fin` commands should be run within the same terminal tab/session. 
+
+4. Run `fin docker info | grep "Kernel Version"`
+
+    If you see something like `Kernel Version: 4.4.27-moby` in the output, 
+    then `fin` was able to communicate with your Docker for Mac/Windows instance.
+
+5. Run `fin reset system` 
