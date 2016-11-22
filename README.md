@@ -1,5 +1,9 @@
 # Docksal
 
+[![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases)
+[![Build Status](https://img.shields.io/travis/docksal/docksal.svg?style=flat-square)](https://travis-ci.org/docksal/docksal)
+[![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
+
 Docker and Docker Compose based environments for web development.
 
     Docksal is still under active development. Breaking changes and outdated docs are very possible.
@@ -160,3 +164,5 @@ If you are still reading this, then go ahead and search the [issue queue](https:
 Others may have experienced the same or a similar issue and have already found a solution or a workaround.
 
 File a new issue if your problem looks to be brand new.
+
+Community support is available via our room on Gitter. [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
