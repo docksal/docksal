@@ -17,7 +17,7 @@ pages:
     - Extending fin with custom commands: custom-commands.md
   - Third party utililies:
     - Debugging with Xdebug and PhpStorm: xdebug.md
-    - Using PHP Code Sniffer (phpcs, phpcbf: phpcs.md
+    - Using PHP Code Sniffer (phpcs, phpcbf): phpcs.md
     - Using Blackfire profiler: blackfire.md
     - Public access via ngrok: public-access.md
     - Using Behat: behat.md

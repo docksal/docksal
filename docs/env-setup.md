@@ -15,14 +15,14 @@ Babun should be installed and run **as a regular user (do not use admin command 
 ## Setup
 
 1. Install/update [VirtualBox](https://www.virtualbox.org) (**Mac and Windows only**)
-2. Install/update `fin` (Docksal control utility)
+2. Install/update `fin` (Docksal command-line tool)
 
     ```
     sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
     sudo chmod +x /usr/local/bin/fin
     ```
 
-3. Install/update tools and configs
+3. Install/update tools and configurations
 
     ```
     fin update
@@ -35,7 +35,7 @@ Docker for Mac/Windows support is experimental. Please report any issues in the 
 
 To try it out:
 
-1. Install Docker for [Mac](https://docs.docker.com/docker-for-mac)/[Windows](https://docs.docker.com/docker-for-windows)
+1. Install Docker for [Mac](https://docs.docker.com/docker-for-mac) or [Windows](https://docs.docker.com/docker-for-windows)
 2. Install `fin` and run `fin update` (unless already installed)
 
     If you do not have `fin` already installed, then follow steps 2 and 3 from the above **Setup** instructions.

@@ -6,7 +6,7 @@ It is possible to extend fin with custom commands (per project).
 
     File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
 
-    ```bash
+```bash
     #!/bin/bash
     
     ## Runs drush updb
@@ -14,7 +14,7 @@ It is possible to extend fin with custom commands (per project).
     ## Usage:	fin updb [params to passthrough]
     
     fin drush updb $1
-    ```
+```
 
 2. Set executable bit: `chmod +x .docksal/commands/updb`
 3. Use as regular fin command: `fin updb`
@@ -25,20 +25,15 @@ It is possible to extend fin with custom commands (per project).
 
 These environment variables are available for use inside you custom command scripts:
 
-* `PROJECT_ROOT` - absolute path to `.docksal` folder  
-* `YML_PATH` - absolute path to `docker-compose.yml`. Usually equals PROJECT_ROOT but can be empty is yml is not found.
-* `DOCKER_RUNNING` - string values "true" and "false"
+* `PROJECT_ROOT` - absolute path to project folder.  
+* `DOCROOT` - relative path to the project's document root, from within the project directory.
+* `APACHE_DOCUMENTROOT` - absolute path to the document root, as seen by the web container. For 
+example, `/var/www/docroot`.
 
-Example `init` command:  
+Example `init` command for a Drupal website using drush to automate the install:  
 
 ```bash
 #!/usr/bin/env bash
-
-## Initialize site
-
-if [ -z "$YML_PATH"]; then
-	cp docker-compose.yml.dist docker-compose.yml
-fi
 
 # Start containers
 fin up
@@ -51,7 +46,7 @@ fin drush uli
 
 ## Documenting custom command
 
-fin looks for lines starting with `##` for command documentation. 
+Fin looks for lines starting with `##` for command documentation. 
 
 ```bash
 ## Custom command description
@@ -60,10 +55,10 @@ fin looks for lines starting with `##` for command documentation.
 ## 		--force		Try really hard
 ```
 
-fin will output first line of custom command documentation as a short decription in `fin help`.  
+Fin will output first line of custom command documentation as a short decription in `fin help`.  
 Rest of lines will be available as advanced help via `fin help command_name`
 
-See example of command documentation in [phpcs command](../examples/.docksal/commands/phpcs)
+See example of command documentation in [phpcs command](https://github.com/docksal/docksal/blob/develop/examples/.docksal/commands/phpcs)
 
 ## Global custom commands
 
@@ -89,4 +84,4 @@ console.log("Custom NodeJS command!")
 
 ## More examples
 
-[Custom command examples](../examples/.docksal/commands)
+[Custom command examples](https://github.com/docksal/docksal/blob/develop/examples/.docksal/commands)
