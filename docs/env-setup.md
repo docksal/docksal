@@ -38,8 +38,12 @@ To try it out:
 1. Install Docker for [Mac](https://docs.docker.com/docker-for-mac)/[Windows](https://docs.docker.com/docker-for-windows)
 2. Install `fin` and run `fin update` (unless already installed)
 
-    If you do not have `fin` already installed, then follow steps 2 and 3 from the above **Setup** instructions.
-
+    ```
+    sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
+    sudo chmod +x /usr/local/bin/fin
+    fin update
+    ```
+    
 3. Run `export DOCKER_NATIVE=1` in your terminal
     
     This applies to a single terminal tab/session and has to be repeated for new ones).
@@ -51,3 +55,17 @@ To try it out:
     then `fin` was able to communicate with your Docker for Mac/Windows instance.
 
 5. Run `fin reset system` 
+
+
+To switch back to Docker Machine + VirtualBox setup:
+
+1. `unset DOCKER_NATIVE`
+2. `fin reset system`
+
+    This will reset system services and update DNS resolution for .docksal domains (Mac)
+
+3. Run `fin docker info | grep "Kernel Version"`
+
+    `Kernel Version: 4.4.27-boot2docke` means you switched back to the VirtualBox VM (TinyCore, boot2docker)
+    `Kernel Version: 4.4.27-moby` means you are still using Docker for Mac/Windows VM (Alpine Linux Moby)
+    
