@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.10.0
+FIN_VERSION=0.10.1
 
 # Console colors
 red='\033[0;91m'
@@ -43,7 +43,7 @@ DOCKER_COMPOSE_BIN_NIX="/usr/local/bin/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
-vboxmanage="vboxmanage"
+vboxmanage="VBoxManage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
 	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 # Stacks folder
