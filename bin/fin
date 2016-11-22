@@ -1285,7 +1285,7 @@ docker_machine_mount_nfs ()
 	# Remove our own old exports
 	local exports_open="# <ds-nfs $machine_name"
 	local exports_close="# ds-nfs>"
-	local exports=$(cat /etc/exports | \
+	local exports=$(cat /etc/exports 2>/dev/null | \
 		tr "\n" "\r" | \
 		sed "s/${exports_open}.*${exports_close}//" | \
 		tr "\r" "\n"
@@ -1301,7 +1301,7 @@ docker_machine_mount_nfs ()
 	exports="${exports}${exports_close}"
 
 	local new_exports=$(echo -e "$exports")
-	local old_exports=$(cat /etc/exports)
+	local old_exports=$(cat /etc/exports 2>/dev/null)
 	if [[ "$new_exports" != "$old_exports" ]]; then
 		# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
 		local exports_test="/tmp/etc.exports.$RANDOM"
