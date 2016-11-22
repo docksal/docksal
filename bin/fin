@@ -1281,12 +1281,12 @@ docker_machine_mount_nfs ()
 	eval $(parse_params "$@")
 
 	# Get required IP addresses
-	network_name=$(VBoxManage showvminfo "$machine_name" --machinereadable | grep hostonlyadapter | cut -d \" -f2)
+	network_name=$("$vboxmanage" showvminfo "$machine_name" --machinereadable | grep hostonlyadapter | cut -d \" -f2)
 	if [[ "$network_name" == "" ]]; then
 		echo-error "Could not find virtualbox net name." && exit 1
 	fi
 	# nfs_ip is an internal IP of localhost as docker machine sees it.
-	nfs_ip=$(VBoxManage list hostonlyifs | grep "$network_name" -A 3 | grep IPAddress | cut -d ':' -f2 | xargs)
+	nfs_ip=$("$vboxmanage" list hostonlyifs | grep "$network_name" -A 3 | grep IPAddress | cut -d ':' -f2 | xargs)
 	if [[ "$nfs_ip" == "" ]]; then
 		echo-error "Could not find virtualbox internal net IP address." && exit 1
 	fi
@@ -1584,7 +1584,7 @@ vm-stats ()
 
 vm-ram () {
 	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
-	echo "Current $(VBoxManage showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
+	echo "Current $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
 		local running
 		is_docker_machine_running && running=1
@@ -1757,8 +1757,8 @@ install_tools_mac ()
 
 	if ! is_docker_native; then
 		# Check VirtualBox
-		if ! which 'VBoxManage' >/dev/null 2>&1; then
-			echo-error "VBoxManage executable was not found. Virtual Box is required to run Docksal on Mac." \
+		if ! which "$vboxmanage" >/dev/null 2>&1; then
+			echo-error "$vboxmanage executable was not found. VirtualBox is required to run Docksal on Mac." \
 				&& exit 1
 		elif ! is_vbox_version; then
 			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
@@ -1766,8 +1766,8 @@ install_tools_mac ()
 			# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
 			#	else
 			#		 Kill the default adapter and DHCP server to avoid network issues down the road
-			#		 VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
-			#		 VBoxManage hostonlyif remove vboxnet0 > /dev/null 2>&1
+			#		 "$vboxmanage" dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
+			#		 "$vboxmanage" hostonlyif remove vboxnet0 > /dev/null 2>&1
 		fi
 	fi
 
@@ -2634,10 +2634,10 @@ sysinfo ()
 
 	if which "$vboxmanage" >/dev/null 2>&1; then
 		echo "███  VIRTUAL BOX"
-		VBoxManage --version
+		"$vboxmanage" --version
 
 		echo "███  NETWORK INTERFACES"
-		VBoxManage list hostonlyifs
+		"$vboxmanage" list hostonlyifs
 	fi
 
 	if is_docker_machine_running; then
