@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.10.0
+FIN_VERSION=0.10.1
 
 # Console colors
 red='\033[0;91m'
@@ -43,7 +43,7 @@ DOCKER_COMPOSE_BIN_NIX="/usr/local/bin/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
-vboxmanage="vboxmanage"
+vboxmanage="VBoxManage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
 	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 # Stacks folder
@@ -812,7 +812,7 @@ show_help ()
 
 	echo
 	printh "alias" "Create/remove aliases (${yellow}fin help alias${NC})"
-	printh "config" "Display effective project configuration"
+	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version	(v, -v)" "Print fin version. [v, -v] - prints short version"
@@ -1011,6 +1011,16 @@ show_help_alias ()
 	printh "fin delete dev"	"Delete 'dev' alias"
 	echo
 	echo "Aliases are effectively symlinks stored in $CONFIG_ALIASES"
+}
+
+show_help_config ()
+{
+	echo-green "fin config <command> - Display/generate project configuration"
+	echo
+	echo-green "Commands:"
+	printh "show" "Display effective configuration for the project"
+	printh "generate" "Generate Docksal configuration for the project"
+	echo
 }
 
 # Display fin version
@@ -1271,12 +1281,12 @@ docker_machine_mount_nfs ()
 	eval $(parse_params "$@")
 
 	# Get required IP addresses
-	network_name=$(VBoxManage showvminfo "$machine_name" --machinereadable | grep hostonlyadapter | cut -d \" -f2)
+	network_name=$("$vboxmanage" showvminfo "$machine_name" --machinereadable | grep hostonlyadapter | cut -d \" -f2)
 	if [[ "$network_name" == "" ]]; then
 		echo-error "Could not find virtualbox net name." && exit 1
 	fi
 	# nfs_ip is an internal IP of localhost as docker machine sees it.
-	nfs_ip=$(VBoxManage list hostonlyifs | grep "$network_name" -A 3 | grep IPAddress | cut -d ':' -f2 | xargs)
+	nfs_ip=$("$vboxmanage" list hostonlyifs | grep "$network_name" -A 3 | grep IPAddress | cut -d ':' -f2 | xargs)
 	if [[ "$nfs_ip" == "" ]]; then
 		echo-error "Could not find virtualbox internal net IP address." && exit 1
 	fi
@@ -1285,7 +1295,7 @@ docker_machine_mount_nfs ()
 	# Remove our own old exports
 	local exports_open="# <ds-nfs $machine_name"
 	local exports_close="# ds-nfs>"
-	local exports=$(cat /etc/exports | \
+	local exports=$(cat /etc/exports 2>/dev/null | \
 		tr "\n" "\r" | \
 		sed "s/${exports_open}.*${exports_close}//" | \
 		tr "\r" "\n"
@@ -1301,7 +1311,7 @@ docker_machine_mount_nfs ()
 	exports="${exports}${exports_close}"
 
 	local new_exports=$(echo -e "$exports")
-	local old_exports=$(cat /etc/exports)
+	local old_exports=$(cat /etc/exports 2>/dev/null)
 	if [[ "$new_exports" != "$old_exports" ]]; then
 		# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
 		local exports_test="/tmp/etc.exports.$RANDOM"
@@ -1574,7 +1584,7 @@ vm-stats ()
 
 vm-ram () {
 	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
-	echo "Current $(VBoxManage showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
+	echo "Current $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
 		local running
 		is_docker_machine_running && running=1
@@ -1747,8 +1757,8 @@ install_tools_mac ()
 
 	if ! is_docker_native; then
 		# Check VirtualBox
-		if ! which 'VBoxManage' >/dev/null 2>&1; then
-			echo-error "VBoxManage executable was not found. Virtual Box is required to run Docksal on Mac." \
+		if ! which "$vboxmanage" >/dev/null 2>&1; then
+			echo-error "$vboxmanage executable was not found. VirtualBox is required to run Docksal on Mac." \
 				&& exit 1
 		elif ! is_vbox_version; then
 			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
@@ -1756,8 +1766,8 @@ install_tools_mac ()
 			# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
 			#	else
 			#		 Kill the default adapter and DHCP server to avoid network issues down the road
-			#		 VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
-			#		 VBoxManage hostonlyif remove vboxnet0 > /dev/null 2>&1
+			#		 "$vboxmanage" dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
+			#		 "$vboxmanage" hostonlyif remove vboxnet0 > /dev/null 2>&1
 		fi
 	fi
 
@@ -2624,10 +2634,10 @@ sysinfo ()
 
 	if which "$vboxmanage" >/dev/null 2>&1; then
 		echo "███  VIRTUAL BOX"
-		VBoxManage --version
+		"$vboxmanage" --version
 
 		echo "███  NETWORK INTERFACES"
-		VBoxManage list hostonlyifs
+		"$vboxmanage" list hostonlyifs
 	fi
 
 	if is_docker_machine_running; then
@@ -2776,7 +2786,8 @@ config_show ()
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
-	echo "IP: $(fin vm ip)"
+	local IP="$(fin vm ip)"; [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
+	echo "IP: $IP"
 	echo
 	echo "MYSQL_PORT:" $(docker-compose port db 3306 2>/dev/null)
 	echo
