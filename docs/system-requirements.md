@@ -16,7 +16,7 @@ While Docker is supported natively on Linux, Mac and Windows users will need a V
 
 There are two main options to get Docker containers running on Mac or Windows:
 
-1. Docker Machine + [VirtualBox](https://www.virtualbox.org) 5.0+ (mature, battle-tested)
-2. Docker for [Mac](https://docs.docker.com/docker-for-mac)/[Windows](https://docs.docker.com/docker-for-windows) (newer, experimental)
+1) Docker Machine + [VirtualBox](https://www.virtualbox.org) 5.0+ (mature, battle-tested)  
+2) Docker for [Mac](https://docs.docker.com/docker-for-mac)/[Windows](https://docs.docker.com/docker-for-windows) (newer, experimental)
 
 Please refer to the [setup instructions](env-setup.md#setup) for further steps.

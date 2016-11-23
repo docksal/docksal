@@ -1,7 +1,6 @@
 site_name: Docksal Documentation
 theme: readthedocs
 repo_url: https://github.com/docksal/docksal
-include_search: true
 extra_css:
   - css/extra.css
 pages:

@@ -19,10 +19,11 @@ make these changes you must have project configuration files. See [Project Setup
 
 To switch to a different image tag:
 
-1 - open the project's `.docksal/docksal.yml` file  
-2 - under the `cli` section, add the `image` property.
+1) open the project's `.docksal/docksal.yml` file  
+2) under the `cli` section, add the `image` property.
 
 By default, it looks like this:
+
 ```
 # CLI node
   cli:
@@ -32,6 +33,7 @@ By default, it looks like this:
 ```
 
 Add the `image` property to override the docker image used:
+
 ```
 # CLI node
   cli:
@@ -40,9 +42,9 @@ Add the `image` property to override the docker image used:
     image: docksal/cli:1.0-php7
 ```
 
-See list of available tags below and on [Docker Hub](https://hub.docker.com/r/docksal/cli/tags/).
+See the list of available tags below and on [Docker Hub](https://hub.docker.com/r/docksal/cli/tags/).
 
-3 - run `fin up`. This will update the project's configuration.
+3) run `fin up`. This will update the project's configuration.
 
 Available PHP versions:
 

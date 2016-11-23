@@ -2,7 +2,7 @@
 
 It is possible to extend fin with custom commands (per project).
 
-1 - Create a custom command
+1) Create a custom command
 
 File `[project dir]/.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
 
@@ -16,10 +16,10 @@ File `[project dir]/.docksal/commands/updb` (Notice **no extension**. Script nam
 fin drush updb $1
 ```
 
-2 - Set executable bit: `chmod +x .docksal/commands/updb`  
-3 - Use as regular fin command: `fin updb`  
-4 - Passing parameters also works: `fin updb -y`  
-5 - See command description in `fin help` and command full help via `fin help updb` 
+2) Set executable bit: `chmod +x .docksal/commands/updb`  
+3) Use as regular fin command: `fin updb`  
+4) Passing parameters also works: `fin updb -y`  
+5) See command description in `fin help` and command full help via `fin help updb` 
 
 ## Available variables
 

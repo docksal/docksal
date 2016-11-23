@@ -15,10 +15,10 @@ Please review [system requirements](system-requirements.md) before proceeding wi
 <a name="setup"></a>
 ## Setup
 
-1. [Docksal environment setup](env-setup.md)
+1) [Docksal environment setup](env-setup.md)
 
-    This is done **one time per host** and should be performed by everyone.
+This is done **one time per host** and should be performed by everyone.
 
-2. [Configure a project to use Docksal](project-setup.md)
+2) [Configure a project to use Docksal](project-setup.md)
 
-    This is done **one time per project** and should be performed by the project TL.  
+This is done **one time per project** and should be performed by the person who creates the project (if it is shared.)  
