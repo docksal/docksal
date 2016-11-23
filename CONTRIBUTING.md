@@ -26,8 +26,8 @@ Listing detailed steps to reproduce an issue will also help us understand the pr
 
 We are sticking with [GitHub Flow](https://guides.github.com/introduction/flow/) as our git workflow.
 
-- `develop` - main branch, bleeding edge, all PRs should be submitted against it
-- `master` - stable branch, matches the latest release at all times
+- `develop` - development branch, all PRs should be submitted against it
+- `master` - main stable branch, matches the latest release at all times
 - `feature/feature-name` - isolated/experimental feature development happens here
 
 To contribute to the project:
