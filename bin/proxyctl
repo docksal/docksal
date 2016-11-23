@@ -55,16 +55,16 @@ _start ()
 	# No match if project_name is empty here.
 	if [[ "$project_name" == "" ]]; then
 		if [[ "$container_id" == "" ]]; then
+			echo "ERROR: No matching projects or containers found for virtual host ${vhost}." \
+				&& echo "Starting docker-gen..." \
+				&& /usr/bin/supervisorctl start docker-gen \
+				&& return 1
+		else
 			echo "Starting single container $container_id..." \
 				&& /usr/local/bin/docker start "$container_id" \
 				&& echo "Starting docker-gen..." \
 				&& /usr/bin/supervisorctl start docker-gen \
 				&& return 0
-		else
-			echo "ERROR: No matching projects or containers found for virtual host ${vhost}." \
-				&& echo "Starting docker-gen..." \
-				&& /usr/bin/supervisorctl start docker-gen \
-				&& return 1
 		fi
 	else
 
