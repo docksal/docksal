@@ -2,24 +2,24 @@
 
 It is possible to extend fin with custom commands (per project).
 
-1. Create a custom command
+1 - Create a custom command
 
-    File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
+File `[project dir]/.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
 
 ```bash
-    #!/bin/bash
+#!/bin/bash
     
-    ## Runs drush updb
-    ##
-    ## Usage:	fin updb [params to passthrough]
-    
-    fin drush updb $1
+## Runs drush updb
+##
+## Usage: fin updb [params to passthrough]
+ 
+fin drush updb $1
 ```
 
-2. Set executable bit: `chmod +x .docksal/commands/updb`
-3. Use as regular fin command: `fin updb`
-4. Passing parameters also works: `fin updb -y`
-5. See command description in `fin help` and command full help via `fin help updb` 
+2 - Set executable bit: `chmod +x .docksal/commands/updb`  
+3 - Use as regular fin command: `fin updb`  
+4 - Passing parameters also works: `fin updb -y`  
+5 - See command description in `fin help` and command full help via `fin help updb` 
 
 ## Available variables
 
@@ -50,19 +50,19 @@ Fin looks for lines starting with `##` for command documentation.
 
 ```bash
 ## Custom command description
-## Usage:	fin mycommand [--force]
+## Usage: fin mycommand [--force]
 ## Parameters:
-## 		--force		Try really hard
+## --force Try really hard
 ```
 
 Fin will output first line of custom command documentation as a short decription in `fin help`.  
 Rest of lines will be available as advanced help via `fin help command_name`
 
-See example of command documentation in [phpcs command](https://github.com/docksal/docksal/blob/develop/examples/.docksal/commands/phpcs)
+See an example of command documentation in the phpcs command (examples/.docksal/commands/phpcs located in the [Docksal project](https://github.com/docksal/docksal).)
 
 ## Global custom commands
 
-Put your command to `~/.docksal/commands` and it will be accessible globally.  
+Put your command in `~/.docksal/commands` and it will be accessible globally.  
 Useful for tedious tasks that you need in every project.
 
 ## Advanced use
@@ -84,4 +84,4 @@ console.log("Custom NodeJS command!")
 
 ## More examples
 
-[Custom command examples](https://github.com/docksal/docksal/blob/develop/examples/.docksal/commands)
+Check the commands directory (examples/.docksal/commands) located in the [Docksal project](https://github.com/docksal/docksal).

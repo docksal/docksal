@@ -8,19 +8,17 @@ Docker and Docker Compose based environment.
 - [Drupal 8 sample project](https://github.com/docksal/drupal8)
 - [WordPress sample project](https://github.com/docksal/wordpress)
 
-
 ## System requirements
 
 Please review [system requirements](system-requirements.md) before proceeding with the setup.
-
 
 <a name="setup"></a>
 ## Setup
 
 1. [Docksal environment setup](env-setup.md)
 
-This is done **one time per host** and should be performed by everyone.  
+    This is done **one time per host** and should be performed by everyone.
 
 2. [Configure a project to use Docksal](project-setup.md)
 
-This is done **one time per project** and should be performed by the project TL.  
+    This is done **one time per project** and should be performed by the project TL.  

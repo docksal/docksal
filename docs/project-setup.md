@@ -8,45 +8,45 @@ Presence of the `.docksal` folder in the repo is a good indicator a project is a
 
 ## Default setup
 
-1 - Create a project directory.
+1. Create a project directory.
 
-`mkdir ~/projects/myproject`
-`cd ~/projects/myproject`  
+    `mkdir ~/projects/myproject`  
+    `cd ~/projects/myproject`  
 
-2 - Create an empty `.docksal` directory. All project-specific configurations and commands
+2. Create an empty `.docksal` directory. All project-specific configurations and commands
 will be stored in this directory.
 
-`mkdir .docksal`
+    `mkdir .docksal`
 
-3 - Start the project containers.
+3. Start the project containers.
 
-`fin start`
+    `fin start`
 
-You should see output like the following:
+    You should see output like the following:
 
-```
-Starting services...
-Creating network "myproject_default" with the default driver
-Creating volume "myproject_project_root" with local driver
-Creating volume "myproject_host_home" with local driver
-Creating myproject_cli_1
-Creating myproject_db_1
-Creating myproject_web_1
-Changing user id in cli to 501 to match host user id...
-Resetting permissions on /var/www...
-Restarting php daemon...
-Connected vhost-proxy to "myproject_default" network.
-```
+    ```
+    Starting services...
+    Creating network "myproject_default" with the default driver
+    Creating volume "myproject_project_root" with local driver
+    Creating volume "myproject_host_home" with local driver
+    Creating myproject_cli_1
+    Creating myproject_db_1
+    Creating myproject_web_1
+    Changing user id in cli to 501 to match host user id...
+    Resetting permissions on /var/www...
+    Restarting php daemon...
+    Connected vhost-proxy to "myproject_default" network.
+    ```
 
-Your project site is now running. If you visit the project url `http://myproject.docksal` you will get a 404 error, because nothing is there yet!
+    Your project site is now running. If you visit the project url `http://myproject.docksal` you will get a 404 error, because nothing is there yet!
 
-4 - Setup your website.
+4. Setup your website.
 
-To have a working site, you need to add a document root and start adding files.
+    To have a working site, you need to add a document root and start adding files.
 
-`mkdir docroot`
+    `mkdir docroot`
 
-In this docroot folder you can add any project files you want. A PHP-based CMS, flat HTML, a pure PHP project, it does not matter.
+    In this docroot folder you can add any project files you want. A PHP-based CMS, flat HTML, a pure PHP project, it does not matter.
 
 ## Checking the default configuration
 

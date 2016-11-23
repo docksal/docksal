@@ -9,13 +9,12 @@ When the following configuration files are added within a project, they can be u
 - `.docksal/etc/php/php-cli.ini` - command line PHP settings overrides
 - `.docksal/etc/mysql/my.cnf` - MySQL settings overrides
 
-Copy [examples/.docksal/etc](https://github.com/docksal/docksal/tree/develop/examples/.docksal/etc) into the `/.docksal` folder in your project repo and modify as necessary.
+Copy `examples/.docksal/etc` from the [Docksal project](https://github.com/docksal/docksal) into the `.docksal` folder in your project repo and modify as necessary.
 
 <a name="php-versions"></a>
 ## Using different PHP versions
 
-Switching PHP versions is done via the `docksal/drupal-cli` docker image tags. See 
-which images are available on [Docker Hub](https://hub.docker.com/r/docksal/cli/). To
+Switching PHP versions is done via the `docksal/drupal-cli` docker image tags. See which images are available on [Docker Hub](https://hub.docker.com/r/docksal/cli/). To
 make these changes you must have project configuration files. See [Project Setup](project-setup.md)
 
 To switch to a different image tag:
@@ -39,7 +38,6 @@ Add the `image` property to override the docker image used:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
     image: docksal/cli:1.0-php7
-
 ```
 
 See list of available tags below and on [Docker Hub](https://hub.docker.com/r/docksal/cli/tags/).
@@ -48,8 +46,8 @@ See list of available tags below and on [Docker Hub](https://hub.docker.com/r/do
 
 Available PHP versions:
 
-- `5.6` (`image: docksal/cli:stable`) - default
-- `7.0` (`image: docksal/cli:1.0-php7`) - experimental
+- `5.x` (`image: docksal/cli:1.0-php5`) - default
+- `7.x` (`image: docksal/cli:1.0-php7`) - experimental
 
 <a name="mysql-versions"></a>
 ## Using different MySQL versions
@@ -61,6 +59,6 @@ modify the `db` configuration. You can find tagged `db` images on [Docker Hub](h
 
 When done, always remember to run `fin up` to update the project's configuration.
 
-- `5.5` (`image: docksal/db:1.0-mysql-5.5`) - default.
+- `5.5` (`image: docksal/db:1.0-mysql-5.5`)
 - `5.6` (`image: docksal/db:1.0-mysql-5.6`)
 - `5.7` (`image: docksal/db:1.0-mysql-5.7`)
