@@ -65,5 +65,5 @@ This will reset system services and update DNS resolution for .docksal domains (
 
 3) Run `fin docker info | grep "Kernel Version"`
 
-`Kernel Version: 4.4.27-boot2docke` means you switched back to the VirtualBox VM (TinyCore, boot2docker)
+`Kernel Version: 4.4.27-boot2docker` means you switched back to the VirtualBox VM (TinyCore, boot2docker)
 `Kernel Version: 4.4.27-moby` means you are still using Docker for Mac/Windows VM (Alpine Linux Moby)
