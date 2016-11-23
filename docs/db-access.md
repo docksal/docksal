@@ -1,51 +1,40 @@
 # MySQL DB access for external tools
 
-MySQL port is not exposed in the `db` container by default.
+MySQL service in the `db` container is exposed at a random port by default.
 This is done to avoid port conflicts if running multiple Docksal powered projects (multisites don't count).
 
-Add the following lines in the `db` service definition in `docksal.yml` to make port **3306** exposed:
+To view the randomly assigned port value run `fin config` and look for `MYSQL_PORT:`.  
+You can connect to MySQL in the db container on `192.168.64.100:<random-port-value>`.  
+Keep in mind, that the random port value will change every time the DB container is restarted.
+
+To have a static port assigned, put this line into `.docksal/docksal-local.env` file 
+and set '<host-port>' to a **unique** port number (unique across all Docksal powered projects on your host): 
 
 ```
-ports:
-  - "3306:3306"
+MYSQL_PORT='<host-port>:3306'
 ```
 
-Run `fin up`.
-
-You will now be able to connect to MySQL in the db container on `192.168.64.100:3306`
-
-Please keep in mind that two db containers will not be able to use the same port (`3306`) on the host.  
-To avoid port conflicts with multiple Docksal powered projects give each project a unique port assignments.
+Examples
 
 **Project 1**
 
 ```
-# DB node
-db:
-  ...
-  ports:
-    - "3306:3306"
-  ...
+MYSQL_PORT='33061:3306'
 ```
 
-MySQL endpoint: `192.168.64.100:3306`
+MySQL endpoint: `192.168.64.100:33061`
 
 **Project 2**
 
-````
-# DB node
-db:
-  ...
-  ports:
-    - "3307:3306"
-  ...
-````
+```
+MYSQL_PORT='33062:3306'
+```
 
-MySQL endpoint: `192.168.64.100:3307`
+MySQL endpoint: `192.168.64.100:33062`
 
 When connecting to the MySQL DB using external tools use the following credentials:
 
 ```
 Username: admin
-Password: admin123 (or MYSQL_ROOT_PASSWORD variable in docker-compose.yml)
+Password: root (or `MYSQL_ROOT_PASSWORD` variable in `.docksal/docksal.env`)
 ```
