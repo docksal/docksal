@@ -12,7 +12,7 @@ From your project's root folder (where `.docksal` folder is):
 
     ```
     mkdir -p .docksal/commands
-    curl https://raw.githubusercontent.com/docksal/docksal/develop/examples/.docksal/commands/phpcs -ko .docksal/commands/phpcs
+    curl https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/phpcs -ko .docksal/commands/phpcs
     chmod +x .docksal/commands/phpcs
     ```
 2. Use as `fin phpcs docroot/sites/all/modules/custom` or any path you want to run sniffer against. See `fin help phpcs`
