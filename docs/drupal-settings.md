@@ -9,7 +9,7 @@ Some settings are required, others are optional or enahncements. Please review c
 Containers do not have static IP addresses assigned.  DB connection settings can be obtained from the environment variables.
 
 Below are sample settings for Drupal 7 and Drupal8.  
-If you change the DB node name in `docker-compose.yml` (e.g. `mysql` instead of `db`) then this has to be updated, since variable names will change as well.
+If you change the DB node name in `docksal.yml` (e.g. `mysql` instead of `db`) then this has to be updated, since variable names will change as well.
 
 **Drupal 7 and 8**
 
