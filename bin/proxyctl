@@ -124,6 +124,23 @@ _stop ()
 	done
 }
 
+_networks ()
+{
+	project_names=$(/usr/local/bin/docker ps \
+		--filter "label=io.docksal.virtual-host" \
+		--format '{{.Label "com.docker.compose.project"}}')
+	for project_name in $project_names; do
+		local network="${project_name}_default"
+		# Making sure the network exists
+		/usr/local/bin/docker network create "$network" >/dev/null 2>&1
+		# Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
+		/usr/local/bin/docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
+		if [[ $? == 0 ]]; then
+			echo "Connected proxy to network: ${network}."
+		fi
+	done
+}
+
 _cron ()
 {
 	_stop
@@ -154,6 +171,9 @@ case "$1" in
 		;;
 	notify)
 		_notify
+		;;
+	networks)
+		_networks
 		;;
 	*)
 		echo "Usage: $0 start <vhost>|stop"

@@ -41,6 +41,7 @@ COPY conf/supervisord.conf /etc/supervisor.d/docker-gen.ini
 
 COPY conf/crontab /var/spool/cron/crontabs/root
 COPY bin/proxyctl /usr/local/bin/proxyctl
+COPY bin/startup.sh /usr/local/bin/startup.sh
 
 COPY www /var/www/proxy
 
@@ -48,5 +49,7 @@ COPY www /var/www/proxy
 ENV INACTIVITY_TIMEOUT 24h
 # Disable debug output by default
 ENV PROXY_DEBUG 0
+
+ENTRYPOINT ["/usr/local/bin/startup.sh"]
 
 CMD ["supervisord", "-n"]
