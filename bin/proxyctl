@@ -6,82 +6,106 @@ _start ()
 {
 	local vhost="$1"
 	[[ "$vhost" == "" ]] &&  echo "ERROR: Empty virtual host." && return 1
-	
+
+  echo "Stoping docker-gen..."
+	/usr/bin/supervisorctl stop docker-gen
+
 	# Match vhost to a web container (exact match only)
 	local project_name
+  local container_id
 	project_name=$(/usr/local/bin/docker ps -a \
-		--filter "label=com.docker.compose.service=web" \
 		--filter "label=io.docksal.virtual-host=$vhost" \
+		--filter "label=com.docker.compose.project" \
 		--format '{{.Label "com.docker.compose.project"}}')
-	
+
 	# If exact match was not found, then we have multiple domains/wildcards (e.g. example.com,*.example.com,example2.com)
 	# More complex processing goes below.
 	if [[ "$project_name" == "" ]]; then
-		# Get a list of all (running and stopped) web containers and their virtual host label values
-		local webs=$(/usr/local/bin/docker ps -a \
-		--filter "label=com.docker.compose.service=web" \
-		--format '{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.virtual-host"}}')
-		
-		# Look for a matching label among all webs
-		for web in $webs; do
-			# Read variables
-			IFS=':' read web_project_name web_project_vhost <<< "$web";
-			# Split web_project_vhost
-			IFS=',' read -a web_project_vhost_arr <<< "$web_project_vhost"
-			for i in "${web_project_vhost_arr[@]}"; do
-				# Turn domain name into a regular expression (e.g. *.example.com => .*\.example\.com)
-				i_reg=$(echo $i | sed "s/\./\\\\./g" | sed "s/\*/\.\*/g")
-				# Match vhost using the regular expression we created
-				echo "$vhost" | grep "^$i_reg$" >/dev/null
-				# Store match and break
-				[[ $? -eq 0 ]] && project_name="$web_project_name" && break
+		container_id=$(/usr/local/bin/docker ps -a \
+			--filter "label=io.docksal.virtual-host=$vhost" \
+			--format '{{.ID }}')
+		if [[ "$container_id" == "" ]]; then
+			# Get a list of all (running and stopped) web containers and their virtual host label values
+			local webs=$(/usr/local/bin/docker ps -a \
+				--filter "label=io.docksal.virtual-host" \
+				--format '{{ .ID }}:{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.virtual-host"}}')
+
+			# Look for a matching label among all webs
+			for web in $webs; do
+				# Read variables
+				IFS=':' read web_container_id web_project_name web_project_vhost <<< "$web";
+				# Split web_project_vhost
+				IFS=',' read -a web_project_vhost_arr <<< "$web_project_vhost"
+				for i in "${web_project_vhost_arr[@]}"; do
+					# Turn domain name into a regular expression (e.g. *.example.com => .*\.example\.com)
+					i_reg=$(echo $i | sed "s/\./\\\\./g" | sed "s/\*/\.\*/g")
+					# Match vhost using the regular expression we created
+					echo "$vhost" | grep "^$i_reg$" >/dev/null
+					# Store match and break
+					[[ $? -eq 0 ]] && project_name="$web_project_name" && container_id="$web_container_id" && break
+				done
+				# Break if match was found
+				if [[ "$project_name" != "" ]] || [[ "$container_id" != "" ]]; then
+					break
+				fi
 			done
-			# Break if match was found
-			[[ "$project_name" != "" ]] && break
-		done
+		fi
 	fi
 
 	# No match if project_name is empty here.
-	[[ "$project_name" == "" ]] && echo "ERROR: No matching projects found for virtual host ${vhost}." && return 1
+	if [[ "$project_name" == "" ]]; then
+		if [[ "$container_id" == "" ]]; then
+			echo "Starting single container $container_id..." \
+				&& /usr/local/bin/docker start "$container_id" \
+				&& echo "Starting docker-gen..." \
+				&& /usr/bin/supervisorctl start docker-gen \
+				&& return 0
+		else
+			echo "ERROR: No matching projects or containers found for virtual host ${vhost}." \
+				&& echo "Starting docker-gen..." \
+				&& /usr/bin/supervisorctl start docker-gen \
+				&& return 1
+		fi
+	else
 
-	echo "Starting containers for $project_name..."
-	# Dirty hack to avoid using docker-compose and still be able to launch containers with dependencies up to 3 levels deep.
-	for i in `seq 1 3`; do
-		echo "Pass #$i..."
-		/usr/local/bin/docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs /usr/local/bin/docker start
-	done
+		# Connecting/re-connecting vhost-ptoxy to the project network
+		local network="${project_name}_default"
+		# Making sure the network exists
+		/usr/local/bin/docker network create "$network" >/dev/null 2>&1
+		# Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
+		/usr/local/bin/docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
+		if [[ $? == 0 ]]; then
+			echo "Connected proxy to network: ${network}."
+		fi
 
-    # Connecting/re-connecting vhost-ptoxy to the project network
-    local network="${project_name}_default"
-    # Making sure the network exists
-    /usr/local/bin/docker network create "$network" >/dev/null 2>&1
-    # Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
-    /usr/local/bin/docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
-    if [[ $? == 0 ]]; then
-      echo "Connected proxy to network: ${network}."
-    fi
-    # Trigger docker-gen with a dummy container to refresh nginx configuration.
-    # This covers a case when containers are already running, but proxy was just created and connected to project networks.
-    echo "Triggering docker-gen..."
-    /usr/local/bin/docker run --rm busybox
+		echo "Starting containers for $project_name..."
+		# Dirty hack to avoid using docker-compose and still be able to launch containers with dependencies up to 3 levels deep.
+		for i in `seq 1 3`; do
+			echo "Pass #$i..."
+			/usr/local/bin/docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs /usr/local/bin/docker start
+		done
+
+		echo "Starting docker-gen..."
+		/usr/bin/supervisorctl start docker-gen
+	fi
 }
 
 # Stop containers for inactive projects
 _stop ()
 {
 	INACTIVITY_TIMEOUT="${INACTIVITY_TIMEOUT:-30m}"
-	
+
 	# Get a list of running web containers
 	local running_webs=$(/usr/local/bin/docker ps \
 		--filter "label=com.docker.compose.service=web" \
 		--format '{{.ID}}:{{.Label "com.docker.compose.project"}}')
-	
+
 	for running_web in $running_webs; do
 		# Read variables
 		IFS=':' read container_id project_name <<< "$running_web";
 		# Skip containers with empty values
 		[[ "$project_name" == "" ]] && continue
-		
+
 		# See if there was any recent container activity (entries in container logs)
 		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $INACTIVITY_TIMEOUT $container_id)" != "" ]]; then
 			# Active
