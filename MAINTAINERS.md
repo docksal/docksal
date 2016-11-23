@@ -2,8 +2,8 @@
 
 ## Maintainers
 
-Leonid Makarov, [lmakarov](https://github.com/lmakarov)
-Alexei Chekulaev, [achekulaev](https://github.com/achekulaev)
+- Leonid Makarov, [lmakarov](https://github.com/lmakarov)
+- Alexei Chekulaev, [achekulaev](https://github.com/achekulaev)
 
 ## Contributors
 
