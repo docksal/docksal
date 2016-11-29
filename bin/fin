@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.11.1
+FIN_VERSION=0.11.2
 
 # Console colors
 red='\033[0;91m'
@@ -1330,13 +1330,31 @@ docker_machine_mount_nfs ()
 			return 1
 		fi
 
-		echo-green "Writing /etc/exports..."
+		echo "Writing /etc/exports..."
 		echo -e "$exports" | sudo tee /etc/exports >/dev/null
-		echo-green "Restarting nfsd..."
+
+		# Start/Restart nfsd
+		ps aux | grep nfsd | grep -v grep >/dev/null
+		local timeout=2
+		if [ $? -eq 0 ]; then
+			echo-green "Restarting nfsd..."
+			timeout=2
+		else
+			echo-green "Starting nfsd..."
+			timeout=5 # give more time for cold start
+		fi
 		sudo nfsd restart
-		sleep 2
+		sleep ${timeout}
 	else
-		echo "Already configured"
+		# /etc/export already contains what is required
+		echo "NFS shares are already configured"
+		# start nfsd if not running
+		ps aux | grep nfsd | grep -v grep >/dev/null
+		if [ ! $? -eq 0 ]; then
+			echo-green "Starting nfsd..."
+			sudo nfsd start
+			sleep 5
+		fi
 	fi
 
 	# Mount exported folders
@@ -1344,12 +1362,13 @@ docker_machine_mount_nfs ()
 	# Start NFS client on docker-machine
 	docker-machine ssh "$machine_name" \
 		"sudo /usr/local/etc/init.d/nfs-client start"
+	sleep 1
 	for share in ${ARGV[@]}; do
 		local share_=(${share//:/ });
 		local share_export="${share_[0]}"
 		local share_mount="${share_[1]}"
 		# Add new exports
-		echo "Mounting local $share_export to $share_mount..."
+		echo "Mounting local $share_export to $share_mount"
 		docker-machine ssh "$machine_name" \
 			"sudo mkdir -p $share_mount ;
 			sudo umount $share_mount 2>/dev/null ;
@@ -1515,7 +1534,7 @@ vm ()
 			fi
 			;;
 		restart)
-			docker_machine_stop && docker_machine_start
+			docker_machine_stop; docker_machine_start
 			;;
 		status)
 			shift
