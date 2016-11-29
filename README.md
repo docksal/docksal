@@ -86,18 +86,26 @@ Vagrant machine is not going to be used anymore and should be deleted.
 6. Run `fin cleanup` to delete Drude files and backups
 
 
-## Uninstalling
+## Uninstallation
 
 The steps below will remove the Docksal VM and cleanup Docksal stuff.
 
 ```
-fin vm rm
+fin vm remove
 rm -rf ~/.docksal
 rm -f /usr/local/bin/fin
 ```
 
-Docker (on Linux), Docker for Mac/Windows and VirtualBox are not automatically removed.   
+Docker for Mac/Windows and VirtualBox are not automatically removed. You can remove them manually on Mac or use uninstaller on Windows.
 
+To remove Docker on Ubuntu Linux you need to:
+
+1. Follow [Docker Uninstallation](https://docs.docker.com/engine/installation/linux/ubuntulinux/#/uninstallation) instruction
+2. Cleanup tools:
+```
+sudo rm /usr/local/bin/docker-compose
+sudo rm /usr/local/bin/docker-machine
+```
 
 <a name="fin"></a>
 ## Docksal Fin (fin)
