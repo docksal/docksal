@@ -1335,8 +1335,7 @@ docker_machine_mount_nfs ()
 		echo -e "$exports" | sudo tee /etc/exports >/dev/null
 
 		# Start/Restart nfsd
-		ps aux | grep nfsd | grep -v grep >/dev/null
-		local timeout=2
+		ps aux | grep /sbin/nfsd | grep -v grep >/dev/null
 		if [ $? -eq 0 ]; then
 			echo-green "Restarting nfsd..."
 			sudo nfsd restart
