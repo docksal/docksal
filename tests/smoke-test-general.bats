@@ -83,7 +83,7 @@ teardown() {
 	run fin mysql-import default ../dump.sql --force
 	echo "$output" | grep "Truncating"
 	echo "$output" | grep "Importing"
-	echo "$output" | grep "ok"
+	echo "$output" | grep "OK"
 
 	# Check if site is available and it's name is correct
 	run curl -sL http://drupal8.docksal
