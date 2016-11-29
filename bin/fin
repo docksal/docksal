@@ -2014,15 +2014,15 @@ update_tools ()
 {
 	is_windows && \
 		install_tools_windows && \
-		return
+		return $?
 
 	is_linux && \
 		install_tools_ubuntu && \
-		return
+		return $?
 
 	is_mac && \
 		install_tools_mac && \
-		return
+		return $?
 }
 
 update_config_files ()
@@ -2221,6 +2221,8 @@ update ()
 
 	# [Update - 4] Update third party tools (if possible)
 	update_tools
+
+	[ $? -eq 0 ] && echo-green "Update finished"
 }
 
 check_for_updates ()
