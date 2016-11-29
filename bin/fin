@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.11.0
+FIN_VERSION=0.11.1
 
 # Console colors
 red='\033[0;91m'
@@ -1864,7 +1864,7 @@ install_tools_windows ()
 		# Install Docker Machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -ksS "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
+		curl -ksSL "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
 			chmod +x "$DOCKER_MACHINE_BIN.exe"
 		if_failed "Check file permissions and internet connection."
 	fi
@@ -2020,7 +2020,7 @@ update_config_files ()
 		cd "$CONFIG_STACKS_DIR" || exit 1;
 		for f in ${files_to_download}; do
 			echo -n "  $(basename ${f})..."
-			curl -kfsSO "$f"
+			curl -kfsSLO "$f"
 			# exit subshell with error if download failed
 			[ ! $? -eq 0 ] && exit 1
 			# otherwise print ok
@@ -2150,7 +2150,7 @@ update ()
 		testing_warn
 		echo-green "Updating fin..."
 		local new_fin
-		new_fin=$(curl -kfsS "$URL_FIN?r=$RANDOM")
+		new_fin=$(curl -kfsSL "$URL_FIN?r=$RANDOM")
 		if_failed_error "fin download failed."
 
 		# Check if fin update is required and whether it is a major version
@@ -2224,7 +2224,7 @@ check_for_updates ()
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$CONFIG_LAST_CHECK"
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_fin=$(curl -kfs --connect-timeout 1 --max-time 3 "$URL_FIN?r=$RANDOM")
+	new_fin=$(curl -kfsL --connect-timeout 1 --max-time 3 "$URL_FIN?r=$RANDOM")
 	new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
 	if [[ $(ver_to_int "$new_version") > $(ver_to_int ${FIN_VERSION}) ]]; then
 		UPDATE_AVAILABLE=1
@@ -2929,7 +2929,7 @@ case "$1" in
 			update_system_images
 		elif [[ "$1" == "--self" ]]; then
 			echo "Downloading $URL_FIN"
-			curl -kfsS "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH" >/dev/null
+			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH" >/dev/null
 			[ $? -eq 0 ] && echo "Done"
 			exit
 		elif [[ "$1" == "--tools" ]]; then
