@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.11.2
+FIN_VERSION=0.11.3
 
 # Console colors
 red='\033[0;91m'
@@ -1280,6 +1280,7 @@ docker_machine_mount_nfs ()
 	local machine_name="$DOCKER_MACHINE_NAME"
 	local network_name
 	local nfs_ip
+	local timeout=2
 	eval $(parse_params "$@")
 
 	# Get required IP addresses
@@ -1338,12 +1339,12 @@ docker_machine_mount_nfs ()
 		local timeout=2
 		if [ $? -eq 0 ]; then
 			echo-green "Restarting nfsd..."
-			timeout=2
+			sudo nfsd restart
 		else
 			echo-green "Starting nfsd..."
-			timeout=5 # give more time for cold start
+			timeout=10 # give more time for cold start
+			sudo nfsd start
 		fi
-		sudo nfsd restart
 		sleep ${timeout}
 	else
 		# /etc/export already contains what is required
@@ -1351,9 +1352,10 @@ docker_machine_mount_nfs ()
 		# start nfsd if not running
 		ps aux | grep nfsd | grep -v grep >/dev/null
 		if [ ! $? -eq 0 ]; then
+			timeout=10
 			echo-green "Starting nfsd..."
 			sudo nfsd start
-			sleep 5
+			sleep ${timeout}
 		fi
 	fi
 
@@ -1362,7 +1364,7 @@ docker_machine_mount_nfs ()
 	# Start NFS client on docker-machine
 	docker-machine ssh "$machine_name" \
 		"sudo /usr/local/etc/init.d/nfs-client start"
-	sleep 1
+	sleep ${timeout}
 	for share in ${ARGV[@]}; do
 		local share_=(${share//:/ });
 		local share_export="${share_[0]}"
