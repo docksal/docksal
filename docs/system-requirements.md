@@ -4,7 +4,8 @@
 
 ### RAM
 
-**8GB** (16GB if you keep lots of apps running) recommended for a comfortable work experience. By default Docker Machine uses 1GB of RAM.
+**4GB** required.
+**8GB** or more recommended for a comfortable development experience. By default Docker Machine uses 1GB of RAM.
 
 ### CPU
 
