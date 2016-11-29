@@ -59,11 +59,10 @@ teardown() {
 	cd docroot
 
 	# Create backup
-	run fin mysql-dump ../dump.sql --db-user=user --db-password=user --db-name=default
+	run fin mysql-dump default ../dump.sql --db-user=user --db-password=user
 
-	echo "$output" | grep "Looking for database..."
 	echo "$output" | grep "Exporting..."
-	echo "$output" | grep "Done"
+	echo "$output" | grep "done"
 
 	# Update sitename
 	fin drush config-set system.site name 'My Drupal Fin updated 8 Site' -y
@@ -81,9 +80,10 @@ teardown() {
 	cd docroot
 
 	# Import mysql dump
-	run fin mysql-import ../dump.sql -y
-	echo "$output" | grep "Importing dump.sql into the database..."
-	echo "$output" | grep "mysql-import finished"
+	run fin mysql-import default ../dump.sql --force
+	echo "$output" | grep "Truncating"
+	echo "$output" | grep "Importing"
+	echo "$output" | grep "ok"
 
 	# Check if site is available and it's name is correct
 	run curl -sL http://drupal8.docksal
