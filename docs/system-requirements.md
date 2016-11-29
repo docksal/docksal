@@ -8,9 +8,9 @@ Your CPU should support hardware **VT-x/AMD-V virtualization** (most modern CPUs
 
 ### RAM
 
-On Mac/Windows 8GB is recommended for a comfortable development experience assuming that Docksal's virtual machine uses 1GB of RAM and other usual browser/IDE memory usages.  
+Workstation with 8GB is recommended for a comfortable development experience, although it's not a hard requirement. Docksal will run on a workstation with anything more than 1GB to accomodate Docksal's virtual machine (!GB RAM default) and host OS RAM usages. It was tested that Docksal runs on Windows 7 with 2GB RAM.
 
-RAM requirements on Linux are usually lower because no VM layer is required. You could run Docksal stack even on 512Mb Linux workstation/virtual machine. For development purposes though, it's recommended to have at least 4GB RAM assuming usual browser/IDE memory usages.
+Linux RAM requirements are usually lower because no VM layer is required, so you could run Docksal stack even on 512MB Linux virtual machine. However for desktop development purposes recommendations above apply.
 
 ## Software
 
