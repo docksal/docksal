@@ -8,17 +8,20 @@ Presence of the `.docksal` folder in the project directory is a good indicator a
 
 ## Default setup
 
-1) Create a project directory.
+### 1) Create a project directory.
 
 `mkdir ~/projects/myproject`  
 `cd ~/projects/myproject`  
 
-2) Create an empty `.docksal` directory. All project-specific configurations and commands
-will be stored in this directory.
+### 2) Create an empty `.docksal` directory. All project-specific configurations and commands will be stored in this directory.
 
 `mkdir .docksal`
 
-3) Start the project containers.
+**Note: git control** 
+> Git does not commit empty directories. To commit it to git create a .gitkeep file inside it:  
+`touch .docksal/.gitkeep`
+
+### 3) Start the project containers.
 
 `fin start`
 
@@ -40,13 +43,16 @@ Connected vhost-proxy to "myproject_default" network.
 
 Your project site is now running. If you visit the project url `http://myproject.docksal` you will get a 404 error, because nothing is there yet!
 
-4) Setup your website.
+**Note: SSH keys password:** 
+> If you are being asked for password to SSH keys `id_dsa` or `id_rsa` please know that these are **your** keys that were copied over from your `~/.ssh` folder into cli container. That's why their paths looks like `/root/.ssh/...` because tha't the path inside container. Please provide password if you want to use git or drush commands that require your SSH keys within Docksal (e.g. often project init script or composer script contains repository checkout that would require your key).
+
+### 4) Setup document root.
 
 To have a working site, you need to add a document root and start adding files.
 
 `mkdir docroot`
 
-In this docroot folder you can add any project files you want. A PHP-based CMS, flat HTML, a pure PHP project, it does not matter.
+In this docroot folder you can add any project files you want: a plain HTML, PHP-based CMS or pure PHP project, it does not matter.
 
 ## Checking the default configuration
 
