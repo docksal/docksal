@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.11.4
+FIN_VERSION=0.11.5
 
 # Console colors
 red='\033[0;91m'
@@ -200,7 +200,7 @@ get_docksal_path ()
 get_project_path_dc ()
 {
 	if is_windows ; then
-		echo "$(get_docksal_path)" | sed "s/^\/\([a-z]\)/\1:/g"
+		echo $(cygpath -m $(get_docksal_path)) | sed "s/^\/\([a-z]\)/\1:/g"
 	else
 		echo "$(get_docksal_path)"
 	fi
