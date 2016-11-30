@@ -1041,12 +1041,8 @@ version ()
 bash_comp_words ()
 {
 	case $1 in
-		install)
-			echo "tools"
-			exit 0
-			;;
 		vm)
-			echo "start restart status stop ssh stats kill rm ip env ram"
+			echo "start restart status stop ssh stats kill remove ip env ram"
 			exit 0
 			;;
 		alias)
@@ -1056,7 +1052,7 @@ bash_comp_words ()
 		fin)
 			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			echo "$aliases alias start stop restart status reset remove bash exec logs mysql mysql-import exec-url drush drupal \
-			behat ssh-add install update version cleanup sysinfo"
+			behat ssh-add update version cleanup sysinfo"
 			exit 0
 			;;
 		*)
@@ -2939,7 +2935,10 @@ case "$1" in
 		shift
 		vm "$@"
 		;;
-	install|update)
+	install)
+		echo -e "${yellow}fin install${NC} is deprecated, please use ${yellow}fin update${NC} instead"
+		;;
+	update)
 		shift
 		if [[ "$1" == "--system-images" ]]; then
 			update_system_images
@@ -2952,6 +2951,8 @@ case "$1" in
 			update_tools
 		elif [[ "$1" == "--config" ]]; then
 			update_config_files
+		elif [[ "$1" != "" ]]; then
+			echo -e "${yellow}fin update${NC} does not support this parameter"
 		else
 			update
 		fi
