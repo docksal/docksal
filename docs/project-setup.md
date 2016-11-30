@@ -44,7 +44,7 @@ Connected vhost-proxy to "myproject_default" network.
 Your project site is now running. If you visit the project url `http://myproject.docksal` you will get a 404 error, because nothing is there yet!
 
 **Note: SSH keys password:** 
-> If you are being asked for password to SSH keys `id_dsa` or `id_rsa` please know that these are **your** keys that were copied over from your `~/.ssh` folder into cli container. That's why their paths looks like `/root/.ssh/...` because tha't the path inside container. Please provide password if you want to use git or drush commands that require your SSH keys within Docksal (e.g. often project init script or composer script contains repository checkout that would require your key).
+> If you are being asked for password to SSH keys `id_dsa` or `id_rsa` please know that these are **your** keys that were copied over from your `~/.ssh` folder into cli container. That's why their paths looks like `/root/.ssh/...` because that's the path **inside container**. Please provide password(s) if you want to use git or drush commands that require your SSH keys within Docksal (e.g. often project init script or composer script contains repository checkout that would require your key).
 
 ### 4) Setup document root.
 
