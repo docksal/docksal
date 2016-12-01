@@ -52,7 +52,7 @@ To have a working site, you need to add a document root and start adding files.
 
 `mkdir docroot`
 
-In this docroot folder you can add any project files you want: a plain HTML, PHP-based CMS or pure PHP project, it does not matter.
+In this docroot folder you can add any project files you want: a plain HTML, PHP-based CMS or pure PHP project.
 
 ## Checking the default configuration
 
