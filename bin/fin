@@ -793,6 +793,7 @@ show_help ()
 	printh "status (ps) [-a (--all)]" "Show project services status (-a shows all running containers)"
 	printh "reset [service]" "Recreate project services and containers (${yellow}fin help reset${NC})"
 	printh "rm [service]" "Remove project services (${yellow}fin help rm${NC})"
+	printh "create-site" "Download and install Drupal."
 
 	echo
 	printh "bash [service]" "Open shell into container. Defaults to ${yellow}cli${NC}"
@@ -1244,7 +1245,7 @@ docker_machine_start ()
 docker_machine_remove ()
 {
 	local $machine_name="${1:-$DOCKER_MACHINE_NAME}"
-	
+
 	_confirm "Remove $machine_name?"
 	# VirtualBox
 	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
@@ -2855,6 +2856,54 @@ config_generate ()
 	fi
 }
 
+create_site ()
+{
+	while true; do
+		read -p "Please enter the name of your project (all one word, no spaces or slashes): " projectName
+		#todo, validate this input
+		break
+	done
+	echo ''
+
+	while true; do
+		read -p "What version of Drupal would you like to install? [7/8]: " newSiteVersion
+		case ${newSiteVersion} in
+			7 )
+				break
+				;;
+			8 )
+				break
+				;;
+			* )
+				echo 'Please enter 7 or 8.'
+				continue
+		esac
+		break
+	done
+	echo ''
+
+	echo -e "Your site will be created at ${yellow}$(pwd)/$projectName${NC}"
+	echo -e "Your site will run ${yellow}Drupal ${newSiteVersion}${NC}"
+	echo -e "The URL of your site will be ${yellow}http://$projectName.docksal${NC}"
+	echo ''
+
+	_confirm "Do you wish to proceed?"
+
+	# Todo: is git clone really the best way to do this?  What about
+	# users who don't have a github account, will this work for them?
+	echo -e "${green} Cloning repository...${NC}"
+	git clone -b master https://github.com/docksal/drupal${newSiteVersion}.git ${projectName}
+	cd ${projectName}/.docksal
+
+	# We have to do this sed command twice, to account for lines with more than
+	# one occurence of "drupalX.docksal"
+	sed -i.bak "s/drupal${newSiteVersion}/${projectName}/" docksal.env && rm docksal.env.bak > /dev/null 2>&1
+	sed -i.bak "s/drupal${newSiteVersion}/${projectName}/" docksal.env && rm docksal.env.bak > /dev/null 2>&1
+	cd ..
+
+	fin init
+}
+
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Export HOME as HOST_HOME.
@@ -3064,6 +3113,9 @@ case "$1" in
 		[[ "$*" == "list" ]] && alias_list && exit
 		[[ "$1" == "remove" ]] && shift && alias_remove "$@" && exit
 		alias_create "$@"
+		;;
+	create-site)
+		create_site
 		;;
 	init|*)
 		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
