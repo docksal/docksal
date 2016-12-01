@@ -141,6 +141,7 @@ For the list of tools available inside the **cli** container check [here](https:
 - [Running multiple projects](/docs/multiple-projects.md)
 - [DB sandbox mode](/docs/db-sandbox.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
+- [Automatic database import](docs/db-import.md)
 - [Extending fin with custom commands](/docs/custom-commands.md)
 
 ### Third party utililies
