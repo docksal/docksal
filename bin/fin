@@ -2372,8 +2372,8 @@ mysql_import ()
 	check_docksal_environment
 	eval $(parse_params "$@")
 
-	local __dump_user="${dbuser:-\$MYSQL_USER}"
-	local __dump_password="${dbpassword:-\$MYSQL_PASSWORD}"
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
 	local __database="${ARGV[0]}"
 	local __input="${ARGV[1]}"
 
@@ -2411,11 +2411,10 @@ mysql_import ()
 	echo "Importing..."
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command direclty (no bash wrapper) so that stdin could be received inside that exec
-	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	container_id=$(get_container_id "db")
-	__mysql_command=$(_RUN_NO_CDIR=1 CONTAINER_NAME="db" _run "echo mysql -u$__dump_user -p$__dump_password")
+	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	__mysql_command=$(echo $__mysql_command | sed -e 's/[^a-zA-Z0-9_-]$//')
-	cat "$__input" | ${winpty_cmd} docker exec -i "$container_id" ${__mysql_command} ${__database}
+	cat ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then
