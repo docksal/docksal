@@ -1488,7 +1488,7 @@ vm ()
 
 	check_binary_found 'docker-machine'
 
-	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] && [[ "$1" != "rm" ]] && [[ "$1" != "active" ]] ; then
+	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] && [[ "$1" != "remove" ]] && [[ "$1" != "active" ]] ; then
 		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME is not created. Use 'fin vm start' or 'fin up'."
 		 return 1
 	fi
