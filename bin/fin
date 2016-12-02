@@ -2455,7 +2455,7 @@ mysql_dump ()
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database} | tee "$__output" >/dev/null
 
-	[ $? -eq 0 ] && echo-rewrite-ok "Exporting... [done]"
+	[ $? -eq 0 ] && echo-rewrite-ok "Exporting..."
 }
 
 # Run Behat tests (also install dependencies through Composer)
