@@ -2349,9 +2349,16 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
+	eval $(parse_params "$@")
+
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+
 	check_docksal_environment
-	check_drush_path
-	_run $(get_mysql_connect)
+	container_id=$(get_container_id "db")
+	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
+	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
+	${winpty_cmd} docker exec -it "$container_id" bash -ic "mysql ${__mysql_command}"
 }
 
 # Truncate db and import from sql dump
