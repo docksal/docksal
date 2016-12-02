@@ -2433,8 +2433,8 @@ mysql_dump ()
 	check_docksal_environment
 	eval $(parse_params "$@")
 
-	local __dump_user="${dbuser:-\$MYSQL_USER}"
-	local __dump_password="${dbpassword:-\$MYSQL_PASSWORD}"
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
 	local __database="${ARGV[0]}"
 	local __output="${ARGV[1]}"
 
@@ -2451,8 +2451,9 @@ mysql_dump ()
 
 	echo-green "Exporting..."
 
-	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-		_run "mysqldump -u $__dump_user -p${__dump_password} $__database" | tee "$__output" >/dev/null
+	container_id=$(get_container_id "db")
+	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
+	docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database} | tee "$__output" >/dev/null
 
 	[ $? -eq 0 ] && echo-rewrite-ok "Exporting... [done]"
 }
