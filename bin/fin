@@ -69,6 +69,9 @@ DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
 #---------------------------- URL references --------------------------------
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
+URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
+URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
+URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_FIN="${URL_REPO}/${FIN_BRANCH}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${FIN_BRANCH}/stacks/services.yml"
 URL_STACKS_STACK_ACQUIA="${URL_REPO}/${FIN_BRANCH}/stacks/stack-acquia.yml"
@@ -2859,8 +2862,11 @@ config_generate ()
 create_site ()
 {
 	while true; do
-		read -p "Please enter the name of your project (all one word, no spaces or slashes): " projectName
-		#todo, validate this input
+		read -p "Please enter the name of your project (all one word, no spaces or slashes): " project_name
+		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
+		  echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
+		  continue
+		fi
 		break
 	done
 	echo ''
@@ -2871,21 +2877,24 @@ create_site ()
 	echo -e "${green}[3]${NC} Wordpress"
 	echo -e ""
 	while true; do
-		read -p ": " newSiteVersion
-		case ${newSiteVersion} in
+		read -p ": " choice
+		case ${choice} in
 			1 )
-				newHumanReadableVersion="Drupal 7"
-				newSiteRepoName="drupal7"
+				target_cms="Drupal 7"
+				target_host_name_search_string="drupal7"
+				target_repo="$URL_REPO_DRUPAL7"
 				break
 				;;
 			2 )
-				newHumanReadableVersion="Drupal 8"
-				newSiteRepoName="drupal8"
+				target_cms="Drupal 8"
+				target_host_name_search_string="drupal8"
+				target_repo="$URL_REPO_DRUPAL8"
 				break
 				;;
 			3 )
-				newHumanReadableVersion="Wordpress"
-				newSiteRepoName="wordpress"
+				target_cms="Wordpress"
+				target_host_name_search_string="wordpress"
+				target_repo="$URL_REPO_WORDPRESS"
 				break
 				;;
 			* )
@@ -2896,9 +2905,9 @@ create_site ()
 	done
 	echo ''
 
-	echo -e "Your site will be created at ${yellow}$(pwd)/$projectName${NC}"
-	echo -e "Your site will run ${yellow}${newHumanReadableVersion}${NC}"
-	echo -e "The URL of your site will be ${yellow}http://$projectName.docksal${NC}"
+	echo -e "Your site will be created at ${yellow}$(pwd)/$project_name${NC}"
+	echo -e "Your site will run ${yellow}${target_cms}${NC}"
+	echo -e "The URL of your site will be ${yellow}http://$project_name.docksal${NC}"
 	echo ''
 
 	_confirm "Do you wish to proceed?"
@@ -2906,13 +2915,11 @@ create_site ()
 	# Todo: is git clone really the best way to do this?  What about
 	# users who don't have a github account, will this work for them?
 	echo -e "${green} Cloning repository...${NC}"
-	git clone -b master https://github.com/docksal/${newSiteRepoName}.git ${projectName}
-	cd ${projectName}/.docksal
+	git clone -b master ${target_repo} ${project_name}
+	cd ${project_name}/.docksal
 
-	# We have to do this sed command twice, to account for lines with more than
-	# one occurence of "drupalX.docksal"
-	sed -i.bak "s/${newSiteRepoName}/${projectName}/" docksal.env && rm docksal.env.bak > /dev/null 2>&1
-	sed -i.bak "s/${newSiteRepoName}/${projectName}/" docksal.env && rm docksal.env.bak > /dev/null 2>&1
+	# Edit docksal.env to use a custom user-supplied host name
+	sed -i.bak "s/${target_host_name_search_string}/${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1
 	cd ..
 
 	fin init
