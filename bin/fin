@@ -793,7 +793,6 @@ show_help ()
 	printh "status (ps) [-a (--all)]" "Show project services status (-a shows all running containers)"
 	printh "reset [service]" "Recreate project services and containers (${yellow}fin help reset${NC})"
 	printh "rm [service]" "Remove project services (${yellow}fin help rm${NC})"
-	printh "create-site" "Download and install Drupal or Wordpress."
 
 	echo
 	printh "bash [service]" "Open shell into container. Defaults to ${yellow}cli${NC}"
@@ -802,6 +801,7 @@ show_help ()
 	printh "logs [service]" "Show Docker logs for service container"
 
 	echo
+	printh "create-site" "Download and install Drupal or Wordpress."
 	printh "drush [command]" "Execute Drush command (Drupal)"
 	printh "drupal [command]" "Execute Drupal Console command (Drupal 8)"
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
