@@ -793,7 +793,7 @@ show_help ()
 	printh "status (ps) [-a (--all)]" "Show project services status (-a shows all running containers)"
 	printh "reset [service]" "Recreate project services and containers (${yellow}fin help reset${NC})"
 	printh "rm [service]" "Remove project services (${yellow}fin help rm${NC})"
-	printh "create-site" "Download and install Drupal."
+	printh "create-site" "Download and install Drupal or Wordpress."
 
 	echo
 	printh "bash [service]" "Open shell into container. Defaults to ${yellow}cli${NC}"
@@ -2865,17 +2865,31 @@ create_site ()
 	done
 	echo ''
 
+	echo -e "What would you like to install?"
+	echo -e "${green}[1]${NC} Drupal 7"
+	echo -e "${green}[2]${NC} Drupal 8"
+	echo -e "${green}[3]${NC} Wordpress"
+	echo -e ""
 	while true; do
-		read -p "What version of Drupal would you like to install? [7/8]: " newSiteVersion
+		read -p ": " newSiteVersion
 		case ${newSiteVersion} in
-			7 )
+			1 )
+				newHumanReadableVersion="Drupal 7"
+				newSiteRepoName="drupal7"
 				break
 				;;
-			8 )
+			2 )
+				newHumanReadableVersion="Drupal 8"
+				newSiteRepoName="drupal8"
+				break
+				;;
+			3 )
+				newHumanReadableVersion="Wordpress"
+				newSiteRepoName="wordpress"
 				break
 				;;
 			* )
-				echo 'Please enter 7 or 8.'
+				echo 'Please enter 1, 2, or 3.'
 				continue
 		esac
 		break
@@ -2883,7 +2897,7 @@ create_site ()
 	echo ''
 
 	echo -e "Your site will be created at ${yellow}$(pwd)/$projectName${NC}"
-	echo -e "Your site will run ${yellow}Drupal ${newSiteVersion}${NC}"
+	echo -e "Your site will run ${yellow}${newHumanReadableVersion}${NC}"
 	echo -e "The URL of your site will be ${yellow}http://$projectName.docksal${NC}"
 	echo ''
 
@@ -2892,13 +2906,13 @@ create_site ()
 	# Todo: is git clone really the best way to do this?  What about
 	# users who don't have a github account, will this work for them?
 	echo -e "${green} Cloning repository...${NC}"
-	git clone -b master https://github.com/docksal/drupal${newSiteVersion}.git ${projectName}
+	git clone -b master https://github.com/docksal/${newSiteRepoName}.git ${projectName}
 	cd ${projectName}/.docksal
 
 	# We have to do this sed command twice, to account for lines with more than
 	# one occurence of "drupalX.docksal"
-	sed -i.bak "s/drupal${newSiteVersion}/${projectName}/" docksal.env && rm docksal.env.bak > /dev/null 2>&1
-	sed -i.bak "s/drupal${newSiteVersion}/${projectName}/" docksal.env && rm docksal.env.bak > /dev/null 2>&1
+	sed -i.bak "s/${newSiteRepoName}/${projectName}/" docksal.env && rm docksal.env.bak > /dev/null 2>&1
+	sed -i.bak "s/${newSiteRepoName}/${projectName}/" docksal.env && rm docksal.env.bak > /dev/null 2>&1
 	cd ..
 
 	fin init
