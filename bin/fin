@@ -2637,7 +2637,7 @@ ngrok_share ()
 		--link ${container_name} \
 		wernight/ngrok \
 		ngrok \
-		http ${container_name}:80
+		http ${container_name}.${network}:80
 }
 
 sysinfo ()
