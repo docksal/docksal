@@ -1948,7 +1948,7 @@ install_tools_ubuntu ()
 	else
 		echo "Starting Docker service if stopped..."
 		sudo service docker start 2>/dev/null
-		sudo docker version
+		sudo docker version >/dev/null
 		if [[ ! $? -eq 0 ]]; then
 			_confirm 'There is some problem with your Docker installation. Do you want to try re-installing?'
 			curl -sSL https://get.docker.com/ | sh && \
