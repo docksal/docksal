@@ -652,7 +652,7 @@ _remove_containers ()
 
 		# Disconnect proxy from the project network, otherwise network will not be removed.
 		# Figure out the default project network name
-		network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
 
 		# Taking the whole docker-compose project down (this removes containers, volumes and networks)
@@ -710,7 +710,7 @@ _docker_cleanup ()
 _vhost_proxy_connect ()
 {
 	# Figure out the default project network name
-	network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 	docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
 	if [[ $? == 0 ]]; then
 		echo-green "Connected vhost-proxy to \"${network}\" network."
@@ -2635,7 +2635,7 @@ ngrok_share ()
 	check_docksal_environment
 
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-	container_name=$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)
+	local container_name=$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)
 	if [[ "$container_name" == "" ]]; then
 		echo-error "Could not find running web container in this project"
 		exit 1
