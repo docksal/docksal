@@ -2647,7 +2647,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${container_name}_ngrok \
 		wernight/ngrok \
-		ngrok http ${container_name}.${network}:80
+		ngrok http -host-header ${VIRTUAL_HOST} ${container_name}.${network}:80
 }
 
 sysinfo ()
