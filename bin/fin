@@ -2641,6 +2641,9 @@ ngrok_share ()
 		exit 1
 	fi
 
+	docker stop ${container_name}_ngrok
+	docker rm ${container_name}_ngrok
+
 	# Based on https://github.com/wernight/docker-ngrok
 	docker run --rm -it \
 		--net ${network} \
