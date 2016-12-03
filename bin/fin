@@ -1996,8 +1996,6 @@ EOF
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
-	else
-		reset system
 	fi
 }
 
