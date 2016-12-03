@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.11.6
+FIN_VERSION=0.11.7
 
 # Console colors
 red='\033[0;91m'
@@ -2628,6 +2628,18 @@ _set_cli_uid ()
 	docker exec -u root ${cli} supervisorctl restart "$php_service" >/dev/null
 }
 
+ngrok_share ()
+{
+	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+	container_name=$(docker-compose ps web | grep _web_ | cut -d " " -f 1)
+	docker run --rm -it \
+		--net ${network} \
+		--link ${container_name} \
+		wernight/ngrok \
+		ngrok \
+		http ${container_name}:80
+}
+
 sysinfo ()
 {
 	# os
@@ -3034,6 +3046,9 @@ case "$1" in
 	exec-url)
 		shift
 		exec_url "$@"
+		;;
+	share)
+		ngrok_share
 		;;
 	cleanup)
 		shift
