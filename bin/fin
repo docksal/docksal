@@ -2628,16 +2628,25 @@ _set_cli_uid ()
 	docker exec -u root ${cli} supervisorctl restart "$php_service" >/dev/null
 }
 
+# Share web container using ngrok service
 ngrok_share ()
 {
+	check_docksal_environment
+
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-	container_name=$(docker-compose ps web | grep _web_ | cut -d " " -f 1)
+	container_name=$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)
+	if [[ "$container_name" == "" ]]; then
+		echo-error "Could not find running web container in this project"
+		exit 1
+	fi
+
+	# Based on https://github.com/wernight/docker-ngrok
 	docker run --rm -it \
 		--net ${network} \
 		--link ${container_name} \
+		--name ${container_name}_ngrok \
 		wernight/ngrok \
-		ngrok \
-		http ${container_name}.${network}:80
+		ngrok http ${container_name}.${network}:80
 }
 
 sysinfo ()
