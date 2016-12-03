@@ -1,6 +1,7 @@
 # Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases/latest)
 
 [![Build Status](https://img.shields.io/travis/docksal/docksal.svg?style=flat-square)](https://travis-ci.org/docksal/docksal)
+[![Docs](https://readthedocs.org/projects/docksal/badge?version=master&style=flat-square)](http://docksal.readthedocs.io/en/master)
 [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
 
 Docker and Docker Compose based environments for web development.
