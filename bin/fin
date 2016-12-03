@@ -136,7 +136,7 @@ echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
 echo-error () {
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}";
-	local unused="$2" # avoid IDE warning
+	local unused="$2$3" # avoid IDE warning
 	shift
 	# echo other parameters indented s error description or remedy
 	while [[ "$1" != "" ]]; do
@@ -447,7 +447,7 @@ check_docker_running ()
 		docker_status=$?
 	fi
 
-	if [[ $docker_status -eq 0 ]]; then
+	if [[ ${docker_status} -eq 0 ]]; then
 		DOCKER_RUNNING="true"
 	else
 		if is_docker_native; then
@@ -1240,7 +1240,7 @@ docker_machine_start ()
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
 docker_machine_remove ()
 {
-	local $machine_name="${1:-$DOCKER_MACHINE_NAME}"
+	local machine_name="${1:-$DOCKER_MACHINE_NAME}"
 	
 	_confirm "Remove $machine_name?"
 	# VirtualBox
@@ -1398,7 +1398,7 @@ Windows Registry Editor Version 5.00
 "Size"=dword:00000003
 EOF
 	# Update registry and restart Server and Computer Browser services.
-	winsudo "regedit /S $(cygpath -w $tmpfile) && net stop server /y && net start server && net start browser"
+	winsudo "regedit /S $(cygpath -w ${tmpfile}) && net stop server /y && net start server && net start browser"
 }
 
 # Method to create the user and SMB network share on Windows.
@@ -1438,7 +1438,7 @@ docker_machine_mount_smb ()
 	echo  # Add a new line after user input.
 
 	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
+		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
 		smb_share_add "$MOUNT_POINT" "$DRIVE" && \
 			smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
 			(echo-red "Error creating share" && exit 1)
@@ -1454,7 +1454,7 @@ docker_machine_remove_smb ()
 {
 	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
+		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
 		command_share="net share ${MOUNT_POINT} /DELETE"
 		winsudo "$command_share"
 	done
@@ -1588,7 +1588,7 @@ vm-stats ()
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
 	"$vboxmanage" metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
 	sleep 1
-	"$vboxmanage" metrics query "$DOCKER_MACHINE_NAME" $metrics
+	"$vboxmanage" metrics query "$DOCKER_MACHINE_NAME" "$metrics"
 }
 
 vm-ram () {
@@ -1626,7 +1626,7 @@ stop ()
 restart ()
 {
 	check_docksal_environment
-	_restart_containers "$@"
+	_restart_containers
 }
 
 # output status of containers
@@ -1937,7 +1937,7 @@ install_tools_ubuntu ()
 		fi
 		curl -sSL https://get.docker.com/ | sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-			sudo usermod -aG docker $LOGNAME
+			sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
@@ -1949,7 +1949,7 @@ install_tools_ubuntu ()
 			_confirm 'There is some problem with your Docker installation. Do you want to try re-installing?'
 			curl -sSL https://get.docker.com/ | sh && \
 				# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-				sudo usermod -aG docker $LOGNAME
+				sudo usermod -aG docker "$LOGNAME"
 			sudo service docker start 2>/dev/null
 			sudo docker version
 			if_failed "Docker installation/upgrade has failed."
@@ -2399,7 +2399,7 @@ mysql_import ()
 	# and only mysql command direclty (no bash wrapper) so that stdin could be received inside that exec
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
-	__mysql_command=$(echo $__mysql_command | sed -e 's/[^a-zA-Z0-9_-]$//')
+	__mysql_command=$(echo "$__mysql_command" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	cat ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
 	# Check if import succeded or not and print results.
@@ -2577,7 +2577,7 @@ _set_cli_uid ()
 	local cli=$(get_container_id cli || true)
 
 	# If there is no cli, move on.
-	if [[ -z $cli ]]; then
+	if [[ -z ${cli} ]]; then
 		echo-yellow 'Expected service "cli" is missing.'
 		return;
 	fi
@@ -2724,15 +2724,15 @@ load_configuration ()
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
 	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
-	if [[ -f $env_file ]]; then
-		ENV_FILE=$env_file
+	if [[ -f "$env_file" ]]; then
+		ENV_FILE="$env_file"
 		# Source and allexport variables in the .env file
-		set -a; source $env_file; set +a
+		set -a; source "$env_file"; set +a
 		# Source local env file if both it and the main env file exist
-		if [[ -f $local_env_file ]]; then
+		if [[ -f "$local_env_file" ]]; then
 			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
 			# Source and allexport variables in the .env file
-			set -a; source $local_env_file; set +a
+			set -a; source "$local_env_file"; set +a
 		fi
 		export ENV_FILE
 	fi
@@ -2740,8 +2740,8 @@ load_configuration ()
 	# Legacy/traditional setup support
 	# TODO: get rid of this in 2017
 	legacy_yml_file="$(get_project_path_dc)/docker-compose.yml"
-	if [[ -f $legacy_yml_file ]]; then
-		COMPOSE_FILE=$legacy_yml_file
+	if [[ -f "$legacy_yml_file" ]]; then
+		COMPOSE_FILE="$legacy_yml_file"
 		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml" >&2
 	fi
 	# Set COMPOSE_FILE unless it has been already set by user
@@ -2753,13 +2753,13 @@ load_configuration ()
 		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
 		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 		# Use .docksal/docksal.yml by default (if exists)
-		if [[ -f $yml_file ]]; then
-			COMPOSE_FILE=$yml_file
+		if [[ -f "$yml_file" ]]; then
+			COMPOSE_FILE="$yml_file"
 			# Include docksal-local.yml (if exists)
-			[[ -f $local_yml_file ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
+			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		# Otherwise use the default.yml stack config (if exists)
-		elif [[ -f $default_yml_file ]]; then
-			COMPOSE_FILE=$default_yml_file
+		elif [[ -f "$default_yml_file" ]]; then
+			COMPOSE_FILE="$default_yml_file"
 		fi
 		# Throw an error if COMPOSE_FILE is empty here
 		if [[ "$COMPOSE_FILE" == "" ]]; then
@@ -2770,9 +2770,9 @@ load_configuration ()
 		# Experimental: Include a volumes yml if requested.
 		# Use bind mount for volumes if using default stack.
 		[[ "$COMPOSE_FILE" == "$default_yml_file" ]] && DOCKSAL_VOLUMES="bind"
-		if [[ $DOCKSAL_VOLUMES != "" ]]; then
+		if [[ "$DOCKSAL_VOLUMES" != "" ]]; then
 			volumes_yml_file="$(get_config_path_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-			if [[ -f $volumes_yml_file ]]; then
+			if [[ -f "$volumes_yml_file" ]]; then
 				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 			else
 				echo-error "Volumes definition not found in ${volumes_yml_file}." \
@@ -2789,7 +2789,7 @@ load_configuration ()
 	if [[ -d $(get_docksal_path) ]]; then
 		local project_name=$(basename $(get_docksal_path) | tr '[:upper:]' '[:lower:]')
 		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
-		COMPOSE_PROJECT_NAME_SAFE=$(echo $COMPOSE_PROJECT_NAME | sed 's/[^a-z0-9]//g')
+		COMPOSE_PROJECT_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^a-z0-9]//g')
 		export COMPOSE_PROJECT_NAME
 		export COMPOSE_PROJECT_NAME_SAFE
 	fi
@@ -2818,8 +2818,8 @@ config_show ()
 	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
 	# Replace separators with new lines
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
-	echo -e "COMPOSE_FILE:\n$(echo $COMPOSE_FILE | tr $SEPARATOR '\n')"
-	echo -e "ENV_FILE:\n$(echo $ENV_FILE | tr $SEPARATOR '\n')"
+	echo -e "COMPOSE_FILE:\n$(echo ${COMPOSE_FILE} | tr ${SEPARATOR} '\n')"
+	echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
 	echo
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
@@ -2843,7 +2843,7 @@ config_generate ()
 
 	_confirm "Set up $DOCKSAL_STACK Docksal stack in the current directory?"
 
-	if [[ -f $yml_file ]]; then
+	if [[ -f ${yml_file} ]]; then
 		if [[ -d .docksal ]]; then
 			echo-yellow ".docksal directory already exists in the current directory."
 			_confirm "Remove it and start from scratch?"
@@ -2853,7 +2853,7 @@ config_generate ()
 		mkdir .docksal && \
 		# Use bind mount volumes by default
 		echo 'DOCKSAL_VOLUMES="bind"' > .docksal/docksal.env && \
-		cp $yml_file .docksal/docksal.yml && \
+		cp ${yml_file} .docksal/docksal.yml && \
 		# Setup docroot and a basic index.php
 		mkdir -p docroot && \
 		echo '<?php phpinfo();' > docroot/index.php
@@ -2941,7 +2941,7 @@ case "$1" in
 		;;
 	restart)
 		shift
-		restart "$@"
+		restart
 		;;
 	status|st|ps)
 		shift
