@@ -1990,12 +1990,14 @@ EOF
 		sudo resolvconf -u
 	fi
 
-	# Update system images and install system service (call self with sudo).
+	# Update system images and install system service (call self with sudo in case of fresh install).
 	echo-green "Updating system images..."
 	sudo fin update --system-images
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
+	else
+		reset system
 	fi
 }
 
@@ -2600,6 +2602,7 @@ _set_cli_uid ()
 	container_uid=$(docker exec ${cli} id -u)
 	if [[ ! $? -eq 0 ]]; then
 		echo-red 'Error getting uid from cli container'
+		echo "You might need to recreate containers with fin reset"
 		return
 	fi
 
