@@ -2640,15 +2640,18 @@ ngrok_share ()
 		echo-error "Could not find running web container in this project"
 		exit 1
 	fi
+	local ngrok_container_name=${container_name}_ngrok
 
-	docker stop ${container_name}_ngrok
-	docker rm ${container_name}_ngrok
+	if ( fin docker ps --format '{{.Names}}' | grep ^${ngrok_container_name}$ >/dev/null ); then
+		docker stop ${ngrok_container_name} >/dev/null
+		docker rm ${ngrok_container_name} >/dev/null 2>/dev/null
+	fi
 
 	# Based on https://github.com/wernight/docker-ngrok
 	docker run --rm -it \
 		--net ${network} \
 		--link ${container_name} \
-		--name ${container_name}_ngrok \
+		--name ${ngrok_container_name} \
 		wernight/ngrok \
 		ngrok http -host-header ${VIRTUAL_HOST} ${container_name}.${network}:80
 }
