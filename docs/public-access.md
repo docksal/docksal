@@ -7,14 +7,16 @@ Working with external web services that expect a callback URL is also generally 
 ## Welcome to ngrok!
 
 ngrok creates a tunnel from the public internet **http://subdomain.ngrok.com** to a port on your local machine.
-You can give this URL to anyone to allow them to try out a web site you're developing without doing any deployment.
+You can give auto-generated URL to anyone to allow them to try out a web site you're developing. ngrock also allows you to debug network requests made to your site.
 
 ## How to use
 
-Uncomment the **share** service definition section in [`docker-compose.yml`](../docker-compose.yml) to start using ngrok.
+Inside project folder run:
 
-To get the *.ngrok.com address, check the container's logs:
+    fin share
 
-    docker-compose logs share
+To stop sharing use `Ctrl+C`
 
-The ngrok web inspection interface is running on port 4040. E.g. `http://192.168.10.10:4040`
+You will see clie interface provided by running ngrok container. Use web address shown there to share.
+
+![](img/ngrok.png)
