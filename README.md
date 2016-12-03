@@ -163,7 +163,7 @@ Check if the issue went away after each step.
 
 - Update Docksal to the latest version. See [updates](#updates) section.
 - Restart the Docksal VM (Mac and Windows only): `fin vm restart`
-- Reset Docksal system services: `fin reset system`
+- Reset Docksal system services: `fin reset system` and restart projects containers with `fin up`
 - Reboot the host system (your computer or remote server)
 - Reset the Docksal VM (Mac and Windows only): `fin vm rm` then `fin vm start` (**WARNING**: backup your DB data before doing this)
 
