@@ -1,7 +1,7 @@
 ## Error checking TLS connection (vm is not accessible)
 
 ```
-Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.10.10:2376": dial tcp 192.168.10.10:2376: getsockopt: connection refused
+Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
 You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
 Be advised that this will trigger a Docker daemon restart which will stop running containers.
 ```
@@ -21,12 +21,12 @@ If that does not help either you will have to delete existing Docksal VM and re-
 
 ## Conflicting exports (files are not accessible)
 ```
- ERROR:  conflicting exports for /Users, 192.168.10.10
+ ERROR:  conflicting exports for /Users, 192.168.64.100
 exports:11: export option conflict for /Users
 -----------------
-/Users 192.168.10.10 -alldirs -mapall=0:0
+/Users 192.168.64.100 -alldirs -mapall=0:0
 # <ds-nfs docksal
-/Users 192.168.10.10 -alldirs -mapall=501:20
+/Users 192.168.64.100 -alldirs -mapall=501:20
 # ds-nfs>
 ```
 
@@ -57,10 +57,10 @@ This is not recommended in particular because of problems like this.
 ## Multiple host-only adapters (vm is not created)
 
 ```
-Error with pre-create check: "VirtualBox is configured with multiple host-only adapters with the same IP \"192.168.10.1\". Please remove one."
+Error with pre-create check: "VirtualBox is configured with multiple host-only adapters with the same IP \"192.168.64.1\". Please remove one."
 ```
 
 1) Open VirtulBox UI
 2) Open Preferences > Network tab
 3) Click "Host-only Netwirks" tab
-4) Click through adapters in list and delete the ones with `192.168.10.1` IP
+4) Click through adapters in list and delete the ones with `192.168.64.1` IP
