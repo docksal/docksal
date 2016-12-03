@@ -16,7 +16,7 @@ Follow instructions below to get started.
 
 In Docker terminology, a read-only [Layer](https://docs.docker.com/terms/layer/#layer) is called an image. In a traditional setup you would use the stock [mysql image](https://registry.hub.docker.com/_/mysql/) as the base image for your DB container. 
 
-:page_facing_up: docker-compose.yml
+:page_facing_up: docksal.yml
 ```yml
 # DB node
 db:
@@ -33,7 +33,7 @@ The stock [mysql image](https://registry.hub.docker.com/_/mysql/) defines a data
 To make the sandbox DB mode possible we have to remove this permanent storage volume from the image (this is done be using a fork of the image), import the DB and commit the container as a new image with `docker commit` command.  
 The new image will include the base image plus all in-memory changes made i.e. your DB snapshot. It is then used as the base image for the DB node going forward. 
 
-:page_facing_up: docker-compose.yml
+:page_facing_up: docksal.yml
 ```yml
 # DB node
 db:
@@ -48,7 +48,7 @@ Now you can do any changes to the database you want and each time after the cont
 ## Steps
 
 1. Create a DB dump
-2. Add '-sandbox' to the image version for the **db** service base in `docker-compose.yml` (example: docksal/mysql:5.5 => docksal/mysql:5.5-sandbox)
+2. Add '-sandbox' to the image version for the **db** service base in `docksal.yml` (example: docksal/mysql:5.5 => docksal/mysql:5.5-sandbox)
 3. Reset containers
 
     `fin reset`
@@ -56,11 +56,11 @@ Now you can do any changes to the database you want and each time after the cont
 4. Import the DB dump you created in step 1.
 5. Stop and [commit](https://docs.docker.com/reference/commandline/cli/#commit) the **db** service container (this will turn the container into a reusable docker image)
     
-    `docker stop $(docker-compose ps -q db) && docker commit $(docker-compose ps -q db) <tag>`
+    `fin stop db && docker commit $(fin docker-compose ps -q db) <tag>`
 
     Replace `<tag>` with any meaningful tag you'd like to use for the image. E.g. `db_backup` or `dbdata/myproject:snapshot1`
 
-6. Replace the *db* service base image in `docker-compose.yml` with the selected tag. E.g. `image: dbdata/myproject:snapshot1`
+6. Replace the *db* service base image in `docksal.yml` with the selected tag. E.g. `image: dbdata/myproject:snapshot1`
 8. Restart containers
 
     `fin up`
@@ -78,7 +78,7 @@ In case of small database though it is ok to do that. But please keep in mind th
 You will need a DB dump to revert to.
 Either use the one created before enabling the sandbox mode or take another one while the **db** service contained is still up.
 
-1. Revert the changes done to the **db** service in `docker-compose.yml`
+1. Revert the changes done to the **db** service in `docksal.yml`
 2. Reset containers
 
     `fin reset`
