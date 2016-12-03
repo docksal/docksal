@@ -115,11 +115,13 @@ else
 	# current active machine folder
 	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
 	mkdir -p "$DOCKER_MACHINE_FOLDER"
+
+	# TODO: revise or remove later. search for DOCKER_MACHINE_IP in the code
 	# get desired ip
-	if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
-		DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
-	fi
-	DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
+	# if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
+	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
+	#fi
+	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
 
 	export DOCKSAL_HOST_IP="192.168.64.1"
 fi
@@ -1419,7 +1421,7 @@ smb_share_add()
 # @param share_path, mount_point, password
 smb_share_mount()
 {
-	DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
+	#DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
