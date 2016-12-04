@@ -1,14 +1,14 @@
 # Drupal settings
 
-Below you will find instructions on configuring you Drupal project to work with Docksal.
-Some settings are required, others are optional or enahncements. Please review carefully.
+Below you will find instructions on configuring your Drupal project to work with Docksal.
+Some settings are required; others are optional or enhancements. Please review carefully.
 
 <a name="db"></a>
 # DB connection settings (**required**)
 
 Containers do not have static IP addresses assigned.  DB connection settings can be obtained from the environment variables.
 
-Below are sample settings for Drupal 7 and Drupal8.  
+Below are sample settings for Drupal 7 and Drupal8.
 If you change the DB node name in `docksal.yml` (e.g. `mysql` instead of `db`) then this has to be updated, since variable names will change as well.
 
 **Drupal 7 and 8**
@@ -27,7 +27,7 @@ $databases['default']['default'] = array (
 <a name="file-permissions"></a>
 ## File permissions fix (**required**)
 
-With NFS mounts Drupal may complain about files directory not being writable. This is a "false-negative" however can be annoying and break certain things. For a workaround add the following to your setting.php file. 
+With NFS mounts, Drupal may complain about the files directory not being writable. This is a "false-negative", however it can be annoying and break certain things. For a workaround, add the following to your setting.php file.
 
 **Drupal 7**
 
@@ -45,7 +45,7 @@ $settings['file_chmod_directory'] = 0777;
 $settings['file_chmod_file'] = 0666;
 ```
 
-You may also have to reset permissions on the existing files folder. The following command will recursively set folders to 777 (rwx) and files to 666 (rw)
+You may also have to reset permissions on the existing files folder. The following command will recursively set folders to 777 (rwx) and files to 666 (rw).
 
 ```bash
 chmod -R +rwX files
@@ -54,8 +54,8 @@ chmod -R +rwX files
 <a name="reverse-proxy"></a>
 ## Reverse proxy settings (**optional**)
 
-If using [boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant), 
-you are most likely using it's vhost-proxy. In that case add the following to settings.php:
+If using [boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant),
+you are most likely using its vhost-proxy. In that case, add the following to settings.php:
 
 **Drupal 7**
 
