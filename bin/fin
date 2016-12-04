@@ -816,7 +816,7 @@ show_help ()
 	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
-	printh "share" "Share web server of current project on the internet using ngrok"
+	printh "share" "Share web server of the current project on the internet using ngrok"
 	printh "version	(v, -v)" "Print fin version. [v, -v] - prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
