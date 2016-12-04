@@ -1,7 +1,7 @@
 # Drupal settings
 
 Below you will find instructions on configuring your Drupal project to work with Docksal.
-Some settings are required; others are optional or enahncements. Please review carefully.
+Some settings are required; others are optional or enhancements. Please review carefully.
 
 <a name="db"></a>
 # DB connection settings (**required**)
