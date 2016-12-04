@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.11.7
+FIN_VERSION=0.11.8
 
 # Console colors
 red='\033[0;91m'
@@ -816,6 +816,7 @@ show_help ()
 	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
+	printh "share" "Share web server of current project on the internet using ngrok"
 	printh "version	(v, -v)" "Print fin version. [v, -v] - prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
@@ -1010,6 +1011,22 @@ show_help_alias ()
 	printh "fin delete dev"	"Delete 'dev' alias"
 	echo
 	echo "Aliases are effectively symlinks stored in $CONFIG_ALIASES"
+}
+
+show_help_share ()
+{
+	echo-green "Share project to the internet via ngrok"
+	printh "fin share" "" "yellow"
+	echo
+	echo-green "Purpose:"
+	echo "	In certain cases you may need to share or expose you local web server on the internet."
+	echo "	E.g. share access with a teammate or customer to demonstrate the work or discuss the progress."
+	echo "	ngrok creates a tunnel from the public internet to a port on your local machine even if you are behind NAT."
+	echo
+	echo-green "Usage:"
+	echo "	You will get public web address in command line UI."
+	echo -e "	Press ${yellow}Ctrl+C${NC} to stop sharing and quit command line UI"
+	echo
 }
 
 show_help_config ()
