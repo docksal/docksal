@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.11.5
+FIN_VERSION=0.11.8
 
 # Console colors
 red='\033[0;91m'
@@ -118,11 +118,13 @@ else
 	# current active machine folder
 	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
 	mkdir -p "$DOCKER_MACHINE_FOLDER"
+
+	# TODO: revise or remove later. search for DOCKER_MACHINE_IP in the code
 	# get desired ip
-	if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
-		DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
-	fi
-	DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
+	# if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
+	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
+	#fi
+	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
 
 	export DOCKSAL_HOST_IP="192.168.64.1"
 fi
@@ -137,7 +139,7 @@ echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
 echo-error () {
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}";
-	local unused="$2" # avoid IDE warning
+	local unused="$2$3" # avoid IDE warning
 	shift
 	# echo other parameters indented s error description or remedy
 	while [[ "$1" != "" ]]; do
@@ -262,13 +264,8 @@ get_mysql_connect ()
 # Use this function for every docker-compose invocation.
 docker_compose ()
 {
-	# Running docker exec interactively on Windows requires workarounds
-	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
-
-	# docker-compose cannot find docker-compose.yml in the path if there are symlinks on the way
-	# get_docksal_path can properly find the file. Incapsulate the cd into subshell
 	(cd "$(get_docksal_path)" && docker-compose "$@")
-	#(cd "$(get_docksal_path)" && "$winpty_cmd" "$DOCKER_COMPOSE_BIN" "$@")
+	#(cd "$(get_docksal_path)" && ${winpty} "$DOCKER_COMPOSE_BIN" "$@")
 }
 
 # Get container id by service name
@@ -453,7 +450,7 @@ check_docker_running ()
 		docker_status=$?
 	fi
 
-	if [[ $docker_status -eq 0 ]]; then
+	if [[ ${docker_status} -eq 0 ]]; then
 		DOCKER_RUNNING="true"
 	else
 		if is_docker_native; then
@@ -543,7 +540,7 @@ check_vbox_version ()
 	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
 }
 
-# Check that docker-compose.yml is present
+# Check that .docksal is present
 check_docksal ()
 {
 	if [[ "$(get_docksal_path)" == "" ]] ; then
@@ -655,7 +652,7 @@ _remove_containers ()
 
 		# Disconnect proxy from the project network, otherwise network will not be removed.
 		# Figure out the default project network name
-		network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
 
 		# Taking the whole docker-compose project down (this removes containers, volumes and networks)
@@ -713,7 +710,7 @@ _docker_cleanup ()
 _vhost_proxy_connect ()
 {
 	# Figure out the default project network name
-	network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 	docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
 	if [[ $? == 0 ]]; then
 		echo-green "Connected vhost-proxy to \"${network}\" network."
@@ -823,6 +820,7 @@ show_help ()
 	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
+	printh "share" "Share web server of the current project on the internet using ngrok"
 	printh "version	(v, -v)" "Print fin version. [v, -v] - prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
@@ -1017,6 +1015,22 @@ show_help_alias ()
 	printh "fin delete dev"	"Delete 'dev' alias"
 	echo
 	echo "Aliases are effectively symlinks stored in $CONFIG_ALIASES"
+}
+
+show_help_share ()
+{
+	echo-green "Share project to the internet via ngrok"
+	printh "fin share" "" "yellow"
+	echo
+	echo-green "Purpose:"
+	echo "	In certain cases you may need to share or expose you local web server on the internet."
+	echo "	E.g. share access with a teammate or customer to demonstrate the work or discuss the progress."
+	echo "	ngrok creates a tunnel from the public internet to a port on your local machine even if you are behind NAT."
+	echo
+	echo-green "Usage:"
+	echo "	You will get public web address in command line UI."
+	echo -e "	Press ${yellow}Ctrl+C${NC} to stop sharing and quit command line UI"
+	echo
 }
 
 show_help_config ()
@@ -1247,7 +1261,7 @@ docker_machine_start ()
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
 docker_machine_remove ()
 {
-	local $machine_name="${1:-$DOCKER_MACHINE_NAME}"
+	local machine_name="${1:-$DOCKER_MACHINE_NAME}"
 
 	_confirm "Remove $machine_name?"
 	# VirtualBox
@@ -1405,7 +1419,7 @@ Windows Registry Editor Version 5.00
 "Size"=dword:00000003
 EOF
 	# Update registry and restart Server and Computer Browser services.
-	winsudo "regedit /S $(cygpath -w $tmpfile) && net stop server /y && net start server && net start browser"
+	winsudo "regedit /S $(cygpath -w ${tmpfile}) && net stop server /y && net start server && net start browser"
 }
 
 # Method to create the user and SMB network share on Windows.
@@ -1425,7 +1439,7 @@ smb_share_add()
 # @param share_path, mount_point, password
 smb_share_mount()
 {
-	DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
+	#DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
@@ -1445,7 +1459,7 @@ docker_machine_mount_smb ()
 	echo  # Add a new line after user input.
 
 	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
+		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
 		smb_share_add "$MOUNT_POINT" "$DRIVE" && \
 			smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
 			(echo-red "Error creating share" && exit 1)
@@ -1461,7 +1475,7 @@ docker_machine_remove_smb ()
 {
 	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u $DRIVE | sed 's/^\/cygdrive\///')
+		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
 		command_share="net share ${MOUNT_POINT} /DELETE"
 		winsudo "$command_share"
 	done
@@ -1492,7 +1506,7 @@ vm ()
 
 	check_binary_found 'docker-machine'
 
-	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] && [[ "$1" != "rm" ]] && [[ "$1" != "active" ]] ; then
+	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] && [[ "$1" != "remove" ]] && [[ "$1" != "active" ]] ; then
 		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME is not created. Use 'fin vm start' or 'fin up'."
 		 return 1
 	fi
@@ -1595,7 +1609,7 @@ vm-stats ()
 	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
 	"$vboxmanage" metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
 	sleep 1
-	"$vboxmanage" metrics query "$DOCKER_MACHINE_NAME" $metrics
+	"$vboxmanage" metrics query "$DOCKER_MACHINE_NAME" "$metrics"
 }
 
 vm-ram () {
@@ -1633,7 +1647,7 @@ stop ()
 restart ()
 {
 	check_docksal_environment
-	_restart_containers "$@"
+	_restart_containers
 }
 
 # output status of containers
@@ -1666,10 +1680,9 @@ ssh_add () {
 	docker exec docksal-ssh-agent ssh-add -l >/dev/null
 	if [[ $1 == "" && $? == 0 ]]; then return; fi
 
-	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-	${winpty_cmd} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+	${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
 	return $?
 }
 
@@ -1945,19 +1958,19 @@ install_tools_ubuntu ()
 		fi
 		curl -sSL https://get.docker.com/ | sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-			sudo usermod -aG docker $LOGNAME
+			sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
 	else
 		echo "Starting Docker service if stopped..."
 		sudo service docker start 2>/dev/null
-		sudo docker version
+		sudo docker version >/dev/null
 		if [[ ! $? -eq 0 ]]; then
 			_confirm 'There is some problem with your Docker installation. Do you want to try re-installing?'
 			curl -sSL https://get.docker.com/ | sh && \
 				# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-				sudo usermod -aG docker $LOGNAME
+				sudo usermod -aG docker "$LOGNAME"
 			sudo service docker start 2>/dev/null
 			sudo docker version
 			if_failed "Docker installation/upgrade has failed."
@@ -1994,7 +2007,7 @@ EOF
 		sudo resolvconf -u
 	fi
 
-	# Update system images and install system service (call self with sudo).
+	# Update system images and install system service (call self with sudo in case of fresh install).
 	echo-green "Updating system images..."
 	sudo fin update --system-images
 
@@ -2084,12 +2097,9 @@ update_system_images ()
 {
 	check_docker_running
 
-	# Running docker exec interactively on Windows requires workarounds
-	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
-
-	${winpty_cmd} docker pull "${IMAGE_VHOST_PROXY}"
-	${winpty_cmd} docker pull "${IMAGE_DNS}"
-	${winpty_cmd} docker pull "${IMAGE_SSH_AGENT}"
+	${winpty} docker pull "${IMAGE_VHOST_PROXY}"
+	${winpty} docker pull "${IMAGE_DNS}"
+	${winpty} docker pull "${IMAGE_SSH_AGENT}"
 	reset system
 }
 
@@ -2296,13 +2306,7 @@ _run ()
 	container_id=$(get_container_id "$CONTAINER_NAME")
 
 	# ------------------------------------------------ #
-	# 1) check winpty
-	# Running docker exec interactively on Windows requires workarounds
-	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
-	# ------------------------------------------------ #
-
-	# ------------------------------------------------ #
-	# 2) cmd
+	# 1) cmd
 	local cmd
 
 	local cdir
@@ -2320,7 +2324,7 @@ _run ()
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
-	# 3) convert array of parameters into escaped string
+	# 2) convert array of parameters into escaped string
 	# Escape spaces that are "spaces" and not parameter delimeters (i.e. param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
@@ -2331,10 +2335,10 @@ _run ()
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
-	# 4) execute
+	# 3) execute
 	# Allow entering arbitrary containers by name (e.g. system containers like vhost-proxy).
 	if [[ "$container_id" == "" ]]; then
-		${winpty_cmd} docker exec -it "$CONTAINER_NAME" sh -i
+		${winpty} docker exec -it "$CONTAINER_NAME" sh -i
 		return
 	fi
 
@@ -2342,7 +2346,7 @@ _run ()
 	if is_tty ; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty_cmd} docker exec -it "$container_id" bash -ic "$cmd; (exit \$?)"
+		${winpty} docker exec -it "$container_id" bash -ic "$cmd; (exit \$?)"
 	else
 		# non-interactive
 		docker exec "$container_id" bash -c "$cmd"
@@ -2353,9 +2357,15 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
+	eval $(parse_params "$@")
+
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+
 	check_docksal_environment
-	check_drush_path
-	_run $(get_mysql_connect)
+	container_id=$(get_container_id "db")
+	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
+	${winpty} docker exec -it "$container_id" bash -ic "mysql ${__mysql_command}"
 }
 
 # Truncate db and import from sql dump
@@ -2369,8 +2379,8 @@ mysql_import ()
 	check_docksal_environment
 	eval $(parse_params "$@")
 
-	local __dump_user="${dbuser:-\$MYSQL_USER}"
-	local __dump_password="${dbpassword:-\$MYSQL_PASSWORD}"
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
 	local __database="${ARGV[0]}"
 	local __input="${ARGV[1]}"
 
@@ -2408,11 +2418,10 @@ mysql_import ()
 	echo "Importing..."
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command direclty (no bash wrapper) so that stdin could be received inside that exec
-	is_windows && check_binary_found 'winpty' && winpty_cmd='winpty'
 	container_id=$(get_container_id "db")
-	__mysql_command=$(_RUN_NO_CDIR=1 CONTAINER_NAME="db" _run "echo mysql -u$__dump_user -p$__dump_password")
-	__mysql_command=$(echo $__mysql_command | sed -e 's/[^a-zA-Z0-9_-]$//')
-	cat "$__input" | ${winpty_cmd} docker exec -i "$container_id" ${__mysql_command} ${__database}
+	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
+	__mysql_command=$(echo "$__mysql_command" | sed -e 's/[^a-zA-Z0-9_-]$//')
+	cat ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then
@@ -2437,8 +2446,8 @@ mysql_dump ()
 	check_docksal_environment
 	eval $(parse_params "$@")
 
-	local __dump_user="${dbuser:-\$MYSQL_USER}"
-	local __dump_password="${dbpassword:-\$MYSQL_PASSWORD}"
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
 	local __database="${ARGV[0]}"
 	local __output="${ARGV[1]}"
 
@@ -2455,10 +2464,11 @@ mysql_dump ()
 
 	echo-green "Exporting..."
 
-	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-		_run "mysqldump -u $__dump_user -p${__dump_password} $__database" | tee "$__output" >/dev/null
+	container_id=$(get_container_id "db")
+	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
+	docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database} | tee "$__output" >/dev/null
 
-	[ $? -eq 0 ] && echo-rewrite-ok "Exporting... [done]"
+	[ $? -eq 0 ] && echo-rewrite-ok "Exporting..."
 }
 
 # Run Behat tests (also install dependencies through Composer)
@@ -2588,7 +2598,7 @@ _set_cli_uid ()
 	local cli=$(get_container_id cli || true)
 
 	# If there is no cli, move on.
-	if [[ -z $cli ]]; then
+	if [[ -z ${cli} ]]; then
 		echo-yellow 'Expected service "cli" is missing.'
 		return;
 	fi
@@ -2597,6 +2607,7 @@ _set_cli_uid ()
 	container_uid=$(docker exec ${cli} id -u)
 	if [[ ! $? -eq 0 ]]; then
 		echo-red 'Error getting uid from cli container'
+		echo "You might need to recreate containers with fin reset"
 		return
 	fi
 
@@ -2623,6 +2634,33 @@ _set_cli_uid ()
 		php_service='php-fpm';
 	fi
 	docker exec -u root ${cli} supervisorctl restart "$php_service" >/dev/null
+}
+
+# Share web container using ngrok service
+ngrok_share ()
+{
+	check_docksal_environment
+
+	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+	local container_name=$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)
+	if [[ "$container_name" == "" ]]; then
+		echo-error "Could not find running web container in this project"
+		exit 1
+	fi
+	local ngrok_container_name=${container_name}_ngrok
+
+	if ( fin docker ps --format '{{.Names}}' | grep ^${ngrok_container_name}$ >/dev/null ); then
+		docker stop ${ngrok_container_name} >/dev/null
+		docker rm ${ngrok_container_name} >/dev/null 2>/dev/null
+	fi
+
+	# Based on https://github.com/wernight/docker-ngrok
+	${winpty} docker run --rm -it \
+		--net ${network} \
+		--link ${container_name} \
+		--name ${ngrok_container_name} \
+		wernight/ngrok \
+		ngrok http -host-header ${VIRTUAL_HOST} ${container_name}.${network}:80
 }
 
 sysinfo ()
@@ -2707,15 +2745,15 @@ load_configuration ()
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
 	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
-	if [[ -f $env_file ]]; then
-		ENV_FILE=$env_file
+	if [[ -f "$env_file" ]]; then
+		ENV_FILE="$env_file"
 		# Source and allexport variables in the .env file
-		set -a; source $env_file; set +a
+		set -a; source "$env_file"; set +a
 		# Source local env file if both it and the main env file exist
-		if [[ -f $local_env_file ]]; then
+		if [[ -f "$local_env_file" ]]; then
 			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
 			# Source and allexport variables in the .env file
-			set -a; source $local_env_file; set +a
+			set -a; source "$local_env_file"; set +a
 		fi
 		export ENV_FILE
 	fi
@@ -2723,8 +2761,8 @@ load_configuration ()
 	# Legacy/traditional setup support
 	# TODO: get rid of this in 2017
 	legacy_yml_file="$(get_project_path_dc)/docker-compose.yml"
-	if [[ -f $legacy_yml_file ]]; then
-		COMPOSE_FILE=$legacy_yml_file
+	if [[ -f "$legacy_yml_file" ]]; then
+		COMPOSE_FILE="$legacy_yml_file"
 		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml" >&2
 	fi
 	# Set COMPOSE_FILE unless it has been already set by user
@@ -2736,13 +2774,13 @@ load_configuration ()
 		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
 		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 		# Use .docksal/docksal.yml by default (if exists)
-		if [[ -f $yml_file ]]; then
-			COMPOSE_FILE=$yml_file
+		if [[ -f "$yml_file" ]]; then
+			COMPOSE_FILE="$yml_file"
 			# Include docksal-local.yml (if exists)
-			[[ -f $local_yml_file ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
+			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		# Otherwise use the default.yml stack config (if exists)
-		elif [[ -f $default_yml_file ]]; then
-			COMPOSE_FILE=$default_yml_file
+		elif [[ -f "$default_yml_file" ]]; then
+			COMPOSE_FILE="$default_yml_file"
 		fi
 		# Throw an error if COMPOSE_FILE is empty here
 		if [[ "$COMPOSE_FILE" == "" ]]; then
@@ -2753,9 +2791,9 @@ load_configuration ()
 		# Experimental: Include a volumes yml if requested.
 		# Use bind mount for volumes if using default stack.
 		[[ "$COMPOSE_FILE" == "$default_yml_file" ]] && DOCKSAL_VOLUMES="bind"
-		if [[ $DOCKSAL_VOLUMES != "" ]]; then
+		if [[ "$DOCKSAL_VOLUMES" != "" ]]; then
 			volumes_yml_file="$(get_config_path_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-			if [[ -f $volumes_yml_file ]]; then
+			if [[ -f "$volumes_yml_file" ]]; then
 				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 			else
 				echo-error "Volumes definition not found in ${volumes_yml_file}." \
@@ -2772,7 +2810,7 @@ load_configuration ()
 	if [[ -d $(get_docksal_path) ]]; then
 		local project_name=$(basename $(get_docksal_path) | tr '[:upper:]' '[:lower:]')
 		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
-		COMPOSE_PROJECT_NAME_SAFE=$(echo $COMPOSE_PROJECT_NAME | sed 's/[^a-z0-9]//g')
+		COMPOSE_PROJECT_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^a-z0-9]//g')
 		export COMPOSE_PROJECT_NAME
 		export COMPOSE_PROJECT_NAME_SAFE
 	fi
@@ -2801,8 +2839,8 @@ config_show ()
 	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
 	# Replace separators with new lines
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
-	echo -e "COMPOSE_FILE:\n$(echo $COMPOSE_FILE | tr $SEPARATOR '\n')"
-	echo -e "ENV_FILE:\n$(echo $ENV_FILE | tr $SEPARATOR '\n')"
+	echo -e "COMPOSE_FILE:\n$(echo ${COMPOSE_FILE} | tr ${SEPARATOR} '\n')"
+	echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
 	echo
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
@@ -2826,7 +2864,7 @@ config_generate ()
 
 	_confirm "Set up $DOCKSAL_STACK Docksal stack in the current directory?"
 
-	if [[ -f $yml_file ]]; then
+	if [[ -f ${yml_file} ]]; then
 		if [[ -d .docksal ]]; then
 			echo-yellow ".docksal directory already exists in the current directory."
 			_confirm "Remove it and start from scratch?"
@@ -2836,7 +2874,7 @@ config_generate ()
 		mkdir .docksal && \
 		# Use bind mount volumes by default
 		echo 'DOCKSAL_VOLUMES="bind"' > .docksal/docksal.env && \
-		cp $yml_file .docksal/docksal.yml && \
+		cp ${yml_file} .docksal/docksal.yml && \
 		# Setup docroot and a basic index.php
 		mkdir -p docroot && \
 		echo '<?php phpinfo();' > docroot/index.php
@@ -2932,6 +2970,8 @@ create_site ()
 HOST_HOME=$HOME
 is_windows && HOST_HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
 export HOST_HOME
+# Export winpty for windows
+is_windows && check_binary_found 'winpty' && winpty='winpty'
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
@@ -2954,7 +2994,7 @@ fi
 	[[ "$1" != "bash_comp_words" ]] &&
 	[[ "$1" != "ssh-add" ]] &&
 	[[ "$1" != "vm" ]] &&
-	[[ "$*" != "docker"* ]] &&
+	[[ "$*" != "docker "* ]] &&
 	[[ "$1" != "exec-url" ]] &&
 	[[ "$1" != "cleanup" ]] &&
 	[[ "$1" != "help" ]] &&
@@ -2970,6 +3010,7 @@ fi
 	[[ "$*" != "status -a" ]] && [[ "$*" != "status --all" ]] &&
 	load_configuration &&
 	check_for_updates
+
 
 # Parse other parameters
 case "$1" in
@@ -2987,7 +3028,7 @@ case "$1" in
 		;;
 	restart)
 		shift
-		restart "$@"
+		restart
 		;;
 	status|st|ps)
 		shift
@@ -3096,6 +3137,9 @@ case "$1" in
 	exec-url)
 		shift
 		exec_url "$@"
+		;;
+	share)
+		ngrok_share
 		;;
 	cleanup)
 		shift

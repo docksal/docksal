@@ -1,34 +1,35 @@
 # Working with multiple projects
 
-## Using vhost-proxy (boot2docker-vagrant)
+Docksal has a built-in reverse proxy container that adds support for running multiple projects. The container binds to `192.168.64.100:80` and routes web requests based on the host name.
 
-[boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant) has a built-in vhost-proxy container that adds support for running multiple projects on the same `IP:port`. The container binds to `192.168.64.100:80` (the default box IP address) and routes web requests based on the Host header.
+## Setting up. MacOS and Linux
+On Mac OS and Linux you don't need to do anything. Routing is automatically configured upon first `fin update`. 
 
-See [boot2docker-vagrant docs](https://github.com/blinkreaction/boot2docker-vagrant/blob/develop/docs/networking.md#vhost-proxy) for more information and configuration instructions.
+## Setting up. Windows
+On Windows you will need to manually append virtual host of each of your Doskal projects to the [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)) to route it to `192.168.64.100`.
 
+Example [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)):
+```
+# Copyright (c) 1993-2009 Microsoft Corp.
+#
+# This is a sample HOSTS file used by Microsoft TCP/IP for Windows.
+#
+# This file contains the mappings of IP addresses to host names. Each
+# entry should be kept on an individual line. The IP address should
+# be placed in the first column followed by the corresponding host name.
+# The IP address and the host name should be separated by at least one
+# space.
 
-## Without vhost-proxy (Mac, Windows, Linux)
+drupal7.docksal    192.168.64.100
+myproject.docksal    192.168.64.100
+```
+## Finding out project hostname
 
-Follow the [setup](env-setup.md) instructions for each project making sure that ports used by containers accross all projects do not collide (e.g. two containers cannot use port 80 at the same time).
+To find current project's virtual host name run `fin config | grep ^VIRTUAL_HOST`
 
-This requires a slight modification of the `docker-compose.yml`.
-Edit the `ports` key for each container that does port mapping in `docker-compose.yml`.
-You can either map unique ports for each container or use dedicated IPs.
-
-## Unique ports
-
-```yml
-ports:
-  - "8080:80"
-  - "8443:443"
+```
+$ fin config | grep ^VIRTUAL_HOST
+VIRTUAL_HOST: netscout.docksal
 ```
 
-## Dedicated IP
-
-```yml
-ports:
-  - "192.168.64.100:80:80"
-  - "192.168.64.100:443:443"
-```
-
-For Mac and Windows see [boot2docker-vagrant/vagrant.yml](https://github.com/blinkreaction/boot2docker-vagrant/blob/master/vagrant.yml) for instructions on enabling additional IPs for the Boot2docker VM.
+> Hint: hostname is usually a project's folder name sans spaces and dashes

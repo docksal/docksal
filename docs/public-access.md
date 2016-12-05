@@ -4,17 +4,22 @@ In certain cases you may need to share or expose you local web server on the int
 E.g. share access with a teammate or customer to demonstrate the work or discuss the progress.
 Working with external web services that expect a callback URL is also generally not possible with a local environment.
 
-## Welcome to ngrok!
+## What is ngrok
 
-ngrok creates a tunnel from the public internet **http://subdomain.ngrok.com** to a port on your local machine.
-You can give this URL to anyone to allow them to try out a web site you're developing without doing any deployment.
+ngrok creates a tunnel from the public internet **http://subdomain.ngrok.io** to a port on your local machine.
+You can give auto-generated URL to anyone to allow them to try out a web site you're developing. ngrock also allows you to debug network requests made to your site.
 
 ## How to use
 
-Uncomment the **share** service definition section in [`docker-compose.yml`](../docker-compose.yml) to start using ngrok.
+Inside project folder run:
 
-To get the *.ngrok.com address, check the container's logs:
+    fin share
 
-    docker-compose logs share
+You will see CLI interface provided by running ngrok container.  
+Use `*.ngrok.io` web address shown here to share you project with public:
 
-The ngrok web inspection interface is running on port 4040. E.g. `http://192.168.10.10:4040`
+![](img/ngrok.png)
+
+## How to stop
+
+To stop sharing use `Ctrl+C`
