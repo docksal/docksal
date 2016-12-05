@@ -4,7 +4,7 @@ It is possible to extend fin with custom commands (per project).
 
 1) Create a custom command
 
-File `[project dir]/.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
+File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
 
 ```bash
 #!/bin/bash
@@ -25,10 +25,11 @@ fin drush updb $1
 
 These environment variables are available for use inside you custom command scripts:
 
-* `PROJECT_ROOT` - absolute path to project folder.  
-* `DOCROOT` - relative path to the project's document root, from within the project directory.
-* `APACHE_DOCUMENTROOT` - absolute path to the document root, as seen by the web container. For 
-example, `/var/www/docroot`.
+* `PROJECT_ROOT` - absolute path to the project folder.  
+* `DOCROOT` - name of the docroot folder.
+* `VIRTUAL_HOST` - for example `projectname.docksal`.
+* `DOCKER_RUNNING` - (string) "true" or "false"
+
 
 Example `init` command for a Drupal website using drush to automate the install:  
 
