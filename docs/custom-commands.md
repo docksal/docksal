@@ -1,8 +1,10 @@
 # Fin custom commands
 
-It is possible to extend fin with custom commands (per project).
+It is possible to extend fin with custom commands per project or per host.
 
-1. Create a custom command
+## Creating cutsom command in project 
+
+1. Create a custom command script
 
     File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
 
