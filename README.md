@@ -11,7 +11,7 @@ Docker and Docker Compose based environments for web development.
     Please help us by testing, submitting issues and PRs. Thanks!
 
 
-## Examples of Docksal powered projects
+## Examples of preconfigured Docksal powered projects
 
 Running a complete LAMP stack for Drupal, WordPress or a pure HTML/PHP base website is two commands away!<sup>*</sup>
 
@@ -42,6 +42,17 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 
     This is done **one time per project** and should be performed by the project TL.
 
+<a name="fin"></a>
+## Docksal Fin (fin)
+
+Docksal Fin is a command line tool to control Docksal's stack. `fin` runs natively on Mac and Linux and requires [Babun Shell](http://babun.github.io) on Windows.
+
+## Docksal Stack
+
+Each project contains at least 3 services:
+* `web` - holds your webserver (nginx/apache/etc.)
+* `db` - holds database server (MySQL)
+* `cli` - container that is meant to serve as a single console access point to all necessary command line tools. You can access it with `fin bash`. For the list of tools available inside **cli** check [CLI image docs](https://github.com/docksal/service-cli)
 
 <a name="updates"></a>
 ## Updates
@@ -108,70 +119,45 @@ sudo rm /usr/local/bin/docker-compose
 sudo rm /usr/local/bin/docker-machine
 ```
 
-<a name="fin"></a>
-## Docksal Fin (fin)
-
-Docksal Fin is a console tool that simplifies day-to-day work with Docksal.
-It provides a set of most commonly used commands and operations for controlling the Docksal VM (Mac and Windows), containers, running drush or other commands inside the **cli** container.
-
-See `fin help` for a complete list.
-
-`fin` detects the environment it is launched in and will automatically start a VM and launch containers as necessary.
-`fin` runs on Mac and Linux directly. On Windows it runs inside the [Babun Shell](http://babun.github.io).
-
-
-<a name="cli"></a>
-## Console tools (cli container)
-
-The **cli** container is meant to serve as a single console to access all necessary command line tools.
-You can access **cli** container's console with `fin`:
-
-```
-fin bash
-```
-
-For the list of tools available inside the **cli** container check [here](https://github.com/docksal/service-cli)
-
-
 <a name="instructions"></a>
 ## Instructions and tutorials
 
 ### Advanced configuration
-- [Drupal settings](/docs/drupal-settings.md)
-- [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
 - [Running multiple projects](/docs/multiple-projects.md)
-- [DB sandbox mode](/docs/db-sandbox.md)
+- [Drupal settings](/docs/drupal-settings.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
+- [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
 - [Automatic database import](docs/db-import.md)
+- [DB sandbox mode](/docs/db-sandbox.md)
 - [Extending fin with custom commands](/docs/custom-commands.md)
 
 ### Third party utililies
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
-- [Using PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
-- [Using Blackfire profiler](/docs/blackfire.md)
-- [Public access via ngrok](/docs/public-access.md)
-- [Using Behat](/docs/behat.md)
+- [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
 - [Sending and capturing e-mail](/docs/mail.md)
+- [Using Sass](/docs/sass.md)
+- [Using PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
 - [Enabling Varnish support](/docs/varnish.md)
 - [Enabling Apache Solr support](/docs/apache-solr.md)
-- [Using Sass](/docs/sass.md)
-- [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
+- [Using Blackfire profiler](/docs/blackfire.md)
+- [Using Behat](/docs/behat.md)
+- [Public access via ngrok](/docs/public-access.md)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
-If something went wrong, first try one/all these steps in the order listed below.
-Check if the issue went away after each step.
+If something went wrong, first try one/all of these steps in the order listed below.
+Check if the issue cleared out after each step.
 
 - Update Docksal to the latest version. See [updates](#updates) section.
 - Restart the Docksal VM (Mac and Windows only): `fin vm restart`
-- Reset Docksal system services: `fin reset system` and restart projects containers with `fin up`
+- Reset Docksal system services with `fin reset system` and restart projects containers with `fin up`
 - Reboot the host system (your computer or remote server)
-- Reset the Docksal VM (Mac and Windows only): `fin vm rm` then `fin vm start` (**WARNING**: backup your DB data before doing this)
+- Reset the Docksal VM (Mac and Windows only): `fin vm remove` then `fin vm start` (**WARNING**: backup your DB data before doing this)
 
 If you are still reading this, then go ahead and search the [issue queue](https://github.com/docksal/docksal/issues). 
-Others may have experienced the same or a similar issue and have already found a solution or a workaround.
+Others may have experienced same or a similar issue and have already found a solution or a workaround.
 
 File a new issue if your problem looks to be brand new.
 
-Community support is available via our room on Gitter. [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
+Community support is available via our room in Gitter. [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
