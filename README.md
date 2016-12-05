@@ -146,18 +146,18 @@ sudo rm /usr/local/bin/docker-machine
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
-If something went wrong, first try one/all of these steps in the order listed below.
-Check if the issue cleared out after each step.
+If something went wrong, first try these quick fix steps in the order listed below.
+Check if the issue has cleared out **after each step**.
 
 - Update Docksal to the latest version. See [updates](#updates) section.
-- Restart the Docksal VM (Mac and Windows only): `fin vm restart`
+- (Mac and Windows) Restart the Docksal VM: `fin vm restart`
 - Reset Docksal system services with `fin reset system` and restart projects containers with `fin up`
-- Reboot the host system (your computer or remote server)
-- Reset the Docksal VM (Mac and Windows only): `fin vm remove` then `fin vm start` (**WARNING**: backup your DB data before doing this)
+- Reboot the host (your computer or remote server)
+- (Mac and Windows) Re-create Docksal VM: `fin vm remove` then `fin vm start` (**WARNING**: backup your DB data before doing this)
 
-If you are still reading this, then go ahead and search the [issue queue](https://github.com/docksal/docksal/issues). 
-Others may have experienced same or a similar issue and have already found a solution or a workaround.
+If quick fixes above did not help, try:
+- checking [troubleshooting doc](docs/troubleshooting.md) for rare problems that might occur
+- searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced same or a similar issue and have already found a solution or a workaround.
+- asking community for support in our Gitter room [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
 
-File a new issue if your problem looks to be brand new.
-
-Community support is available via our room in Gitter. [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
+Create a new issue if your problem is still not resolved.
