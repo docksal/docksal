@@ -69,6 +69,9 @@ DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
 #---------------------------- URL references --------------------------------
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
+URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
+URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
+URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_FIN="${URL_REPO}/${FIN_BRANCH}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${FIN_BRANCH}/stacks/services.yml"
 URL_STACKS_STACK_ACQUIA="${URL_REPO}/${FIN_BRANCH}/stacks/stack-acquia.yml"
@@ -798,6 +801,7 @@ show_help ()
 	printh "logs [service]" "Show Docker logs for service container"
 
 	echo
+	printh "create-site" "Download and install Drupal or Wordpress."
 	printh "drush [command]" "Execute Drush command (Drupal)"
 	printh "drupal [command]" "Execute Drupal Console command (Drupal 8)"
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
@@ -1258,7 +1262,7 @@ docker_machine_start ()
 docker_machine_remove ()
 {
 	local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-	
+
 	_confirm "Remove $machine_name?"
 	# VirtualBox
 	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
@@ -2893,6 +2897,72 @@ config_generate ()
 	fi
 }
 
+create_site ()
+{
+	while true; do
+		read -p "Please enter the name of your project (all one word, no spaces or slashes): " project_name
+		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
+		  echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
+		  continue
+		fi
+		break
+	done
+	echo ''
+
+	echo -e "What would you like to install?"
+	echo -e "${green}[1]${NC} Drupal 7"
+	echo -e "${green}[2]${NC} Drupal 8"
+	echo -e "${green}[3]${NC} Wordpress"
+	echo -e ""
+	while true; do
+		read -p ": " choice
+		case ${choice} in
+			1 )
+				target_cms="Drupal 7"
+				target_host_name_search_string="drupal7"
+				target_repo="$URL_REPO_DRUPAL7"
+				break
+				;;
+			2 )
+				target_cms="Drupal 8"
+				target_host_name_search_string="drupal8"
+				target_repo="$URL_REPO_DRUPAL8"
+				break
+				;;
+			3 )
+				target_cms="Wordpress"
+				target_host_name_search_string="wordpress"
+				target_repo="$URL_REPO_WORDPRESS"
+				break
+				;;
+			* )
+				echo 'Please enter 1, 2, or 3.'
+				continue
+		esac
+		break
+	done
+	echo ''
+
+	echo -e "Your site will be created at ${yellow}$(pwd)/$project_name${NC}"
+	echo -e "Your site will run ${yellow}${target_cms}${NC}"
+	echo -e "The URL of your site will be ${yellow}http://$project_name.docksal${NC}"
+	echo ''
+
+	_confirm "Do you wish to proceed?"
+
+	# Todo: is git clone really the best way to do this?  What about
+	# users who don't have a github account, will this work for them?
+	echo -e "${green} Cloning repository...${NC}"
+	git clone -b master ${target_repo} ${project_name}
+	cd ${project_name}/.docksal
+
+	# Edit docksal.env to use a custom user-supplied host name
+	sed -i.bak "s/${target_host_name_search_string}/${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1
+	cd ..
+
+	fin init
+}
+
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Export HOME as HOST_HOME.
@@ -3108,6 +3178,9 @@ case "$1" in
 		[[ "$*" == "list" ]] && alias_list && exit
 		[[ "$1" == "remove" ]] && shift && alias_remove "$@" && exit
 		alias_create "$@"
+		;;
+	create-site)
+		create_site
 		;;
 	init|*)
 		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
