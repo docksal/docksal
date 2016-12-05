@@ -25,7 +25,7 @@ myproject.docksal    192.168.64.100
 ```
 ## Finding out project hostname
 
-To find current project's virtual host name run `fin config | grep VIRTUAL_HOST`
+To find current project's virtual host name run `fin config | grep ^VIRTUAL_HOST`
 
 ```
 $ fin config | grep ^VIRTUAL_HOST
