@@ -2,28 +2,30 @@
 
 It is possible to extend fin with custom commands (per project).
 
-1) Create a custom command
+1. Create a custom command
 
-File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
+    File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
 
-```bash
-#!/bin/bash
+    ```bash
+    #!/bin/bash
     
-## Runs drush updb
-##
-## Usage: fin updb [params to passthrough]
+    ## Runs drush updb
+    ##
+    ## Usage: fin updb [params to passthrough]
  
-fin drush updb $1
-```
+    fin drush updb $1
+    ```
 
-2) Set executable bit: `chmod +x .docksal/commands/updb`  
-3) Use as regular fin command: `fin updb`  
-4) Passing parameters also works: `fin updb -y`  
-5) See command description in `fin help` and command full help via `fin help updb` 
+2. Make it executable
+    ```
+    chmod +x .docksal/commands/updb
+    ```
+
+Now you can use it as if it was a regular fin command: `fin updb`. Passing parameters also works: `fin updb -y`. Command description will be visible in `fin help` and command full help will be available via `fin help updb` 
 
 ## Available variables
 
-These environment variables are available for use inside you custom command scripts:
+These variables provided by fin are available for use inside you custom command scripts:
 
 * `PROJECT_ROOT` - absolute path to the project folder.  
 * `DOCROOT` - name of the docroot folder.
