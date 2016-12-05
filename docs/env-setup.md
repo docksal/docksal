@@ -12,7 +12,7 @@ Instructions were not tested with other shells on Windows.
 
 Babun should be installed and run **as a regular user (do not use admin command prompt).**
 
-## Setup
+## Installation
 
 1) Install/update [VirtualBox](https://www.virtualbox.org) (**Mac and Windows only**)  
 2) Install/update `fin` (Docksal command-line tool)
@@ -29,9 +29,9 @@ fin update
 ```
 
 
-## Support for Docker for Mac/Windows
+## Using Docker for Mac/Windows instead of VirtualBox
 
-Docker for Mac/Windows support is experimental. Please report any issues in the [issue queue](https://github.com/docksal/docksal/issues)
+Docker for Mac/Windows support is experimental and is not recommended for regular use due to low filesystem performance. Please report any issues in the [issue queue](https://github.com/docksal/docksal/issues)
 
 To try it out:
 
