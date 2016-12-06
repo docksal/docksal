@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.11.9
+FIN_VERSION=0.12.0
 
 # Console colors
 red='\033[0;91m'
@@ -377,6 +377,13 @@ check_binary_found ()
 		echo-red "$1 executable was not found. (Try running 'fin update')"
 		exit 1
 	fi
+}
+
+check_winpty_found ()
+{
+	! is_windows && return
+	check_binary_found 'winpty'
+	winpty='winpty'
 }
 
 is_docker_running ()
@@ -1672,6 +1679,7 @@ status ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
+	check_winpty_found
 	# Check if ssh-agent container is running
 	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
 	[[ "$running" != "true" ]] && return
@@ -2099,6 +2107,7 @@ EOF
 update_system_images ()
 {
 	check_docker_running
+	check_winpty_found
 
 	${winpty} docker pull "${IMAGE_VHOST_PROXY}"
 	${winpty} docker pull "${IMAGE_DNS}"
@@ -2303,6 +2312,7 @@ _run ()
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
 	check_docksal_environment
+	check_winpty_found
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
@@ -2360,6 +2370,7 @@ _run ()
 # start interactive mysql shell
 mysql ()
 {
+	check_winpty_found
 	eval $(parse_params "$@")
 
 	local __dump_user="${dbuser:-root}"
@@ -2643,6 +2654,7 @@ _set_cli_uid ()
 ngrok_share ()
 {
 	check_docksal_environment
+	check_winpty_found
 
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 	local container_name=$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)
@@ -2990,8 +3002,6 @@ create_site ()
 HOST_HOME=$HOME
 is_windows && HOST_HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
 export HOST_HOME
-# Export winpty for windows
-is_windows && check_binary_found 'winpty' && winpty='winpty'
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
