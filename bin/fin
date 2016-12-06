@@ -1679,7 +1679,6 @@ status ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
-	check_winpty_found
 	# Check if ssh-agent container is running
 	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
 	[[ "$running" != "true" ]] && return
@@ -1693,6 +1692,7 @@ ssh_add () {
 
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
+	check_winpty_found
 	${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
 	return $?
 }
@@ -2312,7 +2312,6 @@ _run ()
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
 	check_docksal_environment
-	check_winpty_found
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
@@ -2359,6 +2358,7 @@ _run ()
 	if is_tty ; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
+		check_winpty_found
 		${winpty} docker exec -it "$container_id" bash -ic "$cmd; (exit \$?)"
 	else
 		# non-interactive
