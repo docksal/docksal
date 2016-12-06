@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.11.8
+FIN_VERSION=0.11.9
 
 # Console colors
 red='\033[0;91m'
@@ -1004,15 +1004,14 @@ show_help_alias ()
 	echo "You can precede any command with an alias."
 	echo
 	echo-green "Usage:"
-	printh "fin alias" "Show aliases list"
-	printh "fin alias list" "Show aliases list"
-	printh "fin alias <path> <alias_name>" "Create an alias that links to path"
+	printh "fin alias [list]" "Show aliases list"
+	printh "fin alias <path> <alias_name>" "Create an alias that links to target path"
 	printh "fin alias remove <alias_name>" "Remove alias"
 	echo-green "Examples:"
-	printh "fin alias ~/site1/docroot dev" "Create alias named 'dev' that links to '~/site1/docroot'"
-	printh "fin @dev drush st" "Execute 'fin drush st' command in directory linked by 'dev' alias"
-	printh "" "Hint: to work sub-site link to it's folder e.g. ~/site1/docroot/sites/subsite1"
-	printh "fin delete dev"	"Delete 'dev' alias"
+	printh "fin alias ~/site1/docroot dev" "Create alias ${yellow}dev${NC} that is linked to ${yellow}~/site1/docroot${NC}"
+	printh "fin @dev drush st" "Execute 'drush st' command in directory linked by ${yellow}dev${NC} alias"
+	printh "" "Hint: create alias to Drupal sub-site folder to launch subsite targeted commands"
+	printh "fin alias remove dev"	"Delete ${yellow}dev${NC} alias"
 	echo
 	echo "Aliases are effectively symlinks stored in $CONFIG_ALIASES"
 }
@@ -1069,7 +1068,11 @@ bash_comp_words ()
 		;;
 		fin)
 			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
-			echo "$aliases alias start stop restart status reset remove bash exec logs mysql mysql-import exec-url drush drupal \
+			local projects=$(docker ps --all \
+				--filter 'label=com.docker.compose.service=web' \
+				--format '@{{.Label "com.docker.compose.project"}}' | xargs
+			)
+			echo "$aliases $projects alias start stop restart status reset remove bash exec logs mysql mysql-import exec-url drush drupal \
 			behat ssh-add update version cleanup sysinfo"
 			exit 0
 			;;
@@ -2060,7 +2063,7 @@ update_config_files ()
 }
 
 # Install shell commands autocomplete script
-install_autocomplete ()
+install_bash_autocomplete ()
 {
 	local destination="$FIN_AUTOCOMPLETE_PATH"
 	tee "$destination" >/dev/null << 'EOF'
@@ -2747,8 +2750,9 @@ alias_remove () {
 
 alias_list ()
 {
-	local list=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "    %-15s %s %s\n", $9, $10, $11}')
+	local list=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "%-19s %s\n", $9, $11}')
 	[[ "$list" == "" ]] && echo "No aliases found" && exit
+	printf "%-19s %s\n" "NAME" "TARGET DIR"
 	echo "$list"
 }
 
@@ -2992,11 +2996,28 @@ is_windows && check_binary_found 'winpty' && winpty='winpty'
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
 	USED_ALIAS=${1#@}
-	[[ ! -h "$CONFIG_ALIASES/$USED_ALIAS" ]] && echo-red "No such alias $1" && exit 1
-	_alias_cd=$(readlink "$CONFIG_ALIASES/$USED_ALIAS")
+	shift
+	# Search alias first between aliases then between running projects
+	if [[ -h "$CONFIG_ALIASES/$USED_ALIAS" ]]; then
+		# alias found
+		_alias_cd=$(readlink "$CONFIG_ALIASES/$USED_ALIAS")
+	else
+		# alias not found. search project names
+		_alias_projects=$(docker ps --all \
+			--filter 'label=com.docker.compose.service=web' \
+			--format '{{.Label "com.docker.compose.project"}}\t{{.Label "io.docksal.project-root"}}')
+		if (echo "$_alias_projects" | grep "^$USED_ALIAS" >/dev/null 2>/dev/null); then
+			# project found
+			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS" | cut -d$'\t' -f 2)
+		else
+			# nothing was found. error out
+			echo-red "No such alias $USED_ALIAS"
+			exit 1
+		fi
+	fi
+	[[ "$1" == "" ]] && echo "$_alias_cd" && exit
 	cd "$_alias_cd" 2>/dev/null
 	if_failed_error "Could not navigate to directory linked by $1 alias"
-	shift
 fi
 
 # TODO: figure out a better way to determine when to skip load_configuration
@@ -3078,6 +3099,8 @@ case "$1" in
 			update_tools
 		elif [[ "$1" == "--config" ]]; then
 			update_config_files
+		elif [[ "$1" == "--bash-complete" ]]; then
+			install_bash_autocomplete
 		elif [[ "$1" != "" ]]; then
 			echo -e "${yellow}fin update${NC} does not support this parameter"
 		else
