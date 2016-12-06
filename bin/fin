@@ -731,11 +731,11 @@ printh ()
 	case "$3" in
 		yellow)
 			printf "\t${yellow}%-${COMMAND_COLUMN_WIDTH}s${NC}" "$1"
-			echo -e "	 $2"
+			echo -e "	$2"
 			;;
 		green)
 			printf "\t${green}%-${COMMAND_COLUMN_WIDTH}s${NC}" "$1"
-			echo -e "	 $2"
+			echo -e "	$2"
 			;;
 		*)
 			printf "\t%-${COMMAND_COLUMN_WIDTH}s" "$1"
@@ -780,9 +780,9 @@ show_help ()
 	echo
 	if ! is_linux && ! is_docker_native; then
 		printh "vm <command>" "Docksal's Virtualbox machine commands (${yellow}fin help vm${NC})" "yellow"
+		echo
 	fi
 
-	echo
 	if is_linux; then
 		printh "start (up)" "Start project services"
 	else
