@@ -1066,7 +1066,7 @@ bash_comp_words ()
 {
 	case $1 in
 		vm)
-			echo "start restart status stop ssh stats kill remove ip env ram"
+			echo "start restart status stop ssh stats kill remove ip ram"
 			exit 0
 			;;
 		alias)
@@ -1079,8 +1079,8 @@ bash_comp_words ()
 				--filter 'label=com.docker.compose.service=web' \
 				--format '@{{.Label "com.docker.compose.project"}}' | xargs
 			)
-			echo "$aliases $projects alias start stop restart status reset remove bash exec logs mysql mysql-import exec-url drush drupal \
-			behat ssh-add update version cleanup sysinfo"
+			echo "$aliases $projects vm start stop restart status reset remove bash exec create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
+			behat ssh-add update version cleanup sysinfo logs"
 			exit 0
 			;;
 		*)
