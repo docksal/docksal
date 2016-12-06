@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.12.0
+FIN_VERSION=0.12.1
 
 # Console colors
 red='\033[0;91m'
@@ -2107,11 +2107,10 @@ EOF
 update_system_images ()
 {
 	check_docker_running
-	check_winpty_found
 
-	${winpty} docker pull "${IMAGE_VHOST_PROXY}"
-	${winpty} docker pull "${IMAGE_DNS}"
-	${winpty} docker pull "${IMAGE_SSH_AGENT}"
+	docker pull "${IMAGE_VHOST_PROXY}"
+	docker pull "${IMAGE_DNS}"
+	docker pull "${IMAGE_SSH_AGENT}"
 	reset system
 }
 
