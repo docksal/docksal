@@ -2675,6 +2675,9 @@ sysinfo ()
 	# fin version
 	version
 
+	# Native vs VM
+	echo "Mode: " $( ([[ "$DOCKER_NATIVE" == "1" ]] || is_linux) && echo "Native / Docker for Mac/Windows" || echo "VirtualBox VM" )
+
 	(which 'docker-machine' >/dev/null 2>&1) && \
 		echo "███  INSTANCES" && \
 		docker-machine ls
@@ -2691,12 +2694,25 @@ sysinfo ()
 		echo "███  DOCKER MACHINE" && \
 		docker-machine --version
 
+	if is_docker_running; then
+        echo "███  DOCKER: IMAGES"
+        docker images
+
+        echo "███  DOCKER: CONTAINERS"
+        docker ps
+    fi
+
 	if which "$vboxmanage" >/dev/null 2>&1; then
 		echo "███  VIRTUAL BOX"
 		"$vboxmanage" --version
 
 		echo "███  NETWORK INTERFACES"
 		"$vboxmanage" list hostonlyifs
+	fi
+
+	if is_mac; then
+		echo "███  NFS EXPORTS"
+		cat /etc/exports
 	fi
 
 	if is_docker_machine_running; then
