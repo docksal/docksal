@@ -7,7 +7,6 @@
 Docker and Docker Compose based environments for web development.
 
     Docksal is still under active development. Breaking changes and outdated docs are very possible.
-    We plan to have a 1.0 Release Candidate in November 2016.  
     Please help us by testing, submitting issues and PRs. Thanks!
 
 
