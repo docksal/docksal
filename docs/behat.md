@@ -49,9 +49,7 @@ in the web container definition and `DOMAIN_NAME` in the browser container defin
 
 Tests can be launched with `fin` (Docksal Shell):
 
-    ```
     fin behat
-    ```
 
 This will download composer dependencies and run behat with the docker profile.
 
