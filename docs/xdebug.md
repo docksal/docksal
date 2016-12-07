@@ -2,11 +2,11 @@
 
 `xdebug` extension is disabled by default as it causes about 20% performance hit.
 
-There two variants: you can use xdebug for debuging requests from browser or you can debug requests from console (for example Drush commands).
+There are two ways of using xdebug, for debugging requests from browser or for debugging cli scripts (for example Drush commands).
 
-For configuration first variant use **Prerequisites** and **Setup**.
+To configure debugging in browser follow **Prerequisites** and **Setup**.
 
-For configuration second variant use **Setup for console php**.
+To configure debugging of cli scripts follow **Setup for console php**.
 
 ## Prerequisites
 
@@ -65,7 +65,7 @@ Happy debugging!
    ```
 
 2. Update container configuration with `fin up`
-3. You can run your scripts from console and debug it in the same way as requests from browser.
+3. You can run your scripts in console and debug them in the same way as browser requests.
 
 For example you can run drush command: `fin drush fra -y` and debug this drush command from feature module.
 
