@@ -215,7 +215,7 @@ On the PhpStorm panel, choose Behat debug configuration and run it:
 
 ![](img/behat-run-tests.png)
 
-If everything is ok, you will see a window with test results (all tests are run in this case):
+If everything is ok, you will see a window with your test results (all tests are run in this case):
 
 ![](img/behat-run-window.png)
 
@@ -255,4 +255,4 @@ default:
 ...
 ```
 
-`192.168.10.1` is your machine's IP address in the Docksal subnet.
+`192.168.64.1` is your machine's IP address in the Docksal subnet.
