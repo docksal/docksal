@@ -32,7 +32,8 @@ if (uname | grep 'CYGWIN_NT' >/dev/null); then
 	BABUN_WIN_HOME="$HOME"
 	HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
-export HOST_HOME="$HOME" # remove once deprecated from other projects
+# DO NOT REMOVE HOST_HOME. It is used in some stack yml files and is necessary on Windows.
+export HOST_HOME="$HOME"
 OLD_CONFIG_DIR="$HOME/.drude"
 CONFIG_DIR="$HOME/.docksal"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
