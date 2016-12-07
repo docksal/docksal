@@ -2,15 +2,15 @@
 
 ## Setup
 
-1. Register with https://blackfire.io.
+1. Register with [blackfire](https://blackfire.io).
 
-2. Add `blackfire` service in `docker-compose.yml` and configure API keys:
+2. Add the `blackfire` service in `docker-compose.yml` and configure API keys as follows:
 
     **Option 1:** Use [Blackfire Docker instructions](https://blackfire.io/docs/integrations/docker) to get a snippet that you can put in a `.bash_rc`/etc. file globally. Uncomment respective lines in `docker-compose.yml`.
 
-    **Option 2:** Grab **server** API keys from your [profile page](https://blackfire.io/account). 
+    **Option 2:** Grab **server** API keys from your [profile page](https://blackfire.io/account).
     Uncomment respective lines in `docker-compose.yml` and replace `Server ID` and `Server Token` with your API keys.
-    
+
     ```yml
     blackfire:
       image: blackfire/blackfire
@@ -27,8 +27,8 @@
 
 3. For `docker-compose.yml` files using version 1:
 
-    Note: if you do not see `version: 2` in the beginning of your `docker-compose.yml` file, then proceed. 
-    Add a link in the `cli` service definition:
+    **Note:** If you do not see `version: 2` in the beginning of your `docker-compose.yml` file, then proceed.
+    Add a link in the `cli` service definition as follows:
 
     ```yml
     ...
@@ -38,8 +38,8 @@
     ...
     ```
 
-4. Apply new configuration with `fin up`
+4. Apply the new configuration with `fin up`.
 
-5. Follow instruction to install and use blackfire via a [Chrome extension](https://blackfire.io/docs/integrations/chrome).
+5. Follow instructions to install and use blackfire via a [Chrome extension](https://blackfire.io/docs/integrations/chrome).
 
-See [blackfire.io](https://blackfire.io/docs/introduction) for more docs on using blackfire including support for other browsers.
+See [blackfire.io](https://blackfire.io/docs/introduction) for more docs on using blackfire; including support for other browsers.
