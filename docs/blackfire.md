@@ -40,6 +40,6 @@
 
 4. Apply the new configuration with `fin up`.
 
-5. Follow instructions to install and use blackfire via a [Chrome extension](https://blackfire.io/docs/integrations/chrome).
+5. Follow the instructions to install and use blackfire via the [Chrome extension](https://blackfire.io/docs/integrations/chrome).
 
 See [blackfire.io](https://blackfire.io/docs/introduction) for more docs on using blackfire; including support for other browsers.
