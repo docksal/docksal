@@ -2,7 +2,7 @@
 
 ## Setup
 
-1. Register with [blackfire](https://blackfire.io).
+1. Register with [blackfire.io](https://blackfire.io/signup).
 
 2. Add the `blackfire` service in `docker-compose.yml` and configure API keys as follows:
 
