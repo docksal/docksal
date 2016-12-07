@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.12.3
+FIN_VERSION=0.13.0
 
 # Console colors
 red='\033[0;91m'
@@ -27,6 +27,12 @@ FIN_PATH="/usr/local/bin/fin"
 FIN_PATH_UPDATED="/usr/local/bin/fin.updated"
 FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Configuration paths
+# Rewrite $HOME on windows to be absolute path in Unix notation
+if (uname | grep 'CYGWIN_NT' >/dev/null); then
+	BABUN_WIN_HOME="$HOME"
+	HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
+fi
+export HOST_HOME="$HOME" # remove once deprecated from other projects
 OLD_CONFIG_DIR="$HOME/.drude"
 CONFIG_DIR="$HOME/.docksal"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
@@ -180,16 +186,23 @@ if_failed_error ()
 upfind ()
 {
 	if [[ $1 == '' ]]; then return 1; fi
-	( #incapsulate cd
+	local _path
+	_path=$( #incapsulate cd
 		while [[ ! -f $1 ]] && [[ ! -d $1 ]] && [[ $PWD != / ]]; do
 			cd ".."
 		done;
 		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; exit; fi
 	)
+	# On Windows return full absolute path in Unix notation
+	if [[ "$BABUN_WIN_HOME" != "" ]] && [[ "$_path" = "$BABUN_WIN_HOME"* ]]; then
+		echo "/$(cygpath -m ${_path} | sed 's/\([A-Z]\)\:/\l\1/')"
+	else
+		echo "$_path"
+	fi
 }
 
 # Get path to .docksal folder using upfind
-get_docksal_path ()
+get_project_path ()
 {
 	if [ -z "$DOCKSAL_PATH" ]; then
 		DOCKSAL_PATH=$(upfind ".docksal")
@@ -205,22 +218,20 @@ get_docksal_path ()
 get_project_path_dc ()
 {
 	if is_windows ; then
-		echo "$(get_docksal_path)" | sed "s/^\/\([a-z]\)/\1:/g"
+		echo "$(get_project_path)" | sed "s/^\/\([a-z]\)/\1:/g"
 	else
-		echo "$(get_docksal_path)"
+		echo "$(get_project_path)"
 	fi
 }
 
 # Get path to global .docksal folder (~/.docksal directory).
 # Outputs a Windows compatible path on Windows, e.g. "c:/path/subpath", not "/c/path/subpath".
-get_config_path_dc ()
+get_config_dir_dc ()
 {
-	# Using $HOST_HOME instead of $CONFIG_DIR here
-	# $CONFIG_DIR will translate to /home/<user>/.docksal in Babun and we need full Windows path instead.
 	if is_windows ; then
-		echo $(echo "$HOST_HOME/.docksal" | sed "s/^\/\([a-z]\)/\1:/g")
+		echo "$CONFIG_DIR" | sed "s/^\/\([a-z]\)/\1:/g"
 	else
-		echo "$HOST_HOME/.docksal"
+		echo "$CONFIG_DIR"
 	fi
 }
 
@@ -244,7 +255,7 @@ get_abs_path ()
 get_current_relative_path ()
 {
 	# Check that we're inside project folder
-	local proj_root=$(get_docksal_path)
+	local proj_root=$(get_project_path)
 	local cwd=$(pwd)
 	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
 	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
@@ -264,8 +275,8 @@ get_mysql_connect ()
 # Use this function for every docker-compose invocation.
 docker_compose ()
 {
-	(cd "$(get_docksal_path)" && docker-compose "$@")
-	#(cd "$(get_docksal_path)" && ${winpty} "$DOCKER_COMPOSE_BIN" "$@")
+	(cd "$(get_project_path)" && docker-compose "$@")
+	#(cd "$(get_project_path)" && ${winpty} "$DOCKER_COMPOSE_BIN" "$@")
 }
 
 # Get container id by service name
@@ -550,7 +561,7 @@ check_vbox_version ()
 # Check that .docksal is present
 check_docksal ()
 {
-	if [[ "$(get_docksal_path)" == "" ]] ; then
+	if [[ "$(get_project_path)" == "" ]] ; then
 		echo-error "Cannot detect project root." \
 			"Please make sure you have ${yellow}.docksal${NC} directory in the root of your project." \
 			"To setup a basic Docksal stack in the current directory run ${yellow}fin config generate${NC}"
@@ -756,7 +767,7 @@ printh ()
 # $1 name of command to show help for
 show_help ()
 {
-	local project_commands_path="$(get_docksal_path)/$DOCKSAL_COMMANDS_PATH"
+	local project_commands_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
 	local global_commands_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	local custom_commands_list
 
@@ -832,7 +843,7 @@ show_help ()
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
 	# Show list of custom commands and their help if available
-	if [ ! -z "$(get_docksal_path)" ]; then
+	if [ ! -z "$(get_project_path)" ]; then
 		show_help_list_of_custom_commands 'project'
 	fi
 	if [ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]; then
@@ -847,7 +858,7 @@ show_help_list_of_custom_commands ()
 {
 	local _path
 	if [[ "$1" == 'project' ]]; then
-		_path="$(get_docksal_path)/$DOCKSAL_COMMANDS_PATH"
+		_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
 		# avoid taking global .docksal folder for project one
 		if [[ "$_path" == "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then return; fi
 	else
@@ -1684,7 +1695,7 @@ ssh_add () {
 	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
 	[[ "$running" != "true" ]] && return
 
-	local ssh_path="$HOST_HOME/.ssh"
+	local ssh_path="$HOME/.ssh"
 	local key_path=""
 
 	# When no arguments provided, check if ssh-agent already has at least one identity. If so, stop here.
@@ -2490,7 +2501,7 @@ mysql_dump ()
 behat ()
 {
 	check_docksal_environment
-	cd $(get_docksal_path)
+	cd $(get_project_path)
 
 	local params=''
 	local path='tests/behat'
@@ -2505,7 +2516,7 @@ behat ()
 		esac;
 	done
 
-	local project_root_path=$(get_docksal_path)
+	local project_root_path=$(get_project_path)
 	local behat_yml_path="${project_root_path}/${path}/behat.yml"
 	if [[ ! -f "${behat_yml_path}" ]]; then
 		echo-red "Could not find ${behat_yml_path}"
@@ -2802,7 +2813,7 @@ load_configuration ()
 		# Allow to defined the default stack file.
 		DOCKSAL_STACK=${DOCKSAL_STACK:-default}
 
-		default_yml_file="$(get_config_path_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+		default_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
 		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 		# Use .docksal/docksal.yml by default (if exists)
@@ -2824,7 +2835,7 @@ load_configuration ()
 		# Use bind mount for volumes if using default stack.
 		[[ "$COMPOSE_FILE" == "$default_yml_file" ]] && DOCKSAL_VOLUMES="bind"
 		if [[ "$DOCKSAL_VOLUMES" != "" ]]; then
-			volumes_yml_file="$(get_config_path_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 			if [[ -f "$volumes_yml_file" ]]; then
 				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 			else
@@ -2839,8 +2850,8 @@ load_configuration ()
 
 	# Set project name if it was not set previously
 	# TODO: Figure out how to prevent starting projects with duplicate names
-	if [[ -d $(get_docksal_path) ]]; then
-		local project_name=$(basename $(get_docksal_path) | tr '[:upper:]' '[:lower:]')
+	if [[ -d $(get_project_path) ]]; then
+		local project_name=$(basename $(get_project_path) | tr '[:upper:]' '[:lower:]')
 		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
 		COMPOSE_PROJECT_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^a-z0-9]//g')
 		export COMPOSE_PROJECT_NAME
@@ -2852,8 +2863,8 @@ load_configuration ()
 	export DOCROOT=${DOCROOT:-docroot}
 
 	# Make project root globally available
-	export DOCKSAL_PATH="$(get_docksal_path)"
-	export PROJECT_ROOT="$(get_docksal_path)"
+	export DOCKSAL_PATH="$(get_project_path)"
+	export PROJECT_ROOT="$(get_project_path)"
 
 	if is_docker_running; then
 		export DOCKER_RUNNING="true"
@@ -2892,7 +2903,7 @@ config_generate ()
 {
 	# Allow to defined the default stack file.
 	DOCKSAL_STACK=${DOCKSAL_STACK:-default}
-	yml_file="$(get_config_path_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+	yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 
 	_confirm "Set up $DOCKSAL_STACK Docksal stack in the current directory?"
 
@@ -2996,12 +3007,6 @@ create_site ()
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
-
-# Export HOME as HOST_HOME.
-# Mostly necessary on Windows, where ${HOME} is interpolated by docker-compose into a Windows path and not POSIX.
-HOST_HOME=$HOME
-is_windows && HOST_HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
-export HOST_HOME
 
 # Handle alias first
 if [[ "$1" == "@"* ]]; then
@@ -3234,7 +3239,7 @@ case "$1" in
 	init|*)
 		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
 		# First search project commands folder
-		command_script="$(get_docksal_path)/$DOCKSAL_COMMANDS_PATH/$1"
+		command_script="$(get_project_path)/$DOCKSAL_COMMANDS_PATH/$1"
 		# If not found search global docksal commands folder
 		[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
 		# If not found there as well then it is a wrong command
