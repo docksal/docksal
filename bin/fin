@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.13.1
+FIN_VERSION=0.13.2
 
 # Console colors
 red='\033[0;91m'
@@ -817,7 +817,7 @@ show_help ()
 	printh "bash [service]" "Open shell into container. Defaults to ${yellow}cli${NC}"
 	printh "exec <command> [params]" "Execute a command in ${yellow}cli${NC}"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
-	printh "logs [service]" "Show Docker logs for service container"
+	printh "logs [service]" "Show Docker logs for service container (e.g. Apache logs)"
 
 	echo
 	printh "create-site" "Download and install Drupal or Wordpress."
@@ -826,9 +826,10 @@ show_help ()
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
 
 	echo
-	printh "sqlc" "Opens mysql shell to current project database (alias: mysql)"
+	printh "sqlc" "Opens mysql shell to current project database (${yellow}fin help sqlc${NC})"
+	printh "sqls" "Show list of available databases (${yellow}fin help sqls${NC})"
 	printh "sqld <database> <file>" "Dump specified database into file (${yellow}fin help sqld${NC})"
-	printh "sqli <database> <file>" "Truncate this database and import from sql dump (${yellow}fin help sqli${NC})"
+	printh "sqli <database> <file>" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
 
 	echo
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
@@ -953,6 +954,36 @@ show_help_exec-url ()
 	echo
 	echo -e "URL is required parameter. Useful for demos or installations."
 	echo
+}
+
+show_help_sqlc ()
+{
+	echo-green "Open mysql console to current db server (alias: mysql)"
+	printh "fin sqlc" "" "yellow"
+	echo
+	echo-green "Parameters:"
+	printh "--db-user=admin" "Use another mysql username (default is 'root')"
+	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
+	echo
+}
+show_help_mysql ()
+{
+	show_help_sqlc
+}
+
+show_help_sqls ()
+{
+	echo-green "Show list of available databases (alias: mysql-list)"
+	printh "fin sqls" "" "yellow"
+	echo
+	echo-green "Parameters:"
+	printh "--db-user=admin" "Use another mysql username (default is 'root')"
+	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
+	echo
+}
+show_help_mysql_list ()
+{
+	show_help_sqls
 }
 
 
@@ -2397,7 +2428,9 @@ _run ()
 	# ------------------------------------------------ #
 }
 
-# start interactive mysql shell
+# Start interactive mysql shell
+# --db-user="admin" to override mysql username
+# --db-password="otherpass" to override mysql password
 mysql ()
 {
 	check_winpty_found
@@ -2410,6 +2443,22 @@ mysql ()
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	${winpty} docker exec -it "$container_id" bash -ic "mysql ${__mysql_command}"
+}
+
+# Show databases list
+# --db-user="admin" to override mysql username
+# --db-password="otherpass" to override mysql password
+mysql_list ()
+{
+	check_docksal_environment
+	eval $(parse_params "$@")
+
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+
+	# -N parameter suppresses columns header
+	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
+		_run "echo 'show databases' | mysql -N -u $__dump_user -p${__dump_password}"
 }
 
 # Truncate db and import from sql dump
@@ -2430,9 +2479,6 @@ mysql_import ()
 
 	if [[ "${ARGV[0]}" == "" ]] || [[ "${ARGV[1]}" == "" ]]; then
 		show_help_mysql-import
-		echo-green "Available databases:"
-		_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-			_run "echo 'show databases' | mysql -u $__dump_user -p${__dump_password}"
 		exit 1
 	fi
 
@@ -2497,9 +2543,6 @@ mysql_dump ()
 
 	if [[ "${ARGV[0]}" == "" ]] || [[ "${ARGV[1]}" == "" ]]; then
 		show_help_mysql-dump
-		echo-green "Available databases:"
-		_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-			_run "echo 'show databases' | mysql -u $__dump_user -p${__dump_password}"
 		exit 1
 	fi
 
@@ -3150,7 +3193,12 @@ case "$1" in
 		_run "$@"
 		;;
 	mysql|sqlc)
-		mysql
+		shift
+		mysql "$@"
+		;;
+	mysql-list|sqls)
+		shift
+		mysql_list "$@"
 		;;
 	mysql-import|sqli)
 		shift
