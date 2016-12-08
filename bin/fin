@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.13.0
+FIN_VERSION=0.13.1
 
 # Console colors
 red='\033[0;91m'
@@ -2248,6 +2248,19 @@ update ()
 
 	# [Update - 4] Update third party tools (if possible)
 	update_tools
+
+	# [Update - 5] Restart running projects if BOOT2DOCKER was not restarted
+	# Needed to restore containers connection to vhost_proxy
+	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
+		echo-green "Restarting running projects..."
+		running_projects=$(docker ps --all \
+			--filter 'status=running' --filter 'label=com.docker.compose.service=web' \
+			--format '{{.Label "io.docksal.project-root"}}'
+		)
+		for project in ${running_projects}; do
+			(cd "$project" && fin up)
+		done
+	fi
 
 	[ $? -eq 0 ] && echo-green "Update finished"
 }
