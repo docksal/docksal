@@ -1,7 +1,7 @@
 # Sync project volumes with Unison
 # For use with Docker for Mac osxfs.
 # Pros: native fs performance, fast file sync, inotify/fs watchers support.
-# Cons: 2x space usage - a mirror of the code base is maintained in a Docker volume.  
+# Cons: 2x space usage (a mirror of the code base is maintained in a Docker volume), initial sync delay
 
 version: "2"
 
@@ -13,6 +13,8 @@ volumes:
     driver: local
     driver_opts:
       type: none
+      # $HOST_HOME is a cross-platform version of $HOME. It is exported by fin.
+      # It returns a Unix style path on Windows (which is what we need here), while $HOME return a Windows style path.
       device: ${HOST_HOME}
       o: bind
 

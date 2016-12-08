@@ -62,7 +62,7 @@ teardown() {
 	run fin mysql-dump default ../dump.sql --db-user=user --db-password=user
 
 	echo "$output" | grep "Exporting..."
-	echo "$output" | grep "done"
+	echo "$output" | grep "OK"
 
 	# Update sitename
 	fin drush config-set system.site name 'My Drupal Fin updated 8 Site' -y

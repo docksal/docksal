@@ -4,21 +4,21 @@
 
 ### CPU
 
-Your CPU should support hardware **VT-x/AMD-V virtualization** (most modern CPUs) and it should be enabled in BIOS.
+- (Mac) Must be a 2010 or newer model
+- (Win) Your CPU should support hardware **VT-x/AMD-V virtualization** and it should be [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
 
 ### RAM
 
-Workstation with 8GB is recommended for a comfortable development experience, bit it's not a hard requirement. Docksal will run on a workstation with anything more than 1GB to accomodate Docksal's virtual machine (1GB RAM default) and host OS RAM usages. It was tested that Docksal runs on Windows 7 with 2GB RAM.
-
-Linux RAM requirements are usually lower because no VM layer is required, so you could run Docksal stack even on 512MB Linux virtual machine. However for desktop development purposes recommendations above apply.
+- Mac/Win: workstation with 4GB is required (8GB recommended)
+- Linux: no minimum requirement (4GB recommended)
 
 ## Software
 
-While Docker is supported natively on Linux, Mac and Windows need a VM layer to run Docker containers.
+- 64-bit OS is required for all platforms
+- (**Mac**) OS X El Capitan 10.11 or newer
+- (**Mac**) VirtualBox prior to version 4.3.30 must NOT be installed
+- (**Win**) Windows 7 or higher
+- (**Linux**) Linux kernel 3.10 or higher
 
-There are two main options to get Docker containers running on Mac or Windows:
 
-1) Docker Machine + [VirtualBox](https://www.virtualbox.org) 5.0+ (mature, battle-tested)  
-2) Docker for [Mac](https://docs.docker.com/docker-for-mac)/[Windows](https://docs.docker.com/docker-for-windows) (newer, experimental)
-
-Please refer to the [setup instructions](env-setup.md#setup) for further steps.
+Refer to the [environment setup instructions](env-setup.md#setup) for further steps.
