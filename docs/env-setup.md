@@ -27,7 +27,15 @@ Babun should be installed and run **as a regular user (do not use admin command 
     ```
     fin update
     ```
+4. (**Mac/Win**) Create and start vm
 
+    ```
+    fin vm start
+    ```
+
+    [Help, VM did not start!](/docs/troubleshooting.md#failed-creating-docksal-virtual-machine)
+
+5. Congratulations! You are done with one time environment installation. Now you can [configure your project](/docs/project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.
 
 ## Using Docker for Mac/Windows instead of VirtualBox
 
