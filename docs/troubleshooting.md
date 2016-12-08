@@ -1,3 +1,12 @@
+## Failed creating Docksal virtual machine
+
+Mostly on Windows 7 but sometimes on other OS-s VirtualBox fails to create new virtual machine on the first run. Errors might be very different but usually simply removing failed machine and trying again helps.
+
+```
+fin vm remove
+fin vm start
+```
+
 ## Error checking TLS connection (vm is not accessible)
 
 ```
