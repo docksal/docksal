@@ -2,7 +2,7 @@
 
 ## Docksal configuration
 
-1. Add Apache Solr service to `docker-compose.yml`:
+1. Add Apache Solr service to `docksal.yml`:
 
     Replace `<project_name>` with your project name.
 
