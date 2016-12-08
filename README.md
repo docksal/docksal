@@ -129,6 +129,7 @@ sudo rm /usr/local/bin/docker-machine
 - [Automatic database import](docs/db-import.md)
 - [DB sandbox mode](/docs/db-sandbox.md)
 - [Extending fin with custom commands](/docs/custom-commands.md)
+- [Increasing vm memory (RAM)](/docs/vm.md)
 
 ### Third party utililies
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
