@@ -8,7 +8,7 @@ Presence of the `.docksal` folder in the project directory is a good indicator a
 
 ## Default setup
 
-### 1) Create a project directory.
+### 1) Create a project directory (or checkout your existing project).
 
 `mkdir ~/projects/myproject`  
 `cd ~/projects/myproject`  
