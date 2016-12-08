@@ -1,7 +1,8 @@
 site_name: Docksal Documentation
 theme: readthedocs
 repo_url: https://github.com/docksal/docksal
-include_search: true
+extra_css:
+  - css/extra.css
 pages:
   - Home: index.md
   - Getting started:
@@ -11,13 +12,11 @@ pages:
   - Advanced configuration:
     - Drupal settings: drupal-settings.md
     - Overriding default PHP/MySQL/etc. settings: settings.md
-    - Running multiple projects: multiple-projects.md
-    - DB sandbox mode: db-sandbox.md
     - MySQL DB access for external tools: db-access.md
     - Extending fin with custom commands: custom-commands.md
-  - Third party utililies
+  - Third party utililies:
     - Debugging with Xdebug and PhpStorm: xdebug.md
-    - Using PHP Code Sniffer (phpcs, phpcbf: phpcs.md
+    - Using PHP Code Sniffer (phpcs, phpcbf): phpcs.md
     - Using Blackfire profiler: blackfire.md
     - Public access via ngrok: public-access.md
     - Using Behat: behat.md

@@ -1,0 +1,25 @@
+# Basic LAMP stack
+
+version: "2"
+
+services:
+  # Web node
+  web:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: web
+    # cli has to be up first for web to start
+    depends_on:
+      - cli
+
+  # DB node
+  db:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: db
+
+  # CLI node
+  cli:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: cli

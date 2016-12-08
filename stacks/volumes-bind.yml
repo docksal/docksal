@@ -1,0 +1,23 @@
+# Bind mount project volumes
+# Same as mounting host folders, but via named volumes.
+
+version: "2"
+
+volumes:
+# Bind volumes
+  host_home:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${HOST_HOME}
+      o: bind
+  project_root:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PROJECT_ROOT}
+      o: bind
+
+  # Shared ssh-agent volume
+  docksal_ssh_agent:
+    external: true

@@ -1,19 +1,37 @@
-# Docksal
+# Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases/latest)
 
-Docker and Docker Compose based environment.
+[![Build Status](https://img.shields.io/travis/docksal/docksal.svg?style=flat-square)](https://travis-ci.org/docksal/docksal)
+[![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
 
-**For a fully working example of Docksal setup take a look at:**
+Docker and Docker Compose based environments for web development.
+
+    Docksal is still under active development. Breaking changes and outdated docs are very possible.
+    We plan to have a 1.0 Release Candidate in November 2016.  
+    Please help us by testing, submitting issues and PRs. Thanks!
+
+
+## Examples of Docksal powered projects
+
+Running a complete LAMP stack for Drupal, WordPress or a pure HTML/PHP base website is two commands away!<sup>*</sup>
+
+```
+git clone <sample-project-repo>
+fin init
+```
+
+Try one of the preconfigured projects:
+
 - [Drupal 7 sample project](https://github.com/docksal/drupal7)
 - [Drupal 8 sample project](https://github.com/docksal/drupal8)
+- [WordPress sample project](https://github.com/docksal/wordpress)
 
-
-## System requirements
-
-Please review [system requirements](/docs/system-requirements.md) before proceeding with the setup.
+<sup>*</sup>Once you are done with a one-time [Docksal environment setup](/docs/env-setup.md)
 
 
 <a name="setup"></a>
 ## Setup
+
+Please review [system requirements](/docs/system-requirements.md) before proceeding with the setup.
 
 1. [Docksal environment setup](/docs/env-setup.md)
     
@@ -30,34 +48,75 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
 ### Regular updates
 
 ```
-fin update self
-fin update tools
+fin update
 ```
 
-### Updating from Drude to Docksal 2.x
+If updating from versions below `v0.7.0`
+
+```
+fin update self && fin update
+```
+
+### Updating from Drude to Docksal
 
 Drude used to rely on Vagrant and vagrant-boot2docker for running Docker.  
-Docksal uses Docker Machine, which is more native and can be easily updated.
-Vagrant machine is not going to be used anymore and should be deleted. 
+Docksal uses Docker Machine, which is more native and supports seamless (non-destructive) Docker version updates.  
+Vagrant machine is not going to be used anymore and should be deleted.
 
-1. Create dumps of databases you need using `drush`
-2. Go to your `<projects>` folder and use `vagrant destroy` to destroy the old (Drude) VM. If you happened to have several of them, please destroy all.
-3. You can uninstall vagrant if you do't need it (manually or `brew uninstall vagrant` on Mac, `choco uninstall vagrant` on Win)
-4. Install fin
-5. `fin install tools`
-6. Start your project just like you did before with `fin up` and re-import your DB dump. Notice it will use Docker Machine now. New Docker Machine will be created upon first start.
-7. Run `fin cleanup` to delete old unused files and backups
+1. Create dumps of databases you need with `drush`
+2. `vagrant destroy` the old Drude VM
+
+    Go to your Drude projects folder (the one with `Vagrantfile` and `vagrant.yml`) and use `vagrant destroy` to destroy the Drude VM. 
+    If you happened to have several of them, please destroy all.
+    
+    It is very important to use `vagrant destroy` and not delete the VM manually in VirtualBox.  
+    Vagrant has to clean things up properly and that is what `vagrant destroy` is for.     
+
+3. Uninstall vagrant if you do not plan to use it for other purposes
+
+    Depending on how Vagrant was installed you will either have to uninstall it manually or
+    via `brew uninstall vagrant` on Mac / `choco uninstall vagrant` on Windows
+    
+4. Follow instructions in [Docksal environment setup](/docs/env-setup.md)
+5. Start your project just like you did before with `fin up` and re-import your DB dump.
+
+    Notice it will use Docker Machine now.
+    New Docker Machine will be created upon first start.
+    
+6. Run `fin cleanup` to delete Drude files and backups
+
+
+## Uninstallation
+
+The steps below will remove the Docksal VM and cleanup Docksal stuff.
+
+```
+fin vm remove
+rm -rf ~/.docksal
+rm -f /usr/local/bin/fin
+```
+
+Docker for Mac/Windows and VirtualBox are not automatically removed. You can remove them manually on Mac or use uninstaller on Windows.
+
+To remove Docker on Ubuntu Linux you need to:
+
+1. Follow [Docker Uninstallation](https://docs.docker.com/engine/installation/linux/ubuntulinux/#/uninstallation) instruction
+2. Cleanup tools:
+```
+sudo rm /usr/local/bin/docker-compose
+sudo rm /usr/local/bin/docker-machine
+```
 
 <a name="fin"></a>
 ## Docksal Fin (fin)
 
 Docksal Fin is a console tool that simplifies day-to-day work with Docksal.
-It provides a set of most commonly used commands and operations for controlling the Boot2docker VM, containers, running drush or other commands inside the **cli** container. (**Note**: fin requires cli container to function properly)
+It provides a set of most commonly used commands and operations for controlling the Docksal VM (Mac and Windows), containers, running drush or other commands inside the **cli** container.
 
 See `fin help` for a complete list.
 
-`fin` detects the environment it's launched in and will automatically start the boot2docker VM and launch containers as necessary.
-It runs on Mac/Linux directly. On Windows `fin` runs inside the Babun Shell.
+`fin` detects the environment it is launched in and will automatically start a VM and launch containers as necessary.
+`fin` runs on Mac and Linux directly. On Windows it runs inside the [Babun Shell](http://babun.github.io).
 
 
 <a name="cli"></a>
@@ -70,13 +129,7 @@ You can access **cli** container's console with `fin`:
 fin bash
 ```
 
-Tools available inside the **cli** container:
-
-- php-cli, composer, drush[6,7,8], drupal console, phpcs, phpcbf
-- ruby, bundler
-- node, nvm, npm
-- imagemagick
-- python, git, mc, mysql-client and [more](https://github.com/docksal/image-cli)
+For the list of tools available inside the **cli** container check [here](https://github.com/docksal/service-cli)
 
 
 <a name="instructions"></a>
@@ -105,4 +158,18 @@ Tools available inside the **cli** container:
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
-[Troubleshooting](https://github.com/docksal/docksal/issues)
+If something went wrong, first try one/all these steps in the order listed below.
+Check if the issue went away after each step.
+
+- Update Docksal to the latest version. See [updates](#updates) section.
+- Restart the Docksal VM (Mac and Windows only): `fin vm restart`
+- Reset Docksal system services: `fin reset system`
+- Reboot the host system (your computer or remote server)
+- Reset the Docksal VM (Mac and Windows only): `fin vm rm` then `fin vm start` (**WARNING**: backup your DB data before doing this)
+
+If you are still reading this, then go ahead and search the [issue queue](https://github.com/docksal/docksal/issues). 
+Others may have experienced the same or a similar issue and have already found a solution or a workaround.
+
+File a new issue if your problem looks to be brand new.
+
+Community support is available via our room on Gitter. [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
