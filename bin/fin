@@ -907,7 +907,7 @@ show_help_exec ()
 	printh "fin exec pwd" "Show current path"
 	printh "fin exec ls -la" "Current directory listing"
 	printh "fin exec compass compile" "Compile SASS/SCSS"
-	printh "fin exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or redirects inside cli"
+	printh "fin exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or stdout redirects happening inside cli"
 	echo
 }
 
@@ -932,13 +932,12 @@ show_help_reset ()
 
 show_help_rm ()
 {
-	echo-green "fin rm - Remove services/containers"
+	echo-green "fin rm - Remove services"
 	echo
 	echo -e "${green}Parameters:${NC} one or more service names."
 	echo-green "Examples:"
 	printh "fin rm" "Remove all project services"
 	printh "fin rm web" "Remove web service"
-	printh "fin rm proxy" "Remove Docksal reverse proxy service"
 	echo
 }
 
@@ -966,10 +965,12 @@ show_help_sqli ()
 	echo
 	echo-green "Parameters:"
 	printh "--force" "Do not ask questions. The only time when question is asked is when truncation fails."
+	printh "--db-user=admin" "Use another mysql username (default is 'root')"
+	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	echo
 	echo-green "Examples:"
-	printh "fin sqli drupal ../../mydump.sql" "Import plaintext sql dump into 'drupal' database"
-	printh "fin sqli --force drupal ../../mydump.sql" "Import plaintext sql dump into 'drupal' database (no questions)"
+	printh "fin sqli drupal ../../mydump.sql" "	Import plaintext sql dump into 'drupal' database"
+	printh "fin sqli drupal ../../mydump.sql --force" "Import plaintext sql dump into 'drupal' database (no questions)"
 	echo
 }
 show_help_mysql-import ()
@@ -982,9 +983,9 @@ show_help_sqld ()
 	echo-green "Export database from db container into file (alias: mysql-dump)"
 	printh "fin sqld <database> <dump_file>" "" "yellow"
 	echo
-	echo-green "Optional parameters:"
-	printh "--db-user=admin" "Use another mysql username (default is the one set with 'MYSQL_USER')"
-	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_PASSWORD')"
+	echo-green "Parameters:"
+	printh "--db-user=admin" "Use another mysql username (default is 'root')"
+	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	echo
 	echo-green "Examples:"
 	printh "fin sqld drupal ~/dump.sql" "Export database 'drupal' into ~/dump.sql"
