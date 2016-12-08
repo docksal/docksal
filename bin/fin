@@ -964,8 +964,12 @@ show_help_sqli ()
 	echo
 	echo -e "DB dump file should be plain ${yellow}.sql${NC} file."
 	echo
+	echo-green "Parameters:"
+	printh "--force" "Do not ask questions. The only time when question is asked is when truncation fails."
+	echo
 	echo-green "Examples:"
 	printh "fin sqli drupal ../../mydump.sql" "Import plaintext sql dump into 'drupal' database"
+	printh "fin sqli --force drupal ../../mydump.sql" "Import plaintext sql dump into 'drupal' database (no questions)"
 	echo
 }
 show_help_mysql-import ()
