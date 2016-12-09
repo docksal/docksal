@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.13.2
+FIN_VERSION=0.13.3
 
 # Console colors
 red='\033[0;91m'
@@ -1121,13 +1121,17 @@ bash_comp_words ()
 			echo "list remove"
 			exit 0
 		;;
+		config)
+			echo "generate show"
+			exit 0
+			;;
 		fin)
 			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			local projects=$(docker ps --all \
 				--filter 'label=com.docker.compose.service=web' \
 				--format '@{{.Label "com.docker.compose.project"}}' | xargs
 			)
-			echo "$aliases $projects vm start stop restart status reset remove bash exec create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
+			echo "$aliases $projects vm start stop restart status reset remove bash exec config create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
 			behat ssh-add update version cleanup sysinfo logs"
 			exit 0
 			;;
@@ -2967,38 +2971,30 @@ config_generate ()
 	DOCKSAL_STACK=${DOCKSAL_STACK:-default}
 	yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 
-	_confirm "Set up $DOCKSAL_STACK Docksal stack in the current directory?"
-
 	if [[ -f ${yml_file} ]]; then
 		if [[ -d .docksal ]]; then
-			echo-yellow ".docksal directory already exists in the current directory."
+			echo-yellow ".docksal directory already exists."
 			_confirm "Remove it and start from scratch?"
-			rm -rf .docksal
+			rm -rf ./.docksal
 		fi
 
 		mkdir .docksal && \
 		# Use bind mount volumes by default
 		echo 'DOCKSAL_VOLUMES="bind"' > .docksal/docksal.env && \
-		cp ${yml_file} .docksal/docksal.yml && \
-		# Setup docroot and a basic index.php
-		mkdir -p docroot && \
-		echo '<?php phpinfo();' > docroot/index.php
+		cp "$yml_file" ".docksal/docksal.yml"
+		if [[ ! -f 'docroot/index.php' ]]; then
+			# Setup docroot and a basic index.php
+			mkdir -p docroot && \
+			echo '<?php phpinfo();' > docroot/index.php
+		fi
 
 		if [[ $? == 0 ]]; then
 			echo-green "$DOCKSAL_STACK stack configuration generated. You can start it with ${yellow}fin start${NC}"
-			_confirm "Run fin start now?"
-			fin start
-
-			if [[ $? == 0 ]]; then
-				echo-green "Done!"
-				echo -e "Review stack configuration with ${yellow}fin config show${NC}"
-				echo -e "Point your browser to ${yellow}http://${VIRTUAL_HOST}${NC} to verify."
-			fi
 		else
-			echo-error "Something went wrong. Try again."
+			echo-error "Something went wrong. Check error messages above."
 		fi
 	else
-		echo-error "Stack file does not exist: $yml_file"
+		echo-error "Stack file does not exist: $yml_file" "Try running ${yellow}fin update${NC}"
 	fi
 }
 
