@@ -54,8 +54,7 @@ chmod -R +rwX files
 <a name="reverse-proxy"></a>
 ## Reverse proxy settings (**optional**)
 
-If using [boot2docker-vagrant](https://github.com/blinkreaction/boot2docker-vagrant),
-you are most likely using its vhost-proxy. In that case, add the following to settings.php:
+In some cases you need to let Drual know if HTTPS is used by client. Add the following lines to settings.php:
 
 **Drupal 7**
 
