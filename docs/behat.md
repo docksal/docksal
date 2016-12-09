@@ -75,8 +75,6 @@ browser:
   image: selenium/standalone-chrome
   ports:
     - "4444"
-  environment:
-    - DOMAIN_NAME=drupal7.browser.docker
 ```
 
 You can also use the Firefox image: `selenium/standalone-firefox`
@@ -93,9 +91,9 @@ docker:
   extensions:
     Behat\MinkExtension:
       # URL of the site when accessed inside Docksal.
-      base_url: http://drupal7.docksal
+      base_url: http://web
       selenium2:
-        wd_host: http://drupal7.browser.docker:4444/wd/hub
+        wd_host: http://browser:4444/wd/hub
       # Stick with chrome by default. It's 2x faster than firefox or phantomjs (your results may vary).
       browser_name: chrome
     Drupal\DrupalExtension:
@@ -124,8 +122,6 @@ browser:
   ports:
     - "4444"
     - "5900:5900"
-  environment:
-    - DOMAIN_NAME=drupal7.browser.docker
 ```
 You have to use `selenium/standalone-chrome-debug` or `selenium/standalone-firefox-debug` images. They both include a VNC server.
 Use `localhost:5900` as the host and `secret` as the password in your VNC client.
@@ -144,14 +140,14 @@ PhpStorm uses ssh to connect to and use remote interpreters and tools.
    cli:
      ...
      ports:
-       - "2221:22"
+       - "2223:22"
      ...
     ```
 2. Update the container configuration with `fin up`.
 3. You should now be able to connect to the `cli` container via ssh. Use username `docker` and pasword `docker`:
 
     ```
-    ssh docker@localhost -p 2223
+    ssh docker@192.168.64.100 -p 2223
     ```
 
 Note: If you are working with several projects concurrently, it is a good idea to have a separate port per project (e.g. `2222:22`, `2223:22`, etc.)
@@ -191,7 +187,7 @@ Open settings (menu item *File->Settings...*). In the opened window on the left 
 
 Add a new PHP interpreter for Behat (it should be the interpreter from previous step).
 
-Path to Behat is the path in the `cli` container - ``/var/www/tests/behat/bin/behat`
+Path to Behat is the path in the `cli` container - `/var/www/tests/behat/bin/behat`
 
 Default configuration file: `/var/www/tests/behat/behat.yml`
 
@@ -251,7 +247,7 @@ default:
       # Configure browser to be used. Browser must be available on wd_host.
       browser_name: chrome
       selenium2:
-        wd_host: http://192.168.10.1:4444/wd/hub/static/resource/hub
+        wd_host: http://192.168.64.1:4444/wd/hub/static/resource/hub
 ...
 ```
 
