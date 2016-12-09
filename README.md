@@ -130,6 +130,7 @@ sudo rm /usr/local/bin/docker-machine
 - [DB sandbox mode](/docs/db-sandbox.md)
 - [Extending fin with custom commands](/docs/custom-commands.md)
 - [Increasing vm memory (RAM)](/docs/vm.md)
+- [Exposing any Docker container's port](/docs/expose-port.md)
 
 ### Third party utililies
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)

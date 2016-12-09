@@ -15,6 +15,7 @@ pages:
     - MySQL DB access for external tools: db-access.md
     - Automatic database import: db-import.md
     - Extending fin with custom commands: custom-commands.md
+    - Exposing any Docker container's port: expose-port.md
   - Third party utililies:
     - Debugging with Xdebug and PhpStorm: xdebug.md
     - Using PHP Code Sniffer (phpcs, phpcbf): phpcs.md
