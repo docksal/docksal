@@ -3,13 +3,13 @@
 MySQL service in the `db` container is exposed at a random port by default.
 This is done to avoid port conflicts if running multiple Docksal powered projects (multisites don't count).
 
-To view the randomly assigned port value run `fin config` and look for `MYSQL_PORT:`.  
-You can connect to MySQL in the db container on `192.168.64.100:<random-port-value>`.  
-Keep in mind, that the random port value will change every time the DB container is restarted.
+To view the randomly assigned port value run `fin config` and look for `MYSQL_PORT:`.
+You can connect to MySQL in the db container on `192.168.64.100:<random-port-value>`.
+Keep in mind, the random port value will change every time the `db` container is restarted.
 
-## Assigning static port
+## Assigning a static port
 
-To have a static port assigned, override MYSQL_PORT variable value using `.docksal/docksal-local.env` file.
+To have a static port assigned, override the MYSQL_PORT variable value in `.docksal/docksal-local.env`.
 
 Replace `<unique-static-port>` with a **unique** port number (unique across all Docksal powered projects on your host):
 
@@ -46,7 +46,7 @@ Password: root
 
 ## Root password
 
-Override default admin password by overriding value of `MYSQL_ROOT_PASSWORD` variable in `.docksal/docksal.env` or `.docksal/docksal-local.env`
+Override the default admin password by changing the value of `MYSQL_ROOT_PASSWORD` in `.docksal/docksal.env` or `.docksal/docksal-local.env`.
 
 ```
 MYSQL_ROOT_PASSWORD="gue$$-me-not"
