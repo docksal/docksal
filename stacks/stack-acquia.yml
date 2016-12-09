@@ -5,6 +5,7 @@
 # - PHP 5.6 / PHP 7.0
 # - Varnish 3
 # - Memcached 1.4
+# - ApacheSolr 4.x
 
 version: "2.1"
 
@@ -44,3 +45,9 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: memcached
+
+  # Solr
+  solr:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: solr

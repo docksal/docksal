@@ -61,3 +61,8 @@ services:
     environment:
       # Memcached memory limit in megabytes
       - MEMCACHED_MEMORY_LIMIT=${MEMCACHED_MEMORY_LIMIT:-128}
+
+  # Solr
+  solr:
+    hostname: solr
+    image: docksal/solr:4.x-stable
