@@ -210,3 +210,67 @@ teardown() {
 	run fin ps
 	[[ "$(echo "$output" | tail -n +3)" == "" ]]
 }
+
+@test "fin config" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Check default Drupal 8 config (check if environment variables are used in docksal.yml)
+	run fin config
+	echo "$output" | egrep "VIRTUAL_HOST: drupal8.docksal"
+	echo "$output" | egrep "MYSQL_DATABASE: default"
+}
+
+@test "fin config local env file" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Preparation step - create local env file
+	echo "VIRTUAL_HOST=testenv.docksal" > .docksal/docksal-local.env
+
+	# Check config (check if local environment variables are used in docksal.yml)
+	run fin config
+	echo "$output" | egrep "VIRTUAL_HOST: testenv.docksal"
+}
+
+@test "fin config local yml file" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Preparation step - create local yml file (replace DB)
+	yml="
+version: '2'
+
+services:
+  db:
+    environment:
+      - MYSQL_ROOT_PASSWORD=testpass
+  "
+
+	echo "$yml" > .docksal/docksal-local.yml
+
+	# Check config (check if local yml replaces db password in docksal.yml, and other parts are the same)
+	run fin config
+	echo "$output" | egrep "MYSQL_ROOT_PASSWORD: testpass"
+	echo "$output" | egrep "VIRTUAL_HOST: testenv.docksal"
+	echo "$output" | egrep "MYSQL_DATABASE: default"
+}
+
+@test "fin config local yml and local env files" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Preparation step - create local yml and local env files
+	yml="
+version: '2'
+
+services:
+  web:
+    environment:
+      - VIRTUAL_HOST=$"
+  yml="$yml{DOCKSAL_HOST}"
+
+	echo "$yml" > .docksal/docksal-local.yml
+	echo "DOCKSAL_HOST=newvariable.docksal" > .docksal/docksal-local.env
+
+	# Check config (check if local yml replaces web virtual host and uses new local variable, old variables must work as previously)
+	run fin config
+	echo "$output" | egrep "VIRTUAL_HOST: newvariable.docksal"
+	echo "$output" | egrep "io.docksal.virtual-host: drupal8.docksal"
+}
