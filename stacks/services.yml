@@ -2,7 +2,7 @@
 # To use any service extend it from this file located at ${HOME}/.docksal/stacks/services.yml.
 # See ${HOME}/.docksal/stacks/default.yml for a basic LAMP stack extending from web, db and cli services in this file.
 
-version: "2"
+version: "2.1"
 
 services:
   # Web
@@ -16,18 +16,20 @@ services:
       - io.docksal.virtual-host=${VIRTUAL_HOST}
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
-      - APACHE_DOCUMENTROOT=/var/www/${DOCROOT}
+      - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
       - VIRTUAL_HOST=${VIRTUAL_HOST}
 
   # DB
   db:
     hostname: db
     image: docksal/db:1.0-mysql-5.5
+    ports:
+      - "${MYSQL_PORT_MAPPING:-3306}"
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=user
-      - MYSQL_DATABASE=default
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_USER=${MYSQL_USER:-user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
 
   # CLI
   # Used for all console commands and tools.
@@ -58,4 +60,4 @@ services:
     image: memcached
     environment:
       # Memcached memory limit in megabytes
-      - MEMCACHED_MEMORY_LIMIT=128
+      - MEMCACHED_MEMORY_LIMIT=${MEMCACHED_MEMORY_LIMIT:-128}

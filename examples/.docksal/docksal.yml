@@ -9,10 +9,10 @@
 # Docksal stiches several docker-compose configuration files together.
 # Run "fin config" to see which files are involved and the resulting configration.
 
-version: "2"
+version: "2.1"
 
 services:
-  # Web node
+  # Web
   web:
     hostname: web
     image: docksal/web:1.0-apache2.2
@@ -28,30 +28,30 @@ services:
     depends_on:
       - cli
 
-  # DB node
+  # DB
   db:
     hostname: db
     image: docksal/db:1.0-mysql-5.5
     ports:
-      - ${MYSQL_PORT}
+      - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
       # MySQL configuration overrides
       - ${PROJECT_ROOT}/.docksal/etc/mysql/my.cnf:/opt/mysql.conf.d/z_my.cnf:ro
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_USER=${MYSQL_USER:-user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
 
   # CLI node
   # Used for all console commands and tools.
   cli:
     hostname: cli
-    image: docksal/cli:1.0-php5
+    image: docksal/cli:1.0-php7
     volumes:
       # Project root folder mapping
       - ${PROJECT_ROOT}/:/var/www:rw
-      # Host home directory mapping (for SSH keys and ther credentials).
+      # Host home directory mapping (for SSH keys and other credentials).
       - ${HOME}/:/.home:ro
       # PHP FPM configuration overrides
       - ${PROJECT_ROOT}/.docksal/etc/php/php.ini:/etc/php5/fpm/conf.d/z_php.ini:ro
@@ -61,4 +61,4 @@ services:
     volumes_from:
       - container:docksal-ssh-agent
     environment:
-      - XDEBUG_ENABLED=${XDEBUG_ENABLED}
+      - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}

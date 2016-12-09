@@ -6,7 +6,7 @@
 # - Varnish 3
 # - Memcached 1.4
 
-version: "2"
+version: "2.1"
 
 services:
   # Web

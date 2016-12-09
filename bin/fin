@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.13.3
+FIN_VERSION=0.14.0
 
 # Console colors
 red='\033[0;91m'
@@ -16,7 +16,7 @@ FIN_BRANCH="${FIN_BRANCH:-develop}"
 
 #---------------------------- Global Constants --------------------------------
 REQUIREMENTS_DOCKER='1.12.3'
-REQUIREMENTS_DOCKER_COMPOSE='1.8.0'
+REQUIREMENTS_DOCKER_COMPOSE='1.9.0'
 REQUIREMENTS_DOCKER_MACHINE='0.8.2'
 REQUIREMENTS_VBOX='5.1.2'
 REQUIREMENTS_WINPTY='0.4.0'
