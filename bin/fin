@@ -602,16 +602,6 @@ _confirm ()
 	done
 }
 
-# Display desktop notification (Mac only)
-# @param $1 title
-# @param $2 message
-_notify ()
-{
-	if is_mac && [[ "$1" != "" ]]; then
-		osascript -e 'display notification "'"$2"'" with title "'"$1"'"'
-	fi
-}
-
 #-------------------------- Containers management -----------------------------
 
 _start_containers ()
@@ -2520,11 +2510,9 @@ mysql_import ()
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then
 		echo-rewrite-ok "Importing..."
-		if is_tty; then _notify "Docksal" "Mysql import finished"; fi
 		exit 0
 	else
 		echo-red "Import failed";
-		if is_tty; then _notify "Docksal" "Mysql import failed!"; fi
 		exit 1
 	fi
 }
