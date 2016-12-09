@@ -210,3 +210,23 @@ teardown() {
 	run fin ps
 	[[ "$(echo "$output" | tail -n +3)" == "" ]]
 }
+
+@test "fin config" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Check default Drupal 8 config (check if environment variables are used in docksal.yml)
+	run fin config
+	echo "$output" | egrep "VIRTUAL_HOST: drupal8.docksal"
+	echo "$output" | egrep "MYSQL_DATABASE: default"
+}
+
+@test "fin config local env file" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Preparetion step - create local env file
+	echo "VIRTUAL_HOST=testenv.docksal" > .docksal/docksal-local.env
+
+	# Check default Drupal 8 config (check if environment variables are used in docksal.yml)
+	run fin config
+	echo "$output" | egrep "VIRTUAL_HOST: testenv.docksal"
+}
