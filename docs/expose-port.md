@@ -27,7 +27,7 @@ Ports in the right column are ports that containers expose to Docker. Follow nex
           - "2222:22"
     ```
 
-    ***Note the quotes.** Yaml interprets some numbers with a colon as base 60 numbers, so you need quotes here.*
+    _**Note the quotes.** Yaml interprets some numbers with a colon as base 60 numbers, so you need quotes here._
 
 3. Run `fin up` to apply configuration.
 
