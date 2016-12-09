@@ -2846,14 +2846,15 @@ load_configuration ()
 		ENV_FILE="$env_file"
 		# Source and allexport variables in the .env file
 		set -a; source "$env_file"; set +a
-		# Source local env file if both it and the main env file exist
-		if [[ -f "$local_env_file" ]]; then
-			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
-			# Source and allexport variables in the .env file
-			set -a; source "$local_env_file"; set +a
-		fi
-		export ENV_FILE
 	fi
+    # Source local env file if it exist
+    # Allow using this with the pre-configured stacks by not checking docksal.env presence.
+    if [[ -f "$local_env_file" ]]; then
+        ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
+        # Source and allexport variables in the .env file
+        set -a; source "$local_env_file"; set +a
+    fi
+    export ENV_FILE
 
 	# Legacy/traditional setup support
 	# TODO: get rid of this in 2017
@@ -2873,8 +2874,6 @@ load_configuration ()
 		# Use .docksal/docksal.yml by default (if exists)
 		if [[ -f "$yml_file" ]]; then
 			COMPOSE_FILE="$yml_file"
-			# Include docksal-local.yml (if exists)
-			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		# Otherwise use the default.yml stack config (if exists)
 		elif [[ -f "$default_yml_file" ]]; then
 			COMPOSE_FILE="$default_yml_file"
@@ -2883,6 +2882,10 @@ load_configuration ()
 		if [[ "$COMPOSE_FILE" == "" ]]; then
 			echo-error "No configuration files found." "Expected in $yml_file"
 			exit 1
+		else
+			# Include docksal-local.yml (if exists)
+    	    # Allow using this with the pre-configured stacks by not checking docksal.env presence.
+			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
 		# Experimental: Include a volumes yml if requested.
