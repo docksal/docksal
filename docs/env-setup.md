@@ -78,6 +78,7 @@ then `fin` was able to communicate with your Docker for Mac/Windows instance.
 #### Switching back to VirtualBox
 
 **1.** `unset DOCKER_NATIVE`
+
 **2.** `fin reset system`
 
 This will reset system services and update DNS resolution for .docksal domains (Mac)
