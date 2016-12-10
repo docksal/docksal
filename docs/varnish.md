@@ -23,4 +23,4 @@ varnish:
 **3.** Apply new configuration with `fin up`
 
 
-See https://github.com/docksal/image-varnish for additional configuration options.
+See [docksal/image-varnish](https://github.com/docksal/image-varnish) for additional configuration options.
