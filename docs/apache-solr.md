@@ -2,26 +2,27 @@
 
 ## Docksal configuration
 
-1. Add Apache Solr service to `docksal.yml`:
+### 1. Add Apache Solr service
 
-    Replace `<project_name>` with your project name.
+Add Apache Solr service to `docksal.yml`
 
-    ```yml
-    # Solr node
-    # Uncomment the service definition section below to start using Solr.
-    solr:
-      hostname: solr
-      image: docksal/solr:3.x-stable
-      environment:
-        - DOMAIN_NAME=solr.<project_name>.docksal
-    ```
+```yml
+# Solr
+solr:
+  hostname: solr
+  image: docksal/solr:3.x-stable
+```
 
-2. Apply new configuration with `fin up`
+### 2. Apply new configuration
+
+Run `fin up`
 
 ## Drupal configuration
 
-1. Enable all required Drupal modules for Solr search integration on your site  
+### 1. Enable modules
 
-2. Add your Solr server on page `admin/config/search/apachesolr/settings/add` with following server url: 
+Enble all required by your version of Drupal modules for Solr search integration on your site.
 
-    Solr server URL: `http://solr.<project_name>.docksal:8983/solr`
+### 2. Add your Solr server
+
+Add your Solr server on the `admin/config/search/apachesolr/settings/add` using following server url: `http://solr:8983/solr`
