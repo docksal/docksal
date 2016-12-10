@@ -18,7 +18,7 @@ pages:
     - MySQL DB access for external tools: db-access.md
     - Automatic database import: db-import.md
     - Extending fin with custom commands: custom-commands.md
-    - Exposing any Docker container's port: expose-port.md
+    - Exposing any Docker containers port: expose-port.md
     - Using Docker for Mac/Win: /docs/env-setup-native.md
     - Customize project configuration: project-customize.md
   - Utililies:
