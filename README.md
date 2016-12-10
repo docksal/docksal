@@ -67,7 +67,6 @@ fin update
 
 ### Advanced configuration
 - [Running multiple projects](/docs/multiple-projects.md)
-- [Customize project configuration](/docs/project-customize.md)
 - [Drupal settings (database, file permissions)](/docs/drupal-settings.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
 - [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
@@ -77,8 +76,9 @@ fin update
 - [Increasing vm memory (RAM)](/docs/vm.md)
 - [Exposing any Docker container's port](/docs/expose-port.md)
 - [Using Docker for Mac/Win](/docs/env-setup-native.md)
+- [Customize project configuration](/docs/project-customize.md)
 
-### Third party utililies
+### Utililies
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 - [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
 - [Sending and capturing e-mail](/docs/mail.md)
