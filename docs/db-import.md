@@ -10,9 +10,9 @@ Create a folder for database dumps inside the project root called `db` (name can
 
 ### 2. Place `*.sql` or `*.sql.gz` file(s) into the `db` folder.
 
-!!! NOTE: You can put multiple `*.sql` and `*.sql.gz` files.
-They all will be imported in an alphabetical order.
-`MYSQL_DATABASE` database is used by default and cannot be changed.
+!!! note You can put multiple `*.sql` and `*.sql.gz` files.
+They will all be imported in an alphabetical order.
+Database set in `MYSQL_DATABASE` variable is used.
 
 ### 3. Add the following configuration
 
