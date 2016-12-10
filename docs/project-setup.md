@@ -10,14 +10,16 @@ Presence of the `.docksal` folder in the project directory is a good indicator a
 
 #### 1. Create a project directory (or checkout your existing project).
 
-```
+```bash
 mkdir ~/projects/myproject
 cd ~/projects/myproject
 ```
 
 #### 2. Create an empty `.docksal` directory. 
 
-`mkdir .docksal`
+```bash
+mkdir .docksal
+```
 
 All project specific configurations and commands will be stored in this directory.
 
@@ -26,7 +28,9 @@ All project specific configurations and commands will be stored in this director
 
 #### 3. Start the project containers.
 
-`fin start`
+```bash
+fin start
+```
 
 You should see output like the following:
 
@@ -147,7 +151,9 @@ you need to setup a database.
 
 If you need to customize your Docksal setup, there is a command to build the initial configuration files.
 
-`fin config generate`
+```bash
+fin config generate
+```
 
 This will save the default dynamic configuration to files in the `.docksal` directory.
 
