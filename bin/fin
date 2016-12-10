@@ -1079,11 +1079,13 @@ show_help_share ()
 
 show_help_config ()
 {
-	echo-green "fin config <command> - Display/generate project configuration"
+	echo-green "Display/generate project configuration"
+	printh "fin config [command]" "" "yellow"
 	echo
 	echo-green "Commands:"
 	printh "show" "Display effective configuration for the project"
 	printh "generate" "Generate Docksal configuration for the project"
+	printh "generate --static" "Generate static Docksal configuration for the project"
 	echo
 }
 
@@ -2958,8 +2960,12 @@ config_show ()
 
 config_generate ()
 {
+	eval $(parse_params "$@")
 	# Allow to defined the default stack file.
 	DOCKSAL_STACK=${DOCKSAL_STACK:-default}
+	if [[ "$static" == "static" ]]; then
+		DOCKSAL_STACK="$DOCKSAL_STACK-static"
+	fi
 	yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 
 	if [[ -f ${yml_file} ]]; then
@@ -3274,8 +3280,8 @@ case "$1" in
 		;;
 	config)
 		shift
-		if [[ "$*" == "" ]] || [[ "$*" == "show" ]]; then config_show; fi
-		if [[ "$*" == "generate" ]]; then config_generate; fi
+		if [[ "$*" == "" ]] || [[ "$1" == "show" ]]; then config_show; fi
+		if [[ "$1" == "generate" ]]; then shift; config_generate "$@"; fi
 		;;
 	fix-smb)
 		smb_windows_fix
