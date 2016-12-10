@@ -20,7 +20,7 @@ On Mac and Windows you need to install [VirtualBox 5.1.2 Mac](http://download.vi
 !!! attention "Specific version required!"
     **Please note that specific version is important.** If you're using different version it can work fine or you can experience unforeseen bugs. `fin` will notify you about a need to update your VirtualBox version in future.
 
-## Install `fin`
+## Install fin
 
 ```
 sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
