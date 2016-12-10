@@ -97,6 +97,7 @@ fin update
 - (Mac and Windows) Re-create Docksal VM: `fin vm remove` then `fin vm start` (**WARNING**: backup your DB data before doing this)
 
 If quick fixes above did not help, try:
+
 - checking [troubleshooting doc](docs/troubleshooting.md) for rare problems that might occur
 - searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced same or a similar issue and have already found a solution or a workaround.
 - asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
