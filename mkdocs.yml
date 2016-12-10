@@ -25,7 +25,7 @@ pages:
     - Debugging with Xdebug and PhpStorm: xdebug.md
     - Using custom ssh keys (with or without passwords) via ssh-agent: ssh-agent.md
     - Sending and capturing e-mail: mail.md
-    - Using SASS/Compass: sass.md
+    - Using SASS and Compass: sass.md
     - Using PHP Code Sniffer (phpcs, phpcbf): phpcs.md
     - Enabling Varnish support: varnish.md
     - Enabling Memcached support: memcached.md
@@ -33,6 +33,3 @@ pages:
     - Using Blackfire profiler: blackfire.md
     - Using Behat: behat.md
     - Public access via ngrok: public-access.md
-
-
-
