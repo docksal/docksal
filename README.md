@@ -123,6 +123,7 @@ sudo rm /usr/local/bin/docker-machine
 
 ### Advanced configuration
 - [Running multiple projects](/docs/multiple-projects.md)
+- [Customize project configuration](/docs/project-customize.md)
 - [Drupal settings](/docs/drupal-settings.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
 - [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
