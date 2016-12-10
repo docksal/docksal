@@ -1,13 +1,11 @@
 # System requirements
 
-## Hardware
-
-### CPU
+## CPU
 
 - (**Mac**) Must be a 2010 or newer model
 - (**PC**) Your CPU should support hardware **VT-x/AMD-V virtualization** and it should be [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
 
-### RAM
+## RAM
 
 - (**Mac/Win**) Workstation with 4GB is required (8GB recommended)
 - (**Linux**) no minimum requirement (4GB recommended)
