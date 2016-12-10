@@ -16,7 +16,7 @@
 - (**Mac**) OS X El Capitan 10.11 or newer
 - (**Mac**) VirtualBox prior to version 4.3.30 must NOT be installed
 - (**Win**) Windows 7 or higher
-- (**Linux**) Linux kernel 3.10 or higher
+- (**Linux**) Ubuntu Linux 14.04 or newer (or it's derivatives) with Linux kernel 3.10 or higher
 
 
 Refer to the [environment setup instructions](env-setup.md#setup) for further steps.
