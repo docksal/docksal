@@ -3,6 +3,8 @@ theme: readthedocs
 repo_url: https://github.com/docksal/docksal
 extra_css:
   - css/extra.css
+markdown_extensions:
+  - markdown.extensions.admonition
 pages:
   - Home: index.md
   - Getting started:
