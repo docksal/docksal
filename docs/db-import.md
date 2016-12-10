@@ -2,7 +2,7 @@
 
 The `db` service container can perform automatic import of database dump upon initialization.
 
-# Seting up
+# Setting up
 
 **1.** Create a folder for database dumps
 
