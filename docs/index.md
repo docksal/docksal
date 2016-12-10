@@ -5,9 +5,6 @@ Docker and Docker Compose based environment for web development.
 !!! attention "Docksal is under active development" 
     Breaking changes and outdated docs are very possible. Please help us by testing, submitting issues and pull requests. Thanks!
 
-
-## Examples of preconfigured Docksal powered projects
-
 Running a complete LAMP stack for Drupal, WordPress or a pure HTML/PHP base website is two commands away!<sup>*</sup>
 
 ```
@@ -24,11 +21,11 @@ Try one of the preconfigured projects:
 <sup>*</sup>Once you are done with a one-time [Docksal environment setup](/docs/env-setup.md)
 
 <a name="setup"></a>
-## Setup
+## Docksal Setup
 
 Please review [system requirements](/docs/system-requirements.md) before proceeding with the setup.
 
-1. [Docksal environment setup](/docs/env-setup.md)
+1. [Install software](/docs/env-setup.md)
     
     This is done **one time per host** and should be performed by everyone.
 
@@ -37,11 +34,9 @@ Please review [system requirements](/docs/system-requirements.md) before proceed
     This is done **one time per project** and should be performed by the project TL.
 
 <a name="fin"></a>
-## Docksal Fin (fin)
+## Docksal Fin and stack
 
 Docksal Fin is a command line tool to control Docksal's stack. `fin` runs natively on Mac and Linux and requires [Babun Shell](http://babun.github.io) on Windows.
-
-## Docksal Stack
 
 Each project contains at least 3 services:
 
@@ -50,16 +45,14 @@ Each project contains at least 3 services:
 - `cli` - container that is meant to serve as a single console access point to all necessary command line tools. You can access it with `fin bash`. For the list of tools available inside **cli** check [CLI image docs](https://github.com/docksal/service-cli)
 
 <a name="updates"></a>
-## Updates
-
-### Regular updates
+## Updating Docksal
 
 ```
 fin update
 ```
 
 <a name="instructions"></a>
-## Instructions and tutorials
+## Tutorials
 
 ### Advanced configuration
 - [Running multiple projects](/docs/multiple-projects.md)
@@ -72,7 +65,7 @@ fin update
 - [Increasing vm memory (RAM)](/docs/vm.md)
 - [Exposing any Docker container's port](/docs/expose-port.md)
 
-### Using third party utililies
+### Utililies
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 - [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
 - [Sending and capturing e-mail](/docs/mail.md)

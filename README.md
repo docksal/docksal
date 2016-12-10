@@ -9,9 +9,6 @@ Docker and Docker Compose based environments for web development.
     Docksal is still under active development. Breaking changes and outdated docs are very possible.
     Please help us by testing, submitting issues and PRs. Thanks!
 
-
-## Examples of preconfigured Docksal powered projects
-
 Running a complete LAMP stack for Drupal, WordPress or a pure HTML/PHP base website is two commands away!<sup>*</sup>
 
 ```
@@ -29,29 +26,24 @@ Try one of the preconfigured projects:
 
 
 <a name="setup"></a>
-## Setup
+## Docksal Setup
 
 Please review [system requirements](/docs/system-requirements.md) before proceeding with the setup.
 
-1. [Docksal environment setup](/docs/env-setup.md)
-    
-    This is done **one time per host** and should be performed by everyone.
+1. [Install software](/docs/env-setup.md)
 
-2. [Configure a project to use Docksal](/docs/project-setup.md)
-
-    This is done **one time per project** and should be performed by the project TL.
+2. [Create a Docksal powered project](/docs/project-setup.md)
 
 <a name="fin"></a>
-## Docksal Fin (fin)
+## Docksal Fin and stack
 
 Docksal Fin is a command line tool to control Docksal's stack. `fin` runs natively on Mac and Linux and requires [Babun Shell](http://babun.github.io) on Windows.
 
-## Docksal Stack
-
 Each project contains at least 3 services:
-* `web` - holds your webserver (nginx/apache/etc.)
-* `db` - holds database server (MySQL)
-* `cli` - container that is meant to serve as a single console access point to all necessary command line tools. You can access it with `fin bash`. For the list of tools available inside **cli** check [CLI image docs](https://github.com/docksal/service-cli)
+
+- `web` - holds your webserver (nginx/apache/etc.)
+- `db` - holds database server (MySQL)
+- `cli` - container that is meant to serve as a single console access point to all necessary command line tools. You can access it with `fin bash`. For the list of tools available inside **cli** check [CLI image docs](https://github.com/docksal/service-cli)
 
 <a name="updates"></a>
 ## Updating Docksal
@@ -63,7 +55,7 @@ fin update
 [How to update from Drude to Docksal](/docs/update-dde.md)
 
 <a name="instructions"></a>
-## Instructions and tutorials
+## Tutorials
 
 ### Advanced configuration
 - [Running multiple projects](/docs/multiple-projects.md)
@@ -82,13 +74,13 @@ fin update
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 - [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
 - [Sending and capturing e-mail](/docs/mail.md)
-- [Using SASS/Compass](/docs/sass.md)
-- [Using PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
-- [Enabling Varnish support](/docs/varnish.md)
-- [Enabling Memcached support](/docs/memcached.md)
-- [Enabling Apache Solr support](/docs/apache-solr.md)
-- [Using Blackfire profiler](/docs/blackfire.md)
-- [Using Behat](/docs/behat.md)
+- [SASS/Compass](/docs/sass.md)
+- [PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
+- [Varnish](/docs/varnish.md)
+- [Memcached](/docs/memcached.md)
+- [Apache Solr](/docs/apache-solr.md)
+- [Blackfire profiler](/docs/blackfire.md)
+- [Behat](/docs/behat.md)
 - [Public access via ngrok](/docs/public-access.md)
 
 <a name="troubleshooting"></a>
