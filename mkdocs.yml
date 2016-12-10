@@ -28,6 +28,7 @@ pages:
     - Using SASS/Compass: sass.md
     - Using PHP Code Sniffer (phpcs, phpcbf): phpcs.md
     - Enabling Varnish support: varnish.md
+    - Enabling Memcached support: memcached.md
     - Enabling Apache Solr support: apache-solr.md
     - Using Blackfire profiler: blackfire.md
     - Using Behat: behat.md

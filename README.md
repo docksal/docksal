@@ -85,6 +85,7 @@ fin update
 - [Using SASS/Compass](/docs/sass.md)
 - [Using PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
 - [Enabling Varnish support](/docs/varnish.md)
+- [Enabling Memcached support](/docs/memcached.md)
 - [Enabling Apache Solr support](/docs/apache-solr.md)
 - [Using Blackfire profiler](/docs/blackfire.md)
 - [Using Behat](/docs/behat.md)
