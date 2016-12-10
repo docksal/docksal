@@ -124,7 +124,7 @@ sudo rm /usr/local/bin/docker-machine
 ### Advanced configuration
 - [Running multiple projects](/docs/multiple-projects.md)
 - [Customize project configuration](/docs/project-customize.md)
-- [Drupal settings](/docs/drupal-settings.md)
+- [Drupal settings (database, file permissions)](/docs/drupal-settings.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
 - [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
 - [Automatic database import](docs/db-import.md)
@@ -132,6 +132,7 @@ sudo rm /usr/local/bin/docker-machine
 - [Extending fin with custom commands](/docs/custom-commands.md)
 - [Increasing vm memory (RAM)](/docs/vm.md)
 - [Exposing any Docker container's port](/docs/expose-port.md)
+- [Using Docker for Mac/Win](/docs/env-setup-native.md)
 
 ### Third party utililies
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
