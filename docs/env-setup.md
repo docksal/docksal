@@ -19,7 +19,7 @@ Instructions were not tested with other shells on Windows.
 
 Install [VirtualBox 5.1.2 Mac](http://download.virtualbox.org/virtualbox/5.1.2/VirtualBox-5.1.2-108956-OSX.dmg)/[VirtualBox 5.1.2 Win](http://download.virtualbox.org/virtualbox/5.1.2/VirtualBox-5.1.2-108956-Win.exe) 
 
-!!! danger "Specific version required!"
+!!! attention "Specific version required!"
     **Please note that specific version is important.** If you're using different version it can work fine or you can experience unforeseen bugs. `fin` will notify you about a need to update your VirtualBox version in future.
 
 #### 2. Install `fin`
