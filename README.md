@@ -82,7 +82,7 @@ fin update
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 - [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
 - [Sending and capturing e-mail](/docs/mail.md)
-- [Using Sass](/docs/sass.md)
+- [Using SASS/Compass](/docs/sass.md)
 - [Using PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
 - [Enabling Varnish support](/docs/varnish.md)
 - [Enabling Apache Solr support](/docs/apache-solr.md)
