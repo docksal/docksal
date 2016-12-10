@@ -25,13 +25,9 @@ Try one of the preconfigured projects:
 
 Please review [system requirements](/docs/system-requirements.md) before proceeding with the setup.
 
-1. [Install software](/docs/env-setup.md)
-    
-    This is done **one time per host** and should be performed by everyone.
+**1. [Install required software](/docs/env-setup.md)**
 
-2. [Configure a project to use Docksal](/docs/project-setup.md)
-
-    This is done **one time per project** and should be performed by the project TL.
+**2. [Create a Docksal powered project](/docs/project-setup.md)**
 
 <a name="fin"></a>
 ## Docksal Fin and stack
