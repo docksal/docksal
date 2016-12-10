@@ -21,7 +21,7 @@ cd ~/projects/myproject
 
 All project specific configurations and commands will be stored in this directory.
 
-!!! note "Git control" 
+!!! note "Version control" 
     Git does not commit empty directories. To commit it to Git repo create a .gitkeep file inside it with `touch .docksal/.gitkeep`
 
 #### 3. Start the project containers.
