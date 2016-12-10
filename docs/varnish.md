@@ -1,5 +1,8 @@
 # Enabling Varnish support
 
+!!! warning "This documentation is outdated"
+    Instructions in this document need to be updated
+
 ## Setup
 
 **1.** Comment out `VIRTUAL_HOST=<project_name>.docksal` in the `web` service definition in `docker-compose.yml`.
