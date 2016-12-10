@@ -11,25 +11,21 @@ pages:
     - System requirements: system-requirements.md
     - Docksal environment setup: env-setup.md
     - Configure a project to use Docksal: project-setup.md
-  - Advanced configuration tutorials:
-    - Running multiple projects: multiple-projects.md
-    - Drupal settings (database, files): drupal-settings.md
+  - Advanced configuration:
+    - Drupal settings: drupal-settings.md
     - Overriding default PHP/MySQL/etc. settings: settings.md
     - MySQL DB access for external tools: db-access.md
     - Automatic database import: db-import.md
     - Extending fin with custom commands: custom-commands.md
-    - Exposing any Docker containers port: expose-port.md
-    - Using Docker for Mac/Win: /docs/env-setup-native.md
-    - Customize project configuration: project-customize.md
-  - Utililies:
+    - Exposing any Docker container's port: expose-port.md
+  - Third party utililies:
     - Debugging with Xdebug and PhpStorm: xdebug.md
-    - Using custom ssh keys (with or without passwords) via ssh-agent: ssh-agent.md
-    - Sending and capturing e-mail: mail.md
-    - Using SASS and Compass: sass.md
     - Using PHP Code Sniffer (phpcs, phpcbf): phpcs.md
-    - Enabling Varnish support: varnish.md
-    - Enabling Memcached support: memcached.md
-    - Enabling Apache Solr support: apache-solr.md
     - Using Blackfire profiler: blackfire.md
-    - Using Behat: behat.md
     - Public access via ngrok: public-access.md
+    - Using Behat: behat.md
+    - Sending and capturing e-mail: mail.md
+    - Enabling Varnish support: varnish.md
+    - Enabling Apache Solr support: apache-solr.md
+    - Using Sass: sass.md
+    - Using custom ssh keys (with or without passwords) via ssh-agent: ssh-agent.md
