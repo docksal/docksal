@@ -30,9 +30,9 @@ Try one of the preconfigured projects:
 
 Please review [system requirements](/docs/system-requirements.md) before proceeding with the setup.
 
-1. [Install software](/docs/env-setup.md)
+**1. [Install required software](/docs/env-setup.md)**
 
-2. [Create a Docksal powered project](/docs/project-setup.md)
+**2. [Create a Docksal powered project](/docs/project-setup.md)**
 
 <a name="fin"></a>
 ## Docksal Fin and stack
