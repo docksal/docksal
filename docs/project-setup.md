@@ -8,14 +8,14 @@ Presence of the `.docksal` folder in the project directory is a good indicator a
 
 ## Default setup
 
-#### 1. Create a project directory (or checkout your existing project).
+### 1. Create a project directory (or checkout your existing project).
 
 ```bash
 mkdir ~/projects/myproject
 cd ~/projects/myproject
 ```
 
-#### 2. Create an empty `.docksal` directory. 
+### 2. Create an empty `.docksal` directory. 
 
 ```bash
 mkdir .docksal
@@ -26,7 +26,7 @@ All project specific configurations and commands will be stored in this director
 !!! note "Version control" 
     Git does not commit empty directories. To commit it to Git repo create a .gitkeep file inside it with `touch .docksal/.gitkeep`
 
-#### 3. Start the project containers.
+### 3. Start the project containers.
 
 ```bash
 fin start
@@ -51,18 +51,20 @@ Connected vhost-proxy to "myproject_default" network.
 !!! tip "SSH key password"
     If you are being asked for password to SSH keys `id_dsa` or `id_rsa`, please know that these are **your** keys that were copied over from your `~/.ssh` folder into SSH Agent's container. Their paths looks like `/root/.ssh/...` because that's the path **inside container**. Please provide password(s) to your keys if you want to use git or drush commands that require your SSH keys within Docksal (e.g. often project init script or composer script contains repository checkout that would require your key).
 
-#### 4. Setup document root and create index file
+### 4. Setup document root and create index file
 
 To have a working site, you need to add a document root and start adding files. If your project is empty then create a new `docroot` folder and `index.html` or `index.php` inside it.
 
 In this docroot folder you can add any project files you want: a plain HTML, PHP-based CMS or pure PHP project.
 
-#### 5. Done
+### 5. Done
 
 Your project site is now running. You can visit project url in your browser `http://myproject.docksal`
 
 !!! tip "VIRTUAL HOST name"
     By default virtual host name is equal to project folder name sans spaces and dashes, with `.docksal` domain appended to it. `myproject => myproject.docksal`
+
+### 5.1. Windows users
 
 !!! attention "Windows users need HOSTS file configuration"
     On Windows you need to append your project to the hosts file for every project `192.168.64.100  myproject.docksal`
