@@ -10,7 +10,7 @@ On Windows you will need a Linux-type shell.
 Install [Babun](http://babun.github.io/) before proceeding and run all commands in it.  
 Instructions were not tested with other shells on Windows.
 
-!!! important "Install as regular user"
+!!! danger "Install as regular user"
     Babun should be installed and run **as a regular user (do not use admin command prompt).**
 
 ## Installation
@@ -19,7 +19,7 @@ Instructions were not tested with other shells on Windows.
 
 Install [VirtualBox 5.1.2 Mac](http://download.virtualbox.org/virtualbox/5.1.2/VirtualBox-5.1.2-108956-OSX.dmg)/[VirtualBox 5.1.2 Win](http://download.virtualbox.org/virtualbox/5.1.2/VirtualBox-5.1.2-108956-Win.exe) 
 
-!!! important "Specific version required!"
+!!! danger "Specific version required!"
     **Please note that specific version is important.** If you're using different version it can work fine or you can experience unforeseen bugs. `fin` will notify you about a need to update your VirtualBox version in future.
 
 #### 2. Install `fin`
