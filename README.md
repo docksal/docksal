@@ -9,7 +9,7 @@ Docker and Docker Compose based environments for web development.
     Docksal is still under active development. Breaking changes and outdated docs are very possible.
     Please help us by testing, submitting issues and PRs. Thanks!
 
-Running a complete LAMP stack for Drupal, WordPress or a pure HTML/PHP base website is two commands away!<sup>*</sup>
+Running a complete LAMP stack with Drupal, WordPress or a pure HTML/PHP base website is two commands away!<sup>*</sup>
 
 ```
 git clone <sample-project-repo>
