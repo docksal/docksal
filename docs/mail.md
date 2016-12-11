@@ -7,7 +7,7 @@ Sending/capturing email support can be added via [MailHog](https://github.com/ma
 
 ## Setup
 
-1. Add the `mail` service in `docker-compose.yml`
+1. Add the `mail` service in `docksal.yml`
 
     Replace `<project_name>` with your project name.
     
