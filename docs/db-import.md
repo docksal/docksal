@@ -4,12 +4,12 @@ The `db` service container can perform automatic database dump import when initi
 
 # Setup
 
-1) Create a folder for database dump(s), e.g. `db` in the project root.
+1) Create a folder for database dump(s). E.g. `db` in the project root.
 
 2) Place `*.sql` or `*.sql.gz` file(s) into the `db` folder.
 
     **NOTE:** You can include multiple `*.sql` and `*.sql.gz` files.
-    They all will be imported in alphabetical order.
+    All files will be imported in alphabetical order.
     `MYSQL_DATABASE` database is used by default and cannot be changed.
 
 3) Add the following configuration option to the `db` service in the project's `.docksal/docksal.yml` file:
