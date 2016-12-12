@@ -120,7 +120,7 @@ else
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
 	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
 	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
-	[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
+	[[ "$DOCKER_MACHINE_STATUS" == 'Running' ]] && \
 		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
 	# current active machine folder
 	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
@@ -1191,7 +1191,7 @@ docker_machine_create ()
 			docker run -d --restart=always \
 				-v "$HOME":"/srv/data" \
 				-v /root/.docksal/syncthing:/srv/config \
-				-p 22000:22000  -p 21025:21025/udp -p 8080:8080 \
+				-p 22000:22000 -p 21025:21025/udp -p 8080:8080 \
 				--name docksal-syncthing \
 				joeybaker/syncthing &&
 			# Wait 10 seconds for syncthing to start
@@ -1410,7 +1410,7 @@ docker_machine_mount_nfs ()
 
 	# Start/Restart nfsd
 	(ps aux | grep /sbin/nfsd | grep -v grep >/dev/null) && NFSD_IS_RUNNING="true"
-	if [[ "$NFSD_IS_RUNNING"  == "true" ]]; then
+	if [[ "$NFSD_IS_RUNNING" == "true" ]]; then
 		if [[ "$NFSD_RESTART_REQUIRED" == "true" ]]; then
 			echo-green "Restarting nfsd..."
 			sudo nfsd restart
@@ -1512,7 +1512,7 @@ docker_machine_mount_smb ()
 	# Get a list of logical drives (type 3 = Local disk).
 	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	read -s -p "Enter your Windows account password: " PASSWORD
-	echo  # Add a new line after user input.
+	echo # Add a new line after user input.
 
 	for DRIVE in ${DRIVES}; do
 		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
@@ -2205,7 +2205,7 @@ update ()
 			# Check out the case when current user on linux does not have access to docker daemon
 			if is_linux; then
 				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
-				[ ! $? -eq 0  ] && LINUX_DAEMON_RUNNING="exit 1"
+				[ ! $? -eq 0 ] && LINUX_DAEMON_RUNNING="exit 1"
 				# if daemon is running but docker info does not return 0 then this is the case
 				if (${LINUX_DAEMON_RUNNING}) && ! (exit ${RUNNING_CODE}); then
 					echo-red "Your Docker daemon is running but you don't have access to it."
@@ -2605,7 +2605,7 @@ remove ()
 {
 	check_docksal_environment
 	if [[ $1 == "" ]]; then
-		echo -e  "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
+		echo -e "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
 		_confirm "Continue?";
 	fi
 
@@ -2778,12 +2778,12 @@ sysinfo ()
 		docker-machine --version
 
 	if is_docker_running; then
-        echo "███  DOCKER: IMAGES"
-        docker images
+		echo "███  DOCKER: IMAGES"
+		docker images
 
-        echo "███  DOCKER: CONTAINERS"
-        docker ps
-    fi
+		echo "███  DOCKER: CONTAINERS"
+		docker ps
+	fi
 
 	if which "$vboxmanage" >/dev/null 2>&1; then
 		echo "███  VIRTUAL BOX"
@@ -2850,14 +2850,15 @@ load_configuration ()
 		# Source and allexport variables in the .env file
 		set -a; source "$env_file"; set +a
 	fi
-    # Source local env file if it exist
-    # Allow using this with the pre-configured stacks by not checking docksal.env presence.
-    if [[ -f "$local_env_file" ]]; then
-        ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
-        # Source and allexport variables in the .env file
-        set -a; source "$local_env_file"; set +a
-    fi
-    export ENV_FILE
+
+	# Source local env file if it exist
+	# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+	if [[ -f "$local_env_file" ]]; then
+			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
+			# Source and allexport variables in the .env file
+			set -a; source "$local_env_file"; set +a
+	fi
+	export ENV_FILE
 
 	# Legacy/traditional setup support
 	# TODO: get rid of this in 2017
@@ -2887,7 +2888,7 @@ load_configuration ()
 			exit 1
 		else
 			# Include docksal-local.yml (if exists)
-    	    # Allow using this with the pre-configured stacks by not checking docksal.env presence.
+			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
@@ -3002,8 +3003,8 @@ create_site ()
 	while true; do
 		read -p "Please enter the name of your project (all one word, no spaces or slashes): " project_name
 		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
-		  echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
-		  continue
+			echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
+			continue
 		fi
 		break
 	done
