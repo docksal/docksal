@@ -16,19 +16,16 @@ This page explains some hidden mechanics of Docksal.
 ## System services
 
 When you run `fin update` for the first time Docksal installs you 3 system containers.
-These services are required to glue system pieces together.
-You can see them if you run `fin docker ps | grep docksal-`
+You can see them in the list if you run `fin docker ps | grep docksal-`
 
 ### SSH Agent
 
-[docksal-ssh-agent](https://github.com/docksal/service-ssh-agent) service is required to store your SSH keys. If not this service you would need
-to manually map your SSH keys to every project where you need them and if your keys
-are password protected you would need to enter password each time.
+[docksal-ssh-agent](https://github.com/docksal/service-ssh-agent) service is required to store your SSH keys. If it didn't exist you would need to map your SSH keys into every project where you needed them and if your keys
+are password protected you would need to enter password each time as it's SSH Agent who does password caching on localhost.
 
-Instead there's a conatiner with [ssh-agent](https://github.com/docksal/service-ssh-agent) running
-that imports your keys once and allows their reuse throughout all running projects
-without a need to re-enter passphrase, which could be especially annoying if you need
-ssh key to checkout/commit to repo.
+So we created dockerized version of it. ssh-agent imports your keys only once and 
+allows their reuse throughout all running projects without a need to re-enter passphrase, 
+which could be especially annoying if you need ssh key to checkout/commit to repo.
 
 ### DNS
 
@@ -60,11 +57,11 @@ Docksal's [DB service](https://github.com/docksal/service-db) runs MySQL 5.5, 5.
 ### CLI
 
 Docksal's [CLI service](https://github.com/docksal/service-cli) provides an environment to run php-fpm,
-that is used by web service, Behat, mysql, drush and other tools, and provides reliable automation
+that is used by web service, as well as for Behat, mysql, drush and other tools. Provides reliable automation
 interface via `fin exec`.
 
 <a name="understanding-configuration"></a>
-## Project services advanced configuration
+## Understanding configuration
 
 Docksal relies on [Docker Compose](https://docs.docker.com/compose/) to launch groups of related containers.
 You want to familiarize yourself with [basic concepts](https://docs.docker.com/compose/overview/) of Docker Compose
@@ -77,7 +74,7 @@ before reading next chapters.
 It's a main configuration file for a project that controls it's services settings, so use it to
 modify settings, that are required for all team members.
 
-Even if you don't have this file in your project folder fin loads a default one providing a zero-configuration ability.
+Even if you don't have this file in your project folder, fin will load a default one providing a zero-configuration ability.
 
 For more details on it's role check [loading order](#loading-order) and [customizing project configuration](project-customize.md).
 
@@ -87,13 +84,13 @@ For more details on it's role check [loading order](#loading-order) and [customi
 `docksal.env` is an [Environment file](https://docs.docker.com/compose/env-file/).
 
 It is meant to be used to easily override some default environment variables without a need of
-creating `docksal.yml` (For example to override mysql root password) or to provide additional environment
+creating `docksal.yml` (for example to override MYSQL_ROOT_PASSWORD) or to provide additional environment
 variables to your automation scripts (see [custom commands](custom-commands.md)).
 
 <a name="docksal-local"></a>
 ### What docksal-local files are for?
 
-`docksal-local.yml` and `docksal-local.env` are supposed to be used for customizations that should not
+`docksal-local.yml` and `docksal-local.env` are supposed to be used for customizations, that should not
 get committed to project's repository. For example [exposing custom port](expose-port.md) for local development needs.
 
 <a name="loading-order"></a>
@@ -105,7 +102,7 @@ project in a way that works for your organisation needs, just like Bash configur
 project in dozens of ways.
 
 fin loads files in a certain order. Configuration files that are loaded later overwrite settings
-from files that loaded earlier. The list below goes from earliest to latest in this queue.
+from files that had loaded earlier. The list below goes from earliest to latest in this queue.
 Files at the bottom load the latest.
 
 You can always see files that were loaded for project by running `fin config`.
@@ -121,4 +118,4 @@ Loading order:
 
 ## Customizing project configuration
 
-On details of docksal.yml structure and differences between dynamic and static configurations see [customizing project configuration](project-customize.md).
+If you are ready to customize Docksal settings for your project then check out  [customizing project configuration](project-customize.md) to learn about `docksal.yml` structure and differences between dynamic and static configurations for a project.
