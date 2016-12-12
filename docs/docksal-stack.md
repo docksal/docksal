@@ -4,7 +4,7 @@ This page explains some hidden mechanics of Docksal.
 
 1. [System services](#docksal-system-services)
 2. [Project services](#docksal-project-services)
-3. [Project services advanced configuration](#advanced-configuration)
+3. [Understanding configuration](#understanding-configuration)
     1. [What is docksal.yml?](#docksal-yml)
     2. [What is docksal.env?](#docksal-env)
     3. [What docksal-local files are for?](#docksal-local)
@@ -63,7 +63,7 @@ Docksal's [CLI service](https://github.com/docksal/service-cli) provides an envi
 that is used by web service, Behat, mysql, drush and other tools, and provides reliable automation
 interface via `fin exec`.
 
-<a name="advanced-configuration"></a>
+<a name="understanding-configuration"></a>
 ## Project services advanced configuration
 
 Docksal relies on [Docker Compose](https://docs.docker.com/compose/) to launch groups of related containers.
@@ -79,7 +79,7 @@ modify settings, that are required for all team members.
 
 Even if you don't have this file in your project folder fin loads a default one providing a zero-configuration ability.
 
-For more details on it's role check [loading order](#loading-order) and [customize project configuration](project-customize.md).
+For more details on it's role check [loading order](#loading-order) and [customizing project configuration](project-customize.md).
 
 <a name="docksal-env"></a>
 ### What is docksal.env?
@@ -118,3 +118,7 @@ Loading order:
 **3.** `docksal.env`
 **4.** `docksal-local.yml`
 **5.** `docksal-local.env`
+
+## Customizing project configuration
+
+On details of docksal.yml structure and differences between dynamic and static configurations see [customizing project configuration](project-customize.md).
