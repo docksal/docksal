@@ -2977,7 +2977,7 @@ config_generate ()
 
 		mkdir .docksal && \
 		# Use bind mount volumes by default
-		echo 'DOCKSAL_VOLUMES="bind"' > .docksal/docksal.env && \
+		echo '' > .docksal/docksal.env && \
 		cp "$yml_file" ".docksal/docksal.yml"
 		if [[ ! -f 'docroot/index.php' ]]; then
 			# Setup docroot and a basic index.php
