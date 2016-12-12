@@ -3051,17 +3051,15 @@ create_site ()
 
 	_confirm "Do you wish to proceed?"
 
-	# Todo: is git clone really the best way to do this?  What about
-	# users who don't have a github account, will this work for them?
 	echo -e "${green} Cloning repository...${NC}"
 	git clone -b master ${target_repo} ${project_name}
-	cd ${project_name}/.docksal
+	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
-	# Edit docksal.env to use a custom user-supplied host name
-	sed -i.bak "s/${target_host_name_search_string}/${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1
-	cd ..
-
-	fin init
+	cd ${project_name}/.docksal &&
+		# Edit docksal.env to use a custom user-supplied host name
+		sed -i.bak "s/${target_host_name_search_string}/${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1 &&
+		cd ".." &&
+		fin init
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
