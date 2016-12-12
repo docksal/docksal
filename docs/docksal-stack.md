@@ -114,7 +114,7 @@ You can always see files that were loaded for a project by running `fin config s
 Load order:
 
 1. `volumes-*.yml` - [optional] default is `volumes-bind.yml` ([volumes in Docksal](docksal-volumes.md))  
-2. `~/.docksal/stacks/stack-default.yml` - default stack, only loads if there is no `docksal.yml` configured for a project  
+2. `~/.docksal/stacks/stack-default.yml` - default stack, only loads if there is no `docksal.yml`  
 3. `docksal.yml`  
 4. `docksal.env`  
 5. `docksal-local.yml`  
