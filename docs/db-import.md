@@ -1,21 +1,21 @@
 # Automatic database import
 
-The `db` service container can perform automatic import of database dump upon initialization.
+The `db` service container can perform an automatic import of the database dump upon initialization.
 
 # Setting up
 
 #### 1. Create a folder for database dumps
 
-Create a folder for database dumps inside project root called `db` (name can differ).
+Create a folder for database dumps inside the project root called `db` (name can differ).
 
-#### 2. Put `*.sql` or `*.sql.gz` file(s) into the newly created `db` folder.
+#### 2. Add `*.sql` or `*.sql.gz` file(s) into the newly created `db` folder.
 
-!!! note "You can put multiple files" 
-    You can put multiple `*.sql` and `*.sql.gz` files. They will all be imported in an alphabetical order. Database that is set in `MYSQL_DATABASE` variable is used.
+!!! note "You can add multiple *.sql and *.sql.gz files"
+    All files will be imported in alphabetical order. The `MYSQL_DATABASE` variable contains the active database.
 
 #### 3. Add the following configuration
 
-Add the following to `db` service in the project's `docksal.yml` file:
+Add to the `db` service in the project's `docksal.yml` file as follows:
 
 ```yml
 db:
