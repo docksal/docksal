@@ -2102,14 +2102,13 @@ update_config_files ()
 	# TODO: cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
+		echo "Starting..."
 		for f in ${files_to_download}; do
-			echo -n "  $(basename ${f})..."
-			curl -kfsSLO "$f"
+			echo-rewrite "$(basename ${f})"
 			# exit subshell with error if download failed
-			[ ! $? -eq 0 ] && exit 1
-			# otherwise print ok
-			echo "		[OK]"
+			curl -kfsSLO "$f" || exit 1
 		done
+		echo-rewrite "Done"
 	)
 
 	if_failed_error "One of the default configs was not downloaded." \
