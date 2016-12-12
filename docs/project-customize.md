@@ -2,7 +2,7 @@
 
 ## Checking the default configuration
 
-If you had setup a project using the [simplified process](project-setup.md), then Docksal will handle all the configuration
+If you set up a project using the [simplified process](project-setup.md), then Docksal will handle all the configuration
 behind the scenes.
 
 To review this configuration, in your project directory run
@@ -84,7 +84,7 @@ volumes:
 
 Note that it displays the virtual host name it will use, which is based on your
 project's directory name, and it displays the MySQL user name and password if
-you need to setup a database.
+you need to setup additional databases (there is one by default).
 
 ## Customizing a configuration
 
@@ -94,7 +94,7 @@ If you need to customize your Docksal setup, there is a command to build the ini
 fin config generate
 ```
 
-This will save the default dynamic configuration to files in the `.docksal` directory.
+This will save the default dynamic configuration into files in the `.docksal` directory fo your project.
 
 - `docksal.yml` is for Docker specific configuration, like adding or removing services.
 - `docksal.env` is for environment specific configuration, like setting the document root or hostname.
