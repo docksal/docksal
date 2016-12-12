@@ -9,6 +9,7 @@ This page explains some hidden mechanics of Docksal.
     2. [What is docksal.env?](#docksal-env)
     3. [What docksal-local files are for?](#docksal-local)
     4. [Configuration files loading order](#loading-order)
+4. [Customizing project configuration](#project-customization)
 
 ---
 
@@ -116,6 +117,7 @@ Loading order:
 **4.** `docksal-local.yml`  
 **5.** `docksal-local.env`
 
+<a name="project-customization"></a>
 ## Customizing project configuration
 
 If you are ready to customize Docksal settings for your project then check out  [customizing project configuration](project-customize.md) to learn about `docksal.yml` structure and differences between dynamic and static configurations for a project.
