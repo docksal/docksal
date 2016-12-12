@@ -2893,17 +2893,15 @@ load_configuration ()
 
 		# Experimental: Include a volumes yml if requested.
 		# Use bind mount for volumes if using default stack.
-		[[ "$COMPOSE_FILE" == "$default_yml_file" ]] && DOCKSAL_VOLUMES="bind"
-		if [[ "$DOCKSAL_VOLUMES" != "" ]]; then
-			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-			if [[ -f "$volumes_yml_file" ]]; then
-				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
-			else
-				echo-error "Volumes definition not found in ${volumes_yml_file}." \
-					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
-					"You may need to run ${yellow}fin update${NC} to download volume definitions."
-				exit 1
-			fi
+		[[ "$DOCKSAL_VOLUMES" == "" ]] && DOCKSAL_VOLUMES="bind"
+		volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+		if [[ -f "$volumes_yml_file" ]]; then
+			COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
+		else
+			echo-error "Volumes definition not found in ${volumes_yml_file}." \
+				"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
+				"You may need to run ${yellow}fin update${NC} to download volume definitions."
+			exit 1
 		fi
 	fi
 	export COMPOSE_FILE
