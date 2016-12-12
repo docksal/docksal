@@ -1,5 +1,7 @@
 # Sending and capturing email
 
+!!! warning "This documentation is outdated" Instructions in this document need to be updated
+
 Sending/capturing email support can be added via [MailHog](https://github.com/mailhog/MailHog).   
 
     Out-of-the box only capturing will be working.
@@ -7,7 +9,7 @@ Sending/capturing email support can be added via [MailHog](https://github.com/ma
 
 ## Setup
 
-1. Add the `mail` service in `docker-compose.yml`
+1. Add the `mail` service in `docksal.yml`
 
     Replace `<project_name>` with your project name.
     
