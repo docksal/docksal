@@ -1083,7 +1083,8 @@ show_help_config ()
 	printh "fin config [command]" "" "yellow"
 	echo
 	echo-green "Commands:"
-	printh "show" "Display effective configuration for the project"
+	printh "show" "Display full effective configuration for the project"
+	printh "env" "Display only nevironment variables section of effective configuration"
 	printh "generate" "Generate Docksal configuration for the project"
 	printh "generate --static" "Generate static Docksal configuration for the project"
 	echo
@@ -1114,7 +1115,7 @@ bash_comp_words ()
 			exit 0
 		;;
 		config)
-			echo "generate show"
+			echo "generate show env"
 			exit 0
 			;;
 		fin)
@@ -2936,7 +2937,7 @@ config_show ()
 {
 	check_docksal_environment
 
-	echo
+	echo "---------------------"
 	echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
 	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
 	# Replace separators with new lines
@@ -2949,8 +2950,9 @@ config_show ()
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
 	local IP="$(fin vm ip)"; [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
 	echo "IP: $IP"
-	echo
-	echo "MYSQL_PORT:" $(docker-compose port db 3306 2>/dev/null)
+	echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$IP/")
+	[[ "$1" == "env" ]] && return
+
 	echo
 	echo "Docker Compose configuration"
 	echo "---------------------"
@@ -3280,8 +3282,12 @@ case "$1" in
 		;;
 	config)
 		shift
-		if [[ "$*" == "" ]] || [[ "$1" == "show" ]]; then config_show; fi
-		if [[ "$1" == "generate" ]]; then shift; config_generate "$@"; fi
+		if [[ "$1" == "generate" ]]; then
+			shift;
+			config_generate "$@";
+		else
+			config_show "$@"
+		fi
 		;;
 	fix-smb)
 		smb_windows_fix
