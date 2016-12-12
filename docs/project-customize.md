@@ -13,7 +13,7 @@ fin config
 
 You will see output similar to the following:
 
-```
+```yml
 COMPOSE_PROJECT_NAME: myproject
 COMPOSE_PROJECT_NAME_SAFE: myproject
 COMPOSE_FILE:
