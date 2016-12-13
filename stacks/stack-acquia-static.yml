@@ -23,7 +23,6 @@ services:
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
       - VIRTUAL_HOST=${VIRTUAL_HOST}
-    # cli has to be up before web
     depends_on:
       - cli
 
@@ -51,6 +50,8 @@ services:
       - host_home:/.home:ro
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
+    environment:
+      - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
 
   # Varnish
   varnish:
@@ -61,7 +62,6 @@ services:
     environment:
       - VARNISH_BACKEND_HOST=web
       - VIRTUAL_HOST=varnish.${VIRTUAL_HOST}
-    # web has to be up before varnish
     depends_on:
       - web
 

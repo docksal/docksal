@@ -8,7 +8,6 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: web
-    # cli has to be up before web
     depends_on:
       - cli
 

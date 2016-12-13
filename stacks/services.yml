@@ -43,6 +43,8 @@ services:
       - host_home:/.home:ro
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
+    environment:
+      - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
 
   # Varnish
   varnish:
