@@ -22,7 +22,7 @@ fin update
 export DOCKER_NATIVE=1
 ```
 
-This applies to a single terminal tab/session and has to be repeated for new ones).
+This applies to a single terminal tab/session and has to be repeated for the new ones).
 All further `fin` commands should be run within the same terminal tab/session.
 
 **4.** Check and confirm the switch
@@ -34,7 +34,7 @@ fin docker info | grep "Kernel Version"
 If you see something like `Kernel Version: 4.4.27-moby` in the output,
 then `fin` was able to communicate with your Docker for Mac/Windows instance.
 
-**5.** Re-create Docksal system containers
+**5.** Reset Docksal system containers
 
 ```
 fin reset system
@@ -59,9 +59,8 @@ If you see:
 - `Kernel Version: 4.4.27-boot2docker` means you switched back to the VirtualBox VM (TinyCore, boot2docker)
 - `Kernel Version: 4.4.27-moby` means you are still using Docker for Mac/Windows VM (Alpine Linux Moby)
 
-**3.** Re-create Docksal system containers
+**3.** Reset Docksal system containers
 
 ```
 fin reset system
 ```
-

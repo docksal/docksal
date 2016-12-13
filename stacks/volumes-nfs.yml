@@ -3,7 +3,7 @@
 # Pros: very good performance, almost realtime file sync 
 # Cons: no inotify/fs watchers
 
-version: "2"
+version: "2.1"
 
 volumes:
 # NFS volumes

@@ -45,6 +45,8 @@ Each project contains at least 3 services:
 - `db` - holds database server (MySQL)
 - `cli` - container that is meant to serve as a single console access point to all necessary command line tools. You can access it with `fin bash`. For the list of tools available inside **cli** check [CLI image docs](https://github.com/docksal/service-cli)
 
+[Docksal Stack documentation](/docs/docksal-stack.md)
+
 <a name="updates"></a>
 ## Updating Docksal
 

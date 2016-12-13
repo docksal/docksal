@@ -5,8 +5,9 @@
 # - PHP 5.6 / PHP 7.0
 # - Varnish 3
 # - Memcached 1.4
+# - ApacheSolr 4.x
 
-version: "2"
+version: "2.1"
 
 services:
   # Web
@@ -14,7 +15,6 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: web
-    # cli has to be up before web
     depends_on:
       - cli
 
@@ -35,7 +35,6 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: varnish
-    # web has to be up before varnish
     depends_on:
       - web
 
@@ -44,3 +43,9 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: memcached
+
+  # Solr
+  solr:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: solr

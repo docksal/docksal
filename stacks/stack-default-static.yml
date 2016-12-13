@@ -1,6 +1,4 @@
-# This is a library of preconfigured services for Docksal.
-# To use any service extend it from this file located at ${HOME}/.docksal/stacks/services.yml.
-# See ${HOME}/.docksal/stacks/default.yml for a basic LAMP stack extending from web, db and cli services in this file.
+# Basic LAMP stack
 
 version: "2.1"
 
@@ -18,6 +16,8 @@ services:
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
       - VIRTUAL_HOST=${VIRTUAL_HOST}
+    depends_on:
+      - cli
 
   # DB
   db:
@@ -45,26 +45,3 @@ services:
       - docksal_ssh_agent:/.ssh-agent:ro
     environment:
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-
-  # Varnish
-  varnish:
-    hostname: varnish
-    image: docksal/varnish:3.0-stable
-    labels:
-      - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
-    environment:
-      - VARNISH_BACKEND_HOST=web
-      - VIRTUAL_HOST=varnish.${VIRTUAL_HOST}
-
-  # Memcached
-  memcached:
-    hostname: memcached
-    image: memcached
-    environment:
-      # Memcached memory limit in megabytes
-      - MEMCACHED_MEMORY_LIMIT=${MEMCACHED_MEMORY_LIMIT:-128}
-
-  # Solr
-  solr:
-    hostname: solr
-    image: docksal/solr:4.x-stable

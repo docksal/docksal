@@ -5,7 +5,7 @@
 If you had setup a project using the [simplified process](project-setup.md), then Docksal will handle all the configuration
 behind the scenes.
 
-To review this configuration, in your project directory run
+To review configuration applied to your project run
 
 ```bash
 fin config
@@ -13,7 +13,7 @@ fin config
 
 You will see output similar to the following:
 
-```
+```yml
 COMPOSE_PROJECT_NAME: myproject
 COMPOSE_PROJECT_NAME_SAFE: myproject
 COMPOSE_FILE:
@@ -82,22 +82,39 @@ volumes:
 ---------------------
 ```
 
-Note that it displays the virtual host name it will use, which is based on your
-project's directory name, and it displays the MySQL user name and password if
-you need to setup a database.
+This output represents the very final containers configuration, composed of all your configuration files with all variables resolved to their values.
 
 ## Customizing a configuration
 
-If you need to customize your Docksal setup, there is a command to build the initial configuration files.
+Out-of-the box dynamic configuration is no different than static one. The only difference is how each of them handles future Docksal updates.
+
+### Dynamic configuration (recommended)
+
+Dynamic configuration is the one that can be generated with:
 
 ```bash
 fin config generate
 ```
 
-This will save the default dynamic configuration to files in the `.docksal` directory.
+It will create `docksal.yml` using `stack-default.yml` file. This type of configuration extends default `services.yml` file. Advantage is that your configuration is much more simple, which leaves less space for error (especially for unexperienced developers) and it will update to the latest version of Docksal images and practices automatically, while with static configuration manual updates might be required. Cons is that `services.yml` may change with Docksal updates, which is not always desirable with more complex projects. 
 
-- `docksal.yml` is for Docker specific configuration, like adding or removing services.
-- `docksal.env` is for environment specific configuration, like setting the document root or hostname.
+Dynamic configuration approach is recommended for majority projects with default setups. When you don't need anything more than webserver, database and some dev tools. This Drupal or Wordpress project of low to medium complexity. In majority of cases Docksal updates will not affect such project.
+
+**If you're not sure what to choose, this one is recommended. You can always switch to static one.**
+
+### Static configuration (advanced)
+
+When you start a larger project with customizations to defaults or non-default services, or with the big team of people, then you probably want to generate a static configuration, that will not depend on `services.yml`.
+
+This can be done with additional parameter:
+
+```bash
+fin config generate --static
+```
+
+It will create `docksal.yml` using `stack-default-static.yml` file. This file has static images' names and none of future changes to `services.yml` will affect it. 
+
+Which also means that if future Docksal update brings new features, that require a change to `services.yml`, then unlike with dynamic configuration, you might need to re-generate your static configuration or append those changes manually to your `docksal.yml` if you want to benefit from those new features.
 
 ## Automate the initialization process
 

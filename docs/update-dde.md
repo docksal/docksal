@@ -1,8 +1,8 @@
-# Updating from Drude to Docksal
+# Updating from Drude (DDE) to Docksal
 
 Drude used to rely on Vagrant and vagrant-boot2docker for running Docker.
 Docksal uses Docker Machine, which is more native and supports seamless (non-destructive) Docker version updates.
-Vagrant machine is not going to be used anymore and should be deleted.
+Drude's Vagrant machine is not going to be used anymore and should be deleted (follow instructions below).
 
 ## Create backups
 

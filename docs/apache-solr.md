@@ -25,4 +25,8 @@ Enble all required by your version of Drupal modules for Solr search integration
 
 ### 2. Add your Solr server
 
-Add your Solr server on the `admin/config/search/apachesolr/settings/add` using following server url: `http://solr:8983/solr`
+Add your Solr server on the `admin/config/search/apachesolr/settings/add` using following server url:
+
+```
+http://solr:8983/solr
+```
