@@ -236,7 +236,7 @@ teardown() {
 
 	# Preparation step - create local yml file (replace DB)
 	yml="
-version: '2'
+version: '2.1'
 
 services:
   db:
@@ -258,7 +258,7 @@ services:
 
 	# Preparation step - create local yml and local env files
 	yml="
-version: '2'
+version: '2.1'
 
 services:
   web:
