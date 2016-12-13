@@ -672,6 +672,25 @@ _remove_containers ()
 	fi
 }
 
+# Remove containers for removed projects.
+_remove_containers_removed_project_files ()
+{
+	echo-green "Checking for orphaned containers..."
+	projects=$(docker ps -a --filter "label=io.docksal.project-root" \
+													--filter "label=com.docker.compose.project" \
+													--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
+	for project in $projects; do
+		IFS=':' read project_name project_root <<< "$project";
+		if [[ ! -d "$project_root" ]]; then
+			echo "Directory for project \"$project_name\" does not exist. Removing containers..."
+			docker ps -q -a --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -fv
+			local network="${project_name}_default"
+			docker network disconnect "$network" docksal-vhost-proxy
+			docker network rm "$network"
+		fi
+	done
+}
+
 # Remove dangling images
 _remove_dangling_images ()
 {
@@ -705,6 +724,7 @@ _docker_cleanup ()
 
 	_remove_dangling_images
 	_remove_dangling_volumes
+	_remove_containers_removed_project_files
 
 	# TODO: remove below lines in 2017
 	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
