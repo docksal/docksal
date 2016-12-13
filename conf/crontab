@@ -1,1 +1,2 @@
 */5 * * * * /usr/local/bin/proxyctl cron
+0 0 * * * /usr/local/bin/proxyctl cleanup

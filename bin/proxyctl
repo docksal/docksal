@@ -5,14 +5,14 @@
 _start ()
 {
 	local vhost="$1"
-	[[ "$vhost" == "" ]] &&  echo "ERROR: Empty virtual host." && return 1
+	[[ "$vhost" == "" ]] && echo "ERROR: Empty virtual host." && return 1
 
-  echo "Stoping docker-gen..."
+	echo "Stoping docker-gen..."
 	/usr/bin/supervisorctl stop docker-gen
 
 	# Match vhost to a web container (exact match only)
 	local project_name
-  local container_id
+	local container_id
 	project_name=$(/usr/local/bin/docker ps -a \
 		--filter "label=io.docksal.virtual-host=$vhost" \
 		--filter "label=com.docker.compose.project" \
@@ -146,6 +146,44 @@ _cron ()
 	_stop
 }
 
+_cleanup ()
+{
+	DANGLING_TIMEOUT="${DANGLING_TIMEOUT:-14d}"
+
+	projects=$(docker ps -a \
+		--filter "label=com.docker.compose.project" \
+		--filter "label=com.docker.compose.service=web" \
+		--filter "label=io.docksal.project-root" \
+		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}:{{ .Label "io.docksal.permanent" }}')
+
+	for project in $projects; do
+		IFS=':' read container_id project_name project_root permanent <<< "$project"
+		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $DANGLING_TIMEOUT $container_id)" != "" ]]; then
+			# Active
+			echo "Project: $project_name is active. Skipping."
+		else
+			if [[ "$permanent" == "true" ]]; then
+				# Not active but keep alive
+				echo "Project: $project_name is NOT active, but marked as permanent. Skipping."
+			else
+				# Not active
+				echo "Project: $project_name is NOT active/permanent. Removing..."
+				# Stop and remove containers
+				docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -fv
+				docker network rm "${project_name}_default"
+				echo "Removing project directory..."
+				rm -rf "$project_root"
+				# Remove dangling images
+				echo "Removing dangling images..."
+				docker images -qf dangling=true | xargs docker rmi 2>/dev/null
+				# Remove dangling images
+				echo "Removing dangling volumes..."
+				docker volume ls -qf dangling=true | xargs docker volume rm 2>/dev/null
+			fi
+		fi
+	done
+}
+
 # Trigger nginx config reload
 _notify ()
 {
@@ -174,6 +212,9 @@ case "$1" in
 		;;
 	networks)
 		_networks
+		;;
+	cleanup)
+		_cleanup
 		;;
 	*)
 		echo "Usage: $0 start <vhost>|stop"

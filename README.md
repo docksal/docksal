@@ -11,11 +11,12 @@ See https://github.com/blinkreaction/boot2docker-vagrant#vhost-proxy for details
 
 ## Container Supervisor notes
 
-Run 
+Run
 
 ```
 docker run -d --name vhost-proxy --label "group=system" --restart=always --privileged --userns=host \
 	-p 80:80 -p 443:443 \
 	-v /var/run/docker.sock:/var/run/docker.sock \
+	-v /<PROJECTS_ROOT>:/<PROJECTS_ROOT> \
 	docksal/nginx-proxy:supervisor
 ```
