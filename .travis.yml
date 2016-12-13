@@ -5,7 +5,6 @@ language: generic
 env:
   OS: linux
   IMAGE_VHOST_PROXY: vhost-proxy:test
-  INACTIVITY_TIMEOUT: 0.5h
   PROXY_DEBUG: 1
 
 services:
@@ -14,9 +13,9 @@ services:
 install:
   - sudo sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
   - fin version
-  - docker build -t vhost-proxy:test .
+  - docker build -t ${IMAGE_VHOST_PROXY} .
   - fin update
-  - IMAGE_VHOST_PROXY='vhost-proxy:test' fin reset proxy
+  - IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY} INACTIVITY_TIMEOUT=${INACTIVITY_TIMEOUT:-30s} DANGLING_TIMEOUT=${DANGLING_TIMEOUT:-3m} fin reset proxy
   - fin sysinfo
 
 before_script:
