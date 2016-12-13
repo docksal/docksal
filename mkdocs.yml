@@ -3,6 +3,8 @@ theme: readthedocs
 repo_url: https://github.com/docksal/docksal
 extra_css:
   - css/extra.css
+markdown_extensions:
+  - markdown.extensions.admonition
 pages:
   - Home: index.md
   - Getting started:
@@ -10,19 +12,24 @@ pages:
     - Docksal environment setup: env-setup.md
     - Configure a project to use Docksal: project-setup.md
   - Advanced configuration:
-    - Drupal settings: drupal-settings.md
+    - Running multiple projects: multiple-projects.md
+    - Drupal settings (database, files): drupal-settings.md
     - Overriding default PHP/MySQL/etc. settings: settings.md
     - MySQL DB access for external tools: db-access.md
     - Automatic database import: db-import.md
     - Extending fin with custom commands: custom-commands.md
-  - Third party utililies:
+    - Exposing any Docker containers port: expose-port.md
+    - Using Docker for Mac/Win: env-setup-native.md
+    - Customize project configuration: project-customize.md
+  - Utililies:
     - Debugging with Xdebug and PhpStorm: xdebug.md
-    - Using PHP Code Sniffer (phpcs, phpcbf): phpcs.md
-    - Using Blackfire profiler: blackfire.md
-    - Public access via ngrok: public-access.md
-    - Using Behat: behat.md
-    - Sending and capturing e-mail: mail.md
-    - Enabling Varnish support: varnish.md
-    - Enabling Apache Solr support: apache-solr.md
-    - Using Sass: sass.md
     - Using custom ssh keys (with or without passwords) via ssh-agent: ssh-agent.md
+    - Sending and capturing e-mail: mail.md
+    - SASS and Compass: sass.md
+    - PHP Code Sniffer (phpcs, phpcbf): phpcs.md
+    - Varnish: varnish.md
+    - Memcached: memcached.md
+    - Apache Solr: apache-solr.md
+    - Blackfire profiler: blackfire.md
+    - Behat: behat.md
+    - Public access via ngrok: public-access.md

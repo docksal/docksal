@@ -4,24 +4,25 @@ It is possible to extend fin with custom commands per project or per host.
 
 ## Creating cutsom command in project 
 
-1. Create a custom command script
+### 1. Create a custom command script
 
-    File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
+File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
 
-    ```bash
-    #!/bin/bash
-    
-    ## Runs drush updb
-    ##
-    ## Usage: fin updb [params to passthrough]
- 
-    fin drush updb $1
-    ```
+```bash
+#!/bin/bash
 
-2. Make it executable
-    ```
-    chmod +x .docksal/commands/updb
-    ```
+## Runs drush updb
+##
+## Usage: fin updb [params to passthrough]
+
+fin drush updb $1
+```
+
+### 2. Make it executable
+
+```
+chmod +x .docksal/commands/updb
+```
 
 Now you can use it as if it was a regular fin command: `fin updb`. Passing parameters also works: `fin updb -y`. Command description will be visible in `fin help` and command full help will be available via `fin help updb` 
 

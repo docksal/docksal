@@ -1,5 +1,8 @@
 # Overriding default PHP/MySQL/etc. settings
 
+!!! warning "This documentation is outdated"
+    Intructions in this document need to be updated
+
 <a name="configuration"></a>
 ## Altering PHP and MySQL configuration
 

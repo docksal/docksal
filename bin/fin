@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.13.2
+FIN_VERSION=0.14.0
 
 # Console colors
 red='\033[0;91m'
@@ -16,7 +16,7 @@ FIN_BRANCH="${FIN_BRANCH:-develop}"
 
 #---------------------------- Global Constants --------------------------------
 REQUIREMENTS_DOCKER='1.12.3'
-REQUIREMENTS_DOCKER_COMPOSE='1.8.0'
+REQUIREMENTS_DOCKER_COMPOSE='1.9.0'
 REQUIREMENTS_DOCKER_MACHINE='0.8.2'
 REQUIREMENTS_VBOX='5.1.2'
 REQUIREMENTS_WINPTY='0.4.0'
@@ -120,7 +120,7 @@ else
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
 	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
 	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
-	[[ "$DOCKER_MACHINE_STATUS" ==  'Running' ]] && \
+	[[ "$DOCKER_MACHINE_STATUS" == 'Running' ]] && \
 		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
 	# current active machine folder
 	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
@@ -602,16 +602,6 @@ _confirm ()
 	done
 }
 
-# Display desktop notification (Mac only)
-# @param $1 title
-# @param $2 message
-_notify ()
-{
-	if is_mac && [[ "$1" != "" ]]; then
-		osascript -e 'display notification "'"$2"'" with title "'"$1"'"'
-	fi
-}
-
 #-------------------------- Containers management -----------------------------
 
 _start_containers ()
@@ -1089,11 +1079,14 @@ show_help_share ()
 
 show_help_config ()
 {
-	echo-green "fin config <command> - Display/generate project configuration"
+	echo-green "Display/generate project configuration"
+	printh "fin config [command]" "" "yellow"
 	echo
 	echo-green "Commands:"
-	printh "show" "Display effective configuration for the project"
+	printh "show" "Display full effective configuration for the project"
+	printh "env" "Display only nevironment variables section of effective configuration"
 	printh "generate" "Generate Docksal configuration for the project"
+	printh "generate --static" "Generate static Docksal configuration for the project"
 	echo
 }
 
@@ -1121,13 +1114,17 @@ bash_comp_words ()
 			echo "list remove"
 			exit 0
 		;;
+		config)
+			echo "generate show env"
+			exit 0
+			;;
 		fin)
 			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			local projects=$(docker ps --all \
 				--filter 'label=com.docker.compose.service=web' \
 				--format '@{{.Label "com.docker.compose.project"}}' | xargs
 			)
-			echo "$aliases $projects vm start stop restart status reset remove bash exec create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
+			echo "$aliases $projects vm start stop restart status reset remove bash exec config create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
 			behat ssh-add update version cleanup sysinfo logs"
 			exit 0
 			;;
@@ -1194,7 +1191,7 @@ docker_machine_create ()
 			docker run -d --restart=always \
 				-v "$HOME":"/srv/data" \
 				-v /root/.docksal/syncthing:/srv/config \
-				-p 22000:22000  -p 21025:21025/udp -p 8080:8080 \
+				-p 22000:22000 -p 21025:21025/udp -p 8080:8080 \
 				--name docksal-syncthing \
 				joeybaker/syncthing &&
 			# Wait 10 seconds for syncthing to start
@@ -1413,7 +1410,7 @@ docker_machine_mount_nfs ()
 
 	# Start/Restart nfsd
 	(ps aux | grep /sbin/nfsd | grep -v grep >/dev/null) && NFSD_IS_RUNNING="true"
-	if [[ "$NFSD_IS_RUNNING"  == "true" ]]; then
+	if [[ "$NFSD_IS_RUNNING" == "true" ]]; then
 		if [[ "$NFSD_RESTART_REQUIRED" == "true" ]]; then
 			echo-green "Restarting nfsd..."
 			sudo nfsd restart
@@ -1439,7 +1436,7 @@ docker_machine_mount_nfs ()
 		docker-machine ssh "$machine_name" \
 			"sudo mkdir -p $share_mount ;
 			sudo umount $share_mount 2>/dev/null ;
-			sudo mount -t nfs -o noacl,async $nfs_ip:$share_export $share_mount"
+			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			# [!!] Think twice about performance before changing nfs settings
 	done
 
@@ -1453,7 +1450,8 @@ docker_machine_mount_nfs ()
 		docker-machine ssh "$machine_name" \
 			"sudo mkdir -p $share_mount ;
 			sudo umount $share_mount 2>/dev/null ;
-			sudo mount -t nfs -o noacl,async $nfs_ip:$share_export $share_mount"
+			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
+			# [!!] Think twice about performance before changing nfs settings
 	done
 }
 
@@ -1515,7 +1513,7 @@ docker_machine_mount_smb ()
 	# Get a list of logical drives (type 3 = Local disk).
 	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	read -s -p "Enter your Windows account password: " PASSWORD
-	echo  # Add a new line after user input.
+	echo # Add a new line after user input.
 
 	for DRIVE in ${DRIVES}; do
 		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
@@ -2105,14 +2103,13 @@ update_config_files ()
 	# TODO: cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
+		echo "Starting..."
 		for f in ${files_to_download}; do
-			echo -n "  $(basename ${f})..."
-			curl -kfsSLO "$f"
+			echo-rewrite "$(basename ${f})"
 			# exit subshell with error if download failed
-			[ ! $? -eq 0 ] && exit 1
-			# otherwise print ok
-			echo "		[OK]"
+			curl -kfsSLO "$f" || exit 1
 		done
+		echo-rewrite "Done"
 	)
 
 	if_failed_error "One of the default configs was not downloaded." \
@@ -2208,7 +2205,7 @@ update ()
 			# Check out the case when current user on linux does not have access to docker daemon
 			if is_linux; then
 				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
-				[ ! $? -eq 0  ] && LINUX_DAEMON_RUNNING="exit 1"
+				[ ! $? -eq 0 ] && LINUX_DAEMON_RUNNING="exit 1"
 				# if daemon is running but docker info does not return 0 then this is the case
 				if (${LINUX_DAEMON_RUNNING}) && ! (exit ${RUNNING_CODE}); then
 					echo-red "Your Docker daemon is running but you don't have access to it."
@@ -2516,11 +2513,9 @@ mysql_import ()
 	# Check if import succeded or not and print results.
 	if [ $? -eq 0 ]; then
 		echo-rewrite-ok "Importing..."
-		if is_tty; then _notify "Docksal" "Mysql import finished"; fi
 		exit 0
 	else
 		echo-red "Import failed";
-		if is_tty; then _notify "Docksal" "Mysql import failed!"; fi
 		exit 1
 	fi
 }
@@ -2610,7 +2605,7 @@ remove ()
 {
 	check_docksal_environment
 	if [[ $1 == "" ]]; then
-		echo -e  "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
+		echo -e "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
 		_confirm "Continue?";
 	fi
 
@@ -2783,12 +2778,12 @@ sysinfo ()
 		docker-machine --version
 
 	if is_docker_running; then
-        echo "███  DOCKER: IMAGES"
-        docker images
+		echo "███  DOCKER: IMAGES"
+		docker images
 
-        echo "███  DOCKER: CONTAINERS"
-        docker ps
-    fi
+		echo "███  DOCKER: CONTAINERS"
+		docker ps
+	fi
 
 	if which "$vboxmanage" >/dev/null 2>&1; then
 		echo "███  VIRTUAL BOX"
@@ -2854,14 +2849,16 @@ load_configuration ()
 		ENV_FILE="$env_file"
 		# Source and allexport variables in the .env file
 		set -a; source "$env_file"; set +a
-		# Source local env file if both it and the main env file exist
-		if [[ -f "$local_env_file" ]]; then
+	fi
+
+	# Source local env file if it exist
+	# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+	if [[ -f "$local_env_file" ]]; then
 			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
 			# Source and allexport variables in the .env file
 			set -a; source "$local_env_file"; set +a
-		fi
-		export ENV_FILE
 	fi
+	export ENV_FILE
 
 	# Legacy/traditional setup support
 	# TODO: get rid of this in 2017
@@ -2881,8 +2878,6 @@ load_configuration ()
 		# Use .docksal/docksal.yml by default (if exists)
 		if [[ -f "$yml_file" ]]; then
 			COMPOSE_FILE="$yml_file"
-			# Include docksal-local.yml (if exists)
-			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		# Otherwise use the default.yml stack config (if exists)
 		elif [[ -f "$default_yml_file" ]]; then
 			COMPOSE_FILE="$default_yml_file"
@@ -2891,21 +2886,23 @@ load_configuration ()
 		if [[ "$COMPOSE_FILE" == "" ]]; then
 			echo-error "No configuration files found." "Expected in $yml_file"
 			exit 1
+		else
+			# Include docksal-local.yml (if exists)
+			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
 		# Experimental: Include a volumes yml if requested.
 		# Use bind mount for volumes if using default stack.
-		[[ "$COMPOSE_FILE" == "$default_yml_file" ]] && DOCKSAL_VOLUMES="bind"
-		if [[ "$DOCKSAL_VOLUMES" != "" ]]; then
-			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-			if [[ -f "$volumes_yml_file" ]]; then
-				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
-			else
-				echo-error "Volumes definition not found in ${volumes_yml_file}." \
-					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
-					"You may need to run ${yellow}fin update${NC} to download volume definitions."
-				exit 1
-			fi
+		[[ "$DOCKSAL_VOLUMES" == "" ]] && DOCKSAL_VOLUMES="bind"
+		volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+		if [[ -f "$volumes_yml_file" ]]; then
+			COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
+		else
+			echo-error "Volumes definition not found in ${volumes_yml_file}." \
+				"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
+				"You may need to run ${yellow}fin update${NC} to download volume definitions."
+			exit 1
 		fi
 	fi
 	export COMPOSE_FILE
@@ -2939,7 +2936,7 @@ config_show ()
 {
 	check_docksal_environment
 
-	echo
+	echo "---------------------"
 	echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
 	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
 	# Replace separators with new lines
@@ -2952,8 +2949,9 @@ config_show ()
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
 	local IP="$(fin vm ip)"; [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
 	echo "IP: $IP"
-	echo
-	echo "MYSQL_PORT:" $(docker-compose port db 3306 2>/dev/null)
+	echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$IP/")
+	[[ "$1" == "env" ]] && return
+
 	echo
 	echo "Docker Compose configuration"
 	echo "---------------------"
@@ -2963,42 +2961,38 @@ config_show ()
 
 config_generate ()
 {
+	eval $(parse_params "$@")
 	# Allow to defined the default stack file.
 	DOCKSAL_STACK=${DOCKSAL_STACK:-default}
+	if [[ "$static" == "static" ]]; then
+		DOCKSAL_STACK="$DOCKSAL_STACK-static"
+	fi
 	yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
-
-	_confirm "Set up $DOCKSAL_STACK Docksal stack in the current directory?"
 
 	if [[ -f ${yml_file} ]]; then
 		if [[ -d .docksal ]]; then
-			echo-yellow ".docksal directory already exists in the current directory."
+			echo-yellow ".docksal directory already exists."
 			_confirm "Remove it and start from scratch?"
-			rm -rf .docksal
+			rm -rf ./.docksal
 		fi
 
 		mkdir .docksal && \
 		# Use bind mount volumes by default
-		echo 'DOCKSAL_VOLUMES="bind"' > .docksal/docksal.env && \
-		cp ${yml_file} .docksal/docksal.yml && \
-		# Setup docroot and a basic index.php
-		mkdir -p docroot && \
-		echo '<?php phpinfo();' > docroot/index.php
+		echo '' > .docksal/docksal.env && \
+		cp "$yml_file" ".docksal/docksal.yml"
+		if [[ ! -f 'docroot/index.php' ]]; then
+			# Setup docroot and a basic index.php
+			mkdir -p docroot && \
+			echo '<?php phpinfo();' > docroot/index.php
+		fi
 
 		if [[ $? == 0 ]]; then
 			echo-green "$DOCKSAL_STACK stack configuration generated. You can start it with ${yellow}fin start${NC}"
-			_confirm "Run fin start now?"
-			fin start
-
-			if [[ $? == 0 ]]; then
-				echo-green "Done!"
-				echo -e "Review stack configuration with ${yellow}fin config show${NC}"
-				echo -e "Point your browser to ${yellow}http://${VIRTUAL_HOST}${NC} to verify."
-			fi
 		else
-			echo-error "Something went wrong. Try again."
+			echo-error "Something went wrong. Check error messages above."
 		fi
 	else
-		echo-error "Stack file does not exist: $yml_file"
+		echo-error "Stack file does not exist: $yml_file" "Try running ${yellow}fin update${NC}"
 	fi
 }
 
@@ -3007,8 +3001,8 @@ create_site ()
 	while true; do
 		read -p "Please enter the name of your project (all one word, no spaces or slashes): " project_name
 		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
-		  echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
-		  continue
+			echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
+			continue
 		fi
 		break
 	done
@@ -3055,17 +3049,15 @@ create_site ()
 
 	_confirm "Do you wish to proceed?"
 
-	# Todo: is git clone really the best way to do this?  What about
-	# users who don't have a github account, will this work for them?
 	echo -e "${green} Cloning repository...${NC}"
 	git clone -b master ${target_repo} ${project_name}
-	cd ${project_name}/.docksal
+	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
-	# Edit docksal.env to use a custom user-supplied host name
-	sed -i.bak "s/${target_host_name_search_string}/${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1
-	cd ..
-
-	fin init
+	cd ${project_name}/.docksal &&
+		# Edit docksal.env to use a custom user-supplied host name
+		sed -i.bak "s/${target_host_name_search_string}/${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1 &&
+		cd ".." &&
+		fin init
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
@@ -3287,8 +3279,12 @@ case "$1" in
 		;;
 	config)
 		shift
-		if [[ "$*" == "" ]] || [[ "$*" == "show" ]]; then config_show; fi
-		if [[ "$*" == "generate" ]]; then config_generate; fi
+		if [[ "$1" == "generate" ]]; then
+			shift;
+			config_generate "$@";
+		else
+			config_show "$@"
+		fi
 		;;
 	fix-smb)
 		smb_windows_fix

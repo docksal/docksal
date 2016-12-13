@@ -1,5 +1,8 @@
 # DB sandbox mode
 
+!!! warning "This documentation is outdated"
+    Instructions in this document need to be updated
+
 In certain cases you may want to have a DB sandbox and mess around with the DB, then roll it back.
 Normally this can be achieved by backing up the DB and restoring it from the created DB dump.
 With large databases (over 500MB) this operation can take a considerable amount of time (10+ minutes).

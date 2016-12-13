@@ -1,13 +1,4 @@
-# Docker and Docker Compose based environment for Drupal.
-# See https://github.com/docksal/docksal for more information and documentation.
-
-# This is a shared configuration file that is intended to be stored in the project repo.
-# For local overrides:
-# - create .docksal/docksal-local.yml file and put local docker-compose configuration overrides there
-# - add .docksal/docksal-local.yml to .gitignore
-
-# Docksal stiches several docker-compose configuration files together.
-# Run "fin config" to see which files are involved and the resulting configration.
+# Basic LAMP stack
 
 version: "2.1"
 
@@ -34,9 +25,6 @@ services:
     image: docksal/db:1.0-mysql-5.5
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
-    volumes:
-      # Project root volume
-      - project_root:/var/www:ro
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-user}

@@ -2,13 +2,16 @@
 
 Docksal has a built-in reverse proxy container that adds support for running multiple projects. The container binds to `192.168.64.100:80` and routes web requests based on the host name.
 
-## Setting up. MacOS and Linux
+## MacOS and Linux
+
 On Mac OS and Linux you don't need to do anything. Routing is automatically configured upon first `fin update`. 
 
-## Setting up. Windows
+## Windows
+
 On Windows you will need to manually append virtual host of each of your Doskal projects to the [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)) to route it to `192.168.64.100`.
 
 Example [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)):
+
 ```
 # Copyright (c) 1993-2009 Microsoft Corp.
 #
@@ -23,7 +26,8 @@ Example [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)):
 drupal7.docksal    192.168.64.100
 myproject.docksal    192.168.64.100
 ```
-## Finding out project hostname
+
+## Finding out the hostname
 
 To find current project's virtual host name run `fin config | grep ^VIRTUAL_HOST`
 

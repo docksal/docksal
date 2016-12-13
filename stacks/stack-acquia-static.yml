@@ -1,13 +1,11 @@
-# Docker and Docker Compose based environment for Drupal.
-# See https://github.com/docksal/docksal for more information and documentation.
-
-# This is a shared configuration file that is intended to be stored in the project repo.
-# For local overrides:
-# - create .docksal/docksal-local.yml file and put local docker-compose configuration overrides there
-# - add .docksal/docksal-local.yml to .gitignore
-
-# Docksal stiches several docker-compose configuration files together.
-# Run "fin config" to see which files are involved and the resulting configration.
+# Acquia alike stack
+#
+# - Apache 2.2
+# - MySQL 5.5
+# - PHP 5.6 / PHP 7.0
+# - Varnish 3
+# - Memcached 1.4
+# - ApacheSolr 4.x
 
 version: "2.1"
 
@@ -34,9 +32,6 @@ services:
     image: docksal/db:1.0-mysql-5.5
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
-    volumes:
-      # Project root volume
-      - project_root:/var/www:ro
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-user}
@@ -57,3 +52,28 @@ services:
       - docksal_ssh_agent:/.ssh-agent:ro
     environment:
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
+
+  # Varnish
+  varnish:
+    hostname: varnish
+    image: docksal/varnish:3.0-stable
+    labels:
+      - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
+    environment:
+      - VARNISH_BACKEND_HOST=web
+      - VIRTUAL_HOST=varnish.${VIRTUAL_HOST}
+    depends_on:
+      - web
+
+  # Memcached
+  memcached:
+    hostname: memcached
+    image: memcached
+    environment:
+      # Memcached memory limit in megabytes
+      - MEMCACHED_MEMORY_LIMIT=${MEMCACHED_MEMORY_LIMIT:-128}
+
+  # Solr
+  solr:
+    hostname: solr
+    image: docksal/solr:4.x-stable
