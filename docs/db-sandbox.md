@@ -74,7 +74,7 @@ You will now have a sandboxed DB container which defaults to the DB snapshot you
 
 In case you have a large database, it is not recommended to commit the container that already runs on the snaphot Base Image (i.e. creating snapshot on top of snapshot). Every docker image holds all parent images plus in-memory changes inside it. Thus **with every commit the size of the resulting image will increase by full size of the DB, not its delta.**
 
-In case of small database, though, it is ok to do that. But please keep in mind there's a limitation on the depth of layers which currently equals 120.
+In the case of a small database, though, it is ok to do that. But please keep in mind there's a limitation on the depth of layers which currently equals 120.
 
 ## Disabling the sandbox mode
 
