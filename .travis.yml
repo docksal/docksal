@@ -1,0 +1,26 @@
+sudo: required
+
+language: generic
+
+env:
+  OS: linux
+  IMAGE_VHOST_PROXY: vhost-proxy:test
+  INACTIVITY_TIMEOUT: 0.5h
+  PROXY_DEBUG: 1
+
+services:
+  - docker
+
+install:
+  - sudo sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
+  - fin version
+  - docker build -t vhost-proxy:test .
+  - fin update
+  - IMAGE_VHOST_PROXY='vhost-proxy:test' fin reset proxy
+  - fin sysinfo
+
+before_script:
+  - git clone https://github.com/docksal/drupal7.git ../drupal7 && cd ../drupal7 && fin init && fin stop
+
+script:
+  - bats $(ls -1 --hide=drupal7 ../*/tests/smoke-test.bats)
