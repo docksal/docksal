@@ -17,13 +17,13 @@ services:
     hostname: web
     image: docksal/web:1.0-apache2.2
     volumes:
-      # Project root folder mapping
-      - ${PROJECT_ROOT}/:/var/www:ro
+      # Project root volume
+      - project_root:/var/www:ro
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST}
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
-      - APACHE_DOCUMENTROOT=/var/www/${DOCROOT}
+      - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
       - VIRTUAL_HOST=${VIRTUAL_HOST}
     depends_on:
       - cli
@@ -35,30 +35,25 @@ services:
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
-      # MySQL configuration overrides
-      - ${PROJECT_ROOT}/.docksal/etc/mysql/my.cnf:/opt/mysql.conf.d/z_my.cnf:ro
+      # Project root volume
+      - project_root:/var/www:ro
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-user}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
 
-  # CLI node
+  # CLI
   # Used for all console commands and tools.
   cli:
     hostname: cli
     image: docksal/cli:1.0-php7
     volumes:
-      # Project root folder mapping
-      - ${PROJECT_ROOT}/:/var/www:rw
-      # Host home directory mapping (for SSH keys and other credentials).
-      - ${HOME}/:/.home:ro
-      # PHP FPM configuration overrides
-      - ${PROJECT_ROOT}/.docksal/etc/php/php.ini:/etc/php5/fpm/conf.d/z_php.ini:ro
-      # PHP CLI configuration overrides
-      - ${PROJECT_ROOT}/.docksal/etc/php/php-cli.ini:/etc/php5/cli/conf.d/z_php.ini:ro
-    # Mount shared ssh-agent socket
-    volumes_from:
-      - container:docksal-ssh-agent
+      # Project root volume
+      - project_root:/var/www:rw
+      # Host home volume (for SSH keys and other credentials).
+      - host_home:/.home:ro
+      # Shared ssh-agent socket
+      - docksal_ssh_agent:/.ssh-agent:ro
     environment:
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
