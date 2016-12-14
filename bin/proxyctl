@@ -178,7 +178,9 @@ _cleanup ()
                 docker network disconnect "$network" docksal-vhost-proxy
                 docker network rm "$network"
 				echo "Removing project directory..."
-				rm -rf "$project_root"
+				# This assumes all projects are kept in the same directory, which is mounted at /projects
+				local mounted_project_root="/projects/$(basename $project_root)"
+				[[ -d $mounted_project_root ]] && rm -rf $mounted_project_root
 				# Remove dangling images
 				echo "Removing dangling images..."
 				docker images -qf dangling=true | xargs docker rmi 2>/dev/null

@@ -83,13 +83,17 @@ teardown() {
 	# Check project network was removed
 	[[ $(fin docker network ls -q --filter "name=drupal7_default" | wc -l) =~ "0" ]]
 	# Check project folder was removed
-	# TODO: implement
+	[[ ! -d "/projects/drupal7" ]]
 }
 
 @test "Proxy did not clean up permanent projects" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Check that permanent project containers are still around
+	# Check that project containers exist
 	# Using both filter to be sure the label io.docksal.permanent was set properly on the drupal8 project web container
 	[[ $(fin docker ps -a --filter "label=io.docksal.permanent=true" --filter "name=drupal8_web_1" --format "{{ .Status }}") =~ "Exited (0)" ]]
+	# Check that project network exists
+	[[ $(fin docker network ls -q --filter "name=drupal8_default" | wc -l) =~ "1" ]]
+	# Check that project folder exists
+	[[ ! -d "/projects/drupal8" ]]
 }
