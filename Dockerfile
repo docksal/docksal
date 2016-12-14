@@ -46,9 +46,9 @@ COPY bin/startup.sh /usr/local/bin/startup.sh
 COPY www /var/www/proxy
 
 # Disable INACTIVITY_TIMEOUT by default
-ENV INACTIVITY_TIMEOUT 0
+ENV PROJECT_INACTIVITY_TIMEOUT 0
 # Disable DANGLING_TIMEOUT by default
-ENV DANGLING_TIMEOUT 0
+ENV PROJECT_DANGLING_TIMEOUT 0
 # Disable debug output by default
 ENV PROXY_DEBUG 0
 

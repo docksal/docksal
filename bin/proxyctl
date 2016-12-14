@@ -90,11 +90,11 @@ _start ()
 	fi
 }
 
-# Stop containers for inactive projects
+# Stop containers for projects after a timeout set via PROJECT_INACTIVITY_TIMEOUT
 _stop ()
 {
-	# Allow disabling INACTIVITY_TIMEOUT
-	[[ "$INACTIVITY_TIMEOUT" == 0 ]] && exit
+	# Allow disabling PROJECT_INACTIVITY_TIMEOUT (0 = disabled)
+	[[ "$PROJECT_INACTIVITY_TIMEOUT" == 0 ]] && exit
 
 	# Get a list of running web containers
 	local running_webs=$(/usr/local/bin/docker ps \
@@ -108,7 +108,7 @@ _stop ()
 		[[ "$project_name" == "" ]] && continue
 
 		# See if there was any recent container activity (entries in container logs)
-		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $INACTIVITY_TIMEOUT $container_id)" != "" ]]; then
+		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $PROJECT_INACTIVITY_TIMEOUT $container_id)" != "" ]]; then
 			# Active
 			echo "Project: $project_name is active. Skipping."
 		else
@@ -125,6 +125,8 @@ _stop ()
 	done
 }
 
+# (Re)connect proxy to project networks.
+# Useful when proxy has been just re-provisioned and should be re-connected to existing project networks.
 _networks ()
 {
 	project_names=$(/usr/local/bin/docker ps \
@@ -147,10 +149,12 @@ _cron ()
 	_stop
 }
 
+# Removed projects (containers and sources) after a timeout set via PROJECT_DANGLING_TIMEOUT.
+# Projects with the label "io.docksal.permanent=true" are considered permanent and skipped.
 _cleanup ()
 {
-	# Allow disabling DANGLING_TIMEOUT
-	[[ "$DANGLING_TIMEOUT" == 0 ]] && exit
+	# Allow disabling PROJECT_DANGLING_TIMEOUT (0 = disabled)
+	[[ "$PROJECT_DANGLING_TIMEOUT" == 0 ]] && exit
 
 	projects=$(docker ps -a \
 		--filter "label=com.docker.compose.project" \
@@ -160,7 +164,7 @@ _cleanup ()
 
 	for project in $projects; do
 		IFS=':' read container_id project_name project_root permanent <<< "$project"
-		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $DANGLING_TIMEOUT $container_id)" != "" ]]; then
+		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $PROJECT_DANGLING_TIMEOUT $container_id)" != "" ]]; then
 			# Active
 			echo "Project: $project_name is not dangling. Skipping."
 		else

@@ -26,7 +26,7 @@ teardown() {
 @test "Proxy returns 404 for a non-existing virtual-host" {
 	[[ $SKIP == 1 ]] && skip
 
-	run curl -I http://test.docksal/
+	run curl -I http://test.docksal/robots.txt
 	[[ $output =~ "HTTP/1.1 404 Not Found" ]]
 }
 
@@ -35,15 +35,24 @@ teardown() {
 
     # Make sure the project is running
     cwd=$(pwd)
-    cd ../drupal7 && fin start && sleep 5
+    cd ../drupal7 && fin start
     cd $cwd
+	run curl -I http://drupal7.docksal/robots.txt
+	[[ $output =~ "HTTP/1.1 200 OK" ]]
 
-	run curl -I http://drupal7.docksal/
+    # Make sure the project is running
+    cwd=$(pwd)
+    cd ../drupal8 && fin start
+    cd $cwd
+	run curl -I http://drupal8.docksal/robots.txt
 	[[ $output =~ "HTTP/1.1 200 OK" ]]
 }
 
 @test "Proxy stopped project containers after \"${PROJECT_INACTIVITY_TIMEOUT}\" of inactivity" {
 	[[ $SKIP == 1 ]] && skip
+
+	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
+	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
 
     sleep $PROJECT_INACTIVITY_TIMEOUT && sleep 1
     # Trigger proxyctl stop manually to skip the cron job wait.
@@ -58,21 +67,30 @@ teardown() {
 @test "Proxy can start an existing stopped project" {
 	[[ $SKIP == 1 ]] && skip
 
-	run curl http://drupal7.docksal/
+	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
+	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
+
+	run curl http://drupal7.docksal/robots.txt
 	[[ $output =~ "Waking up the daemons..." ]]
 }
 
 @test "Proxy started the project within 15 seconds" {
 	[[ $SKIP == 1 ]] && skip
 
+	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
+	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
+
 	# Wait for start
 	sleep 15
-	run curl http://drupal7.docksal/
-	[[ $output =~ "My Drupal 7 Site" ]]
+	run curl http://drupal7.docksal/robots.txt
+	[[ $output =~ "robots.txt" ]]
 }
 
 @test "Proxy cleaned up projects after \"${PROJECT_DANGLING_TIMEOUT}\" of inactivity" {
 	[[ $SKIP == 1 ]] && skip
+
+	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
+	    skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
 
     sleep $PROJECT_DANGLING_TIMEOUT && sleep 1
     # Trigger proxyctl cleanup manually to skip the cron job wait.
@@ -89,11 +107,12 @@ teardown() {
 @test "Proxy did not clean up permanent projects" {
 	[[ $SKIP == 1 ]] && skip
 
+	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
+	    skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
+
 	# Check that project containers exist
 	# Using both filter to be sure the label io.docksal.permanent was set properly on the drupal8 project web container
 	[[ $(fin docker ps -a --filter "label=io.docksal.permanent=true" --filter "name=drupal8_web_1" --format "{{ .Status }}") =~ "Exited (0)" ]]
-	# Check that project network exists
-	[[ $(fin docker network ls -q --filter "name=drupal8_default" | wc -l) =~ "1" ]]
 	# Check that project folder exists
 	[[ ! -d "/projects/drupal8" ]]
 }
