@@ -3334,11 +3334,21 @@ case "$1" in
 			echo-yellow "Unknown command '$*'. See 'fin help' for list of available commands" && \
 			exit 1
 
+		# if it's not executable let's fix it
 		if [[ ! -x "$command_script" ]]; then
 			echo -e "${yellow}$command_script${NC} is not set to be executable."
 			_confirm "Fix automatically?"
 			chmod +x "$command_script"
 			if_failed "Could not make $command_script executable"
+		fi
+
+		# if it has windows line endings let's fix it
+		if [[ "$(grep -c $'\r' ${command_script})" -gt 0 ]]; then
+			echo -e "${red}WARNING: ${NC}${yellow}$command_script${NC} has CRLF line endings."
+			echo-red "You should configure your git or repo to always use LF line endings for Docksal files"
+			_confirm "Fix this file automatically?"
+			CR=$'\r'
+			cat "$command_script" | sed "s/$CR//" | tee "$command_script" >/dev/null
 		fi
 		shift
 		exec "$command_script" "$@"
