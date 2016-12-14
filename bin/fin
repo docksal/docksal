@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.14.0
+FIN_VERSION=0.14.1
 
 # Console colors
 red='\033[0;91m'
@@ -30,7 +30,7 @@ FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Rewrite $HOME on windows to be absolute path in Unix notation
 if (uname | grep 'CYGWIN_NT' >/dev/null); then
 	BABUN_WIN_HOME="$HOME"
-	HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
+	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
 # DO NOT REMOVE HOST_HOME. It is used in some stack yml files and is necessary on Windows.
 export HOST_HOME="$HOME"
@@ -196,9 +196,9 @@ upfind ()
 	)
 	# On Windows return full absolute path in Unix notation
 	if [[ "$BABUN_WIN_HOME" != "" ]] && [[ "$_path" = "$BABUN_WIN_HOME"* ]]; then
-		echo "/$(cygpath -m ${_path} | sed 's/\([A-Z]\)\:/\l\1/')"
+		echo "/$(cygpath -m ${_path} | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 	else
-		echo "$_path"
+		echo "$_path" | sed 's/^\/cygdrive//'
 	fi
 }
 
@@ -2884,10 +2884,10 @@ load_configuration ()
 	if [[ "$COMPOSE_FILE" == "" ]]; then
 		# Allow to defined the default stack file.
 		DOCKSAL_STACK=${DOCKSAL_STACK:-default}
-
 		default_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
 		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
+
 		# Use .docksal/docksal.yml by default (if exists)
 		if [[ -f "$yml_file" ]]; then
 			COMPOSE_FILE="$yml_file"
