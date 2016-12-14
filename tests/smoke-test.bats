@@ -14,7 +14,7 @@ teardown() {
 
 # Global skip
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-#SKIP=1
+SKIP=1
 
 @test "Proxy container is up and using the \"${IMAGE_VHOST_PROXY}\" image" {
 	[[ $SKIP == 1 ]] && skip
@@ -71,7 +71,7 @@ teardown() {
 	[[ $output =~ "My Drupal 7 Site" ]]
 }
 
-@test "Proxy cleaned up the project after \"${PROXY_DANGLING_TIMEOUT}\" of inactivity" {
+@test "Proxy cleaned up projects after \"${PROXY_DANGLING_TIMEOUT}\" of inactivity" {
 	[[ $SKIP == 1 ]] && skip
 
     sleep $PROXY_DANGLING_TIMEOUT && sleep 1
@@ -84,4 +84,12 @@ teardown() {
 	[[ $(fin docker network ls -q --filter "name=drupal7_default" | wc -l) =~ "0" ]]
 	# Check project folder was removed
 	# TODO: implement
+}
+
+@test "Proxy did not clean up permanent projects" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Check that permanent project containers are still around
+	# Using both filter to be sure the label io.docksal.permanent was set properly on the drupal8 project web container
+	[[ $(fin docker ps -a --filter "label=io.docksal.permanent=true" --filter "name=drupal8_web_1" --format "{{ .Status }}") =~ "Exited (0)" ]]
 }
