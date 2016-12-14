@@ -1754,7 +1754,8 @@ install_proxy_service ()
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
 	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
-		-e INACTIVITY_TIMEOUT="${INACTIVITY_TIMEOUT:-24h}" \
+		-e INACTIVITY_TIMEOUT="${PROXY_INACTIVITY_TIMEOUT:-0}" \
+		-e DANGLING_TIMEOUT="${PROXY_DANGLING_TIMEOUT:-0}" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 }
