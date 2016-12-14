@@ -391,6 +391,36 @@ is_docker_native ()
 	[[ "$DOCKER_NATIVE" == "1" ]]
 }
 
+# Check if file has crlf endings
+# param $1 filename
+is_crlf ()
+{
+	[[ "$(grep -c $'\r' $1)" -gt 0 ]]
+}
+
+# Check if file has crlf endings and fix it
+# param $1 filename
+fix_crlf ()
+{
+	CR=$'\r'
+	cat "$1" | sed "s/$CR//" | tee "$1" >/dev/null
+}
+
+# Check if file has crlf endings, warn about it and fix it
+# param $1 filename
+fix_crlf_warning ()
+{
+
+	if (is_crlf "$1"); then
+		if is_tty; then
+			echo -e "${red}WARNING: ${NC}${yellow}$1${NC} has CRLF line endings."
+			echo-red "You should configure your git or repo to always use LF line endings for Docksal files"
+			_confirm "Fix this file automatically?"
+		fi
+		fix_crlf "$1"
+	fi
+}
+
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
@@ -2871,6 +2901,7 @@ load_configuration ()
 	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
 	if [[ -f "$env_file" ]]; then
 		ENV_FILE="$env_file"
+		fix_crlf_warning "$env_file"
 		# Source and allexport variables in the .env file
 		set -a; source "$env_file"; set +a
 	fi
@@ -2879,6 +2910,7 @@ load_configuration ()
 	# Allow using this with the pre-configured stacks by not checking docksal.env presence.
 	if [[ -f "$local_env_file" ]]; then
 			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
+			fix_crlf_warning "$local_env_file"
 			# Source and allexport variables in the .env file
 			set -a; source "$local_env_file"; set +a
 	fi
@@ -3343,13 +3375,8 @@ case "$1" in
 		fi
 
 		# if it has windows line endings let's fix it
-		if [[ "$(grep -c $'\r' ${command_script})" -gt 0 ]]; then
-			echo -e "${red}WARNING: ${NC}${yellow}$command_script${NC} has CRLF line endings."
-			echo-red "You should configure your git or repo to always use LF line endings for Docksal files"
-			_confirm "Fix this file automatically?"
-			CR=$'\r'
-			cat "$command_script" | sed "s/$CR//" | tee "$command_script" >/dev/null
-		fi
+		fix_crlf_warning "$command_script"
+
 		shift
 		exec "$command_script" "$@"
 esac
