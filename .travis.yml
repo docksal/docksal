@@ -13,8 +13,8 @@ services:
 install:
   - sudo sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
   - fin version
-  - docker build -t ${IMAGE_VHOST_PROXY} .
   - fin update
+  - fin docker build -t ${IMAGE_VHOST_PROXY} .
   - IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY} INACTIVITY_TIMEOUT=${INACTIVITY_TIMEOUT:-30s} DANGLING_TIMEOUT=${DANGLING_TIMEOUT:-3m} fin reset proxy
   - fin sysinfo
 
