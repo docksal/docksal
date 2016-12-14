@@ -14,7 +14,7 @@ teardown() {
 
 # Global skip
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-SKIP=1
+#SKIP=1
 
 @test "Proxy container is up and using the \"${IMAGE_VHOST_PROXY}\" image" {
 	[[ $SKIP == 1 ]] && skip
@@ -42,10 +42,10 @@ SKIP=1
 	[[ $output =~ "HTTP/1.1 200 OK" ]]
 }
 
-@test "Proxy stopped project containers after \"${PROXY_INACTIVITY_TIMEOUT}\" of inactivity" {
+@test "Proxy stopped project containers after \"${PROJECT_INACTIVITY_TIMEOUT}\" of inactivity" {
 	[[ $SKIP == 1 ]] && skip
 
-    sleep $PROXY_INACTIVITY_TIMEOUT && sleep 1
+    sleep $PROJECT_INACTIVITY_TIMEOUT && sleep 1
     # Trigger proxyctl stop manually to skip the cron job wait.
     fin docker exec docksal-vhost-proxy proxyctl stop
 
@@ -71,10 +71,10 @@ SKIP=1
 	[[ $output =~ "My Drupal 7 Site" ]]
 }
 
-@test "Proxy cleaned up projects after \"${PROXY_DANGLING_TIMEOUT}\" of inactivity" {
+@test "Proxy cleaned up projects after \"${PROJECT_DANGLING_TIMEOUT}\" of inactivity" {
 	[[ $SKIP == 1 ]] && skip
 
-    sleep $PROXY_DANGLING_TIMEOUT && sleep 1
+    sleep $PROJECT_DANGLING_TIMEOUT && sleep 1
     # Trigger proxyctl cleanup manually to skip the cron job wait.
     fin docker exec docksal-vhost-proxy proxyctl cleanup
 
@@ -87,7 +87,7 @@ SKIP=1
 }
 
 @test "Proxy did not clean up permanent projects" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Check that permanent project containers are still around
 	# Using both filter to be sure the label io.docksal.permanent was set properly on the drupal8 project web container
