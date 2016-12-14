@@ -1,6 +1,7 @@
 #!/usr/bin/env bats
 
 # Debugging
+# TODO: looks like this only outputs the first line instead of all lines.
 teardown() {
 	echo "Status: $status"
 	echo "Output:"
@@ -29,27 +30,58 @@ teardown() {
 	[[ $output =~ "HTTP/1.1 404 Not Found" ]]
 }
 
+@test "Proxy returns 200 for an existing virtual-host" {
+	[[ $SKIP == 1 ]] && skip
+
+    # Make sure the project is running
+    cwd=$(pwd)
+    cd ../drupal7 && fin start && sleep 5
+    cd $cwd
+
+	run curl -I http://drupal7.docksal/
+	[[ $output =~ "HTTP/1.1 200 OK" ]]
+}
+
+@test "Proxy stopped project containers after \"${PROXY_INACTIVITY_TIMEOUT}\" of inactivity" {
+	[[ $SKIP == 1 ]] && skip
+
+    sleep $PROXY_INACTIVITY_TIMEOUT && sleep 1
+    # Trigger proxyctl stop manually to skip the cron job wait.
+    fin docker exec docksal-vhost-proxy proxyctl stop
+
+    # Check project was stopped
+    [[ $(fin docker ps -a --filter "name=drupal7_web_1" --format "{{ .Status }}") =~ "Exited (0)" ]]
+	# Check project network was removed
+	[[ $(fin docker network ls -q --filter "name=drupal7_default" | wc -l) =~ "0" ]]
+}
+
 @test "Proxy can start an existing stopped project" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Stop if running.
-	containers=$(fin docker ps -q --filter "label=com.docker.compose.project=drupal7")
-	for container in $containers; do
-		fin docker stop $container
-	done
-	if [[ "$(docker network ls -q --filter "name=drupal7_default")" != "" ]]; then
-		fin docker network disconnect drupal7_default docksal-vhost-proxy
-		fin docker network rm drupal7_default
-	fi
 	run curl http://drupal7.docksal/
 	[[ $output =~ "Waking up the daemons..." ]]
 }
 
-@test "Proxy container started the project within 15 seconds" {
+@test "Proxy started the project within 15 seconds" {
 	[[ $SKIP == 1 ]] && skip
 
 	# Wait for start
 	sleep 15
 	run curl http://drupal7.docksal/
 	[[ $output =~ "My Drupal 7 Site" ]]
+}
+
+@test "Proxy cleaned up the project after \"${PROXY_DANGLING_TIMEOUT}\" of inactivity" {
+	[[ $SKIP == 1 ]] && skip
+
+    sleep $PROXY_DANGLING_TIMEOUT && sleep 1
+    # Trigger proxyctl cleanup manually to skip the cron job wait.
+    fin docker exec docksal-vhost-proxy proxyctl cleanup
+
+    # Check project containers were removed
+	[[ $(fin docker ps -a -q --filter "label=com.docker.compose.project=drupal7" | wc -l) =~ "0" ]]
+	# Check project network was removed
+	[[ $(fin docker network ls -q --filter "name=drupal7_default" | wc -l) =~ "0" ]]
+	# Check project folder was removed
+	# TODO: implement
 }

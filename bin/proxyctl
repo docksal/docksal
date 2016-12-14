@@ -93,7 +93,8 @@ _start ()
 # Stop containers for inactive projects
 _stop ()
 {
-	INACTIVITY_TIMEOUT="${INACTIVITY_TIMEOUT:-30m}"
+	# Allow disabling INACTIVITY_TIMEOUT
+	[[ "$INACTIVITY_TIMEOUT" == 0 ]] && exit
 
 	# Get a list of running web containers
 	local running_webs=$(/usr/local/bin/docker ps \
@@ -148,7 +149,8 @@ _cron ()
 
 _cleanup ()
 {
-	DANGLING_TIMEOUT="${DANGLING_TIMEOUT:-14d}"
+	# Allow disabling DANGLING_TIMEOUT
+	[[ "$DANGLING_TIMEOUT" == 0 ]] && exit
 
 	projects=$(docker ps -a \
 		--filter "label=com.docker.compose.project" \
@@ -160,17 +162,21 @@ _cleanup ()
 		IFS=':' read container_id project_name project_root permanent <<< "$project"
 		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $DANGLING_TIMEOUT $container_id)" != "" ]]; then
 			# Active
-			echo "Project: $project_name is active. Skipping."
+			echo "Project: $project_name is not dangling. Skipping."
 		else
 			if [[ "$permanent" == "true" ]]; then
 				# Not active but keep alive
-				echo "Project: $project_name is NOT active, but marked as permanent. Skipping."
+				echo "Project: $project_name is dangling, but marked as permanent. Skipping."
 			else
 				# Not active
-				echo "Project: $project_name is NOT active/permanent. Removing..."
-				# Stop and remove containers
-				docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -fv
-				docker network rm "${project_name}_default"
+				echo "Project: $project_name is dangling. Removing..."
+                # Stop and remove containers
+                docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -vf
+                # Disconnect vhost-proxy from the project network and remove the network.
+                # See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
+                local network="${project_name}_default"
+                docker network disconnect "$network" docksal-vhost-proxy
+                docker network rm "$network"
 				echo "Removing project directory..."
 				rm -rf "$project_root"
 				# Remove dangling images

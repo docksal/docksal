@@ -45,10 +45,10 @@ COPY bin/startup.sh /usr/local/bin/startup.sh
 
 COPY www /var/www/proxy
 
-# Stop inactive containers after timeout
-ENV INACTIVITY_TIMEOUT 24h
-# Remove dangling projects (containers and sources) after timeout
-ENV DANGLING_TIMEOUT 14d
+# Disable INACTIVITY_TIMEOUT by default
+ENV INACTIVITY_TIMEOUT 0
+# Disable DANGLING_TIMEOUT by default
+ENV DANGLING_TIMEOUT 0
 # Disable debug output by default
 ENV PROXY_DEBUG 0
 

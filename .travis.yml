@@ -5,6 +5,9 @@ language: generic
 env:
   OS: linux
   IMAGE_VHOST_PROXY: vhost-proxy:test
+  # Only use seconds here, so that these can be used with "sleep" as well
+  PROXY_INACTIVITY_TIMEOUT: 30s
+  PROXY_DANGLING_TIMEOUT: 60s
   PROXY_DEBUG: 1
 
 services:
@@ -15,7 +18,7 @@ install:
   - fin version
   - fin update
   - fin docker build -t ${IMAGE_VHOST_PROXY} .
-  - IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY} INACTIVITY_TIMEOUT=${INACTIVITY_TIMEOUT:-30s} DANGLING_TIMEOUT=${DANGLING_TIMEOUT:-3m} fin reset proxy
+  - IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY} INACTIVITY_TIMEOUT=${PROXY_INACTIVITY_TIMEOUT} DANGLING_TIMEOUT=${PROXY_DANGLING_TIMEOUT} fin reset proxy
   - fin sysinfo
 
 before_script:
