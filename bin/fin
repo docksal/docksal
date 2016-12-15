@@ -3416,7 +3416,7 @@ case "$1" in
 		if [[ "$1" == "generate" ]]; then
 			shift;
 			config_generate "$@";
-		elif [[ "$1" == "image" ]]; then
+		elif [[ "$1" == "images" ]]; then
 			shift
 			config_images "$@"
 		else
