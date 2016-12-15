@@ -230,7 +230,7 @@ get_project_path ()
 get_project_path_dc ()
 {
 	if is_windows ; then
-		echo "$(get_project_path)" | sed "s/^\/\([a-z]\)/\1:/g"
+		cygpath -m "$(get_project_path)"
 	else
 		echo "$(get_project_path)"
 	fi
