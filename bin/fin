@@ -241,7 +241,7 @@ get_project_path_dc ()
 get_config_dir_dc ()
 {
 	if is_windows ; then
-		echo "$CONFIG_DIR" | sed "s/^\/\([a-z]\)/\1:/g"
+		cygpath -m "$CONFIG_DIR"
 	else
 		echo "$CONFIG_DIR"
 	fi
