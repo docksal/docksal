@@ -3119,6 +3119,18 @@ config_generate ()
 	fi
 }
 
+config_images ()
+{
+	if [[ "$1" != "" ]]; then
+		echo "$1 tags"
+		echo "----------"
+		# for instance $1 == "docksal/db"
+		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | cut -d " " -f2 | tr -d \"
+	else
+		fin docker search "docksal" | grep "^docksal\/"
+	fi
+}
+
 create_site ()
 {
 	while true; do
@@ -3404,6 +3416,9 @@ case "$1" in
 		if [[ "$1" == "generate" ]]; then
 			shift;
 			config_generate "$@";
+		elif [[ "$1" == "image" ]]; then
+			shift
+			config_images "$@"
 		else
 			config_show "$@"
 		fi
