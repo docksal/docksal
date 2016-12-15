@@ -3044,8 +3044,13 @@ config_show ()
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
-	local IP="$(fin vm ip)"; [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
+
+	local IP;
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="$(fin vm ip)"
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" != 1 ]] && IP="127.0.0.1"
+	(is_linux) && IP="$DOCKSAL_DEFAULT_IP"
 	echo "IP: $IP"
+
 	echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$IP/")
 	[[ "$1" == "env" ]] && return
 
