@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.14.7
+FIN_VERSION=0.14.8
 
 # Console colors
 red='\033[0;91m'
@@ -210,6 +210,8 @@ upfind ()
 	# On Windows return full absolute path in Unix notation
 	if [[ "$BABUN_WIN_HOME" != "" ]]; then
 		echo "/$(cygpath -m ${_path} | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
+	else
+		echo "$_path"
 	fi
 }
 
