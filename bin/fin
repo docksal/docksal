@@ -208,10 +208,8 @@ upfind ()
 		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; exit; fi
 	)
 	# On Windows return full absolute path in Unix notation
-	if [[ "$BABUN_WIN_HOME" != "" ]] && [[ "$_path" = "$BABUN_WIN_HOME"* ]]; then
+	if [[ "$BABUN_WIN_HOME" != "" ]]; then
 		echo "/$(cygpath -m ${_path} | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
-	else
-		echo "$_path" | sed 's/^\/cygdrive//'
 	fi
 }
 
