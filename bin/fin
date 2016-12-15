@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.14.4
+FIN_VERSION=0.14.5
 
 # Console colors
 red='\033[0;91m'
@@ -2988,14 +2988,16 @@ load_configuration ()
 		# Experimental: Include a volumes yml if requested.
 		# Use bind mount for volumes if using default stack.
 		[[ "$DOCKSAL_VOLUMES" == "" ]] && DOCKSAL_VOLUMES="bind"
-		volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-		if [[ -f "$volumes_yml_file" ]]; then
-			COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
-		else
-			echo-error "Volumes definition not found in ${volumes_yml_file}." \
-				"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
-				"You may need to run ${yellow}fin update${NC} to download volume definitions."
-			exit 1
+		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
+			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+			if [[ -f "$volumes_yml_file" ]]; then
+				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
+			else
+				echo-error "Volumes definition not found in ${volumes_yml_file}." \
+					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
+					"You may need to run ${yellow}fin update${NC} to download volume definitions."
+				exit 1
+			fi
 		fi
 	fi
 	export COMPOSE_FILE
