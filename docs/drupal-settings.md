@@ -78,7 +78,7 @@ if (!drupal_is_cli()) {
 **Drupal 8**
 
 ```php
-# Reverse proxy configuration (Drude's vhost-proxy)
+# Reverse proxy configuration (Docksal's vhost-proxy)
 if (PHP_SAPI !== 'cli') {
   $settings['reverse_proxy'] = TRUE;
   $settings['reverse_proxy_addresses'] = array($_SERVER['REMOTE_ADDR']);
