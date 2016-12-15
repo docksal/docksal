@@ -3039,7 +3039,8 @@ config_show ()
 	# Replace separators with new lines
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	echo -e "COMPOSE_FILE:\n$(echo ${COMPOSE_FILE} | tr ${SEPARATOR} '\n')"
-	echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
+	[[ "$ENV_FILE" != "" ]] &&
+		echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
 	echo
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
