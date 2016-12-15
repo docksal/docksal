@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.14.3
+FIN_VERSION=0.14.4
 
 # Console colors
 red='\033[0;91m'
@@ -1377,6 +1377,10 @@ docker_machine_remove ()
 			echo-green "Removing SMB shares..."
 			docker_machine_remove_smb
 		fi
+		if is_mac; then
+			echo-green "Removing NFS exports..."
+			docker_machine_remove_nfs
+		fi
 	else
 		docker-machine rm -f "$machine_name"
 	fi
@@ -1494,6 +1498,39 @@ docker_machine_mount_nfs ()
 			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			# [!!] Think twice about performance before changing nfs settings
 	done
+}
+
+docker_machine_remove_nfs ()
+{
+	local machine_name="$DOCKER_MACHINE_NAME"
+	# Remove our own old exports
+	local exports_open="# <ds-nfs $machine_name"
+	local exports_close="# ds-nfs>"
+	local exports=$(cat /etc/exports 2>/dev/null | \
+		tr "\n" "\r" | \
+		sed "s/${exports_open}.*${exports_close}//" | \
+		tr "\r" "\n"
+	)
+
+	# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
+	local exports_test="/tmp/etc.exports.$RANDOM"
+	echo -e "$exports" | tee "$exports_test" >/dev/null
+	exports_errors=$(nfsd -F "$exports_test" checkexports 2>&1)
+	rm -f "$exports_test" >/dev/null 2>&1
+
+	# Do not write /etc/exports if there are config check errors
+	if [[ "$exports_errors" != '' ]]; then
+		echo-error "$exports_errors"
+		echo "-----------------"
+		echo -e "$exports"
+		echo "-----------------"
+		return 1
+	fi
+
+	echo "Writing and applying /etc/exports..."
+	echo -e "$exports" | sudo tee /etc/exports >/dev/null
+	sudo nfsd restart
+	sleep 2
 }
 
 # Fix/optimize Windows network settings for file sharing.
@@ -3172,7 +3209,6 @@ fi
 	[[ "$*" != "status -a" ]] && [[ "$*" != "status --all" ]] &&
 	load_configuration &&
 	check_for_updates
-
 
 # Parse other parameters
 case "$1" in
