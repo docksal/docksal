@@ -1,10 +1,17 @@
 # Customize project configuration
 
-It is recommended to read [Docksal Stack](docksal-stack.yml) explanation before reading this.
-You should understand what project containers are, which configuration files Docksal uses and their loading order.
+It is recommended to read [Docksal Stack](docksal-stack.yml) explanation before reading this manual.
+You should understand what project containers are and what project containers are default.
 
-1. [Understanding configurations](#basics)
+**Understanding configurations**
+
+1. [Basics](#basics)
+2. [Project configuraion files](#docksal-yml)
 2. [Default stacks](#default-configurations)
+3. [Configuration files loading order](#loading-order)
+
+**Using configurations**
+
 3. [Zero-configuration](#zero-configuration)
 4. [Custom configuration](#custom-configuration)
 5. [Don't break your Docksal setup! List of must have values.](#warning)
@@ -17,14 +24,42 @@ You should understand what project containers are, which configuration files Doc
 3. [Finding supported PHP/MySQL/etc. versions](#docksal-images)
 
 <a name="basics"></a>
-### Understanding configurations
+### Basics
 
+Docksal relies on [Docker Compose](https://docs.docker.com/compose/) to launch groups of related containers.
 yml files are [Compose Files](https://docs.docker.com/compose/compose-file/). Please read documentation on what their main sections are.
 
 !!! danger "REMEMBER DOCKSAL REQUIREMENTS"
     Some containers and their parameters are must have for Docksal to work properly. **Please see [Don't break your Docksal setup!](#warning) section.**
 
 You need to run `fin start` to apply configuration changes. If you removed services or volumes you need to remove them with `fin rm [service]`.
+
+## Project configuraion files
+<a name="docksal-yml"></a>
+### docksal.yml
+
+`docksal.yml` is a [Compose file](https://docs.docker.com/compose/compose-file/).
+It's a main configuration file for a project that controls it's services settings, so use it to
+modify settings, that are required for all team members.
+
+If you don't have this file in your project folder, fin will load a [default stack](#default-configurations) providing a zero-configuration setup.
+
+For more details on it's role check [loading order](#loading-order).
+
+<a name="docksal-env"></a>
+### docksal.env
+
+`docksal.env` is an [Environment file](https://docs.docker.com/compose/env-file/).
+
+It is meant to be used to easily override some default environment variables without a need of
+creating `docksal.yml` (for example to override MYSQL_ROOT_PASSWORD) or to provide additional environment
+variables to your automation scripts (see [custom commands](custom-commands.md)).
+
+<a name="docksal-local"></a>
+### docksal-local.yml, docksal-local.env
+
+`docksal-local.yml` and `docksal-local.env` can be used for additional customizations, that happen after main files. See [loading order](#loading-order).
+Good example of their use is [exposing custom port](expose-port.md) or switching PHP version.
 
 <a name="default-configurations"></a>
 ## Default stacks
@@ -38,18 +73,44 @@ These files are a good starting point of reference when you begin creating your 
 | File name                  | Description |
 |----------------------------|:------------|
 | `volumes-*.yml`            | Different binding for Docker volumes. Default is `volume-bind.yml`. Used always for volumes binding|
-| `services.yml`             | **Main file. Contains default services descriptions**. Used zero-configuration |
+| `services.yml`             | Contains default services descriptions. Used for zero-configuration |
 | `stack-default.yml`        | Default stack with 3 services that inherits `services.yml`. Used for zero-configuration |
-| `stack-default-static.yml` | Same as `stack-default.yml` but does not inherit `services.yml`|
-| `stack-acquia.yml`         | Acquia-like stack with Solr, Varnish and memcached. Inherits `services.yml`|
+| `stack-default-static.yml` | Same configuration as `stack-default.yml` but does not inherit `services.yml`|
+| `stack-acquia.yml`         | Acquia-like stack with Solr, Varnish and memcached|
+
+<a name="loading-order"></a>
+## Configuration files loading order
+
+This swarm of configuration files that Docksal can use, provides flexibility to set up your
+project in a way that works for your team's needs. Just like Bash configuration files
+(/etc/profile, bashrc, bash_profile, bash_logout), they provide flexibility to configure Docksal
+project in dozens of ways.
+
+`fin` loads files in a certain order. Configuration files, that are loaded later, overwrite settings
+from files, that had been loaded earlier. The list below goes from earliest to latest in this queue.
+Files at the bottom load the latest.
+
+You can always see files that were loaded for a project by running `fin config show`.
+
+Loading order:
+
+1. `~/.docksal/stacks/volumes-*.yml` - `volumes-bind.yml` currently loads always ([volumes in Docksal](docksal-volumes.md))
+2. `~/.docksal/stacks/stack-*.yml` - loads if there is no `docksal.yml` or if forced by `DOCKSAL_STACK` variable
+3. `docksal.yml`
+4. `docksal.env`
+5. `docksal-local.yml`
+6. `docksal-local.env`
+
 
 <a name="zero-configuration"></a>
 ## Zero-configuration
 
 You can simply create a `.docksal` folder in you project root and run `fin start`.
-`stack-default.yml` will be used to create containers in this case. This is a great way
-to start developing a project or can be used all the time if it's one or two people project.
-`stack-default.yml` inherits `services.yml` so you'll get latest versions of containers.
+`stack-default.yml` will be loaded and used to create containers in this case.
+
+This is a great way to start developing a new project or it can be used all the time
+if it's one or two people project. `stack-default.yml` inherits `services.yml` so
+you'll get latest versions of containers.
 
 ### Zero-configuration stacks
 
@@ -88,7 +149,7 @@ or re-create your static configuration or append those changes manually to your 
 
 There are some values that are not required for docker-compose to work but are required for Docksal stack to function.
 
-**1.** In `web` service these are a volume, labels, environment variables and a dependency. You should not remove ro change these volume, labels or variables.
+**1.** In `web` service these are a volume, labels, environment variables and a dependency. You should not remove or change these volume, labels or variables.
 
 ```yaml
   web:
