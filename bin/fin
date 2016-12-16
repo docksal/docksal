@@ -3105,13 +3105,13 @@ config_generate ()
 	if [[ -f ${yml_file} ]]; then
 		if [[ -d .docksal ]]; then
 			echo-yellow ".docksal directory already exists."
-			_confirm "Overwrite?"
+			_confirm "Overwrite docksal.yml?"
 		else
 			mkdir ".docksal"
 		fi
 
 		[[ -d ".docksal" ]] && \
-		echo '' > ".docksal/docksal.env" && \
+		touch ".docksal/docksal.env" && \
 		cp "$yml_file" ".docksal/docksal.yml"
 		if [[ ! -f 'docroot/index.php' ]]; then
 			# Setup docroot and a basic index.php
