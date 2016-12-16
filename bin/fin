@@ -1149,12 +1149,9 @@ show_help_config ()
 	printh "show" "Display full effective configuration for the project"
 	printh "env" "Display only environment variables section"
 	printh "generate" "Generate Docksal configuration for the project"
-	printh "generate [stack]" "Generate Docksal configuration for the project using stack (assumed defult)"
-	printh "generate --static" "Generate static Docksal configuration for the project"
 	printh "images" "Show all Docksal images on Docker Hub"
 	printh "images [image name]" "Show all tags for certain image"
 	echo-green "Examples:"
-	printh "fin config generate acquia --static" "Generate static Acquia stack like config"
 	printh "fin config images docksal/db" "Show all tags for docksal/db image"
 	echo
 }
@@ -3086,42 +3083,35 @@ config_show ()
 
 config_generate ()
 {
-	eval $(parse_params "$@")
-	# Allow to defined the default stack file.
-	if [[ "${ARGV[0]}" != "" ]]; then
-		DOCKSAL_STACK="${ARGV[0]}"
-	else
-		DOCKSAL_STACK=${DOCKSAL_STACK:-default}
+	local stack_file="$(get_config_dir_dc)/stacks/stack-default-static.yml"
+
+	if [[ ! -f ${stack_file} ]]; then
+		echo-error "Stack file does not exist: $stack_file" "Try running ${yellow}fin update${NC}"
+		exit 1
 	fi
-	if [[ "$static" == "static" ]]; then
-		DOCKSAL_STACK="$DOCKSAL_STACK-static"
-	fi
-	yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 
-	if [[ -f ${yml_file} ]]; then
-		if [[ -d .docksal ]]; then
-			echo-yellow ".docksal directory already exists."
-			_confirm "Overwrite docksal.yml?"
-		else
-			mkdir ".docksal"
-		fi
-
-		[[ -d ".docksal" ]] && \
-		touch ".docksal/docksal.env" && \
-		cp "$yml_file" ".docksal/docksal.yml"
-		if [[ ! -f 'docroot/index.php' ]]; then
-			# Setup docroot and a basic index.php
-			mkdir -p docroot && \
-			echo '<?php phpinfo();' > docroot/index.php
-		fi
-
-		if [[ $? == 0 ]]; then
-			echo-green "$DOCKSAL_STACK stack configuration generated. You can start it with ${yellow}fin start${NC}"
-		else
-			echo-error "Something went wrong. Check error messages above."
-		fi
+	if [[ -d .docksal ]]; then
+		echo-yellow ".docksal directory already exists."
+		_confirm "Overwrite docksal.yml?"
 	else
-		echo-error "Stack file does not exist: $yml_file" "Try running ${yellow}fin update${NC}"
+		mkdir ".docksal"
+	fi
+
+	[[ -d ".docksal" ]] &&
+		touch ".docksal/docksal.env" &&
+		cp "$stack_file" ".docksal/docksal.yml" &&
+		# remove DOCKSAL_STACK from env file if present
+		(cat ".docksal/docksal.env" | sed "s/^DOCKSAL_STACK=.*//" | tee ".docksal/docksal.env" >/dev/null)
+
+	[[ ! -f 'docroot/index.php' ]] &&
+		# Setup docroot and a basic index.php
+		mkdir -p docroot &&
+		echo '<?php phpinfo();' > docroot/index.php
+
+	if [[ $? == 0 ]]; then
+		echo-green "Configuration was generated. You can start it with ${yellow}fin start${NC}"
+	else
+		echo-error "Something went wrong. Check error messages above."
 	fi
 }
 
