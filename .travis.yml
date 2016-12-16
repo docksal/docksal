@@ -20,9 +20,12 @@ install:
 
 before_script:
   - git clone https://github.com/docksal/drupal8.git ../drupal8
+  - mkdir ../test-config
 
 script:
   # Testing Docksal system services
   - bats tests/smoke-test-system.bats
+  # Test Docksal configuration system
+  - cd $TRAVIS_BUILD_DIR/../test-config && bats $TRAVIS_BUILD_DIR/docksal/tests/smoke-test-config.bats
   # Test a project workflow
-  - cd ../drupal8 && bats ../docksal/tests/smoke-test-general.bats
+  - cd $TRAVIS_BUILD_DIR/../drupal8 && bats $TRAVIS_BUILD_DIR/docksal/tests/smoke-test-general.bats
