@@ -26,6 +26,8 @@ script:
   # Testing Docksal system services
   - bats tests/smoke-test-system.bats
   # Test Docksal configuration system
-  - cd $TRAVIS_BUILD_DIR/../test-config && bats $TRAVIS_BUILD_DIR/docksal/tests/smoke-test-config.bats
+  - cd "$TRAVIS_BUILD_DIR/../test-config"
+  - bats $TRAVIS_BUILD_DIR/docksal/tests/smoke-test-config.bats
   # Test a project workflow
-  - cd $TRAVIS_BUILD_DIR/../drupal8 && bats $TRAVIS_BUILD_DIR/docksal/tests/smoke-test-general.bats
+  - cd "$TRAVIS_BUILD_DIR/../drupal8"
+  - bats $TRAVIS_BUILD_DIR/docksal/tests/smoke-test-general.bats
