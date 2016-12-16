@@ -53,8 +53,8 @@ These files are a good starting point of reference when you begin creating your 
 | `services.yml`             | Used for dynamic and zero-configuration |
 | `stack-default.yml`        | Used for zero-configuration |
 | `stack-default-static.yml` | Used for `fin config generate --static`|
-| `stack-acquia.yml`         | Example of Acquia-like stack config |
-| `stack-acquia.yml`         | Example of static Acquia-like stack config |
+| `stack-acquia.yml`         | Used for `fin config generate acquia` |
+| `stack-acquia.yml`         | Used for `fin config generate acquia --static` |
 
 <a name="zero-configuration"></a>
 ## Zero-configuration (recommended)
