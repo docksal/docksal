@@ -3103,10 +3103,11 @@ config_generate ()
 		# remove DOCKSAL_STACK from env file if present
 		(cat ".docksal/docksal.env" | sed "s/^DOCKSAL_STACK=.*//" | tee ".docksal/docksal.env" >/dev/null)
 
-	[[ ! -f 'docroot/index.php' ]] &&
+	if [[ ! -f 'docroot/index.php' ]]; then
 		# Setup docroot and a basic index.php
 		mkdir -p docroot &&
 		echo '<?php phpinfo();' > docroot/index.php
+	fi
 
 	if [[ $? == 0 ]]; then
 		echo-green "Configuration was generated. You can start it with ${yellow}fin start${NC}"
