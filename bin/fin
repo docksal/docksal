@@ -3268,6 +3268,7 @@ case "$1" in
 		shift
 		bash_comp_words "$@"
 		;;
+	# TODO: pick one, get rid of the other one.
 	up|start)
 		shift
 		up
@@ -3280,6 +3281,7 @@ case "$1" in
 		shift
 		restart
 		;;
+	# TODO: pick one, get rid of the other one (st vs ps).
 	status|st|ps)
 		shift
 		status "$@"
