@@ -2981,28 +2981,24 @@ load_configuration ()
 	fi
 	export ENV_FILE
 
-	# Legacy/traditional setup support
-	# TODO: get rid of this in 2017
-	legacy_yml_file="$(get_project_path_dc)/docker-compose.yml"
-	if [[ -f "$legacy_yml_file" ]]; then
-		COMPOSE_FILE="$legacy_yml_file"
-		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml" >&2
-	fi
 	# Set COMPOSE_FILE unless it has been already set by user
 	if [[ "$COMPOSE_FILE" == "" ]]; then
-		# Allow to defined the default stack file.
-		DOCKSAL_STACK=${DOCKSAL_STACK:-default}
-		default_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
-		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 
-		# Use .docksal/docksal.yml by default (if exists)
-		if [[ -f "$yml_file" ]]; then
-			COMPOSE_FILE="$yml_file"
-		# Otherwise use the default.yml stack config (if exists)
-		elif [[ -f "$default_yml_file" ]]; then
-			COMPOSE_FILE="$default_yml_file"
+		# Allow to define the stack file via DOCKSAL_STACK
+		# Set it to "default" if empty and there is no project yml file
+		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
+		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+
+		# Include both the stack and the project yml files if both exist
+		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
+			COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
+		# Otherwise try including only one that exists
+		else
+		    [[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
+		    [[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
 		fi
+
 		# Throw an error if COMPOSE_FILE is empty here
 		if [[ "$COMPOSE_FILE" == "" ]]; then
 			echo-error "No configuration files found." "Expected in $yml_file"
@@ -3010,12 +3006,12 @@ load_configuration ()
 		else
 			# Include docksal-local.yml (if exists)
 			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+    		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
-		# Experimental: Include a volumes yml if requested.
-		# Use bind mount for volumes if using default stack.
-		[[ "$DOCKSAL_VOLUMES" == "" ]] && DOCKSAL_VOLUMES="bind"
+		# Include a volumes yml if requested. Use bind mount for volumes by default.
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
 		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
 			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 			if [[ -f "$volumes_yml_file" ]]; then
