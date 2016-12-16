@@ -70,7 +70,7 @@ fin update
 - [Increasing vm memory (RAM)](/docs/vm.md)
 - [Exposing any Docker container's port](/docs/expose-port.md)
 - [Using Docker for Mac/Win](/docs/env-setup-native.md)
-- [Customize project configuration](/docs/project-customize.md)
+- [Customize project configuration or switch PHP/MySQL version](/docs/project-customize.md)
 
 ### Utililies
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
