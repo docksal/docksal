@@ -3092,7 +3092,7 @@ config_generate ()
 {
 	eval $(parse_params "$@")
 	# Allow to defined the default stack file.
-	if [[ "${ARGV[0]}" != "" ]] && [[ "${ARGV[0]}" =~ ^[a-zA-Z0-9]*$ ]]; then
+	if [[ "${ARGV[0]}" != "" ]]; then
 		DOCKSAL_STACK="${ARGV[0]}"
 	else
 		DOCKSAL_STACK=${DOCKSAL_STACK:-default}
