@@ -3090,20 +3090,23 @@ config_generate ()
 		exit 1
 	fi
 
-	if [[ -d .docksal ]]; then
-		echo-yellow ".docksal directory already exists."
-		_confirm "Overwrite docksal.yml?"
-	else
-		mkdir ".docksal"
+	if [[ -f .docksal/docksal.yml ]]; then
+		echo-yellow ".docksal/docksal.yml already exists"
+		_confirm "Do you want to proceed and overwrite it?"
 	fi
 
-	[[ -d ".docksal" ]] &&
-		touch ".docksal/docksal.env" &&
-		cp "$stack_file" ".docksal/docksal.yml" &&
-		# remove DOCKSAL_STACK from env file if present
-		(cat ".docksal/docksal.env" | sed "s/^DOCKSAL_STACK=.*//" | tee ".docksal/docksal.env" >/dev/null)
+	# Create .docksal directory if it does not already exist
+	[[ ! -d .docksal ]] && mkdir .docksal
+	# Create docksal.env if it does not exist
+	touch ".docksal/docksal.env" && \
+    # remove DOCKSAL_STACK from env file if present
+    (cat ".docksal/docksal.env" | sed "s/^DOCKSAL_STACK=.*//" | tee ".docksal/docksal.env" >/dev/null) && \
+    # Override docksal.yml with the default stack file
+    cp -f "$stack_file" ".docksal/docksal.yml"
 
-	if [[ ! -f 'docroot/index.php' ]]; then
+	# TODO: maybe we should not be doing this. What if the user users a different directory other than docroot?
+	# Create a basic docroot and index.php if not present
+	if [[ ! -d docroot ]] && [[ ! -f docroot/index.php ]]; then
 		# Setup docroot and a basic index.php
 		mkdir -p docroot &&
 		echo '<?php phpinfo();' > docroot/index.php
