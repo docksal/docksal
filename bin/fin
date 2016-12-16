@@ -890,7 +890,7 @@ show_help ()
 
 	echo
 	printh "alias" "Create/remove folder aliases (${yellow}fin help alias${NC})"
-	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
+	printh "config [command]" "Display/generate project configuration (${yellow}fin help config${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "share" "Share web server of the current project on the internet using ngrok"
@@ -1145,11 +1145,13 @@ show_help_config ()
 	echo-green "Display/generate project configuration"
 	printh "fin config [command]" "" "yellow"
 	echo
-	echo-green "Commands:"
+	echo-green "Config commands:"
 	printh "show" "Display full effective configuration for the project"
-	printh "env" "Display only nevironment variables section of effective configuration"
+	printh "env" "Display only environment variables section"
 	printh "generate" "Generate Docksal configuration for the project"
 	printh "generate --static" "Generate static Docksal configuration for the project"
+	printh "images" "Show all Docksal images on Docker Hub"
+	printh "images [image name]" "Show all tags for certain image, for example: 'fin config images docksal/db'"
 	echo
 }
 
@@ -1753,7 +1755,7 @@ vm ()
 			vm-ram "$@"
 			;;
 		*)
-			show_help_vm
+			docker-machine ls
 			;;
 	esac
 }
