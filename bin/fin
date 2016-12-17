@@ -2371,11 +2371,7 @@ update ()
 			local new_version=$(${FIN_PATH_UPDATED} v)
 			echo "fin $new_version downloaded..."
 
-			# check for different updates on next run
-			# TODO: UNCOMMENT
-			#rm -f "$CONFIG_LAST_CHECK" >/dev/null 2>&1
-
-			# Run other updates with newly downloaded fin version
+			# Run other Updates 2-5 with newly downloaded fin version
 			( "$FIN_PATH_UPDATED" update )
 
 			# overwrite old fin
@@ -2427,8 +2423,9 @@ check_for_updates ()
 	timestamp=$(date +%s)
 	# Set last_check to 0 if empty
 	last_check=$(cat "$CONFIG_LAST_CHECK" 2>/dev/null || echo 0)
-	# Check once a week
-	next_check=$(($last_check+604800))
+	# Check once bi-weekly
+	local one_week=$((60*60*24*7))
+	next_check=$(( $last_check+($one_week*2) ))
 	if [ ${timestamp} -le ${next_check} ]; then
 		return;
 	fi
@@ -2443,8 +2440,8 @@ check_for_updates ()
 	if [[ $(ver_to_int "$new_version") > $(ver_to_int ${FIN_VERSION}) ]]; then
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
-		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ] (run ${green}fin update${NC} to update)"
-		echo "Press Enter."
+		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ]"
+		echo "Press Enter to continue"
 		read -p ''
 	fi
 
@@ -3252,7 +3249,7 @@ fi
 	[[ "$*" != "st -a" ]] && [[ "$*" != "st --all" ]] &&
 	[[ "$*" != "status -a" ]] && [[ "$*" != "status --all" ]] &&
 	load_configuration &&
-	check_for_updates
+	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
 # Parse other parameters
 case "$1" in
