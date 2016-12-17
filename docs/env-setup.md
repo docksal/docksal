@@ -5,20 +5,20 @@
 
 ## (Win) Install Babun
 
-On Windows you will need a Linux-type shell.
+On Windows, you will need a Linux-type shell.
 
 !!! danger "Install as regular user"
-    Babun should be installed and run **as a regular user (do NOT use running installer as and admin).**
+    Babun should be installed and run **as a regular user (do NOT Run as Administrator to install).**
 
-Install [Babun](http://babun.github.io/) before proceeding and run all commands in it.  
+Install [Babun](http://babun.github.io/) before proceeding and run all commands in it.
 Docksal is not tested and not supported with other Linux-type shells on Windows.
 
 ## (Mac/Win) Install VirtualBox
 
-On Mac and Windows you need to install [VirtualBox 5.1.2 Mac](http://download.virtualbox.org/virtualbox/5.1.2/VirtualBox-5.1.2-108956-OSX.dmg)/[VirtualBox 5.1.2 Win](http://download.virtualbox.org/virtualbox/5.1.2/VirtualBox-5.1.2-108956-Win.exe)
+On Mac and Windows, you need to install [VirtualBox 5.1.2 Mac](http://download.virtualbox.org/virtualbox/5.1.2/VirtualBox-5.1.2-108956-OSX.dmg)/[VirtualBox 5.1.2 Win](http://download.virtualbox.org/virtualbox/5.1.2/VirtualBox-5.1.2-108956-Win.exe).
 
 !!! attention "Specific version required"
-    **Using specific version is important.** If you use different version it can work fine or you can experience unexpected bugs. fin will notify you about a need to update your VirtualBox version in future.
+    **Using specific version is important.** If you use a different version, it could work fine or you may experience unexpected bugs. fin will notify you to update your VirtualBox version in the future.
 
 ## (Mac/Win/Linux) Install Docksal Fin
 
@@ -43,7 +43,7 @@ fin vm start
 
 ## Congratulations!
 
-You are done with one time environment installation. Now you can [configure your project](/docs/project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.
+You are done with the one time environment installation. Now you can [configure your project](/docs/project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.
 
 !!! tip "Native Docker application on Mac and Windows"
     Advanced Docker users may want to check out how to use Docksal with [Native Docker applications on Mac and Windows](env-setup-native.md).
