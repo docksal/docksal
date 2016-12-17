@@ -208,7 +208,8 @@ upfind ()
 		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; exit; fi
 	)
 	# On Windows compensate for getting down to "" and return full absolute path in Unix notation
-	[[ "$_path" == "" ]] && _path="/"
+	# upfind on windows may return FAKED HOME PATH! because of that. KEEP that in mind
+	[[ "$_path" == "" ]] && _path="$HOME"
 	if [[ "$BABUN_WIN_HOME" != "" ]]; then
 		echo "/$(cygpath -m ${_path} | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 	else
@@ -233,7 +234,8 @@ get_project_path ()
 get_project_path_dc ()
 {
 	if is_windows ; then
-		cygpath -m "$(get_project_path)"
+		local _path="$(get_project_path)"
+		[[ "$_path" != "" ]] && cygpath -m "$_path"
 	else
 		echo "$(get_project_path)"
 	fi
