@@ -2407,7 +2407,9 @@ update ()
 			--format '{{.Label "io.docksal.project-root"}}'
 		)
 		for project in ${running_projects}; do
-			(cd "$project" && fin up)
+			# use updated version when updated
+			[[ ! -f "$FIN_PATH_UPDATED" ]] && FIN_PATH_UPDATED="fin"
+			(cd "$project" && "$FIN_PATH_UPDATED" start)
 		done
 	fi
 
