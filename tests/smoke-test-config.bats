@@ -179,7 +179,8 @@ services:
 	# Define which stack we want to use. This is supposed to be eventually removed by the "fin config generate" run below
 	echo 'DOCKSAL_STACK=acquia' > .docksal/docksal.env
 	# TODO: need a --force option to be able to use this in a non-interactive environment like CI/bats tests
-	fin config generate
+	# Run this non-interactively to avoid confirmation messages and thus getting stuck
+	echo "fin config generate" | bash
 
 	run fin config env
 	[[ $status == 0 ]] && \
