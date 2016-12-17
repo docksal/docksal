@@ -94,12 +94,12 @@ You can always see files that were loaded for a project by running `fin config s
 
 Loading order:
 
-1. `~/.docksal/stacks/volumes-*.yml` - `volumes-bind.yml` currently loads always ([volumes in Docksal](docksal-volumes.md))
-2. `~/.docksal/stacks/stack-*.yml` - loads if there is no `docksal.yml` or if forced by `DOCKSAL_STACK` variable
-3. `docksal.yml`
-4. `docksal.env`
-5. `docksal-local.yml`
-6. `docksal-local.env`
+1. `~/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](docksal-volumes.md))
+2. `~/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` or if forced by `DOCKSAL_STACK` variable in `docksal.env`
+3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise
+4. `docksal.env` - sets or modifies environment variables
+5. `docksal-local.yml` - extends loaded stack or `docksal.yml`
+6. `docksal-local.env` - sets or modifies environment variables set previously
 
 
 <a name="zero-configuration"></a>
@@ -272,12 +272,16 @@ Here `docksal/cli` is the name of the docker image, while `1.0-php7` is it's tag
 
 [How to find out all supported PHP versions?](#docksal-images)
 
-### Overriding with `docksal-local.yml`
+### Extend or modify config with `docksal-local.yml` or `docksal.yml`
 
-If you use zero-configuration (or any other) you can override images with `docksal-local.yml`.
-Change PHP version by overriding `image` value for `cli` container.
+If you use zero-configuration (or any other) you can change used images with `docksal-local.yml`.
 
-Example `docksal-local.yml`:
+Same technique is **applicable to `dosksal.yml` if `DOCKSAL_STACK` is set in `docksal.env`**, as in this case
+`docksal.yml` will extend/modify configuration instead of overriding it.
+
+Change PHP version by providing `image` value for `cli` container.
+
+Example `docksal-local.yml` or `docksal.yml`:
 
 ```yaml
 version: "2.1"
@@ -293,9 +297,11 @@ services:
 
 `docksal-local.yml` will append to or modify configuration what was loaded before it, regardless of whether it was `stack-default.yml` or `docksal.yml`.
 
-### Overriding with `docksal.yml`
+`docksal.yml` will append to or modify configuration only if `DOCKSAL_STACK` is set in `docksal.env`.
 
-If you don't use any zero-configuration stack then you are in control of everything.
+### Override config with `docksal.yml`
+
+If you don't use any stack (`docksal.yml` is present and `DOCKSAL_STACK` is not set) then you are in control of everything.
 You don't inherit `services.yml` so you should fully describe `cli` container.
 
 Example of **part** of `docksal.yml` with configuration for `cli` overriding PHP version:
@@ -310,6 +316,8 @@ services:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw
 ```
+
+Note, that you **should** fully describe all other services (web, db, etc.) as well if you don't use stack.
 
 <a name="mysql-version"></a>
 ## Switching MySQL version
