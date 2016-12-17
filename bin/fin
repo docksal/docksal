@@ -3092,13 +3092,13 @@ config_generate ()
 		exit 1
 	fi
 
-	if [[ -f .docksal/docksal.yml ]]; then
+	if [[ -f ".docksal/docksal.yml" ]]; then
 		echo-yellow ".docksal/docksal.yml already exists"
 		_confirm "Do you want to proceed and overwrite it?"
 	fi
 
-	# Create .docksal directory if it does not already exist
-	[[ ! -d .docksal ]] && mkdir .docksal
+	# Create .docksal directory if it does not exist
+	mkdir -p ".docksal"
 	# Create docksal.env if it does not exist
 	touch ".docksal/docksal.env" && \
     # remove DOCKSAL_STACK from env file if present
@@ -3106,12 +3106,12 @@ config_generate ()
     # Override docksal.yml with the default stack file
     cp -f "$stack_file" ".docksal/docksal.yml"
 
-	# TODO: maybe we should not be doing this. What if the user users a different directory other than docroot?
+	local DOCROOT="${DOCROOT:-docroot}"
 	# Create a basic docroot and index.php if not present
-	if [[ ! -d docroot ]] && [[ ! -f docroot/index.php ]]; then
+	if [[ ! -d "$DOCROOT" ]] || [[ ! -f "$DOCROOT/index.php" ]]; then
 		# Setup docroot and a basic index.php
-		mkdir -p docroot &&
-		echo '<?php phpinfo();' > docroot/index.php
+		mkdir -p "$DOCROOT" &&
+		echo '<?php phpinfo();' > "$DOCROOT/index.php"
 	fi
 
 	if [[ $? == 0 ]]; then
