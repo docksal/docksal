@@ -72,13 +72,6 @@ services:
 
 	echo "$yml" > .docksal/docksal.yml
 
-	# Debug
-	pwd
-	ls -la
-	cat .docksal/docksal.yml
-	cat .docksal/docksal.env
-	ls -la ~/.docksal/stacks
-
 	run fin config
 	[[ $status == 0 ]] && \
 	[[ $output =~ "volumes-bind.yml" ]] && \
