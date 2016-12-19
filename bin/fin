@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.14.8
+FIN_VERSION=0.15.0
 
 # Console colors
 red='\033[0;91m'
@@ -207,7 +207,9 @@ upfind ()
 		done;
 		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; exit; fi
 	)
-	# On Windows return full absolute path in Unix notation
+	# On Windows compensate for getting down to "" and return full absolute path in Unix notation
+	# upfind on windows may return FAKED HOME PATH! because of that. KEEP that in mind
+	[[ "$_path" == "" ]] && _path="$HOME"
 	if [[ "$BABUN_WIN_HOME" != "" ]]; then
 		echo "/$(cygpath -m ${_path} | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 	else
@@ -232,7 +234,8 @@ get_project_path ()
 get_project_path_dc ()
 {
 	if is_windows ; then
-		cygpath -m "$(get_project_path)"
+		local _path="$(get_project_path)"
+		[[ "$_path" != "" ]] && cygpath -m "$_path"
 	else
 		echo "$(get_project_path)"
 	fi
@@ -1149,9 +1152,10 @@ show_help_config ()
 	printh "show" "Display full effective configuration for the project"
 	printh "env" "Display only environment variables section"
 	printh "generate" "Generate Docksal configuration for the project"
-	printh "generate --static" "Generate static Docksal configuration for the project"
 	printh "images" "Show all Docksal images on Docker Hub"
-	printh "images [image name]" "Show all tags for certain image, for example: 'fin config images docksal/db'"
+	printh "images [image name]" "Show all tags for certain image"
+	echo-green "Examples:"
+	printh "fin config images docksal/db" "Show all tags for docksal/db image"
 	echo
 }
 
@@ -2370,11 +2374,7 @@ update ()
 			local new_version=$(${FIN_PATH_UPDATED} v)
 			echo "fin $new_version downloaded..."
 
-			# check for different updates on next run
-			# TODO: UNCOMMENT
-			#rm -f "$CONFIG_LAST_CHECK" >/dev/null 2>&1
-
-			# Run other updates with newly downloaded fin version
+			# Run other Updates 2-5 with newly downloaded fin version
 			( "$FIN_PATH_UPDATED" update )
 
 			# overwrite old fin
@@ -2406,7 +2406,9 @@ update ()
 			--format '{{.Label "io.docksal.project-root"}}'
 		)
 		for project in ${running_projects}; do
-			(cd "$project" && fin up)
+			# use updated version when updated
+			[[ ! -f "$FIN_PATH_UPDATED" ]] && FIN_PATH_UPDATED="fin"
+			(cd "$project" && "$FIN_PATH_UPDATED" start)
 		done
 	fi
 
@@ -2424,8 +2426,9 @@ check_for_updates ()
 	timestamp=$(date +%s)
 	# Set last_check to 0 if empty
 	last_check=$(cat "$CONFIG_LAST_CHECK" 2>/dev/null || echo 0)
-	# Check once a week
-	next_check=$(($last_check+604800))
+	# Check once bi-weekly
+	local one_week=$((60*60*24*7))
+	next_check=$(( $last_check+($one_week*2) ))
 	if [ ${timestamp} -le ${next_check} ]; then
 		return;
 	fi
@@ -2440,8 +2443,8 @@ check_for_updates ()
 	if [[ $(ver_to_int "$new_version") > $(ver_to_int ${FIN_VERSION}) ]]; then
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
-		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ] (run ${green}fin update${NC} to update)"
-		echo "Press Enter."
+		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ]"
+		echo "Press Enter to continue"
 		read -p ''
 	fi
 
@@ -2977,28 +2980,24 @@ load_configuration ()
 	fi
 	export ENV_FILE
 
-	# Legacy/traditional setup support
-	# TODO: get rid of this in 2017
-	legacy_yml_file="$(get_project_path_dc)/docker-compose.yml"
-	if [[ -f "$legacy_yml_file" ]]; then
-		COMPOSE_FILE="$legacy_yml_file"
-		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml" >&2
-	fi
 	# Set COMPOSE_FILE unless it has been already set by user
 	if [[ "$COMPOSE_FILE" == "" ]]; then
-		# Allow to defined the default stack file.
-		DOCKSAL_STACK=${DOCKSAL_STACK:-default}
-		default_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
-		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 
-		# Use .docksal/docksal.yml by default (if exists)
-		if [[ -f "$yml_file" ]]; then
-			COMPOSE_FILE="$yml_file"
-		# Otherwise use the default.yml stack config (if exists)
-		elif [[ -f "$default_yml_file" ]]; then
-			COMPOSE_FILE="$default_yml_file"
+		# Allow to define the stack file via DOCKSAL_STACK
+		# Set it to "default" if empty and there is no project yml file
+		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
+		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+
+		# Include both the stack and the project yml files if both exist
+		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
+			COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
+		# Otherwise try including only one that exists
+		else
+		    [[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
+		    [[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
 		fi
+
 		# Throw an error if COMPOSE_FILE is empty here
 		if [[ "$COMPOSE_FILE" == "" ]]; then
 			echo-error "No configuration files found." "Expected in $yml_file"
@@ -3006,12 +3005,12 @@ load_configuration ()
 		else
 			# Include docksal-local.yml (if exists)
 			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+    		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
-		# Experimental: Include a volumes yml if requested.
-		# Use bind mount for volumes if using default stack.
-		[[ "$DOCKSAL_VOLUMES" == "" ]] && DOCKSAL_VOLUMES="bind"
+		# Include a volumes yml if requested. Use bind mount for volumes by default.
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
 		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
 			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 			if [[ -f "$volumes_yml_file" ]]; then
@@ -3086,38 +3085,39 @@ config_show ()
 
 config_generate ()
 {
-	eval $(parse_params "$@")
-	# Allow to defined the default stack file.
-	DOCKSAL_STACK=${DOCKSAL_STACK:-default}
-	if [[ "$static" == "static" ]]; then
-		DOCKSAL_STACK="$DOCKSAL_STACK-static"
+	local stack_file="$(get_config_dir_dc)/stacks/stack-default-static.yml"
+
+	if [[ ! -f ${stack_file} ]]; then
+		echo-error "Stack file does not exist: $stack_file" "Try running ${yellow}fin update${NC}"
+		exit 1
 	fi
-	yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 
-	if [[ -f ${yml_file} ]]; then
-		if [[ -d .docksal ]]; then
-			echo-yellow ".docksal directory already exists."
-			_confirm "Remove it and start from scratch?"
-			rm -rf ./.docksal
-		fi
+	if [[ -f ".docksal/docksal.yml" ]]; then
+		echo-yellow ".docksal/docksal.yml already exists"
+		_confirm "Do you want to proceed and overwrite it?"
+	fi
 
-		mkdir .docksal && \
-		# Use bind mount volumes by default
-		echo '' > .docksal/docksal.env && \
-		cp "$yml_file" ".docksal/docksal.yml"
-		if [[ ! -f 'docroot/index.php' ]]; then
-			# Setup docroot and a basic index.php
-			mkdir -p docroot && \
-			echo '<?php phpinfo();' > docroot/index.php
-		fi
+	# Create .docksal directory if it does not exist
+	mkdir -p ".docksal"
+	# Create docksal.env if it does not exist
+	touch ".docksal/docksal.env" && \
+    # remove DOCKSAL_STACK from env file if present
+    (cat ".docksal/docksal.env" | sed "s/^DOCKSAL_STACK=.*//" | tee ".docksal/docksal.env" >/dev/null) && \
+    # Override docksal.yml with the default stack file
+    cp -f "$stack_file" ".docksal/docksal.yml"
 
-		if [[ $? == 0 ]]; then
-			echo-green "$DOCKSAL_STACK stack configuration generated. You can start it with ${yellow}fin start${NC}"
-		else
-			echo-error "Something went wrong. Check error messages above."
-		fi
+	local DOCROOT="${DOCROOT:-docroot}"
+	# Create a basic docroot and index.php if not present
+	if [[ ! -d "$DOCROOT" ]] || [[ ! -f "$DOCROOT/index.php" ]]; then
+		# Setup docroot and a basic index.php
+		mkdir -p "$DOCROOT" &&
+		echo '<?php phpinfo();' > "$DOCROOT/index.php"
+	fi
+
+	if [[ $? == 0 ]]; then
+		echo-green "Configuration was generated. You can start it with ${yellow}fin start${NC}"
 	else
-		echo-error "Stack file does not exist: $yml_file" "Try running ${yellow}fin update${NC}"
+		echo-error "Something went wrong. Check error messages above."
 	fi
 }
 
@@ -3252,7 +3252,7 @@ fi
 	[[ "$*" != "st -a" ]] && [[ "$*" != "st --all" ]] &&
 	[[ "$*" != "status -a" ]] && [[ "$*" != "status --all" ]] &&
 	load_configuration &&
-	check_for_updates
+	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
 # Parse other parameters
 case "$1" in
@@ -3260,6 +3260,7 @@ case "$1" in
 		shift
 		bash_comp_words "$@"
 		;;
+	# TODO: pick one, get rid of the other one.
 	up|start)
 		shift
 		up
@@ -3272,6 +3273,7 @@ case "$1" in
 		shift
 		restart
 		;;
+	# TODO: pick one, get rid of the other one (st vs ps).
 	status|st|ps)
 		shift
 		status "$@"

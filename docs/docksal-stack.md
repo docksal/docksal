@@ -4,12 +4,7 @@ This page explains how Docksal works under the hood.
 
 1. [System services](#docksal-system-services)
 2. [Project services](#docksal-project-services)
-3. [Understanding configuration](#understanding-configuration)
-    1. [docksal.yml](#docksal-yml)
-    2. [docksal.env](#docksal-env)
-    3. [Local overrides](#docksal-local)
-    4. [Configuration files load order](#loading-order)
-4. [Customizing project configuration](#project-customization)
+3. [Customizing project configuration](#project-customization)
 
 ---
 
@@ -64,64 +59,8 @@ Docksal's [CLI service](https://github.com/docksal/service-cli) provides an envi
 which is used by `web` service, as well as for Behat, mysql client, drush and other tools. It provides a reliable automation
 interface via `fin exec`.
 
-<a name="understanding-configuration"></a>
-## Understanding configuration
-
-Docksal relies on [Docker Compose](https://docs.docker.com/compose/) to launch groups of related containers.
-You want to familiarize yourself with [basic concepts](https://docs.docker.com/compose/overview/) of Docker Compose
-before reading further sections.
-
-<a name="docksal-yml"></a>
-### docksal.yml
-
-`docksal.yml` is a [Compose file](https://docs.docker.com/compose/compose-file/).
-It's a main configuration file for a project that controls it's services settings, so use it to
-modify settings, that are required for all team members.
-
-Even if you don't have this file in your project folder, fin will load a default one providing a zero-configuration ability.
-
-For more details on it's role check [loading order](#loading-order) and [customizing project configuration](project-customize.md).
-
-<a name="docksal-env"></a>
-### docksal.env
-
-`docksal.env` is an [Environment file](https://docs.docker.com/compose/env-file/).
-
-It is meant to be used to easily override some default environment variables without a need of
-creating `docksal.yml` (for example to override MYSQL_ROOT_PASSWORD) or to provide additional environment
-variables to your automation scripts (see [custom commands](custom-commands.md)).
-
-<a name="docksal-local"></a>
-### Local overrides
-
-`docksal-local.yml` and `docksal-local.env` can be used those for customizations, which should not
-get committed into the project's repository. For example [exposing custom port](expose-port.md) for local development needs.
-
-<a name="loading-order"></a>
-## Configuration files load order
-
-This swarm of configuration files that Docksal can use, provides flexibility to set up your
-project in a way that works for your team's needs. Just like Bash configuration files
-(/etc/profile, bashrc, bash_profile, bash_logout), they provide flexibility to configure Docksal
-project in dozens of ways.
-
-`fin` loads files in a certain order. Configuration files, that are loaded later, overwrite settings
-from files, that had been loaded earlier. The list below goes from earliest to latest in this queue.
-Files at the bottom load the latest.
-
-You can always see files that were loaded for a project by running `fin config show`.
-
-Load order:
-
-1. `volumes-*.yml` - [optional] default is `volumes-bind.yml` ([volumes in Docksal](docksal-volumes.md))  
-2. `~/.docksal/stacks/stack-default.yml` - default stack, only loads if there is no `docksal.yml`  
-3. `docksal.yml`  
-4. `docksal.env`  
-5. `docksal-local.yml`  
-6. `docksal-local.env`
-
 <a name="project-customization"></a>
 ## Customizing project configuration
 
-If you are ready to customize Docksal settings for your project then check out [Customizing project configuration](project-customize.md) 
-to learn about `docksal.yml` structure and differences between dynamic and static configurations for a project.
+If you are ready to customize Docksal services' settings for your project then check out [customizing project configuration](project-customize.md)
+to learn about `docksal.yml` structure and how to properly edit it.

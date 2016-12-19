@@ -1,14 +1,19 @@
 # Customize project configuration
 
-It is recommended to read [Docksal Stack](docksal-stack.yml) explanation before reading this.
-You should understand what project containers are, which configuration files Docksal uses and their loading order.
+It is recommended to read [Docksal Stack](docksal-stack.yml) explanation before reading this manual.
+You should understand what project containers are and what project containers are default.
 
-1. [Understanding configurations](#basics)
-2. [Default configurations](#default-configurations)
+**Understanding configurations**
+
+1. [Basics](#basics)
+2. [Project configuraion files](#docksal-yml)
+2. [Default stacks](#default-configurations)
+3. [Configuration files loading order](#loading-order)
+
+**Using configurations**
+
 3. [Zero-configuration](#zero-configuration)
-4. [Generating custom configuration](#generating)
-  1. [Dynamic](#dynamic)
-  2. [Static](#static)
+4. [Custom configuration](#custom-configuration)
 5. [Don't break your Docksal setup! List of must have values.](#warning)
 6. [Checking your configuration](#checking)
 
@@ -19,17 +24,45 @@ You should understand what project containers are, which configuration files Doc
 3. [Finding supported PHP/MySQL/etc. versions](#docksal-images)
 
 <a name="basics"></a>
-### Understanding configurations
+### Basics
 
+Docksal relies on [Docker Compose](https://docs.docker.com/compose/) to launch groups of related containers.
 yml files are [Compose Files](https://docs.docker.com/compose/compose-file/). Please read documentation on what their main sections are.
 
 !!! danger "REMEMBER DOCKSAL REQUIREMENTS"
-    Some containers and their parameters are must have for Docksal to work properly. Please see [Don't break your Docksal setup!](#warning) section.**
+    Some containers and their parameters are must have for Docksal to work properly. **Please see [Don't break your Docksal setup!](#warning) section.**
 
 You need to run `fin start` to apply configuration changes. If you removed services or volumes you need to remove them with `fin rm [service]`.
 
+## Project configuraion files
+<a name="docksal-yml"></a>
+### docksal.yml
+
+`docksal.yml` is a [Compose file](https://docs.docker.com/compose/compose-file/).
+It's a main configuration file for a project that controls it's services settings, so use it to
+modify settings, that are required for all team members.
+
+If you don't have this file in your project folder, fin will load a [default stack](#default-configurations) providing a zero-configuration setup.
+
+For more details on it's role check [loading order](#loading-order).
+
+<a name="docksal-env"></a>
+### docksal.env
+
+`docksal.env` is an [Environment file](https://docs.docker.com/compose/env-file/).
+
+It is meant to be used to easily override some default environment variables without a need of
+creating `docksal.yml` (for example to override MYSQL_ROOT_PASSWORD) or to provide additional environment
+variables to your automation scripts (see [custom commands](custom-commands.md)).
+
+<a name="docksal-local"></a>
+### docksal-local.yml, docksal-local.env
+
+`docksal-local.yml` and `docksal-local.env` can be used for additional customizations, that happen after main files. See [loading order](#loading-order).
+Good example of their use is [exposing custom port](expose-port.md) or switching PHP version.
+
 <a name="default-configurations"></a>
-## Default configurations
+## Default stacks
 
 Docksal ships with a set of default configurations (stacks), that are yml files stored in `~/.docksal/stacks/`.
 These files are a good starting point of reference when you begin creating your own project configuration.
@@ -39,65 +72,74 @@ These files are a good starting point of reference when you begin creating your 
 
 | File name                  | Description |
 |----------------------------|:------------|
-| `volumes-*.yml`            | Different binding for Docker volumes. Default is `volume-bind.yml` |
-| `services.yml`             | **Main file. Contains default services descriptions** |
-| `stack-default.yml`        | Default stack with 3 services that inherit `services.yml` |
-| `stack-default-static.yml` | Same as `stack-default.yml` but does not inherit `services.yml`|
-| `stack-acquia.yml`         | Acquia-like stack with Solr, Varnish and memcached. Inherits `services.yml`|
-| `stack-acquia.yml`         | Same as `stack-acquia.yml` but does not inherit `services.yml` |
+| `volumes-*.yml`            | Different binding for Docker volumes. Default is `volume-bind.yml`. Used always for volumes binding|
+| `services.yml`             | Contains default services descriptions. Used for zero-configuration |
+| `stack-default.yml`        | Default stack with 3 services that inherits `services.yml`. Used for zero-configuration |
+| `stack-default-static.yml` | Same configuration as `stack-default.yml` but does not inherit `services.yml`|
+| `stack-acquia.yml`         | Acquia-like stack with Solr, Varnish and memcached|
 
+<a name="loading-order"></a>
+## Configuration files loading order
 
-| File name                  | Used for |
-|----------------------------|:------------|
-| `volumes-*.yml`            | `volume-bind.yml` used always for volumes binding |
-| `services.yml`             | Used for dynamic and zero-configuration |
-| `stack-default.yml`        | Used for zero-configuration |
-| `stack-default-static.yml` | Used for `fin config generate --static`|
-| `stack-acquia.yml`         | Example of Acquia-like stack config |
-| `stack-acquia.yml`         | Example of static Acquia-like stack config |
+This swarm of configuration files that Docksal can use, provides flexibility to set up your
+project in a way that works for your team's needs. Just like Bash configuration files
+(/etc/profile, bashrc, bash_profile, bash_logout), they provide flexibility to configure Docksal
+project in dozens of ways.
+
+`fin` loads files in a certain order. Configuration files, that are loaded later, overwrite settings
+from files, that had been loaded earlier. The list below goes from earliest to latest in this queue.
+Files at the bottom load the latest.
+
+You can always see files that were loaded for a project by running `fin config show`.
+
+Loading order:
+
+1. `~/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](docksal-volumes.md))
+2. `~/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` or if forced by `DOCKSAL_STACK` variable in `docksal.env`
+3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise
+4. `docksal.env` - sets or modifies environment variables
+5. `docksal-local.yml` - extends loaded stack or `docksal.yml`
+6. `docksal-local.env` - sets or modifies environment variables set previously
+
 
 <a name="zero-configuration"></a>
-## Zero-configuration (recommended)
+## Zero-configuration
 
-Docksal supports zero-configuration approach. If you simply create a `.docksal` folder in you project root and run `fin start`
-then `stack-default.yml` will be used to create containers, which should be a great way for majority of projects that only need
-web server and PHP.
+You can simply create a `.docksal` folder in you project root and run `fin start`.
+`stack-default.yml` will be loaded and used to create containers in this case.
 
-<a name="generating"></a>
-If you're not going to use zero configuration, but will create a standalone one for your project, then it's recommended to use generation to create initial files. However you can also just copy them manually. It is **not recommended to start from empty Compose File file or use one from other systems.** Docksal has some must have requirements to containers and configurations that should be present in your config for Docksal to work properly.
+This is a great way to start developing a new project or it can be used all the time
+if it's one or two people project. `stack-default.yml` inherits `services.yml` so
+you'll get latest versions of containers.
 
-<a name="dynamic"></a>
-### Custom dynamic configuration
+### Zero-configuration stacks
 
-Dynamic configuration is the one that can be generated with:
+You can switch between pre-created zero-configuration stacks by adding a following line to your `docksal.env` file and running `fin reset`.
+
+```
+DOCKSAL_STACK="acquia"
+```
+
+There are following stacks present:
+- `default` - web, db, cli (assumed, when none specified)
+- `acquia` - web, db, cli, varnish, memcached, solr
+
+<a name="custom-configuration"></a>
+### Custom configuration
+
+When you start a larger project, that needs customizations to default or non-default services.
+A project where CI server is involved or there are many people and you need to maintain software versions across the team.
+Or if you just want to protect your configuration from future `services.yml` updates, then you need to generate your own configuration.
 
 ```bash
 fin config generate
 ```
 
-It will create `docksal.yml` by copying `stack-default.yml` file. This type of configuration extends default `services.yml` file. Advantage is that your configuration is much more simple, which leaves less space for error (especially for unexperienced developers) and it will update to the latest version of Docksal images and practices automatically, while with static configuration manual updates might be required. Cons is that `services.yml` may change with Docksal updates, which is not always desirable with more complex projects.
+It will create `docksal.yml` by copying `stack-default-static.yml` file.
+This file has fully independent descriptions of services. Future changes to `services.yml` will not affect your config.
 
-Dynamic configuration approach is recommended for majority of projects that need something more than zero configuration, a Drupal or Wordpress project of low to medium complexity.
-
-**If you're not sure what to choose, this one is recommended. You can always switch to static one.**
-
-!!! note "Why pay more?"
-    Out-of-the box dynamic configuration is no different than out-of-the box static one. The only difference is how each of them handles future updates of default configs.
-
-<a name="static"></a>
-### Static configuration (advanced)
-
-When you start a larger project, that needs customizations to default or non-default services, or you want to protect from future `services.yml` updates, then you probably want to generate a static configuration, that will not depend on `services.yml`.
-
-This can be done with additional parameter:
-
-```bash
-fin config generate --static
-```
-
-It will create `docksal.yml` by copying `stack-default-static.yml` file. This file has fully independent descriptions of services. Future changes to `services.yml` will not affect your config.
-
-Which also means that if future Docksal update brings new features and changes to `services.yml`, then you might need to re-generate or re-create your static configuration or append those changes manually to your `docksal.yml` if you want to benefit from those new features.
+Which also means that if future Docksal update brings new features and changes to `services.yml`, then you might need to re-generate
+or re-create your static configuration or append those changes manually to your `docksal.yml` if you want to benefit from those new features.
 
 <a name="warning"></a>
 ### Don't break your Docksal setup! List of must have values.
@@ -107,7 +149,7 @@ Which also means that if future Docksal update brings new features and changes t
 
 There are some values that are not required for docker-compose to work but are required for Docksal stack to function.
 
-**1.** In `web` service these are a volume, labels, and environment veriables. You should not remove ro change these volume, labels or variables.
+**1.** In `web` service these are a volume, labels, environment variables and a dependency. You should not remove or change these volume, labels or variables.
 
 ```yaml
   web:
@@ -120,6 +162,9 @@ There are some values that are not required for docker-compose to work but are r
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
       - VIRTUAL_HOST=${VIRTUAL_HOST}
+    # cli has to be up before web
+    depends_on:
+      - cli
 ```
 
 **2.** In `cli` service it's a volumes section. You should not remove or change these volumes.
@@ -133,15 +178,6 @@ There are some values that are not required for docker-compose to work but are r
       - host_home:/.home:ro
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
-```
-
-**3.** For static configurations there's an additional requirement to maintain `web` container dependence on `cli`.
-
-```yaml
-  web:
-    # cli has to be up before web
-    depends_on:
-      - cli
 ```
 
 <a name="checking"></a>
@@ -236,12 +272,16 @@ Here `docksal/cli` is the name of the docker image, while `1.0-php7` is it's tag
 
 [How to find out all supported PHP versions?](#docksal-images)
 
-### Overriding with `docksal-local.yml`
+### Extend or modify config with `docksal-local.yml` or `docksal.yml`
 
-Whether you use zero-configuration or any other you can override images with `docksal-local.yml`.
-Change PHP version by overriding `image` value for `cli` container.
+If you use zero-configuration (or any other) you can change used images with `docksal-local.yml`.
 
-Example `docksal-local.yml`:
+Same technique is **applicable to `dosksal.yml` if `DOCKSAL_STACK` is set in `docksal.env`**, as in this case
+`docksal.yml` will extend/modify configuration instead of overriding it.
+
+Change PHP version by providing `image` value for `cli` container.
+
+Example `docksal-local.yml` or `docksal.yml`:
 
 ```yaml
 version: "2.1"
@@ -257,43 +297,14 @@ services:
 
 `docksal-local.yml` will append to or modify configuration what was loaded before it, regardless of whether it was `stack-default.yml` or `docksal.yml`.
 
-### Overriding with `docksal.yml`
+`docksal.yml` will append to or modify configuration only if `DOCKSAL_STACK` is set in `docksal.env`.
 
-`docksal.yml` prevents `stack-default.yml` from loading so if you are doing it with `docksal.yml`,
-then you need to describe all services, not just the one you want to override.
+### Override config with `docksal.yml`
 
-Example of `docksal.yml` dynamic configuration overriding `cli` service image to change used PHP version:
+If you don't use any stack (`docksal.yml` is present and `DOCKSAL_STACK` is not set) then you are in control of everything.
+You don't inherit `services.yml` so you should fully describe `cli` container.
 
-```yaml
-version: "2.1"
-
-services:
-  # Web
-  web:
-    extends:
-      file: ${HOME}/.docksal/stacks/services.yml
-      service: web
-    depends_on:
-      - cli
-
-  # DB
-  db:
-    extends:
-      file: ${HOME}/.docksal/stacks/services.yml
-      service: db
-
-  # CLI
-  cli:
-    extends:
-      file: ${HOME}/.docksal/stacks/services.yml
-      service: cli
-    image: docksal/cli:1.0-php5
-```
-
-### Overriding with `docksal.yml` (static configuration)
-
-If you are using static config, then you are in control of everything. You don't inherit `services.yml` so you should fully describe container.
-Example **part** of `docksal.yml` with static configuration for `cli`:
+Example of **part** of `docksal.yml` with configuration for `cli` overriding PHP version:
 
 ```yaml
 services:
@@ -305,6 +316,8 @@ services:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw
 ```
+
+Note, that you **should** fully describe all other services (web, db, etc.) as well if you don't use stack.
 
 <a name="mysql-version"></a>
 ## Switching MySQL version
