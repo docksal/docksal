@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.14.8
+FIN_VERSION=0.15.0
 
 # Console colors
 red='\033[0;91m'
