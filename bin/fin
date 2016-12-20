@@ -2558,8 +2558,8 @@ mysql ()
 
 	check_docksal_environment
 	container_id=$(get_container_id "db")
-	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
-	${winpty} docker exec -it "$container_id" bash -ic "mysql ${__mysql_command}"
+	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
+	${winpty} docker exec -it "$container_id" mysql ${__mysql_command}
 }
 
 # Show databases list
