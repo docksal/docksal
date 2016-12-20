@@ -18,7 +18,7 @@ Try one of the preconfigured projects:
 - [Drupal 8 sample project](https://github.com/docksal/drupal8)  
 - [WordPress sample project](https://github.com/docksal/wordpress)
 
-<sup>*</sup>Once you are done with a one-time [Docksal environment setup](/docs/env-setup.md)
+<sup>*</sup>Once you are done with a one-time [Docksal environment setup](env-setup.md)
 
 <a name="setup"></a>
 ## Docksal Setup
@@ -51,29 +51,29 @@ fin update
 ## Tutorials
 
 ### Advanced configuration
-- [Running multiple projects](/docs/multiple-projects.md)
-- [Drupal settings](/docs/drupal-settings.md)
-- [MySQL DB access for external tools](/docs/db-access.md)
-- [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
-- [Automatic database import](docs/db-import.md)
-- [DB sandbox mode](/docs/db-sandbox.md)
-- [Extending fin with custom commands](/docs/custom-commands.md)
-- [Increasing vm memory (RAM)](/docs/vm.md)
-- [Exposing any Docker container's port](/docs/expose-port.md)
-- [Customize project configuration or switch PHP/MySQL version](/docs/project-customize.md)
+- [Running multiple projects](multiple-projects.md)
+- [Drupal settings](drupal-settings.md)
+- [MySQL DB access for external tools](db-access.md)
+- [Overriding default PHP/MySQL/etc. settings](settings.md)
+- [Automatic database import](db-import.md)
+- [DB sandbox mode](db-sandbox.md)
+- [Extending fin with custom commands](custom-commands.md)
+- [Increasing vm memory (RAM)](vm.md)
+- [Exposing any Docker container's port](expose-port.md)
+- [Customize project configuration or switch PHP/MySQL version](project-customize.md)
 
 ### Utililies
-- [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
-- [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
-- [Sending and capturing e-mail](/docs/mail.md)
-- [SASS/Compass](/docs/sass.md)
-- [PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
-- [Varnish](/docs/varnish.md)
-- [Memcached](/docs/memcached.md)
-- [Apache Solr](/docs/apache-solr.md)
-- [Blackfire profiler](/docs/blackfire.md)
-- [Behat](/docs/behat.md)
-- [Public access via ngrok](/docs/public-access.md)
+- [Debugging with Xdebug and PhpStorm](xdebug.md)
+- [Using custom ssh keys (with or without passwords) via ssh-agent](ssh-agent.md)
+- [Sending and capturing e-mail](mail.md)
+- [SASS/Compass](sass.md)
+- [PHP Code Sniffer (phpcs, phpcbf)](phpcs.md)
+- [Varnish](varnish.md)
+- [Memcached](memcached.md)
+- [Apache Solr](apache-solr.md)
+- [Blackfire profiler](blackfire.md)
+- [Behat](behat.md)
+- [Public access via ngrok](public-access.md)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
@@ -89,7 +89,7 @@ fin update
 
 If quick fixes above did not help, try:
 
-- checking [troubleshooting doc](docs/troubleshooting.md) for rare problems that might occur
+- checking [troubleshooting doc](troubleshooting.md) for rare problems that might occur
 - searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced same or a similar issue and have already found a solution or a workaround.
 - asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
 
