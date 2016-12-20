@@ -59,7 +59,7 @@ teardown() {
 	cd docroot
 
 	# Create backup
-	run fin mysql-dump default ../dump.sql --db-user=user --db-password=user
+	run fin mysql-dump ../dump.sql --db-user=user --db-password=user
 
 	echo "$output" | grep "Exporting..."
 	echo "$output" | grep "OK"
@@ -80,7 +80,7 @@ teardown() {
 	cd docroot
 
 	# Import mysql dump
-	run fin mysql-import default ../dump.sql --force
+	run fin mysql-import ../dump.sql --force
 	echo "$output" | grep "Truncating"
 	echo "$output" | grep "Importing"
 	echo "$output" | grep "OK"
