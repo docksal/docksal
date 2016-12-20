@@ -884,8 +884,8 @@ show_help ()
 	echo
 	printh "sqlc" "Opens mysql shell to current project database (${yellow}fin help sqlc${NC})"
 	printh "sqls" "Show list of available databases (${yellow}fin help sqls${NC})"
-	printh "sqld <database> <file>" "Dump specified database into file (${yellow}fin help sqld${NC})"
-	printh "sqli <database> <file>" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
+	printh "sqld [file]" "Dump specified database into file (${yellow}fin help sqld${NC})"
+	printh "sqli [file]" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
 
 	echo
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
@@ -1042,11 +1042,10 @@ show_help_mysql_list ()
 	show_help_sqls
 }
 
-
 show_help_sqli ()
 {
-	echo-green "Import SQL DB dump into the database, truncating it first (alias: mysql-import)"
-	printh "fin sqli <dump_file.sql>" "" "yellow"
+	echo-green "Truncate database and import dump from file or stdin (alias: mysql-import)"
+	printh "fin sqli [dump_file.sql]" "" "yellow"
 	echo
 	echo -e "DB dump file should be plain ${yellow}.sql${NC} file."
 	echo
@@ -1057,8 +1056,8 @@ show_help_sqli ()
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	echo
 	echo-green "Examples:"
-	printh "fin sqli ../../mydump.sql" "	Import plaintext sql dump into 'drupal' database"
-	printh "fin sqli ../../mydump.sql --force" "Import plaintext sql dump into 'drupal' database (no questions)"
+	printh "fin sqli ~/dump.sql --db=drupal" "	Import plaintext sql dump into database named 'drupal' (DB should exist)"
+	printh "cat ~/dump.sql | fin sqli" "	Import dump from stdin into default database"
 	echo
 }
 show_help_mysql-import ()
@@ -1077,8 +1076,8 @@ show_help_sqld ()
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	echo
 	echo-green "Examples:"
-	printh "fin sqld ~/dump.sql" "Export database set in 'MYSQL_DATABASE' into ~/dump.sql"
-	printh "fin sqld --db=drupal" "Export database 'drupal' into stdout"
+	printh "fin sqld ~/dump.sql" "Export default database dump"
+	printh "fin sqld --db=drupal" "Export database 'drupal' dump into stdout"
 	echo
 }
 show_help_mysql-dump ()
