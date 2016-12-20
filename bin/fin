@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.14.0
+FIN_VERSION=0.15.0
 
 # Console colors
 red='\033[0;91m'
@@ -30,7 +30,7 @@ FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Rewrite $HOME on windows to be absolute path in Unix notation
 if (uname | grep 'CYGWIN_NT' >/dev/null); then
 	BABUN_WIN_HOME="$HOME"
-	HOME="/$(cygpath -m $HOME | sed 's/\([A-Z]\)\:/\l\1/')"
+	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
 # DO NOT REMOVE HOST_HOME. It is used in some stack yml files and is necessary on Windows.
 export HOST_HOME="$HOME"
@@ -82,7 +82,9 @@ URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_FIN="${URL_REPO}/${FIN_BRANCH}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${FIN_BRANCH}/stacks/services.yml"
 URL_STACKS_STACK_ACQUIA="${URL_REPO}/${FIN_BRANCH}/stacks/stack-acquia.yml"
+URL_STACKS_STACK_ACQUIA_STATIC="${URL_REPO}/${FIN_BRANCH}/stacks/stack-acquia-static.yml"
 URL_STACKS_STACK_DEFAULT="${URL_REPO}/${FIN_BRANCH}/stacks/stack-default.yml"
+URL_STACKS_STACK_DEFAULT_STATIC="${URL_REPO}/${FIN_BRANCH}/stacks/stack-default-static.yml"
 URL_STACKS_VOLUMES_BIND="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-bind.yml"
 URL_STACKS_VOLUMES_NFS="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-nfs.yml"
 URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-unison.yml"
@@ -182,6 +184,17 @@ if_failed_error ()
 	fi
 }
 
+_PWD=$(which pwd)
+# Override default pwd function on windows and remove /cygdrive part from the path
+pwd ()
+{
+	if (uname | grep 'CYGWIN_NT' >/dev/null); then
+		"$_PWD" | sed 's/^\/cygdrive//'
+	else
+		"$_PWD"
+	fi
+}
+
 # Search for a file/directory in a directiry tree upwards. Return it's path.
 # @param $1 filename
 upfind ()
@@ -194,9 +207,11 @@ upfind ()
 		done;
 		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; exit; fi
 	)
-	# On Windows return full absolute path in Unix notation
-	if [[ "$BABUN_WIN_HOME" != "" ]] && [[ "$_path" = "$BABUN_WIN_HOME"* ]]; then
-		echo "/$(cygpath -m ${_path} | sed 's/\([A-Z]\)\:/\l\1/')"
+	# On Windows compensate for getting down to "" and return full absolute path in Unix notation
+	# upfind on windows may return FAKED HOME PATH! because of that. KEEP that in mind
+	[[ "$_path" == "" ]] && _path="$HOME"
+	if [[ "$BABUN_WIN_HOME" != "" ]]; then
+		echo "/$(cygpath -m ${_path} | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 	else
 		echo "$_path"
 	fi
@@ -219,7 +234,8 @@ get_project_path ()
 get_project_path_dc ()
 {
 	if is_windows ; then
-		echo "$(get_project_path)" | sed "s/^\/\([a-z]\)/\1:/g"
+		local _path="$(get_project_path)"
+		[[ "$_path" != "" ]] && cygpath -m "$_path"
 	else
 		echo "$(get_project_path)"
 	fi
@@ -230,7 +246,7 @@ get_project_path_dc ()
 get_config_dir_dc ()
 {
 	if is_windows ; then
-		echo "$CONFIG_DIR" | sed "s/^\/\([a-z]\)/\1:/g"
+		cygpath -m "$CONFIG_DIR"
 	else
 		echo "$CONFIG_DIR"
 	fi
@@ -378,6 +394,36 @@ is_docker_native ()
 {
 	# comparison returns error codes
 	[[ "$DOCKER_NATIVE" == "1" ]]
+}
+
+# Check if file has crlf endings
+# param $1 filename
+is_crlf ()
+{
+	[[ "$(grep -c $'\r' $1)" -gt 0 ]]
+}
+
+# Check if file has crlf endings and fix it
+# param $1 filename
+fix_crlf ()
+{
+	CR=$'\r'
+	cat "$1" | sed "s/$CR//" | tee "$1" >/dev/null
+}
+
+# Check if file has crlf endings, warn about it and fix it
+# param $1 filename
+fix_crlf_warning ()
+{
+
+	if (is_crlf "$1"); then
+		if is_tty; then
+			echo -e "${red}WARNING: ${NC}${yellow}$1${NC} has CRLF line endings."
+			echo-red "You should configure your git or repo to always use LF line endings for Docksal files"
+			_confirm "Fix this file automatically?"
+		fi
+		fix_crlf "$1"
+	fi
 }
 
 # checks if binary exists and fails is it isn't
@@ -672,6 +718,25 @@ _remove_containers ()
 	fi
 }
 
+# Remove containers for non-exiting projects.
+_remove_dangling_containers ()
+{
+	echo-green "Checking for orphaned containers..."
+	projects=$(docker ps -a --filter "label=io.docksal.project-root" \
+		--filter "label=com.docker.compose.project" \
+		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
+	for project in $projects; do
+		IFS=':' read project_name project_root <<< "$project";
+		if [[ ! -d "$project_root" ]]; then
+			echo "Directory for project \"$project_name\" does not exist. Removing containers..."
+			docker ps -q -a --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -fv
+			local network="${project_name}_default"
+			docker network disconnect "$network" docksal-vhost-proxy
+			docker network rm "$network"
+		fi
+	done
+}
+
 # Remove dangling images
 _remove_dangling_images ()
 {
@@ -705,6 +770,7 @@ _docker_cleanup ()
 
 	_remove_dangling_images
 	_remove_dangling_volumes
+	_remove_dangling_containers
 
 	# TODO: remove below lines in 2017
 	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
@@ -827,7 +893,7 @@ show_help ()
 
 	echo
 	printh "alias" "Create/remove folder aliases (${yellow}fin help alias${NC})"
-	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
+	printh "config [command]" "Display/generate project configuration (${yellow}fin help config${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "share" "Share web server of the current project on the internet using ngrok"
@@ -1082,11 +1148,14 @@ show_help_config ()
 	echo-green "Display/generate project configuration"
 	printh "fin config [command]" "" "yellow"
 	echo
-	echo-green "Commands:"
+	echo-green "Config commands:"
 	printh "show" "Display full effective configuration for the project"
-	printh "env" "Display only nevironment variables section of effective configuration"
+	printh "env" "Display only environment variables section"
 	printh "generate" "Generate Docksal configuration for the project"
-	printh "generate --static" "Generate static Docksal configuration for the project"
+	printh "images" "Show all Docksal images on Docker Hub"
+	printh "images [image name]" "Show all tags for certain image"
+	echo-green "Examples:"
+	printh "fin config images docksal/db" "Show all tags for docksal/db image"
 	echo
 }
 
@@ -1336,6 +1405,10 @@ docker_machine_remove ()
 			echo-green "Removing SMB shares..."
 			docker_machine_remove_smb
 		fi
+		if is_mac; then
+			echo-green "Removing NFS exports..."
+			docker_machine_remove_nfs
+		fi
 	else
 		docker-machine rm -f "$machine_name"
 	fi
@@ -1453,6 +1526,39 @@ docker_machine_mount_nfs ()
 			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			# [!!] Think twice about performance before changing nfs settings
 	done
+}
+
+docker_machine_remove_nfs ()
+{
+	local machine_name="$DOCKER_MACHINE_NAME"
+	# Remove our own old exports
+	local exports_open="# <ds-nfs $machine_name"
+	local exports_close="# ds-nfs>"
+	local exports=$(cat /etc/exports 2>/dev/null | \
+		tr "\n" "\r" | \
+		sed "s/${exports_open}.*${exports_close}//" | \
+		tr "\r" "\n"
+	)
+
+	# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
+	local exports_test="/tmp/etc.exports.$RANDOM"
+	echo -e "$exports" | tee "$exports_test" >/dev/null
+	exports_errors=$(nfsd -F "$exports_test" checkexports 2>&1)
+	rm -f "$exports_test" >/dev/null 2>&1
+
+	# Do not write /etc/exports if there are config check errors
+	if [[ "$exports_errors" != '' ]]; then
+		echo-error "$exports_errors"
+		echo "-----------------"
+		echo -e "$exports"
+		echo "-----------------"
+		return 1
+	fi
+
+	echo "Writing and applying /etc/exports..."
+	echo -e "$exports" | sudo tee /etc/exports >/dev/null
+	sudo nfsd restart
+	sleep 2
 }
 
 # Fix/optimize Windows network settings for file sharing.
@@ -1653,7 +1759,7 @@ vm ()
 			vm-ram "$@"
 			;;
 		*)
-			show_help_vm
+			docker-machine ls
 			;;
 	esac
 }
@@ -1752,9 +1858,22 @@ install_proxy_service ()
 	docker rm -f vhost-proxy >/dev/null 2>&1 || true
 
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
+	docker volume rm docksal_projects >/dev/null 2>&1 || true
+
+	# Create a bind mount volume to the projects directory if defined. If not - create an empty volume.
+	local volume_options=""
+	[[ "$PROJECTS_ROOT" != "" ]] && [[ -d "$PROJECTS_ROOT" ]] && \
+	    # Don't use quotes with the device option or the bind mount will not work
+	    volume_options="--opt type=none --opt device=$PROJECTS_ROOT --opt o=bind"
+    docker volume create --name docksal_projects $volume_options >/dev/null 2>&1
+
+	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
+	# and are inactive unless configured.
 	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
 		-p 80:80 -p 443:443 \
-		-e INACTIVITY_TIMEOUT="${INACTIVITY_TIMEOUT:-24h}" \
+		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
+		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
+		-v docksal_projects:/projects \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 }
@@ -2095,7 +2214,9 @@ update_config_files ()
 	files_to_download="
 			$URL_STACKS_SERVICES
 			$URL_STACKS_STACK_ACQUIA
+			$URL_STACKS_STACK_ACQUIA_STATIC
 			$URL_STACKS_STACK_DEFAULT
+			$URL_STACKS_STACK_DEFAULT_STATIC
 			$URL_STACKS_VOLUMES_BIND
 			$URL_STACKS_VOLUMES_NFS
 			$URL_STACKS_VOLUMES_UNISON
@@ -2103,13 +2224,11 @@ update_config_files ()
 	# TODO: cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
-		echo "Starting..."
 		for f in ${files_to_download}; do
-			echo-rewrite "$(basename ${f})"
+			echo "$(basename ${f})"
 			# exit subshell with error if download failed
 			curl -kfsSLO "$f" || exit 1
 		done
-		echo-rewrite "Done"
 	)
 
 	if_failed_error "One of the default configs was not downloaded." \
@@ -2255,11 +2374,7 @@ update ()
 			local new_version=$(${FIN_PATH_UPDATED} v)
 			echo "fin $new_version downloaded..."
 
-			# check for different updates on next run
-			# TODO: UNCOMMENT
-			#rm -f "$CONFIG_LAST_CHECK" >/dev/null 2>&1
-
-			# Run other updates with newly downloaded fin version
+			# Run other Updates 2-5 with newly downloaded fin version
 			( "$FIN_PATH_UPDATED" update )
 
 			# overwrite old fin
@@ -2291,7 +2406,9 @@ update ()
 			--format '{{.Label "io.docksal.project-root"}}'
 		)
 		for project in ${running_projects}; do
-			(cd "$project" && fin up)
+			# use updated version when updated
+			[[ ! -f "$FIN_PATH_UPDATED" ]] && FIN_PATH_UPDATED="fin"
+			(cd "$project" && "$FIN_PATH_UPDATED" start)
 		done
 	fi
 
@@ -2309,8 +2426,9 @@ check_for_updates ()
 	timestamp=$(date +%s)
 	# Set last_check to 0 if empty
 	last_check=$(cat "$CONFIG_LAST_CHECK" 2>/dev/null || echo 0)
-	# Check once a week
-	next_check=$(($last_check+604800))
+	# Check once bi-weekly
+	local one_week=$((60*60*24*7))
+	next_check=$(( $last_check+($one_week*2) ))
 	if [ ${timestamp} -le ${next_check} ]; then
 		return;
 	fi
@@ -2325,8 +2443,8 @@ check_for_updates ()
 	if [[ $(ver_to_int "$new_version") > $(ver_to_int ${FIN_VERSION}) ]]; then
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
-		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ] (run ${green}fin update${NC} to update)"
-		echo "Press Enter."
+		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ]"
+		echo "Press Enter to continue"
 		read -p ''
 	fi
 
@@ -2847,6 +2965,7 @@ load_configuration ()
 	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
 	if [[ -f "$env_file" ]]; then
 		ENV_FILE="$env_file"
+		fix_crlf_warning "$env_file"
 		# Source and allexport variables in the .env file
 		set -a; source "$env_file"; set +a
 	fi
@@ -2855,33 +2974,30 @@ load_configuration ()
 	# Allow using this with the pre-configured stacks by not checking docksal.env presence.
 	if [[ -f "$local_env_file" ]]; then
 			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
+			fix_crlf_warning "$local_env_file"
 			# Source and allexport variables in the .env file
 			set -a; source "$local_env_file"; set +a
 	fi
 	export ENV_FILE
 
-	# Legacy/traditional setup support
-	# TODO: get rid of this in 2017
-	legacy_yml_file="$(get_project_path_dc)/docker-compose.yml"
-	if [[ -f "$legacy_yml_file" ]]; then
-		COMPOSE_FILE="$legacy_yml_file"
-		echo "WARNING: Please move your docker-compose.yml file into .docksal/docksal.yml" >&2
-	fi
 	# Set COMPOSE_FILE unless it has been already set by user
 	if [[ "$COMPOSE_FILE" == "" ]]; then
-		# Allow to defined the default stack file.
-		DOCKSAL_STACK=${DOCKSAL_STACK:-default}
-
-		default_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
-		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
-		# Use .docksal/docksal.yml by default (if exists)
-		if [[ -f "$yml_file" ]]; then
-			COMPOSE_FILE="$yml_file"
-		# Otherwise use the default.yml stack config (if exists)
-		elif [[ -f "$default_yml_file" ]]; then
-			COMPOSE_FILE="$default_yml_file"
+
+		# Allow to define the stack file via DOCKSAL_STACK
+		# Set it to "default" if empty and there is no project yml file
+		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
+		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+
+		# Include both the stack and the project yml files if both exist
+		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
+			COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
+		# Otherwise try including only one that exists
+		else
+		    [[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
+		    [[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
 		fi
+
 		# Throw an error if COMPOSE_FILE is empty here
 		if [[ "$COMPOSE_FILE" == "" ]]; then
 			echo-error "No configuration files found." "Expected in $yml_file"
@@ -2889,20 +3005,22 @@ load_configuration ()
 		else
 			# Include docksal-local.yml (if exists)
 			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+    		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
-		# Experimental: Include a volumes yml if requested.
-		# Use bind mount for volumes if using default stack.
-		[[ "$DOCKSAL_VOLUMES" == "" ]] && DOCKSAL_VOLUMES="bind"
-		volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-		if [[ -f "$volumes_yml_file" ]]; then
-			COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
-		else
-			echo-error "Volumes definition not found in ${volumes_yml_file}." \
-				"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
-				"You may need to run ${yellow}fin update${NC} to download volume definitions."
-			exit 1
+		# Include a volumes yml if requested. Use bind mount for volumes by default.
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
+			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+			if [[ -f "$volumes_yml_file" ]]; then
+				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
+			else
+				echo-error "Volumes definition not found in ${volumes_yml_file}." \
+					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
+					"You may need to run ${yellow}fin update${NC} to download volume definitions."
+				exit 1
+			fi
 		fi
 	fi
 	export COMPOSE_FILE
@@ -2942,13 +3060,19 @@ config_show ()
 	# Replace separators with new lines
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	echo -e "COMPOSE_FILE:\n$(echo ${COMPOSE_FILE} | tr ${SEPARATOR} '\n')"
-	echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
+	[[ "$ENV_FILE" != "" ]] &&
+		echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
 	echo
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
-	local IP="$(fin vm ip)"; [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
+
+	local IP;
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="$(fin vm ip)"
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" != 1 ]] && IP="127.0.0.1"
+	(is_linux) && IP="$DOCKSAL_DEFAULT_IP"
 	echo "IP: $IP"
+
 	echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$IP/")
 	[[ "$1" == "env" ]] && return
 
@@ -2961,38 +3085,51 @@ config_show ()
 
 config_generate ()
 {
-	eval $(parse_params "$@")
-	# Allow to defined the default stack file.
-	DOCKSAL_STACK=${DOCKSAL_STACK:-default}
-	if [[ "$static" == "static" ]]; then
-		DOCKSAL_STACK="$DOCKSAL_STACK-static"
+	local stack_file="$(get_config_dir_dc)/stacks/stack-default-static.yml"
+
+	if [[ ! -f ${stack_file} ]]; then
+		echo-error "Stack file does not exist: $stack_file" "Try running ${yellow}fin update${NC}"
+		exit 1
 	fi
-	yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 
-	if [[ -f ${yml_file} ]]; then
-		if [[ -d .docksal ]]; then
-			echo-yellow ".docksal directory already exists."
-			_confirm "Remove it and start from scratch?"
-			rm -rf ./.docksal
-		fi
+	if [[ -f ".docksal/docksal.yml" ]]; then
+		echo-yellow ".docksal/docksal.yml already exists"
+		_confirm "Do you want to proceed and overwrite it?"
+	fi
 
-		mkdir .docksal && \
-		# Use bind mount volumes by default
-		echo '' > .docksal/docksal.env && \
-		cp "$yml_file" ".docksal/docksal.yml"
-		if [[ ! -f 'docroot/index.php' ]]; then
-			# Setup docroot and a basic index.php
-			mkdir -p docroot && \
-			echo '<?php phpinfo();' > docroot/index.php
-		fi
+	# Create .docksal directory if it does not exist
+	mkdir -p ".docksal"
+	# Create docksal.env if it does not exist
+	touch ".docksal/docksal.env" && \
+    # remove DOCKSAL_STACK from env file if present
+    (cat ".docksal/docksal.env" | sed "s/^DOCKSAL_STACK=.*//" | tee ".docksal/docksal.env" >/dev/null) && \
+    # Override docksal.yml with the default stack file
+    cp -f "$stack_file" ".docksal/docksal.yml"
 
-		if [[ $? == 0 ]]; then
-			echo-green "$DOCKSAL_STACK stack configuration generated. You can start it with ${yellow}fin start${NC}"
-		else
-			echo-error "Something went wrong. Check error messages above."
-		fi
+	local DOCROOT="${DOCROOT:-docroot}"
+	# Create a basic docroot and index.php if not present
+	if [[ ! -d "$DOCROOT" ]] || [[ ! -f "$DOCROOT/index.php" ]]; then
+		# Setup docroot and a basic index.php
+		mkdir -p "$DOCROOT" &&
+		echo '<?php phpinfo();' > "$DOCROOT/index.php"
+	fi
+
+	if [[ $? == 0 ]]; then
+		echo-green "Configuration was generated. You can start it with ${yellow}fin start${NC}"
 	else
-		echo-error "Stack file does not exist: $yml_file" "Try running ${yellow}fin update${NC}"
+		echo-error "Something went wrong. Check error messages above."
+	fi
+}
+
+config_images ()
+{
+	if [[ "$1" != "" ]]; then
+		echo "$1 tags"
+		echo "----------"
+		# for instance $1 == "docksal/db"
+		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | cut -d " " -f2 | tr -d \"
+	else
+		fin docker search "docksal" | grep "^docksal\/"
 	fi
 }
 
@@ -3115,8 +3252,7 @@ fi
 	[[ "$*" != "st -a" ]] && [[ "$*" != "st --all" ]] &&
 	[[ "$*" != "status -a" ]] && [[ "$*" != "status --all" ]] &&
 	load_configuration &&
-	check_for_updates
-
+	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
 # Parse other parameters
 case "$1" in
@@ -3124,6 +3260,7 @@ case "$1" in
 		shift
 		bash_comp_words "$@"
 		;;
+	# TODO: pick one, get rid of the other one.
 	up|start)
 		shift
 		up
@@ -3136,6 +3273,7 @@ case "$1" in
 		shift
 		restart
 		;;
+	# TODO: pick one, get rid of the other one (st vs ps).
 	status|st|ps)
 		shift
 		status "$@"
@@ -3282,6 +3420,9 @@ case "$1" in
 		if [[ "$1" == "generate" ]]; then
 			shift;
 			config_generate "$@";
+		elif [[ "$1" == "images" ]]; then
+			shift
+			config_images "$@"
 		else
 			config_show "$@"
 		fi
@@ -3310,12 +3451,17 @@ case "$1" in
 			echo-yellow "Unknown command '$*'. See 'fin help' for list of available commands" && \
 			exit 1
 
+		# if it's not executable let's fix it
 		if [[ ! -x "$command_script" ]]; then
 			echo -e "${yellow}$command_script${NC} is not set to be executable."
 			_confirm "Fix automatically?"
 			chmod +x "$command_script"
 			if_failed "Could not make $command_script executable"
 		fi
+
+		# if it has windows line endings let's fix it
+		fix_crlf_warning "$command_script"
+
 		shift
 		exec "$command_script" "$@"
 esac

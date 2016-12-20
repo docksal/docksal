@@ -60,17 +60,19 @@ fin update
 - [Extending fin with custom commands](/docs/custom-commands.md)
 - [Increasing vm memory (RAM)](/docs/vm.md)
 - [Exposing any Docker container's port](/docs/expose-port.md)
+- [Customize project configuration or switch PHP/MySQL version](/docs/project-customize.md)
 
 ### Utililies
 - [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
 - [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
 - [Sending and capturing e-mail](/docs/mail.md)
-- [Using SASS/Compass](/docs/sass.md)
-- [Using PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
-- [Enabling Varnish support](/docs/varnish.md)
-- [Enabling Apache Solr support](/docs/apache-solr.md)
-- [Using Blackfire profiler](/docs/blackfire.md)
-- [Using Behat](/docs/behat.md)
+- [SASS/Compass](/docs/sass.md)
+- [PHP Code Sniffer (phpcs, phpcbf)](/docs/phpcs.md)
+- [Varnish](/docs/varnish.md)
+- [Memcached](/docs/memcached.md)
+- [Apache Solr](/docs/apache-solr.md)
+- [Blackfire profiler](/docs/blackfire.md)
+- [Behat](/docs/behat.md)
 - [Public access via ngrok](/docs/public-access.md)
 
 <a name="troubleshooting"></a>
