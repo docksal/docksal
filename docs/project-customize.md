@@ -125,7 +125,7 @@ There are following stacks present:
 - `acquia` - web, db, cli, varnish, memcached, solr
 
 <a name="custom-configuration"></a>
-### Custom configuration
+## Custom configuration
 
 When you start a larger project, that needs customizations to default or non-default services.
 A project where CI server is involved or there are many people and you need to maintain software versions across the team.
