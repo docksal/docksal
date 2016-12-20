@@ -1057,8 +1057,8 @@ show_help_sqli ()
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	echo
 	echo-green "Examples:"
-	printh "fin sqli drupal ../../mydump.sql" "	Import plaintext sql dump into 'drupal' database"
-	printh "fin sqli drupal ../../mydump.sql --force" "Import plaintext sql dump into 'drupal' database (no questions)"
+	printh "fin sqli ../../mydump.sql" "	Import plaintext sql dump into 'drupal' database"
+	printh "fin sqli ../../mydump.sql --force" "Import plaintext sql dump into 'drupal' database (no questions)"
 	echo
 }
 show_help_mysql-import ()
@@ -1068,8 +1068,8 @@ show_help_mysql-import ()
 
 show_help_sqld ()
 {
-	echo-green "Export database from db container into file (alias: mysql-dump)"
-	printh "fin sqld <dump_file>" "" "yellow"
+	echo-green "Export database from db container into file or stdout (alias: mysql-dump)"
+	printh "fin sqld [dump_file]" "" "yellow"
 	echo
 	echo-green "Parameters:"
 	printh "--db=drupal" "Use another database (default is the one set with 'MYSQL_DATABASE')"
@@ -1077,7 +1077,8 @@ show_help_sqld ()
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	echo
 	echo-green "Examples:"
-	printh "fin sqld drupal ~/dump.sql" "Export database 'drupal' into ~/dump.sql"
+	printh "fin sqld ~/dump.sql" "Export database set in 'MYSQL_DATABASE' into ~/dump.sql"
+	printh "fin sqld --db=drupal" "Export database 'drupal' into stdout"
 	echo
 }
 show_help_mysql-dump ()
@@ -2642,7 +2643,7 @@ mysql_import ()
 
 # Dump mysql database
 # @params
-# $1 - file name
+# $1 - file name, if ommitted then stdout
 # --db="drupal" to override database username
 # --db-user="admin" to override mysql username
 # --db-password="otherpass" to override mysql password
@@ -2656,21 +2657,23 @@ mysql_dump ()
 	local __database="${db:-default}"
 	local __output="${ARGV[0]}"
 
-	if [[ "${ARGV[0]}" == "" ]]; then
-		show_help_mysql-dump
-		exit 1
+	if [[ "${ARGV[0]}" != "" ]]; then
+		touch "$__output"
+		if_failed_error "Could not write $__output" "Please check your file permissions"
+		echo-green "Exporting..."
 	fi
-
-	touch "$__output"
-	if_failed_error "Could not write $__output" "Please check your file permissions"
-
-	echo-green "Exporting..."
 
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
-	docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database} | tee "$__output" >/dev/null
+	if [[ "${ARGV[0]}" == "" ]]; then
+		docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database}
+	else
+		docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database} | tee "$__output" >/dev/null
+	fi
 
-	[ $? -eq 0 ] && echo-rewrite-ok "Exporting..."
+	if [[ "${ARGV[0]}" != "" ]]; then
+		[ $? -eq 0 ] && echo-rewrite-ok "Exporting..."
+	fi
 }
 
 # Run Behat tests (also install dependencies through Composer)
