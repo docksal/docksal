@@ -2592,7 +2592,8 @@ mysql_import ()
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
 	local __database="${db:-default}"
-	# important: don't run interactive commands until /dev/fd/0 is used or it's value will be lost
+	# /dev/fd/0 is the stdin stream for current script
+	# IMPORTANT: don't run "docker exec" with "-i" until value of /dev/fd/0 is used or it's value will be lost
 	local __input="${ARGV[0]:-/dev/fd/0}"
 
 	[[ "$__input" != "/dev/fd/0" ]] && [[ ! -r "$__input" ]] &&
@@ -2624,6 +2625,7 @@ mysql_import ()
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	__mysql_command=$(echo "$__mysql_command" | sed -e 's/[^a-zA-Z0-9_-]$//')
+	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
 	cat ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
 	# Check if import succeded or not and print results.
