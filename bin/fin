@@ -2593,14 +2593,10 @@ mysql_import ()
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
 	local __database="${db:-default}"
-	local __input="${ARGV[0]}"
+	# important: don't run interactive commands until /dev/fd/0 is used or it's value will be lost
+	local __input="${ARGV[0]:-/dev/fd/0}"
 
-	if [[ "${ARGV[0]}" == "" ]]; then
-		show_help_mysql-import
-		exit 1
-	fi
-
-	[[ ! -r "$__input" ]] &&
+	[[ "$__input" != "/dev/fd/0" ]] && [[ ! -r "$__input" ]] &&
 		echo-error "Can not read $__input" "Please check file path and permissions" && exit 1
 
 	local confirm=0
@@ -2627,7 +2623,7 @@ mysql_import ()
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command direclty (no bash wrapper) so that stdin could be received inside that exec
 	container_id=$(get_container_id "db")
-	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
+	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	__mysql_command=$(echo "$__mysql_command" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	cat ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
