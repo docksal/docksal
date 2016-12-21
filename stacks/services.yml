@@ -8,7 +8,7 @@ services:
   # Web
   web:
     hostname: web
-    image: docksal/web:1.0-apache2.2
+    image: ${WEB_IMAGE:-docksal/web:1.0-apache2.2}
     volumes:
       # Project root volume
       - project_root:/var/www:ro
@@ -22,7 +22,7 @@ services:
   # DB
   db:
     hostname: db
-    image: docksal/db:1.0-mysql-5.5
+    image: ${DB_IMAGE:-docksal/db:1.0-mysql-5.5}
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     environment:
@@ -35,7 +35,7 @@ services:
   # Used for all console commands and tools.
   cli:
     hostname: cli
-    image: docksal/cli:1.0-php7
+    image: ${CLI_IMAGE:-docksal/cli:1.0-php7}
     volumes:
       # Project root volume
       - project_root:/var/www:rw
@@ -49,7 +49,7 @@ services:
   # Varnish
   varnish:
     hostname: varnish
-    image: docksal/varnish:3.0-stable
+    image: ${VARNISH_IMAGE:-docksal/varnish:3.0-stable}
     labels:
       - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
     environment:
@@ -59,7 +59,7 @@ services:
   # Memcached
   memcached:
     hostname: memcached
-    image: memcached
+    image: ${MEMCACHED_IMAGE:-memcached}
     environment:
       # Memcached memory limit in megabytes
       - MEMCACHED_MEMORY_LIMIT=${MEMCACHED_MEMORY_LIMIT:-128}
@@ -67,4 +67,4 @@ services:
   # Solr
   solr:
     hostname: solr
-    image: docksal/solr:4.x-stable
+    image: ${SOLR_IMAGE:-docksal/solr:4.x-stable}
