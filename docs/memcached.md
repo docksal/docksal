@@ -18,6 +18,6 @@
 fin up
 ```
 
-### Drupal configuration
+### Configuration
 
-See [Drupal configuration](drupal-settings.md#memcache) page
+Use `memcached:11211` as the memcached endpoint.
