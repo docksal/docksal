@@ -93,3 +93,20 @@ if (PHP_SAPI !== 'cli') {
   }
 }
 ```
+
+<a name="memcache"></a>
+## Memcache settings (**optional**)
+
+**Drupal 7**
+
+Add the following lines to `settings.php` to point Drupal to the memcached node. Replace `</path/to/memcache-module>` with path to [memcache module](https://www.drupal.org/project/memcache) in your project. E.g. `sites/all/modules/contrib/memcache`
+
+```php
+// Memcache
+$conf['cache_backends'][] = '</path/to/memcache-module>/memcache.inc';
+$conf['cache_default_class'] = 'MemCacheDrupal';
+$conf['cache_class_cache_form'] = 'DrupalDatabaseCache';
+$conf['memcache_servers'] = array(
+  'memcached.hello-world.docker:11211' => 'default',
+);
+```
