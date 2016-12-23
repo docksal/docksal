@@ -6,7 +6,7 @@
 # - create .docksal/docksal-local.yml file and put local docker-compose configuration overrides there
 # - add .docksal/docksal-local.yml to .gitignore
 
-# Docksal stiches several docker-compose configuration files together.
+# Docksal stitches several docker-compose configuration files together.
 # Run "fin config" to see which files are involved and the resulting configration.
 
 version: "2.1"

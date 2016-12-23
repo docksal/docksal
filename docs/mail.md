@@ -1,18 +1,18 @@
 # Sending and capturing email
 
-!!! warning "This documentation is outdated" Instructions in this document need to be updated
+!!! warning "This documentation is outdated" Instructions in this document need to be updated.
 
-Sending/capturing email support can be added via [MailHog](https://github.com/mailhog/MailHog).   
+Sending/capturing email support can be added via [MailHog](https://github.com/mailhog/MailHog).
 
     Out-of-the box only capturing will be working.
-    For email delivery you will have to point MailHog to a working mail server/service.
+    For email delivery, you will have to point MailHog to a working mail server/service.
 
 ## Setup
 
-1. Add the `mail` service in `docksal.yml`
+1. Add the `mail` service in `docksal.yml`.
 
     Replace `<project_name>` with your project name.
-    
+
     ```
     mail:
       hostname: mail
@@ -26,22 +26,22 @@ Sending/capturing email support can be added via [MailHog](https://github.com/ma
         - VIRTUAL_HOST=webmail.<project_name>.docksal
     ```
 
-    Apply new configuration with `fin up`
+    Apply new configuration with `fin up`.
 
-2. Add to `.docksal/etc/php5/php.ini` in the project repo
-    
+2. Add to `.docksal/etc/php5/php.ini` in the project repo.
+
     Replace `<project_name>` with your project name.
-    
+
     ```
     ; Mail settings
     sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail.<project_name>.docker:1025'
     ```
 
     Note: if using `version 2` docker-compose file format, then you may use this instead
-    
+
     ```
     ; Mail settings
     sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail:1025'
     ```
 
-MailHog web UI will be available at `http://webmail.<project_name>.docksal`
+MailHog web UI will be available at `http://webmail.<project_name>.docksal`.

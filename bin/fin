@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.15.0
+FIN_VERSION=0.15.1
 
 # Console colors
 red='\033[0;91m'
@@ -884,8 +884,8 @@ show_help ()
 	echo
 	printh "sqlc" "Opens mysql shell to current project database (${yellow}fin help sqlc${NC})"
 	printh "sqls" "Show list of available databases (${yellow}fin help sqls${NC})"
-	printh "sqld <database> <file>" "Dump specified database into file (${yellow}fin help sqld${NC})"
-	printh "sqli <database> <file>" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
+	printh "sqld [file]" "Dump specified database into file (${yellow}fin help sqld${NC})"
+	printh "sqli [file]" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
 
 	echo
 	printh "behat [--path=path]" "Run Behat tests from path relative to YML path. Default: tests/behat"
@@ -1042,22 +1042,22 @@ show_help_mysql_list ()
 	show_help_sqls
 }
 
-
 show_help_sqli ()
 {
-	echo-green "Import SQL DB dump into the database, truncating it first (alias: mysql-import)"
-	printh "fin sqli <database> <dump_file.sql>" "" "yellow"
+	echo-green "Truncate database and import dump from file or stdin (alias: mysql-import)"
+	printh "fin sqli [dump_file.sql]" "" "yellow"
 	echo
 	echo -e "DB dump file should be plain ${yellow}.sql${NC} file."
 	echo
 	echo-green "Parameters:"
 	printh "--force" "Do not ask questions. The only time when question is asked is when truncation fails."
+	printh "--db=drupal" "Use another database (default is the one set with 'MYSQL_DATABASE')"
 	printh "--db-user=admin" "Use another mysql username (default is 'root')"
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	echo
 	echo-green "Examples:"
-	printh "fin sqli drupal ../../mydump.sql" "	Import plaintext sql dump into 'drupal' database"
-	printh "fin sqli drupal ../../mydump.sql --force" "Import plaintext sql dump into 'drupal' database (no questions)"
+	printh "fin sqli ~/dump.sql --db=drupal" "	Import plaintext sql dump into database named 'drupal' (DB should exist)"
+	printh "cat ~/dump.sql | fin sqli" "	Import dump from stdin into default database"
 	echo
 }
 show_help_mysql-import ()
@@ -1067,15 +1067,17 @@ show_help_mysql-import ()
 
 show_help_sqld ()
 {
-	echo-green "Export database from db container into file (alias: mysql-dump)"
-	printh "fin sqld <database> <dump_file>" "" "yellow"
+	echo-green "Export database from db container into file or stdout (alias: mysql-dump)"
+	printh "fin sqld [dump_file]" "" "yellow"
 	echo
 	echo-green "Parameters:"
+	printh "--db=drupal" "Use another database (default is the one set with 'MYSQL_DATABASE')"
 	printh "--db-user=admin" "Use another mysql username (default is 'root')"
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	echo
 	echo-green "Examples:"
-	printh "fin sqld drupal ~/dump.sql" "Export database 'drupal' into ~/dump.sql"
+	printh "fin sqld ~/dump.sql" "Export default database dump"
+	printh "fin sqld --db=drupal" "Export database 'drupal' dump into stdout"
 	echo
 }
 show_help_mysql-dump ()
@@ -2556,8 +2558,8 @@ mysql ()
 
 	check_docksal_environment
 	container_id=$(get_container_id "db")
-	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
-	${winpty} docker exec -it "$container_id" bash -ic "mysql ${__mysql_command}"
+	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
+	${winpty} docker exec -it "$container_id" mysql ${__mysql_command}
 }
 
 # Show databases list
@@ -2578,8 +2580,8 @@ mysql_list ()
 
 # Truncate db and import from sql dump
 # @params
-# $1 - database name
-# $2 - file name
+# $1 - file name
+# --db="drupal" to override database username
 # --db-user="admin" to override mysql username
 # --db-password="otherpass" to override mysql password
 mysql_import ()
@@ -2589,15 +2591,12 @@ mysql_import ()
 
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
-	local __database="${ARGV[0]}"
-	local __input="${ARGV[1]}"
+	local __database="${db:-default}"
+	# /dev/fd/0 is the stdin stream for current script
+	# IMPORTANT: don't run "docker exec" with "-i" until value of /dev/fd/0 is used or it's value will be lost
+	local __input="${ARGV[0]:-/dev/fd/0}"
 
-	if [[ "${ARGV[0]}" == "" ]] || [[ "${ARGV[1]}" == "" ]]; then
-		show_help_mysql-import
-		exit 1
-	fi
-
-	[[ ! -r "$__input" ]] &&
+	[[ "$__input" != "/dev/fd/0" ]] && [[ ! -r "$__input" ]] &&
 		echo-error "Can not read $__input" "Please check file path and permissions" && exit 1
 
 	local confirm=0
@@ -2624,8 +2623,9 @@ mysql_import ()
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command direclty (no bash wrapper) so that stdin could be received inside that exec
 	container_id=$(get_container_id "db")
-	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
+	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	__mysql_command=$(echo "$__mysql_command" | sed -e 's/[^a-zA-Z0-9_-]$//')
+	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
 	cat ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
 	# Check if import succeded or not and print results.
@@ -2640,8 +2640,8 @@ mysql_import ()
 
 # Dump mysql database
 # @params
-# $1 - database name
-# $2 - file name
+# $1 - file name, if ommitted then stdout
+# --db="drupal" to override database username
 # --db-user="admin" to override mysql username
 # --db-password="otherpass" to override mysql password
 mysql_dump ()
@@ -2651,24 +2651,26 @@ mysql_dump ()
 
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
-	local __database="${ARGV[0]}"
-	local __output="${ARGV[1]}"
+	local __database="${db:-default}"
+	local __output="${ARGV[0]}"
 
-	if [[ "${ARGV[0]}" == "" ]] || [[ "${ARGV[1]}" == "" ]]; then
-		show_help_mysql-dump
-		exit 1
+	if [[ "${ARGV[0]}" != "" ]]; then
+		touch "$__output"
+		if_failed_error "Could not write $__output" "Please check your file permissions"
+		echo-green "Exporting..."
 	fi
-
-	touch "$__output"
-	if_failed_error "Could not write $__output" "Please check your file permissions"
-
-	echo-green "Exporting..."
 
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
-	docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database} | tee "$__output" >/dev/null
+	if [[ "${ARGV[0]}" == "" ]]; then
+		docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database}
+	else
+		docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database} | tee "$__output" >/dev/null
+	fi
 
-	[ $? -eq 0 ] && echo-rewrite-ok "Exporting..."
+	if [[ "${ARGV[0]}" != "" ]]; then
+		[ $? -eq 0 ] && echo-rewrite-ok "Exporting..."
+	fi
 }
 
 # Run Behat tests (also install dependencies through Composer)
