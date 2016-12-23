@@ -2270,6 +2270,18 @@ EOF
 	fi
 }
 
+# Update start script and shortcut
+update_start_script_shortcut()
+{
+	rm "$BABUN_HOME/docksal.bat" >/dev/null 2>&1
+	rm "$BABUN_HOME/docksal.ico" >/dev/null 2>&1
+	rm "$BABUN_HOME/tools/link_icon.vbs" >/dev/null 2>&1
+	curl -kfsSL "${URL_REPO}/${FIN_BRANCH}/scripts/link_icon.vbs?r=$RANDOM" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
+	curl -kfsSL "${URL_REPO}/${FIN_BRANCH}/scripts/docksal.bat?r=$RANDOM" -o "$(cygpath $BABUN_HOME)/docksal.bat"
+	curl -kfsSL "${URL_REPO}/${FIN_BRANCH}/scripts/docksal.ico?r=$RANDOM" -o "$(cygpath $BABUN_HOME)/docksal.ico"
+	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
+}
+
 # Update system conteainers' images
 update_system_images ()
 {
@@ -2390,16 +2402,22 @@ update ()
 	# [Update - 2] Update default configs
 	update_config_files
 
-	# [Update - 3] Update system images (if possible)
+	# [Update - 3] Update start script and shortcut
+	if  is_windows; then
+		echo-green "Updating start script and shortcut..."
+		update_start_script_shortcut
+	fi
+
+	# [Update - 4] Update system images (if possible)
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && ! is_linux; then
 		echo-green "Updating system images..."
 		update_system_images
 	fi
 
-	# [Update - 4] Update third party tools (if possible)
+	# [Update - 5] Update third party tools (if possible)
 	update_tools
 
-	# [Update - 5] Restart running projects if BOOT2DOCKER was not restarted
+	# [Update - 6] Restart running projects if BOOT2DOCKER was not restarted
 	# Needed to restore containers connection to vhost_proxy
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
 		echo-green "Restarting running projects..."
