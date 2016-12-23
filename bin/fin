@@ -1803,6 +1803,7 @@ up ()
 {
 	check_docksal_environment
 	_start_containers
+	is_linux && ssh_add
 }
 
 # Stop containers
@@ -1818,6 +1819,7 @@ restart ()
 {
 	check_docksal_environment
 	_restart_containers
+	is_linux && ssh_add
 }
 
 # output status of containers
