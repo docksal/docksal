@@ -21,9 +21,6 @@ DOCKSAL_IP=192.168.64.100
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
 #SKIP=1
 
-# Add default sample keys on Travis only. We don't want to mess with a real host ssh key.
-[[ "$TRAVIS" == "true" ]] && cp tests/ssh-keys/* ~/.ssh
-
 @test "fin mysql-list" {
 	[[ $SKIP == 1 ]] && skip
 
