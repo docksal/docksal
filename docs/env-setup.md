@@ -95,19 +95,25 @@ You are done with the one time environment installation. Now you can [configure 
 <a name="linux"></a>
 ## Installing Docksal on Ubuntu Linux
 
-### 1. Install Docksal Fin
+### 1. Avoid conflict with Apache
+
+By default Apache listens on `0.0.0.0:80` and `0.0.0.0:443`. This will prevent Docksal from running properly.
+
+You either need to stop Apache or reconfigure it to listen on different ports (e.g. `8080` and `4433`) or different host (e.g. `127.0.0.1:80` and `127.0.0.1:443`).
+
+### 2. Install Docksal Fin
 
 ```bash
 sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
 sudo chmod +x /usr/local/bin/fin
 ```
 
-### 2. Install tools and configurations
+### 3. Install tools and configurations
 
 ```bash
 fin update
 ```
 
-### 3. Congratulations!
+### 4. Congratulations!
 
 You are done with the one time environment installation. Now you can [configure your project](project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.

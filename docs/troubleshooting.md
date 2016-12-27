@@ -55,7 +55,6 @@ Set bigger amount of RAM. For instance 2048 Mb
 fin vm ram 2048
 ```
 
-
 ## Conflicting exports (files are not accessible)
 ```
  ERROR:  conflicting exports for /Users, 192.168.64.100
@@ -68,12 +67,34 @@ exports:11: export option conflict for /Users
 ```
 
 #### Explanation: a single directory can only be exported once. 
+
 It can not be exported several times with different settings.
    
 #### Solution
    
 1) Remove conflicting export from `/etc/exports` (remove the one which is non-docksal) and save the file.  
 2) `fin vm restart`
+
+## Conflicting ports
+
+```
+Resetting Docksal services...
+ * proxy
+docker: Error response from daemon: driver failed programming external connectivity
+on endpoint docksal-vhost-proxy (a7addf7797e6b0aec8e3e810c11775eb77508c9079e375c083b3650df2dff9a2):
+Error starting userland proxy: listen tcp 0.0.0.0:443: listen: address already in use.
+```
+
+#### Explanation: default Apache server
+
+Usually happens on Linux because default Apache listens on `0.0.0.0:80` and `0.0.0.0:443`.
+This prevents Docksal from running properly.
+
+#### Solution
+
+You either need to stop Apache or reconfigure it to listen on different ports (e.g. `8080` and `4433`) or
+different host (e.g. `127.0.0.1:80` and `127.0.0.1:443`).
+
 
 ## Config permissions issue (vm does not start)
 
