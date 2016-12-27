@@ -21,6 +21,12 @@ DOCKSAL_IP=192.168.64.100
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
 #SKIP=1
 
+@test "fin start" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin start
+}
+
 @test "fin mysql-list" {
 	[[ $SKIP == 1 ]] && skip
 
