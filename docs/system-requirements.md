@@ -19,4 +19,4 @@
 - (**Linux**) Ubuntu Linux 14.04 or newer (or it's derivatives) with Linux kernel 3.10 or higher
 
 
-Refer to the [environment setup instructions](env-setup.md#setup) for further steps.
+Refer to the [environment setup instructions](env-setup.md) for further steps.
