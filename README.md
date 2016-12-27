@@ -64,6 +64,7 @@ fin update
 - [Drupal settings (database, file permissions)](/docs/drupal-settings.md)
 - [MySQL DB access for external tools](/docs/db-access.md)
 - [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
+- [Drush aliases](/docs/drush-aliases.md)
 - [Automatic database import](docs/db-import.md)
 - [DB sandbox mode](/docs/db-sandbox.md)
 - [Extending fin with custom commands](/docs/custom-commands.md)

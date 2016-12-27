@@ -55,6 +55,7 @@ fin update
 - [Drupal settings](drupal-settings.md)
 - [MySQL DB access for external tools](db-access.md)
 - [Overriding default PHP/MySQL/etc. settings](settings.md)
+- [Drush aliases](drush-aliases.md)
 - [Automatic database import](db-import.md)
 - [Extending fin with custom commands](custom-commands.md)
 - [Increasing vm memory (RAM)](vm.md)
