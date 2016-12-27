@@ -29,6 +29,27 @@ If that does not help either you will have to delete existing Docksal VM and re-
 2. `fin vm start`
 
 
+## Lack of memory
+
+Composer on Drupal 8 projects might spawn this error:
+
+```
+The following exception is caused by a lack of memory and not having swap configured
+Check https://getcomposer.org/doc/articles/troubleshooting.md#proc-open-fork-failed-errors for details
+```
+
+#### Explanation
+
+Default Docksal virtual machine features 1GB (1024MB) of RAM. Drupal 8 tools sometimes require more that that.
+
+#### Solution
+
+Set bigger amount of RAM. For instance 2048 Mb
+```
+fin vm ram 2048
+```
+
+
 ## Conflicting exports (files are not accessible)
 ```
  ERROR:  conflicting exports for /Users, 192.168.64.100
