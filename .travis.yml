@@ -32,3 +32,6 @@ script:
   # Test a project workflow
   - cd "$TRAVIS_BUILD_DIR/../drupal8"
   - bats "$TRAVIS_BUILD_DIR/tests/smoke-test-general.bats"
+  # Test mysql commands
+  - cd "$TRAVIS_BUILD_DIR/../drupal8"
+  - bats "$TRAVIS_BUILD_DIR/tests/smoke-test-mysql.bats"
