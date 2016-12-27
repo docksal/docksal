@@ -56,7 +56,6 @@ fin update
 - [MySQL DB access for external tools](db-access.md)
 - [Overriding default PHP/MySQL/etc. settings](settings.md)
 - [Automatic database import](db-import.md)
-- [DB sandbox mode](db-sandbox.md)
 - [Extending fin with custom commands](custom-commands.md)
 - [Increasing vm memory (RAM)](vm.md)
 - [Exposing any Docker container's port](expose-port.md)
