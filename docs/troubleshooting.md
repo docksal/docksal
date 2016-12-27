@@ -22,7 +22,13 @@ Sometimes docker-machine certificaties re-generation fails.
 #### Solution
 Usually it is solved with `fin vm restart`.
 
-However in rare cases this does not help. We advice trying to restart your host OS first.
+If simple restart did not help try
+```
+fin docker-machine regenerate-certs -f
+fin vm restart
+```
+
+However in rare cases this does not help too.
 If that does not help either you will have to delete existing Docksal VM and re-create it.
 
 1. `fin vm remove`
