@@ -2,11 +2,11 @@
 
 It is possible to extend fin with custom commands per project or per host.
 
-## Creating cutsom command in project 
+## Creating custom commands in a project 
 
 ### 1. Create a custom command script
 
-File `.docksal/commands/updb` (Notice **no extension**. Script name should match command name)
+Create a file at this location `.docksal/commands/updb` (Notice **no extension**. Script name should match command name) with the following contents:
 
 ```bash
 #!/bin/bash
@@ -18,25 +18,27 @@ File `.docksal/commands/updb` (Notice **no extension**. Script name should match
 fin drush updb $1
 ```
 
-### 2. Make it executable
+Note that this is a Drupal-specific command.
+
+### 2. Make the file executable
 
 ```
 chmod +x .docksal/commands/updb
 ```
 
-Now you can use it as if it was a regular fin command: `fin updb`. Passing parameters also works: `fin updb -y`. Command description will be visible in `fin help` and command full help will be available via `fin help updb` 
+Now you can use it as if it was a regular fin command: `fin updb`. Passing parameters also works: `fin updb -y`. The command description will be visible in `fin help` and the full command help will be available via `fin help updb`. 
 
 ## Available variables
 
-These variables provided by fin are available for use inside you custom command scripts:
+These variables, provided by fin, are available for use inside you custom command scripts:
 
 * `PROJECT_ROOT` - absolute path to the project folder.  
 * `DOCROOT` - name of the docroot folder.
-* `VIRTUAL_HOST` - for example `projectname.docksal`.
-* `DOCKER_RUNNING` - (string) "true" or "false"
+* `VIRTUAL_HOST` - the virtual host name for the project. For example, `projectname.docksal`.
+* `DOCKER_RUNNING` - (string) "true" or "false".
 
 
-Example `init` command for a Drupal website using drush to automate the install:  
+Here is an example `init` command for a Drupal website using drush to automate the install:  
 
 ```bash
 #!/usr/bin/env bash
@@ -61,15 +63,15 @@ Fin looks for lines starting with `##` for command documentation.
 ## --force Try really hard
 ```
 
-Fin will output first line of custom command documentation as a short decription in `fin help`.  
-Rest of lines will be available as advanced help via `fin help command_name`
+Fin will output the first line of custom command documentation as the short description when using `fin help`.  
+The rest of the lines will be available as advanced help via `fin help command_name`.
 
 See an example of command documentation in the phpcs command (examples/.docksal/commands/phpcs located in the [Docksal project](https://github.com/docksal/docksal).)
 
 ## Global custom commands
 
 Put your command in `~/.docksal/commands` and it will be accessible globally.  
-Useful for tedious tasks that you need in every project.
+This is useful for tedious tasks that you need in every project.
 
 ## Advanced use
 
