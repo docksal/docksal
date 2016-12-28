@@ -8,6 +8,7 @@ markdown_extensions:
 pages:
   - Home: index.md
   - Getting started:
+    - Initial setup: setup.md
     - System requirements: system-requirements.md
     - Explaining the Docksal stack: docksal-stack.md
     - Docksal environment setup: env-setup.md

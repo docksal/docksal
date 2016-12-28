@@ -1,116 +1,54 @@
-# Docksal
+![Docksal](img/docksald.png)
 
-Docker and Docker Compose based environments for web development.
+##What is Docksal?
 
-!!! attention "Docksal is under active development" 
-    Breaking changes and outdated docs are very possible. Please help us by testing, submitting issues and pull requests. Thanks!
+Docksal is a tool for defining and managing development environments. It brings together common tools, minimizes configuration, 
+and ensures environment consistency throughout your continuous integration workflow. See this [FFW blog post](https://ffwagency.com/blog/announcing-docksal-docker-based-development-environment) for more info about 
+the motivation behind creating Docksal.
 
-Running a complete LAMP stack for Drupal, WordPress or a pure HTML/PHP based website is two commands away!<sup>*</sup>
+Docksal uses Docker to create fully containerized environments, and uses Virtual Box to support MacOS and Windows. 
+Its main feature is the inclusion of a command-line tool, called `fin`, that simplifies the management of all components.
 
-```
-git clone <sample-project-repo>
-fin init
-```
+It comes preloaded with common Drupal development tools like drush and Drupal Console, as well as php tools like Composer, 
+PHP Code Sniffer, and php-cli. It also comes with node, npm, ruby, bundler, and python. As well as WP-CLI for WordPress.
 
-Try one of the preconfigured projects:
+There is built-in support for Apache Solr, Varnish, Memcache, Selenium, and Behat. And since services are containerized with Docker, 
+any other service needed for a project can be added.
 
-- [Drupal 7 sample project](https://github.com/docksal/drupal7)  
-- [Drupal 8 sample project](https://github.com/docksal/drupal8)  
-- [WordPress sample project](https://github.com/docksal/wordpress)
+##Key features
 
-<sup>*</sup>Once you are done with a one-time [Docksal environment setup](env-setup.md)
+Docksal does more than simply manage containers. Below is a list of some of Docksal's key features. While it is not
+limited to these features, we think you'll find these to be some of its main selling points.
 
-<a name="setup"></a>
-## Docksal Setup
+- Fully [containerized environments](/docksal-stack).
+    - all projects stay separated from each other
+    - each can have its own requirements
+    - each can have different versions of the same service
+    - each can be managed independently (start, stop, restart, trash, etc.)
+    - each can be extended with any service you want
+- [Zero-configuration](/project-customize/#zero-configuration) projects - with two commands you can be up and running with an AMP stack without
+having to create or understand any configurations.
+- Easy to create [configurations](/project-customize) to partially or fully override any defaults.
+- Tools such as drush, console, and WP-CLI are builtin so you don't need to have them installed locally.
+- Automatic virtual host configuration ([except for Windows](/multiple-projects/#windows).)
+- Support for [custom commands](/custom-commands) using any interpreter you want.
+- Easily [share your site](/public-access) over the internet using ngrok. This lets show your project to others without having to 
+move your project to a web host somewhere.
 
-Please review [system requirements](system-requirements.md) before proceeding with the setup.
+##What's in the software?
 
-**1. [Install required software](env-setup.md)**
+"Docksal" is an umbrella for all the components and services you get. It uses Docker to manage containers and Docker Compose to
+manage the configurations, so almost anything you can do with Docker you can do with Docksal. There are also a number of 
+containers managed by the Docksal team that are tuned for Docksal's most common use case, which is Drupal/PHP CMS development.
 
-**2. [Create a Docksal powered project](project-setup.md)**
+And along with this comes predefined ["stacks"](/project-customize/#default-configurations) that quickly and easily setup projects for you so you don't have
+understand all the complexity in configuring containers. Docksal's main purpose is to make managing projects **easy**. We try to take care of most of the work for you,
+so you focus on your project.
 
-<a name="fin"></a>
-## Docksal Fin and stack
+For those of you that are a little more particular about how you setup your projects, don't fret. You can choose to use your own, or any other, containers,
+and setup the configurations how ever you like. Docksal's predefined services are provided to make things easy for anyone that doesn't know, or doesn't want to know,
+how to manage it themselves.
 
-Docksal Fin is a command line tool for controlling Docksal's stack. `fin` runs natively on Mac and Linux but requires [Babun Shell](http://babun.github.io) on Windows.
-
-Each project contains at least 3 services:
-
-- `web` - holds your webserver (nginx/apache/etc.)
-- `db` - holds your database server (MySQL)
-- `cli` - serves as a single access point for all necessary command line tools. You can access it with `fin bash`. For the list of tools available inside `cli` check [CLI image docs](https://github.com/docksal/service-cli).
-
-<a name="updates"></a>
-## Updating Docksal
-
-```
-fin update
-```
-
-<a name="instructions"></a>
-## Additional Instructions
-
-### Advanced configuration
-- [Running multiple projects](multiple-projects.md)
-- [Drupal settings](drupal-settings.md)
-- [MySQL DB access for external tools](db-access.md)
-- [Overriding default PHP/MySQL/etc. settings](settings.md)
-- [Automatic database import](db-import.md)
-- [Extending fin with custom commands](custom-commands.md)
-- [Increasing vm memory (RAM)](vm.md)
-- [Exposing any Docker container's port](expose-port.md)
-- [Customize project configuration or switch PHP/MySQL version](project-customize.md)
-
-### Utililies
-- [Debugging with Xdebug and PhpStorm](xdebug.md)
-- [Using custom ssh keys (with or without passwords) via ssh-agent](ssh-agent.md)
-- [Sending and capturing e-mail](mail.md)
-- [SASS/Compass](sass.md)
-- [PHP Code Sniffer (phpcs, phpcbf)](phpcs.md)
-- [Varnish](varnish.md)
-- [Memcached](memcached.md)
-- [Apache Solr](apache-solr.md)
-- [Blackfire profiler](blackfire.md)
-- [Behat](behat.md)
-- [Public access via ngrok](public-access.md)
-
-<a name="troubleshooting"></a>
-## Troubleshooting
-
-!!! attention "If something went wrong" 
-    First try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
-
-- Update Docksal to the latest version. See [updates](#updates) section.
-- (Mac and Windows) Restart the Docksal VM: `fin vm restart`
-- Reset Docksal system services with `fin reset system` and restart project containers with `fin up`
-- Reboot the host (your computer or remote server)
-- (Mac and Windows) Re-create Docksal VM: `fin vm remove` then `fin vm start` (**WARNING**: backup your DB data before doing this)
-
-If quick fixes above did not help, try:
-
-- checking the [troubleshooting doc](troubleshooting.md) for rare problems that might occur
-- searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced a similar issue and already found a solution or a workaround.
-- asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
-
-Create a [new issue](https://github.com/docksal/docksal/issues/new) if your problem is still not resolved.
-
-## Uninstallation
-
-The steps below will remove the Docksal VM and cleanup Docksal stuff.
-
-```
-fin vm remove
-rm -rf ~/.docksal
-rm -f /usr/local/bin/fin
-```
-
-Docker for Mac/Windows and VirtualBox are not automatically removed. You can remove them manually on Mac or use the uninstaller on Windows.
-
-To remove Docker on Ubuntu Linux you need to:
-
-1. Follow [Docker Uninstallation](https://docs.docker.com/engine/installation/linux/ubuntulinux/#/uninstallation) instructions
-2. Remove the Docker tools:
-```
-sudo rm /usr/local/bin/docker-compose
-sudo rm /usr/local/bin/docker-machine
-```
+With Docksal you also get `fin`, the command line tool used to manage your projects. Fin has builtin in commands for every day tasks, like 
+stopping and starting services, importing and exporting databases, initializing projects, executing bash commands inside the containers, and adding ssh keys.
+Fin is also easily extended with custom commands that can be universal to your computer, or unique for each project.
