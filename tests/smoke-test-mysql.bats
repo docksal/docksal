@@ -27,6 +27,12 @@ DOCKSAL_IP=192.168.64.100
 	run fin start
 }
 
+@test "fin init" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin init
+}
+
 @test "fin mysql-list" {
 	[[ $SKIP == 1 ]] && skip
 
