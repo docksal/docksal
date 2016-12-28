@@ -60,7 +60,7 @@ which is used by `web` service, as well as for Behat, mysql client, drush and ot
 interface via `fin exec`.
 
 <a name="project-customization"></a>
-## Customizing project configuration
+## Customizing project configurations
 
-If you are ready to customize Docksal services' settings for your project then check out [customizing project configuration](project-customize.md)
+If you are ready to customize Docksal services' settings for your project then check out [customizing project configurations](project-customize.md)
 to learn about `docksal.yml` structure and how to properly edit it.
