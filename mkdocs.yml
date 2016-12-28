@@ -9,6 +9,7 @@ pages:
   - Home: index.md
   - Getting started:
     - System requirements: system-requirements.md
+    - Explaining the Docksal stack: docksal-stack.md
     - Docksal environment setup: env-setup.md
     - Configure a project to use Docksal: project-setup.md
   - Advanced configuration:
@@ -18,9 +19,11 @@ pages:
     - MySQL DB access for external tools: db-access.md
     - Automatic database import: db-import.md
     - Extending fin with custom commands: custom-commands.md
+    - Increasing vm memory (RAM): vm.md
     - Exposing any Docker containers port: expose-port.md
     - Using Docker for Mac/Win: env-setup-native.md
-    - Customize project configuration: project-customize.md
+    - Customizing project configurations: project-customize.md
+    - Docksal volumes: docksal-volumes.md
   - Utililies:
     - Debugging with Xdebug and PhpStorm: xdebug.md
     - Using custom ssh keys (with or without passwords) via ssh-agent: ssh-agent.md
@@ -33,3 +36,4 @@ pages:
     - Blackfire profiler: blackfire.md
     - Behat: behat.md
     - Public access via ngrok: public-access.md
+  - Troubleshooting: troubleshooting.md

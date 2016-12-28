@@ -3,7 +3,7 @@
 !!! warning "This documentation is outdated"
     Instructions in this document need to be updated
 
-MySQL service in the `db` container is exposed at a random port by default.
+The MySQL service in the `db` container is exposed at a random port by default.
 This is done to avoid port conflicts when running multiple Docksal powered projects (multisites don't count).
 
 To view the randomly assigned port value run `fin config` and look for `MYSQL_PORT:`.

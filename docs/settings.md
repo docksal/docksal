@@ -18,7 +18,7 @@ Copy `examples/.docksal/etc` from the [Docksal project](https://github.com/docks
 ## Using different PHP versions
 
 Switching PHP versions is done via the `docksal/drupal-cli` docker image tags. See which images are available on [Docker Hub](https://hub.docker.com/r/docksal/cli/). To
-make these changes you must have project configuration files. See [Project Setup](project-setup.md)
+make these changes you must have project configuration files. See [Project Setup](project-setup.md).
 
 To switch to a different image tag:
 
