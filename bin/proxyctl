@@ -175,7 +175,7 @@ _cleanup ()
 				# Not active
 				echo "Project: $project_name is dangling. Removing..."
                 # Stop and remove containers
-                docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -vf
+                docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -vf
                 # Disconnect vhost-proxy from the project network and remove the network.
                 # See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
                 local network="${project_name}_default"
