@@ -2433,12 +2433,6 @@ update ()
 	fi
 
 	[ $? -eq 0 ] && echo-green "Update finished"
-
-	if is_windows; then
-		echo-yellow "To use Docksal, start the console using the Docksal shortcut on your Desktop."
-		read -p "Press enter to continue..."
-		exit 0
-	fi
 }
 
 check_for_updates ()
