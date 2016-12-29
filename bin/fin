@@ -454,8 +454,15 @@ is_docker_running ()
 	which docker >/dev/null 2>&1 && docker info >/dev/null || return 1
 }
 
-# Check whether shell is interactive
-# Otherwise we are running in a non-interactive script environment
+# Check whether the shell is interactive.
+# Otherwise we are running in a non-interactive script environment.
+is_interactive ()
+{
+	[[ $- == *i* ]]
+}
+
+# Check whether we have a working tty.
+# Otherwise we are running in a non-tty environment ( e.g. Babun on Windows).
 is_tty ()
 {
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
@@ -1848,9 +1855,12 @@ ssh_add () {
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
 	check_winpty_found
-	if is_tty; then
+	if is_interactive && is_tty; then
+		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
 		${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
 	else
+		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
+		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 		docker run --rm -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
 	fi
 	return $?
