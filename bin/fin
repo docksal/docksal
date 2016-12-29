@@ -2564,15 +2564,18 @@ _run ()
 		return
 	fi
 
+	# Source $HOME/.docksalrc in cli.
+	# Commands in this file will be sourced for both interactive and non-interactive sessions.
+	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
 	# Enter project containers
 	if is_tty ; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
 		check_winpty_found
-		${winpty} docker exec -it "$container_id" bash -ic "$cmd; (exit \$?)"
+		${winpty} docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec "$container_id" bash -c "$cmd"
+		docker exec "$container_id" bash -c "$DOCKSALRC; $cmd"
 	fi
 	# ------------------------------------------------ #
 }
