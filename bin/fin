@@ -1848,7 +1848,11 @@ ssh_add () {
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
 	check_winpty_found
-	${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+	if is_tty; then
+		${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+	else
+		docker run --rm -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+	fi
 	return $?
 }
 
