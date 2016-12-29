@@ -2310,6 +2310,8 @@ update_system_images ()
 # Update project images
 update_project_images ()
 {
+	# Need docker-compose configuration to be properly loaded here
+	load_configuration
 	check_docksal_environment
 	docker_compose pull # update project containers images
 	up
@@ -3336,6 +3338,8 @@ case "$1" in
 		shift
 		if [[ "$1" == "--system-images" ]]; then
 			update_system_images
+		elif [[ "$1" == "--project-images" ]]; then
+			update_project_images
 		elif [[ "$1" == "--self" ]]; then
 			echo "Downloading $URL_FIN"
 			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH" >/dev/null
