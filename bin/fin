@@ -52,7 +52,7 @@ DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
-	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+	vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 # Stacks folder
 CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
 mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
