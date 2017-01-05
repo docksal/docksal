@@ -1,3 +1,6 @@
+!!! danger Do not follow this instruction on Windows. 
+    It does not work properly on windows and will break your setup. We are working and getting it updated.
+
 # Automatic database import
 
 The `db` service container can perform an automatic import of the database dump upon initialization.
