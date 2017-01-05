@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.15.3
+FIN_VERSION=0.15.4
 
 # Console colors
 red='\033[0;91m'
@@ -3071,6 +3071,8 @@ load_configuration ()
 	# Make project root globally available
 	export DOCKSAL_PATH="$(get_project_path)"
 	export PROJECT_ROOT="$(get_project_path)"
+	# Set this to 0 to account for docker-compose bug https://github.com/docker/compose/pull/4294
+	export COMPOSE_CONVERT_WINDOWS_PATHS=0
 
 	if is_docker_running; then
 		export DOCKER_RUNNING="true"
