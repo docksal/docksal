@@ -30,3 +30,13 @@ Add your Solr server on the `admin/config/search/apachesolr/settings/add` using 
 ```
 http://solr:8983/solr
 ```
+
+Or in case if you already had server and need to edit it:
+
+| Name | Value |
+|---|---|
+| Protocol | `HTTP` |
+| Host | `solr` |
+| Port | `8983` |
+| Solr path | `/solr` |
+| Solr core |  |
