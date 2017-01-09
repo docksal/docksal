@@ -18,7 +18,9 @@ teardown() {
 @test "fin init" {
 	[[ $SKIP == 1 ]] && skip
 
+	fin start
 	fin init
+	sleep 5
 	# Check that the site is available
 	run curl -sL http://drupal8.docksal
 	echo "$output" | grep "My Drupal 8 Site"
