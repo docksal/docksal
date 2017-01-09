@@ -440,8 +440,11 @@ check_binary_found ()
 check_winpty_found ()
 {
 	! is_windows && return
-	check_binary_found 'winpty'
-	winpty='winpty'
+	# Do not set winpty in non-zsh environment e.g. bash shell which Docksal creates a link for on desktop
+	if [[ "$ZSH" != "" ]]; then
+		check_binary_found 'winpty'
+		winpty='winpty'
+	fi
 }
 
 is_docker_running ()
