@@ -15,92 +15,40 @@ teardown() {
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
 #SKIP=1
 
+@test "fin start" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin start
+	echo "$output" | egrep "Creating network \".*_default\" with the default driver"
+	echo "$output" | egrep "Creating volume \".*_project_root\" with local driver"
+	echo "$output" | egrep "Creating .*_web_1"
+	echo "$output" | egrep "Creating .*_db_1"
+	echo "$output" | egrep "Creating .*_cli_1"
+
+	# uid change won't usually happen in Linux, as host uid 1000 matches container uid.
+	#echo "$output" | grep "Changing user id in cli to \d* to match host user id"
+	#echo "$output" | grep "Resetting permissions on /var/www"
+	#echo "$output" | grep "Restarting php daemon"
+
+	echo "$output" | egrep "Connected vhost-proxy to \".*_default\" network"
+
+	# Check that containers are running
+	run fin ps
+	echo "$output" | grep "web_1" | grep "Up"
+	echo "$output" | grep "db_1" | grep "Up"
+	echo "$output" | grep "cli_1" | grep "Up"
+}
+
 @test "fin init" {
 	[[ $SKIP == 1 ]] && skip
 
-	fin start
-	fin init
-	sleep 5
-	# Check that the site is available
+	run fin init
+	echo "$output" | grep "Initializing local project configuration"
+	echo "$output" | grep "Recreating services"
+	echo "$output" | grep "Installing site"
+	echo "$output" | grep "Congratulations, you installed Drupal!"
+
+	# Check if site is available and it's name is correct
 	run curl -sL http://drupal8.docksal
 	echo "$output" | grep "My Drupal 8 Site"
-}
-
-@test "fin mysql-list" {
-	[[ $SKIP == 1 ]] && skip
-
-	run fin mysql-list
-	echo "$output" | grep "mysql"
-}
-
-@test "fin mysql-dump with no params" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Create backup
-	rm -f dump.sql
-	run fin mysql-dump dump.sql
-    echo "$output" | grep "Exporting..."
-
-	# Check that we've got a valid dump
-	run grep "Database: default" dump.sql
-    [ $status -eq 0 ]
-}
-
-@test "fin mysql-dump with user and password" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Create backup
-    rm -f dump.sql
-	run fin mysql-dump dump.sql --db-user="user" --db-password="user"
-    echo "$output" | grep "Exporting..."
-
-	# Check that we've got a valid dump
-	run grep "Database: default" dump.sql
-    [ $status -eq 0 ]
-}
-
-@test "fin mysql-import with no params" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Import mysql dump
-    run fin mysql-import dump.sql --force
-    echo "$output" | grep "Truncating 'default'"
-    echo "$output" | grep "Importing"
-
-	# Check that the site is available
-	run curl -sL http://drupal8.docksal
-	echo "$output" | grep "My Drupal 8 Site"
-}
-
-@test "fin mysql-import with user and password" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Import mysql dump
-	run fin mysql-import dump.sql --db-user="user" --db-password="user" --force
-    echo "$output" | grep "Truncating 'default'"
-    echo "$output" | grep "Importing"
-
-	# Check that the site is available
-	run curl -sL http://drupal8.docksal
-	echo "$output" | grep "My Drupal 8 Site"
-}
-
-@test "fin mysql-import with the wrong user and password" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Import mysql dump
-	run fin mysql-import dump.sql --db-user="wront-user" --db-password="wrong-password" --force
-    echo "$output" | grep "Truncating 'default'"
-    echo "$output" | grep "Importing"
-    echo "$output" | grep "Import failed"
-}
-
-@test "fin mysql-import into different db" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Import mysql dump
-	run fin mysql-import dump.sql --db-user="user" --db-password="user" --db="nondefault" --force
-	echo "$output" | grep "Truncating 'nondefault'"
-	echo "$output" | grep "Importing"
-	echo "$output" | grep "Import failed"
 }
