@@ -776,9 +776,9 @@ _docker_cleanup ()
 		docker ps -aqf status=exited | xargs docker rm -vf
 	fi
 
+	_remove_dangling_containers
 	_remove_dangling_images
 	_remove_dangling_volumes
-	_remove_dangling_containers
 
 	# TODO: remove below lines in 2017
 	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
