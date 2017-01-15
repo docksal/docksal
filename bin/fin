@@ -1990,11 +1990,6 @@ install_tools_mac ()
 		elif ! is_vbox_version; then
 			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
 				&& exit 1
-			# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
-			#	else
-			#		 Kill the default adapter and DHCP server to avoid network issues down the road
-			#		 "$vboxmanage" dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
-			#		 "$vboxmanage" hostonlyif remove vboxnet0 > /dev/null 2>&1
 		fi
 	fi
 
@@ -2056,13 +2051,6 @@ install_tools_windows ()
 		if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
 			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
 				&& exit 1
-# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
-#		else
-#			if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-#				echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
-#				winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
-#				winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
-#			fi
 		fi
 	fi
 
