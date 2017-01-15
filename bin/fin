@@ -15,7 +15,7 @@ NC='\033[0m'
 FIN_BRANCH="${FIN_BRANCH:-develop}"
 
 #---------------------------- Global Constants --------------------------------
-REQUIREMENTS_DOCKER='1.12.3'
+REQUIREMENTS_DOCKER='1.12.6'
 REQUIREMENTS_DOCKER_COMPOSE='1.9.0'
 REQUIREMENTS_DOCKER_MACHINE='0.8.2'
 REQUIREMENTS_VBOX='5.1.2'
@@ -98,6 +98,7 @@ URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${RE
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
 URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-x86_64"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
+URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER}/boot2docker.iso"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
@@ -1242,6 +1243,7 @@ docker_machine_create ()
 			check_vbox_version
 
 			docker-machine create --driver=virtualbox \
+				--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
 				--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
 				--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 				--virtualbox-hostonly-cidr "$DOCKSAL_DEFAULT_SUBNET" \
@@ -2030,10 +2032,10 @@ install_tools_mac ()
 	# If it was an upgrade
 	[[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]] && \
 		is_docker_machine_running && \
-		echo-green "Upgrading Docker Machine..." && \
-		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
-		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
-		docker_machine_stop && docker_machine_start
+		echo-green "Preparing to update virtual machine..." && \
+		docker_machine_stop && \
+		curl -ksSL "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
+		docker_machine_start
 
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		local server_version=$(docker version --format '{{.Server.Version}}')
@@ -2119,10 +2121,10 @@ install_tools_windows ()
 
 	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
 		is_docker_machine_running && \
-		echo-green "Upgrading Docker Machine..." && \
-		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
-		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
-		docker_machine_stop && docker_machine_start
+		echo-green "Preparing to update virtual machine..." && \
+		docker_machine_stop && \
+		curl -ksSL "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
+		docker_machine_start
 	fi
 
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
