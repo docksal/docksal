@@ -2144,7 +2144,7 @@ install_tools_ubuntu ()
 			echo "Stopping docker service..."
 			sudo service docker stop 2>/dev/null
 		fi
-		curl -sSL https://get.docker.com/ | sh && \
+		curl -sSL "${URL_DOCKER_NIX}" | sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
@@ -2156,7 +2156,7 @@ install_tools_ubuntu ()
 		sudo docker version >/dev/null
 		if [[ ! $? -eq 0 ]]; then
 			_confirm 'There is some problem with your Docker installation. Do you want to try re-installing?'
-			curl -sSL https://get.docker.com/ | sh && \
+			curl -sSL "${URL_DOCKER_NIX}" | sh && \
 				# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 				sudo usermod -aG docker "$LOGNAME"
 			sudo service docker start 2>/dev/null
