@@ -2111,7 +2111,7 @@ install_tools_windows ()
 		is_docker_machine_running && \
 		echo-green "Preparing to update virtual machine..." && \
 		docker_machine_stop && \
-		curl -ksSL "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
+		curl -ksSL "$URL_BOOT2DOCKER" -o "$(cygpath $USERPROFILE)/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
 		docker_machine_start
 	fi
 
