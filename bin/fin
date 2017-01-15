@@ -2326,11 +2326,12 @@ update ()
 	[[ "$0" == "$FIN_PATH_UPDATED" ]] && FULL_UPDATE="exit 1"
 
 	# Pre-update check #1: check if there is existing but stopped Docksal machine
+	# We need it running to know Docker server version
 	if (${FULL_UPDATE}); then
 		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
-				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
-					"Start it with ${yellow}fin vm start${NC} first or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
+				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
+					"Start it with ${yellow}fin vm start${NC} or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
 				return 1
 			fi
 		fi
