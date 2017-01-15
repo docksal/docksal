@@ -2005,7 +2005,7 @@ install_tools_mac ()
 	if ! is_docker_version; then
 		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
 		(cd "$CONFIG_DOWNLOADS_DIR" && \
-			curl -ksSL "$URL_DOCKER_MAC" | tar zxf - && \
+			curl -sSL "$URL_DOCKER_MAC" | tar zxf - && \
 			mv "docker/docker" "$CONFIG_BIN_DIR/")
 		if_failed "Check file permissions and internet connection."
 	fi
@@ -2013,7 +2013,7 @@ install_tools_mac ()
 	# Install docker-compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
-		curl -ksSL "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
+		curl -sSL "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
 			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Check file permissions and internet connection."
 	fi
@@ -2021,7 +2021,7 @@ install_tools_mac ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -ksSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
+		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
 			chmod +x "$DOCKER_MACHINE_BIN"
 		if_failed "Check file permissions and internet connection."
 	fi
@@ -2070,7 +2070,7 @@ install_tools_windows ()
 	if ! is_docker_version; then
 		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
 		(cd "$CONFIG_DOWNLOADS_DIR" && \
-			curl -ksSL "$URL_DOCKER_WIN" -o docker.zip && \
+			curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
 			unzip docker.zip && \
 			rm docker.zip && \
 			mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
@@ -2081,7 +2081,7 @@ install_tools_windows ()
 		# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
-		curl -ksSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
+		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
 			chmod +x "$DOCKER_COMPOSE_BIN.exe"
 		if_failed "Check file permissions and internet connection."
 	fi
@@ -2098,7 +2098,7 @@ install_tools_windows ()
 	if ! is_winpty_version; then
 		echo-green "Installing winpty v${REQUIREMENTS_WINPTY}..."
 		(cd "$CONFIG_DOWNLOADS_DIR" && \
-			curl -ksSL "$URL_WINPTY" | tar -xzf - && \
+			curl -sSL "$URL_WINPTY" | tar -xzf - && \
 			mv winpty-*/bin/* "$CONFIG_BIN_DIR/")
 		if_failed "Check file permissions and internet connection."
 	fi
@@ -2154,7 +2154,7 @@ install_tools_ubuntu ()
 			echo "Stopping docker service..."
 			sudo service docker stop 2>/dev/null
 		fi
-		curl -ksSL https://get.docker.com/ | sh && \
+		curl -sSL https://get.docker.com/ | sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
@@ -2166,7 +2166,7 @@ install_tools_ubuntu ()
 		sudo docker version >/dev/null
 		if [[ ! $? -eq 0 ]]; then
 			_confirm 'There is some problem with your Docker installation. Do you want to try re-installing?'
-			curl -ksSL https://get.docker.com/ | sh && \
+			curl -sSL https://get.docker.com/ | sh && \
 				# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 				sudo usermod -aG docker "$LOGNAME"
 			sudo service docker start 2>/dev/null
@@ -2178,7 +2178,7 @@ install_tools_ubuntu ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -ksSL "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
+		sudo curl -sSL "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
 			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
@@ -2187,7 +2187,7 @@ install_tools_ubuntu ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		sudo curl -ksSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
+		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
 			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
 	fi
 
