@@ -10,7 +10,7 @@ Docksal expects your Behat tests to be in the `tests/behat` folder of the projec
 >       \_ composer.json
 >       \_ composer.lock
 
-See [Drupal 7 sample project](https://github.com/docksal/docksal-drupal7) repo for a working example.
+See [Drupal 7 sample project](https://github.com/docksal/drupal7) repo for a working example.
 
 ## Docker profile example
 
@@ -42,7 +42,7 @@ This will configure Behat for use with Docksal.
 **Important note**
 
 `base_url: http://hello-world.docksal` and `wd_host: http://browser.hello-world.docker:4444/wd/hub`
-should be configured based on your `docker-compose.yml` settings for `VIRTUAL_HOST`
+should be configured based on your `docksal.yml` settings for `VIRTUAL_HOST`
 in the web container definition and `DOMAIN_NAME` in the browser container definition.
 
 ## Running tests
@@ -65,7 +65,7 @@ If your tests require javascript support, selenium2-driver should be used. You c
 Selenium2 works with real browsers, using them as zombies for testing purposes. You get a standard, feature reach, real browser, with CSS styling, JS and AJAX execution - all supported out of the box.
 
 The easiest way to enable Selenium support is to use stock Selenium docker images.
-To do this, update the `docker-compose.yml` file in your project folder as follows:
+To do this, update the `docksal.yml` file in your project folder as follows:
 
 ```yml
 # selenium2 node
