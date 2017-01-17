@@ -1,47 +1,39 @@
 # Sending and capturing email
 
-!!! warning "This documentation is outdated" Instructions in this document need to be updated.
+Sending/capturing email is available via [MailHog](https://github.com/mailhog/MailHog).
 
-Sending/capturing email support can be added via [MailHog](https://github.com/mailhog/MailHog).
-
-    Out-of-the box only capturing will be working.
-    For email delivery, you will have to point MailHog to a working mail server/service.
+    Note: Out-of-the box only capturing works.
+    For email delivery, you have to point MailHog to a working mail server/service.
 
 ## Setup
 
-1. Add the `mail` service in `docksal.yml`.
+### Mail service
 
-    Replace `<project_name>` with your project name.
+Add the `mail` service in `.docksal/docksal.yml` under `services`.
 
-    ```
-    mail:
-      hostname: mail
-      image: mailhog/mailhog
-      expose:
-        - "80"
-      environment:
-        - MH_API_BIND_ADDR=0.0.0.0:80
-        - MH_UI_BIND_ADDR=0.0.0.0:80
-        - DOMAIN_NAME=mail.<project_name>.docker
-        - VIRTUAL_HOST=webmail.<project_name>.docksal
-    ```
+```
+mail:
+  hostname: mail
+  image: mailhog/mailhog
+  expose:
+    - "80"
+  environment:
+    - MH_API_BIND_ADDR=0.0.0.0:80
+    - MH_UI_BIND_ADDR=0.0.0.0:80
+    - VIRTUAL_HOST=webmail.${VIRTUAL_HOST}
+  labels:
+    - io.docksal.virtual-host=webmail.${VIRTUAL_HOST}
+```
 
-    Apply new configuration with `fin up`.
+Apply new configuration with `fin up`.
 
-2. Add to `.docksal/etc/php5/php.ini` in the project repo.
+### PHP settings
 
-    Replace `<project_name>` with your project name.
+In `.docksal/etc/php/php.ini` in the project repo add the following:
 
-    ```
-    ; Mail settings
-    sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail.<project_name>.docker:1025'
-    ```
-
-    Note: if using `version 2` docker-compose file format, then you may use this instead
-
-    ```
-    ; Mail settings
-    sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail:1025'
-    ```
+```
+; Mail settings
+sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail:1025'
+```
 
 MailHog web UI will be available at `http://webmail.<project_name>.docksal`.

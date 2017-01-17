@@ -49,7 +49,7 @@ services:
   # Varnish
   varnish:
     hostname: varnish
-    image: ${VARNISH_IMAGE:-docksal/varnish:3.0-stable}
+    image: ${VARNISH_IMAGE:-docksal/varnish:1.0-varnish4}
     labels:
       - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
     environment:
@@ -67,4 +67,4 @@ services:
   # Solr
   solr:
     hostname: solr
-    image: ${SOLR_IMAGE:-docksal/solr:4.x-stable}
+    image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.15.1
+FIN_VERSION=0.16.0
 
 # Console colors
 red='\033[0;91m'
@@ -15,10 +15,10 @@ NC='\033[0m'
 FIN_BRANCH="${FIN_BRANCH:-develop}"
 
 #---------------------------- Global Constants --------------------------------
-REQUIREMENTS_DOCKER='1.12.3'
+REQUIREMENTS_DOCKER='1.12.6'
 REQUIREMENTS_DOCKER_COMPOSE='1.9.0'
 REQUIREMENTS_DOCKER_MACHINE='0.8.2'
-REQUIREMENTS_VBOX='5.1.2'
+REQUIREMENTS_VBOX='5.1.12'
 REQUIREMENTS_WINPTY='0.4.0'
 REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
 
@@ -52,7 +52,7 @@ DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 (uname | grep 'CYGWIN_NT' >/dev/null) && \
-	vboxmanage="/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+	vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 # Stacks folder
 CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
 mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
@@ -98,6 +98,7 @@ URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${RE
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
 URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-x86_64"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
+URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER}/boot2docker.iso"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
@@ -440,8 +441,11 @@ check_binary_found ()
 check_winpty_found ()
 {
 	! is_windows && return
-	check_binary_found 'winpty'
-	winpty='winpty'
+	# Do not set winpty in non-zsh environment e.g. bash shell which Docksal creates a link for on desktop
+	if [[ "$ZSH" != "" ]]; then
+		check_binary_found 'winpty'
+		winpty='winpty'
+	fi
 }
 
 is_docker_running ()
@@ -454,8 +458,10 @@ is_docker_running ()
 	which docker >/dev/null 2>&1 && docker info >/dev/null || return 1
 }
 
-# Check whether shell is interactive
-# Otherwise we are running in a non-interactive script environment
+# Check whether we have a working tty.
+# Otherwise we are running in a non-tty environment ( e.g. Babun on Windows).
+# We assume the environment is interactive if there is a tty.
+# All other direct checks don't work well in and every environment and scripts.
 is_tty ()
 {
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
@@ -563,6 +569,18 @@ is_docker_version ()
 	return 0;
 }
 
+is_docker_server_version ()
+{
+	! which docker >/dev/null 2>&1 && return 1
+
+	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
+
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$version") ]] && \
+		return 1;
+
+	return 0;
+}
+
 is_docker_compose_version ()
 {
 	! which docker-compose >/dev/null 2>&1 && return 1
@@ -655,6 +673,9 @@ _start_containers ()
 	check_docker_running
 	echo-green "Starting services..."
 	docker_compose up -d --remove-orphans && \
+		# Give time for startup.sh in CLI to execute otherwise UID is changed too quickly
+		# which prevents xdebug from loading properly
+		sleep 1 && \
 		_set_cli_uid && \
 		_vhost_proxy_connect
 }
@@ -768,9 +789,9 @@ _docker_cleanup ()
 		docker ps -aqf status=exited | xargs docker rm -vf
 	fi
 
+	_remove_dangling_containers
 	_remove_dangling_images
 	_remove_dangling_volumes
-	_remove_dangling_containers
 
 	# TODO: remove below lines in 2017
 	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
@@ -1234,6 +1255,7 @@ docker_machine_create ()
 			check_vbox_version
 
 			docker-machine create --driver=virtualbox \
+				--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
 				--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
 				--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 				--virtualbox-hostonly-cidr "$DOCKSAL_DEFAULT_SUBNET" \
@@ -1608,7 +1630,7 @@ smb_share_mount()
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
-	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o username='${USERNAME}',pass='$3',nobrl,mfsymlinks,noperm,actimeo=1 //${DOCKER_HOST_IP}/$1 $2"
+	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o username='${USERNAME}',pass='$3',nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 $2"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 }
 
@@ -1798,6 +1820,7 @@ up ()
 {
 	check_docksal_environment
 	_start_containers
+	is_linux && ssh_add
 }
 
 # Stop containers
@@ -1813,6 +1836,7 @@ restart ()
 {
 	check_docksal_environment
 	_restart_containers
+	is_linux && ssh_add
 }
 
 # output status of containers
@@ -1848,7 +1872,14 @@ ssh_add () {
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
 	check_winpty_found
-	${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+	if is_tty; then
+		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
+		${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+	else
+		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
+		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
+		docker run --rm -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+	fi
 	return $?
 }
 
@@ -1971,11 +2002,6 @@ install_tools_mac ()
 		elif ! is_vbox_version; then
 			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
 				&& exit 1
-			# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
-			#	else
-			#		 Kill the default adapter and DHCP server to avoid network issues down the road
-			#		 "$vboxmanage" dhcpserver remove --netname HostInterfaceNetworking-vboxnet0 > /dev/null 2>&1
-			#		 "$vboxmanage" hostonlyif remove vboxnet0 > /dev/null 2>&1
 		fi
 	fi
 
@@ -2013,10 +2039,11 @@ install_tools_mac ()
 	# If it was an upgrade
 	[[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]] && \
 		is_docker_machine_running && \
-		echo-green "Upgrading Docker Machine..." && \
-		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
-		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
-		docker_machine_stop && docker_machine_start
+		echo-green "Preparing to update virtual machine..." && \
+		docker_machine_stop && \
+		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
+		curl -ksSL "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
+		docker_machine_start
 
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		local server_version=$(docker version --format '{{.Server.Version}}')
@@ -2037,13 +2064,6 @@ install_tools_windows ()
 		if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
 			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
 				&& exit 1
-# TODO: THESE LINES WERE COMMENTED OUT BECAUSE WE CAN NOT KILL THIS ADAPTER ON EACH UPGRADE
-#		else
-#			if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-#				echo-green "Killing the default VirtualBox adapter and DHCP server to avoid network issues down the road"
-#				winsudo "$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter"
-#				winsudo "$vboxmanage" hostonlyif remove "VirtualBox Host-Only Ethernet Adapter"
-#			fi
 		fi
 	fi
 
@@ -2102,10 +2122,11 @@ install_tools_windows ()
 
 	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
 		is_docker_machine_running && \
-		echo-green "Upgrading Docker Machine..." && \
-		docker-machine upgrade "$DOCKER_MACHINE_NAME" && \
-		# Restart machine right after upgrade to avoid IP change and cert issues down the road.
-		docker_machine_stop && docker_machine_start
+		echo-green "Preparing to update virtual machine..." && \
+		docker_machine_stop && \
+		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
+		curl -ksSL "$URL_BOOT2DOCKER" -o "$(cygpath $USERPROFILE)/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
+		docker_machine_start
 	fi
 
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
@@ -2128,32 +2149,23 @@ install_tools_ubuntu ()
 	fi
 
 	# Install Docker client
-	if ! is_docker_version; then
+	sudo service docker start 2>/dev/null
+	if ! is_docker_version || ! is_docker_server_version; then
 		echo-green "Installing Docker..."
-		# Stop docker dervice if it exists
+		# Stop docker service if it exists
 		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
 			echo "Stopping docker service..."
 			sudo service docker stop 2>/dev/null
 		fi
-		curl -sSL https://get.docker.com/ | sh && \
+		curl -sSL "${URL_DOCKER_NIX}" | \
+			# patch Docker installation script on the fly to install a specific Docker version
+			sed "s/apt-get update; apt-get install -y -q docker-engine/apt-get update; pckg_version=\$(apt-cache madison docker-engine | grep ${REQUIREMENTS_DOCKER} | cut -d \"|\" -f 2 | tr -d \" \"); apt-get install -y -q docker-engine=\$pckg_version/" | \
+			sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
-	else
-		echo "Starting Docker service if stopped..."
-		sudo service docker start 2>/dev/null
-		sudo docker version >/dev/null
-		if [[ ! $? -eq 0 ]]; then
-			_confirm 'There is some problem with your Docker installation. Do you want to try re-installing?'
-			curl -sSL https://get.docker.com/ | sh && \
-				# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-				sudo usermod -aG docker "$LOGNAME"
-			sudo service docker start 2>/dev/null
-			sudo docker version
-			if_failed "Docker installation/upgrade has failed."
-		fi
 	fi
 
 	# Install Docker Compose
@@ -2166,11 +2178,11 @@ install_tools_ubuntu ()
 	fi
 
 	# Install docker-machine
-	if ! is_docker_machine_version; then
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
-	fi
+#	if ! is_docker_machine_version; then
+#		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+#		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
+#			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
+#	fi
 
 	# Adding a subnet for Docksal. Make sure we don't do this twice
 	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
@@ -2270,6 +2282,18 @@ EOF
 	fi
 }
 
+# Update start script and shortcut
+update_start_script_shortcut()
+{
+	rm "$BABUN_HOME/docksal.bat" >/dev/null 2>&1
+	rm "$BABUN_HOME/docksal.ico" >/dev/null 2>&1
+	rm "$BABUN_HOME/tools/link_icon.vbs" >/dev/null 2>&1
+	curl -kfsSL "${URL_REPO}/${FIN_BRANCH}/scripts/link_icon.vbs?r=$RANDOM" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
+	curl -kfsSL "${URL_REPO}/${FIN_BRANCH}/scripts/docksal.bat?r=$RANDOM" -o "$(cygpath $BABUN_HOME)/docksal.bat"
+	curl -kfsSL "${URL_REPO}/${FIN_BRANCH}/scripts/docksal.ico?r=$RANDOM" -o "$(cygpath $BABUN_HOME)/docksal.ico"
+	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
+}
+
 # Update system conteainers' images
 update_system_images ()
 {
@@ -2284,6 +2308,8 @@ update_system_images ()
 # Update project images
 update_project_images ()
 {
+	# Need docker-compose configuration to be properly loaded here
+	load_configuration
 	check_docksal_environment
 	docker_compose pull # update project containers images
 	up
@@ -2305,11 +2331,12 @@ update ()
 	[[ "$0" == "$FIN_PATH_UPDATED" ]] && FULL_UPDATE="exit 1"
 
 	# Pre-update check #1: check if there is existing but stopped Docksal machine
+	# We need it running to know Docker server version
 	if (${FULL_UPDATE}); then
 		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
-				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' exists but not running" \
-					"Start it with ${yellow}fin vm start${NC} first or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
+				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
+					"Start it with ${yellow}fin vm start${NC} or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
 				return 1
 			fi
 		fi
@@ -2390,16 +2417,22 @@ update ()
 	# [Update - 2] Update default configs
 	update_config_files
 
-	# [Update - 3] Update system images (if possible)
+	# [Update - 3] Update start script and shortcut
+	if  is_windows; then
+		echo-green "Updating start script and shortcut..."
+		update_start_script_shortcut
+	fi
+
+	# [Update - 4] Update system images (if possible)
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && ! is_linux; then
 		echo-green "Updating system images..."
 		update_system_images
 	fi
 
-	# [Update - 4] Update third party tools (if possible)
+	# [Update - 5] Update third party tools (if possible)
 	update_tools
 
-	# [Update - 5] Restart running projects if BOOT2DOCKER was not restarted
+	# [Update - 6] Restart running projects if BOOT2DOCKER was not restarted
 	# Needed to restore containers connection to vhost_proxy
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
 		echo-green "Restarting running projects..."
@@ -2451,7 +2484,7 @@ check_for_updates ()
 	fi
 
 	if [[ ${UPDATE_AVAILABLE} -eq 0 ]]; then
-		is_docker_machine_version
+		is_docker_machine_version && ! is_linux
 		if [[ $? -eq 1 ]]; then
 			UPDATES_AVAILABLE=1
 			echo-green "Update available for docker-machine to $REQUIREMENTS_DOCKER_MACHINE"
@@ -2532,15 +2565,18 @@ _run ()
 		return
 	fi
 
+	# Source $HOME/.docksalrc in cli.
+	# Commands in this file will be sourced for both interactive and non-interactive sessions.
+	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
 	# Enter project containers
 	if is_tty ; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
 		check_winpty_found
-		${winpty} docker exec -it "$container_id" bash -ic "$cmd; (exit \$?)"
+		${winpty} docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec "$container_id" bash -c "$cmd"
+		docker exec "$container_id" bash -c "$DOCKSALRC; $cmd"
 	fi
 	# ------------------------------------------------ #
 }
@@ -3044,6 +3080,8 @@ load_configuration ()
 	# Make project root globally available
 	export DOCKSAL_PATH="$(get_project_path)"
 	export PROJECT_ROOT="$(get_project_path)"
+	# Set this to 0 to account for docker-compose bug https://github.com/docker/compose/pull/4294
+	export COMPOSE_CONVERT_WINDOWS_PATHS=0
 
 	if is_docker_running; then
 		export DOCKER_RUNNING="true"
@@ -3299,6 +3337,8 @@ case "$1" in
 		shift
 		if [[ "$1" == "--system-images" ]]; then
 			update_system_images
+		elif [[ "$1" == "--project-images" ]]; then
+			update_project_images
 		elif [[ "$1" == "--self" ]]; then
 			echo "Downloading $URL_FIN"
 			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH" >/dev/null

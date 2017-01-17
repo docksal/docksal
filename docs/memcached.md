@@ -1,6 +1,6 @@
 # Enable Memcached support
 
-## Append to `docksal.yml`
+Add the `memcached` service under the `services` section in `.docksal/docksal.yml`
 
 ```
   # Memcached
@@ -12,12 +12,6 @@
       - MEMCACHED_MEMORY_LIMIT=128
 ```
 
-## Restart project containers
-
-```
-fin up
-```
-
-### Configuration
+Apply new configuration with `fin up`.
 
 Use `memcached:11211` as the memcached endpoint.
