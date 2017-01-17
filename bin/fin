@@ -569,6 +569,18 @@ is_docker_version ()
 	return 0;
 }
 
+is_docker_server_version ()
+{
+	! which docker >/dev/null 2>&1 && return 1
+
+	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
+
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$version") ]] && \
+		return 1;
+
+	return 0;
+}
+
 is_docker_compose_version ()
 {
 	! which docker-compose >/dev/null 2>&1 && return 1
@@ -2137,32 +2149,23 @@ install_tools_ubuntu ()
 	fi
 
 	# Install Docker client
-	if ! is_docker_version; then
+	sudo service docker start 2>/dev/null
+	if ! is_docker_version || ! is_docker_server_version; then
 		echo-green "Installing Docker..."
-		# Stop docker dervice if it exists
+		# Stop docker service if it exists
 		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
 			echo "Stopping docker service..."
 			sudo service docker stop 2>/dev/null
 		fi
-		curl -sSL "${URL_DOCKER_NIX}" | sh && \
+		curl -sSL "${URL_DOCKER_NIX}" | \
+			# patch Docker installation script on the fly to install a specific Docker version
+			sed "s/apt-get update; apt-get install -y -q docker-engine/apt-get update; pckg_version=\$(apt-cache madison docker-engine | grep ${REQUIREMENTS_DOCKER} | cut -d \"|\" -f 2 | tr -d \" \"); apt-get install -y -q docker-engine=\$pckg_version/" | \
+			sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
-	else
-		echo "Starting Docker service if stopped..."
-		sudo service docker start 2>/dev/null
-		sudo docker version >/dev/null
-		if [[ ! $? -eq 0 ]]; then
-			_confirm 'There is some problem with your Docker installation. Do you want to try re-installing?'
-			curl -sSL "${URL_DOCKER_NIX}" | sh && \
-				# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-				sudo usermod -aG docker "$LOGNAME"
-			sudo service docker start 2>/dev/null
-			sudo docker version
-			if_failed "Docker installation/upgrade has failed."
-		fi
 	fi
 
 	# Install Docker Compose
@@ -2175,11 +2178,11 @@ install_tools_ubuntu ()
 	fi
 
 	# Install docker-machine
-	if ! is_docker_machine_version; then
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
-	fi
+#	if ! is_docker_machine_version; then
+#		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+#		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
+#			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
+#	fi
 
 	# Adding a subnet for Docksal. Make sure we don't do this twice
 	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
@@ -2481,7 +2484,7 @@ check_for_updates ()
 	fi
 
 	if [[ ${UPDATE_AVAILABLE} -eq 0 ]]; then
-		is_docker_machine_version
+		is_docker_machine_version && ! is_linux
 		if [[ $? -eq 1 ]]; then
 			UPDATES_AVAILABLE=1
 			echo-green "Update available for docker-machine to $REQUIREMENTS_DOCKER_MACHINE"
