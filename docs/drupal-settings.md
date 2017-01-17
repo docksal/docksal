@@ -118,6 +118,11 @@ $conf['memcache_servers'] = array(
 **Drupal 8**
 
 Enable the Memcache module in Drupal.  
+
+    Note: Configuring memcache in Drupal 8 requires the Memcache module to first be enabled.
+    (Re)installing a Drupal 8 site with these settings will fail.
+    Comment the settings out, (re)install, then uncomment the settings back. 
+
 Edit `settings.php` and add the following lines to point Drupal to the memcached service. 
 
 ```php

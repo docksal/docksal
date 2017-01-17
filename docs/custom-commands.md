@@ -4,8 +4,6 @@ It is possible to extend fin with custom commands per project or per host.
 
 ## Creating custom commands in a project 
 
-### 1. Create a custom command script
-
 Create a file at this location `.docksal/commands/updb` (Notice **no extension**. Script name should match command name) with the following contents:
 
 ```bash
@@ -18,15 +16,17 @@ Create a file at this location `.docksal/commands/updb` (Notice **no extension**
 fin drush updb $1
 ```
 
-Note that this is a Drupal-specific command.
-
-### 2. Make the file executable
+Make the file executable
 
 ```
 chmod +x .docksal/commands/updb
 ```
 
-Now you can use it as if it was a regular fin command: `fin updb`. Passing parameters also works: `fin updb -y`. The command description will be visible in `fin help` and the full command help will be available via `fin help updb`. 
+Now you can use it as if it was a regular fin command: `fin updb`. 
+Passing parameters also works: `fin updb -y`. 
+The command description will be visible in `fin help` and the full command help will be available via `fin help updb`. 
+
+Note: `drush updb` this is a Drupal-specific example.
 
 ## Available variables
 

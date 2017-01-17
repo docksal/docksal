@@ -1,8 +1,5 @@
 # MySQL DB access for external tools
 
-!!! warning "This documentation is outdated"
-    Instructions in this document need to be updated
-
 The MySQL service in the `db` container is exposed at a random port by default.
 This is done to avoid port conflicts when running multiple Docksal powered projects (multisites don't count).
 
@@ -12,15 +9,13 @@ Keep in mind, the random port value will change every time the `db` container is
 
 ## Assigning a static port
 
-To have a static port assigned, override the MYSQL_PORT variable value in `.docksal/docksal-local.env`.
+To have a static port assigned, override the `MYSQL_PORT_MAPPING` variable value in `.docksal/docksal-local.env`.
 
-Replace `<unique-static-port>` with a **unique** port number (unique across all Docksal powered projects on your host):
+Replace `<unique-static-port>` with a **unique** port number (unique across all Docksal powered projects on your host).
 
 ```
 MYSQL_PORT_MAPPING='<unique-static-port>:3306'
 ```
-
-Replace `<unique-static-port>` with a **unique** port number (unique across all Docksal powered projects on your host):
 
 ## Examples
 
