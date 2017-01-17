@@ -873,6 +873,7 @@ show_help ()
 
 	echo
 	printh "bash [service]" "Open shell into container. Defaults to ${yellow}cli${NC}"
+	printh "zsh" "Open zsh shell into ${yellow}cli${NC}"
 	printh "exec <command> [params]" "Execute a command in ${yellow}cli${NC}"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "logs [service]" "Show Docker logs for service container (e.g. Apache logs)"
@@ -2510,6 +2511,20 @@ _bash ()
 	CONTAINER_NAME=$1 _run bash -i
 }
 
+# Start an interactive zsh session in a container
+_zsh ()
+{
+	check_docker_running
+	# Interactive shell requires a tty.
+	# On Windows we assume we run interactively via winpty.
+	if ! is_tty; then
+		echo "Interactive zsh console in a non-interactive enveronment!? Nope, won't happen."
+		return 1
+	fi
+
+	_run zsh -i
+}
+
 # Run a command in the cli container changing dir to the same folder
 # @param $* command with it's params to run
 _run ()
@@ -3348,6 +3363,10 @@ case "$1" in
 	bash)
 		shift
 		_bash "$@"
+		;;
+	zsh)
+		shift
+		_zsh
 		;;
 	exec|run)
 		shift
