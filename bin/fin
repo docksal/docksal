@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.16.0
+FIN_VERSION=0.16.1
 
 # Console colors
 red='\033[0;91m'
@@ -2484,7 +2484,7 @@ check_for_updates ()
 	fi
 
 	if [[ ${UPDATE_AVAILABLE} -eq 0 ]]; then
-		is_docker_machine_version && ! is_linux
+		is_docker_machine_version
 		if [[ $? -eq 1 ]]; then
 			UPDATES_AVAILABLE=1
 			echo-green "Update available for docker-machine to $REQUIREMENTS_DOCKER_MACHINE"
