@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.15.4
+FIN_VERSION=0.15.5
 
 # Console colors
 red='\033[0;91m'
@@ -1610,7 +1610,7 @@ smb_share_mount()
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
-	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o username='${USERNAME}',pass='$3',nobrl,mfsymlinks,noperm,actimeo=1 //${DOCKER_HOST_IP}/$1 $2"
+	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o username='${USERNAME}',pass='$3',nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 $2"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 }
 
