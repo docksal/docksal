@@ -657,6 +657,9 @@ _start_containers ()
 	check_docker_running
 	echo-green "Starting services..."
 	docker_compose up -d --remove-orphans && \
+		# Give time for startup.sh in CLI to execute otherwise UID is changed too quickly
+		# which prevents xdebug from loading properly
+		sleep 1 && \
 		_set_cli_uid && \
 		_vhost_proxy_connect
 }
