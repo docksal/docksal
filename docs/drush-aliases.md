@@ -6,13 +6,12 @@ There are several places where Drush looks for the alias files.
 The following locations will work in Docksal:
 
 ```
-$HOME/.drush/aliases
 $DOCROOT/drush/aliases
 $DOCROOT/sites/all/drush/aliases
 $DOCROOT/../drush/aliases
 ```
 
-Where `$HOME` is your host home directory and `$DOCROOT` is the project's `docroot` folder.
+Where `$DOCROOT` is the project's `docroot` folder.
 
 To check the list of available site aliases run `fin drush sa`.  
 Project specific site aliases are only visible when running drush within the project's `docroot` folders.
