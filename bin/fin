@@ -872,7 +872,7 @@ show_help ()
 	printh "rm [service]" "Remove project services (${yellow}fin help rm${NC})"
 
 	echo
-	printh "bash [service]" "Open shell into container. Defaults to ${yellow}cli${NC}"
+	printh "bash [service]" "Open bash shell into container. Defaults to ${yellow}cli${NC}"
 	printh "zsh" "Open zsh shell into ${yellow}cli${NC}"
 	printh "exec <command> [params]" "Execute a command in ${yellow}cli${NC}"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
