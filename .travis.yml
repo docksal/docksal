@@ -1,0 +1,28 @@
+sudo: required
+
+language: generic
+
+env:
+  OS: linux
+  IMAGE_VHOST_PROXY: vhost-proxy:test
+  # Only use seconds here, so that these can be used with "sleep" as well
+  PROJECT_INACTIVITY_TIMEOUT: 30s
+  PROJECT_DANGLING_TIMEOUT: 60s
+  PROXY_DEBUG: 1
+
+services:
+  - docker
+
+install:
+  - sudo sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
+  - fin version
+  - fin update
+  - fin docker build -t ${IMAGE_VHOST_PROXY} .
+  - PROJECTS_ROOT=$TRAVIS_BUILD_DIR fin reset proxy
+  - fin sysinfo
+
+before_script:
+  - .travis/before_script.sh
+
+script:
+  - bats tests/smoke-test.bats
