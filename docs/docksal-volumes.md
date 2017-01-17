@@ -7,6 +7,10 @@
 
 `~/.docksal/stacks/volumes-bind.yml`
 
+## Volumes nfs
+
+`~/.docksal/stacks/volumes-nfs.yml`
+
 ## Volumes unison
 
 `~/.docksal/stacks/volumes-unison.yml`
