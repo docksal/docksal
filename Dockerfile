@@ -37,6 +37,7 @@ COPY conf/sudoers /etc/sudoers
 RUN chmod 0440 /etc/sudoers
 
 COPY conf/nginx.default.conf.tmpl /etc/nginx/default.conf.tmpl
+COPY conf/default_locations.conf /etc/nginx/default_locations.conf
 COPY conf/supervisord.conf /etc/supervisor.d/docker-gen.ini
 
 COPY conf/crontab /var/spool/cron/crontabs/root

@@ -86,6 +86,32 @@ teardown() {
 	[[ $output =~ "robots.txt" ]]
 }
 
+@test "Proxy can start an existing stopped project by https" {
+	[[ $SKIP == 1 ]] && skip
+
+	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
+	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
+
+	cwd=$(pwd)
+	cd ../drupal7 && fin stop
+	cd $cwd
+
+	run curl -k https://drupal7.docksal/robots.txt
+	[[ $output =~ "Waking up the daemons..." ]]
+}
+
+@test "Proxy started the project by https within 15 seconds" {
+	[[ $SKIP == 1 ]] && skip
+
+	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
+	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
+
+	# Wait for start
+	sleep 15
+	run curl -k https://drupal7.docksal/robots.txt
+	[[ $output =~ "robots.txt" ]]
+}
+
 @test "Proxy cleaned up projects after \"${PROJECT_DANGLING_TIMEOUT}\" of inactivity" {
 	[[ $SKIP == 1 ]] && skip
 
