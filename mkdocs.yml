@@ -8,10 +8,13 @@ markdown_extensions:
 pages:
   - Home: index.md
   - Getting started:
+    - What's in the Software?: the-software.md
+    - Initial setup: setup.md
     - System requirements: system-requirements.md
     - Explaining the Docksal stack: docksal-stack.md
     - Docksal environment setup: env-setup.md
     - Configure a project to use Docksal: project-setup.md
+  - Troubleshooting: troubleshooting.md
   - Advanced configuration:
     - Running multiple projects: multiple-projects.md
     - Drupal settings (database, files): drupal-settings.md
@@ -36,4 +39,3 @@ pages:
     - Blackfire profiler: blackfire.md
     - Behat: behat.md
     - Public access via ngrok: public-access.md
-  - Troubleshooting: troubleshooting.md
