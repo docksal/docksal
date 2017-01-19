@@ -2002,7 +2002,7 @@ install_tools_mac ()
 			echo-error "$vboxmanage executable was not found. VirtualBox is required to run Docksal on Mac." \
 				&& exit 1
 		elif ! is_vbox_version; then
-			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
+			echo-error "Required VirtualBox version is $REQUIREMENTS_VBOX or higher" \
 				&& exit 1
 		fi
 	fi
@@ -2062,9 +2062,9 @@ install_tools_windows ()
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
 	if ! is_docker_native; then
-		# Check Virtual Box
+		# Check VirtualBox
 		if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
-			echo-error "Required Virtual Box version is $REQUIREMENTS_VBOX or higher" \
+			echo-error "Required VirtualBox version is $REQUIREMENTS_VBOX or higher" \
 				&& exit 1
 		fi
 	fi
@@ -2930,7 +2930,7 @@ sysinfo ()
 	fi
 
 	if which "$vboxmanage" >/dev/null 2>&1; then
-		echo "███  VIRTUAL BOX"
+		echo "███  VIRTUALBOX"
 		"$vboxmanage" --version
 
 		echo "███  NETWORK INTERFACES"
