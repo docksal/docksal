@@ -10,9 +10,7 @@ green_bg='\033[42m'
 yellow='\033[1;33m'
 NC='\033[0m'
 
-# TODO: change to master before release
-#FIN_BRANCH="${FIN_BRANCH:-master}"
-FIN_BRANCH="${FIN_BRANCH:-develop}"
+DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 #---------------------------- Global Constants --------------------------------
 REQUIREMENTS_DOCKER='1.12.6'
@@ -81,15 +79,15 @@ URL_REPO_UI="https://github.com/docksal/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
-URL_FIN="${URL_REPO}/${FIN_BRANCH}/bin/fin"
-URL_STACKS_SERVICES="${URL_REPO}/${FIN_BRANCH}/stacks/services.yml"
-URL_STACKS_STACK_ACQUIA="${URL_REPO}/${FIN_BRANCH}/stacks/stack-acquia.yml"
-URL_STACKS_STACK_ACQUIA_STATIC="${URL_REPO}/${FIN_BRANCH}/stacks/stack-acquia-static.yml"
-URL_STACKS_STACK_DEFAULT="${URL_REPO}/${FIN_BRANCH}/stacks/stack-default.yml"
-URL_STACKS_STACK_DEFAULT_STATIC="${URL_REPO}/${FIN_BRANCH}/stacks/stack-default-static.yml"
-URL_STACKS_VOLUMES_BIND="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-bind.yml"
-URL_STACKS_VOLUMES_NFS="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-nfs.yml"
-URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${FIN_BRANCH}/stacks/volumes-unison.yml"
+URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
+URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
+URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
+URL_STACKS_STACK_ACQUIA_STATIC="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia-static.yml"
+URL_STACKS_STACK_DEFAULT="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default.yml"
+URL_STACKS_STACK_DEFAULT_STATIC="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default-static.yml"
+URL_STACKS_VOLUMES_BIND="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-bind.yml"
+URL_STACKS_VOLUMES_NFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-nfs.yml"
+URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-unison.yml"
 
 URL_DOCKER_MAC="https://get.docker.com/builds/Darwin/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
@@ -473,8 +471,8 @@ is_tty ()
 
 testing_warn ()
 {
-	[[ "$FIN_BRANCH" != 'master' ]] && is_tty && \
-		echo-yellow "[!] Using Docksal ${FIN_BRANCH} branch"
+	[[ "$DOCKSAL_VERSION" != 'master' ]] && is_tty && \
+		echo-yellow "[!] Using Docksal version: ${DOCKSAL_VERSION}"
 }
 
 # Convert version string like 1.2.3 to integer for comparison
@@ -2290,9 +2288,9 @@ update_start_script_shortcut()
 	rm "$BABUN_HOME/docksal.bat" >/dev/null 2>&1
 	rm "$BABUN_HOME/docksal.ico" >/dev/null 2>&1
 	rm "$BABUN_HOME/tools/link_icon.vbs" >/dev/null 2>&1
-	curl -kfsSL "${URL_REPO}/${FIN_BRANCH}/scripts/link_icon.vbs?r=$RANDOM" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
-	curl -kfsSL "${URL_REPO}/${FIN_BRANCH}/scripts/docksal.bat?r=$RANDOM" -o "$(cygpath $BABUN_HOME)/docksal.bat"
-	curl -kfsSL "${URL_REPO}/${FIN_BRANCH}/scripts/docksal.ico?r=$RANDOM" -o "$(cygpath $BABUN_HOME)/docksal.ico"
+	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/link_icon.vbs" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
+	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.bat" -o "$(cygpath $BABUN_HOME)/docksal.bat"
+	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.ico" -o "$(cygpath $BABUN_HOME)/docksal.ico"
 	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
 }
 

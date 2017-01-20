@@ -8,14 +8,10 @@ env:
 services:
   - docker
 
-#branches:
-#  only:
-#  - develop
-
 install:
   - sudo cp ./bin/fin /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
   - fin version
-  - export FIN_BRANCH=$(if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then echo "$TRAVIS_PULL_REQUEST_BRANCH"; else echo "$TRAVIS_BRANCH"; fi )
+  - export DOCKSAL_VERSION="$TRAVIS_BRANCH"
   - fin update
   - fin sysinfo
 
