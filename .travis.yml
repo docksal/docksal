@@ -16,6 +16,7 @@ install:
   - sudo cp ./bin/fin /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
   - fin version
   - export FIN_BRANCH=$(if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then echo "$TRAVIS_PULL_REQUEST_BRANCH"; else echo "$TRAVIS_BRANCH"; fi )
+  - export URL_REPO_SLUG=$TRAVIS_REPO_SLUG
   - fin update
   - fin sysinfo
 
@@ -32,3 +33,6 @@ script:
   # Test a project workflow
   - cd "$TRAVIS_BUILD_DIR/../drupal8"
   - bats "$TRAVIS_BUILD_DIR/tests/smoke-test-general.bats"
+  # Test Docksal cleanup
+  - cd "$TRAVIS_BUILD_DIR" && rm "$TRAVIS_BUILD_DIR/../drupal8"
+  - bats "$TRAVIS_BUILD_DIR/tests/smoke-test-cleanup.bats"

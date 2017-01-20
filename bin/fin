@@ -76,7 +76,8 @@ DEFAULT_MACHINE_VBOX_HDD='20000' #mb
 DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
 
 #---------------------------- URL references --------------------------------
-URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
+URL_REPO_SLUG="${URL_REPO_SLUG:-docksal/docksal}"
+URL_REPO="https://raw.githubusercontent.com/${URL_REPO_SLUG}"
 URL_REPO_UI="https://github.com/docksal/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
