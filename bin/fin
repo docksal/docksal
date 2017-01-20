@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.16.3
+FIN_VERSION=0.17.0
 
 # Console colors
 red='\033[0;91m'
@@ -886,7 +886,7 @@ show_help ()
 	fi
 	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects)"
 	printh "restart" "Restart all current project services"
-	printh "status (ps) [-a (--all)]" "Show project services status (-a shows all running containers)"
+	printh "ps" "List project services"
 	printh "reset [service]" "Recreate project services and containers (${yellow}fin help reset${NC})"
 	printh "rm [service]" "Remove project services (${yellow}fin help rm${NC})"
 
@@ -914,6 +914,7 @@ show_help ()
 
 	echo
 	printh "alias" "Create/remove folder aliases (${yellow}fin help alias${NC})"
+	printh "projects [-a (--all)]" "List running Docksal projects (-a to show stopped as well)"
 	printh "config [command]" "Display/generate project configuration (${yellow}fin help config${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
@@ -1830,20 +1831,25 @@ restart ()
 	is_linux && ssh_add
 }
 
-# output status of containers
-# @param $1 Show containers from all projects (-a)
-status ()
+# List project containers
+_ps ()
 {
+	check_docksal_environment
+	docker_compose ps
+}
 
+# List Docksal projects
+# @param $1 Show containers from all projects (-a)
+projects ()
+{
+	local all
 	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
-		check_docker_running
-		docker ps --all \
-			--filter 'label=com.docker.compose.service=web' \
-			--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
-	else
-		check_docksal_environment
-		docker_compose ps
+		all="--all"
 	fi
+	check_docker_running
+	docker ps ${all} \
+		--filter 'label=com.docker.compose.service=web' \
+		--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
@@ -3249,7 +3255,7 @@ fi
 	[[ "$*" != "reset proxy" ]] &&
 	[[ "$*" != "reset ssh-agent" ]] &&
 	[[ "$*" != "reset system" ]] &&
-	[[ "$*" != "ps -a" ]] && [[ "$*" != "ps --all" ]] &&
+	[[ "$1" != "projects" ]] &&
 	load_configuration &&
 	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
@@ -3272,8 +3278,11 @@ case "$1" in
 		restart
 		;;
 	ps)
+		_ps
+		;;
+	projects)
 		shift
-		status "$@"
+		projects "$@"
 		;;
 	reset)
 		shift
