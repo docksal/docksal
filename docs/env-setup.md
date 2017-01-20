@@ -4,6 +4,7 @@
     Once you have a working Docksal environment in place, you can use it for all Docksal powered projects.
 
 Installing Docksal on
+
 - [Windows](#windows)
 - [macOS](#macos)
 - [Ubuntu Linux](#linux)

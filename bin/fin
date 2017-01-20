@@ -793,7 +793,7 @@ _docker_cleanup ()
 	_remove_dangling_images
 	_remove_dangling_volumes
 
-	# TODO: remove below lines in 2017
+	# TODO: remove below lines in March 2017
 	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/backups/Vagrantfile."* >/dev/null 2>&1
 	rm -r "$OLD_CONFIG_DIR/backups" >/dev/null 2>&1
@@ -1269,7 +1269,6 @@ docker_machine_create ()
 			echo -n "Provide Digital Ocean access token: "
 			read token
 			[[ "$token" == "" ]] && echo "Invalid token" && return 1
-			# TODO: sync folder on windows is not $HOME
 			local syncthing_id
 			docker-machine create --driver=digitalocean \
 				--digitalocean-access-token="$token" \
@@ -1651,11 +1650,6 @@ docker_machine_mount_smb ()
 			smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
 			(echo-red "Error creating share" && exit 1)
 	done
-
-	# TODO: remove /.home mount completely once proper adjustments are made in docksal/cli
-	# Mount user's home directory
-	#local HOME_PATH=$(cygpath -m $HOME | sed 's/\://')
-	#smb_share_mount "$HOME_PATH" "/.home" "$PASSWORD"
 }
 
 docker_machine_remove_smb ()
@@ -1673,8 +1667,6 @@ docker_machine_mounts ()
 	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
 		if is_mac; then
 			echo-green "Configuring NFS shares..."
-			# TODO: remove /.home mount completely once proper adjustments are made in docksal/cli
-			#docker_machine_mount_nfs "/Users:/Users" --no-export="$HOME:/.home"
 			docker_machine_mount_nfs "/Users:/Users"
 		elif is_windows; then
 			echo-green "Configuring SMB shares..."
@@ -1710,7 +1702,6 @@ vm ()
 			docker_machine_create "${ARGV[0]}" "$provider"
 			;;
 		active)
-			# TODO: ability to set to NONE for linux to use docker directly
 			# Get/Set active vm
 			shift
 			if [[ "$1" == "" ]]; then
@@ -1887,9 +1878,6 @@ ssh_add () {
 
 install_proxy_service ()
 {
-	# TODO: 0.8.0 breaking change. Remove with 1.0 release
-	docker rm -f vhost-proxy >/dev/null 2>&1 || true
-
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
 
@@ -1923,9 +1911,6 @@ install_dns_service ()
 	local docker_ip_map="-p 172.17.42.1:53:53/udp"
 	if is_linux; then docker_ip_map=""; fi
 
-	# TODO: 0.8.0 breaking change. Remove with 1.0 release
-	docker rm -f dns >/dev/null 2>&1 || true
-
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always --privileged --userns=host \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
@@ -1935,7 +1920,6 @@ install_dns_service ()
 }
 
 # Configuring sytem-wide *.$DOCKSAL_DNS_DOMAIN resolver (Windows not supported)
-# TODO: change this function to work properly with DO provider
 configure_resolver ()
 {
 	check_docker_running
@@ -1974,9 +1958,6 @@ configure_resolver ()
 
 install_sshagent_service ()
 {
-	# TODO: 0.8.0 breaking change. Remove with 1.0 release
-	docker rm -f ssh-agent >/dev/null 2>&1 || true
-
 	docker rm -f docksal-ssh-agent >/dev/null 2>&1 || true
 	docker volume rm docksal_ssh_agent >/dev/null 2>&1 || true
 
@@ -2061,7 +2042,7 @@ install_tools_windows ()
 
 	if ! is_docker_native; then
 		# Check VirtualBox
-		if ! is_vbox_version; then # TODO: check_vbox_version should say where it looks for vbox. Not found or versions wrong?
+		if ! is_vbox_version; then
 			echo-error "Required VirtualBox version is $REQUIREMENTS_VBOX or higher" \
 				&& exit 1
 		fi
@@ -2235,9 +2216,10 @@ update_config_files ()
 			$URL_STACKS_VOLUMES_NFS
 			$URL_STACKS_VOLUMES_UNISON
 	"
-	# TODO: cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
+		# Cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
+		rm -f "$CONFIG_STACKS_DIR/*"
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
@@ -2384,7 +2366,7 @@ update ()
 
 		# Check if fin update is required and whether it is a major version
 		local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
-		# TODO: UNCOMMENT
+
 		if [[ "$new_version" != "$FIN_VERSION" ]]; then
 			local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
 			local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
@@ -2850,14 +2832,7 @@ _set_cli_uid ()
 	fi
 
 	echo-green "Restarting php daemon..."
-	# TODO: Remove. This code is to support legacy cli image version, where php5-fpm service name was used.
-	local php_service
-	if (docker exec ${cli} grep "program:php5-fpm" /etc/supervisor/conf.d/supervisord.conf >/dev/null); then
-		php_service='php5-fpm';
-	else
-		php_service='php-fpm';
-	fi
-	docker exec -u root ${cli} supervisorctl restart "$php_service" >/dev/null
+	docker exec -u root ${cli} supervisorctl restart php-fpm >/dev/null
 }
 
 # Share web container using ngrok service
@@ -3275,8 +3250,6 @@ fi
 	[[ "$*" != "reset ssh-agent" ]] &&
 	[[ "$*" != "reset system" ]] &&
 	[[ "$*" != "ps -a" ]] && [[ "$*" != "ps --all" ]] &&
-	[[ "$*" != "st -a" ]] && [[ "$*" != "st --all" ]] &&
-	[[ "$*" != "status -a" ]] && [[ "$*" != "status --all" ]] &&
 	load_configuration &&
 	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
@@ -3286,7 +3259,6 @@ case "$1" in
 		shift
 		bash_comp_words "$@"
 		;;
-	# TODO: pick one, get rid of the other one.
 	up|start)
 		shift
 		up
@@ -3299,8 +3271,7 @@ case "$1" in
 		shift
 		restart
 		;;
-	# TODO: pick one, get rid of the other one (st vs ps).
-	status|st|ps)
+	ps)
 		shift
 		status "$@"
 		;;

@@ -3,7 +3,7 @@
 By default, container ports are not accessible outside of Docker. Other containers can work with them, but you can't access them from your host.
 
 ```
-$ fin status
+$ fin ps
      Name                   Command               State        Ports
 --------------------------------------------------------------------------
 netscout_cli_1   /opt/startup.sh gosu root  ...   Up      22/tcp, 9000/tcp
@@ -38,7 +38,7 @@ version: "2"
 Note `0.0.0.0:2222` is pointing to `22`.
 
 ```
-$ fin status
+$ fin ps
      Name                   Command               State            Ports
 ---------------------------------------------------------------------------------
 netscout_cli_1   /opt/startup.sh gosu root  ...   Up      0.0.0.0:2222->22/tcp, 9000/tcp
