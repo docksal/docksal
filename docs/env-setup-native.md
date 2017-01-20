@@ -11,7 +11,7 @@ On Mac and Windows, you can use native Docker applications instead of VirtualBox
 
 **2.** Install `fin` and run `fin update`, unless already installed.
 
-```
+```bash
 sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
 sudo chmod +x /usr/local/bin/fin
 fin update
@@ -19,7 +19,7 @@ fin update
 
 **3.** Tell Docksal to use native apps.
 
-```
+```bash
 export DOCKER_NATIVE=1
 ```
 
@@ -28,7 +28,7 @@ All further `fin` commands should be run within the same terminal tab/session.
 
 **4.** Check and confirm the switch.
 
-```
+```bash
 fin docker info | grep "Kernel Version"
 ```
 
@@ -37,7 +37,7 @@ then `fin` was able to communicate with your Docker for Mac/Windows instance.
 
 **5.** Reset Docksal system containers.
 
-```
+```bash
 fin reset system
 ```
 
@@ -45,13 +45,13 @@ fin reset system
 
 **1.** Tell Docksal to use the default VirtualBox approach.
 
-```
+```bash
 unset DOCKER_NATIVE
 ```
 
 **2.** Check and confirm the switch.
 
-```
+```bash
 fin docker info | grep "Kernel Version"
 ```
 
@@ -62,6 +62,6 @@ If you see:
 
 **3.** Reset Docksal system containers.
 
-```
+```bash
 fin reset system
 ```

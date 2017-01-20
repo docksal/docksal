@@ -5,7 +5,7 @@ When working with projects hosted on a remote server you would often use drush s
 There are several places where Drush looks for the alias files.  
 The following locations will work in Docksal:
 
-```
+```bash
 $DOCROOT/drush/aliases
 $DOCROOT/sites/all/drush/aliases
 $DOCROOT/../drush/aliases

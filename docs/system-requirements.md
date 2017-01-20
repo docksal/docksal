@@ -15,8 +15,8 @@
 - 64-bit OS is required for all platforms
 - (**Mac**) OS X El Capitan 10.11 or newer
 - (**Mac**) VirtualBox prior to version 4.3.30 must NOT be installed
-- (**Win**) Windows 7 or higher
-- (**Linux**) Ubuntu Linux 14.04 or newer (or it's derivatives) with Linux kernel 3.10 or higher
+- (**Win**) Windows 7 or newer
+- (**Linux**) Ubuntu Linux 14.04 or newer (or it's derivatives) with Linux kernel 3.10 or newer
 
 
 Refer to the [environment setup instructions](env-setup.md) for further steps.

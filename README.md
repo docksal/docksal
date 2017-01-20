@@ -66,7 +66,7 @@ fin update
 - [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
 - [Drush aliases](/docs/drush-aliases.md)
 - [Automatic database import](docs/db-import.md)
-- [DB sandbox mode](/docs/db-sandbox.md)
+- [Database sandbox mode](/docs/db-sandbox.md)
 - [Extending fin with custom commands](/docs/custom-commands.md)
 - [Increasing vm memory (RAM)](/docs/vm.md)
 - [Exposing any Docker container's port](/docs/expose-port.md)

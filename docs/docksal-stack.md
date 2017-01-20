@@ -2,26 +2,19 @@
 
 This page explains how Docksal works under the hood.
 
-1. [System services](#docksal-system-services)
-2. [Project services](#docksal-project-services)
-3. [Customizing project configuration](#project-customization)
-
----
-
 <a name="docksal-system-services"></a>
 ## System services
 
 When you run `fin update` for the first time, Docksal installs several system containers.  
-To see the list run `fin docker ps --filter "label=io.docksal.group=system"`
+To see the list, run `fin docker ps --filter "label=io.docksal.group=system"`
 
-### SSH Agent
+### SSH agent
 
 [docksal-ssh-agent](https://github.com/docksal/service-ssh-agent) service stores SSH keys and makes them available 
-to other projects and containers. Without it you would have to mount your SSH keys into every project where you needed them.  
-Also, if your keys are password protected, you would need to enter password each time they are used. ssh-agent takes care of that as well.
+to other projects and containers.
 
-ssh-agent imports your keys only once and allows their reuse throughout all running projects without a need to re-enter 
-the passphrase, which can be especially annoying if you need an ssh key to checkout/commit to a repo.
+SSH agent can handle passphrase protected ssh keys, so you don't have to enter the passphrase every time the key is used. 
+The passphrase is entered one only time, when the key is loaded into the agent.
 
 ### DNS
 
@@ -43,24 +36,26 @@ This allows for a seamless work with multiple project stacks at the same time.
 <a name="docksal-project-services"></a>
 ## Project services
 
-A standard Docksal project consists of 3 canonical services: `web`, `db` and `cli`. These services represent the LAMP stack.
+Each project usually consists of at least 3 services: `web`, `db` and `cli`.
 
-### Web
+### web
 
-Docksal's [Web service](https://github.com/docksal/service-web) runs Apache Server 2.2 or 2.4
+The [web](https://github.com/docksal/service-web) service runs Apache server 2.2 or 2.4.
 
-### DB
+### db
 
-Docksal's [DB service](https://github.com/docksal/service-db) runs MySQL 5.5, 5.6, 5.7 or 8.0
+The [db](https://github.com/docksal/service-db) service runs MySQL 5.5, 5.6, 5.7 or 8.0
 
-### CLI
+### cli
 
-Docksal's [CLI service](https://github.com/docksal/service-cli) provides an environment to run `php-fpm`,
-which is used by `web` service, as well as for Behat, mysql client, drush and other tools. It provides a reliable automation
-interface via `fin exec`.
+The [cli](https://github.com/docksal/service-cli) service runs `php-fpm` (used by `web` service) and also provides 
+a Linux console with all necessary command line tools installed and pre-configured 
+(e.g. drush, drupal console, wp-cli, phpcs, behat, mysql client and many more).
+
+The console can be access from the host machine via `fin bash`. Individual tools/binaries can be executed via `fin exec`.
 
 <a name="project-customization"></a>
 ## Customizing project configurations
 
-If you are ready to customize Docksal services' settings for your project then check out [customizing project configurations](project-customize.md)
-to learn about `docksal.yml` structure and how to properly edit it.
+If you are ready to customize Docksal service settings for your project, then check out [Customizing project configurations](project-customize.md)
+to learn about the `docksal.yml` structure and how to properly edit it.

@@ -4,7 +4,7 @@
 
 Add the Apache Solr service to `.docksal/docksal.yml` under `services`.
 
-```yml
+```yaml
 # Solr
 solr:
   hostname: solr
@@ -15,7 +15,7 @@ Run `fin up` to apply the new configuration.
 
 ## Drupal configuration
 
-Enable all required by your version of Drupal modules for Solr search integration on your site.
+Enable all required by your version of Drupal modules for the Apache Solr search integration.
 
 For Apachesolr module add your Solr server using following server url:
 
@@ -23,7 +23,7 @@ For Apachesolr module add your Solr server using following server url:
 http://solr:8983/solr
 ```
 
-In case of Search API module use these values:
+For the Search API module use these values:
 
 | Name | Value |
 |---|---|

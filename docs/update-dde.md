@@ -10,7 +10,7 @@ Create dumps of databases that you need with `drush`
 
 ## Remove old VM
 
-```
+```bash
 vagrant destroy
 ```
 

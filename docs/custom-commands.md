@@ -18,7 +18,7 @@ fin drush updb $1
 
 Make the file executable
 
-```
+```bash
 chmod +x .docksal/commands/updb
 ```
 

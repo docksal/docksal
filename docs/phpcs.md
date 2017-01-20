@@ -1,27 +1,29 @@
-# Using PHP Code Sniffer with Docksal
+# Using PHP Code Sniffer
 
-phpcs and phpcbf are readily available in up-to-date version of cli container.
+`phpcs` and `phpcbf` are readily available in the cli container.
 
-## Using as custom fin command
+## Using as a custom fin command
 
 It's recommended to see how to [extend fin with custom commands](custom-commands.md) first.
 
-From your project's root folder (where `.docksal` folder is):
+From your project's root folder (where the `.docksal` folder is) download the sample `phpcs` command
 
-1. Download example `phpcs` command
+```bash
+mkdir -p .docksal/commands
+curl https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/phpcs -ko .docksal/commands/phpcs
+chmod +x .docksal/commands/phpcs
+```
 
-    ```
-    mkdir -p .docksal/commands
-    curl https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/phpcs -ko .docksal/commands/phpcs
-    chmod +x .docksal/commands/phpcs
-    ```
-2. Use as `fin phpcs docroot/sites/all/modules/custom` or any path you want to run sniffer against. See `fin help phpcs`
-3. Modify `.docksal/commands/phpcs` script as you need
-4. In the same way you can create script for `phpcbf` as it uses the same set of parameters
+Run `fin phpcs docroot/sites/all/modules/custom` or any path you want to run sniffer against.  
+See `fin help phpcs` for options.
 
-## Manual usage
+Modify `.docksal/commands/phpcs` script as ou see fit.
 
-Instead of installing custom command you can just enter it manually every time.  
+A command for `phpcbf` can be created in a similar fashion.
+
+## Using directly
+
+Instead of installing or creating custom commands you can use `phpcs`/`phpcbf` directly every time.  
 From your project's root folder run
 
 ```bash

@@ -4,6 +4,7 @@ Cli container already contains `ruby`, `bundler`.
 ## Create Gemfile in theme folder
 
 Example:
+
 ```ruby
 source "https://rubygems.org"
 gem 'sass', '~>3.4.0'
@@ -17,7 +18,7 @@ gem 'bootstrap-sass', '~>3.2.0'
 
 This command should be run in the folder with Gemfile:
 
-```
+```bash
 fin exec bundle install
 ```
 
@@ -28,7 +29,7 @@ Please add this directories (`.bundle`/`.bundler`) to `.gitignore`
 
 Run in the theme folder:
 
-```
+```bash
 fin exec bundle exec compass compile
 ```
 
@@ -38,6 +39,6 @@ This is important not run `compass compile` directly, but run it via `bundle exe
 
 You can run watcher to keep your CSS files up to date as changes are made:
 
-```
+```bash
 fin exec bundle exec compass watch --poll
 ```

@@ -5,7 +5,7 @@
 
 Installing Docksal on
 - [Windows](#windows)
-- [MacOS](#macos)
+- [macOS](#macos)
 - [Ubuntu Linux](#linux)
 
 <a name="windows"></a>
@@ -23,7 +23,7 @@ Docksal is not tested and not supported with other Linux-type shells on Windows.
 
 ### 2. Install VirtualBox
 
-You need to install [VirtualBox 5.1.12 for Windows](http://download.virtualbox.org/virtualbox/5.1.12/VirtualBox-5.1.12-112440-Win.exe).
+Install [VirtualBox 5.1.12 for Windows](http://download.virtualbox.org/virtualbox/5.1.12/VirtualBox-5.1.12-112440-Win.exe).
 
 !!! attention "Specific version required"
     **Using the specified version is important.** If you use a different version, it may work fine or you may experience unexpected bugs. Fin will notify you to update your VirtualBox version in the future.
@@ -56,11 +56,11 @@ You are done with the one time environment installation. Now you can [configure 
     Advanced Docker users may want to check out how to use Docksal with [Native Docker applications](env-setup-native.md).
 
 <a name="macos"></a>
-## Installing Docksal on MacOS
+## Installing Docksal on macOS
 
 ### 1. Install VirtualBox
 
-You need to install [VirtualBox 5.1.12 for Mac](http://download.virtualbox.org/virtualbox/5.1.12/VirtualBox-5.1.12-112440-OSX.dmg).
+Install [VirtualBox 5.1.12 for Mac](http://download.virtualbox.org/virtualbox/5.1.12/VirtualBox-5.1.12-112440-OSX.dmg).
 
 !!! attention "Specific version required"
     **Using the specified version is important.** If you use a different version, it may work fine or you may experience unexpected bugs. Fin will notify you to update your VirtualBox version in the future.

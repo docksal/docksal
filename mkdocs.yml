@@ -9,18 +9,21 @@ pages:
   - Home: index.md
   - Getting started:
     - What's in the Software?: the-software.md
-    - Initial setup: setup.md
+    - Setup instructions: setup.md
     - System requirements: system-requirements.md
-    - Explaining the Docksal stack: docksal-stack.md
-    - Docksal environment setup: env-setup.md
-    - Configure a project to use Docksal: project-setup.md
+    - Initial Docksal environment setup: env-setup.md
+    - Configuring a project to use Docksal: project-setup.md
+    - Docksal stack: docksal-stack.md
+    - Docksal Fin: fin.md
   - Troubleshooting: troubleshooting.md
   - Advanced configuration:
     - Running multiple projects: multiple-projects.md
-    - Drupal settings (database, files): drupal-settings.md
+    - Drupal settings: drupal-settings.md
     - Overriding default PHP/MySQL/etc. settings: settings.md
+    - Drush aliases: drush-aliases.md
     - MySQL DB access for external tools: db-access.md
     - Automatic database import: db-import.md
+    - Database sandbox mode (snapshots): db-sandbox.md
     - Extending fin with custom commands: custom-commands.md
     - Increasing vm memory (RAM): vm.md
     - Exposing any Docker containers port: expose-port.md

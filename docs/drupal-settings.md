@@ -52,7 +52,7 @@ chmod -R +rwX files
 <a name="reverse-proxy"></a>
 ## Reverse proxy settings (**optional**)
 
-In some cases you need to let Drupal know if HTTPS is used. Add the following lines to `settings.php`:
+In some cases you have to let Drupal know if HTTPS is used. Add the following lines to `settings.php`:
 
 **Drupal 7**
 
@@ -119,7 +119,8 @@ $conf['memcache_servers'] = array(
 
 Enable the Memcache module in Drupal.  
 
-    Note: Configuring memcache in Drupal 8 requires the Memcache module to first be enabled.
+!!! warning "Drupal 8 Memcache caveat"
+    Configuring memcache in Drupal 8 requires the Memcache module to first be enabled.
     (Re)installing a Drupal 8 site with these settings will fail.
     Comment the settings out, (re)install, then uncomment the settings back. 
 

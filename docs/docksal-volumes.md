@@ -1,7 +1,7 @@
 # Volumes in Docksal
 
 !!! warning "This documentation is incomplete"
-    Instructions in this document need to be finalized
+    Instructions in this document need to be finalized.
 
 ## Volumes bind
 

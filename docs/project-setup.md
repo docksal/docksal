@@ -1,4 +1,4 @@
-# Configure a project to use Docksal
+# Configuring a project to use Docksal
 
 With Docksal you can initialize a basic LAMP stack with no configuration.   
 In this case a default configuration will be used to provision containers and set up a virtual host.
@@ -7,7 +7,7 @@ Initial configuration is done once per project (e.g. by a team lead) and committ
 Presence of the `.docksal` folder in the project directory is a good indication the project is using Docksal.
 
 
-## 1. Create a directory structure for the project
+## Create a directory structure for the project
 
 ```bash
 mkdir ~/projects/myproject
@@ -21,7 +21,7 @@ The `.docksal` directory is where all Docksal configurations and commands for th
 !!! note "Version control" 
     Git does not commit empty directories. To commit the `.docksal` directory into your Git repo create an empty `.gitkeep` file inside it ( or some other file of your choosing.)
 
-## 2. Start containers
+## Start containers
 
 ```bash
 cd ~/projects/myproject
@@ -53,15 +53,15 @@ Connected vhost-proxy to "myproject_default" network.
     (e.g. often a project init script or a composer script contains a repository checkout, 
     which would require an ssh key for access).
 
-## 3. Your project is ready
+## Your project is ready
 
-Your project website is now running. You can visit the project url in your browser `http://myproject.docksal`
+Your project stack is now running. Access it in your browser: `http://myproject.docksal`
 
 !!! tip "VIRTUAL HOST name"
-    By default the virtual host name is equal to project folder name sans spaces and dashes, with the `.docksal` domain appended to it. `myproject => myproject.docksal`
+    By default the virtual host name is equal to the project's folder name sans spaces and dashes, 
+    with the `.docksal` domain appended to it.  
+    `myproject => myproject.docksal`
 
-## 3.1. Windows users, one more thing...
-
-!!! attention "Windows users need HOSTS file configuration"
-    On Windows you need to add every project to the hosts file.  
+!!! attention "Windows users must edit their host file configuration"
+    On Windows you have to add each project manually to the hosts file.  
     `192.168.64.100  myproject.docksal`

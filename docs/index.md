@@ -3,7 +3,7 @@
 ##What is Docksal?
 
 Docksal is a tool for defining and managing development environments. It uses Docker to create fully containerized environments, 
-along with Virtual Box to support MacOS and Windows. Its main feature is the inclusion of a command-line tool called `fin` that 
+along with VirtualBox to support macOS and Windows. Its main feature is the inclusion of a command-line tool called `fin` that 
 simplifies the management of all components.
 
 Docksal comes preloaded with common development tools, e.g. Composer, PHP Code Sniffer, php-cli, node, npm, ruby, bundler, and python.

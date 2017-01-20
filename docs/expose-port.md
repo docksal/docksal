@@ -21,7 +21,7 @@ This is recommended for creating local overrides instead of modifying `docksal.y
 
 This will instruct Docker to export port `22` of the `cli` service as port `2222` on your host.
 
-```yml
+```yaml
 version: "2"
   services:
     cli:

@@ -2,7 +2,7 @@
 
 Add the `memcached` service under the `services` section in `.docksal/docksal.yml`
 
-```
+```yaml
   # Memcached
   memcached:
     hostname: memcached

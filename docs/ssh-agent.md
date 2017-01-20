@@ -7,7 +7,7 @@ which can be shared across multiple projects.
 
 Add the following configuration option under the `volumes` section of the `cli` service in the project's `.docksal/docksal.yml` file:
 
-```yml
+```yaml
 cli:
   ...
   volumes:

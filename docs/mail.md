@@ -2,7 +2,7 @@
 
 Sending/capturing email is available via [MailHog](https://github.com/mailhog/MailHog).
 
-    Note: Out-of-the box only capturing works.
+!!! warning "Out-of-the box only capturing works"
     For email delivery, you have to point MailHog to a working mail server/service.
 
 ## Setup
@@ -11,7 +11,7 @@ Sending/capturing email is available via [MailHog](https://github.com/mailhog/Ma
 
 Add the `mail` service in `.docksal/docksal.yml` under `services`.
 
-```
+```yaml
 mail:
   hostname: mail
   image: mailhog/mailhog
@@ -31,7 +31,7 @@ Apply new configuration with `fin up`.
 
 In `.docksal/etc/php/php.ini` in the project repo add the following:
 
-```
+```ini
 ; Mail settings
 sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail:1025'
 ```

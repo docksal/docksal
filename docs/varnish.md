@@ -2,7 +2,7 @@
 
 Add the `varnish` service under the `services` section in `.docksal/docksal.yml`
 
-```
+```yaml
 # Varnish
 varnish:
   hostname: varnish

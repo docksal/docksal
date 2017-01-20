@@ -2,9 +2,9 @@
 
 Docksal has a built-in reverse proxy container that adds support for running multiple projects. The container binds to `192.168.64.100:80` and routes web requests based on the host name.
 
-## MacOS and Linux
+## macOS and Linux
 
-On MacOS and Linux you don't need to do anything. Routing is automatically configured upon first `fin update`. 
+On macOS and Linux you don't need to do anything. Routing is automatically configured upon first `fin update`. 
 
 ## Windows
 
@@ -31,9 +31,10 @@ myproject.docksal    192.168.64.100
 
 To find the current project's virtual host name run `fin config | grep ^VIRTUAL_HOST`.
 
-```
+```bash
 $ fin config | grep ^VIRTUAL_HOST
 VIRTUAL_HOST: myproject.docksal
 ```
 
-> Hint: hostname is usually a project's folder name sans spaces and dashes.
+!!! note "hostname is isually dire"
+    The hostname is usually the project's folder name sans spaces and dashes.

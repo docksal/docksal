@@ -1,69 +1,66 @@
 # Overriding default PHP/MySQL/etc. settings
 
-!!! warning "This documentation is outdated"
-    Intructions in this document need to be updated
-
 <a name="configuration"></a>
 ## Altering PHP and MySQL configuration
 
-When the following configuration files are added within a project, they can be used to override default settings:
+When the following settings files are added to the project, they can be used to override the defaults.
 
 - `.docksal/etc/php/php.ini` - PHP settings overrides
 - `.docksal/etc/php/php-cli.ini` - command line PHP settings overrides
 - `.docksal/etc/mysql/my.cnf` - MySQL settings overrides
 
-Copy `examples/.docksal/etc` from the [Docksal project](https://github.com/docksal/docksal) into the `.docksal` folder in your project repo and modify as necessary.
+Copy `examples/.docksal/etc` from the [Docksal](https://github.com/docksal/docksal) project repo into the `.docksal` 
+folder in your project repo and modify as necessary.
+
+!!! important "Applying the settings changes"
+    When adding the settings files initially into a project a reset is necessary for containers to pick them up properly.  
+    Run `fin reset cli` for PHP and `fin reset db` for MySQL (**WARNING: this will destroy your database!**).  
+    When the settings files are already in place, configuration changes can be propagated by restarting the containers 
+    with `fin restart`.
 
 <a name="php-versions"></a>
 ## Using different PHP versions
 
-Switching PHP versions is done via the `docksal/drupal-cli` docker image tags. See which images are available on [Docker Hub](https://hub.docker.com/r/docksal/cli/). To
-make these changes you must have project configuration files. See [Project Setup](project-setup.md).
+Different PHP versions are handled via using different `cli` service images.  
 
-To switch to a different image tag:
+When using the default stack (a custom project stack is not defined in `.docksal/docksal.yml`), switching can be done 
+via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 
-1) open the project's `.docksal/docksal.yml` file  
-2) under the `cli` section, add the `image` property.
-
-By default, it looks like this:
-
-```
-# CLI node
-  cli:
-    extends:
-      file: ${HOME}/.docksal/stacks/services.yml
-      service: cli
+```bash
+CLI_IMAGE='docksal/cli:1.0-php5'
 ```
 
-Add the `image` property to override the docker image used:
+Remember to run `fin up` to apply the configuration.
 
-```
-# CLI node
-  cli:
-    extends:
-      file: ${HOME}/.docksal/stacks/services.yml
-    image: docksal/cli:1.0-php7
-```
+Available images:
 
-See the list of available tags below and on [Docker Hub](https://hub.docker.com/r/docksal/cli/tags/).
+- PHP 5 - `docksal/cli:1.0-php5`
+- PHP 7 - `docksal/cli:1.0-php7`
 
-3) run `fin up`. This will update the project's configuration.
-
-Available PHP versions:
-
-- `5.x` (`image: docksal/cli:1.0-php5`) - default
-- `7.x` (`image: docksal/cli:1.0-php7`) - experimental
+For projects using a custom stack configuration check [here](project-customize.md#php-version).
 
 <a name="mysql-versions"></a>
 ## Using different MySQL versions
 
-Switching MySQL versions is done via the `docksal/db` docker image tags.
+When using the default stack (a custom project stack is not defined in `.docksal/docksal.yml`), switching can be done 
+via the `DB_IMAGE` variable in `.docksal/docksal.env`.
 
-To switch to a different image tag follow the same instructions as above, but 
-modify the `db` configuration. You can find tagged `db` images on [Docker Hub](https://hub.docker.com/r/docksal/db/tags/).
+```bash
+DB_IMAGE='docksal/db:1.0-mysql-5.5'
+```
 
-When done, always remember to run `fin up` to update the project's configuration.
+Remember to run `fin up` to apply the configuration.
 
-- `5.5` (`image: docksal/db:1.0-mysql-5.5`)
-- `5.6` (`image: docksal/db:1.0-mysql-5.6`)
-- `5.7` (`image: docksal/db:1.0-mysql-5.7`)
+!!! warning "MySQL versions compatibility"
+
+    Different MySQL versions may not be fully compatible. A complete `db` service reset (`fin reset db`) might be necessary 
+    followed by a DB re-import.
+
+Available images:
+
+- MySQL 5.5 - `docksal/db:1.0-mysql-5.5`
+- MySQL 5.6 - `docksal/db:1.0-mysql-5.6`
+- MySQL 5.7 - `docksal/db:1.0-mysql-5.7`
+- MySQL 8.0 - `docksal/db:1.0-mysql-8.0`
+
+For projects using a custom stack configuration check [here](project-customize.md#mysql-version).

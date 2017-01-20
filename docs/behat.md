@@ -17,7 +17,7 @@ See [docksal/drupal7](https://github.com/docksal/drupal7) repo for a working Dru
 
 Run `fin behat` to launch Behat tests.
 
-This will download composer dependencies and run behat with the docker profile.
+This will download Composer dependencies and run Behat using the pre-configured `docker` profile.
 
 
 ## Behat goutte driver
@@ -29,7 +29,7 @@ It can make HTTP requests, but does not parse CSS, execute JS or do any renderin
 Goutte can be used in many cases and does not require additional configuration/installation.
 
 
-## Behat selenium2 driver
+## Behat Selenium2 driver
 
 If your tests require javascript support, the `selenium2-driver` should be used. It can be set as the default one.
 Selenium2 works with real browsers, using them as zombies for testing purposes. 
@@ -39,7 +39,7 @@ The easiest way to add Selenium support is to use the stock Selenium docker imag
 
 To do this, add the `browser` service under the `services` section in `.docksal/docksal.yml`:
 
-```yml
+```yaml
 # Browser
 browser:
   hostname: browser
@@ -53,7 +53,7 @@ Add your Selenium configuration in `tests/behat/behat.yml`.
 
 Example:
 
-```yml
+```yaml
 # Docker profile.
 # For use inside the CLI container in Docksal.
 docker:
@@ -83,10 +83,10 @@ If you use Selenium with a browser in a container, you can obtain the test scree
 Sometimes it is very useful to watch the tests running in the browser (e.g. when you are creating a new test and want to see how it performs).  
 In such cases, a [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) client can be used.
 
-1. Install a VNC client on your computer (there are many versions for all platforms).
-2. Update the `browser` service configuration in the project's `.docksal/docksal.yml` file as follows:
+1) Install a VNC client on your computer (there are many versions for all platforms).  
+2) Update the `browser` service configuration in the project's `.docksal/docksal.yml` file as follows:
 
-```yml
+```yaml
 # Browser
 browser:
   hostname: browser
@@ -109,9 +109,9 @@ Note: If you are working with several projects concurrently, it is a good idea t
 It is possible to connect PhpStorm with the `cli` container and run behat tests from within PhpStorm.
 PhpStorm uses ssh to connect to and use remote interpreters and tools.
 
-1. Add the following line in `.docksal/docksal.yml` to expose the ssh server in the `cli`container:
+1) Add the following line in `.docksal/docksal.yml` to expose the ssh server in the `cli`container:
 
-```yml
+```yaml
 cli:
  ...
  ports:
@@ -119,10 +119,10 @@ cli:
  ...
 ```
 
-2. Update the container configuration with `fin up`.
-3. You should now be able to connect to the `cli` container via ssh. Use username `docker` and password `docker`:
+2) Update the container configuration with `fin up`.  
+3) You should now be able to connect to the `cli` container via ssh. Use username `docker` and password `docker`:
 
-```
+```bash
 ssh docker@192.168.64.100 -p 2223
 ```
 
@@ -132,14 +132,14 @@ Note: If you are working with several projects concurrently, it is a good idea t
 
 Open settings (menu item *File->Settings...*). In the opened window on the left side, select item *Build, Execution, Deployment->Deployment*:
 
-![](img/behat-phpstorm-deployment-configure.png)
+![Screenshot](img/behat-phpstorm-deployment-configure.png)
 
 Create a new SFTP connection and fill-out the form. Don't forget to fill-out *Web server root URL*.
 Press the *Test SFTP connection...* button and if everything is ok, you will see that test is successful.
 
 On the second tab, you should check and correct the mapping:
 
-![](img/behat-phpstorm-deployment-configure-mapping.png)
+![Screenshot](img/behat-phpstorm-deployment-configure-mapping.png)
 
 Local path is the path to your project on the host machine. Deployment path is `/var/www`.
 
@@ -147,11 +147,11 @@ Local path is the path to your project on the host machine. Deployment path is `
 
 Open settings (menu item *File->Settings...*). In the opened window on the left side, select item *Languages & Frameworks->PHP*:
 
-![](img/behat-phpstorm-PHP-configuration.png)
+![Screenshot](img/behat-phpstorm-PHP-configuration.png)
 
 To add a new interpreter, click on **...** button on *Interpreter:* line.
 
-![](img/behat-phpstorm-PHP-configuration-deployment.png)
+![Screenshot](img/behat-phpstorm-PHP-configuration-deployment.png)
 
 In the opened window, add a new interpreter and choose the **Deployment configuration** option and deployment server from the select list (it should be server from previous step).
 
@@ -159,7 +159,7 @@ In the opened window, add a new interpreter and choose the **Deployment configur
 
 Open settings (menu item *File->Settings...*). In the opened window on the left side, select item *Languages & Frameworks->PHP->Behat*:
 
-![](img/behat-phpstorm-PHP-Behat-configuration.png)
+![Screenshot](img/behat-phpstorm-PHP-Behat-configuration.png)
 
 Add a new PHP interpreter for Behat (it should be the interpreter from previous step).
 
@@ -169,7 +169,7 @@ Default configuration file: `/var/www/tests/behat/behat.yml`
 
 Check that your `behat.yml` contains `wd_host` for selenium in `Behat\MinkExtension` part:
 
-![](img/behat-behat-yml.png)
+![Screenshot](img/behat-behat-yml.png)
 
 It should be the same as in `behat.common.yml` for `docker` part.
 
@@ -177,7 +177,7 @@ It should be the same as in `behat.common.yml` for `docker` part.
 
 Open *Run/Debug Configurations* (menu item *Run->Edit Configurations...*). In the opened window on the left side, add the new Behat configuration:
 
-![](img/behat-run-debug-configuration.png)
+![Screenshot](img/behat-run-debug-configuration.png)
 
 Choose the Test Runner option *Defined in the configuration file*.
 
@@ -185,21 +185,21 @@ Choose the Test Runner option *Defined in the configuration file*.
 
 On the PhpStorm panel, choose Behat debug configuration and run it:
 
-![](img/behat-run-tests.png)
+![Screenshot](img/behat-run-tests.png)
 
 If everything is ok, you will see a window with your test results (all tests are run in this case):
 
-![](img/behat-run-window.png)
+![Screenshot](img/behat-run-window.png)
 
 You can re-run any scenario from this window. If you click on scenario or test, PhpStorm will open window with this scenario/test.
 
 You can also open the folder with Behat features (`tests/behat/features` directory in your project) and
 run any feature tests by right clicking on it and choosing the **Run 'feature-name'** option.
 
-![](img/behat-test-features.png)
+![Screenshot](img/behat-test-features.png)
 
 
-## Using host's selenium2 driver
+## Using host's Selenium2 driver
 
 You can use selenium from your host machine instead of the one in a container.
 
@@ -208,13 +208,15 @@ WebDriver for Chrome is available [here](https://sites.google.com/a/chromium.org
 
 Run selenium with Chrome webdriver:
 
-> java -jar selenium-server-standalone-2.53.0.jar -Dwebdriver.chrome.driver=/path/to/webdriver/chromedriver
+```bash
+java -jar selenium-server-standalone-2.53.0.jar -Dwebdriver.chrome.driver=/path/to/webdriver/chromedriver
+```
 
 By default, it is running on port `4444`, which can be verified by opening `http://localhost:4444/wd/hub/static/resource/hub.html` in a browser.
 
 Update `tests/behat/behat.yml`:
 
-```yml
+```yaml
 # Local overrides to the default profile
 default:
   extensions:
@@ -228,6 +230,6 @@ default:
 ...
 ```
 
-`base_url: http://drupal7.docksal` - this should match the URL you are using to access the site from your host.  
-`wd_host: http://192.168.64.1:4444/wd/hub/static/resource/hub` should point to your host machine's Selenium server.  
-`192.168.64.1` is your host machine's IP address in the Docksal subnet.
+- `base_url: http://drupal7.docksal` should match the URL you are using to access the site from your host.  
+- `wd_host: http://192.168.64.1:4444/wd/hub/static/resource/hub` should point to your host machine's Selenium server.  
+- `192.168.64.1` is your host machine's IP address in the Docksal subnet.
