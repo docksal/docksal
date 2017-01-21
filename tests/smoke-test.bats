@@ -33,19 +33,11 @@ teardown() {
 @test "Proxy returns 200 for an existing virtual-host" {
 	[[ $SKIP == 1 ]] && skip
 
-    # Make sure the project is running
-    cwd=$(pwd)
-    cd ../drupal7 && fin start
-    cd $cwd
-	run curl -I http://drupal7.docksal/robots.txt
-	[[ $output =~ "HTTP/1.1 200 OK" ]]
+	run curl -v http://drupal7.docksal/robots.txt
+	[[ $output =~ "robots.txt" ]]
 
-    # Make sure the project is running
-    cwd=$(pwd)
-    cd ../drupal8 && fin start
-    cd $cwd
-	run curl -I http://drupal8.docksal/robots.txt
-	[[ $output =~ "HTTP/1.1 200 OK" ]]
+	run curl -v http://drupal8.docksal/robots.txt
+	[[ $output =~ "robots.txt" ]]
 }
 
 @test "Proxy stopped project containers after \"${PROJECT_INACTIVITY_TIMEOUT}\" of inactivity" {

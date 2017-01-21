@@ -3,7 +3,7 @@
 # Regular project
 git clone https://github.com/docksal/drupal7.git ../drupal7
 cwd=$(pwd) && cd ../drupal7
-fin start && fin stop
+fin start
 cd $cwd
 
 # Project with the "io.docksal.permanent" flag set to true
@@ -20,5 +20,5 @@ services:
 "
 echo "$local_yml" > .docksal/docksal-local.yml
 
-fin start && fin stop
+fin start
 cd $cwd
