@@ -499,7 +499,7 @@ check_docker_running ()
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
 	if ! is_docker_native && ! is_docker_version; then
-		echo-error "Required Docker version is $REQUIREMENTS_DOCKER or higher"
+		echo-error "Required Docker version is $REQUIREMENTS_DOCKER"
 		echo -e "Run ${yellow}fin update${NC} to update"
 		exit 1
 	fi
@@ -563,7 +563,7 @@ is_docker_version ()
 
 	local version=$(docker -v | sed "s/.*version \(.*\),.*/\1/")
 
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$version") ]] && \
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -ne $(ver_to_int "$version") ]] && \
 		return 1;
 
 	return 0;
@@ -575,7 +575,7 @@ is_docker_server_version ()
 
 	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
 
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$version") ]] && \
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -ne $(ver_to_int "$version") ]] && \
 		return 1;
 
 	return 0;
@@ -2144,9 +2144,13 @@ install_tools_ubuntu ()
 			echo "Stopping docker service..."
 			sudo service docker stop 2>/dev/null
 		fi
+
+		# Pin docker-engine version to avoid apt-get upgrade.
+		echo -e "Package: docker-engine\nPin: version ${REQUIREMENTS_DOCKER}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
+
 		curl -sSL "${URL_DOCKER_NIX}" | \
 			# patch Docker installation script on the fly to install a specific Docker version
-			sed "s/apt-get update; apt-get install -y -q docker-engine/apt-get update; pckg_version=\$(apt-cache madison docker-engine | grep ${REQUIREMENTS_DOCKER} | cut -d \"|\" -f 2 | tr -d \" \"); apt-get install -y -q docker-engine=\$pckg_version/" | \
+			sed "s/apt-get update; apt-get install -y -q docker-engine/apt-get update; pckg_version=\$(apt-cache madison docker-engine | grep ${REQUIREMENTS_DOCKER} | cut -d \"|\" -f 2 | tr -d \" \"); apt-get install -y --force-yes -q docker-engine=\$pckg_version/" | \
 			sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
