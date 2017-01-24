@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.17.0
+FIN_VERSION=0.18.0
 
 # Console colors
 red='\033[0;91m'
@@ -2683,36 +2683,6 @@ mysql_dump ()
 	fi
 }
 
-# Run Behat tests (also install dependencies through Composer)
-# @param $* arguments and params passed to Behat
-behat ()
-{
-	check_docksal_environment
-	cd $(get_project_path)
-
-	local params=''
-	local path='tests/behat'
-	for i in "$@"; do
-		case "$i" in
-			--path=*)
-				path="${i#*=}"
-				;;
-			*)
-				params="$params$i "
-				;;
-		esac;
-	done
-
-	local project_root_path=$(get_project_path)
-	local behat_yml_path="${project_root_path}/${path}/behat.yml"
-	if [[ ! -f "${behat_yml_path}" ]]; then
-		echo-red "Could not find ${behat_yml_path}"
-		exit 1
-	fi
-	_run "cd $path && composer install --prefer-source --no-interaction"
-	_run "cd $path && bin/behat -p docker $params"
-}
-
 # Download script by URL and execute it
 # @param $1 url of script.
 exec_url ()
@@ -3369,10 +3339,6 @@ case "$1" in
 		else
 			_run wp "$@"
 		fi
-		;;
-	behat)
-		shift
-		behat "$@"
 		;;
 	ssh-add)
 		shift
