@@ -2150,7 +2150,7 @@ install_tools_ubuntu ()
 
 		curl -sSL "${URL_DOCKER_NIX}" | \
 			# patch Docker installation script on the fly to install a specific Docker version
-			sed "s/apt-get update; apt-get install -y -q docker-engine/apt-get update; pckg_version=\$(apt-cache madison docker-engine | grep ${REQUIREMENTS_DOCKER} | cut -d \"|\" -f 2 | tr -d \" \"); apt-get install -y --force-yes -q docker-engine=\$pckg_version/" | \
+			sed "s/apt-get install -y -q docker-engine/apt-get install -y --force-yes -q docker-engine/" | \
 			sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
