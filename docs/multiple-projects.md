@@ -8,7 +8,7 @@ On macOS and Linux you don't need to do anything. Routing is automatically confi
 
 ## Windows
 
-On Windows you will need to manually add the virtual host of each of your Doskal projects to the [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)) to route it to `192.168.64.100`.
+On Windows you will need to manually add the virtual host of each of your Docksal projects to the [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)) to route it to `192.168.64.100`.
 
 Example [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)):
 
@@ -36,5 +36,5 @@ $ fin config | grep ^VIRTUAL_HOST
 VIRTUAL_HOST: myproject.docksal
 ```
 
-!!! note "hostname is isually dire"
+!!! note "hostname is usually dir name"
     The hostname is usually the project's folder name sans spaces and dashes.
