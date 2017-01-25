@@ -36,5 +36,5 @@ $ fin config | grep ^VIRTUAL_HOST
 VIRTUAL_HOST: myproject.docksal
 ```
 
-!!! note "hostname is isually dire"
+!!! note "hostname is usually dir name"
     The hostname is usually the project's folder name sans spaces and dashes.
