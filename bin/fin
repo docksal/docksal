@@ -3351,7 +3351,8 @@ case "$1" in
 	docker|d)
 		shift
 		is_docker_running # exports env
-		docker "$@"
+		check_winpty_found
+		${winpty} docker "$@"
 		;;
 	docker-compose|dc)
 		shift
@@ -3397,7 +3398,7 @@ case "$1" in
 		shift
 		if [[ "$1" == "generate" ]]; then
 			shift;
-			config_generate "$@";
+			config_generate
 		elif [[ "$1" == "images" ]]; then
 			shift
 			config_images "$@"
