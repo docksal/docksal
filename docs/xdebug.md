@@ -70,7 +70,9 @@ Replace **drupal7.docksal** with your domain. You can find it in `docksal.env` s
 - (2) Disable "Force break at the first line when a script is outside the project". As the main drush binary resides in cli in /usr/local/bin/drush the debugger will break on every drush invocation.
 
 4) Install a site specific drush in your project root (if not already done) to get a non-phar version of drush.
+```
 fin exec composer require drush/drush:8.x
+```
 
 5.) Set path mappings for drush in PHP-Storm:
 ![Screenshot](img/xdebug-phpstorm-drush-mapping.png)
