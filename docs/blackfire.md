@@ -8,8 +8,8 @@ Register with [blackfire.io](https://blackfire.io/signup).
 
 ---
 
-Use [Blackfire Docker instructions](https://blackfire.io/docs/integrations/docker) to get a snippet 
-that you can put in a `.bashrc`/etc. file. This will set the API keys globally.
+Use [Blackfire Docker instructions](https://blackfire.io/docs/integrations/docker) to get a `~/.bashrc` snippet. 
+This will set the API keys globally.
 
 Add the `blackfire` service to `.docksal/docksal.yml` under `services`:
 
