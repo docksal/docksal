@@ -4,13 +4,14 @@
 
 Register with [blackfire.io](https://blackfire.io/signup).
 
-Add the `blackfire` service to `.docksal/docksal.yml` under `services` and configure API keys:
-
 **Option 1**
 
 ---
+
 Use [Blackfire Docker instructions](https://blackfire.io/docs/integrations/docker) to get a snippet 
-that you can put in a `.bash_rc`/etc. file globally.
+that you can put in a `.bashrc`/etc. file. This will set the API keys globally.
+
+Add the `blackfire` service to `.docksal/docksal.yml` under `services`:
 
 ```yaml
 blackfire:
@@ -22,13 +23,14 @@ blackfire:
     # Log verbosity level (4: debug, 3: info, 2: warning, 1: error).
     #- BLACKFIRE_LOG_LEVEL=4
 ```
+
 ---
 
 **Option 2**
 
 ---
-Grab the **server** API keys from your [profile page](https://blackfire.io/account).
-Replace `Server ID` and `Server Token` with your API keys.
+
+Add the `blackfire` service to `.docksal/docksal.yml` under `services`:
 
 ```yaml
 blackfire:
@@ -40,6 +42,9 @@ blackfire:
     # Log verbosity level (4: debug, 3: info, 2: warning, 1: error).
     #- BLACKFIRE_LOG_LEVEL=4
 ```
+
+Replace `<Server ID>` and `<Server Token>` with the API keys from your blackfire.io [profile page](https://blackfire.io/account).
+
 ---
 
 Apply the new configuration with `fin up`.
