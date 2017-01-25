@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=0.18.1
+FIN_VERSION=0.18.2
 
 # Console colors
 red='\033[0;91m'
@@ -151,7 +151,7 @@ echo-error () {
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}";
 	local unused="$2$3" # avoid IDE warning
 	shift
-	# echo other parameters indented s error description or remedy
+	# Echo other parameters indented. Can be used for error description or suggestions.
 	while [[ "$1" != "" ]]; do
 		echo -e "         $1";
 		shift
@@ -1811,8 +1811,10 @@ vm-ram () {
 up ()
 {
 	check_docksal_environment
-	_start_containers
+	# Run ssh_add here, since there is no better place to get it triggered on Linux.
+	# This should not be the last command in a function as it will exit 1 on non Linux systems.
 	is_linux && ssh_add
+	_start_containers
 }
 
 # Stop containers
@@ -1827,8 +1829,10 @@ stop ()
 restart ()
 {
 	check_docksal_environment
-	_restart_containers
+	# Run ssh_add here, since there is no better place to get it triggered on Linux.
+	# This should not be the last command in a function as it will exit 1 on non Linux systems.
 	is_linux && ssh_add
+	_restart_containers
 }
 
 # List project containers
