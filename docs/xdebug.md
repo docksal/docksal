@@ -17,14 +17,10 @@ You can also pick from the [list](https://confluence.jetbrains.com/display/PhpSt
 
 ## Setup
 
-1) Set environment variable on the `cli` service
+1) Set environment variable on the `cli` in .docksal/dockasl.env
 
 ```yaml
-cli:
-  ...
-  environment:
-    - XDEBUG_ENABLED=1
-  ...
+XDEBUG_ENABLED=1
 ```
 2) Update container configuration with `fin up`  
 3) Open your project in PHPStorm  
@@ -44,16 +40,16 @@ cli:
 
 ## Setup for console php
 
-1) Set environment variable on the `cli` service
+1) Set environment variable on the `cli` service thorugh creating/editing ./docksal/docksal-local.yml
 
 ```yaml
-cli:
-  ...
-  environment:
-    - XDEBUG_ENABLED=1
-    - XDEBUG_CONFIG=idekey=PHPSTORM remote_host=192.168.10.1
-    - PHP_IDE_CONFIG=serverName=drupal7.docksal
-  ...
+version: "2.1"
+services:
+  cli:
+    environment:
+      - XDEBUG_ENABLED=1
+      - XDEBUG_CONFIG=idekey=PHPSTORM remote_host=192.168.10.1
+      - PHP_IDE_CONFIG=serverName=drupal7.docksal
 ```
 
 Replace **drupal7.docksal** with your domain. You can find it in `docksal.env` section:
@@ -66,7 +62,23 @@ Replace **drupal7.docksal** with your domain. You can find it in `docksal.env` s
 ```
 
 2) Update container configuration with `fin up`  
-3) You can run your scripts in console and debug them in the same way as browser requests.
+
+3) Configure PHPStorm to be able to handle drush debugging
+![Screenshot](img/xdebug-phpstorm-drush.png)
+
+- (1) You need to increase the Max. simultaneous connections to allow drush to spawn other drush instances. Otherwise the debugger might get stuck without any response.
+- (2) Disable "Force break at the first line when a script is outside the project". As the main drush binary resides in cli in /usr/local/bin/drush the debugger will break on every drush invocation.
+
+4) Install a site specific drush in your project root (if not already done) to get a non-phar version of drush.
+fin exec composer require drush/drush:8.x
+
+5.) Set path mappings for drush in PHP-Storm:
+![Screenshot](img/xdebug-phpstorm-drush-mapping.png)
+
+- (1) Enter the same hostname as you did in VIRTUAL_HOST and PHP_IDE_CONFIG environment variables before.
+- (2) Map your docksal project root to /var/www so your all your files are mapped. Additionally map your site drush to /usr/local/bin/drush.
+
+6) You can run your scripts in console and debug them in the same way as browser requests.
 
 For example you can run drush command: `fin drush fra -y` and debug this drush command from feature module.
 
