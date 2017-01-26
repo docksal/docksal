@@ -3261,7 +3261,7 @@ case "$1" in
 	ps)
 		_ps
 		;;
-	projects)
+	projects|pr)
 		shift
 		projects "$@"
 		;;
