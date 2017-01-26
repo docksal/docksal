@@ -1894,9 +1894,9 @@ install_proxy_service ()
 	# Create a bind mount volume to the projects directory if defined. If not - create an empty volume.
 	local volume_options=""
 	[[ "$PROJECTS_ROOT" != "" ]] && [[ -d "$PROJECTS_ROOT" ]] && \
-	    # Don't use quotes with the device option or the bind mount will not work
-	    volume_options="--opt type=none --opt device=$PROJECTS_ROOT --opt o=bind"
-    docker volume create --name docksal_projects $volume_options >/dev/null 2>&1
+		# Don't use quotes with the device option or the bind mount will not work
+		volume_options="--opt type=none --opt device=$PROJECTS_ROOT --opt o=bind"
+	docker volume create --name docksal_projects $volume_options >/dev/null 2>&1
 
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
 	# and are inactive unless configured.
@@ -2980,8 +2980,8 @@ load_configuration ()
 			COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
 		# Otherwise try including only one that exists
 		else
-		    [[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
-		    [[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
+			[[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
+			[[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
 		fi
 
 		# Throw an error if COMPOSE_FILE is empty here
@@ -2991,7 +2991,7 @@ load_configuration ()
 		else
 			# Include docksal-local.yml (if exists)
 			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
-    		local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
+			local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
@@ -3089,10 +3089,10 @@ config_generate ()
 	mkdir -p ".docksal"
 	# Create docksal.env if it does not exist
 	touch ".docksal/docksal.env" && \
-    # remove DOCKSAL_STACK from env file if present
-    (cat ".docksal/docksal.env" | sed "s/^DOCKSAL_STACK=.*//" | tee ".docksal/docksal.env" >/dev/null) && \
-    # Override docksal.yml with the default stack file
-    cp -f "$stack_file" ".docksal/docksal.yml"
+	# remove DOCKSAL_STACK from env file if present
+	(cat ".docksal/docksal.env" | sed "s/^DOCKSAL_STACK=.*//" | tee ".docksal/docksal.env" >/dev/null) && \
+	# Override docksal.yml with the default stack file
+	cp -f "$stack_file" ".docksal/docksal.yml"
 
 	local DOCROOT="${DOCROOT:-docroot}"
 	# Create a basic docroot and index.php if not present
