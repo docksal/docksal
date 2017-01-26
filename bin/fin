@@ -747,7 +747,7 @@ _remove_dangling_containers ()
 		--filter "label=com.docker.compose.project" \
 		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
 	for project in $projects; do
-		IFS=':' read project_name project_root <<< "$project";
+		IFS=':' read project_name project_root <<< "$project"
 		if [[ ! -d "$project_root" ]]; then
 			echo "Directory for project \"$project_name\" does not exist. Removing containers..."
 			docker ps -q -a --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -fv
