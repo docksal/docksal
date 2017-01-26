@@ -1814,6 +1814,18 @@ up ()
 	# Run ssh_add here, since there is no better place to get it triggered on Linux.
 	# This should not be the last command in a function as it will exit 1 on non Linux systems.
 	is_linux && ssh_add
+
+	# Prevent trying to start another set of containers with the same hostname
+	if (docker ps \
+				--filter 'label=com.docker.compose.service=web' \
+				--format '{{.Label "io.docksal.virtual-host"}} {{.Label "io.docksal.project-root"}}' | \
+				grep "${COMPOSE_PROJECT_NAME_SAFE}\.docksal" 2>/dev/null |
+				grep -v "$PROJECT_ROOT" >/dev/null); then
+		echo-error "Can not start another project with virtual host name '${COMPOSE_PROJECT_NAME_SAFE}.docksal'" \
+			"There is another project running with the same hostname. Use ${yellow}fin projects${NC} to find it."
+		exit 1
+	fi
+
 	_start_containers
 }
 
