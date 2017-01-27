@@ -36,7 +36,7 @@ To contribute to the project:
 - Create a feature branch (optional)
 - Commit code with meaningful commit messages
 - Create a pull request against `develop`
-- Discuss the PR with the maintainers, update it as necessary
+- Discuss the PR with the [maintainers](MAINTAINERS.md), update it as necessary
 - Once approved the PR will be merged
 
 Each PR goes through automated tests on [Travis CI](https://travis-ci.org/docksal/docksal/pull_requests).

@@ -7,11 +7,15 @@
 2. [Initial Docksal environment setup](env-setup.md)
 3. [Configuring a project to use Docksal](project-setup.md)
 
+Coming from Drude (DDE)?  
+You will find a lot of similarities and a lot more new features that Docksal has over Drude (DDE).  
+Follow [Updating from Drude (DDE) to Docksal](update-dde.md) instructions. 
+
 
 <a name="examples"></a>
 ## Example projects
 
-With Docksal starting a complete LAMP stack for Drupal, WordPress or a pure HTML/PHP based website is two commands away!
+With Docksal starting a complete LAMP stack for Drupal, WordPress or a pure HTML/PHP based website can be two commands away!
 
 ```bash
 git clone <sample-project-repo>

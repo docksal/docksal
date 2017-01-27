@@ -871,7 +871,7 @@ show_help ()
 		fi
 	fi
 
-	printh "Docksal Fin v$FIN_VERSION commands reference" "" "green"
+	printh "Docksal Fin v$FIN_VERSION command reference" "" "green"
 
 	echo
 	if ! is_linux && ! is_docker_native; then

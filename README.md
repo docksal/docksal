@@ -4,19 +4,16 @@
 [![Docs](https://readthedocs.org/projects/docksal/badge?version=master&style=flat-square)](http://docksal.readthedocs.io/en/master)
 [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
 
-Docker and Docker Compose based environments for web development.
+Docker powered environments for web development.  
 
-    Docksal is still under active development. Breaking changes and outdated docs are very possible.
-    Please help us by testing, submitting issues and PRs. Thanks!
-
-Running a complete LAMP stack with Drupal, WordPress or a pure HTML/PHP base website is two commands away!<sup>*</sup>
+Running a complete LAMP stack for your project can be two steps away!<sup>*</sup>
 
 ```
 git clone <sample-project-repo>
 fin init
 ```
 
-Try one of the preconfigured projects:
+Try one of the pre-configured sample projects:
 
 - [Drupal 7 sample project](https://github.com/docksal/drupal7)  
 - [Drupal 8 sample project](https://github.com/docksal/drupal8)  
@@ -25,39 +22,23 @@ Try one of the preconfigured projects:
 <sup>*</sup>Once you are done with a one-time [Docksal environment setup](/docs/env-setup.md)
 
 
+## Better than VMs
+
+"I love my Vagrant box. Why would I want to switch to a Docker based solution?"  
+Containers are just [better than VMs](https://github.com/docker/docker#better-than-vms): 
+smaller, faster, portable and more efficient across the board.
+
+
 <a name="setup"></a>
-## Docksal Setup
+## Getting started
 
-Please review [system requirements](/docs/system-requirements.md) before proceeding with the setup.
-
-**1. [Install required software](/docs/env-setup.md)**
-
-**2. [Create a Docksal powered project](/docs/project-setup.md)**
-
-<a name="fin"></a>
-## Docksal Fin and stack
-
-Docksal Fin is a command line tool to control Docksal's stack. `fin` runs natively on Mac and Linux and requires [Babun Shell](http://babun.github.io) on Windows.
-
-Each project contains at least 3 services:
-
-- `web` - holds your webserver (nginx/apache/etc.)
-- `db` - holds database server (MySQL)
-- `cli` - container that is meant to serve as a single console access point to all necessary command line tools. You can access it with `fin bash`. For the list of tools available inside **cli** check [CLI image docs](https://github.com/docksal/service-cli)
-
-[Docksal Stack documentation](/docs/docksal-stack.md)
-
-<a name="updates"></a>
-## Updating Docksal
-
-```
-fin update
-```
-
-[How to update from Drude to Docksal](/docs/update-dde.md)
+Docksal works with Linux, Mac and Windows.  
+Follow the [Setup](/docs/setup.md) documentation for instructions on getting started. 
 
 <a name="instructions"></a>
 ## Tutorials
+
+Once you get the basics straight, feel free to explore the more advanced use cases. 
 
 ### Advanced configuration
 - [Running multiple projects](/docs/multiple-projects.md)
@@ -86,42 +67,18 @@ fin update
 - [Behat](/docs/behat.md)
 - [Public access via ngrok](/docs/public-access.md)
 
-<a name="troubleshooting"></a>
-## Troubleshooting
 
-Try these steps in the order listed below. Check if the issue has cleared out **after each step**.
+## Contributing to Docksal
 
-- **Check [troubleshooting document](docs/troubleshooting.md)** for rare problems that might occur
-- Update Docksal to the latest version. See [updates](#updates) section.
-- (Mac and Windows) Restart the Docksal VM: `fin vm restart`
-- Reset Docksal system services with `fin reset system` and restart projects containers with `fin up`
-- Reboot the host (your computer or remote server)
-- (Mac and Windows) Re-create Docksal VM: `fin vm remove` then `fin vm start` (**WARNING**: backup your DB data before doing this)
+Ready to give back? Check the [Contributing](CONTRIBUTING.md) docs on how to get involved.  
+We have a room on Gitter where questions can be asked and answered 
+[![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)  
+If you have experience with Docksal and Docker, please stick around in the room to help others.
 
-If quick fixes above did not help, try:
 
-- searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced same or a similar issue and have already found a solution or a workaround.
-- asking community for support in our Gitter room [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
+## Roadmap
 
-Create a new issue if your problem is still not resolved.
+Wondering what's coming up next? See [Docksal Roadmap](ROADMAP.md).
 
-## Uninstallation
-
-The steps below will remove the Docksal VM and cleanup Docksal stuff.
-
-```
-fin vm remove
-rm -rf ~/.docksal
-rm -f /usr/local/bin/fin
-```
-
-Docker for Mac/Windows and VirtualBox are not automatically removed. You can remove them manually on Mac or use uninstaller on Windows.
-
-To remove Docker on Ubuntu Linux you need to:
-
-1. Follow [Docker Uninstallation](https://docs.docker.com/engine/installation/linux/ubuntulinux/#/uninstallation) instruction
-2. Cleanup tools:
-```
-sudo rm /usr/local/bin/docker-compose
-sudo rm /usr/local/bin/docker-machine
-```
+For the list of current and past releases check the [Release](https://github.com/docksal/docksal/releases) section.  
+Change records are published there and in the [Changelog](CHANGELOG.md) docs. 
