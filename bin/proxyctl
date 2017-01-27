@@ -174,13 +174,13 @@ _cleanup ()
 			else
 				# Not active
 				echo "Project: $project_name is dangling. Removing..."
-                # Stop and remove containers
-                docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -vf
-                # Disconnect vhost-proxy from the project network and remove the network.
-                # See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
-                local network="${project_name}_default"
-                docker network disconnect "$network" docksal-vhost-proxy
-                docker network rm "$network"
+				# Stop and remove containers
+				docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -vf
+				# Disconnect vhost-proxy from the project network and remove the network.
+				# See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
+				local network="${project_name}_default"
+				docker network disconnect "$network" docksal-vhost-proxy
+				docker network rm "$network"
 				echo "Removing project directory..."
 				# This assumes all projects are kept in the same directory, which is mounted at /projects
 				local mounted_project_root="/projects/$(basename $project_root)"
