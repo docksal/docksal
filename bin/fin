@@ -1403,6 +1403,7 @@ docker_machine_start ()
 	if [[ $? -eq 0 ]]; then
 		echo-green "Importing ssh keys..."
 		ssh_add
+		return 0
 	fi
 }
 
