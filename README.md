@@ -30,10 +30,14 @@ smaller, faster, portable and more efficient across the board.
 
 
 <a name="setup"></a>
+<a name="updates"></a>
 ## Getting started
 
 Docksal works with Linux, Mac and Windows.  
 Follow the [Setup](/docs/setup.md) documentation for instructions on getting started. 
+
+Updating from a pre-release (v0.x.y)?  
+You can safely ignore the backward compatibility warning from `fin` and proceed with the update.
 
 <a name="instructions"></a>
 ## Tutorials
