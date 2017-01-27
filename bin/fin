@@ -1817,13 +1817,13 @@ up ()
 	is_linux && ssh_add
 
 	# Prevent trying to start another set of containers with the same hostname
-	if (docker ps \
+	if (docker ps --all \
 				--filter 'label=com.docker.compose.service=web' \
-				--format '{{.Label "io.docksal.virtual-host"}} {{.Label "io.docksal.project-root"}}' | \
-				grep "${COMPOSE_PROJECT_NAME_SAFE}\.docksal" 2>/dev/null |
+				--filter 'label=io.docksal.virtual-host='${VIRTUAL_HOST} \
+				--format '{{.Label "io.docksal.project-root"}}' | \
 				grep -v "$PROJECT_ROOT" >/dev/null); then
-		echo-error "Can not start another project with virtual host name '${COMPOSE_PROJECT_NAME_SAFE}.docksal'" \
-			"There is another project running with the same hostname. Use ${yellow}fin projects${NC} to find it."
+		echo-error "Can not start another project with the virtual hostname '${VIRTUAL_HOST}'" \
+			"Use a different hostname for this project. Run ${yellow}fin projects -a${NC} to list all projects."
 		exit 1
 	fi
 
