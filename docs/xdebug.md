@@ -40,6 +40,8 @@ XDEBUG_ENABLED=1
 
 ## Setup for console php
 
+For debugging simple cli php-scripts only steps 1) and 2) are required.
+
 1) Set environment variable on the `cli` service thorugh creating/editing ./docksal/docksal-local.yml
 
 ```yaml
@@ -61,7 +63,7 @@ Replace **drupal7.docksal** with your domain. You can find it in `docksal.env` s
   ...
 ```
 
-2) Update container configuration with `fin up`  
+2) Update container configuration with `fin up`
 
 3) Configure PHPStorm to be able to handle drush debugging
 ![Screenshot](img/xdebug-phpstorm-drush.png)
@@ -74,7 +76,7 @@ Replace **drupal7.docksal** with your domain. You can find it in `docksal.env` s
 fin exec composer require drush/drush:8.x
 ```
 
-5.) Set path mappings for drush in PHP-Storm:
+5) Set path mappings for drush in PHP-Storm:
 ![Screenshot](img/xdebug-phpstorm-drush-mapping.png)
 
 - (1) Enter the same hostname as you did in VIRTUAL_HOST and PHP_IDE_CONFIG environment variables before.
