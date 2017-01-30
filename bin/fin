@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.0.0
+FIN_VERSION=1.0.1
 
 # Console colors
 red='\033[0;91m'
@@ -189,10 +189,13 @@ _PWD=$(which pwd)
 # Override default pwd function on windows and remove /cygdrive part from the path
 pwd ()
 {
+	# -L option should be used at all times because running pwd via absolute path /bin/pwd
+	# on Linux and Windows forces it to resolve current logical dir to physical dir
+	# (resolves symlink into target dir). -L forces using logical dir just like running pwd alone
 	if (uname | grep 'CYGWIN_NT' >/dev/null); then
-		"$_PWD" | sed 's/^\/cygdrive//'
+		"$_PWD" "-L" | sed 's/^\/cygdrive//'
 	else
-		"$_PWD"
+		"$_PWD" "-L"
 	fi
 }
 
