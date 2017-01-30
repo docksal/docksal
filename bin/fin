@@ -746,8 +746,9 @@ _remove_containers ()
 _remove_dangling_containers ()
 {
 	echo-green "Checking for orphaned containers..."
-	projects=$(docker ps -a --filter "label=io.docksal.project-root" \
-		--filter "label=com.docker.compose.project" \
+	projects=$(docker ps --all \
+		--filter 'label=io.docksal.project-root' \
+		--filter 'label=com.docker.compose.project' \
 		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
 	for project in $projects; do
 		IFS=':' read project_name project_root <<< "$project"
@@ -1820,10 +1821,10 @@ up ()
 
 	# Prevent trying to start another set of containers with the same hostname
 	if (docker ps --all \
-				--filter 'label=com.docker.compose.service=web' \
-				--filter 'label=io.docksal.virtual-host='${VIRTUAL_HOST} \
-				--format '{{.Label "io.docksal.project-root"}}' | \
-				grep -v "$PROJECT_ROOT" >/dev/null); then
+			--filter 'label=com.docker.compose.service=web' \
+			--filter "label=io.docksal.virtual-host=${VIRTUAL_HOST}" \
+			--format '{{.Label "io.docksal.project-root"}}' | \
+			grep -v "$PROJECT_ROOT" >/dev/null); then
 		echo-error "Can not start another project with the virtual hostname '${VIRTUAL_HOST}'" \
 			"Use a different hostname for this project. Run ${yellow}fin projects -a${NC} to list all projects."
 		exit 1
@@ -2451,7 +2452,8 @@ update ()
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
 		echo-green "Restarting running projects..."
 		running_projects=$(docker ps --all \
-			--filter 'status=running' --filter 'label=com.docker.compose.service=web' \
+			--filter 'status=running' \
+			--filter 'label=com.docker.compose.service=web' \
 			--format '{{.Label "io.docksal.project-root"}}'
 		)
 		for project in ${running_projects}; do
