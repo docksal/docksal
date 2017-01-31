@@ -22,9 +22,13 @@ You can also pick from the [list](https://confluence.jetbrains.com/display/PhpSt
 ```bash
 XDEBUG_ENABLED=1
 ```
+
 2) Update container configuration with `fin up`  
+
 3) Open your project in PHPStorm  
+
 4) Set a breakpoint wherever you like  
+
 5) Click on the **Start Listening for PHP Debug Connections** button in PHPStorm
 
 ![Screenshot](img/xdebug-toggle-listener.png)
@@ -56,11 +60,11 @@ services:
 
 Replace **drupal7.docksal** with your domain. You can find it in `docksal.env` section:
 
-```yaml
-  ...
-  # Docksal configuration.
-  VIRTUAL_HOST=drupal7.docksal
-  ...
+```bash
+...
+# Docksal configuration.
+VIRTUAL_HOST=drupal7.docksal
+...
 ```
 
 2) Update container configuration with `fin up`
@@ -69,9 +73,10 @@ Replace **drupal7.docksal** with your domain. You can find it in `docksal.env` s
 ![Screenshot](img/xdebug-phpstorm-drush.png)
 
 - (1) You need to increase the Max. simultaneous connections to allow drush to spawn other drush instances. Otherwise the debugger might get stuck without any response.
-- (2) Disable "Force break at the first line when a script is outside the project". As the main drush binary resides in cli in /usr/local/bin/drush the debugger will break on every drush invocation.
+- (2) Disable "Force break at the first line when a script is outside the project". As the main drush binary resides in `cli` in `/usr/local/bin/drush` the debugger will break on every drush invocation.
 
 4) Install a site specific drush in your project root (if not already done) to get a non-phar version of drush.
+
 ```bash
 fin exec composer require drush/drush:8.x
 ```
