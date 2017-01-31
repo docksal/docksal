@@ -17,7 +17,6 @@ services:
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
-      - VIRTUAL_HOST=${VIRTUAL_HOST}
 
   # DB
   db:
@@ -57,7 +56,6 @@ services:
       - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
     environment:
       - VARNISH_BACKEND_HOST=web
-      - VIRTUAL_HOST=varnish.${VIRTUAL_HOST}
 
   # Memcached
   memcached:
