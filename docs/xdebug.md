@@ -81,7 +81,7 @@ VIRTUAL_HOST=drupal7.docksal
 fin exec composer require drush/drush:8.x
 ```
 
-5) Set path mappings for drush in PHP-Storm:
+5) Set path mappings for drush in PHP-Storm (note that `vendor` folder is inside `docroot` in Drupal 8):
 ![Screenshot](img/xdebug-phpstorm-drush-mapping.png)
 
 - (1) Enter the same hostname as you did in VIRTUAL_HOST and PHP_IDE_CONFIG environment variables before.
