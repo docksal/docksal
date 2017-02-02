@@ -966,7 +966,7 @@ show_help_ssh-add ()
 	echo-green "fin ssh-add - Add private key identities to the ssh-agent."
 	echo "Usage: fin ssh-add [-lD] [key]"
 	echo
-	echo "When run without arguments, picks up the default key file (~/.ssh/id_rsa or ~/.ssh/id_dsa)."
+	echo "When run without arguments, picks up the default key files (~/.ssh/id_rsa, ~/.ssh/id_dsa, ~/.ssh/id_ecdsa)."
 	echo "A custom key name can be given as an argument: fin ssh-add <keyname>."
 	echo
 	echo -e "${yellow}NOTE${NC}: <keyname> is the file name within ${yellow}~/.ssh${NC} (not full path to file)."

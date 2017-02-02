@@ -16,6 +16,8 @@ to other projects and containers.
 SSH agent can handle passphrase protected ssh keys, so you don't have to enter the passphrase every time the key is used. 
 The passphrase is entered one only time, when the key is loaded into the agent.
 
+See [Using ssh-agent service](ssh-agent.md) for more information. 
+
 ### DNS
 
 [docksal-dns](https://github.com/docksal/service-dns) contains a running `bind` server that resolves `*.docksal` URI's 
