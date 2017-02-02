@@ -20,11 +20,10 @@ services:
       # Project root volume
       - project_root:/var/www:ro
     labels:
-      - io.docksal.virtual-host=${VIRTUAL_HOST}
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
-      - VIRTUAL_HOST=${VIRTUAL_HOST}
     depends_on:
       - cli
 

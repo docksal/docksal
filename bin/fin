@@ -3071,6 +3071,7 @@ config_show ()
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
+	echo "VIRTUAL_HOST_ALIASES: *.${VIRTUAL_HOST}"
 
 	local IP;
 	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="$(fin vm ip)"

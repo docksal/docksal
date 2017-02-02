@@ -165,7 +165,7 @@ You should not remove or change these values.
       # Project root volume
       - project_root:/var/www:ro
     labels:
-      - io.docksal.virtual-host=${VIRTUAL_HOST}
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
@@ -216,6 +216,7 @@ COMPOSE_FILE:
 PROJECT_ROOT: /Users/testuser/projects/myproject
 DOCROOT: docroot
 VIRTUAL_HOST: myproject.docksal
+VIRTUAL_HOST_ALIASES: *.myproject.docksal
 IP: 192.168.64.100
 
 MYSQL_PORT:
