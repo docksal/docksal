@@ -1779,7 +1779,7 @@ vm ()
 			vm-ram "$@"
 			;;
 		*)
-			docker-machine ls
+			echo-error "Unknown command fin vm $1" "See ${yellow}fin help vm${NC} for list of available commands"
 			;;
 	esac
 }
