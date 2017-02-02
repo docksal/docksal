@@ -827,7 +827,7 @@ _vhost_proxy_connect ()
 # @param $3 [optional] command color
 printh ()
 {
-	local COMMAND_COLUMN_WIDTH=30;
+	local COMMAND_COLUMN_WIDTH=25;
 	case "$3" in
 		yellow)
 			printf "  ${yellow}%-${COMMAND_COLUMN_WIDTH}s${NC}" "$1"
@@ -922,7 +922,7 @@ show_help ()
 	printh "share" "Share web server of the current project on the internet using ngrok"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "alias" "Create/remove folder aliases (${yellow}fin help alias${NC})"
-	printh "version	(v, -v)" "Print fin version. [v, -v] - prints short version"
+	printh "version (v, -v)" "Print fin version. [v, -v] - prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
 	# Show list of custom commands and their help if available
