@@ -169,7 +169,6 @@ You should not remove or change these values.
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
-      - VIRTUAL_HOST=${VIRTUAL_HOST}
     # cli has to be up before web
     depends_on:
       - cli
@@ -245,7 +244,6 @@ services:
     - cli
     environment:
       APACHE_DOCUMENTROOT: /var/www/docroot
-      VIRTUAL_HOST: myproject.docksal
     hostname: web
     image: docksal/web:1.0-apache2.2
     labels:

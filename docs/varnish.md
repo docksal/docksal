@@ -11,9 +11,10 @@ varnish:
     - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
   environment:
     - VARNISH_BACKEND_HOST=web
-    - VIRTUAL_HOST=varnish.${VIRTUAL_HOST}
 ```
 
 Apply new configuration with `fin up`.
 
+Use `http://varnish.<VIRTUAL_HOST>` to access the site via Varnish.
+ 
 See [docksal/image-varnish](https://github.com/docksal/image-varnish) for additional configuration options.

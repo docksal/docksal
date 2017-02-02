@@ -20,7 +20,6 @@ mail:
   environment:
     - MH_API_BIND_ADDR=0.0.0.0:80
     - MH_UI_BIND_ADDR=0.0.0.0:80
-    - VIRTUAL_HOST=webmail.${VIRTUAL_HOST}
   labels:
     - io.docksal.virtual-host=webmail.${VIRTUAL_HOST}
 ```
