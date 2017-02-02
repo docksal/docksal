@@ -7,9 +7,9 @@
 2. [Initial Docksal environment setup](env-setup.md)
 3. [Configuring a project to use Docksal](project-setup.md)
 
-Coming from Drude (DDE)?  
-You will find a lot of similarities and a lot more new features that Docksal has over Drude (DDE).  
-Follow [Updating from Drude (DDE) to Docksal](update-dde.md) instructions. 
+!!! tip "Coming from Drude (DDE)?"
+    You will find a lot of similarities and a lot more new features that Docksal has over Drude (DDE).  
+    Follow [Updating from Drude (DDE) to Docksal](update-dde.md) instructions. 
 
 
 <a name="examples"></a>
@@ -68,8 +68,12 @@ sudo rm /usr/local/bin/docker-machine
 <a name="troubleshoting"></a>
 ## Troubleshooting
 
-!!! attention "If something went wrong" 
-    First try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
+!!! attention "If something is wrong" 
+    Quite often a problem may reside within the 3rd party tools, project code, local configuration, etc., and not the stack.  
+    To make sure that the Docksal stack works properly, try launching any of the [sample projects](setup.md#examples).  
+    If you believe the issue is with the stack, then read on.
+
+First, try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
 
 - Update Docksal to the latest version. See the [updates](#updates) section.
 - (Mac and Windows) Restart the Docksal VM: `fin vm restart`
