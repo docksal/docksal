@@ -54,7 +54,7 @@ services:
   cli:
     environment:
       - XDEBUG_ENABLED=1
-      - XDEBUG_CONFIG=idekey=PHPSTORM remote_host=192.168.10.1
+      - XDEBUG_CONFIG=idekey=PHPSTORM remote_host=192.168.64.1
       - PHP_IDE_CONFIG=serverName=drupal7.docksal
 ```
 
