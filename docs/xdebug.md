@@ -55,16 +55,7 @@ services:
     environment:
       - XDEBUG_ENABLED=1
       - XDEBUG_CONFIG=idekey=PHPSTORM remote_host=192.168.64.1
-      - PHP_IDE_CONFIG=serverName=drupal7.docksal
-```
-
-Replace **drupal7.docksal** with your domain. You can find it in `docksal.env` section:
-
-```bash
-...
-# Docksal configuration.
-VIRTUAL_HOST=drupal7.docksal
-...
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
 ```
 
 2) Update container configuration with `fin up`
@@ -84,7 +75,7 @@ fin exec composer require drush/drush:8.x
 5) Set path mappings for drush in PHP-Storm (note that `vendor` folder is inside `docroot` in Drupal 8):
 ![Screenshot](img/xdebug-phpstorm-drush-mapping.png)
 
-- (1) Enter the same hostname as you did in VIRTUAL_HOST and PHP_IDE_CONFIG environment variables before.
+- (1) Enter the same hostname as you did in `VIRTUAL_HOST` and `PHP_IDE_CONFIG` environment variables before.
 - (2) Map your docksal project root to `/var/www` so your all your files are mapped. Additionally map your site drush to `/usr/local/bin/drush`.
 
 6) You can run your scripts in console and debug them in the same way as browser requests.
