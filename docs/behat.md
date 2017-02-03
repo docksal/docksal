@@ -10,7 +10,7 @@ Docksal expects your Behat tests to be in the `tests/behat` folder of the projec
 >       \_ composer.json
 >       \_ composer.lock
 
-See [docksal/drupal7](https://github.com/docksal/drupal7) repo for a working Drupal 7 + Behat setup.
+See [docksal/drupal7-advanced](https://github.com/docksal/drupal7-advanced) repo for a working Drupal 7 + Behat setup or [docksal/qa-suite](https://github.com/docksal/qa-suite) for example of QA-oriented suite with Behat,  Selenium and Backstop with PhantomJS, SlimerJS plus CasperJS.
 
 
 ## Running tests
