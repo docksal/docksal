@@ -15,9 +15,10 @@ fin init
 
 Try one of the pre-configured sample projects:
 
-- [Drupal 7 sample project](https://github.com/docksal/drupal7)  
-- [Drupal 8 sample project](https://github.com/docksal/drupal8)  
+- [Drupal 8 sample project](https://github.com/docksal/drupal8)
+- [Drupal 7 sample project](https://github.com/docksal/drupal7)
 - [WordPress sample project](https://github.com/docksal/wordpress)
+- [Magento sample project](https://github.com/docksal/magento)
 
 <sup>*</sup>Once you are done with a one-time [Docksal environment setup](/docs/env-setup.md)
 
