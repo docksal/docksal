@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.0.4
+FIN_VERSION=1.0.5
 
 # Console colors
 red='\033[0;91m'
@@ -647,6 +647,36 @@ check_drush_path ()
 	fi
 }
 
+# Project uniqueness checks
+check_project_unique ()
+{
+	# Format: project:project-root:virtual-host
+	local _projects=$(docker ps --all \
+				--filter 'label=com.docker.compose.service=web' \
+				--format '{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.project-root"}}:{{.Label "io.docksal.virtual-host"}}')
+
+	for _project in $_projects; do
+		IFS=':' read _project_name _project_root _project_vhost <<< "$_project"
+
+		# Prevent duplicate project names
+		if [[ "$_project_name" == "$COMPOSE_PROJECT_NAME_SAFE" ]] && [[ "$_project_root" != "$PROJECT_ROOT" ]]; then
+			echo-error "Another project is already using the name '${COMPOSE_PROJECT_NAME_SAFE}'" \
+				"Change the name of the current project by renaming the project folder (folder name defines the project name and has to be unique)" \
+				"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$_project_root${NC}"
+			exit 1
+		fi
+
+		# Prevent duplicate vhost names
+		# TODO: handle non-default VIRTUAL_HOST definitions
+		if [[ "$_project_vhost" =~ ^$VIRTUAL_HOST ]] && [[ "$_project_root" != "$PROJECT_ROOT" ]]; then
+			echo-error "Another project is already using the virtual hostname '${VIRTUAL_HOST}'" \
+				"Use a different hostname for this project by overriding the VIRTUAL_HOST variable in docksal.env" \
+				"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$_project_root${NC}"
+			exit 1
+		fi
+	done
+}
+
 # Yes/no confirmation dialog with an optional message
 # @param $1 confirmation message
 _confirm ()
@@ -746,7 +776,7 @@ _remove_containers ()
 _remove_dangling_containers ()
 {
 	echo-green "Checking for orphaned containers..."
-	projects=$(docker ps --all \
+	local projects=$(docker ps --all \
 		--filter 'label=io.docksal.project-root' \
 		--filter 'label=com.docker.compose.project' \
 		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
@@ -1818,41 +1848,7 @@ up ()
 	# Run ssh_add here, since there is no better place to get it triggered on Linux.
 	# This should not be the last command in a function as it will exit 1 on non Linux systems.
 	is_linux && ssh_add
-
-	# Prevent trying to start another project with the same name
-	if (docker ps --all \
-				--filter 'label=com.docker.compose.service=web' \
-				--filter 'label=com.docker.compose.project='${COMPOSE_PROJECT_NAME_SAFE} \
-				--format '{{.Label "io.docksal.project-root"}}' |
-				grep -v "^$PROJECT_ROOT$" |
-				grep ${COMPOSE_PROJECT_NAME_SAFE} >/dev/null); then
-		fldr=$(docker ps --all \
-				--filter 'label=com.docker.compose.service=web' \
-				--filter 'label=com.docker.compose.project='${COMPOSE_PROJECT_NAME_SAFE} \
-				--format '{{.Label "io.docksal.project-root"}}')
-		echo-error "Can not start another project with the same name '${COMPOSE_PROJECT_NAME_SAFE}'" \
-			"Use a different name for this project by renaming the project folder (folder name defines the project name and has to be unique)" \
-			"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$fldr${NC}"
-		exit 1
-	fi
-
-	# Prevent trying to start another set of containers with the same hostname
-	if (docker ps --all \
-			--filter 'label=com.docker.compose.service=web' \
-			--format '{{.Label "io.docksal.virtual-host"}} {{.Label "io.docksal.project-root"}}' | \
-			grep "^${VIRTUAL_HOST}" 2>/dev/null | \
-			grep -v " $PROJECT_ROOT$" >/dev/null); then
-		local conflict=$(docker ps --all \
-			--filter 'label=com.docker.compose.service=web' \
-			--format '{{.Label "io.docksal.virtual-host"}} {{.Label "io.docksal.project-root"}}' | \
-			grep "^${VIRTUAL_HOST}" 2>/dev/null | \
-			grep -v " $PROJECT_ROOT$" |
-			cut -d " " -f 2)
-		echo-error "Can not start another project with the virtual hostname '${VIRTUAL_HOST}'" \
-			"Use a different hostname for this project by overriding VIRTUAL_HOST variable." \
-			"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$conflict${NC}"
-		exit 1
-	fi
+	check_project_unique
 
 	_start_containers
 }
@@ -1861,6 +1857,8 @@ up ()
 stop ()
 {
 	check_docksal_environment
+	check_project_unique
+
 	_stop_containers "$@"
 }
 
@@ -1872,13 +1870,37 @@ restart ()
 	# Run ssh_add here, since there is no better place to get it triggered on Linux.
 	# This should not be the last command in a function as it will exit 1 on non Linux systems.
 	is_linux && ssh_add
+	check_project_unique
+
 	_restart_containers
+}
+
+# Remove container(s)
+# @param $1 $2... container names
+remove ()
+{
+	check_docksal_environment
+	check_project_unique
+
+	if [[ $1 == "" ]]; then
+		echo -e "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
+		_confirm "Continue?";
+	fi
+
+	# support quiet removal
+	if [[ $1 == "-f" ]]; then
+		shift
+	fi
+
+	_remove_containers "$@"
 }
 
 # List project containers
 _ps ()
 {
 	check_docksal_environment
+	check_project_unique
+
 	docker_compose ps
 }
 
@@ -2749,24 +2771,6 @@ exec_url ()
 	else
 		show_help_exec-url
 	fi
-}
-
-# Remove container(s)
-# @param $1 $2... container names
-remove ()
-{
-	check_docksal_environment
-	if [[ $1 == "" ]]; then
-		echo -e "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
-		_confirm "Continue?";
-	fi
-
-	# support quiet removal
-	if [[ $1 == "-f" ]]; then
-		shift
-	fi
-
-	_remove_containers "$@"
 }
 
 # Reset container(s) (stop, remove, up)
