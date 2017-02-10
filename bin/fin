@@ -2262,8 +2262,8 @@ EOF
 	# Calling with sudo in case of fresh install when user is not in docker group yet
 	echo-green "Updating system images..."
 	[[ -x "$FIN_PATH_UPDATED" ]] &&
-		sudo "$FIN_PATH_UPDATED" update --system-images ||
-		sudo fin update --system-images
+		NO_UPDATES=1 sudo "$FIN_PATH_UPDATED" update --system-images ||
+		NO_UPDATES=1 sudo fin update --system-images
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
@@ -2508,7 +2508,7 @@ update ()
 		for project in ${running_projects}; do
 			# use updated version when updated
 			[[ ! -f "$FIN_PATH_UPDATED" ]] && FIN_PATH_UPDATED="fin"
-			(cd "$project" && "$FIN_PATH_UPDATED" start)
+			(cd "$project" && NO_UPDATES=1 "$FIN_PATH_UPDATED" start)
 		done
 	fi
 
