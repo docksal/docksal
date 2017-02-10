@@ -2258,9 +2258,12 @@ EOF
 		sudo resolvconf -u
 	fi
 
-	# Update system images and install system service (call self with sudo in case of fresh install).
+	# Update system images and install system service
+	# Calling with sudo in case of fresh install when user is not in docker group yet
 	echo-green "Updating system images..."
-	sudo fin update --system-images
+	[[ -x "$FIN_PATH_UPDATED" ]] &&
+		sudo "$FIN_PATH_UPDATED" update --system-images ||
+		sudo fin update --system-images
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
