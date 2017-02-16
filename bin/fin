@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.0.5
+FIN_VERSION=1.0.6
 
 # Console colors
 red='\033[0;91m'
@@ -79,6 +79,7 @@ URL_REPO_UI="https://github.com/docksal/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
+URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
 URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
@@ -3060,7 +3061,6 @@ load_configuration ()
 	export COMPOSE_FILE
 
 	# Set project name if it was not set previously
-	# TODO: Figure out how to prevent starting projects with duplicate names
 	if [[ -d $(get_project_path) ]]; then
 		local project_name=$(basename $(get_project_path) | tr '[:upper:]' '[:lower:]')
 		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
@@ -3186,30 +3186,37 @@ create_site ()
 	echo -e "${green}[1]${NC} Drupal 7"
 	echo -e "${green}[2]${NC} Drupal 8"
 	echo -e "${green}[3]${NC} Wordpress"
+	echo -e "${green}[4]${NC} Magento"
 	echo -e ""
 	while true; do
 		read -p ": " choice
 		case ${choice} in
-			1 )
+			1)
 				target_cms="Drupal 7"
 				target_host_name_search_string="drupal7"
 				target_repo="$URL_REPO_DRUPAL7"
 				break
 				;;
-			2 )
+			2)
 				target_cms="Drupal 8"
 				target_host_name_search_string="drupal8"
 				target_repo="$URL_REPO_DRUPAL8"
 				break
 				;;
-			3 )
+			3)
 				target_cms="Wordpress"
 				target_host_name_search_string="wordpress"
 				target_repo="$URL_REPO_WORDPRESS"
 				break
 				;;
+			4)
+				target_cms="Magento"
+				target_host_name_search_string="magento"
+				target_repo="$URL_REPO_MAGENTO"
+				break
+				;;
 			* )
-				echo 'Please enter 1, 2, or 3.'
+				echo 'Please enter 1, 2, 3 or 4.'
 				continue
 		esac
 		break
@@ -3229,7 +3236,7 @@ create_site ()
 
 	cd ${project_name}/.docksal &&
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/${target_host_name_search_string}/${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1 &&
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1 &&
 		cd ".." &&
 		fin init
 }
