@@ -1,5 +1,14 @@
 # Using Behat
 
+## Setup
+
+Add custom `behat` command to your project.
+
+>     .docksal/commands
+>       \_ behat
+
+See [docksal/drupal7-advanced/.docksal/commands/behat](https://github.com/docksal/drupal7-advanced/blob/master/.docksal/commands/behat) as an example.
+
 ## Expected folder structure
 
 Docksal expects your Behat tests to be in the `tests/behat` folder of the project repo.
@@ -22,7 +31,7 @@ This will download Composer dependencies and run Behat using the pre-configured 
 
 ## Behat goutte driver
 
-The basic configuration (see [behat.common.yml](https://github.com/docksal/drupal7/blob/master/tests/behat/behat.common.yml) as an example) 
+The basic configuration (see [behat.common.yml](https://github.com/docksal/drupal7-advanced/blob/master/tests/behat/behat.common.yml) as an example) 
 uses goutte as the default driver. Goutte is a very basic browser emulator. It is much faster than real browsers, but also very limited. 
 It can make HTTP requests, but does not parse CSS, execute JS or do any rendering.
 
