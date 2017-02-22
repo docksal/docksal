@@ -1793,8 +1793,10 @@ vm ()
 			if [[ "$1" =~ [0-9][0-9]*[0-9]*.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9] ]]; then
 				# set ip
 				echo-green "Setting ip to $1..."
-				echo "$1" > "$DOCKER_MACHINE_FOLDER/ip"
-				echo-yellow "IP change will take effect on next machine start."
+#				echo "$1" > "$DOCKER_MACHINE_FOLDER/ip"
+#				echo-yellow "IP change will take effect on next machine start."
+				DOCKER_MACHINE_IP="$1"
+				docker_machine_change_ip
 			else
 				docker-machine ip "$machine_name"
 			fi
