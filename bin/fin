@@ -70,7 +70,7 @@ DOCKSAL_VHOST_PROXY_PORT_HTTPS="${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}"
 DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
 DEFAULT_MACHINE_VBOX_RAM='1024' #mb
-DEFAULT_MACHINE_VBOX_HDD='20000' #mb
+DEFAULT_MACHINE_VBOX_HDD='50000' #mb
 DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
 
 #---------------------------- URL references --------------------------------
