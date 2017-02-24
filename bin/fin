@@ -946,7 +946,7 @@ show_help ()
 
 	echo
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent (${yellow}fin help ssh-add${NC})"
-	printh "cleanup [--hard]" "Remove unused docker images (--hard will also remove stopped containers)"
+	printh "cleanup [--hard]" "Remove unused docker images and projects that are no longer present"
 
 	echo
 	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
@@ -1214,6 +1214,19 @@ show_help_config ()
 	printh "images [image name]" "Show all tags for certain image"
 	echo-green "Examples:"
 	printh "fin config images docksal/db" "Show all tags for docksal/db image"
+	echo
+}
+
+show_help_cleanup ()
+{
+	echo-green "Perform a cleanup"
+	printh "fin cleaup [--hard]" "" "yellow"
+	echo
+	printh "Removes unused docker images to save disk space on VM."
+	printh "Removes orphaned containers. Orphaned are those, which folders were deleted on filesystem"
+	printh "without removing their containers with 'fin rm' first."
+	echo-green "Parameters:"
+	printh "--hard" "Also remove all stopped containers (potentially destructive operation)"
 	echo
 }
 
