@@ -1559,7 +1559,7 @@ docker_machine_mount_nfs ()
 		if [[ "$NFSD_RESTART_REQUIRED" == "true" ]]; then
 			echo-green "Restarting nfsd..."
 			sudo nfsd restart
-			sleep 2
+			sleep 5
 		fi
 	else
 		echo-green "Starting nfsd..."
