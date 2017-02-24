@@ -32,7 +32,7 @@ Install [VirtualBox 5.1.12 for Windows](http://download.virtualbox.org/virtualbo
 ### 3. Install Docksal Fin
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
+sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
 sudo chmod +x /usr/local/bin/fin
 ```
 
