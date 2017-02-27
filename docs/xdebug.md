@@ -85,3 +85,41 @@ For example you can run drush command: `fin drush fra -y` and debug this drush c
 ### Resources
 
 - [Zero-configuration Web Application Debugging with Xdebug and PhpStorm](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm)
+
+# Debugging with Docksal, Xdebug and NetBeans IDE
+
+`xdebug` extension is disabled by default as it causes about 20% performance hit.
+
+To configure debugging in browser follow **Prerequisites** and **Setup**.
+
+## Prerequisites
+
+- [NetBeans](https://netbeans.org/downloads/)
+
+## Setup
+
+1) Set environment variable on the `cli` in `.docksal/docksal.env`
+
+```bash
+XDEBUG_ENABLED=1
+```
+
+2) Update container configuration with `fin up`  
+
+3) Open NetBeans Debugging configuration (follow menu "Tools" -> "Options" -> "PHP" -> "Debugging") and set "DebuggerPort" to 9000
+
+4) Open your project in NetBeans.
+
+5) Configure project properties:
+
+* Click right mouse button at project name and hit "Properties" in the dropdown menu
+
+* In "Sources" category set correct Web Root folder by clicking "Browse" button (usually it's docroot)
+
+* In the "Run Configuration" category select your docksal Project URL (your http://local-site.docksal (replace local-site by your value of SITE_DOMAIN, set via docksal.env file)
+
+* Click "OK" to save project properties.
+
+6) Set a breakpoint wherever you like  
+
+7) When you are in the NetBeans, and your whole project is selected, or one of the project files is opened and active, press **\<CTRL\> + \<F5\>** on your keyboard to run xdebug.
