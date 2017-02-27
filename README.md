@@ -60,7 +60,7 @@ Once you get the basics straight, feel free to explore the more advanced use cas
 - [Customize project configuration or switch PHP/MySQL version](/docs/project-customize.md)
 
 ### Utililies
-- [Debugging with Xdebug and PhpStorm](/docs/xdebug.md)
+- [Debugging with Xdebug and PhpStorm or NetBeans](/docs/xdebug.md)
 - [Using custom ssh keys (with or without passwords) via ssh-agent](/docs/ssh-agent.md)
 - [Sending and capturing e-mail](/docs/mail.md)
 - [SASS/Compass](/docs/sass.md)
