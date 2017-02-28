@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.0.7
+FIN_VERSION=1.0.8
 
 # Console colors
 red='\033[0;91m'
@@ -34,6 +34,7 @@ fi
 export HOST_HOME="$HOME"
 OLD_CONFIG_DIR="$HOME/.drude"
 CONFIG_DIR="$HOME/.docksal"
+CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
 CONFIG_LAST_CHECK="$CONFIG_DIR/last_check"
 CONFIG_MACHINES="$CONFIG_DIR/machines"
@@ -109,10 +110,14 @@ IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.0}
 
 #---------------------------- Global Variables --------------------------------
 
+# Override path to use our utilities
 PATH="$CONFIG_BIN_DIR:$PATH"
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
-# UID of user to use in cli continer. Only override if you know what you're doing
+# UID of user to use in cli container. Only override if you know what you're doing
 FIN_SET_UID=""
+# Load env variables overrides, use to permanently override some variables
+[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
+
 
 if [[ "$DOCKER_NATIVE" == "1" ]]; then
 	# no vm used
@@ -621,6 +626,9 @@ is_winpty_version ()
 
 check_vbox_version ()
 {
+	# Provide ability to skip checking for vbox version
+	[[ "$SKIP_VBOX_VERSION_CHECK" == "1" ]] && return;
+
 	is_vbox_version
 	local res=$?
 	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
