@@ -19,7 +19,6 @@ volumes:
       type: none
       device: ${PROJECT_ROOT}
       o: bind
-
   # Shared ssh-agent volume
   docksal_ssh_agent:
     external: true
