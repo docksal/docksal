@@ -69,7 +69,7 @@ Install [VirtualBox 5.1.12 for Mac](http://download.virtualbox.org/virtualbox/5.
 ### 2. Install Docksal Fin
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
+sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
 sudo chmod +x /usr/local/bin/fin
 ```
 
@@ -105,7 +105,7 @@ You either need to stop Apache or reconfigure it to listen on different ports (e
 ### 2. Install Docksal Fin
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
+sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
 sudo chmod +x /usr/local/bin/fin
 ```
 
