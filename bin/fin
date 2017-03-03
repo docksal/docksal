@@ -1492,11 +1492,13 @@ docker_machine_start ()
 			docker_machine_mounts
 	fi
 
-	if [[ $? -eq 0 ]]; then
+	local _err=$?
+	if [[ ${_err} -eq 0 ]]; then
 		echo-green "Importing ssh keys..."
 		ssh_add
-		return 0
 	fi
+
+	return ${_err}
 }
 
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
