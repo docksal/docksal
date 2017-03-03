@@ -3359,9 +3359,9 @@ if [[ "$1" == "@"* ]]; then
 		_alias_projects=$(docker ps --all \
 			--filter 'label=com.docker.compose.service=web' \
 			--format '{{.Label "com.docker.compose.project"}}\t{{.Label "io.docksal.project-root"}}')
-		if (echo "$_alias_projects" | grep "^$USED_ALIAS" >/dev/null 2>/dev/null); then
+		if (echo "$_alias_projects" | grep "^$USED_ALIAS\t" >/dev/null 2>/dev/null); then
 			# project found
-			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS" | cut -d$'\t' -f 2)
+			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS\t" | cut -d$'\t' -f 2)
 		else
 			# nothing was found. error out
 			echo-red "No such alias $USED_ALIAS"
