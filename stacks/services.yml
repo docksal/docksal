@@ -37,7 +37,7 @@ services:
   # Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:1.0-php7}
+    image: ${CLI_IMAGE:-docksal/cli:1.1-php7}
     volumes:
       # Project root volume
       - project_root:/var/www:rw
