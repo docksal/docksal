@@ -561,7 +561,7 @@ is_vbox_version ()
 
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
 	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$REQUIREMENTS_VBOX") ]] && \
-		return 1
+		return 2
 
 	return 0
 }
