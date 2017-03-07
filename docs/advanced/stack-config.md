@@ -1,6 +1,6 @@
 # Customizing project stack configuration
 
-It is recommended that you familiarize yourself with the [Docksal stack](docksal-stack.md) documentation before reading 
+It is recommended that you familiarize yourself with the [Docksal stack](../advanced/stack.md) documentation before reading 
 this manual. You should understand what project containers are and which project containers exist by default.
 
 **Understanding stack configurations**
@@ -57,13 +57,13 @@ For more details on its role check [loading order](#loading-order).
 
 It is used to override of some of the default environment variables, without the need for
 a full `docksal.yml` file (for example, to override `MYSQL_ROOT_PASSWORD`) or to provide additional environment
-variables for your automation scripts (see [custom commands](custom-commands.md).)
+variables for your automation scripts (see [custom commands](../fin/custom-commands.md).)
 
 <a name="docksal-local"></a>
 ### docksal-local.yml, docksal-local.env
 
 `docksal-local.yml` and `docksal-local.env` are used for additional customizations that happen after the main files 
-are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom port](expose-port.md) 
+are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom port](../advanced/networking.md#expose-port) 
 or switching PHP versions.
 
 <a name="default-configurations"></a>
@@ -96,7 +96,7 @@ The list below goes from the earliest to the latest in this queue.
 
 Loading order:
 
-1. `~/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](/docksal-volumes.md).)
+1. `~/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md).)
 2. `~/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`.
 3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise.
 4. `docksal.env` - sets or modifies environment variables.
@@ -355,7 +355,7 @@ fin config images docksal/db
 
 This is optional, but highly recommended.
 
-Site provisioning can be automated via a [custom command](custom-commands.md).
+Site provisioning can be automated via a [custom command](../fin/custom-commands.md).
 E.g. `fin init`, which will call `.docksal/commands/init`. Put project specific initialization tasks there, like:
 
 - initialize the Docksal configuration.

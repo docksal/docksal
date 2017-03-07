@@ -3,7 +3,8 @@
 On Mac and Windows, you can use native Docker applications instead of VirtualBox.
 
 !!! danger "Experimental support"
-    Docker for Mac/Windows support is experimental and is not recommended for regular use due to low filesystem performance. Please report any issues in the [issue queue](https://github.com/docksal/docksal/issues).
+    Docker for Mac/Windows support is experimental and is not recommended for regular use due to low filesystem performance.
+    Please report any issues in the [issue queue](https://github.com/docksal/docksal/issues).
 
 ## Switching to native Docker application for Mac/Window
 

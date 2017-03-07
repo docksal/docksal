@@ -39,7 +39,7 @@ Say you need to update your `schema.xml` or other configuration.
 
 You can put all your custom Solr config files to the `.docksal/etc/solr/conf` folder:
 
-![Screenshot](img/apache-solr-conf-folder.png)
+![Screenshot](../_img/apache-solr-conf-folder.png)
 
 Then update your `.docksal/docksal.yml` to mount them in the `solr` service:
 

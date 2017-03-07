@@ -3,13 +3,13 @@
 <a name="install"></a>
 ## Installation
 
-1. [System requirements](system-requirements.md)
-2. [Initial Docksal environment setup](docksal-env-setup.md)
-3. [Configuring a project to use Docksal](project-setup.md)
+1. [System requirements](../getting-started/system-requirements.md)
+2. [Initial Docksal environment setup](../getting-started/env-setup.md)
+3. [Configuring a project to use Docksal](../getting-started/project-setup.md)
 
 !!! tip "Coming from Drude (DDE)?"
     You will find a lot of similarities and a lot more new features that Docksal has over Drude (DDE).  
-    Follow [Updating from Drude (DDE) to Docksal](update-dde.md) instructions. 
+    Follow [Updating from Drude (DDE) to Docksal](../getting-started/update-dde.md) instructions. 
 
 
 <a name="examples"></a>
@@ -70,7 +70,7 @@ sudo rm /usr/local/bin/docker-machine
 
 !!! attention "If something is wrong" 
     Quite often a problem may reside within the 3rd party tools, project code, local configuration, etc., and not the stack.  
-    To make sure that the Docksal stack works properly, try launching any of the [sample projects](setup.md#examples).  
+    To make sure that the Docksal stack works properly, try launching any of the [sample projects](#examples).  
     If you believe the issue is with the stack, then read on.
 
 First, try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
@@ -83,7 +83,7 @@ First, try these quick fix steps in the order listed below. Check if the issue h
 
 If the quick fixes above did not help, try:
 
-- checking the [troubleshooting doc](troubleshooting.md) for rare problems that might occur
+- checking the [troubleshooting doc](../troubleshooting.md) for rare problems that might occur
 - searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced a similar issue and already found a solution or a workaround.
 - asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
 

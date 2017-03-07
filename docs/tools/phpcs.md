@@ -4,7 +4,7 @@
 
 ## Using as a custom fin command
 
-It's recommended to see how to [extend fin with custom commands](custom-commands.md) first.
+It's recommended to see how to [extend fin with custom commands](../fin/custom-commands.md) first.
 
 From your project's root folder (where the `.docksal` folder is) download the sample `phpcs` command
 

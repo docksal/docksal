@@ -31,15 +31,15 @@ XDEBUG_ENABLED=1
 
 5) Click on the **Start Listening for PHP Debug Connections** button in PHPStorm
 
-![Screenshot](img/xdebug-toggle-listener.png)
+![Screenshot](../_img/xdebug-toggle-listener.png)
 
 6) Click on **Debug** in **Xdebug Helper** in Chrome
 
-![Screenshot](img/xdebug-toggle-debugger.png)
+![Screenshot](../_img/xdebug-toggle-debugger.png)
 
 7) Click on **Accept** in the **Incoming Connection From Xdebug** dialogue in PHPStorm
 
-![Screenshot](img/xdebug-mapping.png)
+![Screenshot](../_img/xdebug-mapping.png)
 
 
 ## Setup for console php
@@ -61,7 +61,7 @@ services:
 2) Update container configuration with `fin up`
 
 3) Configure PHPStorm to be able to handle drush debugging
-![Screenshot](img/xdebug-phpstorm-drush.png)
+![Screenshot](../_img/xdebug-phpstorm-drush.png)
 
 - (1) You need to increase the Max. simultaneous connections to allow drush to spawn other drush instances. Otherwise the debugger might get stuck without any response.
 - (2) Disable "Force break at the first line when a script is outside the project". As the main drush binary resides in `cli` in `/usr/local/bin/drush` the debugger will break on every drush invocation.
@@ -73,7 +73,7 @@ fin exec composer require drush/drush:8.x
 ```
 
 5) Set path mappings for drush in PHP-Storm (note that `vendor` folder is inside `docroot` in Drupal 8):
-![Screenshot](img/xdebug-phpstorm-drush-mapping.png)
+![Screenshot](../_img/xdebug-phpstorm-drush-mapping.png)
 
 - (1) Enter the same hostname as you did in `VIRTUAL_HOST` and `PHP_IDE_CONFIG` environment variables before.
 - (2) Map your docksal project root to `/var/www` so your all your files are mapped. Additionally map your site drush to `/usr/local/bin/drush`.

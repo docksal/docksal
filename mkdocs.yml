@@ -10,16 +10,16 @@ markdown_extensions:
 pages:
   - Home: index.md
   - Getting started:
-    - What's in the software?: gettings-started/the-software.md
-    - Setup instructions: gettings-started/setup.md
-    - System requirements: gettings-started/system-requirements.md
-    - Docksal environment setup: gettings-started/env-setup.md
-    - Docker for Mac/Win: gettings-started/env-setup-native.md
-    - Project setup: gettings-started/project-setup.md
+    - What's in the software?: getting-started/the-software.md
+    - Setup instructions: getting-started/setup.md
+    - System requirements: getting-started/system-requirements.md
+    - Docksal environment setup: getting-started/env-setup.md
+    - Docker for Mac/Win: getting-started/env-setup-native.md
+    - Project setup: getting-started/project-setup.md
   - Troubleshooting: troubleshooting.md
   - Docksal Fin:
     - fin: fin/fin.md
-    - Custom commands: advanced/custom-commands.md
+    - Custom commands: fin/custom-commands.md
   - Tools and integrations:
     - Apache Solr: tools/apache-solr.md
     - Behat: tools/behat.md
@@ -47,4 +47,4 @@ pages:
       - Database access: advanced/db-access.md
       - Automatic database import: advanced/db-import.md
       - Database sandbox mode: advanced/db-sandbox.md
-    - Docksal volumes: advanced/docksal-volumes.md
+    - Docksal volumes: advanced/volumes.md
