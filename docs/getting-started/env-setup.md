@@ -24,7 +24,7 @@ Docksal is not tested and not supported with other Linux-type shells on Windows.
 
 ### 2. Install VirtualBox
 
-Install [VirtualBox 5.1.12 for Windows](http://download.virtualbox.org/virtualbox/5.1.12/VirtualBox-5.1.12-112440-Win.exe).
+Install [VirtualBox 5.1.14 for Windows](http://download.virtualbox.org/virtualbox/5.1.14/VirtualBox-5.1.14-112924-Win.exe).
 
 !!! attention "Specific version required"
     **Using the specified version is important.** If you use a different version, it may work fine or you may experience unexpected bugs. Fin will notify you to update your VirtualBox version in the future.
@@ -61,7 +61,7 @@ You are done with the one time environment installation. Now you can [configure 
 
 ### 1. Install VirtualBox
 
-Install [VirtualBox 5.1.12 for Mac](http://download.virtualbox.org/virtualbox/5.1.12/VirtualBox-5.1.12-112440-OSX.dmg).
+Install [VirtualBox 5.1.14 for Mac](http://download.virtualbox.org/virtualbox/5.1.14/VirtualBox-5.1.14-112924-OSX.dmg).
 
 !!! attention "Specific version required"
     **Using the specified version is important.** If you use a different version, it may work fine or you may experience unexpected bugs. Fin will notify you to update your VirtualBox version in the future.
