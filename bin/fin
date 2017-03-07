@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.0
+FIN_VERSION=1.1.1
 
 # Console colors
 red='\033[0;91m'
@@ -1989,7 +1989,7 @@ install_proxy_service ()
 	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g. 0.5h)
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
 	# entirely wiped out from the host (e.g. 168h). WARNING: use at your own risk!
-	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
+	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always \
 		-p "${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
@@ -2011,7 +2011,7 @@ install_dns_service ()
 	if is_linux; then docker_ip_map=""; fi
 
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
-	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always --privileged --userns=host \
+	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
 		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
 		-e DNS_IP="$ip" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -2061,7 +2061,7 @@ install_sshagent_service ()
 	docker volume rm docksal_ssh_agent >/dev/null 2>&1 || true
 
 	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
-	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always --privileged --userns=host \
+	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always \
 		-v docksal_ssh_agent:/.ssh-agent \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_SSH_AGENT}" >/dev/null
