@@ -1,4 +1,4 @@
-# Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases/latest) [![Setup Instructions](https://img.shields.io/badge/%E2%9A%99-%20Setup%20Instructions%20-blue.svg)](http://docksal.readthedocs.io/en/master/getting-started/setup)
+# Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases/latest) [![Setup Instructions](https://img.shields.io/badge/%E2%9A%99-%20Setup%20Instructions%20-blue.svg)](http://docksal.readthedocs.io/en/master/getting-started/env-setup)
 
 [![Build Status](https://img.shields.io/travis/docksal/docksal.svg?style=flat-square)](https://travis-ci.org/docksal/docksal)
 [![Docs](https://readthedocs.org/projects/docksal/badge?version=master&style=flat-square)](http://docksal.readthedocs.io/en/master)
@@ -26,7 +26,7 @@ smaller, faster, portable and more efficient across the board.
 <a name="getting-started"></a>
 ## Getting started
 
-Follow the [Setup instructions](http://docksal.readthedocs.io/en/master/getting-started/setup) to get started.
+Follow the [Setup instructions](http://docksal.readthedocs.io/en/master/getting-started/env-setup) to get started.
 
 To get a quick taste of Docksal try one of the pre-configured example projects:
 
