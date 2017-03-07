@@ -14,8 +14,8 @@ pages:
     - Setup instructions: getting-started/setup.md
     - System requirements: getting-started/system-requirements.md
     - Docksal environment setup: getting-started/env-setup.md
-    - Docker for Mac/Win: getting-started/env-setup-native.md
     - Project setup: getting-started/project-setup.md
+    - Docker for Mac/Windows: getting-started/env-setup-native.md
   - Troubleshooting: troubleshooting.md
   - Docksal Fin:
     - fin: fin/fin.md

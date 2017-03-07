@@ -1,7 +1,7 @@
-# Overriding default PHP/MySQL/etc. settings
+# PHP/MySQL/etc. settings
 
 <a name="configuration"></a>
-## Altering PHP and MySQL configuration
+## PHP and MySQL configuration
 
 When the following settings files are added to the project, they can be used to override the defaults.
 

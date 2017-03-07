@@ -30,7 +30,7 @@ drush --version
     detect the Drupal instance and read the DB connection settings.
 
 <a name="site-aliases"></a>
-## Configure drush site aliases for a project
+## Drush site aliases
 
 When working with projects hosted on a remote server you would often use drush site aliases.
 

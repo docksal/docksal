@@ -27,6 +27,8 @@ Try one of the example projects:
 - [Drupal 7 sample project](https://github.com/docksal/drupal7)  
 - [Drupal 8 sample project](https://github.com/docksal/drupal8)  
 - [WordPress sample project](https://github.com/docksal/wordpress)
+- [Magento sample project](https://github.com/docksal/magento)
+
 
 You can also use the `fin create-site` command and a wizard will take you through the steps.
 

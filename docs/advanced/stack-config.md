@@ -1,4 +1,4 @@
-# Customizing project stack configuration
+# Stack configuration
 
 It is recommended that you familiarize yourself with the [Docksal stack](../advanced/stack.md) documentation before reading 
 this manual. You should understand what project containers are and which project containers exist by default.
@@ -190,7 +190,7 @@ In the `cli` service there is the `volumes` section. You should not remove or ch
 ```
 
 <a name="checking"></a>
-## Checking the current project configuration
+## Checking project configuration
 
 To review the configuration applied to your project run:
 

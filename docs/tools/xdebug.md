@@ -1,4 +1,6 @@
-# Debugging with Docksal, Xdebug and PhpStorm
+# Xdebug
+
+## Debugging with PHPStorm
 
 `xdebug` extension is disabled by default as it causes about 20% performance hit.
 
@@ -8,14 +10,14 @@ To configure debugging in browser follow **Prerequisites** and **Setup**.
 
 To configure debugging of cli scripts follow **Setup for console php**.
 
-## Prerequisites
+### Prerequisites
 
 - [PHPStorm](https://www.jetbrains.com/phpstorm/)
 - [Xdebug Helper](https://chrome.google.com/extensions/detail/eadndfjplgieldjbigjakmdgkmoaaaoc) extension for Chrome
 
 You can also pick from the [list](https://confluence.jetbrains.com/display/PhpStorm/Browser+Debugging+Extensions) of options for other browsers.
 
-## Setup
+### Setup
 
 1) Set environment variable on the `cli` in `.docksal/docksal.env`
 
@@ -42,7 +44,7 @@ XDEBUG_ENABLED=1
 ![Screenshot](../_img/xdebug-mapping.png)
 
 
-## Setup for console php
+### Setup for console php
 
 For debugging simple cli php-scripts only steps 1) and 2) are required.
 
@@ -86,17 +88,18 @@ For example you can run drush command: `fin drush fra -y` and debug this drush c
 
 - [Zero-configuration Web Application Debugging with Xdebug and PhpStorm](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm)
 
-# Debugging with Docksal, Xdebug and NetBeans IDE
+
+## Debugging with NetBeans
 
 `xdebug` extension is disabled by default as it causes about 20% performance hit.
 
 To configure debugging in browser follow **Prerequisites** and **Setup**.
 
-## Prerequisites
+### Prerequisites
 
 - [NetBeans](https://netbeans.org/downloads/)
 
-## Setup
+### Setup
 
 1) Set environment variable on the `cli` in `.docksal/docksal.env`
 

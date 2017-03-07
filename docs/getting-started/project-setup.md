@@ -7,7 +7,9 @@ Initial configuration is done once per project (e.g. by a team lead) and committ
 Presence of the `.docksal` folder in the project directory is a good indication the project is using Docksal.
 
 
-## Create a directory structure for the project
+## Project directory structure
+
+Create a project directory structure:
 
 ```bash
 mkdir ~/projects/myproject

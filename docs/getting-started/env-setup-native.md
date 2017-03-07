@@ -6,7 +6,7 @@ On Mac and Windows, you can use native Docker applications instead of VirtualBox
     Docker for Mac/Windows support is experimental and is not recommended for regular use due to low filesystem performance.
     Please report any issues in the [issue queue](https://github.com/docksal/docksal/issues).
 
-## Switching to native Docker application for Mac/Window
+## Switching to Docker for Mac/Windows
 
 **1.** Install Docker for [Mac](https://docs.docker.com/docker-for-mac) or [Windows](https://docs.docker.com/docker-for-windows).
 
@@ -42,7 +42,7 @@ then `fin` was able to communicate with your Docker for Mac/Windows instance.
 fin reset system
 ```
 
-## Switching back to VirtualBox
+## Switching to VirtualBox
 
 **1.** Tell Docksal to use the default VirtualBox approach.
 
