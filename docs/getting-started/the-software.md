@@ -4,7 +4,7 @@
 manage the configurations, so almost anything you can do with Docker you can do with Docksal. There are also a number of 
 containers managed by the Docksal team that are tuned for Docksal's most common use case, which is Drupal/PHP CMS development.
 
-And along with this comes predefined ["stacks"](/project-customize/#default-configurations) that quickly and easily setup projects for you so you don't have
+And along with this comes predefined ["stacks"](../advanced/stack-config.md#default-configurations) that quickly and easily setup projects for you so you don't have
 understand all the complexity in configuring containers. Docksal's main purpose is to make managing projects **easy**. We try to take care of most of the work for you,
 so you focus on your project.
 

@@ -2,7 +2,7 @@
 
 It is possible to extend fin with custom commands per project or per host.
 
-## Creating custom commands in a project 
+## Project-level custom commands 
 
 Create a file at this location `.docksal/commands/updb` (Notice **no extension**. Script name should match command name) with the following contents:
 

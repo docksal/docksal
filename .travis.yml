@@ -18,6 +18,7 @@ install:
 before_script:
   - git clone https://github.com/docksal/drupal8.git ../drupal8
   - mkdir ../test-config
+  - mkdir ../test-duplicates
 
 script:
   # Testing Docksal system services
@@ -28,3 +29,6 @@ script:
   # Test a project workflow
   - cd "$TRAVIS_BUILD_DIR/../drupal8"
   - bats "$TRAVIS_BUILD_DIR/tests/smoke-test-general.bats"
+  # Test duplicates detection
+  - cd "$TRAVIS_BUILD_DIR/../test-duplicates"
+  - bats "$TRAVIS_BUILD_DIR/tests/smoke-test-duplicates.bats"

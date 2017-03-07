@@ -1,4 +1,4 @@
-![Docksal](img/docksald.png)
+![Docksal](_img/docksald.png)
 
 ##What is Docksal?
 
@@ -17,17 +17,17 @@ any other service needed for a project can be added.
 Docksal does more than simply manage containers. Below is a list of some of Docksal's key features. While it is not
 limited to these features, we think you'll find these to be some of its main selling points.
 
-- Fully [containerized environments](/docksal-stack).
+- Fully [containerized environments](advanced/stack.md).
     - all projects stay separated from each other
     - each can have its own requirements
     - each can have different versions of the same service
     - each can be managed independently (start, stop, restart, trash, etc.)
     - each can be extended with any service you want
-- [Zero-configuration](/project-customize/#zero-configuration) projects - with two commands you can be up and running with an AMP stack without
+- [Zero-configuration](advanced/stack-config.md#zero-configuration) projects - with two commands you can be up and running with an AMP stack without
 having to create or understand any configurations.
-- Easy to create [configurations](/project-customize) to partially or fully override any defaults.
+- Easy to create [configurations](advanced/stack-config.md) to partially or fully override any defaults.
 - Tools such as drush, console, and WP-CLI are builtin so you don't need to have them installed locally.
-- Automatic virtual host configuration ([except for Windows](/multiple-projects/#windows).)
-- Support for [custom commands](/custom-commands) using any interpreter you want.
-- Easily [share your site](/public-access) over the internet using ngrok. This lets show your project to others without having to 
+- Automatic virtual host configuration ([except for Windows](advanced/multiple-projects.md#windows).)
+- Support for [custom commands](fin/custom-commands.md) using any interpreter you want.
+- Easily [share your site](tools/ngrok.md) over the internet using ngrok. This lets show your project to others without having to 
 move your project to a web host somewhere.

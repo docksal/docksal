@@ -1,4 +1,6 @@
-# Docksal's Virtual Machine configuration
+# Docksal VM configuration
+
+These instructions are only applicable to macOS and Windows.
 
 ## Increasing memory (RAM)
 

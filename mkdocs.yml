@@ -1,44 +1,50 @@
 site_name: Docksal Documentation
 theme: readthedocs
+theme_dir: docs/_custom_theme
 repo_url: https://github.com/docksal/docksal
 extra_css:
-  - css/extra.css
+  - _css/extra.css
 markdown_extensions:
   - markdown.extensions.admonition
+  - markdown.extensions.nl2br
 pages:
   - Home: index.md
   - Getting started:
-    - What's in the Software?: the-software.md
-    - Setup instructions: setup.md
-    - System requirements: system-requirements.md
-    - Initial Docksal environment setup: env-setup.md
-    - Configuring a project to use Docksal: project-setup.md
-    - Docksal stack: docksal-stack.md
-    - Docksal Fin: fin.md
+    - What's in the software?: getting-started/the-software.md
+    - Setup instructions: getting-started/setup.md
+    - System requirements: getting-started/system-requirements.md
+    - Docksal environment setup: getting-started/env-setup.md
+    - Project setup: getting-started/project-setup.md
+    - Docker for Mac/Windows: getting-started/env-setup-native.md
   - Troubleshooting: troubleshooting.md
+  - Docksal Fin:
+    - fin: fin/fin.md
+    - Custom commands: fin/custom-commands.md
+  - Tools and integrations:
+    - Apache Solr: tools/apache-solr.md
+    - Behat: tools/behat.md
+    - Blackfire: tools/blackfire.md
+    - Drupal Console: tools/drupal-console.md
+    - Drush: tools/drush.md
+    - MailHog: tools/mailhog.md
+    - Memcached: tools/memcached.md
+    - ngrok: tools/ngrok.md
+    - PHP Code Sniffer: tools/phpcs.md
+    - SASS and Compass: tools/sass.md
+    - Varnish: tools/varnish.md
+    - Xdebug: tools/xdebug.md
   - Advanced configuration:
-    - Running multiple projects: multiple-projects.md
-    - Drupal settings: drupal-settings.md
-    - Overriding default PHP/MySQL/etc. settings: settings.md
-    - Drush aliases: drush-aliases.md
-    - MySQL DB access for external tools: db-access.md
-    - Automatic database import: db-import.md
-    - Database sandbox mode (snapshots): db-sandbox.md
-    - Extending fin with custom commands: custom-commands.md
-    - Increasing vm memory (RAM): vm.md
-    - Exposing any Docker containers port: expose-port.md
-    - Using Docker for Mac/Win: env-setup-native.md
-    - Customizing project configurations: project-customize.md
-    - Docksal volumes: docksal-volumes.md
-  - Utililies:
-    - Debugging with Xdebug and PhpStorm: xdebug.md
-    - Using custom ssh keys (with or without passwords) via ssh-agent: ssh-agent.md
-    - Sending and capturing e-mail: mail.md
-    - SASS and Compass: sass.md
-    - PHP Code Sniffer (phpcs, phpcbf): phpcs.md
-    - Varnish: varnish.md
-    - Memcached: memcached.md
-    - Apache Solr: apache-solr.md
-    - Blackfire profiler: blackfire.md
-    - Behat: behat.md
-    - Public access via ngrok: public-access.md
+    - Stack configuration:
+      - Stack: advanced/stack.md
+      - Stack configuration: advanced/stack-config.md
+      - PHP/MySQL/etc. settings: advanced/stack-settings.md
+      - Drupal settings: advanced/drupal-settings.md
+      - Multiple projects: advanced/multiple-projects.md
+      - VM resources: advanced/vm.md
+      - Networking: advanced/networking.md
+    - SSH agent: advanced/ssh-agent.md
+    - Database:
+      - Database access: advanced/db-access.md
+      - Automatic database import: advanced/db-import.md
+      - Database sandbox mode: advanced/db-sandbox.md
+    - Docksal volumes: advanced/volumes.md

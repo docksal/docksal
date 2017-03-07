@@ -1,7 +1,7 @@
-# Overriding default PHP/MySQL/etc. settings
+# PHP/MySQL/etc. settings
 
 <a name="configuration"></a>
-## Altering PHP and MySQL configuration
+## PHP and MySQL configuration
 
 When the following settings files are added to the project, they can be used to override the defaults.
 
@@ -27,17 +27,17 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 
 ```bash
-CLI_IMAGE='docksal/cli:1.0-php5'
+CLI_IMAGE='docksal/cli:1.1-php5'
 ```
 
 Remember to run `fin up` to apply the configuration.
 
 Available images:
 
-- PHP 5 - `docksal/cli:1.0-php5`
-- PHP 7 - `docksal/cli:1.0-php7`
+- PHP 5 - `docksal/cli:1.1-php5`
+- PHP 7 - `docksal/cli:1.1-php7`
 
-For projects using a custom stack configuration check [here](project-customize.md#php-version).
+For projects using a custom stack configuration check [here](../advanced/stack-config.md#php-version).
 
 <a name="mysql-versions"></a>
 ## Using different MySQL versions
@@ -63,4 +63,4 @@ Available images:
 - MySQL 5.7 - `docksal/db:1.0-mysql-5.7`
 - MySQL 8.0 - `docksal/db:1.0-mysql-8.0`
 
-For projects using a custom stack configuration check [here](project-customize.md#mysql-version).
+For projects using a custom stack configuration check [here](../advanced/stack-config.md#mysql-version).

@@ -1,4 +1,4 @@
-# Public Access
+# Public Access via ngrok
 
 In certain cases you may want to share or expose you local web server on the internet.
 E.g. share access with a teammate or customer to demonstrate the work or discuss the progress.
@@ -21,6 +21,6 @@ fin share
 You will see a console output from the `ngrok` container.  
 Use `*.ngrok.io` web address displayed there to share you project with others:
 
-![](img/ngrok.png)
+![](../_img/ngrok.png)
 
 Use `Ctrl+C` to stop ngrok and sharing.

@@ -3,13 +3,13 @@
 <a name="install"></a>
 ## Installation
 
-1. [System requirements](system-requirements.md)
-2. [Initial Docksal environment setup](env-setup.md)
-3. [Configuring a project to use Docksal](project-setup.md)
+1. [System requirements](../getting-started/system-requirements.md)
+2. [Initial Docksal environment setup](../getting-started/env-setup.md)
+3. [Configuring a project to use Docksal](../getting-started/project-setup.md)
 
-Coming from Drude (DDE)?  
-You will find a lot of similarities and a lot more new features that Docksal has over Drude (DDE).  
-Follow [Updating from Drude (DDE) to Docksal](update-dde.md) instructions. 
+!!! tip "Coming from Drude (DDE)?"
+    You will find a lot of similarities and a lot more new features that Docksal has over Drude (DDE).  
+    Follow [Updating from Drude (DDE) to Docksal](../getting-started/update-dde.md) instructions. 
 
 
 <a name="examples"></a>
@@ -27,6 +27,8 @@ Try one of the example projects:
 - [Drupal 7 sample project](https://github.com/docksal/drupal7)  
 - [Drupal 8 sample project](https://github.com/docksal/drupal8)  
 - [WordPress sample project](https://github.com/docksal/wordpress)
+- [Magento sample project](https://github.com/docksal/magento)
+
 
 You can also use the `fin create-site` command and a wizard will take you through the steps.
 
@@ -68,8 +70,12 @@ sudo rm /usr/local/bin/docker-machine
 <a name="troubleshoting"></a>
 ## Troubleshooting
 
-!!! attention "If something went wrong" 
-    First try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
+!!! attention "If something is wrong" 
+    Quite often a problem may reside within the 3rd party tools, project code, local configuration, etc., and not the stack.  
+    To make sure that the Docksal stack works properly, try launching any of the [sample projects](#examples).  
+    If you believe the issue is with the stack, then read on.
+
+First, try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
 
 - Update Docksal to the latest version. See the [updates](#updates) section.
 - (Mac and Windows) Restart the Docksal VM: `fin vm restart`
@@ -79,7 +85,7 @@ sudo rm /usr/local/bin/docker-machine
 
 If the quick fixes above did not help, try:
 
-- checking the [troubleshooting doc](troubleshooting.md) for rare problems that might occur
+- checking the [troubleshooting doc](../troubleshooting.md) for rare problems that might occur
 - searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced a similar issue and already found a solution or a workaround.
 - asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
 

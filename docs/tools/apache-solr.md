@@ -33,3 +33,23 @@ For the Search API module use these values:
 | Solr path | `/solr` |
 | Solr core |  |
 
+## Updating Solr configuration
+
+Say you need to update your `schema.xml` or other configuration.
+
+You can put all your custom Solr config files to the `.docksal/etc/solr/conf` folder:
+
+![Screenshot](../_img/apache-solr-conf-folder.png)
+
+Then update your `.docksal/docksal.yml` to mount them in the `solr` service:
+
+```yaml
+# Solr
+solr:
+  hostname: solr
+  image: ...
+  volumes:
+    - ${PROJECT_ROOT}/.docksal/etc/solr/conf:/var/lib/solr/conf:ro
+```
+
+Apply configuration changes with `fin up`

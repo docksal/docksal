@@ -32,7 +32,7 @@ Install [VirtualBox 5.1.12 for Windows](http://download.virtualbox.org/virtualbo
 ### 3. Install Docksal Fin
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
+sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
 sudo chmod +x /usr/local/bin/fin
 ```
 
@@ -47,14 +47,14 @@ fin update
 ```bash
 fin vm start
 ```
-[Help, my VM did not start!](troubleshooting.md#failed-creating-docksal-virtual-machine)
+[Help, my VM did not start!](../troubleshooting.md#failed-creating-docksal-virtual-machine)
 
 ### 6. Congratulations!
 
-You are done with the one time environment installation. Now you can [configure your project](project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.
+You are done with the one time environment installation. Now you can [configure your project](../getting-started/project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.
 
 !!! info "Experimental support for Native Docker applications"
-    Advanced Docker users may want to check out how to use Docksal with [Native Docker applications](env-setup-native.md).
+    Advanced Docker users may want to check out how to use Docksal with [Native Docker applications](../getting-started/env-setup-native.md).
 
 <a name="macos"></a>
 ## Installing Docksal on macOS
@@ -69,7 +69,7 @@ Install [VirtualBox 5.1.12 for Mac](http://download.virtualbox.org/virtualbox/5.
 ### 2. Install Docksal Fin
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
+sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
 sudo chmod +x /usr/local/bin/fin
 ```
 
@@ -84,14 +84,14 @@ fin update
 ```bash
 fin vm start
 ```
-[Help, my VM did not start!](troubleshooting.md#failed-creating-docksal-virtual-machine)
+[Help, my VM did not start!](../troubleshooting.md#failed-creating-docksal-virtual-machine)
 
 ### 5. Congratulations!
 
-You are done with the one time environment installation. Now you can [configure your project](project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.
+You are done with the one time environment installation. Now you can [configure your project](../getting-started/project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.
 
 !!! info "Experimental support for Native Docker applications"
-    Advanced Docker users may want to check out how to use Docksal with [Native Docker applications](env-setup-native.md).
+    Advanced Docker users may want to check out how to use Docksal with [Native Docker applications](../getting-started/docksal-env-setup-native.md).
 
 <a name="linux"></a>
 ## Installing Docksal on Ubuntu Linux
@@ -105,7 +105,7 @@ You either need to stop Apache or reconfigure it to listen on different ports (e
 ### 2. Install Docksal Fin
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/develop/bin/fin -o /usr/local/bin/fin && \
+sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
 sudo chmod +x /usr/local/bin/fin
 ```
 

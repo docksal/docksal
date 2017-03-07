@@ -18,11 +18,10 @@ services:
       # Project root volume
       - project_root:/var/www:ro
     labels:
-      - io.docksal.virtual-host=${VIRTUAL_HOST}
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
-      - VIRTUAL_HOST=${VIRTUAL_HOST}
     depends_on:
       - cli
 
@@ -42,7 +41,7 @@ services:
   # Used for all console commands and tools.
   cli:
     hostname: cli
-    image: docksal/cli:1.0-php7
+    image: docksal/cli:1.1-php7
     volumes:
       # Project root volume
       - project_root:/var/www:rw
@@ -61,7 +60,6 @@ services:
       - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
     environment:
       - VARNISH_BACKEND_HOST=web
-      - VIRTUAL_HOST=varnish.${VIRTUAL_HOST}
     depends_on:
       - web
 

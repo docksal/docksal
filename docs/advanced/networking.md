@@ -1,4 +1,5 @@
-# Expose Docker container ports
+<a name="expose-port"></a>
+## Exposing container ports
 
 By default, container ports are not accessible outside of Docker. Other containers can work with them, but you can't access them from your host.
 
