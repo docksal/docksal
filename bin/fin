@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.0
+FIN_VERSION=1.1.1
 
 # Console colors
 red='\033[0;91m'
@@ -948,6 +948,7 @@ show_help ()
 
 	echo
 	printh "sqlc" "Opens mysql shell to current project database (${yellow}fin help sqlc${NC})"
+	printh "sqlp" "Checks mysql status (mysql is alive)"
 	printh "sqls" "Show list of available databases (${yellow}fin help sqls${NC})"
 	printh "sqld [file]" "Dump specified database into file (${yellow}fin help sqld${NC})"
 	printh "sqli [file]" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
@@ -2673,6 +2674,24 @@ mysql ()
 	${winpty} docker exec -it "$container_id" mysql ${__mysql_command}
 }
 
+# Check mysql status.
+# --db-user="admin" to override mysql username
+# --db-password="otherpass" to override mysql password
+mysql_ping ()
+{
+	check_winpty_found
+	eval $(parse_params "$@")
+
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+
+	check_docksal_environment
+
+	# -N parameter suppresses columns header
+	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
+		_run "mysqladmin ping -u $__dump_user -p${__dump_password}"
+}
+
 # Show databases list
 # --db-user="admin" to override mysql username
 # --db-password="otherpass" to override mysql password
@@ -3394,6 +3413,10 @@ case "$1" in
 	mysql|sqlc)
 		shift
 		mysql "$@"
+		;;
+	mysql-ping|sqlp)
+		shift
+		mysql_ping "$@"
 		;;
 	mysql-list|sqls)
 		shift
