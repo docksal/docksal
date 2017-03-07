@@ -632,7 +632,7 @@ check_vbox_version ()
 	is_vbox_version
 	local res=$?
 	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
-	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
+	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher (you have "$($vboxmanage -v | sed "s/r.*//")")" && exit 1
 }
 
 # Check that .docksal is present
@@ -2076,13 +2076,7 @@ install_tools_mac ()
 
 	if ! is_docker_native; then
 		# Check VirtualBox
-		if ! which "$vboxmanage" >/dev/null 2>&1; then
-			echo-error "$vboxmanage executable was not found. VirtualBox is required to run Docksal on Mac." \
-				&& exit 1
-		elif ! is_vbox_version; then
-			echo-error "Required VirtualBox version is $REQUIREMENTS_VBOX or higher" \
-				&& exit 1
-		fi
+		check_vbox_version
 	fi
 
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
@@ -2141,10 +2135,7 @@ install_tools_windows ()
 
 	if ! is_docker_native; then
 		# Check VirtualBox
-		if ! is_vbox_version; then
-			echo-error "Required VirtualBox version is $REQUIREMENTS_VBOX or higher" \
-				&& exit 1
-		fi
+		check_vbox_version
 	fi
 
 	# Install Docker client
