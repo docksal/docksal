@@ -31,4 +31,4 @@ via `brew uninstall vagrant` on Mac / `choco uninstall vagrant` on Windows
 
 ## Install Docksal
 
-[Docksal environment setup](env-setup.md)
+[Docksal environment setup](docksal-env-setup.md)

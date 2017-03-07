@@ -1,4 +1,4 @@
-# Sending and capturing email
+# Sending and capturing email via MailHog
 
 Sending/capturing email is available via [MailHog](https://github.com/mailhog/MailHog).
 

@@ -23,11 +23,11 @@ limited to these features, we think you'll find these to be some of its main sel
     - each can have different versions of the same service
     - each can be managed independently (start, stop, restart, trash, etc.)
     - each can be extended with any service you want
-- [Zero-configuration](/project-customize/#zero-configuration) projects - with two commands you can be up and running with an AMP stack without
+- [Zero-configuration](/docksal-stack-config/#zero-configuration) projects - with two commands you can be up and running with an AMP stack without
 having to create or understand any configurations.
-- Easy to create [configurations](/project-customize) to partially or fully override any defaults.
+- Easy to create [configurations](/docksal-stack-config) to partially or fully override any defaults.
 - Tools such as drush, console, and WP-CLI are builtin so you don't need to have them installed locally.
 - Automatic virtual host configuration ([except for Windows](/multiple-projects/#windows).)
 - Support for [custom commands](/custom-commands) using any interpreter you want.
-- Easily [share your site](/public-access) over the internet using ngrok. This lets show your project to others without having to 
+- Easily [share your site](/ngrok) over the internet using ngrok. This lets show your project to others without having to 
 move your project to a web host somewhere.

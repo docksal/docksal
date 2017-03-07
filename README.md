@@ -48,7 +48,7 @@ Once you get the basics straight, feel free to explore the more advanced use cas
 ### Advanced configuration
 - [Running multiple projects](/docs/multiple-projects.md)
 - [Drupal settings (database, file permissions)](/docs/drupal-settings.md)
-- [MySQL DB access for external tools](/docs/db-access.md)
+- [MySQL DB access for external tools](/docs/advanced/db-access.md)
 - [Overriding default PHP/MySQL/etc. settings](/docs/settings.md)
 - [Drush aliases](/docs/drush-aliases.md)
 - [Automatic database import](docs/db-import.md)

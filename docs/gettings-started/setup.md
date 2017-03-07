@@ -4,7 +4,7 @@
 ## Installation
 
 1. [System requirements](system-requirements.md)
-2. [Initial Docksal environment setup](env-setup.md)
+2. [Initial Docksal environment setup](docksal-env-setup.md)
 3. [Configuring a project to use Docksal](project-setup.md)
 
 !!! tip "Coming from Drude (DDE)?"

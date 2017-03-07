@@ -1,4 +1,4 @@
-# Customizing project configurations
+# Customizing project stack configuration
 
 It is recommended that you familiarize yourself with the [Docksal stack](docksal-stack.md) documentation before reading 
 this manual. You should understand what project containers are and which project containers exist by default.
@@ -24,7 +24,7 @@ this manual. You should understand what project containers are and which project
 3. [Finding supported PHP/MySQL/etc. versions](#docksal-images)
 
 <a name="basics"></a>
-### Basics
+## Basics
 
 Docksal relies on [Docker Compose](https://docs.docker.com/compose/) to launch groups of related containers.
 The yml files you use are [Compose Files](https://docs.docker.com/compose/compose-file/). 

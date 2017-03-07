@@ -54,7 +54,7 @@ fin vm start
 You are done with the one time environment installation. Now you can [configure your project](project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.
 
 !!! info "Experimental support for Native Docker applications"
-    Advanced Docker users may want to check out how to use Docksal with [Native Docker applications](env-setup-native.md).
+    Advanced Docker users may want to check out how to use Docksal with [Native Docker applications](docksal-env-setup-native.md).
 
 <a name="macos"></a>
 ## Installing Docksal on macOS
@@ -91,7 +91,7 @@ fin vm start
 You are done with the one time environment installation. Now you can [configure your project](project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin create-site`.
 
 !!! info "Experimental support for Native Docker applications"
-    Advanced Docker users may want to check out how to use Docksal with [Native Docker applications](env-setup-native.md).
+    Advanced Docker users may want to check out how to use Docksal with [Native Docker applications](docksal-env-setup-native.md).
 
 <a name="linux"></a>
 ## Installing Docksal on Ubuntu Linux

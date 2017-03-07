@@ -1,4 +1,4 @@
-# Public Access
+# Public Access via ngrok
 
 In certain cases you may want to share or expose you local web server on the internet.
 E.g. share access with a teammate or customer to demonstrate the work or discuss the progress.
