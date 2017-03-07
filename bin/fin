@@ -632,7 +632,7 @@ check_vbox_version ()
 	is_vbox_version
 	local res=$?
 	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
-	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher (you have "$($vboxmanage -v | sed "s/r.*//")")" && exit 1
+	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
 }
 
 # Check that .docksal is present
