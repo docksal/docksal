@@ -446,7 +446,12 @@ winpty_wrapper ()
 	# Do not set winpty in non-zsh environment e.g. bash shell which Docksal creates a link for on desktop
 	if [[ "$ZSH" != "" ]]; then
 		check_binary_found 'winpty'
-		echo -n 'winpty'
+		# -Xallow-non-tty: allow stdin/stdout to not be ttys
+		# This is an undocumented feature of winpty which makes thing work much better on Windows,
+		# including pipes (|), stream redirects (< >) and variable substitution from a sub-shell ( $() )
+		# https://github.com/rprichard/winpty/commit/222ecb9f4404cce3cdbafa0a97c7c3da4ce2b3c2
+		# I wish it was documented... Could have saved many hours of pain making things work on Windows.
+		echo -n 'winpty -Xallow-non-tty'
 	fi
 }
 
