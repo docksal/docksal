@@ -440,13 +440,13 @@ check_binary_found ()
 	fi
 }
 
-check_winpty_found ()
+winpty_wrapper ()
 {
 	! is_windows && return
 	# Do not set winpty in non-zsh environment e.g. bash shell which Docksal creates a link for on desktop
 	if [[ "$ZSH" != "" ]]; then
 		check_binary_found 'winpty'
-		winpty='winpty'
+		echo -n 'winpty'
 	fi
 }
 
@@ -1951,10 +1951,9 @@ ssh_add () {
 
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-	check_winpty_found
 	if is_tty; then
 		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+		$(winpty_wrapper) docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
 	else
 		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
@@ -2620,7 +2619,7 @@ _run ()
 	# 3) execute
 	# Allow entering arbitrary containers by name (e.g. system containers like vhost-proxy).
 	if [[ "$container_id" == "" ]]; then
-		${winpty} docker exec -it "$CONTAINER_NAME" sh -i
+		$(winpty_wrapper) docker exec -it "$CONTAINER_NAME" sh -i
 		return
 	fi
 
@@ -2631,8 +2630,7 @@ _run ()
 	if is_tty ; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		check_winpty_found
-		${winpty} docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
+		$(winpty_wrapper) docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
 	else
 		# non-interactive
 		docker exec "$container_id" bash -c "$DOCKSALRC; $cmd"
@@ -2654,7 +2652,7 @@ mysql ()
 	check_docksal_environment
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
-	${winpty} docker exec -it "$container_id" mysql ${__mysql_command}
+	$(winpty_wrapper) docker exec -it "$container_id" mysql ${__mysql_command}
 }
 
 # Show databases list
@@ -2882,7 +2880,6 @@ _set_cli_uid ()
 ngrok_share ()
 {
 	check_docksal_environment
-	check_winpty_found
 
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 	local container_name=$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)
@@ -2898,7 +2895,7 @@ ngrok_share ()
 	fi
 
 	# Based on https://github.com/wernight/docker-ngrok
-	${winpty} docker run --rm -it \
+	$(winpty_wrapper) docker run --rm -it \
 		--net ${network} \
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
