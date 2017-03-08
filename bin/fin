@@ -299,20 +299,13 @@ get_mysql_connect ()
 	echo "$cleaned_string"
 }
 
-# Use this function for every docker-compose invocation.
-docker_compose ()
-{
-	(cd "$(get_project_path)" && docker-compose "$@")
-	#(cd "$(get_project_path)" && ${winpty} "$DOCKER_COMPOSE_BIN" "$@")
-}
-
 # Get container id by service name
 # @param $1 docker compose service name (e.g. cli)
 # @return docker container id
 get_container_id ()
 {
 	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
-	echo $(docker_compose ps -q $1 2>/dev/null | tr -d '[:cntrl:]')
+	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '[:cntrl:]')
 }
 
 # Run command on Windows with elevated privileges
@@ -714,7 +707,7 @@ _start_containers ()
 {
 	check_docker_running
 	echo-green "Starting services..."
-	docker_compose up -d --remove-orphans && \
+	docker-compose up -d --remove-orphans && \
 		# Give time for startup.sh in CLI to execute otherwise UID is changed too quickly
 		# which prevents xdebug from loading properly
 		sleep 1 && \
@@ -753,7 +746,7 @@ _stop_containers ()
 
 	check_docksal_environment
 	echo-green "Stopping services..."
-	docker_compose stop
+	docker-compose stop
 }
 
 _restart_containers ()
@@ -774,10 +767,10 @@ _remove_containers ()
 		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
 
 		# Taking the whole docker-compose project down (this removes containers, volumes and networks)
-		docker_compose down --volumes --remove-orphans
+		docker-compose down --volumes --remove-orphans
 	else
 		# Removing requested containers only
-		docker_compose kill "$@" && docker_compose rm -vf "$@"
+		docker-compose kill "$@" && docker-compose rm -vf "$@"
 	fi
 }
 
@@ -1925,7 +1918,7 @@ _ps ()
 	check_docksal_environment
 	check_project_unique
 
-	docker_compose ps
+	docker-compose ps
 }
 
 # List Docksal projects
@@ -2390,7 +2383,7 @@ update_project_images ()
 	# Need docker-compose configuration to be properly loaded here
 	load_configuration
 	check_docksal_environment
-	docker_compose pull # update project containers images
+	docker-compose pull # update project containers images
 	up
 }
 
@@ -2842,7 +2835,7 @@ reset ()
 logs ()
 {
 	check_docker_running
-	docker_compose logs "$@"
+	docker-compose logs "$@"
 }
 
 # Set uid of the primary "docker" user in the cli container
@@ -2938,7 +2931,7 @@ sysinfo ()
 	echo "Docker: $(docker version)"
 
 	echo "███  DOCKER COMPOSE"
-	echo "Docker Compose: $(docker_compose version)"
+	echo "Docker Compose: $(docker-compose version)"
 
 	(which 'docker-machine' >/dev/null 2>&1) && \
 		echo "███  DOCKER MACHINE" && \
@@ -3435,7 +3428,7 @@ case "$1" in
 	docker-compose|dc)
 		shift
 		is_docker_running # exports env
-		docker_compose "$@"
+		docker-compose "$@"
 		;;
 	docker-machine|dm)
 		shift
