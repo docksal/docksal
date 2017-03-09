@@ -61,6 +61,7 @@ FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Rewrite $HOME on windows to be absolute path in Unix notation
 if is_windows; then
 	BABUN_WIN_HOME="$HOME"
+	# Cannot use cygpath_abs_unix here as it's being defined much later
 	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
 # DO NOT REMOVE HOST_HOME. It is used in some stack yml files and is necessary on Windows.
@@ -237,7 +238,16 @@ pwd ()
 	fi
 }
 
-# Search for a file/directory in a directiry tree upwards. Return it's path.
+# Returns absolute path to a file/folder in a Unix notation under cygwin on Windows.
+# cygpath -m returns something like C:/Users/user/...
+# This function converts that into something like /c/Users/user/...
+# @param $1 file/folder
+cygpath_abs_unix ()
+{
+	echo "/$(cygpath -m $1 | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
+}
+
+# Search for a file/directory in a directory tree upwards. Return its path.
 # @param $1 filename
 upfind ()
 {
@@ -252,8 +262,8 @@ upfind ()
 	# On Windows compensate for getting down to "" and return full absolute path in Unix notation
 	# upfind on windows may return FAKED HOME PATH! because of that. KEEP that in mind
 	[[ "$_path" == "" ]] && _path="$HOME"
-	if [[ "$BABUN_WIN_HOME" != "" ]]; then
-		echo "/$(cygpath -m ${_path} | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
+	if is_windows; then
+		echo "$(cygpath_abs_unix ${_path})"
 	else
 		echo "$_path"
 	fi
@@ -316,11 +326,18 @@ get_current_relative_path ()
 	# Check that we're inside project folder
 	local proj_root=$(get_project_path)
 	local cwd=$(pwd)
-	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
-	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
-	# ex: cwd=/a/b, proj_root=/a/b/c, pathdiff==/a/b
-	local pathdiff=${cwd#${proj_root}/}
-	echo "$pathdiff"
+	# On Windows pwd may return a cygwin absolute path.
+	# We need a full absolute path here (/c/Users/user/... instead of /home/user), thus the special handling.
+	is_windows && cwd=$(cygpath_abs_unix $(pwd))
+
+	# Output relative path unless we are in the project root (empty relative path)
+	if [[ "$proj_root" != "$cwd" ]]; then
+		# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
+		# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
+		# ex: cwd=/a/b, proj_root=/a/b/c, pathdiff==/a/b
+		local pathdiff=${cwd#${proj_root}/}
+		echo "$pathdiff"
+	fi
 }
 
 # Get mysql connection string
