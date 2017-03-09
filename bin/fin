@@ -10,9 +10,42 @@ green_bg='\033[42m'
 yellow='\033[1;33m'
 NC='\033[0m'
 
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
+#-------------------------------- OS Checks ------------------------------------
+is_linux ()
+{
+	uname | grep 'Linux' >/dev/null
+}
+
+is_ubuntu ()
+{
+	if [ -r /etc/lsb-release ]; then
+		lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
+		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
+	fi
+
+	if [[ "$lsb_dist" != 'Ubuntu' || $(ver_to_int "$lsb_release") < $(ver_to_int '14.04') ]]; then
+		return 1
+	fi
+
+	return 0
+}
+
+is_windows ()
+{
+	uname | grep 'CYGWIN_NT' >/dev/null
+}
+
+is_mac ()
+{
+	uname | grep 'Darwin' >/dev/null
+}
+#------------------------------------------------------------------------------
+
 
 #---------------------------- Global Constants --------------------------------
+
+DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
+
 REQUIREMENTS_DOCKER='1.13.1'
 REQUIREMENTS_DOCKER_COMPOSE='1.11.1'
 REQUIREMENTS_DOCKER_MACHINE='0.9.0'
@@ -26,7 +59,7 @@ FIN_PATH_UPDATED="/usr/local/bin/fin.updated"
 FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
-if (uname | grep 'CYGWIN_NT' >/dev/null); then
+if is_windows; then
 	BABUN_WIN_HOME="$HOME"
 	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
@@ -50,8 +83,7 @@ DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
-(uname | grep 'CYGWIN_NT' >/dev/null) && \
-	vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 # Stacks folder
 CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
 mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
@@ -198,7 +230,7 @@ pwd ()
 	# -L option should be used at all times because running pwd via absolute path /bin/pwd
 	# on Linux and Windows forces it to resolve current logical dir to physical dir
 	# (resolves symlink into target dir). -L forces using logical dir just like running pwd alone
-	if (uname | grep 'CYGWIN_NT' >/dev/null); then
+	if is_windows; then
 		"$_PWD" "-L" | sed 's/^\/cygdrive//'
 	else
 		"$_PWD" "-L"
@@ -363,35 +395,6 @@ parse_params ()
 }
 
 #------------------------- Basics check functions -----------------------------
-
-is_linux ()
-{
-	uname | grep 'Linux' >/dev/null
-}
-
-is_ubuntu ()
-{
-	if [ -r /etc/lsb-release ]; then
-		lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
-		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
-	fi
-
-	if [[ "$lsb_dist" != 'Ubuntu' || $(ver_to_int "$lsb_release") < $(ver_to_int '14.04') ]]; then
-		return 1
-	fi
-
-	return 0
-}
-
-is_windows ()
-{
-	uname | grep 'CYGWIN_NT' >/dev/null
-}
-
-is_mac ()
-{
-	uname | grep 'Darwin' >/dev/null
-}
 
 is_docker_native ()
 {
