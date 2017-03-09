@@ -669,16 +669,6 @@ check_docksal ()
 	fi
 }
 
-# Check that command is run inside project folder
-check_drush_path ()
-{
-	local path=$(get_current_relative_path)
-	if [[ "$path" != "" ]] ; then
-		echo-red "This command must be run inside Drupal's document root"
-		exit 1
-	fi
-}
-
 # Project uniqueness checks
 check_project_unique ()
 {
@@ -2637,7 +2627,7 @@ _run ()
 	if [[ "$CONTAINER_NAME" == "cli" ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
 		local path=$(get_current_relative_path)
 		if [[ "$path" != "" ]] ; then
-			# we're inside docroot
+			# We are deeper than project root and thus need to do a cd
 			cdir="cd $path &&"
 		fi
 	fi
