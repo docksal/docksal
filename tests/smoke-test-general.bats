@@ -204,13 +204,16 @@ teardown() {
 	run fin exec uname -a
 	[[ "$output" =~ "Linux cli" ]]
 	
-	run fin exec pwd
-	[[ "$(echo $output | tr -d '[:cntrl:]')" == "/var/www" ]]
+	# Test output in TTY vs no-TTY mode.
+	[[ "$(fin exec echo)" != "$(fin exec -T echo)" ]]
+
+	run fin exec -T pwd
+	[[ "$output" == "/var/www" ]]
 
 	# Test that switching directories on host carries over into cli
 	cd docroot
-	run fin exec pwd
-	[[ "$(echo $output | tr -d '[:cntrl:]')" == "/var/www/docroot" ]]
+	run fin exec -T pwd
+	[[ "$output" == "/var/www/docroot" ]]
 }
 
 @test "fin drush" {
