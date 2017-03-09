@@ -460,7 +460,7 @@ check_binary_found ()
 	fi
 }
 
-winpty_wrapper ()
+check_winpty_found ()
 {
 	! is_windows && return
 	# Do not set winpty in non-zsh environment e.g. bash shell which Docksal creates a link for on desktop
@@ -471,7 +471,7 @@ winpty_wrapper ()
 		# including pipes (|), stream redirects (< >) and variable substitution from a sub-shell ( $() )
 		# https://github.com/rprichard/winpty/commit/222ecb9f4404cce3cdbafa0a97c7c3da4ce2b3c2
 		# I wish it was documented... Could have saved many hours of pain making things work on Windows.
-		echo -n 'winpty -Xallow-non-tty'
+		winpty='winpty -Xallow-non-tty'
 	fi
 }
 
@@ -1963,6 +1963,8 @@ projects ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
+	check_winpty_found
+
 	# Check if ssh-agent container is running
 	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
 	[[ "$running" != "true" ]] && return
@@ -1978,7 +1980,7 @@ ssh_add () {
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
 	if is_tty; then
 		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-		$(winpty_wrapper) docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+		${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
 	else
 		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
@@ -2606,6 +2608,7 @@ _run ()
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
 	check_docksal_environment
+	check_winpty_found
 
 	# Allow disabling TTY mode.
 	# Useful for non-interactive commands when output is saved into a variable for further comparison.
@@ -2650,7 +2653,7 @@ _run ()
 	# 3) execute
 	# Allow entering arbitrary containers by name (e.g. system containers like vhost-proxy).
 	if [[ "$container_id" == "" ]]; then
-		$(winpty_wrapper) docker exec -it "$CONTAINER_NAME" sh -i
+		${winpty} docker exec -it "$CONTAINER_NAME" sh -i
 		return
 	fi
 
@@ -2661,7 +2664,7 @@ _run ()
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		$(winpty_wrapper) docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
+		${winpty} docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
 	else
 		# non-interactive
 		docker exec "$container_id" bash -c "$DOCKSALRC; $cmd"
@@ -2683,7 +2686,7 @@ mysql ()
 	check_docksal_environment
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
-	$(winpty_wrapper) docker exec -it "$container_id" mysql ${__mysql_command}
+	${winpty} docker exec -it "$container_id" mysql ${__mysql_command}
 }
 
 # Show databases list
@@ -2911,6 +2914,7 @@ _set_cli_uid ()
 ngrok_share ()
 {
 	check_docksal_environment
+	check_winpty_found
 
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 	local container_name=$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)
@@ -2926,7 +2930,7 @@ ngrok_share ()
 	fi
 
 	# Based on https://github.com/wernight/docker-ngrok
-	$(winpty_wrapper) docker run --rm -it \
+	${winpty} docker run --rm -it \
 		--net ${network} \
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
