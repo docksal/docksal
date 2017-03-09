@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.1
+FIN_VERSION=1.1.2
 
 # Console colors
 red='\033[0;91m'
@@ -10,15 +10,48 @@ green_bg='\033[42m'
 yellow='\033[1;33m'
 NC='\033[0m'
 
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
+#-------------------------------- OS Checks ------------------------------------
+is_linux ()
+{
+	uname | grep 'Linux' >/dev/null
+}
+
+is_ubuntu ()
+{
+	if [ -r /etc/lsb-release ]; then
+		lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
+		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
+	fi
+
+	if [[ "$lsb_dist" != 'Ubuntu' || $(ver_to_int "$lsb_release") < $(ver_to_int '14.04') ]]; then
+		return 1
+	fi
+
+	return 0
+}
+
+is_windows ()
+{
+	uname | grep 'CYGWIN_NT' >/dev/null
+}
+
+is_mac ()
+{
+	uname | grep 'Darwin' >/dev/null
+}
+#------------------------------------------------------------------------------
+
 
 #---------------------------- Global Constants --------------------------------
+
+DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
+
 REQUIREMENTS_DOCKER='1.13.1'
 REQUIREMENTS_DOCKER_COMPOSE='1.11.1'
 REQUIREMENTS_DOCKER_MACHINE='0.9.0'
 REQUIREMENTS_VBOX='5.1.14'
-REQUIREMENTS_WINPTY='0.4.0'
-REQUIREMENTS_WINPTY_CYGWIN='2.5.2'
+REQUIREMENTS_WINPTY='0.4.2'
+REQUIREMENTS_WINPTY_CYGWIN='2.6.1'
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
@@ -26,8 +59,9 @@ FIN_PATH_UPDATED="/usr/local/bin/fin.updated"
 FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
-if (uname | grep 'CYGWIN_NT' >/dev/null); then
+if is_windows; then
 	BABUN_WIN_HOME="$HOME"
+	# Cannot use cygpath_abs_unix here as it's being defined much later
 	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
 # DO NOT REMOVE HOST_HOME. It is used in some stack yml files and is necessary on Windows.
@@ -50,8 +84,7 @@ DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
-(uname | grep 'CYGWIN_NT' >/dev/null) && \
-	vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 # Stacks folder
 CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
 mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
@@ -198,14 +231,23 @@ pwd ()
 	# -L option should be used at all times because running pwd via absolute path /bin/pwd
 	# on Linux and Windows forces it to resolve current logical dir to physical dir
 	# (resolves symlink into target dir). -L forces using logical dir just like running pwd alone
-	if (uname | grep 'CYGWIN_NT' >/dev/null); then
+	if is_windows; then
 		"$_PWD" "-L" | sed 's/^\/cygdrive//'
 	else
 		"$_PWD" "-L"
 	fi
 }
 
-# Search for a file/directory in a directiry tree upwards. Return it's path.
+# Returns absolute path to a file/folder in a Unix notation under cygwin on Windows.
+# cygpath -m returns something like C:/Users/user/...
+# This function converts that into something like /c/Users/user/...
+# @param $1 file/folder
+cygpath_abs_unix ()
+{
+	echo "/$(cygpath -m $1 | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
+}
+
+# Search for a file/directory in a directory tree upwards. Return its path.
 # @param $1 filename
 upfind ()
 {
@@ -220,8 +262,8 @@ upfind ()
 	# On Windows compensate for getting down to "" and return full absolute path in Unix notation
 	# upfind on windows may return FAKED HOME PATH! because of that. KEEP that in mind
 	[[ "$_path" == "" ]] && _path="$HOME"
-	if [[ "$BABUN_WIN_HOME" != "" ]]; then
-		echo "/$(cygpath -m ${_path} | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
+	if is_windows; then
+		echo "$(cygpath_abs_unix ${_path})"
 	else
 		echo "$_path"
 	fi
@@ -284,11 +326,18 @@ get_current_relative_path ()
 	# Check that we're inside project folder
 	local proj_root=$(get_project_path)
 	local cwd=$(pwd)
-	# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
-	# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
-	# ex: cwd=/a/b, proj_root=/a/b/c, pathdiff==/a/b
-	local pathdiff=${cwd#${proj_root}/}
-	echo "$pathdiff"
+	# On Windows pwd may return a cygwin absolute path.
+	# We need a full absolute path here (/c/Users/user/... instead of /home/user), thus the special handling.
+	is_windows && cwd=$(cygpath_abs_unix $(pwd))
+
+	# Output relative path unless we are in the project root (empty relative path)
+	if [[ "$proj_root" != "$cwd" ]]; then
+		# if cwd substract proj_root is still cwd then it means we're out of proj_root (unsubstractable)
+		# ex: cwd=/a/b/c/d, proj_root=/a/b/c, pathdiff==d
+		# ex: cwd=/a/b, proj_root=/a/b/c, pathdiff==/a/b
+		local pathdiff=${cwd#${proj_root}/}
+		echo "$pathdiff"
+	fi
 }
 
 # Get mysql connection string
@@ -299,20 +348,13 @@ get_mysql_connect ()
 	echo "$cleaned_string"
 }
 
-# Use this function for every docker-compose invocation.
-docker_compose ()
-{
-	(cd "$(get_project_path)" && docker-compose "$@")
-	#(cd "$(get_project_path)" && ${winpty} "$DOCKER_COMPOSE_BIN" "$@")
-}
-
 # Get container id by service name
 # @param $1 docker compose service name (e.g. cli)
 # @return docker container id
 get_container_id ()
 {
 	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
-	echo $(docker_compose ps -q $1 2>/dev/null | tr -d '[:cntrl:]')
+	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '[:cntrl:]')
 }
 
 # Run command on Windows with elevated privileges
@@ -371,35 +413,6 @@ parse_params ()
 
 #------------------------- Basics check functions -----------------------------
 
-is_linux ()
-{
-	uname | grep 'Linux' >/dev/null
-}
-
-is_ubuntu ()
-{
-	if [ -r /etc/lsb-release ]; then
-		lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
-		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
-	fi
-
-	if [[ "$lsb_dist" != 'Ubuntu' || $(ver_to_int "$lsb_release") < $(ver_to_int '14.04') ]]; then
-		return 1
-	fi
-
-	return 0
-}
-
-is_windows ()
-{
-	uname | grep 'CYGWIN_NT' >/dev/null
-}
-
-is_mac ()
-{
-	uname | grep 'Darwin' >/dev/null
-}
-
 is_docker_native ()
 {
 	# comparison returns error codes
@@ -453,7 +466,12 @@ check_winpty_found ()
 	# Do not set winpty in non-zsh environment e.g. bash shell which Docksal creates a link for on desktop
 	if [[ "$ZSH" != "" ]]; then
 		check_binary_found 'winpty'
-		winpty='winpty'
+		# -Xallow-non-tty: allow stdin/stdout to not be ttys
+		# This is an undocumented feature of winpty which makes thing work much better on Windows,
+		# including pipes (|), stream redirects (< >) and variable substitution from a sub-shell ( $() )
+		# https://github.com/rprichard/winpty/commit/222ecb9f4404cce3cdbafa0a97c7c3da4ce2b3c2
+		# I wish it was documented... Could have saved many hours of pain making things work on Windows.
+		winpty='winpty -Xallow-non-tty'
 	fi
 }
 
@@ -474,6 +492,11 @@ is_docker_running ()
 is_tty ()
 {
 	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
+
+	# TODO: rewrite this check using [ -t ] test
+	# http://stackoverflow.com/questions/911168/how-to-detect-if-my-shell-script-is-running-through-a-pipe/911213#911213
+	# 0: stdin, 1: stdout, 2: stderr
+	# [ -t 0 -a -t 1 ]
 }
 
 #---------------------------- Other helper functions -------------------------------
@@ -646,16 +669,6 @@ check_docksal ()
 	fi
 }
 
-# Check that command is run inside project folder
-check_drush_path ()
-{
-	local pathdiff=$(get_current_relative_path)
-	if [[ "$(pwd)" == "$pathdiff" ]]; then
-		echo-red "This command must be run inside Drupal's document root"
-		exit 1
-	fi
-}
-
 # Project uniqueness checks
 check_project_unique ()
 {
@@ -714,7 +727,7 @@ _start_containers ()
 {
 	check_docker_running
 	echo-green "Starting services..."
-	docker_compose up -d --remove-orphans && \
+	docker-compose up -d --remove-orphans && \
 		# Give time for startup.sh in CLI to execute otherwise UID is changed too quickly
 		# which prevents xdebug from loading properly
 		sleep 1 && \
@@ -753,7 +766,7 @@ _stop_containers ()
 
 	check_docksal_environment
 	echo-green "Stopping services..."
-	docker_compose stop
+	docker-compose stop
 }
 
 _restart_containers ()
@@ -774,10 +787,10 @@ _remove_containers ()
 		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
 
 		# Taking the whole docker-compose project down (this removes containers, volumes and networks)
-		docker_compose down --volumes --remove-orphans
+		docker-compose down --volumes --remove-orphans
 	else
 		# Removing requested containers only
-		docker_compose kill "$@" && docker_compose rm -vf "$@"
+		docker-compose kill "$@" && docker-compose rm -vf "$@"
 	fi
 }
 
@@ -1019,10 +1032,15 @@ show_help_ssh-add ()
 
 show_help_exec ()
 {
-	echo-green "fin exec <command> - Execute command in ${yellow}cli${green} service container."
+	echo-green "fin exec [options] <command> - Execute command in ${yellow}cli${green} service container."
 	echo
 	echo "Command is a required parameter."
 	echo "Command will be executed in the path that matches your local current path."
+	echo
+	echo "Options:"
+	printh "-T" "Disable pseudo-tty allocation."
+	printh "" "Useful for non-interactive commands when output is saved into a variable for further comparison."
+	printh "" "In a TTY mode the output may contain unexpected control symbols/etc."
 	echo
 	echo-green "Examples:"
 	printh "fin exec pwd" "Show current path"
@@ -1925,7 +1943,7 @@ _ps ()
 	check_docksal_environment
 	check_project_unique
 
-	docker_compose ps
+	docker-compose ps
 }
 
 # List Docksal projects
@@ -1945,6 +1963,8 @@ projects ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
+	check_winpty_found
+
 	# Check if ssh-agent container is running
 	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
 	[[ "$running" != "true" ]] && return
@@ -1958,7 +1978,6 @@ ssh_add () {
 
 	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
 	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-	check_winpty_found
 	if is_tty; then
 		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
 		${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
@@ -2390,7 +2409,7 @@ update_project_images ()
 	# Need docker-compose configuration to be properly loaded here
 	load_configuration
 	check_docksal_environment
-	docker_compose pull # update project containers images
+	docker-compose pull # update project containers images
 	up
 }
 
@@ -2589,6 +2608,13 @@ _run ()
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
 	check_docksal_environment
+	check_winpty_found
+
+	# Allow disabling TTY mode.
+	# Useful for non-interactive commands when output is saved into a variable for further comparison.
+	# In a TTY mode the output may contain unexpected control symbols/etc.
+	[[ $1 == "-T" ]] && \
+		local no_tty=true && shift
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
@@ -2603,8 +2629,8 @@ _run ()
 	# RUN_NO_CDIR can be used to override this (used in mysql_import)
 	if [[ "$CONTAINER_NAME" == "cli" ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
 		local path=$(get_current_relative_path)
-		if [[ "$path" != "$(pwd)" ]] && [[ "$path" != "" ]] ; then
-			# we're inside docroot
+		if [[ "$path" != "" ]] ; then
+			# We are deeper than project root and thus need to do a cd
 			cdir="cd $path &&"
 		fi
 	fi
@@ -2635,10 +2661,9 @@ _run ()
 	# Commands in this file will be sourced for both interactive and non-interactive sessions.
 	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
 	# Enter project containers
-	if is_tty ; then
+	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		check_winpty_found
 		${winpty} docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
 	else
 		# non-interactive
@@ -2842,7 +2867,7 @@ reset ()
 logs ()
 {
 	check_docker_running
-	docker_compose logs "$@"
+	docker-compose logs "$@"
 }
 
 # Set uid of the primary "docker" user in the cli container
@@ -2938,7 +2963,7 @@ sysinfo ()
 	echo "Docker: $(docker version)"
 
 	echo "███  DOCKER COMPOSE"
-	echo "Docker Compose: $(docker_compose version)"
+	echo "Docker Compose: $(docker-compose version)"
 
 	(which 'docker-machine' >/dev/null 2>&1) && \
 		echo "███  DOCKER MACHINE" && \
@@ -3435,7 +3460,7 @@ case "$1" in
 	docker-compose|dc)
 		shift
 		is_docker_running # exports env
-		docker_compose "$@"
+		docker-compose "$@"
 		;;
 	docker-machine|dm)
 		shift
