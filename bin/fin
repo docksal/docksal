@@ -1037,10 +1037,15 @@ show_help_ssh-add ()
 
 show_help_exec ()
 {
-	echo-green "fin exec <command> - Execute command in ${yellow}cli${green} service container."
+	echo-green "fin exec [options] <command> - Execute command in ${yellow}cli${green} service container."
 	echo
 	echo "Command is a required parameter."
 	echo "Command will be executed in the path that matches your local current path."
+	echo
+	echo "Options:"
+	printh "-T" "Disable pseudo-tty allocation."
+	printh "" "Useful for non-interactive commands when output is saved into a variable for further comparison."
+	printh "" "In a TTY mode the output may contain unexpected control symbols/etc."
 	echo
 	echo-green "Examples:"
 	printh "fin exec pwd" "Show current path"
@@ -2607,6 +2612,12 @@ _run ()
 		show_help_exec && exit
 	check_docksal_environment
 
+	# Allow disabling TTY mode.
+	# Useful for non-interactive commands when output is saved into a variable for further comparison.
+	# In a TTY mode the output may contain unexpected control symbols/etc.
+	[[ $1 == "-T" ]] && \
+		local no_tty=true && shift
+
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
 	container_id=$(get_container_id "$CONTAINER_NAME")
@@ -2652,7 +2663,7 @@ _run ()
 	# Commands in this file will be sourced for both interactive and non-interactive sessions.
 	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
 	# Enter project containers
-	if is_tty ; then
+	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
 		$(winpty_wrapper) docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
