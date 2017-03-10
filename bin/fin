@@ -3591,6 +3591,10 @@ case "$1" in
 		is_docker_running # exports env
 		docker-machine "$@"
 		;;
+	debug)
+		shift
+		eval "$@"
+		;;
 	exec-url)
 		shift
 		exec_url "$@"
