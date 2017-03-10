@@ -151,3 +151,19 @@ DOCKSAL_IP=192.168.64.100
 	run fin ssh-add -l
 	echo "$output" | grep "The agent has no identities."
 }
+
+@test "DNS: .docksal name resolution inside cli" {
+	[[ $SKIP == 1 ]] && skip
+
+	cd ../drupal8 && fin up
+    run fin exec nslookup anything.docksal
+    [[ "$status" == 0 ]]
+}
+
+@test "DNS: external name resolution inside cli" {
+	[[ $SKIP == 1 ]] && skip
+
+	cd ../drupal8 && fin up
+    run fin exec nslookup google.com
+    [[ "$status" == 0 ]]
+}

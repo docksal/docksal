@@ -17,6 +17,9 @@ services:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
     depends_on:
       - cli
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
 
   # DB
   db:
@@ -29,6 +32,9 @@ services:
       - MYSQL_USER=${MYSQL_USER:-user}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
 
   # CLI
   # Used for all console commands and tools.
@@ -44,3 +50,6 @@ services:
       - docksal_ssh_agent:/.ssh-agent:ro
     environment:
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
