@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.2
+FIN_VERSION=1.1.3
 
 # Console colors
 red='\033[0;91m'
@@ -3111,6 +3111,17 @@ load_configuration ()
 	# Set defaults
 	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.docksal}
 	export DOCROOT=${DOCROOT:-docroot}
+	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
+
+	# DNS servers for containers
+	# Internal name resolution (for *.docksal domains)
+	export DOCKSAL_DNS1=${DOCKSAL_DEFAULT_IP}
+	# External name resolution (everything else)
+	if ! is_linux; then
+		export DOCKSAL_DNS2=${DOCKSAL_DEFAULT_DNS}
+	else
+		export DOCKSAL_DNS2=${DOCKSAL_DEFAULT_DNS_NIX}
+	fi
 
 	# Make project root globally available
 	export DOCKSAL_PATH="$(get_project_path)"
