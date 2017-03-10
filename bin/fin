@@ -1438,6 +1438,8 @@ docker_machine_provider ()
 
 docker_machine_env ()
 {
+	#remove cache
+	rm -f "$CONFIG_MACHINES_ENV" 2>dev/null
 	local _env=$(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
 	eval ${_env}
 	# Save to file for reuse during subsequent fin runs to avoid running env which is expensive
@@ -1873,8 +1875,8 @@ vm ()
 			;;
 		env)
 			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			docker-machine env "$machine_name"
+			DOCKER_MACHINE_NAME="${1:-$DOCKER_MACHINE_NAME}"
+			docker_machine_env
 			;;
 		ram)
 			shift
