@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.55
+FIN_VERSION=1.1.56
 
 # Console colors
 red='\033[0;91m'
@@ -2197,12 +2197,13 @@ install_dns_service ()
 		"${IMAGE_DNS}" >/dev/null
 }
 
-# Configuring sytem-wide *.$DOCKSAL_DNS_DOMAIN resolver (Windows not supported)
+# Configuring system-wide *.$DOCKSAL_DNS_DOMAIN resolver (Windows not supported)
 configure_resolver ()
 {
 	check_docker_running
 	local TARGET_IP="0.0.0.0"
 
+	#------ macOS
 	if is_mac; then
 		if is_docker_native; then
 			TARGET_IP="127.0.0.1"
@@ -2221,9 +2222,24 @@ configure_resolver ()
 			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 		sudo dscacheutil -flushcache
 		# to check: scutil --dns
+	#----- Linux
 	elif is_linux; then
 		TARGET_IP="$DOCKSAL_DEFAULT_IP"
 		install_dns_service "$TARGET_IP"
+		# Adding a subnet for Docksal. Make sure we don't do this twice
+		if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
+			echo-green "Adding a subnet for Docksal..."
+			cat > /tmp/docksal.ip.addr <<EOF
+		up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+		down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+		dns-nameservers ${DOCKSAL_DEFAULT_IP}
+EOF
+			sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
+			rm -f /tmp/docksal.ip.addr
+			sudo ifdown lo && sudo ifup lo
+			sudo resolvconf -u
+		fi
+	#----- Windows
 	elif is_windows; then
 		if is_docker_native; then
 			TARGET_IP="127.0.0.1"
@@ -2432,32 +2448,11 @@ install_tools_ubuntu ()
 	fi
 
 	# Install docker-machine
-#	if ! is_docker_machine_version; then
-#		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-#		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
-#			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
-#	fi
-
-	# Adding a subnet for Docksal. Make sure we don't do this twice
-	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
-		echo-green "Adding a subnet for Docksal..."
-		cat > /tmp/docksal.ip.addr <<EOF
-	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	dns-nameservers ${DOCKSAL_DEFAULT_IP}
-EOF
-		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
-		rm -f /tmp/docksal.ip.addr
-		sudo ifdown lo && sudo ifup lo
-		sudo resolvconf -u
-	fi
-
-	# Update system images and install system service
-	# Calling with sudo in case of fresh install when user is not in docker group yet
-	echo-green "Updating system images..."
-	[[ -x "$FIN_PATH_UPDATED" ]] &&
-		NO_UPDATES=1 sudo "$FIN_PATH_UPDATED" update --system-images ||
-		NO_UPDATES=1 sudo fin update --system-images
+	#	if ! is_docker_machine_version; then
+	#		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+	#		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
+	#			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
+	#	fi
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
@@ -2681,17 +2676,19 @@ update ()
 		update_start_script_shortcut
 	fi
 
-	# [Update - 4] Update system images (if possible)
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && ! is_linux; then
+	# [Update - 4] Update third party tools
+	update_tools
+
+	# [Update - 5] Update system images
+	# On macOS and Windows do this only during upgrade as on clean install it happens during VM creation
+	# On Linux do it during both upgrade and install too, as there is no VM on Linux
+	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] || is_linux; then
 		echo-green "Updating system images..."
 		update_system_images
 	fi
 
-	# [Update - 5] Update third party tools (if possible)
-	update_tools
-
 	# [Update - 6] Restart running projects if BOOT2DOCKER was not restarted
-	# Needed to restore containers connection to vhost_proxy
+	# This is needed to re-append restarted vhost-proxy to containers networks
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
 		echo-green "Restarting running projects..."
 		running_projects=$(docker ps --all \
@@ -3629,6 +3626,8 @@ case "$1" in
 	update)
 		shift
 		if [[ "$1" == "--system-images" ]]; then
+			update_system_images
+		elif [[ "$1" == "--system" ]]; then
 			update_system_images
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
