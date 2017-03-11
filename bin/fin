@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.51
+FIN_VERSION=1.1.52
 
 # Console colors
 red='\033[0;91m'
@@ -971,7 +971,7 @@ show_help ()
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "exec <command> [params]" "Execute a command in ${yellow}cli${NC}"
+	printh "exec <command|file>" "Execute a command or file in ${yellow}cli${NC}"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "logs [service]" "Show Docker logs for service container (e.g. Apache logs)"
 
@@ -1054,10 +1054,10 @@ show_help_ssh-add ()
 
 show_help_exec ()
 {
-	echo-green "fin exec [options] <command> - Execute command in ${yellow}cli${green} service container."
+	echo-green "fin exec [options] <command|file> - Execute command or file in ${yellow}cli${green} service container."
 	echo
-	echo "Command is a required parameter."
-	echo "Command will be executed in the path that matches your local current path."
+	echo "Command or file is a required parameter."
+	echo "It will be executed in the path that matches your local current path."
 	echo
 	echo "Options:"
 	printh "-T" "Disable pseudo-tty allocation."
@@ -1065,10 +1065,10 @@ show_help_exec ()
 	printh "" "In a TTY mode the output may contain unexpected control symbols/etc."
 	echo
 	echo-green "Examples:"
-	printh "fin exec pwd" "Show current path"
 	printh "fin exec ls -la" "Current directory listing"
-	printh "fin exec compass compile" "Compile SASS/SCSS"
 	printh "fin exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or stdout redirects happening inside cli"
+	printh "res=\$(fin exec -T drush st)" "Use -T switch to assign exec output to a variable"
+	printh "fin exec .docksal/script.sh" "Execute file inside cli container"
 	echo
 }
 
@@ -3529,7 +3529,13 @@ case "$1" in
 		;;
 	exec|run)
 		shift
-		_run "$@"
+		if [ -f "$1" ]; then
+			# if a file is passed then run it inside cli container
+			[ "$(get_project_path)" == "" ] && echo "Should be run inside a project" && exit 1
+			_run "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash $1"
+		else
+			_run "$@"
+		fi
 		;;
 	mysql|sqlc)
 		shift
