@@ -72,7 +72,7 @@ services:
 
 	echo "$yml" > .docksal/docksal.yml
 
-	run fin config
+	run fin config -a
 	[[ $status == 0 ]] && \
 	[[ $output =~ "volumes-bind.yml" ]] && \
 	[[ $output =~ "stack-acquia.yml" ]] && \
@@ -100,7 +100,7 @@ services:
 
 	echo "$yml" > .docksal/docksal.yml
 
-	run fin config
+	run fin config -a
 	[[ $status == 0 ]] && \
 	[[ $output =~ "volumes-bind.yml" ]] && \
 	[[ ! $output =~ "stack-default.yml" ]] && \
@@ -115,7 +115,7 @@ services:
 	# Override TEST_VAR
 	echo 'TEST_VAR=my_val' > .docksal/docksal.env
 
-	run fin config
+	run fin config -a
 	[[ $status == 0 ]] && \
 	[[ $output =~ "docksal.env" ]] && \
 	# Test our override is in place
@@ -137,7 +137,7 @@ services:
 
 	echo "$yml" > .docksal/docksal-local.yml
 
-	run fin config
+	run fin config -a
 	[[ $status == 0 ]] && \
 	[[ $output =~ "docksal-local.yml" ]] && \
 	[[ ! $output =~ "docksal-local.env" ]] && \
@@ -150,7 +150,7 @@ services:
 	# Override TEST_VAR_LOCAL
 	echo 'TEST_VAR_LOCAL=my_val_local' > .docksal/docksal-local.env
 
-	run fin config
+	run fin config -a
 	[[ $status == 0 ]] && \
 	[[ $output =~ "docksal-local.yml" ]] && \
 	[[ $output =~ "docksal-local.env" ]] && \
