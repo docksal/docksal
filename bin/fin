@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.54
+FIN_VERSION=1.1.55
 
 # Console colors
 red='\033[0;91m'
@@ -1215,6 +1215,7 @@ show_help_vm ()
 	# printh "ip [new ip]" "Set machine IP address (requires vm restart)"
 	printh "env" "Display the commands to set up the shell for direct use of Docker client"
 	echo
+	printh "mount" "Try remounting host filesystem (NFS on macOS, SMB on Windows)"
 	printh "ram" "Get machine memory size"
 	printh "ram [megabytes]" "Set machine memory size. Default is 1024 (requires vm restart)"
 	printh "stats" "Show machine HDD/RAM usage stats"
@@ -1442,7 +1443,9 @@ is_docker_machine_exist ()
 # Return docker machine provider
 docker_machine_provider ()
 {
-	docker-machine ls | grep "$DOCKER_MACHINE_NAME" | awk '{print $3}' 2>/dev/null
+	# For now always return virtualbox
+	echo 'virtualbox'
+	#docker-machine ls | grep "$DOCKER_MACHINE_NAME" | awk '{print $3}' 2>/dev/null
 }
 
 docker_machine_env ()
@@ -1650,21 +1653,15 @@ docker_machine_mount_nfs ()
 			sudo umount $share_mount 2>/dev/null ;
 			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			# [!!] Think twice about performance before changing nfs settings
+		if [ ! $? -eq 0 ]; then
+			echo "Retrying mounting local $share_export to $share_mount"
+			docker-machine ssh "$machine_name" \
+				"sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
+			[ ! $? -eq 0 ] &&
+				echo-red "NFS share mount has failed. Try fin vm restart."
+		fi
 	done
 
-	# Mount no-export folders (should be inside exported folders)
-	for share in ${noexport[@]}; do
-		local share_=(${share//:/ });
-		local share_export="${share_[0]}"
-		local share_mount="${share_[1]}"
-		# Add new exports
-		echo "Mounting local $share_export to $share_mount..."
-		docker-machine ssh "$machine_name" \
-			"sudo mkdir -p $share_mount ;
-			sudo umount $share_mount 2>/dev/null ;
-			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
-			# [!!] Think twice about performance before changing nfs settings
-	done
 }
 
 docker_machine_remove_nfs ()
@@ -1866,6 +1863,9 @@ vm ()
 			shift
 			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
 			docker_machine_remove "$machine_name"
+			;;
+		mount)
+			docker_machine_mounts
 			;;
 		ip)
 			shift
