@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.52
+FIN_VERSION=1.1.53
 
 # Console colors
 red='\033[0;91m'
@@ -75,7 +75,14 @@ CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
 CONFIG_MACHINES="$CONFIG_DIR/machines"
 CONFIG_MACHINES_ENV="$CONFIG_DIR/machines/.env"
 CONFIG_MACHINE_ACTIVE="$CONFIG_MACHINES/.active"
-mkdir -p "$CONFIG_DIR" >/dev/null 2>&1
+CONFIG_PROJECTS="$CONFIG_DIR/projects"
+CONFIG_FILES="
+	docksal.yml
+	docksal.env
+	docksal-local.yml
+	docksal-local.env
+"
+mkdir -p "$CONFIG_PROJECTS" >/dev/null 2>&1
 # BIN folder
 CONFIG_BIN_DIR="$CONFIG_DIR/bin"
 CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
@@ -964,10 +971,11 @@ show_help ()
 	fi
 	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects)"
 	printh "restart" "Restart project services"
-	printh "reset [service]" "Recreate project services and containers (${yellow}fin help reset${NC})"
-	printh "rm [service]" "Stop project services and remove their containers (${yellow}fin help rm${NC})"
-	printh "ps" "List project services"
-	printh "projects [-a (--all)]" "List running Docksal projects (-a to show stopped as well)"
+	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
+	printh "remove" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
+	echo
+	printh "ps" "Project status: list project services"
+	printh "pl [-a (--all)]" "Project list: list running Docksal projects (-a to show stopped as well)"
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
@@ -1074,32 +1082,33 @@ show_help_exec ()
 
 show_help_reset ()
 {
-	echo-green "fin reset - Recreate services/containers. Equal to fin stop, fin remove, fin start"
+	printh "fin reset" "" "yellow"
 	echo
-	echo-green "Parameters: one or more service names. Examples:"
-	echo "	fin reset web		Restart 'web' service"
-	echo "	fin reset web cli	Restart 'web' and 'cli' services"
-	echo "	fin reset		Restart all project services"
+	echo-green "Recreate services/containers. Equal to fin rm followed by fin start"
+	echo "By default recreates project containers deleting all changes that were made to them."
 	echo
 	echo-green "System services"
 	echo -e "Docksal has several system services."
-	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and should not be used on projects."
-	echo "	fin reset dns		Recreate Docksal DNS service"
-	echo -e "	fin reset proxy		Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
-	echo "	fin reset ssh-agent	Recreate Docksal ssh-agent service"
-	echo "	fin reset system	Recreate all Docksal system services"
+	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and should not be used in projects."
+	echo
+	printh "fin reset dns" "Recreate Docksal DNS service"
+	printh "fin reset proxy" "Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
+	printh "fin reset ssh-agent" "Recreate Docksal ssh-agent service"
+	printh "fin reset system" "Recreate all Docksal system services"
 	echo
 }
 
 show_help_rm ()
 {
-	echo-green "fin rm - Remove services"
+	echo-green "Remove services"
+	printh "fin remove" "" "yellow"
 	echo
-	echo -e "${green}Parameters:${NC} one or more service names."
-	echo-green "Examples:"
-	printh "fin rm" "Remove all project services"
-	printh "fin rm web" "Remove web service"
+	echo "Removes project containers and frees up space consumed by them."
 	echo
+}
+show_help_remove ()
+{
+	show_help_rm
 }
 
 show_help_update ()
@@ -1925,6 +1934,18 @@ up ()
 	check_project_unique
 
 	_start_containers
+	local result=$?
+
+	# project central management
+	project_dir_setup
+	if [ ${result} -eq 0 ]; then
+		project_state_started
+		project_config_save
+	else
+		project_state_stopped
+	fi
+
+	return ${result}
 }
 
 # Stop containers
@@ -1934,6 +1955,9 @@ stop ()
 	check_project_unique
 
 	_stop_containers "$@"
+
+	# project central management
+	project_state_stopped
 }
 
 # Restart container(s)
@@ -1947,6 +1971,18 @@ restart ()
 	check_project_unique
 
 	_restart_containers
+	local result=$?
+
+	# project central management
+	project_dir_setup
+	if [ ${result} -eq 0 ]; then
+		project_state_started
+		project_config_save
+	else
+		project_state_stopped
+	fi
+
+	return ${result}
 }
 
 # Remove container(s)
@@ -1967,10 +2003,12 @@ remove ()
 	fi
 
 	_remove_containers "$@"
+
+	project_state_stopped
 }
 
 # List project containers
-_ps ()
+project_status ()
 {
 	check_docksal_environment
 	check_project_unique
@@ -1980,7 +2018,7 @@ _ps ()
 
 # List Docksal projects
 # @param $1 Show containers from all projects (-a)
-projects ()
+project_list ()
 {
 	local all
 	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
@@ -1990,6 +2028,76 @@ projects ()
 	docker ps ${all} \
 		--filter 'label=com.docker.compose.service=web' \
 		--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
+}
+
+# Perform project config management actions
+project_dir_setup ()
+{
+	local PROJECT_STORAGE="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
+	# create project state directory
+	[ ! -d  ] && mkdir -p "$PROJECT_STORAGE"
+	local PROJECT_ROOTFILE="$PROJECT_STORAGE/.project-root"
+
+	# Check that config dir belongs to this project not some else deleted one
+	if [ -f "$PROJECT_ROOTFILE" ] && [[ "$(cat $PROJECT_ROOTFILE)" != "$PROJECT_ROOT" ]]; then
+		# this is leftover of another project with the same name. kill it with fire!
+		rm -rf "$PROJECT_STORAGE" 2>/dev/null
+		mkdir -p "$PROJECT_STORAGE"
+	fi
+	echo "$PROJECT_ROOT" > "$PROJECT_STORAGE/.project-root"
+}
+
+# Save project state
+# $1 - state started|stopped
+project_state_save ()
+{
+	mkdir -p "$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
+	local PROJECT_STARTED="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE/.started"
+	[[ "$1" == "started" ]] &&
+		echo $(date +%s) > "$PROJECT_STARTED" ||
+		rm -f "$PROJECT_STARTED"
+}
+
+project_state_started ()
+{
+	project_state_save started
+}
+
+project_state_stopped ()
+{
+	project_state_save stopped
+}
+
+# Save project config files to central storage
+project_config_save ()
+{
+	local PROJECT_STORAGE="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
+	# create project state directory
+	[ ! -d  ] && mkdir -p "$PROJECT_STORAGE"
+	# save project configuration
+	for file in ${CONFIG_FILES}; do
+		cp "$PROJECT_ROOT/.docksal/$file" "$PROJECT_STORAGE/$file" >/dev/null 2>&1
+	done
+}
+
+project_config_diff ()
+{
+	local PROJECT_STORAGE="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
+
+	if ! (ls ${PROJECT_STORAGE} | grep . >/dev/null 2>&1); then
+		# no config files, project was never started
+		return
+	fi
+
+	for file in ${CONFIG_FILES}; do
+		diff "$PROJECT_ROOT/.docksal/$file" "$PROJECT_STORAGE/$file" >/dev/null 2>&1
+		if [ $? -eq 1 ]; then
+			echo -e "${red_bg} WARNING ${NC} Project configuration files have changed since project was started."
+			echo "If you continue with your command, you might experience issues."
+			echo "Use ${yellow}fin up${NC} to apply new config or ${yellow}fin config restore${NC} to restore initial one."
+			return 1
+		fi
+	done
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
@@ -3207,7 +3315,7 @@ config_show ()
 	check_docksal_environment
 
 	echo "---------------------"
-	echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
+	# echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
 	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
 	# Replace separators with new lines
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
@@ -3221,8 +3329,8 @@ config_show ()
 	echo "VIRTUAL_HOST_ALIASES: *.${VIRTUAL_HOST}"
 
 	local IP;
-	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="$(fin vm ip)"
-	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" != 1 ]] && IP="127.0.0.1"
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" != 1 ]] && IP="$DOCKSAL_DEFAULT_IP"
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
 	(is_linux) && IP="$DOCKSAL_DEFAULT_IP"
 	echo "IP: $IP"
 
@@ -3476,20 +3584,34 @@ case "$1" in
 		shift
 		restart
 		;;
-	ps)
-		_ps
-		;;
 	project)
-		;;
-	projects|pr)
 		shift
-		projects "$@"
+		case "$1" in
+			status)
+				project_status
+				;;
+			list)
+				shift
+				project_list "$@"
+				;;
+			*)
+				echo -e "Unknown command $1. See ${yellow}fin help project${NC}"
+				exit 1
+				;;
+		esac
+		;;
+	ps)
+		project_status
+		;;
+	projects|pl)
+		shift
+		project_list "$@"
 		;;
 	reset)
 		shift
 		reset "$@"
 		;;
-	rm)
+	remove|rm)
 		shift
 		remove "$@"
 		;;
