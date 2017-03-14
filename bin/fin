@@ -107,6 +107,12 @@ DEFAULT_MACHINE_VBOX_RAM='1024' #mb
 DEFAULT_MACHINE_VBOX_HDD='50000' #mb
 DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
 
+# Stats
+# fin sends a minimal ping with OS and fin version number
+DOCKSAL_STATS_TID='UA-93724315-1'
+DOCKSAL_STATS_URL='http://www.google-analytics.com/collect'
+DOCKSAL_STATS_OPTOUT=${DOCKSAL_STATS_OPTOUT:-0}
+
 #---------------------------- URL references --------------------------------
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
@@ -176,6 +182,12 @@ else
 	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
 
 	export DOCKSAL_HOST_IP="192.168.64.1"
+fi
+
+# Generate Docksal instance uuid if not available
+if [[ "$DOCKSAL_UUID" == "" ]]; then
+	export DOCKSAL_UUID=$(uuidgen)
+	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV"
 fi
 
 #---------------------------- Helper functions --------------------------------
@@ -1265,6 +1277,9 @@ version ()
 	else
 		echo "fin version: $FIN_VERSION"
 	fi
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 # return bash completion words
@@ -1991,6 +2006,14 @@ ssh_add () {
 
 #----- Installations and updates -----
 
+# Reports version stats
+stats_ping ()
+{
+	local os_version="$(uname -s)"
+	[[ $DOCKSAL_STATS_OPTOUT == 0 ]] && \
+		curl -kfsL --data "v=1&tid=${DOCKSAL_STATS_TID}&cid=${DOCKSAL_UUID}&t=event&ec=version&ea=${os_version}&el=${FIN_VERSION}" ${DOCKSAL_STATS_URL}
+}
+
 install_proxy_service ()
 {
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
@@ -2145,6 +2168,9 @@ install_tools_mac ()
 			sleep 2
 		fi
 	fi
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 install_tools_windows ()
@@ -2226,6 +2252,9 @@ install_tools_windows ()
 			sleep 2
 		fi
 	fi
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 # Install everything required on Ubuntu 14.04+
@@ -2302,6 +2331,9 @@ EOF
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
 	fi
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 update_tools ()
@@ -2345,6 +2377,9 @@ update_config_files ()
 
 	if_failed_error "One of the default configs was not downloaded." \
 		"Check your internet connection and file permission on $CONFIG_STACKS_DIR"
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 # Install shell commands autocomplete script
@@ -2401,6 +2436,9 @@ update_system_images ()
 	docker pull "${IMAGE_DNS}"
 	docker pull "${IMAGE_SSH_AGENT}"
 	reset system
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 # Update project images
@@ -2411,6 +2449,9 @@ update_project_images ()
 	check_docksal_environment
 	docker-compose pull # update project containers images
 	up
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 # Update system and project images
@@ -2420,6 +2461,9 @@ update_images ()
 	update_system_images
 	echo-green "Updating project images..."
 	update_project_images
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 # Update Docksal
@@ -2547,6 +2591,9 @@ update ()
 	fi
 
 	[ $? -eq 0 ] && echo-green "Update finished"
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 check_for_updates ()
@@ -2581,6 +2628,9 @@ check_for_updates ()
 		echo "Press Enter to continue"
 		read -p ''
 	fi
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 #-------------------------- Execution commands -----------------------------
@@ -2994,6 +3044,9 @@ sysinfo ()
 		echo "███  MOUNTS"
 		vm ssh mount
 	fi
+
+	# Ping stats server
+	$(stats_ping > /dev/null 2>&1) || true
 }
 
 #-------------------------- Links / Aliases -----------------------------
