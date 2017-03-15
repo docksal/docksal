@@ -1972,7 +1972,8 @@ remove ()
 
 	_remove_containers "$@"
 
-	project_state_stopped
+	# set state stopped when containers removed
+	[[ "$1" == "" ]] && project_state_stopped
 }
 
 # List project containers
