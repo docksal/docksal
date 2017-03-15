@@ -70,7 +70,8 @@ OLD_CONFIG_DIR="$HOME/.drude"
 CONFIG_DIR="$HOME/.docksal"
 CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
-CONFIG_LAST_CHECK="$CONFIG_DIR/last_check"
+CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
+CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
 CONFIG_MACHINES="$CONFIG_DIR/machines"
 CONFIG_MACHINE_ACTIVE="$CONFIG_MACHINES/.active"
 mkdir -p "$CONFIG_DIR" >/dev/null 2>&1
@@ -106,6 +107,12 @@ DEFAULT_MACHINE_PROVIDER='virtualbox'
 DEFAULT_MACHINE_VBOX_RAM='1024' #mb
 DEFAULT_MACHINE_VBOX_HDD='50000' #mb
 DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
+
+# Stats
+# fin sends a minimal ping with OS and fin version number
+DOCKSAL_STATS_TID='UA-93724315-1'
+DOCKSAL_STATS_URL='http://www.google-analytics.com/collect'
+DOCKSAL_STATS_OPTOUT=${DOCKSAL_STATS_OPTOUT:-0}
 
 #---------------------------- URL references --------------------------------
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
@@ -148,9 +155,15 @@ PATH="$CONFIG_BIN_DIR:$PATH"
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 # UID of user to use in cli container. Only override if you know what you're doing
 FIN_SET_UID=""
+
 # Load env variables overrides, use to permanently override some variables
 [[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
 
+# Generate Docksal instance uuid if not available
+if [[ "$DOCKSAL_UUID" == "" ]]; then
+	export DOCKSAL_UUID=$(uuidgen)
+	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
+fi
 
 if [[ "$DOCKER_NATIVE" == "1" ]]; then
 	# no vm used
@@ -849,13 +862,16 @@ _docker_cleanup ()
 	_remove_dangling_images
 	_remove_dangling_volumes
 
-	# TODO: remove below lines in March 2017
+	# TODO: remove below lines in September 2017
 	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/backups/Vagrantfile."* >/dev/null 2>&1
 	rm -r "$OLD_CONFIG_DIR/backups" >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/vagrant.yml."* >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/backups/vagrant.yml."* >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/b2d_version" >/dev/null 2>&1
+
+	# TODO: remove in September 2017
+	rm -f "$CONFIG_DIR/last_check" >/dev/null 2>&1
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -1265,6 +1281,9 @@ version ()
 	else
 		echo "fin version: $FIN_VERSION"
 	fi
+
+	# Ping stats server
+	stats_ping
 }
 
 # return bash completion words
@@ -1991,6 +2010,26 @@ ssh_add () {
 
 #----- Installations and updates -----
 
+# Reports version stats
+stats_ping ()
+{
+	[[ "$DOCKSAL_STATS_OPTOUT" != 0 ]] && return # Don't run if the user opted out
+	[[ "$CI" == "true" ]] && return # Don't run in CI
+
+	# We are passing OS version via a custom User-Agent request header, which GA can parse
+	local user_agent
+	is_linux && user_agent="fin/${FIN_VERSION} (Linux $(lsb_release -si)-$(lsb_release -sr))"
+	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X $(sw_vers -productVersion))"
+	is_windows && user_agent="fin/${FIN_VERSION} (Windows NT $(echo $(cmd /c ver) | sed 's/.*Version \(.*\)\..*]/\1/'))"
+
+	curl -kfsL \
+		--user-agent "$user_agent" \
+		--data "v=1&tid=${DOCKSAL_STATS_TID}&cid=${DOCKSAL_UUID}&t=screenview&an=fin&av=${FIN_VERSION}&cd=ping" \
+		"${DOCKSAL_STATS_URL}" >/dev/null 2>&1 &
+
+	return 0
+}
+
 install_proxy_service ()
 {
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
@@ -2556,13 +2595,23 @@ check_for_updates ()
 	local UPDATE_AVAILABLE=0
 	local UPDATES_AVAILABLE=0
 
-	local timestamp; local last_check; local next_check
+	local timestamp; local last_check; local next_check; local last_ping; local next_ping
+	local one_day=$((60*60*24))
+	local one_week=$(($one_day * 7))
 	timestamp=$(date +%s)
-	# Set last_check to 0 if empty
+	# Set last_check/last_ping to 0 if empty
 	last_check=$(cat "$CONFIG_LAST_CHECK" 2>/dev/null || echo 0)
+	last_ping=$(cat "$CONFIG_LAST_PING" 2>/dev/null || echo 0)
+
+	# Send ping daily
+	next_ping=$(( $last_ping + $one_day ))
+	if [ ${timestamp} -gt ${next_ping} ]; then
+		stats_ping
+		echo "$timestamp" > "$CONFIG_LAST_PING"
+	fi
+
 	# Check once bi-weekly
-	local one_week=$((60*60*24*7))
-	next_check=$(( $last_check+($one_week*2) ))
+	next_check=$(( $last_check + ($one_week * 2) ))
 	if [ ${timestamp} -le ${next_check} ]; then
 		return;
 	fi
@@ -2943,10 +2992,10 @@ sysinfo ()
 	# os
 	echo "███  OS & BASICS"
 	uname -a
-	if is_linux; then
-		[ -f /etc/os-release ] && cat /etc/os-release
-		[ -f /etc/system-release ] && cat /etc/system-release
-	fi
+	# OS version
+	is_linux && echo $(lsb_release -si) $(lsb_release -sr)
+	is_mac && echo $(sw_vers -productName) $(sw_vers -productVersion)
+	is_windows && echo $(cmd /c ver)
 	# fin version
 	version
 
@@ -2994,6 +3043,9 @@ sysinfo ()
 		echo "███  MOUNTS"
 		vm ssh mount
 	fi
+
+	# Ping stats server
+	stats_ping
 }
 
 #-------------------------- Links / Aliases -----------------------------
