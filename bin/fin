@@ -3278,42 +3278,38 @@ load_configuration ()
 	fi
 }
 
-# Show project configuration
-# $1 - -a (--all) show more information
 config_show ()
 {
 	check_docksal_environment
 
-	if [[ "$1" == '-a' ]] || [[ "$1" == '--all' ]] || [[ "$1" == 'env' ]]; then
-		echo "---------------------"
-		# echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
-		echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
-		# Replace separators with new lines
-		local SEPARATOR=':'; is_windows && SEPARATOR=';'
-		echo -e "COMPOSE_FILE:\n$(echo ${COMPOSE_FILE} | tr ${SEPARATOR} '\n')"
-		[[ "$ENV_FILE" != "" ]] &&
-			echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
-		echo
-		echo "DOCROOT: ${DOCROOT}"
-		echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
-		echo "VIRTUAL_HOST_ALIASES: *.${VIRTUAL_HOST}"
+	echo "---------------------"
+	# echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
+	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
+	# Replace separators with new lines
+	local SEPARATOR=':'; is_windows && SEPARATOR=';'
+	echo -e "COMPOSE_FILE:\n$(echo ${COMPOSE_FILE} | tr ${SEPARATOR} '\n')"
+	[[ "$ENV_FILE" != "" ]] &&
+		echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
+	echo
+	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
+	echo "DOCROOT: ${DOCROOT}"
+	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
+	echo "VIRTUAL_HOST_ALIASES: *.${VIRTUAL_HOST}"
 
-		local IP;
-		(is_mac || is_windows) && [[ "$DOCKER_NATIVE" != 1 ]] && IP="$DOCKSAL_DEFAULT_IP"
-		(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
-		(is_linux) && IP="$DOCKSAL_DEFAULT_IP"
-		echo "IP: $IP"
+	local IP;
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" != 1 ]] && IP="$DOCKSAL_DEFAULT_IP"
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
+	(is_linux) && IP="$DOCKSAL_DEFAULT_IP"
+	echo "IP: $IP"
 
-		echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$IP/")
-		[[ "$1" == "env" ]] && return
-
-		echo
-		echo "Docker Compose configuration"
-		echo "---------------------"
-	fi
+	echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$IP/")
+	[[ "$1" == "env" ]] && return
 
 	echo
+	echo "Docker Compose configuration"
+	echo "---------------------"
 	docker-compose config
+	echo "---------------------"
 }
 
 config_generate ()
