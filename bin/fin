@@ -926,10 +926,10 @@ show_help ()
 	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects)"
 	printh "restart" "Restart project services"
 	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
-	printh "remove" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
+	printh "remove (rm)" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
+	printh "status (ps)" "List project services"
 	echo
-	printh "ps" "Project status: list project services"
-	printh "pl [-a (--all)]" "Project list: list running Docksal projects (-a to show stopped as well)"
+	printh "project <command>" "Project management (${yellow}fin help project${NC})" "yellow"
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
@@ -1065,7 +1065,20 @@ show_help_remove ()
 	show_help_rm
 }
 
-show_help_update ()
+show_help_project() {
+	echo-green "Project management"
+	printh "fin project <command>" "" "yellow"
+	echo
+	echo-green "Commands:"
+	printh "status (ps)" "Project status: list project services"
+	printh "list (pl) [-a (--all)]" "Project list: list running Docksal projects (-a to show stopped as well)"
+	echo
+	echo-green "Examples:"
+	printh "fin pl -a" "	Import dump from stdin into default database"
+	echo
+}
+
+how_help_update ()
 {
 	echo-green "fin update - Automated update of Docksal system components"
 	echo
@@ -1154,7 +1167,8 @@ show_help_mysql-dump ()
 
 show_help_vm ()
 {
-	echo-green "fin vm <command> - Control docker machine directly"
+	echo-green "Control docker machine directly"
+	printh "fin vm <command>" "" "yellow"
 	echo
 	echo-green "Commands:"
 	printh "start" "Start a machine (create if needed)"
@@ -3561,7 +3575,7 @@ case "$1" in
 				;;
 		esac
 		;;
-	ps)
+	status|ps)
 		project_status
 		;;
 	projects|pl)
