@@ -158,52 +158,6 @@ IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.0}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.0}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.0}
 
-<<<<<<< 2a146e8a2ecc87403e232cf21b48f403ed9917ee
-#---------------------------- Global Variables --------------------------------
-
-# Override path to use our utilities
-PATH="$CONFIG_BIN_DIR:$PATH"
-DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
-# UID of user to use in cli container. Only override if you know what you're doing
-FIN_SET_UID=""
-
-# Load env variables overrides, use to permanently override some variables
-[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
-
-# Generate Docksal instance uuid if not available
-if [[ "$DOCKSAL_UUID" == "" ]]; then
-	export DOCKSAL_UUID=$(uuidgen)
-	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
-fi
-
-if [[ "$DOCKER_NATIVE" == "1" ]]; then
-	# no vm used
-	export DOCKER_HOST=""
-	# Host IP on Docker for Mac
-	export DOCKSAL_HOST_IP="192.168.65.1"
-else
-	# get active machine and it's status
-	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
-	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
-	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
-	[[ "$DOCKER_MACHINE_STATUS" == 'Running' ]] && \
-		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
-	# current active machine folder
-	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
-	mkdir -p "$DOCKER_MACHINE_FOLDER"
-
-	# TODO: revise or remove later. search for DOCKER_MACHINE_IP in the code
-	# get desired ip
-	# if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
-	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
-	#fi
-	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
-
-	export DOCKSAL_HOST_IP="192.168.64.1"
-fi
-
-=======
->>>>>>> 1.1.50 Refactor Docker environment variable export during startup.
 #---------------------------- Helper functions --------------------------------
 
 DOCKSAL_PATH='' #docksal path value will be cached here
@@ -3479,6 +3433,12 @@ FIN_SET_UID=""
 
 # Load environment variables overrides, use to permanently override some variables
 [[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
+
+# Generate Docksal instance uuid if not available
+if [[ "$DOCKSAL_UUID" == "" ]]; then
+	export DOCKSAL_UUID=$(uuidgen)
+	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
+fi
 
 # Export environment variables to properly reach Docker server
 if [[ "$DOCKER_NATIVE" == "1" ]]; then
