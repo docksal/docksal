@@ -1412,6 +1412,7 @@ is_docker_machine_exist ()
 docker_machine_provider ()
 {
 	# For now always return virtualbox
+	# TODO: remove if not used in September 2017
 	echo 'virtualbox'
 	#docker-machine ls | grep "$DOCKER_MACHINE_NAME" | awk '{print $3}' 2>/dev/null
 }
@@ -1623,6 +1624,7 @@ docker_machine_mount_nfs ()
 			# [!!] Think twice about performance before changing nfs settings
 		if [ ! $? -eq 0 ]; then
 			echo "Retrying mounting local $share_export to $share_mount"
+			sleep 5
 			docker-machine ssh "$machine_name" \
 				"sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			[ ! $? -eq 0 ] &&
