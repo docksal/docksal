@@ -154,6 +154,13 @@ PATH="$CONFIG_BIN_DIR:$PATH"
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 # UID of user to use in cli container. Only override if you know what you're doing
 FIN_SET_UID=""
+
+# Generate Docksal instance uuid if not available
+if [[ "$DOCKSAL_UUID" == "" ]]; then
+	DOCKSAL_UUID=$(uuidgen)
+	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
+fi
+
 # Load env variables overrides, use to permanently override some variables
 [[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
 
@@ -182,12 +189,6 @@ else
 	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
 
 	export DOCKSAL_HOST_IP="192.168.64.1"
-fi
-
-# Generate Docksal instance uuid if not available
-if [[ "$DOCKSAL_UUID" == "" ]]; then
-	export DOCKSAL_UUID=$(uuidgen)
-	echo "DOCKSAL_UUID=$DOCKSAL_UUID" >> "$CONFIG_ENV"
 fi
 
 #---------------------------- Helper functions --------------------------------
