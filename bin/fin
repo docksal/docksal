@@ -187,7 +187,7 @@ fi
 # Generate Docksal instance uuid if not available
 if [[ "$DOCKSAL_UUID" == "" ]]; then
 	export DOCKSAL_UUID=$(uuidgen)
-	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV"
+	echo "DOCKSAL_UUID=$DOCKSAL_UUID" >> "$CONFIG_ENV"
 fi
 
 #---------------------------- Helper functions --------------------------------
@@ -2009,9 +2009,19 @@ ssh_add () {
 # Reports version stats
 stats_ping ()
 {
-	local os_version="$(uname -s)"
-	[[ $DOCKSAL_STATS_OPTOUT == 0 ]] && \
-		curl -kfsL --data "v=1&tid=${DOCKSAL_STATS_TID}&cid=${DOCKSAL_UUID}&t=event&ec=version&ea=${os_version}&el=${FIN_VERSION}" ${DOCKSAL_STATS_URL}
+	[[ "$DOCKSAL_STATS_OPTOUT" != 0 ]] && return # Don't run if the user opted out
+	[[ "$CI" == "true" ]] && return # Don't run in CI
+
+	# We are passing OS version via a custom User-Agent request header, which GA can parse
+	local user_agent
+	is_linux && user_agent="fin/${FIN_VERSION} (Linux $(lsb_release -si)-$(lsb_release -sr))"
+	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X $(sw_vers -productVersion)))"
+	is_windows && user_agent="fin/${FIN_VERSION} (Windows NT $(echo $(cmd /c ver) | sed 's/.*Version \(.*\)\..*]/\1/'))"
+
+	curl -kfsL \
+		--user-agent "$user_agent" \
+		--data "v=1&tid=${DOCKSAL_STATS_TID}&cid=${DOCKSAL_UUID}&t=screenview&an=fin&av=${FIN_VERSION}&cd=ping" \
+		"${DOCKSAL_STATS_URL}"
 }
 
 install_proxy_service ()
