@@ -2184,9 +2184,6 @@ install_tools_mac ()
 			sleep 2
 		fi
 	fi
-
-	# Ping stats server
-	stats_ping
 }
 
 install_tools_windows ()
@@ -2268,9 +2265,6 @@ install_tools_windows ()
 			sleep 2
 		fi
 	fi
-
-	# Ping stats server
-	stats_ping
 }
 
 # Install everything required on Ubuntu 14.04+
@@ -2347,9 +2341,6 @@ EOF
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
 	fi
-
-	# Ping stats server
-	stats_ping
 }
 
 update_tools ()
@@ -2393,9 +2384,6 @@ update_config_files ()
 
 	if_failed_error "One of the default configs was not downloaded." \
 		"Check your internet connection and file permission on $CONFIG_STACKS_DIR"
-
-	# Ping stats server
-	stats_ping
 }
 
 # Install shell commands autocomplete script
@@ -2452,9 +2440,6 @@ update_system_images ()
 	docker pull "${IMAGE_DNS}"
 	docker pull "${IMAGE_SSH_AGENT}"
 	reset system
-
-	# Ping stats server
-	stats_ping
 }
 
 # Update project images
