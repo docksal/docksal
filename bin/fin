@@ -3003,10 +3003,10 @@ sysinfo ()
 	# os
 	echo "███  OS & BASICS"
 	uname -a
-	if is_linux; then
-		[ -f /etc/os-release ] && cat /etc/os-release
-		[ -f /etc/system-release ] && cat /etc/system-release
-	fi
+	# OS version
+	is_linux && echo $(lsb_release -si) $(lsb_release -sr)
+	is_mac && echo $(sw_vers -productName) $(sw_vers -productVersion)
+	is_windows && echo $(cmd /c ver)
 	# fin version
 	version
 
