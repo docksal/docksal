@@ -70,7 +70,8 @@ OLD_CONFIG_DIR="$HOME/.drude"
 CONFIG_DIR="$HOME/.docksal"
 CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
-CONFIG_LAST_CHECK="$CONFIG_DIR/last_check"
+CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
+CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
 CONFIG_MACHINES="$CONFIG_DIR/machines"
 CONFIG_MACHINE_ACTIVE="$CONFIG_MACHINES/.active"
 mkdir -p "$CONFIG_DIR" >/dev/null 2>&1
@@ -155,15 +156,14 @@ DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 # UID of user to use in cli container. Only override if you know what you're doing
 FIN_SET_UID=""
 
-# Generate Docksal instance uuid if not available
-if [[ "$DOCKSAL_UUID" == "" ]]; then
-	DOCKSAL_UUID=$(uuidgen)
-	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
-fi
-
 # Load env variables overrides, use to permanently override some variables
 [[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
 
+# Generate Docksal instance uuid if not available
+if [[ "$DOCKSAL_UUID" == "" ]]; then
+	export DOCKSAL_UUID=$(uuidgen)
+	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
+fi
 
 if [[ "$DOCKER_NATIVE" == "1" ]]; then
 	# no vm used
@@ -862,13 +862,16 @@ _docker_cleanup ()
 	_remove_dangling_images
 	_remove_dangling_volumes
 
-	# TODO: remove below lines in March 2017
+	# TODO: remove below lines in September 2017
 	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/backups/Vagrantfile."* >/dev/null 2>&1
 	rm -r "$OLD_CONFIG_DIR/backups" >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/vagrant.yml."* >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/backups/vagrant.yml."* >/dev/null 2>&1
 	rm -f "$OLD_CONFIG_DIR/b2d_version" >/dev/null 2>&1
+
+	# TODO: remove in September 2017
+	rm -f "$CONFIG_DIR/last_check" >/dev/null 2>&1
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -2462,9 +2465,6 @@ update_project_images ()
 	check_docksal_environment
 	docker-compose pull # update project containers images
 	up
-
-	# Ping stats server
-	stats_ping
 }
 
 # Update system and project images
@@ -2474,9 +2474,6 @@ update_images ()
 	update_system_images
 	echo-green "Updating project images..."
 	update_project_images
-
-	# Ping stats server
-	stats_ping
 }
 
 # Update Docksal
@@ -2604,9 +2601,6 @@ update ()
 	fi
 
 	[ $? -eq 0 ] && echo-green "Update finished"
-
-	# Ping stats server
-	stats_ping
 }
 
 check_for_updates ()
@@ -2616,13 +2610,23 @@ check_for_updates ()
 	local UPDATE_AVAILABLE=0
 	local UPDATES_AVAILABLE=0
 
-	local timestamp; local last_check; local next_check
+	local timestamp; local last_check; local next_check; local last_ping; local next_ping
+	local one_day=$((60*60*24))
+	local one_week=$(($one_day * 7))
 	timestamp=$(date +%s)
-	# Set last_check to 0 if empty
+	# Set last_check/last_ping to 0 if empty
 	last_check=$(cat "$CONFIG_LAST_CHECK" 2>/dev/null || echo 0)
+	last_ping=$(cat "$CONFIG_LAST_PING" 2>/dev/null || echo 0)
+
+	# Send ping daily
+	next_ping=$(( $last_ping + $one_day ))
+	if [ ${timestamp} -gt ${next_ping} ]; then
+		stats_ping
+		echo "$timestamp" > "$CONFIG_LAST_PING"
+	fi
+
 	# Check once bi-weekly
-	local one_week=$((60*60*24*7))
-	next_check=$(( $last_check+($one_week*2) ))
+	next_check=$(( $last_check + ($one_week * 2) ))
 	if [ ${timestamp} -le ${next_check} ]; then
 		return;
 	fi
@@ -2641,9 +2645,6 @@ check_for_updates ()
 		echo "Press Enter to continue"
 		read -p ''
 	fi
-
-	# Ping stats server
-	stats_ping
 }
 
 #-------------------------- Execution commands -----------------------------
