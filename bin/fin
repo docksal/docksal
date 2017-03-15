@@ -1279,7 +1279,7 @@ version ()
 	fi
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 # return bash completion words
@@ -2015,13 +2015,15 @@ stats_ping ()
 	# We are passing OS version via a custom User-Agent request header, which GA can parse
 	local user_agent
 	is_linux && user_agent="fin/${FIN_VERSION} (Linux $(lsb_release -si)-$(lsb_release -sr))"
-	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X $(sw_vers -productVersion)))"
+	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X $(sw_vers -productVersion))"
 	is_windows && user_agent="fin/${FIN_VERSION} (Windows NT $(echo $(cmd /c ver) | sed 's/.*Version \(.*\)\..*]/\1/'))"
 
 	curl -kfsL \
 		--user-agent "$user_agent" \
 		--data "v=1&tid=${DOCKSAL_STATS_TID}&cid=${DOCKSAL_UUID}&t=screenview&an=fin&av=${FIN_VERSION}&cd=ping" \
-		"${DOCKSAL_STATS_URL}"
+		"${DOCKSAL_STATS_URL}" >/dev/null 2>&1 &
+
+	return 0
 }
 
 install_proxy_service ()
@@ -2180,7 +2182,7 @@ install_tools_mac ()
 	fi
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 install_tools_windows ()
@@ -2264,7 +2266,7 @@ install_tools_windows ()
 	fi
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 # Install everything required on Ubuntu 14.04+
@@ -2343,7 +2345,7 @@ EOF
 	fi
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 update_tools ()
@@ -2389,7 +2391,7 @@ update_config_files ()
 		"Check your internet connection and file permission on $CONFIG_STACKS_DIR"
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 # Install shell commands autocomplete script
@@ -2448,7 +2450,7 @@ update_system_images ()
 	reset system
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 # Update project images
@@ -2461,7 +2463,7 @@ update_project_images ()
 	up
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 # Update system and project images
@@ -2473,7 +2475,7 @@ update_images ()
 	update_project_images
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 # Update Docksal
@@ -2603,7 +2605,7 @@ update ()
 	[ $? -eq 0 ] && echo-green "Update finished"
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 check_for_updates ()
@@ -2640,7 +2642,7 @@ check_for_updates ()
 	fi
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 #-------------------------- Execution commands -----------------------------
@@ -3056,7 +3058,7 @@ sysinfo ()
 	fi
 
 	# Ping stats server
-	$(stats_ping > /dev/null 2>&1) || true
+	stats_ping
 }
 
 #-------------------------- Links / Aliases -----------------------------
