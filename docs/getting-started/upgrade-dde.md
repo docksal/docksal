@@ -1,4 +1,4 @@
-# Updating from Drude (DDE) to Docksal
+# Upgrading from Drude (DDE) to Docksal
 
 Drude (DDE) relied on Vagrant boot2docker-vagrant to run Docker on Mac and Windows.  
 Docksal uses Docker Machine, which is more native and supports seamless (non-destructive) Docker version updates.
