@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.56
+FIN_VERSION=1.1.57
 
 # Console colors
 red='\033[0;91m'
@@ -913,11 +913,6 @@ show_help ()
 	printh "Docksal Fin v$FIN_VERSION command reference" "" "green"
 
 	echo
-	if ! is_linux && ! is_docker_native; then
-		printh "vm <command>" "Docksal's Virtualbox machine commands (${yellow}fin help vm${NC})" "yellow"
-		echo
-	fi
-
 	if is_linux; then
 		printh "start (up)" "Start project services"
 	else
@@ -928,17 +923,20 @@ show_help ()
 	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
 	printh "remove (rm)" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
 	printh "status (ps)" "List project services"
+
 	echo
-	printh "project <command>" "Project management (${yellow}fin help project${NC})" "yellow"
+	if ! is_linux && ! is_docker_native; then
+		printh "vm <command>" "Docksal's Virtualbox machine commands (${yellow}fin help vm${NC})" "yellow"
+		printh "  start, stop, restart, status, ls, ssh, remove, ip, env, ram, stats"
+	fi
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "exec <command|file>" "Execute a command or file in ${yellow}cli${NC}"
+	printh "exec <command|file>" "Execute a command or a file in ${yellow}cli${NC}"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "logs [service]" "Show Docker logs for service container (e.g. Apache logs)"
 
 	echo
-	printh "create-site" "Create and install new Drupal or Wordpress project."
 	printh "drush [command]" "Execute Drush command (Drupal)"
 	printh "drupal [command]" "Execute Drupal Console command (Drupal 8)"
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
@@ -948,6 +946,10 @@ show_help ()
 	printh "sqls" "Show list of available databases (${yellow}fin help sqls${NC})"
 	printh "sqld [file]" "Dump specified database into file (${yellow}fin help sqld${NC})"
 	printh "sqli [file]" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
+
+	echo
+	printh "project <command>" "Project management" "yellow"
+	printh "  list, create" "See ${yellow}fin help project${NC} for details"
 
 	echo
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent (${yellow}fin help ssh-add${NC})"
@@ -1069,12 +1071,11 @@ show_help_project() {
 	echo-green "Project management"
 	printh "fin project <command>" "" "yellow"
 	echo
-	echo-green "Commands:"
-	printh "status (ps)" "Project status: list project services"
-	printh "list (pl) [-a (--all)]" "Project list: list running Docksal projects (-a to show stopped as well)"
+	printh "list (pl) [-a (--all)]" "List running Docksal projects (-a to show stopped as well)"
+	printh "create" "Create and install new Drupal, Wordpress or Magento project."
 	echo
 	echo-green "Examples:"
-	printh "fin pl -a" "	Import dump from stdin into default database"
+	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
 	echo
 }
 
@@ -3561,8 +3562,8 @@ case "$1" in
 	project)
 		shift
 		case "$1" in
-			status)
-				project_status
+			create)
+				create_site
 				;;
 			list)
 				shift
@@ -3577,6 +3578,7 @@ case "$1" in
 	status|ps)
 		project_status
 		;;
+	# TODO: remove "projects" alias in July 2017
 	projects|pl)
 		shift
 		project_list "$@"
@@ -3751,7 +3753,9 @@ case "$1" in
 		[[ "$1" == "remove" ]] && shift && alias_remove "$@" && exit
 		alias_create "$@"
 		;;
+	# TODO: remove create-site in September 2017 in favor of project create
 	create-site)
+		echo -e "${yellow}Notice:${NC} create-site is deprecated and will be removed. Use ${yellow}fin project create${NC} instead."
 		create_site
 		;;
 	init|*)
