@@ -1078,7 +1078,7 @@ show_help_project() {
 	echo
 }
 
-how_help_update ()
+show_help_update ()
 {
 	echo-green "fin update - Automated update of Docksal system components"
 	echo
