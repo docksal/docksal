@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.3
+FIN_VERSION=1.1.57
 
 # Console colors
 red='\033[0;91m'
@@ -46,9 +46,9 @@ is_mac ()
 
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
-REQUIREMENTS_DOCKER='1.13.1'
-REQUIREMENTS_DOCKER_COMPOSE='1.11.1'
-REQUIREMENTS_DOCKER_MACHINE='0.9.0'
+REQUIREMENTS_DOCKER='17.03.0-ce'
+REQUIREMENTS_DOCKER_COMPOSE='1.11.2'
+REQUIREMENTS_DOCKER_MACHINE='0.10.0'
 REQUIREMENTS_VBOX='5.1.14'
 REQUIREMENTS_WINPTY='0.4.2'
 REQUIREMENTS_WINPTY_CYGWIN='2.6.1'
@@ -73,8 +73,16 @@ CONFIG_ALIASES="$CONFIG_DIR/alias"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
 CONFIG_MACHINES="$CONFIG_DIR/machines"
+CONFIG_MACHINES_ENV="$CONFIG_DIR/machines/.env"
 CONFIG_MACHINE_ACTIVE="$CONFIG_MACHINES/.active"
-mkdir -p "$CONFIG_DIR" >/dev/null 2>&1
+CONFIG_PROJECTS="$CONFIG_DIR/projects"
+CONFIG_FILES="
+	docksal.yml
+	docksal.env
+	docksal-local.yml
+	docksal-local.env
+"
+mkdir -p "$CONFIG_PROJECTS" >/dev/null 2>&1
 # BIN folder
 CONFIG_BIN_DIR="$CONFIG_DIR/bin"
 CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
@@ -94,6 +102,8 @@ mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
 
 # Network settings
+DOCKSAL_HOST_IP_BOOT2DOCKER="192.168.64.1"
+DOCKSAL_HOST_IP_NATIVE="192.168.65.1"
 DOCKSAL_DEFAULT_IP="192.168.64.100"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
 DOCKSAL_DEFAULT_DNS="10.0.2.3"
@@ -147,49 +157,6 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.0}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.0}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.0}
-
-#---------------------------- Global Variables --------------------------------
-
-# Override path to use our utilities
-PATH="$CONFIG_BIN_DIR:$PATH"
-DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
-# UID of user to use in cli container. Only override if you know what you're doing
-FIN_SET_UID=""
-
-# Load env variables overrides, use to permanently override some variables
-[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
-
-# Generate Docksal instance uuid if not available
-if [[ "$DOCKSAL_UUID" == "" ]]; then
-	export DOCKSAL_UUID=$(uuidgen)
-	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
-fi
-
-if [[ "$DOCKER_NATIVE" == "1" ]]; then
-	# no vm used
-	export DOCKER_HOST=""
-	# Host IP on Docker for Mac
-	export DOCKSAL_HOST_IP="192.168.65.1"
-else
-	# get active machine and it's status
-	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
-	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
-	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
-	[[ "$DOCKER_MACHINE_STATUS" == 'Running' ]] && \
-		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
-	# current active machine folder
-	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
-	mkdir -p "$DOCKER_MACHINE_FOLDER"
-
-	# TODO: revise or remove later. search for DOCKER_MACHINE_IP in the code
-	# get desired ip
-	# if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
-	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
-	#fi
-	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
-
-	export DOCKSAL_HOST_IP="192.168.64.1"
-fi
 
 #---------------------------- Helper functions --------------------------------
 
@@ -524,7 +491,7 @@ testing_warn ()
 # param $1 version string of 3 components max (e.g. 1.10.3)
 ver_to_int ()
 {
-	printf "%03d%03d%03d" $(echo "$1" | tr '.' ' ')
+	printf "%03d%03d%03d" $(echo "$1" | tr -d '[:alpha:]' | tr -d '-' | tr '.' ' ')
 }
 
 #---------------------------- Control functions -------------------------------
@@ -946,11 +913,6 @@ show_help ()
 	printh "Docksal Fin v$FIN_VERSION command reference" "" "green"
 
 	echo
-	if ! is_linux && ! is_docker_native; then
-		printh "vm <command>" "Docksal's Virtualbox machine commands (${yellow}fin help vm${NC})" "yellow"
-		echo
-	fi
-
 	if is_linux; then
 		printh "start (up)" "Start project services"
 	else
@@ -958,19 +920,23 @@ show_help ()
 	fi
 	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects)"
 	printh "restart" "Restart project services"
-	printh "reset [service]" "Recreate project services and containers (${yellow}fin help reset${NC})"
-	printh "rm [service]" "Stop project services and remove their containers (${yellow}fin help rm${NC})"
-	printh "ps" "List project services"
-	printh "projects [-a (--all)]" "List running Docksal projects (-a to show stopped as well)"
+	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
+	printh "remove (rm)" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
+	printh "status (ps)" "List project services"
+
+	echo
+	if ! is_linux && ! is_docker_native; then
+		printh "vm <command>" "Docksal's Virtualbox machine commands (${yellow}fin help vm${NC})" "yellow"
+		printh "  start, stop, restart, status, ls, ssh, remove, ip, env, ram, stats"
+	fi
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "exec <command> [params]" "Execute a command in ${yellow}cli${NC}"
+	printh "exec <command|file>" "Execute a command or a file in ${yellow}cli${NC}"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "logs [service]" "Show Docker logs for service container (e.g. Apache logs)"
 
 	echo
-	printh "create-site" "Create and install new Drupal or Wordpress project."
 	printh "drush [command]" "Execute Drush command (Drupal)"
 	printh "drupal [command]" "Execute Drupal Console command (Drupal 8)"
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
@@ -980,6 +946,10 @@ show_help ()
 	printh "sqls" "Show list of available databases (${yellow}fin help sqls${NC})"
 	printh "sqld [file]" "Dump specified database into file (${yellow}fin help sqld${NC})"
 	printh "sqli [file]" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
+
+	echo
+	printh "project <command>" "Project management" "yellow"
+	printh "  list, create" "See ${yellow}fin help project${NC} for details"
 
 	echo
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent (${yellow}fin help ssh-add${NC})"
@@ -1048,10 +1018,10 @@ show_help_ssh-add ()
 
 show_help_exec ()
 {
-	echo-green "fin exec [options] <command> - Execute command in ${yellow}cli${green} service container."
+	echo-green "fin exec [options] <command|file> - Execute command or file in ${yellow}cli${green} service container."
 	echo
-	echo "Command is a required parameter."
-	echo "Command will be executed in the path that matches your local current path."
+	echo "Command or file is a required parameter."
+	echo "It will be executed in the path that matches your local current path."
 	echo
 	echo "Options:"
 	printh "-T" "Disable pseudo-tty allocation."
@@ -1059,40 +1029,53 @@ show_help_exec ()
 	printh "" "In a TTY mode the output may contain unexpected control symbols/etc."
 	echo
 	echo-green "Examples:"
-	printh "fin exec pwd" "Show current path"
 	printh "fin exec ls -la" "Current directory listing"
-	printh "fin exec compass compile" "Compile SASS/SCSS"
 	printh "fin exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or stdout redirects happening inside cli"
+	printh "res=\$(fin exec -T drush st)" "Use -T switch to assign exec output to a variable"
+	printh "fin exec .docksal/script.sh" "Execute file inside cli container"
 	echo
 }
 
 show_help_reset ()
 {
-	echo-green "fin reset - Recreate services/containers. Equal to fin stop, fin remove, fin start"
+	printh "fin reset" "" "yellow"
 	echo
-	echo-green "Parameters: one or more service names. Examples:"
-	echo "	fin reset web		Restart 'web' service"
-	echo "	fin reset web cli	Restart 'web' and 'cli' services"
-	echo "	fin reset		Restart all project services"
+	echo-green "Recreate services/containers. Equal to fin rm followed by fin start"
+	echo "By default recreates project containers deleting all changes that were made to them."
 	echo
 	echo-green "System services"
 	echo -e "Docksal has several system services."
-	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and should not be used on projects."
-	echo "	fin reset dns		Recreate Docksal DNS service"
-	echo -e "	fin reset proxy		Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
-	echo "	fin reset ssh-agent	Recreate Docksal ssh-agent service"
-	echo "	fin reset system	Recreate all Docksal system services"
+	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and should not be used in projects."
+	echo
+	printh "fin reset dns" "Recreate Docksal DNS service"
+	printh "fin reset proxy" "Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
+	printh "fin reset ssh-agent" "Recreate Docksal ssh-agent service"
+	printh "fin reset system" "Recreate all Docksal system services"
 	echo
 }
 
 show_help_rm ()
 {
-	echo-green "fin rm - Remove services"
+	echo-green "Remove services"
+	printh "fin remove" "" "yellow"
 	echo
-	echo -e "${green}Parameters:${NC} one or more service names."
+	echo "Removes project containers and frees up space consumed by them."
+	echo
+}
+show_help_remove ()
+{
+	show_help_rm
+}
+
+show_help_project() {
+	echo-green "Project management"
+	printh "fin project <command>" "" "yellow"
+	echo
+	printh "list (pl) [-a (--all)]" "List running Docksal projects (-a to show stopped as well)"
+	printh "create" "Create and install new Drupal, Wordpress or Magento project."
+	echo
 	echo-green "Examples:"
-	printh "fin rm" "Remove all project services"
-	printh "fin rm web" "Remove web service"
+	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
 	echo
 }
 
@@ -1185,7 +1168,8 @@ show_help_mysql-dump ()
 
 show_help_vm ()
 {
-	echo-green "fin vm <command> - Control docker machine directly"
+	echo-green "Control docker machine directly"
+	printh "fin vm <command>" "" "yellow"
 	echo
 	echo-green "Commands:"
 	printh "start" "Start a machine (create if needed)"
@@ -1200,6 +1184,7 @@ show_help_vm ()
 	# printh "ip [new ip]" "Set machine IP address (requires vm restart)"
 	printh "env" "Display the commands to set up the shell for direct use of Docker client"
 	echo
+	printh "mount" "Try remounting host filesystem (NFS on macOS, SMB on Windows)"
 	printh "ram" "Get machine memory size"
 	printh "ram [megabytes]" "Set machine memory size. Default is 1024 (requires vm restart)"
 	printh "stats" "Show machine HDD/RAM usage stats"
@@ -1427,12 +1412,20 @@ is_docker_machine_exist ()
 # Return docker machine provider
 docker_machine_provider ()
 {
-	docker-machine ls | grep "$DOCKER_MACHINE_NAME" | awk '{print $3}' 2>/dev/null
+	# For now always return virtualbox
+	# TODO: remove if not used in September 2017
+	echo 'virtualbox'
+	#docker-machine ls | grep "$DOCKER_MACHINE_NAME" | awk '{print $3}' 2>/dev/null
 }
 
 docker_machine_env ()
 {
-	eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+	#remove cache
+	rm -f "$CONFIG_MACHINES_ENV" 2>dev/null
+	local _env=$(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+	eval ${_env}
+	# Save to file for reuse during subsequent fin runs to avoid running env which is expensive
+	echo "${_env}" | tee "$CONFIG_MACHINES_ENV" >/dev/null
 }
 
 # Stop docker machine
@@ -1492,11 +1485,13 @@ docker_machine_start ()
 			docker_machine_mounts
 	fi
 
-	if [[ $? -eq 0 ]]; then
+	local _err=$?
+	if [[ ${_err} -eq 0 ]]; then
 		echo-green "Importing ssh keys..."
 		ssh_add
-		return 0
 	fi
+
+	return ${_err}
 }
 
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
@@ -1628,21 +1623,16 @@ docker_machine_mount_nfs ()
 			sudo umount $share_mount 2>/dev/null ;
 			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			# [!!] Think twice about performance before changing nfs settings
+		if [ ! $? -eq 0 ]; then
+			echo "Retrying mounting local $share_export to $share_mount"
+			sleep 5
+			docker-machine ssh "$machine_name" \
+				"sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
+			[ ! $? -eq 0 ] &&
+				echo-red "NFS share mount has failed. Try fin vm restart."
+		fi
 	done
 
-	# Mount no-export folders (should be inside exported folders)
-	for share in ${noexport[@]}; do
-		local share_=(${share//:/ });
-		local share_export="${share_[0]}"
-		local share_mount="${share_[1]}"
-		# Add new exports
-		echo "Mounting local $share_export to $share_mount..."
-		docker-machine ssh "$machine_name" \
-			"sudo mkdir -p $share_mount ;
-			sudo umount $share_mount 2>/dev/null ;
-			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
-			# [!!] Think twice about performance before changing nfs settings
-	done
 }
 
 docker_machine_remove_nfs ()
@@ -1845,6 +1835,9 @@ vm ()
 			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
 			docker_machine_remove "$machine_name"
 			;;
+		mount)
+			docker_machine_mounts
+			;;
 		ip)
 			shift
 			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
@@ -1862,8 +1855,8 @@ vm ()
 			;;
 		env)
 			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			docker-machine env "$machine_name"
+			DOCKER_MACHINE_NAME="${1:-$DOCKER_MACHINE_NAME}"
+			docker_machine_env
 			;;
 		ram)
 			shift
@@ -1912,6 +1905,18 @@ up ()
 	check_project_unique
 
 	_start_containers
+	local result=$?
+
+	# project central management
+	project_dir_setup
+	if [ ${result} -eq 0 ]; then
+		project_state_started
+		project_config_save
+	else
+		project_state_stopped
+	fi
+
+	return ${result}
 }
 
 # Stop containers
@@ -1921,6 +1926,9 @@ stop ()
 	check_project_unique
 
 	_stop_containers "$@"
+
+	# project central management
+	project_state_stopped
 }
 
 # Restart container(s)
@@ -1934,6 +1942,18 @@ restart ()
 	check_project_unique
 
 	_restart_containers
+	local result=$?
+
+	# project central management
+	project_dir_setup
+	if [ ${result} -eq 0 ]; then
+		project_state_started
+		project_config_save
+	else
+		project_state_stopped
+	fi
+
+	return ${result}
 }
 
 # Remove container(s)
@@ -1954,10 +1974,13 @@ remove ()
 	fi
 
 	_remove_containers "$@"
+
+	# set state stopped when containers removed
+	[[ "$1" == "" ]] && project_state_stopped
 }
 
 # List project containers
-_ps ()
+project_status ()
 {
 	check_docksal_environment
 	check_project_unique
@@ -1967,7 +1990,7 @@ _ps ()
 
 # List Docksal projects
 # @param $1 Show containers from all projects (-a)
-projects ()
+project_list ()
 {
 	local all
 	if [[ "$1" == "-a" ]] || [[ "$1" == "--all" ]]; then
@@ -1977,6 +2000,76 @@ projects ()
 	docker ps ${all} \
 		--filter 'label=com.docker.compose.service=web' \
 		--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
+}
+
+# Perform project config management actions
+project_dir_setup ()
+{
+	local PROJECT_STORAGE="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
+	# create project state directory
+	[ ! -d  ] && mkdir -p "$PROJECT_STORAGE"
+	local PROJECT_ROOTFILE="$PROJECT_STORAGE/.project-root"
+
+	# Check that config dir belongs to this project not some else deleted one
+	if [ -f "$PROJECT_ROOTFILE" ] && [[ "$(cat $PROJECT_ROOTFILE)" != "$PROJECT_ROOT" ]]; then
+		# this is leftover of another project with the same name. kill it with fire!
+		rm -rf "$PROJECT_STORAGE" 2>/dev/null
+		mkdir -p "$PROJECT_STORAGE"
+	fi
+	echo "$PROJECT_ROOT" > "$PROJECT_STORAGE/.project-root"
+}
+
+# Save project state
+# $1 - state started|stopped
+project_state_save ()
+{
+	mkdir -p "$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
+	local PROJECT_STARTED="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE/.started"
+	[[ "$1" == "started" ]] &&
+		echo $(date +%s) > "$PROJECT_STARTED" ||
+		rm -f "$PROJECT_STARTED"
+}
+
+project_state_started ()
+{
+	project_state_save started
+}
+
+project_state_stopped ()
+{
+	project_state_save stopped
+}
+
+# Save project config files to central storage
+project_config_save ()
+{
+	local PROJECT_STORAGE="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
+	# create project state directory
+	[ ! -d  ] && mkdir -p "$PROJECT_STORAGE"
+	# save project configuration
+	for file in ${CONFIG_FILES}; do
+		cp "$PROJECT_ROOT/.docksal/$file" "$PROJECT_STORAGE/$file" >/dev/null 2>&1
+	done
+}
+
+project_config_diff ()
+{
+	local PROJECT_STORAGE="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
+
+	if ! (ls ${PROJECT_STORAGE} | grep . >/dev/null 2>&1); then
+		# no config files, project was never started
+		return
+	fi
+
+	for file in ${CONFIG_FILES}; do
+		diff "$PROJECT_ROOT/.docksal/$file" "$PROJECT_STORAGE/$file" >/dev/null 2>&1
+		if [ $? -eq 1 ]; then
+			echo -e "${red_bg} WARNING ${NC} Project configuration files have changed since project was started."
+			echo "If you continue with your command, you might experience issues."
+			echo "Use ${yellow}fin up${NC} to apply new config or ${yellow}fin config restore${NC} to restore initial one."
+			return 1
+		fi
+	done
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
@@ -2076,12 +2169,13 @@ install_dns_service ()
 		"${IMAGE_DNS}" >/dev/null
 }
 
-# Configuring sytem-wide *.$DOCKSAL_DNS_DOMAIN resolver (Windows not supported)
+# Configuring system-wide *.$DOCKSAL_DNS_DOMAIN resolver (Windows not supported)
 configure_resolver ()
 {
 	check_docker_running
 	local TARGET_IP="0.0.0.0"
 
+	#------ macOS
 	if is_mac; then
 		if is_docker_native; then
 			TARGET_IP="127.0.0.1"
@@ -2100,9 +2194,24 @@ configure_resolver ()
 			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 		sudo dscacheutil -flushcache
 		# to check: scutil --dns
+	#----- Linux
 	elif is_linux; then
 		TARGET_IP="$DOCKSAL_DEFAULT_IP"
 		install_dns_service "$TARGET_IP"
+		# Adding a subnet for Docksal. Make sure we don't do this twice
+		if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
+			echo-green "Adding a subnet for Docksal..."
+			cat > /tmp/docksal.ip.addr <<EOF
+		up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+		down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+		dns-nameservers ${DOCKSAL_DEFAULT_IP}
+EOF
+			sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
+			rm -f /tmp/docksal.ip.addr
+			sudo ifdown lo && sudo ifup lo
+			sudo resolvconf -u
+		fi
+	#----- Windows
 	elif is_windows; then
 		if is_docker_native; then
 			TARGET_IP="127.0.0.1"
@@ -2311,32 +2420,11 @@ install_tools_ubuntu ()
 	fi
 
 	# Install docker-machine
-#	if ! is_docker_machine_version; then
-#		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-#		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
-#			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
-#	fi
-
-	# Adding a subnet for Docksal. Make sure we don't do this twice
-	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
-		echo-green "Adding a subnet for Docksal..."
-		cat > /tmp/docksal.ip.addr <<EOF
-	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	dns-nameservers ${DOCKSAL_DEFAULT_IP}
-EOF
-		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
-		rm -f /tmp/docksal.ip.addr
-		sudo ifdown lo && sudo ifup lo
-		sudo resolvconf -u
-	fi
-
-	# Update system images and install system service
-	# Calling with sudo in case of fresh install when user is not in docker group yet
-	echo-green "Updating system images..."
-	[[ -x "$FIN_PATH_UPDATED" ]] &&
-		NO_UPDATES=1 sudo "$FIN_PATH_UPDATED" update --system-images ||
-		NO_UPDATES=1 sudo fin update --system-images
+	#	if ! is_docker_machine_version; then
+	#		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+	#		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
+	#			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
+	#	fi
 
 	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
@@ -2560,17 +2648,19 @@ update ()
 		update_start_script_shortcut
 	fi
 
-	# [Update - 4] Update system images (if possible)
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && ! is_linux; then
+	# [Update - 4] Update third party tools
+	update_tools
+
+	# [Update - 5] Update system images
+	# On macOS and Windows do this only during upgrade as on clean install it happens during VM creation
+	# On Linux do it during both upgrade and install too, as there is no VM on Linux
+	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] || is_linux; then
 		echo-green "Updating system images..."
 		update_system_images
 	fi
 
-	# [Update - 5] Update third party tools (if possible)
-	update_tools
-
 	# [Update - 6] Restart running projects if BOOT2DOCKER was not restarted
-	# Needed to restore containers connection to vhost_proxy
+	# This is needed to re-append restarted vhost-proxy to containers networks
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
 		echo-green "Restarting running projects..."
 		running_projects=$(docker ps --all \
@@ -3194,7 +3284,7 @@ config_show ()
 	check_docksal_environment
 
 	echo "---------------------"
-	echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
+	# echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
 	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
 	# Replace separators with new lines
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
@@ -3208,8 +3298,8 @@ config_show ()
 	echo "VIRTUAL_HOST_ALIASES: *.${VIRTUAL_HOST}"
 
 	local IP;
-	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="$(fin vm ip)"
-	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" != 1 ]] && IP="127.0.0.1"
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" != 1 ]] && IP="$DOCKSAL_DEFAULT_IP"
+	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
 	(is_linux) && IP="$DOCKSAL_DEFAULT_IP"
 	echo "IP: $IP"
 
@@ -3346,7 +3436,56 @@ create_site ()
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
-# Handle alias first
+# Override PATH to use our utilities
+PATH="$CONFIG_BIN_DIR:$PATH"
+
+# Set global variable in case native Docker app is used/not-used
+DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
+
+# UID of user to use in cli container. Only override if you know what you're doing
+FIN_SET_UID=""
+
+# Load environment variables overrides, use to permanently override some variables
+[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
+
+# Generate Docksal instance uuid if not available
+if [[ "$DOCKSAL_UUID" == "" ]]; then
+	export DOCKSAL_UUID=$(uuidgen)
+	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
+fi
+
+# Export environment variables to properly reach Docker server
+if [[ "$DOCKER_NATIVE" == "1" ]]; then
+	# no vm used
+	export DOCKER_HOST=""
+	# Host IP on Docker for Mac
+	export DOCKSAL_HOST_IP="$DOCKSAL_HOST_IP_NATIVE"
+else
+	# get active machine and it's status
+	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
+	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
+	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
+	if [[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]; then
+		# Use cached environment variables if possible
+		[[ -f "$CONFIG_MACHINES_ENV" ]] &&
+			eval $(cat "$CONFIG_MACHINES_ENV") ||
+			docker_machine_env
+	fi
+	# current active machine folder
+	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
+	mkdir -p "$DOCKER_MACHINE_FOLDER"
+
+	# TODO: revise or remove later. search for DOCKER_MACHINE_IP in the code
+	# get desired ip
+	# if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
+	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
+	#fi
+	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
+
+	export DOCKSAL_HOST_IP="$DOCKSAL_HOST_IP_BOOT2DOCKER"
+fi
+
+# Handle Alias
 if [[ "$1" == "@"* ]]; then
 	USED_ALIAS=${1#@}
 	shift
@@ -3359,9 +3498,9 @@ if [[ "$1" == "@"* ]]; then
 		_alias_projects=$(docker ps --all \
 			--filter 'label=com.docker.compose.service=web' \
 			--format '{{.Label "com.docker.compose.project"}}\t{{.Label "io.docksal.project-root"}}')
-		if (echo "$_alias_projects" | grep "^$USED_ALIAS" >/dev/null 2>/dev/null); then
+		if (echo "$_alias_projects" | grep "^$USED_ALIAS\t" >/dev/null 2>/dev/null); then
 			# project found
-			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS" | cut -d$'\t' -f 2)
+			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS\t" | cut -d$'\t' -f 2)
 		else
 			# nothing was found. error out
 			echo-red "No such alias $USED_ALIAS"
@@ -3384,7 +3523,10 @@ fi
 	[[ "$1" != "bash_comp_words" ]] &&
 	[[ "$1" != "ssh-add" ]] &&
 	[[ "$1" != "vm" ]] &&
-	[[ "$*" != "docker "* ]] &&
+	[[ "$1" != "docker" ]] &&
+	[[ "$1" != "d" ]] &&
+	[[ "$1" != "docker-machine" ]] &&
+	[[ "$1" != "dm" ]] &&
 	[[ "$1" != "exec-url" ]] &&
 	[[ "$1" != "cleanup" ]] &&
 	[[ "$1" != "help" ]] &&
@@ -3399,7 +3541,7 @@ fi
 	load_configuration &&
 	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
-# Parse other parameters
+# Parse command line parameters
 case "$1" in
 	bash_comp_words)
 		shift
@@ -3417,18 +3559,35 @@ case "$1" in
 		shift
 		restart
 		;;
-	ps)
-		_ps
-		;;
-	projects|pr)
+	project)
 		shift
-		projects "$@"
+		case "$1" in
+			create)
+				create_site
+				;;
+			list)
+				shift
+				project_list "$@"
+				;;
+			*)
+				echo -e "Unknown command $1. See ${yellow}fin help project${NC}"
+				exit 1
+				;;
+		esac
+		;;
+	status|ps)
+		project_status
+		;;
+	# TODO: remove "projects" alias in July 2017
+	projects|pl)
+		shift
+		project_list "$@"
 		;;
 	reset)
 		shift
 		reset "$@"
 		;;
-	rm)
+	remove|rm)
 		shift
 		remove "$@"
 		;;
@@ -3442,6 +3601,8 @@ case "$1" in
 	update)
 		shift
 		if [[ "$1" == "--system-images" ]]; then
+			update_system_images
+		elif [[ "$1" == "--system" ]]; then
 			update_system_images
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
@@ -3468,7 +3629,13 @@ case "$1" in
 		;;
 	exec|run)
 		shift
-		_run "$@"
+		if [ -f "$1" ]; then
+			# if a file is passed then run it inside cli container
+			[ "$(get_project_path)" == "" ] && echo "Should be run inside a project" && exit 1
+			_run "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash $1"
+		else
+			_run "$@"
+		fi
 		;;
 	mysql|sqlc)
 		shift
@@ -3530,6 +3697,10 @@ case "$1" in
 		is_docker_running # exports env
 		docker-machine "$@"
 		;;
+	debug)
+		shift
+		eval "$@"
+		;;
 	exec-url)
 		shift
 		exec_url "$@"
@@ -3582,7 +3753,9 @@ case "$1" in
 		[[ "$1" == "remove" ]] && shift && alias_remove "$@" && exit
 		alias_create "$@"
 		;;
+	# TODO: remove create-site in September 2017 in favor of project create
 	create-site)
+		echo -e "${yellow}Notice:${NC} create-site is deprecated and will be removed. Use ${yellow}fin project create${NC} instead."
 		create_site
 		;;
 	init|*)
