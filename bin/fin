@@ -324,7 +324,7 @@ get_current_relative_path ()
 get_mysql_connect ()
 {
 	# Run drush forcing tty to false to avoid colored output string from drush.
-	cleaned_string=$(echo $(_run drush sql-connect) | sed -e 's/[^a-zA-Z0-9_-]$//')
+	cleaned_string=$(echo $(_exec drush sql-connect) | sed -e 's/[^a-zA-Z0-9_-]$//')
 	echo "$cleaned_string"
 }
 
@@ -2738,12 +2738,12 @@ _bash ()
 	fi
 
 	# Pass container name to _run
-	CONTAINER_NAME=$1 _run bash -i
+	CONTAINER_NAME=$1 _exec bash -i
 }
 
 # Run a command in the cli container changing dir to the same folder
 # @param $* command with it's params to run
-_run ()
+_exec ()
 {
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
@@ -2874,7 +2874,7 @@ mysql_list ()
 
 	# -N parameter suppresses columns header
 	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-		_run "echo 'show databases' | mysql -N -u $__dump_user -p${__dump_password}"
+		_exec "echo 'show databases' | mysql -N -u $__dump_user -p${__dump_password}"
 }
 
 # Truncate db and import from sql dump
@@ -2909,7 +2909,7 @@ mysql_import ()
 	local TRUNCATE_DATABASE_COMMAND="mysqldump -u$__dump_user -p$__dump_password --add-drop-table --no-data $__database | grep -e '^DROP \| FOREIGN_KEY_CHECKS' | mysql -u$__dump_user -p$__dump_password $__database"
 
 	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-		_run "${TRUNCATE_DATABASE_COMMAND}"
+		_exec "${TRUNCATE_DATABASE_COMMAND}"
 
 	if [[ ! $? -eq 0 ]] && (exit ${confirm}); then
 		_confirm "There were errors during truncation. Continue anyways?"
@@ -3673,9 +3673,9 @@ case "$1" in
 		if [ -f "$1" ]; then
 			# if a file is passed then run it inside cli container
 			[ "$(get_project_path)" == "" ] && echo "Should be run inside a project" && exit 1
-			_run "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash $1"
+			_exec "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash $1"
 		else
-			_run "$@"
+			_exec "$@"
 		fi
 		;;
 	run-cli|rc)
@@ -3701,25 +3701,25 @@ case "$1" in
 	drush)
 		shift
 		if [[ $1 == "" ]]; then
-			_run drush
+			_exec drush
 		else
-			_run drush "$@"
+			_exec drush "$@"
 		fi
 		;;
 	drupal)
 		shift
 		if [[ "$1" == "" ]]; then
-			_run drupal
+			_exec drupal
 		else
-			_run drupal "$@"
+			_exec drupal "$@"
 		fi
 		;;
 	wp)
 		shift
 		if [[ "$1" == "" ]]; then
-			_run wp
+			_exec wp
 		else
-			_run wp "$@"
+			_exec wp "$@"
 		fi
 		;;
 	ssh-add)
