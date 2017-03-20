@@ -2757,7 +2757,7 @@ _exec ()
 		local no_tty=true && shift
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
-	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
+	CONTAINER_NAME=${CONTAINER_NAME:-cli}
 	container_id=$(get_container_id "$CONTAINER_NAME")
 
 	# ------------------------------------------------ #
@@ -2800,7 +2800,9 @@ _exec ()
 	if [[ "$CONTAINER_NAME" == "cli" ]]; then
 		# Source $HOME/.docksalrc in cli.
 		# Commands in this file will be sourced for both interactive and non-interactive sessions.
-		DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
+		local DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
+		# Commands in cli should be run using the docker user, not root.
+		local container_user='-u docker'
 	fi
 
 	# Enter project containers
@@ -2808,10 +2810,10 @@ _exec ()
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker exec -it -u docker "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
+		${winpty} docker exec -it $container_user "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec -u docker "$container_id" bash -c "$DOCKSALRC; $cmd"
+		docker exec $container_user "$container_id" bash -c "$DOCKSALRC; $cmd"
 	fi
 	# ------------------------------------------------ #
 }
