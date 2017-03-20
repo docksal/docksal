@@ -711,6 +711,7 @@ _start_containers ()
 		# Give time for startup.sh in CLI to execute otherwise UID is changed too quickly
 		# which prevents xdebug from loading properly
 		sleep 1 && \
+		# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
 		_set_cli_uid && \
 		_vhost_proxy_connect
 }
@@ -2796,19 +2797,51 @@ _run ()
 		return
 	fi
 
-	# Source $HOME/.docksalrc in cli.
-	# Commands in this file will be sourced for both interactive and non-interactive sessions.
-	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
+	if [[ "$CONTAINER_NAME" == "cli" ]]; then
+		# Source $HOME/.docksalrc in cli.
+		# Commands in this file will be sourced for both interactive and non-interactive sessions.
+		DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
+	fi
+
 	# Enter project containers
+	# Use the docker user in cli (-u docker) instead of root (default user).
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
+		${winpty} docker exec -it -u docker "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec "$container_id" bash -c "$DOCKSALRC; $cmd"
+		docker exec -u docker "$container_id" bash -c "$DOCKSALRC; $cmd"
 	fi
 	# ------------------------------------------------ #
+}
+
+# Run a command in a standalone cli container (outside of any project).
+# The current directory on the host is mapped to /var/www inside the container.
+# @param $* command with it's params to run.
+run_cli ()
+{
+	# Allow disabling TTY mode.
+	# Useful for non-interactive commands when output is saved into a variable for further comparison.
+	# In a TTY mode the output may contain unexpected control symbols/etc.
+	[[ $1 == "-T" ]] && \
+		local no_tty=true && shift
+	# Set default image
+	local IMAGE="${IMAGE:-docksal/cli}"
+	local cmd="$@"
+
+	# Source $HOME/.docksalrc in cli.
+	# Commands in this file will be sourced for both interactive and non-interactive sessions.
+	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
+
+	if is_tty && [[ "$no_tty" != true ]]; then
+		# interactive
+		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
+		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) ${IMAGE} bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
+	else
+		# non-interactive
+		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) ${IMAGE} bash -c "$DOCKSALRC; $cmd"
+	fi
 }
 
 # Start interactive mysql shell
@@ -3009,6 +3042,7 @@ logs ()
 	docker-compose logs "$@"
 }
 
+# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
 # Set uid of the primary "docker" user in the cli container
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
@@ -3024,7 +3058,7 @@ _set_cli_uid ()
 	fi
 
 	local container_uid
-	container_uid=$(docker exec ${cli} id -u)
+	container_uid=$(docker exec ${cli} id -u docker)
 	if [[ ! $? -eq 0 ]]; then
 		echo-red 'Error getting uid from cli container'
 		echo "You might need to recreate containers with fin reset"
@@ -3035,11 +3069,13 @@ _set_cli_uid ()
 		return
 	fi
 
+	# TODO: output a note to the user about updating their custom yml configuration (point to the docs).
 	if [[ "$host_uid" != "0" ]] ; then
 		echo-green "Changing user id in cli to $host_uid to match host user id..."
 		docker exec -u root ${cli} usermod -u "$host_uid" -o docker
-		echo-green "Resetting permissions on /var/www..."
-		docker exec -u root ${cli} chown -R docker:users /var/www
+		# TODO: remove once confirmed this is no longer necessary
+		#echo-green "Resetting permissions on /var/www..."
+		#docker exec -u root ${cli} chown -R -h docker:users /var/www
 	else
 		echo -e "${green}Changing user id in cli to 0 to match host user id ${NC}${yellow}(running as root is not recommended)...${NC}"
 		docker exec -u root ${cli} usermod -u 0 -o docker
@@ -3271,6 +3307,10 @@ load_configuration ()
 	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
 	# Set this to 0 to account for docker-compose bug https://github.com/docker/compose/pull/4294
 	export COMPOSE_CONVERT_WINDOWS_PATHS=0
+
+	# Export host user uid/gid
+	export HOST_UID=$(id -u)
+	export HOST_GID=$(id -g)
 
 	if is_docker_running; then
 		export DOCKER_RUNNING="true"
@@ -3538,6 +3578,7 @@ fi
 	[[ "$*" != "reset ssh-agent" ]] &&
 	[[ "$*" != "reset system" ]] &&
 	[[ "$1" != "projects" ]] &&
+	[[ "$1" != "rc" ]] &&
 	load_configuration &&
 	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
@@ -3636,6 +3677,10 @@ case "$1" in
 		else
 			_run "$@"
 		fi
+		;;
+	run-cli|rc)
+		shift
+		run_cli "$@"
 		;;
 	mysql|sqlc)
 		shift
