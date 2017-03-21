@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.1.57
+FIN_VERSION=1.1.58
 
 # Console colors
 red='\033[0;91m'
@@ -1478,11 +1478,20 @@ docker_machine_start ()
 		docker_machine_create && \
 			# Disable IP change for now
 			#docker_machine_change_ip && \
-			echo-green "Exporting env variables for '$DOCKER_MACHINE_NAME'..." && \
-			docker_machine_env && \
-			echo-green "Pulling system images..." && \
-			update_system_images && \
+			docker_machine_env
+
+		if [ $? -eq 0 ]; then
+			echo-green "Pulling Docksal system images..."
+			update_system_images
 			docker_machine_mounts
+		else
+			echo-error "Proper creation of virtual machine has failed" \
+				"For details please refer to the log above." \
+				"${yellow}It is recommended to remove malfunctioned virtual machine.${NC}"
+				docker_machine_remove
+			# Generate non-zero exit code for following commands
+			(exit 1)
+		fi
 	fi
 
 	local _err=$?
