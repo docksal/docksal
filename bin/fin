@@ -3085,8 +3085,8 @@ _set_cli_uid ()
 	docker exec -u root ${cli} usermod -u "$host_uid" -o docker >/dev/null 2>&1
 	docker exec -u root ${cli} groupmod -g "$host_gid" -o users >/dev/null 2>&1
 	# TODO: remove once confirmed this is no longer necessary
-	#echo-green "Resetting permissions on /var/www..."
-	#docker exec -u root ${cli} chown -R -h docker:users /var/www
+	echo-green "Resetting permissions on /var/www..."
+	docker exec -u root ${cli} chown -R -h $host_uid:$host_gid /var/www
 
 	echo-green "Restarting php daemon..."
 	docker exec -u root ${cli} supervisorctl restart php-fpm >/dev/null
