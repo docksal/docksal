@@ -224,23 +224,6 @@ teardown() {
 	[[ "$output" == "/var/www/docroot" ]]
 }
 
-@test "fin drush" {
-	[[ $SKIP == 1 ]] && skip
-	
-	# Default drush (8)
-	run fin drush --version
-	echo "$output" | egrep "Drush Version   :  8.*"
-
-	# Drush 6
-	run fin exec drush6 --version
-	echo "$output" | egrep "Drush Version   :  6.*"
-
-	# Drush 7
-	run fin exec drush7 --version
-	echo "$output" | egrep "Drush Version   :  7.*"
-}
-
-
 @test "fin rm -f" {
 	[[ $SKIP == 1 ]] && skip
 	
