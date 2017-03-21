@@ -215,6 +215,7 @@ teardown() {
 	# Test output in TTY vs no-TTY mode.
 	[[ "$(fin exec echo)" != "$(fin exec -T echo)" ]]
 
+	# Test the no-TTY output is a "clean" string (does not have extra control characters and can be compared)
 	run fin exec -T pwd
 	[[ "$output" == "/var/www" ]]
 
@@ -222,6 +223,14 @@ teardown() {
 	cd docroot
 	run fin exec -T pwd
 	[[ "$output" == "/var/www/docroot" ]]
+
+	# fin exec uses the docker user
+	run fin exec -T id -un
+	[[ "$output" == "docker" ]]
+
+	# docker user uid/gid in cli matches the host user uid/gid
+	run fin exec -T 'echo $(id -u):$(id -g)'
+	[[ "$output" == "$(id -u):$(id -g)" ]]
 }
 
 @test "fin rm -f" {
