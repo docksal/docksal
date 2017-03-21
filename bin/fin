@@ -2007,7 +2007,7 @@ project_dir_setup ()
 {
 	local PROJECT_STORAGE="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
 	# create project state directory
-	[ ! -d  ] && mkdir -p "$PROJECT_STORAGE"
+	[ ! -d "$PROJECT_STORAGE" ] && mkdir -p "$PROJECT_STORAGE"
 	local PROJECT_ROOTFILE="$PROJECT_STORAGE/.project-root"
 
 	# Check that config dir belongs to this project not some else deleted one
