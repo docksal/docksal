@@ -236,9 +236,8 @@ teardown() {
 @test "fin run-cli" {
 	[[ $SKIP == 1 ]] && skip
 
-	# TODO: remove the image override once the new version of cli is released
-	export IMAGE=docksal/cli:edge-php7
-	fin docker pull ${IMAGE} >/dev/null
+	# Dummy command to pre-pull the image run-cli is using.
+	fin rc uname
 
 	# Test output in TTY vs no-TTY mode.
 	[[ "$(fin rc echo)" != "$(fin rc -T echo)" ]]
