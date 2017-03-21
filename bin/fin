@@ -2742,7 +2742,7 @@ _bash ()
 }
 
 # Run a command in the cli container changing dir to the same folder
-# @param $* command with it's params to run
+# @param $* command with its params to run
 _exec ()
 {
 	[[ $1 == "" ]] && \
@@ -2820,7 +2820,7 @@ _exec ()
 
 # Run a command in a standalone cli container (outside of any project).
 # The current directory on the host is mapped to /var/www inside the container.
-# @param $* command with it's params to run.
+# @param $* command with its params to run.
 run_cli ()
 {
 	# Allow disabling TTY mode.
@@ -2836,13 +2836,16 @@ run_cli ()
 	# Commands in this file will be sourced for both interactive and non-interactive sessions.
 	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
 
+	# Debug mode off by default
+	DEBUG=${DEBUG:-0}
+
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) ${IMAGE} bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
+		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) ${IMAGE} bash -c "$DOCKSALRC; $cmd"
+		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} bash -c "$DOCKSALRC; $cmd"
 	fi
 }
 
@@ -3051,6 +3054,7 @@ _set_cli_uid ()
 {
 	# Let uid to be set with the FIN_SET_UID env variable
 	local host_uid=${FIN_SET_UID:-$(id -u)}
+	local host_gid=${FIN_SET_GID:-$(id -g)}
 	local cli=$(get_container_id cli || true)
 
 	# If there is no cli, move on.
@@ -3060,28 +3064,29 @@ _set_cli_uid ()
 	fi
 
 	local container_uid
-	container_uid=$(docker exec ${cli} id -u docker)
+	# Get both uid and gid in one shot to save time
+	container_uid_gid=$(docker exec -u docker ${cli} bash -c 'echo -n $(id -u):$(id -g)')
 	if [[ ! $? -eq 0 ]]; then
 		echo-red 'Error getting uid from cli container'
 		echo "You might need to recreate containers with fin reset"
 		return
 	fi
 
-	if [[ "$container_uid" == "$host_uid" ]]; then
+	if [[ "$container_uid_gid" == "$host_uid:$host_gid" ]]; then
 		return
 	fi
 
 	# TODO: output a note to the user about updating their custom yml configuration (point to the docs).
 	if [[ "$host_uid" != "0" ]] ; then
-		echo-green "Changing user id in cli to $host_uid to match host user id..."
-		docker exec -u root ${cli} usermod -u "$host_uid" -o docker
-		# TODO: remove once confirmed this is no longer necessary
-		#echo-green "Resetting permissions on /var/www..."
-		#docker exec -u root ${cli} chown -R -h docker:users /var/www
+		echo-green "Changing uid/gid in cli to $host_uid/$host_gid to match the host"
 	else
 		echo -e "${green}Changing user id in cli to 0 to match host user id ${NC}${yellow}(running as root is not recommended)...${NC}"
-		docker exec -u root ${cli} usermod -u 0 -o docker
 	fi
+	docker exec -u root ${cli} usermod -u "$host_uid" -o docker >/dev/null 2>&1
+	docker exec -u root ${cli} groupmod -g "$host_gid" -o users >/dev/null 2>&1
+	# TODO: remove once confirmed this is no longer necessary
+	#echo-green "Resetting permissions on /var/www..."
+	#docker exec -u root ${cli} chown -R -h docker:users /var/www
 
 	echo-green "Restarting php daemon..."
 	docker exec -u root ${cli} supervisorctl restart php-fpm >/dev/null

@@ -233,6 +233,25 @@ teardown() {
 	[[ "$output" == "$(id -u):$(id -g)" ]]
 }
 
+@test "fin run-cli" {
+	[[ $SKIP == 1 ]] && skip
+
+	# TODO: remove the image override once the new version of cli is released
+	export IMAGE=docksal/cli:edge-php7
+	fin docker pull ${IMAGE} >/dev/null
+
+	# Test output in TTY vs no-TTY mode.
+	[[ "$(fin rc echo)" != "$(fin rc -T echo)" ]]
+
+	# fin rc uses the docker user
+	run fin rc -T id -un
+	[[ "$output" == "docker" ]]
+
+	# docker user uid/gid in cli matches the host user uid/gid
+	run fin rc -T 'echo $(id -u):$(id -g)'
+	[[ "$output" == "$(id -u):$(id -g)" ]]
+}
+
 @test "fin rm -f" {
 	[[ $SKIP == 1 ]] && skip
 	
