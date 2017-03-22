@@ -958,6 +958,7 @@ show_help ()
 
 	echo
 	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
+	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "share" "Share web server of the current project on the internet using ngrok"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "alias" "Create/remove folder aliases (${yellow}fin help alias${NC})"
