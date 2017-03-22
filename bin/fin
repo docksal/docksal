@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.3.0
+FIN_VERSION=1.3.1
 
 # Console colors
 red='\033[0;91m'
@@ -2390,7 +2390,11 @@ install_tools_windows ()
 # Install everything required on Ubuntu 14.04+
 install_tools_ubuntu ()
 {
-	is_tty || return 1 # only allow in interactive shell
+	if ! is_tty; then
+	 	echo "not a tty"
+		return 1 # only allow in interactive shell
+	fi
+
 	if ! is_ubuntu; then
 		echo-red "Prerequisites installation is currently supported only on Ubuntu 14.04+"
 		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
