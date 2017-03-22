@@ -324,7 +324,7 @@ get_current_relative_path ()
 get_mysql_connect ()
 {
 	# Run drush forcing tty to false to avoid colored output string from drush.
-	cleaned_string=$(echo $(_run drush sql-connect) | sed -e 's/[^a-zA-Z0-9_-]$//')
+	cleaned_string=$(echo $(_exec drush sql-connect) | sed -e 's/[^a-zA-Z0-9_-]$//')
 	echo "$cleaned_string"
 }
 
@@ -711,6 +711,7 @@ _start_containers ()
 		# Give time for startup.sh in CLI to execute otherwise UID is changed too quickly
 		# which prevents xdebug from loading properly
 		sleep 1 && \
+		# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
 		_set_cli_uid && \
 		_vhost_proxy_connect
 }
@@ -957,6 +958,7 @@ show_help ()
 
 	echo
 	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
+	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "share" "Share web server of the current project on the internet using ngrok"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "alias" "Create/remove folder aliases (${yellow}fin help alias${NC})"
@@ -2746,12 +2748,12 @@ _bash ()
 	fi
 
 	# Pass container name to _run
-	CONTAINER_NAME=$1 _run bash -i
+	CONTAINER_NAME=$1 _exec bash -i
 }
 
 # Run a command in the cli container changing dir to the same folder
-# @param $* command with it's params to run
-_run ()
+# @param $* command with its params to run
+_exec ()
 {
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
@@ -2765,7 +2767,7 @@ _run ()
 		local no_tty=true && shift
 
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
-	if [[ "$CONTAINER_NAME" == "" ]]; then CONTAINER_NAME='cli'; fi
+	CONTAINER_NAME=${CONTAINER_NAME:-cli}
 	container_id=$(get_container_id "$CONTAINER_NAME")
 
 	# ------------------------------------------------ #
@@ -2805,19 +2807,57 @@ _run ()
 		return
 	fi
 
-	# Source $HOME/.docksalrc in cli.
-	# Commands in this file will be sourced for both interactive and non-interactive sessions.
-	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
+	if [[ "$CONTAINER_NAME" == "cli" ]]; then
+		# Source $HOME/.docksalrc in cli.
+		# Commands in this file will be sourced for both interactive and non-interactive sessions.
+		local DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1;'
+		# Commands in cli should be run using the docker user, not root.
+		local container_user='-u docker'
+	fi
+
 	# Enter project containers
+	# Use the docker user in cli (-u docker) instead of root (default user).
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker exec -it "$container_id" bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
+		${winpty} docker exec -it $container_user "$container_id" bash -ic "$DOCKSALRC $cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec "$container_id" bash -c "$DOCKSALRC; $cmd"
+		docker exec $container_user "$container_id" bash -c "$DOCKSALRC $cmd"
 	fi
 	# ------------------------------------------------ #
+}
+
+# Run a command in a standalone cli container (outside of any project).
+# The current directory on the host is mapped to /var/www inside the container.
+# @param $* command with its params to run.
+run_cli ()
+{
+	# Allow disabling TTY mode.
+	# Useful for non-interactive commands when output is saved into a variable for further comparison.
+	# In a TTY mode the output may contain unexpected control symbols/etc.
+	[[ $1 == "-T" ]] && \
+		local no_tty=true && shift
+	# Set default image
+	# TODO: set the defaul image to docksal/cli once cli v1.2.0 is released
+	local IMAGE="${IMAGE:-docksal/cli:edge-php7}"
+	local cmd="$@"
+
+	# Source $HOME/.docksalrc in cli.
+	# Commands in this file will be sourced for both interactive and non-interactive sessions.
+	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
+
+	# Debug mode off by default
+	DEBUG=${DEBUG:-0}
+
+	if is_tty && [[ "$no_tty" != true ]]; then
+		# interactive
+		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
+		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
+	else
+		# non-interactive
+		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} bash -c "$DOCKSALRC; $cmd"
+	fi
 }
 
 # Start interactive mysql shell
@@ -2850,7 +2890,7 @@ mysql_list ()
 
 	# -N parameter suppresses columns header
 	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-		_run "echo 'show databases' | mysql -N -u $__dump_user -p${__dump_password}"
+		_exec "echo 'show databases' | mysql -N -u $__dump_user -p${__dump_password}"
 }
 
 # Truncate db and import from sql dump
@@ -2885,7 +2925,7 @@ mysql_import ()
 	local TRUNCATE_DATABASE_COMMAND="mysqldump -u$__dump_user -p$__dump_password --add-drop-table --no-data $__database | grep -e '^DROP \| FOREIGN_KEY_CHECKS' | mysql -u$__dump_user -p$__dump_password $__database"
 
 	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-		_run "${TRUNCATE_DATABASE_COMMAND}"
+		_exec "${TRUNCATE_DATABASE_COMMAND}"
 
 	if [[ ! $? -eq 0 ]] && (exit ${confirm}); then
 		_confirm "There were errors during truncation. Continue anyways?"
@@ -3018,12 +3058,14 @@ logs ()
 	docker-compose logs "$@"
 }
 
+# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
 # Set uid of the primary "docker" user in the cli container
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
 {
 	# Let uid to be set with the FIN_SET_UID env variable
 	local host_uid=${FIN_SET_UID:-$(id -u)}
+	local host_gid=${FIN_SET_GID:-$(id -g)}
 	local cli=$(get_container_id cli || true)
 
 	# If there is no cli, move on.
@@ -3033,26 +3075,29 @@ _set_cli_uid ()
 	fi
 
 	local container_uid
-	container_uid=$(docker exec ${cli} id -u)
+	# Get both uid and gid in one shot to save time
+	container_uid_gid=$(docker exec -u docker ${cli} bash -c 'echo -n $(id -u):$(id -g)')
 	if [[ ! $? -eq 0 ]]; then
 		echo-red 'Error getting uid from cli container'
 		echo "You might need to recreate containers with fin reset"
 		return
 	fi
 
-	if [[ "$container_uid" == "$host_uid" ]]; then
+	if [[ "$container_uid_gid" == "$host_uid:$host_gid" ]]; then
 		return
 	fi
 
+	# TODO: output a note to the user about updating their custom yml configuration (point to the docs).
 	if [[ "$host_uid" != "0" ]] ; then
-		echo-green "Changing user id in cli to $host_uid to match host user id..."
-		docker exec -u root ${cli} usermod -u "$host_uid" -o docker
-		echo-green "Resetting permissions on /var/www..."
-		docker exec -u root ${cli} chown -R docker:users /var/www
+		echo-green "Changing uid/gid in cli to $host_uid/$host_gid to match the host"
 	else
 		echo -e "${green}Changing user id in cli to 0 to match host user id ${NC}${yellow}(running as root is not recommended)...${NC}"
-		docker exec -u root ${cli} usermod -u 0 -o docker
 	fi
+	docker exec -u root ${cli} usermod -u "$host_uid" -o docker >/dev/null 2>&1
+	docker exec -u root ${cli} groupmod -g "$host_gid" -o users >/dev/null 2>&1
+	# TODO: remove once confirmed this is no longer necessary
+	echo-green "Resetting permissions on /var/www..."
+	docker exec -u root ${cli} chown -R -h $host_uid:$host_gid /var/www
 
 	echo-green "Restarting php daemon..."
 	docker exec -u root ${cli} supervisorctl restart php-fpm >/dev/null
@@ -3280,6 +3325,10 @@ load_configuration ()
 	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
 	# Set this to 0 to account for docker-compose bug https://github.com/docker/compose/pull/4294
 	export COMPOSE_CONVERT_WINDOWS_PATHS=0
+
+	# Export host user uid/gid
+	export HOST_UID=$(id -u)
+	export HOST_GID=$(id -g)
 
 	if is_docker_running; then
 		export DOCKER_RUNNING="true"
@@ -3547,6 +3596,7 @@ fi
 	[[ "$*" != "reset ssh-agent" ]] &&
 	[[ "$*" != "reset system" ]] &&
 	[[ "$1" != "projects" ]] &&
+	[[ "$1" != "rc" ]] &&
 	load_configuration &&
 	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
@@ -3641,10 +3691,14 @@ case "$1" in
 		if [ -f "$1" ]; then
 			# if a file is passed then run it inside cli container
 			[ "$(get_project_path)" == "" ] && echo "Should be run inside a project" && exit 1
-			_run "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash $1"
+			_exec "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash $1"
 		else
-			_run "$@"
+			_exec "$@"
 		fi
+		;;
+	run-cli|rc)
+		shift
+		run_cli "$@"
 		;;
 	mysql|sqlc)
 		shift
@@ -3665,25 +3719,25 @@ case "$1" in
 	drush)
 		shift
 		if [[ $1 == "" ]]; then
-			_run drush
+			_exec drush
 		else
-			_run drush "$@"
+			_exec drush "$@"
 		fi
 		;;
 	drupal)
 		shift
 		if [[ "$1" == "" ]]; then
-			_run drupal
+			_exec drupal
 		else
-			_run drupal "$@"
+			_exec drupal "$@"
 		fi
 		;;
 	wp)
 		shift
 		if [[ "$1" == "" ]]; then
-			_run wp
+			_exec wp
 		else
-			_run wp "$@"
+			_exec wp "$@"
 		fi
 		;;
 	ssh-add)
