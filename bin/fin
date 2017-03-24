@@ -2391,8 +2391,7 @@ install_tools_windows ()
 install_tools_ubuntu ()
 {
 	if ! is_tty; then
-	 	echo "not a tty"
-		return 1 # only allow in interactive shell
+	 	echo "WARNING: Installation is running not in a tty mode"
 	fi
 
 	if ! is_ubuntu; then
