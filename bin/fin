@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.3.1
+FIN_VERSION=1.3.2
 
 # Console colors
 red='\033[0;91m'
@@ -2180,56 +2180,64 @@ install_dns_service ()
 		"${IMAGE_DNS}" >/dev/null
 }
 
-# Configuring system-wide *.$DOCKSAL_DNS_DOMAIN resolver (Windows not supported)
+# Configure system-wide *.docksal resolver using /etc/resolver
+configure_resolver_mac () {
+	local TARGET_IP="$1"
+	if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
+		return
+	fi
+	sudo mkdir -p /etc/resolver
+	# deleting old resolver is the only way to get mac to update config
+	sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
+	# NO \n at the beginning of line here!
+	echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $TARGET_IP" | \
+		sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
+	sudo dscacheutil -flushcache
+	# to check: scutil --dns
+}
+
+# Configure system-wide *.docksal resolver using custom subnet and dns-nameservers instruction
+configure_resolver_linux () {
+	# Adding a subnet for Docksal. Make sure we don't do this twice
+	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
+		echo-green "Adding a subnet for Docksal..."
+		cat > /tmp/docksal.ip.addr <<EOF
+	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	dns-nameservers ${DOCKSAL_DEFAULT_IP}
+EOF
+		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
+		rm -f /tmp/docksal.ip.addr
+		sudo ifdown --force lo 2>/dev/null
+		sudo ifup lo
+		sudo resolvconf -u
+	fi
+}
+
+# Configure system-wide *.docksal resolver
+configure_resolver_windows () {
+	return
+}
+
+# Configure system-wide *.docksal resolver (Windows is not supported)
 configure_resolver ()
 {
 	check_docker_running
-	local TARGET_IP="0.0.0.0"
+	local TARGET_IP="$DOCKSAL_DEFAULT_IP"
 
-	#------ macOS
 	if is_mac; then
-		if is_docker_native; then
-			TARGET_IP="127.0.0.1"
-		else
-			TARGET_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
-		fi
+		is_docker_native && TARGET_IP="127.0.0.1"
 		install_dns_service "$TARGET_IP"
-		if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
-			return
-		fi
-		sudo mkdir -p /etc/resolver
-		# deleting old resolver is the only way to get mac to update config
-		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
-		# NO \n at the begginning of line here!
-		echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $TARGET_IP" | \
-			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
-		sudo dscacheutil -flushcache
-		# to check: scutil --dns
-	#----- Linux
+		configure_resolver_mac "$TARGET_IP"
+
 	elif is_linux; then
-		TARGET_IP="$DOCKSAL_DEFAULT_IP"
-		install_dns_service "$TARGET_IP"
-		# Adding a subnet for Docksal. Make sure we don't do this twice
-		if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
-			echo-green "Adding a subnet for Docksal..."
-			cat > /tmp/docksal.ip.addr <<EOF
-		up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-		down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-		dns-nameservers ${DOCKSAL_DEFAULT_IP}
-EOF
-			sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
-			rm -f /tmp/docksal.ip.addr
-			sudo ifdown lo && sudo ifup lo
-			sudo resolvconf -u
-		fi
-	#----- Windows
+		install_dns_service "$DOCKSAL_DEFAULT_IP"
+		configure_resolver_linux
+
 	elif is_windows; then
-		if is_docker_native; then
-			TARGET_IP="127.0.0.1"
-		else
-			TARGET_IP=$(docker-machine ip "$DOCKER_MACHINE_NAME")
-		fi
+		is_docker_native && TARGET_IP="127.0.0.1"
 		install_dns_service "$TARGET_IP"
+		configure_resolver_windows "$TARGET_IP" # maybe someday
 	fi
 }
 
@@ -2439,10 +2447,6 @@ install_tools_ubuntu ()
 	#		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
 	#			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
 	#	fi
-
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo-yellow "Please re-login or run ${green}newgrp docker${yellow} now."
-	fi
 }
 
 update_tools ()
@@ -2554,15 +2558,6 @@ update_project_images ()
 	up
 }
 
-# Update system and project images
-update_images ()
-{
-	echo-green "Updating Docksal system images..."
-	update_system_images
-	echo-green "Updating project images..."
-	update_project_images
-}
-
 # Update Docksal
 update ()
 {
@@ -2666,10 +2661,23 @@ update ()
 	update_tools
 
 	# [Update - 5] Update system images
-	# On macOS and Windows do this only during upgrade as on clean install it happens during VM creation
-	# On Linux do it during both upgrade and install too, as there is no VM on Linux
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] || is_linux; then
+
+	# Always update system images during upgrade
+	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		echo-green "Updating system images..."
+		update_system_images
+	fi
+
+	# On Linux also do it during install, but use sudo as user will not be in docker group yet.
+	# On Win and Mac it is done in docker_machine_start
+	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]] && is_linux; then
+		# On Linux a subnet needs to be created first
+		configure_resolver_linux
+		echo-green "Updating system images..."
+		# Override docker to run it via sudo
+		docker () {
+			sudo "$(which docker)" "$@"
+		}
 		update_system_images
 	fi
 
@@ -2690,6 +2698,12 @@ update ()
 	fi
 
 	[ $? -eq 0 ] && echo-green "Update finished"
+
+	if is_linux && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+		echo -e "${yellow}IMPORTANT NOTE FOR LINUX USERS:${NC}"
+		echo -e "  Current user was added to the 'docker' group."
+		echo -e "  Re-login or run ${yellow}newgrp docker${NC} now to apply that change and use Docksal."
+	fi
 }
 
 check_for_updates ()
@@ -3663,8 +3677,6 @@ case "$1" in
 	update)
 		shift
 		if [[ "$1" == "--system-images" ]]; then
-			update_system_images
-		elif [[ "$1" == "--system" ]]; then
 			update_system_images
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
