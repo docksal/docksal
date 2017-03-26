@@ -811,7 +811,7 @@ _remove_dangling_volumes ()
 
 # Cleanup unused images and containters
 # @param $1 --hard if set removes all stopped containers
-_docker_cleanup ()
+cleanup ()
 {
 	check_docker_running
 	if [[ "$1" == "--hard" ]] && [[ "$(docker ps -aqf status=exited)" != "" ]]; then
@@ -2666,6 +2666,8 @@ update ()
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		echo-green "Updating system images..."
 		update_system_images
+		# Run cleanup to get rid of outdated images
+		cleanup
 	fi
 
 	# On Linux also do it during install, but use sudo as user will not be in docker group yet.
@@ -3788,7 +3790,7 @@ case "$1" in
 		;;
 	cleanup)
 		shift
-		_docker_cleanup $1
+		cleanup $1
 		;;
 	-v | v)
 		version --short
