@@ -1933,6 +1933,13 @@ up ()
 # Stop containers
 stop ()
 {
+	# Do not do any checks for "stop all projects" action
+	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
+		_stop_containers "$@"
+		# TODO: set stopped state to all projects
+		return $?
+	fi
+
 	check_docksal_environment
 	check_project_unique
 
