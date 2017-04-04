@@ -905,7 +905,8 @@ show_help ()
 		#
 		if [ -f "$_command" ]; then
 			echo -en "${green}fin $1${NC} - "
-			cat "$_command" | grep '^##' | sed "s/^##[ ]*//g"
+			local _help_contents=$(cat "$_command" | grep '^##' | sed "s/^##[ ]*//g")
+			echo -e "$_help_contents"
 			echo
 			exit
 		fi
