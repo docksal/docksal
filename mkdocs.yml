@@ -40,7 +40,7 @@ pages:
       - Stack configuration: advanced/stack-config.md
       - PHP/MySQL/etc. settings: advanced/stack-settings.md
       - Drupal settings: advanced/drupal-settings.md
-      - Multiple projects: advanced/multiple-projects.md
+      - Multiple projects/domains: advanced/multiple-projects.md
       - VM resources: advanced/vm.md
       - Networking: advanced/networking.md
     - SSH agent: advanced/ssh-agent.md
