@@ -1943,6 +1943,7 @@ stop ()
 
 	check_docksal_environment
 	check_project_unique
+	project_check_config_diff
 
 	_stop_containers "$@"
 
@@ -1959,6 +1960,7 @@ restart ()
 	# This should not be the last command in a function as it will exit 1 on non Linux systems.
 	is_linux && ssh_add
 	check_project_unique
+	project_check_config_diff
 
 	_restart_containers
 	local result=$?
@@ -1981,6 +1983,7 @@ remove ()
 {
 	check_docksal_environment
 	check_project_unique
+	project_check_config_diff
 
 	if [[ $1 == "" ]]; then
 		echo -e "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
@@ -2071,7 +2074,7 @@ project_config_save ()
 	done
 }
 
-project_config_diff ()
+project_check_config_diff ()
 {
 	local PROJECT_STORAGE="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
 
@@ -2083,9 +2086,10 @@ project_config_diff ()
 	for file in ${CONFIG_FILES}; do
 		diff "$PROJECT_ROOT/.docksal/$file" "$PROJECT_STORAGE/$file" >/dev/null 2>&1
 		if [ $? -eq 1 ]; then
-			echo -e "${red_bg} WARNING ${NC} Project configuration files have changed since project was started."
-			echo "If you continue with your command, you might experience issues."
-			echo "Use ${yellow}fin up${NC} to apply new config or ${yellow}fin config restore${NC} to restore initial one."
+			echo -e "${red_bg} WARNING ${NC} Project configuration file ${yellow}${file}${NC} have changed since project was started."
+			echo "          If you continue with your command, you might experience issues."
+			echo -e "          It's recommended to use ${yellow}fin up${NC} to apply new config or ${yellow}fin config restore${NC} to restore initial one."
+			_confirm "Do you want to continue anyways?"
 			return 1
 		fi
 	done
@@ -3446,6 +3450,35 @@ config_images ()
 	else
 		fin docker search "docksal" | grep "^docksal\/"
 	fi
+}
+
+config_diff ()
+{
+	local PROJECT_STORAGE="$CONFIG_PROJECTS/$COMPOSE_PROJECT_NAME_SAFE"
+
+	if ! (ls ${PROJECT_STORAGE} | grep . >/dev/null 2>&1); then
+		# no config files, project was never started
+		return
+	fi
+
+	echo > /tmp/_empty_diff
+	for file in ${CONFIG_FILES}; do
+		if [ ! -f "$PROJECT_ROOT/.docksal/$file" ] && [ -f "$PROJECT_STORAGE/$file" ]; then
+			echo
+			git diff --no-index /tmp/_empty_diff "$PROJECT_STORAGE/$file"
+			continue
+		fi
+		if [ -f "$PROJECT_ROOT/.docksal/$file" ] && [ ! -f "$PROJECT_STORAGE/$file" ]; then
+			echo
+			git diff --no-index "$PROJECT_ROOT/.docksal/$file" /tmp/_empty_diff
+			continue
+		fi
+		if [ ! -f "$PROJECT_ROOT/.docksal/$file" ] && [ ! -f "$PROJECT_STORAGE/$file" ]; then
+			continue
+		fi
+		echo
+		git diff --no-index "$PROJECT_ROOT/.docksal/$file" "$PROJECT_STORAGE/$file"
+	done
 }
 
 create_site ()
