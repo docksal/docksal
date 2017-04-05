@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.3.2
+FIN_VERSION=1.3.3
 
 # Console colors
 red='\033[0;91m'
@@ -568,7 +568,7 @@ is_docker_version ()
 
 	local version=$(docker -v | sed "s/.*version \(.*\),.*/\1/")
 
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -ne $(ver_to_int "$version") ]] && \
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -gt $(ver_to_int "$version") ]] && \
 		return 1;
 
 	return 0;
@@ -580,7 +580,7 @@ is_docker_server_version ()
 
 	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
 
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -ne $(ver_to_int "$version") ]] && \
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -gt $(ver_to_int "$version") ]] && \
 		return 1;
 
 	return 0;
@@ -2320,7 +2320,9 @@ install_tools_ubuntu ()
 		fi
 
 		# Pin docker-engine version to avoid apt-get upgrade.
-		echo -e "Package: docker-engine\nPin: version ${REQUIREMENTS_DOCKER}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
+		# Get rid of -ce part because linux packages use `~ce` suffix in repos and pin version will not work with it
+		local PIN_DOCKER_VERSION=$(echo ${REQUIREMENTS_DOCKER} | sed "s/-.*//")
+		echo -e "Package: docker-engine\nPin: version ${PIN_DOCKER_VERSION}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
 
 		curl -sSL "${URL_DOCKER_NIX}" | \
 			# patch Docker installation script on the fly to install a specific Docker version
