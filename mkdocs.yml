@@ -48,4 +48,6 @@ pages:
       - Database access: advanced/db-access.md
       - Automatic database import: advanced/db-import.md
       - Database sandbox mode: advanced/db-sandbox.md
+    - Web Server:
+      - HTTP Basic Authentication: advanced/web-http-auth.md
     - Docksal volumes: advanced/volumes.md
