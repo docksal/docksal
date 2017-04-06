@@ -2162,8 +2162,6 @@ install_sshagent_service ()
 # Install tools on Mac
 install_tools_mac ()
 {
-	is_tty || return 1 # only allow in interactive shell
-
 	if ! is_docker_native; then
 		# Check VirtualBox
 		check_vbox_version
