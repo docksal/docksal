@@ -2401,7 +2401,7 @@ update_virtualbox () {
 	# Wait for installation to finish
 	echo
 	if ! is_tty; then
-		echo "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
+		echo "Please finish VirtualBox installation using installer (Ctrl+C to exit)..."
 	fi
 
 	while ! is_vbox_version; do
