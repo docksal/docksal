@@ -2221,8 +2221,8 @@ install_tools_windows ()
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
 	# Disable Babun update checks as they often bring problems
-	if ! (grep '^export DISABLE_CHECK_ON_STARTUP="true"' '$HOME/.babunrc' >/dev/null 2>&1); then
-		echo "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> '$HOME/.babunrc'
+	if ! (grep '^export DISABLE_CHECK_ON_STARTUP="true"' "$HOME/.babunrc" >/dev/null 2>&1); then
+		echo "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> "$HOME/.babunrc"
 	fi
 
 	if ! is_docker_native; then
