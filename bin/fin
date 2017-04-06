@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.3.4
+FIN_VERSION=1.4.0
 
 # Console colors
 red='\033[0;91m'
@@ -52,6 +52,9 @@ REQUIREMENTS_DOCKER_MACHINE='0.10.0'
 REQUIREMENTS_VBOX='5.1.18'
 REQUIREMENTS_WINPTY='0.4.2'
 REQUIREMENTS_WINPTY_CYGWIN='2.6.1'
+
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.18/VirtualBox-5.1.18-114002-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.18/VirtualBox-5.1.18-114002-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
@@ -627,8 +630,8 @@ check_vbox_version ()
 
 	is_vbox_version
 	local res=$?
-	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
-	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
+	[[ "$res" == "1" ]] && echo-red "$vboxmanage binary was not found" && update_virtualbox
+	[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && update_virtualbox
 }
 
 # Check that .docksal is present
@@ -2355,6 +2358,49 @@ install_tools_ubuntu ()
 	#		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
 	#			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
 	#	fi
+}
+
+update_virtualbox () {
+	local downloads
+	local url
+
+	# Confirmation
+	is_windows && downloads=$(cygpath -u "$USERPROFILE/Downloads")
+	is_mac && downloads="$HOME/Downloads"
+	_confirm "Do you want to download VirtualBox $REQUIREMENTS_VBOX to '$downloads' and install it?"
+
+	# Preparation
+	is_windows &&
+		url="$URL_VBOX_WIN"
+	is_mac &&
+		url="$URL_VBOX_MAC" &&
+		hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1
+
+	# Stop VM
+	fin vm stop >/dev/null 2>&1
+
+	# Download and install Mac
+	is_mac && (
+		cd "$downloads" &&
+		curl -kfLO "$url" &&
+		hdiutil attach $(basename "$url") &&
+		open "/Volumes/VirtualBox" &&
+		sleep 1 &&
+		open "/Volumes/VirtualBox/VirtualBox.pkg"
+	)
+
+	# Download and install Win
+	is_windows && (
+		cd "$downloads" &&
+		curl -kfLO "$url" &&
+		cmd /c start $(basename "$url")
+	)
+
+	# Wait for installation to finish
+	echo
+	while ! is_vbox_version; do
+		read -p "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
+	done
 }
 
 update_tools ()
