@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.3.3
+FIN_VERSION=1.3.4
 
 # Console colors
 red='\033[0;91m'
@@ -2219,6 +2219,11 @@ install_tools_windows ()
 {
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
+
+	# Disable Babun update checks as they often bring problems
+	if ! (grep '^export DISABLE_CHECK_ON_STARTUP="true"' '$HOME/.babunrc' >/dev/null 2>&1); then
+		echo "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> '$HOME/.babunrc'
+	fi
 
 	if ! is_docker_native; then
 		# Check VirtualBox
