@@ -2367,7 +2367,11 @@ update_virtualbox () {
 	# Confirmation
 	is_windows && downloads=$(cygpath -u "$USERPROFILE/Downloads")
 	is_mac && downloads="$HOME/Downloads"
-	_confirm "Do you want to download VirtualBox $REQUIREMENTS_VBOX to '$downloads' and install it?"
+	if is_tty; then
+		_confirm "Do you want to download VirtualBox $REQUIREMENTS_VBOX to '$downloads' and install it?"
+	else
+		echo-green "Downloading and installing VirtualBox $REQUIREMENTS_VBOX"
+	fi
 
 	# Preparation
 	is_windows &&
@@ -2398,8 +2402,13 @@ update_virtualbox () {
 
 	# Wait for installation to finish
 	echo
+	if ! is_tty; then
+		echo "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
+	fi
+
 	while ! is_vbox_version; do
 		read -p "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
+		sleep 1
 	done
 }
 
