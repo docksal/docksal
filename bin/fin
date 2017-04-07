@@ -2367,7 +2367,8 @@ update_virtualbox () {
 	is_mac && (
 		cd "$downloads" &&
 		curl -kfLO "$url" &&
-		hdiutil attach $(basename "$url") &&
+		echo "Attaching $(basename "$url")"
+		hdiutil attach $(basename "$url") -quiet &&
 		open "/Volumes/VirtualBox" &&
 		sleep 1 &&
 		open "/Volumes/VirtualBox/VirtualBox.pkg"
