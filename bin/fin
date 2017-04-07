@@ -846,9 +846,9 @@ _vhost_proxy_connect ()
 	docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
 	if [[ $? == 0 ]]; then
 		echo-green "Connected vhost-proxy to \"${network}\" network."
+		# Run a dummy container to trigger docker-gen to refresh proxy configuration.
+		docker run --rm --entrypoint=echo ${IMAGE_VHOST_PROXY} >/dev/null 2>&1
 	fi
-	# Run a dummy container to trigger docker-gen to refresh proxy configuration.
-	docker run --rm busybox
 }
 
 #------------------------------ Help functions --------------------------------
