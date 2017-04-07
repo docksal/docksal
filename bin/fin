@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.5.0
+FIN_VERSION=1.5.1
 
 # Console colors
 red='\033[0;91m'
@@ -1331,73 +1331,27 @@ is_docker_machine_running ()
 
 # Create docker machine
 # param $1 machine name
-# param $2 provider (virtualbox | digitalocean). Defaults to virtualbox
 docker_machine_create ()
 {
+	check_vbox_version
 	check_binary_found 'docker-machine'
 
 	local machine_name="${1:-$DEFAULT_MACHINE_NAME}"
-	local provider="${2:-$DEFAULT_MACHINE_PROVIDER}"
 
 	if is_docker_machine_exist "$machine_name"; then
 		echo-error "Docker Machine '$machine_name' already exists"
 		return 1
 	fi
 
-	echo-green "Creating docker machine '$machine_name' ($provider)..."
-	case "$provider" in
-		virtualbox)
-			check_vbox_version
-
-			docker-machine create --driver=virtualbox \
-				--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
-				--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
-				--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
-				--virtualbox-hostonly-cidr "$DOCKSAL_DEFAULT_SUBNET" \
-				--virtualbox-no-share \
-				"$machine_name"
-			;; #-- end virtualbox
-
-		digitalocean)
-			[[ ! "$machine_name" =~ ^[0-9a-zA-Z.-]*$ ]] && echo "Invalid hostname specified. Allowed hostname chars are: 0-9a-zA-Z . -" && return 1
-			local token
-			echo -n "Provide Digital Ocean access token: "
-			read token
-			[[ "$token" == "" ]] && echo "Invalid token" && return 1
-			local syncthing_id
-			docker-machine create --driver=digitalocean \
-				--digitalocean-access-token="$token" \
-				--digitalocean-size="$DEFAULT_MACHINE_DO_SIZE" \
-				"$machine_name" &&
-				# Set up env variables
-				eval $(docker-machine env --shell=bash "$machine_name")
-			if_failed "New docker machine creation has failed"
-
-			# Install syncthing container
-			echo "Installing Syncthing container..."
-			docker run -d --restart=always \
-				-v "$HOME":"/srv/data" \
-				-v /root/.docksal/syncthing:/srv/config \
-				-p 22000:22000 -p 21025:21025/udp -p 8080:8080 \
-				--name docksal-syncthing \
-				joeybaker/syncthing &&
-			# Wait 10 seconds for syncthing to start
-			echo "Waiting for syncthing container to start..." &&
-			sleep 10 &&
-			# Get Syncthing ID
-			syncthing_id=$(docker-machine ssh "$machine_name" 'cat /root/.docksal/syncthing/config.xml | grep introducer' | cut -d \" -f 2) &&
-			echo-green "($machine_name) Syncthing ID: $syncthing_id"
-			echo-green "($machine_name) Syncthing UI: http://$(docker-machine ip ${machine_name}):8080"
-			echo "Use Syncthing ID above to add device and share folders."
-			# add device automatically
-			# [ ! -f "$HOME/Library/Application Support/Syncthing/config.xml" ] && echo "Use Syncthing ID above to pair." && return
-			# local apikey=$(grep apikey "$HOME/Library/Application Support/Syncthing/config.xml" | sed "s/<\/*apikey>//g" | tr -d " ")
-			;; #-- end digitalocean
-
-		*)
-			echo-error "$provider provider is not supported" && (exit 1)
-			;;
-	esac
+	echo-green "Creating docker machine '$machine_name'..."
+	docker-machine create \
+ 		--driver=virtualbox \
+		--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
+		--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
+		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
+		--virtualbox-hostonly-cidr "$DOCKSAL_DEFAULT_SUBNET" \
+		--virtualbox-no-share \
+		"$machine_name"
 
 	if [[ $? -eq 0 ]]; then
 		DOCKER_MACHINE_NAME="$machine_name"
@@ -1492,25 +1446,20 @@ docker_machine_start ()
 			rm -f "$CONFIG_MACHINE_ACTIVE"
 			exit 1
 		fi
+
 		docker_machine_create && \
 			# Disable IP change for now
 			#docker_machine_change_ip && \
 			docker_machine_env
+		[[ $? != 0 ]] && _docker_machine_start_exception
 
-		if [ $? -eq 0 ]; then
-			echo-green "Pulling Docksal system images..."
-			update_system_images
-			docker_machine_mounts
-		else
-			echo-error "Proper creation of virtual machine has failed" \
-				"For details please refer to the log above." \
-				"${yellow}It is recommended to remove malfunctioned virtual machine.${NC}"
-				docker_machine_remove
-			# Generate non-zero exit code for following commands
-			(exit 1)
-		fi
+		echo-green "Pulling Docksal system images..."
+		update_system_images
+		docker_machine_mounts
 	fi
 
+	# Catch the return code from docker_machine_mounts
+	# TODO: figure out a more reliable implementation, as this may break if the code above gets reordered
 	local _err=$?
 	if [[ ${_err} -eq 0 ]]; then
 		echo-green "Importing ssh keys..."
@@ -1518,6 +1467,16 @@ docker_machine_start ()
 	fi
 
 	return ${_err}
+}
+
+# Displays an error message and offers to remove the vm if something failed
+_docker_machine_start_exception ()
+{
+	echo-error "Proper creation of virtual machine has failed" \
+				"For details please refer to the log above." \
+				"${yellow}It is recommended to remove malfunctioned virtual machine.${NC}"
+	docker_machine_remove
+	exit 1
 }
 
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
@@ -1802,14 +1761,13 @@ vm ()
 
 	case $1 in
 		create)
-			# usage: fin vm create <machine_name> --provider="<provider_name>"
+			# usage: fin vm create <machine_name>
 			shift
-			eval $(parse_params "$@")
 			# errors handling
-			[[ "${ARGV[0]}" == "" ]] && echo "Please provide a name for a new vm." && return 1
-			is_docker_machine_exist "${ARGV[0]}" && echo "Machine \"${ARGV[0]}\" already exists." && return 1
+			[[ "$1" == "" ]] && echo "Please provide a name for a new vm." && return 1
+			is_docker_machine_exist "$1" && echo "Machine ${1} already exists." && return 1
 			# create
-			docker_machine_create "${ARGV[0]}" "$provider"
+			docker_machine_create "$1"
 			;;
 		active)
 			# Get/Set active vm
