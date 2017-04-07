@@ -846,9 +846,9 @@ _vhost_proxy_connect ()
 	docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
 	if [[ $? == 0 ]]; then
 		echo-green "Connected vhost-proxy to \"${network}\" network."
+		# Run a dummy container to trigger docker-gen to refresh proxy configuration.
+		docker run --rm --entrypoint=echo ${IMAGE_VHOST_PROXY} >/dev/null 2>&1
 	fi
-	# Run a dummy container to trigger docker-gen to refresh proxy configuration.
-	docker run --rm busybox
 }
 
 #------------------------------ Help functions --------------------------------
@@ -1320,6 +1320,7 @@ docker_machine_create ()
 
 	local machine_name="${1:-$DEFAULT_MACHINE_NAME}"
 	local provider="${2:-$DEFAULT_MACHINE_PROVIDER}"
+	local offline="${3:-0}"
 
 	if is_docker_machine_exist "$machine_name"; then
 		echo-error "Docker Machine '$machine_name' already exists"
@@ -1330,6 +1331,9 @@ docker_machine_create ()
 	case "$provider" in
 		virtualbox)
 			check_vbox_version
+
+			# Use a local copy of boot2docker.iso (in the current directory) when provisioning in offline mode
+			[[ "$offline" ]] && URL_BOOT2DOCKER="boot2docker.iso"
 
 			docker-machine create --driver=virtualbox \
 				--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
@@ -1459,6 +1463,8 @@ docker_machine_change_ip ()
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
+	# Parse command parameters
+	eval $(parse_params "$@")
 
 	if is_docker_machine_exist; then
 		docker-machine start "$DOCKER_MACHINE_NAME" && DOCKER_MACHINE_STATUS='Running' && \
@@ -1468,31 +1474,44 @@ docker_machine_start ()
 			docker_machine_mounts
 	else
 		# only auto-create default machine
+		# TODO: Why do we need this?
 		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
 			echo-error "Machine '$DOCKER_MACHINE_NAME' does not exist"
 			echo-yellow "Removing reference to non-existent machine... Run your command again."
+			# TODO: this can be replaced with "docker-machine rm --force -y $DOCKER_MACHINE_NAME"
 			rm -f "$CONFIG_MACHINE_ACTIVE"
 			exit 1
 		fi
-		docker_machine_create && \
+
+		[[ $offline ]] && mode="--offline"
+
+		docker_machine_create "$DEFAULT_MACHINE_NAME" "$DEFAULT_MACHINE_PROVIDER" "$mode" && \
 			# Disable IP change for now
 			#docker_machine_change_ip && \
 			docker_machine_env
+		[[ $? != 0 ]] && _docker_machine_start_exception
 
-		if [ $? -eq 0 ]; then
+		# Load system images from docksal-system-images.tar (in the current directory) when provisioning in offline mode
+		if [[ $offline ]]; then
+			echo-green "Loading Docksal system images..."
+			docker_load docksal-system-images.tar && reset system
+			[[ $? != 0 ]] && _docker_machine_start_exception
+
+			echo-green "Loading other images..."
+			for file in docksal-*-images.tar; do
+				# Skip system images as we already loaded those
+				[[ "$file" == "docksal-system-images.tar" ]] && continue
+				docker_load "$file"
+			done
+		else
 			echo-green "Pulling Docksal system images..."
 			update_system_images
-			docker_machine_mounts
-		else
-			echo-error "Proper creation of virtual machine has failed" \
-				"For details please refer to the log above." \
-				"${yellow}It is recommended to remove malfunctioned virtual machine.${NC}"
-				docker_machine_remove
-			# Generate non-zero exit code for following commands
-			(exit 1)
 		fi
+		docker_machine_mounts
 	fi
 
+	# Catch the return code from docker_machine_mounts
+	# TODO: figure out a more reliable implementation, as this may break if the code above gets reordered
 	local _err=$?
 	if [[ ${_err} -eq 0 ]]; then
 		echo-green "Importing ssh keys..."
@@ -1500,6 +1519,16 @@ docker_machine_start ()
 	fi
 
 	return ${_err}
+}
+
+# Displays an error message and offers to remove the vm if something failed
+_docker_machine_start_exception ()
+{
+	echo-error "Proper creation of virtual machine has failed" \
+				"For details please refer to the log above." \
+				"${yellow}It is recommended to remove malfunctioned virtual machine.${NC}"
+	docker_machine_remove
+	exit 1
 }
 
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
@@ -1806,10 +1835,11 @@ vm ()
 			fi
 			;;
 		start)
+			shift
 			if is_docker_machine_running; then
 				echo "Machine \"$DOCKER_MACHINE_NAME\" is already running."
 			else
-				docker_machine_start
+				docker_machine_start "$@"
 			fi
 			;;
 		restart)
@@ -2711,6 +2741,40 @@ check_for_updates ()
 		echo "Press Enter to continue"
 		read -p ''
 	fi
+}
+
+# Export images into a tar archive
+# @param $1 mode: --system, --project, --offline, --all
+docker_save ()
+{
+	local mode="$1"; shift
+	if [[ "$mode" == "--system" ]]; then
+		echo "Saving system images..."
+		docker ps --filter "label=io.docksal.group=system" --format "{{.Image}}" | xargs docker save -o docksal-system-images.tar
+	elif [[ "$mode" == "--project" ]]; then
+		load_configuration
+		echo "Saving ${COMPOSE_PROJECT_NAME} project images..."
+		docker-compose config | grep image | sed 's/.*image: \(.*\)/\1/' | xargs docker save -o docksal-${COMPOSE_PROJECT_NAME}-images.tar
+	elif [[ "$mode" == "--all" ]]; then
+		echo "Saving all images available on the host..."
+		docker image ls -q | xargs docker save -o docksal-images.tar
+	elif [[ "$mode" == "--offline" ]]; then
+		echo "Saving dependencies for offline mode..."
+		# There is no boot2docker.iso on Linux
+		! is_linux && cp -f "$HOME/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" .
+		docker_save --system
+		docker_save --project
+	else
+		echo "Usage: save <mode> (--system, --project, --offline, --all)"
+	fi
+}
+
+# Import images from a tar archive
+# @param $1 file
+docker_load ()
+{
+	local file="$1"; shift
+	docker load -i "$file"
 }
 
 #-------------------------- Execution commands -----------------------------
@@ -3752,6 +3816,14 @@ case "$1" in
 	cleanup)
 		shift
 		cleanup $1
+		;;
+	save)
+		shift
+		docker_save "$@"
+		;;
+	load)
+		shift
+		docker_load "$@"
 		;;
 	-v | v)
 		version --short
