@@ -2847,8 +2847,7 @@ run_cli ()
 	[[ $1 == "-T" ]] && \
 		local no_tty=true && shift
 	# Set default image
-	# TODO: set the defaul image to docksal/cli once cli v1.2.0 is released
-	local IMAGE="${IMAGE:-docksal/cli:edge-php7}"
+	local IMAGE="${IMAGE:-docksal/cli:1.2-php7}"
 	local cmd="$@"
 
 	# Source $HOME/.docksalrc in cli.
