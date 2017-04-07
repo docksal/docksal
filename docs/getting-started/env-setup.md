@@ -14,42 +14,27 @@ Installing Docksal on
 
 ### 1. Install Babun
 
-On Windows, you will need a Linux-type shell.
+Install [Babun](http://babun.github.io/) and run all further commands in Babun.
 
 !!! danger "Install as a regular user"
     Babun should be installed and run **as a regular user** (do **NOT** run as Administrator to install).
 
-Install [Babun](http://babun.github.io/) before proceeding and run all commands in it.
-Docksal is not tested and not supported with other Linux-type shells on Windows.
+Docksal is not tested and does not support other Linux-type shells on Windows.
 
-### 2. Install VirtualBox
-
-Install [VirtualBox 5.1.14 for Windows](http://download.virtualbox.org/virtualbox/5.1.14/VirtualBox-5.1.14-112924-Win.exe).
-
-!!! attention "Specific version required"
-    **Using the specified version is important.** If you use a different version, it may work fine or you may experience unexpected bugs. Fin will notify you to update your VirtualBox version in the future.
-
-### 3. Install Docksal Fin
+### 2. Install Docksal
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
-sudo chmod +x /usr/local/bin/fin
+curl -fsSL http://get.docksal.io | sh
 ```
 
-### 4. Install tools and configurations
-
-```bash
-fin update
-```
-
-### 5. Create and start the vm
+### 3. Create and start the vm
 
 ```bash
 fin vm start
 ```
 [Help, my VM did not start!](../troubleshooting.md#failed-creating-docksal-virtual-machine)
 
-### 6. Congratulations!
+### 4. Congratulations!
 
 You are done with the one time environment installation. Now you can [configure your project](../getting-started/project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin project create`.
 
@@ -59,34 +44,20 @@ You are done with the one time environment installation. Now you can [configure 
 <a name="macos"></a>
 ## Installing Docksal on macOS
 
-### 1. Install VirtualBox
-
-Install [VirtualBox 5.1.14 for Mac](http://download.virtualbox.org/virtualbox/5.1.14/VirtualBox-5.1.14-112924-OSX.dmg).
-
-!!! attention "Specific version required"
-    **Using the specified version is important.** If you use a different version, it may work fine or you may experience unexpected bugs. Fin will notify you to update your VirtualBox version in the future.
-
-### 2. Install Docksal Fin
+### 1. Install Docksal
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
-sudo chmod +x /usr/local/bin/fin
+curl -fsSL http://get.docksal.io | sh
 ```
 
-### 3. Install tools and configurations
-
-```bash
-fin update
-```
-
-### 4. Create and start the vm
+### 2. Create and start the vm
 
 ```bash
 fin vm start
 ```
 [Help, my VM did not start!](../troubleshooting.md#failed-creating-docksal-virtual-machine)
 
-### 5. Congratulations!
+### 3. Congratulations!
 
 You are done with the one time environment installation. Now you can [configure your project](../getting-started/project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin project create`.
 
@@ -102,19 +73,12 @@ By default Apache listens on `0.0.0.0:80` and `0.0.0.0:443`. This will prevent D
 
 You either need to stop Apache or reconfigure it to listen on different ports (e.g. `8080` and `4433`) or different host (e.g. `127.0.0.1:80` and `127.0.0.1:443`).
 
-### 2. Install Docksal Fin
+### 2. Install Docksal
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
-sudo chmod +x /usr/local/bin/fin
+curl -fsSL http://get.docksal.io | sh
 ```
 
-### 3. Install tools and configurations
-
-```bash
-fin update
-```
-
-### 4. Congratulations!
+### 3. Congratulations!
 
 You are done with the one time environment installation. Now you can [configure your project](project-setup.md) to use Docksal or create a new pre-configured Drupal or Wordpress project with `fin project create`.
