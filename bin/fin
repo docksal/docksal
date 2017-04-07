@@ -1345,10 +1345,10 @@ docker_machine_create ()
 
 	echo-green "Creating docker machine '$machine_name'..."
 
-	# Use a local boot2docker.iso copy when provisioning in the portable mode
-	if [[ "$PORTABLE" ]] && [[ -f "boot2docker.iso" ]]; then
-		URL_BOOT2DOCKER="boot2docker.iso"
-	fi
+	# Use a local boot2docker.iso copy when available
+	ISO_FILE=${ISO_FILE:-boot2docker.iso}
+	[[ -f "$ISO_FILE" ]] && (_confirm "Found $ISO_FILE. Use it?") && \
+		URL_BOOT2DOCKER="$ISO_FILE"
 
 	docker-machine create \
  		--driver=virtualbox \
@@ -2485,9 +2485,10 @@ update_system_images ()
 {
 	check_docker_running
 
-	if [[ "$PORTABLE" ]] && [[ -f "docksal-system-images.tar" ]]; then
-		# Load system images from the current directory when running in portable mode
-		image_load "docksal-system-images.tar"
+	IMAGE_FILE=${IMAGE_FILE:-docksal-system-images.tar}
+	if [[ -f "$IMAGE_FILE" ]] && (_confirm "Found $IMAGE_FILE. Use it?"); then
+		# Load system images from the current directory when available
+		image_load "$IMAGE_FILE"
 	else
 		# Load system images as usually from Docker Hub
 		docker pull "${IMAGE_VHOST_PROXY}"
@@ -3690,10 +3691,6 @@ case "$1" in
 			update_config_files
 		elif [[ "$1" == "--bash-complete" ]]; then
 			install_bash_autocomplete
-		# TODO: add support for fin, tools and stack files. Only supports boot2docker.iso and system images for now.
-		elif [[ "$1" == "--portable" ]]; then
-			export PORTABLE=1
-			update
 		elif [[ "$1" != "" ]]; then
 			echo -e "${yellow}fin update${NC} does not support this parameter"
 		else
