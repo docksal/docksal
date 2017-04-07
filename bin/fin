@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.4.2
+FIN_VERSION=1.5.2
 
 # Console colors
 red='\033[0;91m'
@@ -846,9 +846,9 @@ _vhost_proxy_connect ()
 	docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
 	if [[ $? == 0 ]]; then
 		echo-green "Connected vhost-proxy to \"${network}\" network."
+		# Run a dummy container to trigger docker-gen to refresh proxy configuration.
+		docker run --rm --entrypoint=echo ${IMAGE_VHOST_PROXY} >/dev/null 2>&1
 	fi
-	# Run a dummy container to trigger docker-gen to refresh proxy configuration.
-	docker run --rm busybox
 }
 
 #------------------------------ Help functions --------------------------------
@@ -944,6 +944,10 @@ show_help ()
 	printh "sqls" "Show list of available databases (${yellow}fin help sqls${NC})"
 	printh "sqld [file]" "Dump specified database into file (${yellow}fin help sqld${NC})"
 	printh "sqli [file]" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
+
+	echo
+	printh "image <command>" "Image management" "yellow"
+	printh "  save, load, registry" "See ${yellow}fin help image${NC} for details"
 
 	echo
 	printh "project <command>" "Project management" "yellow"
@@ -1064,6 +1068,24 @@ show_help_rm ()
 show_help_remove ()
 {
 	show_help_rm
+}
+
+show_help_image() {
+	echo-green "Image management"
+	printh "fin image <command>" "" "yellow"
+	echo
+	printh "save [--system|--project|--all]" "Save docker images into a tar archive."
+	printh "load <file>" "Load docker images from a tar archive."
+	echo
+	printh "registry" "Show all Docksal images on Docker Hub"
+	printh "registry [image name]" "Show all tags for a certain image"
+	echo
+	echo-green "Examples:"
+	printh "fin image save --system" "Save Docksal system images."
+	printh "fin image save --project" "Save current project's images."
+	printh "fin image save --all" "Save all images available on the host."
+	printh "fin image registry docksal/db" "Show all tags for docksal/db image"
+	echo
 }
 
 show_help_project() {
@@ -1236,10 +1258,6 @@ show_help_config ()
 	printh "show" "Display full effective configuration for the project"
 	printh "env" "Display only environment variables section"
 	printh "generate" "Generate Docksal configuration for the project"
-	printh "images" "Show all Docksal images on Docker Hub"
-	printh "images [image name]" "Show all tags for certain image"
-	echo-green "Examples:"
-	printh "fin config images docksal/db" "Show all tags for docksal/db image"
 	echo
 }
 
@@ -1313,73 +1331,33 @@ is_docker_machine_running ()
 
 # Create docker machine
 # param $1 machine name
-# param $2 provider (virtualbox | digitalocean). Defaults to virtualbox
 docker_machine_create ()
 {
+	check_vbox_version
 	check_binary_found 'docker-machine'
 
 	local machine_name="${1:-$DEFAULT_MACHINE_NAME}"
-	local provider="${2:-$DEFAULT_MACHINE_PROVIDER}"
 
 	if is_docker_machine_exist "$machine_name"; then
 		echo-error "Docker Machine '$machine_name' already exists"
 		return 1
 	fi
 
-	echo-green "Creating docker machine '$machine_name' ($provider)..."
-	case "$provider" in
-		virtualbox)
-			check_vbox_version
+	echo-green "Creating docker machine '$machine_name'..."
 
-			docker-machine create --driver=virtualbox \
-				--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
-				--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
-				--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
-				--virtualbox-hostonly-cidr "$DOCKSAL_DEFAULT_SUBNET" \
-				--virtualbox-no-share \
-				"$machine_name"
-			;; #-- end virtualbox
+	# Use a local boot2docker.iso copy when provisioning in the portable mode
+	if [[ "$PORTABLE" ]] && [[ -f "boot2docker.iso" ]]; then
+		URL_BOOT2DOCKER="boot2docker.iso"
+	fi
 
-		digitalocean)
-			[[ ! "$machine_name" =~ ^[0-9a-zA-Z.-]*$ ]] && echo "Invalid hostname specified. Allowed hostname chars are: 0-9a-zA-Z . -" && return 1
-			local token
-			echo -n "Provide Digital Ocean access token: "
-			read token
-			[[ "$token" == "" ]] && echo "Invalid token" && return 1
-			local syncthing_id
-			docker-machine create --driver=digitalocean \
-				--digitalocean-access-token="$token" \
-				--digitalocean-size="$DEFAULT_MACHINE_DO_SIZE" \
-				"$machine_name" &&
-				# Set up env variables
-				eval $(docker-machine env --shell=bash "$machine_name")
-			if_failed "New docker machine creation has failed"
-
-			# Install syncthing container
-			echo "Installing Syncthing container..."
-			docker run -d --restart=always \
-				-v "$HOME":"/srv/data" \
-				-v /root/.docksal/syncthing:/srv/config \
-				-p 22000:22000 -p 21025:21025/udp -p 8080:8080 \
-				--name docksal-syncthing \
-				joeybaker/syncthing &&
-			# Wait 10 seconds for syncthing to start
-			echo "Waiting for syncthing container to start..." &&
-			sleep 10 &&
-			# Get Syncthing ID
-			syncthing_id=$(docker-machine ssh "$machine_name" 'cat /root/.docksal/syncthing/config.xml | grep introducer' | cut -d \" -f 2) &&
-			echo-green "($machine_name) Syncthing ID: $syncthing_id"
-			echo-green "($machine_name) Syncthing UI: http://$(docker-machine ip ${machine_name}):8080"
-			echo "Use Syncthing ID above to add device and share folders."
-			# add device automatically
-			# [ ! -f "$HOME/Library/Application Support/Syncthing/config.xml" ] && echo "Use Syncthing ID above to pair." && return
-			# local apikey=$(grep apikey "$HOME/Library/Application Support/Syncthing/config.xml" | sed "s/<\/*apikey>//g" | tr -d " ")
-			;; #-- end digitalocean
-
-		*)
-			echo-error "$provider provider is not supported" && (exit 1)
-			;;
-	esac
+	docker-machine create \
+ 		--driver=virtualbox \
+		--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
+		--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
+		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
+		--virtualbox-hostonly-cidr "$DOCKSAL_DEFAULT_SUBNET" \
+		--virtualbox-no-share \
+		"$machine_name"
 
 	if [[ $? -eq 0 ]]; then
 		DOCKER_MACHINE_NAME="$machine_name"
@@ -1474,25 +1452,20 @@ docker_machine_start ()
 			rm -f "$CONFIG_MACHINE_ACTIVE"
 			exit 1
 		fi
+
 		docker_machine_create && \
 			# Disable IP change for now
 			#docker_machine_change_ip && \
 			docker_machine_env
+		[[ $? != 0 ]] && _docker_machine_start_exception
 
-		if [ $? -eq 0 ]; then
-			echo-green "Pulling Docksal system images..."
-			update_system_images
-			docker_machine_mounts
-		else
-			echo-error "Proper creation of virtual machine has failed" \
-				"For details please refer to the log above." \
-				"${yellow}It is recommended to remove malfunctioned virtual machine.${NC}"
-				docker_machine_remove
-			# Generate non-zero exit code for following commands
-			(exit 1)
-		fi
+		echo-green "Pulling Docksal system images..."
+		update_system_images
+		docker_machine_mounts
 	fi
 
+	# Catch the return code from docker_machine_mounts
+	# TODO: figure out a more reliable implementation, as this may break if the code above gets reordered
 	local _err=$?
 	if [[ ${_err} -eq 0 ]]; then
 		echo-green "Importing ssh keys..."
@@ -1500,6 +1473,16 @@ docker_machine_start ()
 	fi
 
 	return ${_err}
+}
+
+# Displays an error message and offers to remove the vm if something failed
+_docker_machine_start_exception ()
+{
+	echo-error "Proper creation of virtual machine has failed" \
+				"For details please refer to the log above." \
+				"${yellow}It is recommended to remove malfunctioned virtual machine.${NC}"
+	docker_machine_remove
+	exit 1
 }
 
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
@@ -1784,14 +1767,13 @@ vm ()
 
 	case $1 in
 		create)
-			# usage: fin vm create <machine_name> --provider="<provider_name>"
+			# usage: fin vm create <machine_name>
 			shift
-			eval $(parse_params "$@")
 			# errors handling
-			[[ "${ARGV[0]}" == "" ]] && echo "Please provide a name for a new vm." && return 1
-			is_docker_machine_exist "${ARGV[0]}" && echo "Machine \"${ARGV[0]}\" already exists." && return 1
+			[[ "$1" == "" ]] && echo "Please provide a name for a new vm." && return 1
+			is_docker_machine_exist "$1" && echo "Machine ${1} already exists." && return 1
 			# create
-			docker_machine_create "${ARGV[0]}" "$provider"
+			docker_machine_create "$1"
 			;;
 		active)
 			# Get/Set active vm
@@ -2498,14 +2480,20 @@ update_start_script_shortcut()
 	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
 }
 
-# Update system conteainers' images
+# Update system service images
 update_system_images ()
 {
 	check_docker_running
 
-	docker pull "${IMAGE_VHOST_PROXY}"
-	docker pull "${IMAGE_DNS}"
-	docker pull "${IMAGE_SSH_AGENT}"
+	if [[ "$PORTABLE" ]] && [[ -f "docksal-system-images.tar" ]]; then
+		# Load system images from the current directory when running in portable mode
+		image_load "docksal-system-images.tar"
+	else
+		# Load system images as usually from Docker Hub
+		docker pull "${IMAGE_VHOST_PROXY}"
+		docker pull "${IMAGE_DNS}"
+		docker pull "${IMAGE_SSH_AGENT}"
+	fi
 	reset system
 }
 
@@ -2613,7 +2601,7 @@ update ()
 	update_config_files
 
 	# [Update - 3] Update start script and shortcut
-	if  is_windows; then
+	if is_windows; then
 		echo-green "Updating start script and shortcut..."
 		update_start_script_shortcut
 	fi
@@ -2710,6 +2698,46 @@ check_for_updates ()
 		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ]"
 		echo "Press Enter to continue"
 		read -p ''
+	fi
+}
+
+# Export docker images from the host into a tar archive
+# @param $1 mode: --system, --project, --all
+image_save ()
+{
+	local mode="$1"; shift
+	if [[ "$mode" == "--system" ]]; then
+		echo "Saving system images..."
+		docker ps --filter "label=io.docksal.group=system" --format "{{.Image}}" | xargs docker save -o docksal-system-images.tar
+	elif [[ "$mode" == "--project" ]]; then
+		load_configuration
+		echo "Saving ${COMPOSE_PROJECT_NAME} project images..."
+		docker-compose config | grep image | sed 's/.*image: \(.*\)/\1/' | xargs docker save -o docksal-${COMPOSE_PROJECT_NAME}-images.tar
+	elif [[ "$mode" == "--all" ]]; then
+		echo "Saving all images available on the host..."
+		docker image ls -q | xargs docker save -o docksal-all-images.tar
+	else
+		echo "Usage: save <mode> (--system, --project, --all)"
+	fi
+}
+
+# Import docker images from a tar archive
+# @param $1 file
+image_load ()
+{
+	local file="$1"; shift
+	docker load -i "$file"
+}
+
+image_registry_list ()
+{
+	if [[ "$1" != "" ]]; then
+		echo "$1 tags"
+		echo "----------"
+		# for instance $1 == "docksal/db"
+		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | cut -d " " -f2 | tr -d \"
+	else
+		fin docker search "docksal" | grep "^docksal\/"
 	fi
 }
 
@@ -3389,18 +3417,6 @@ config_generate ()
 	fi
 }
 
-config_images ()
-{
-	if [[ "$1" != "" ]]; then
-		echo "$1 tags"
-		echo "----------"
-		# for instance $1 == "docksal/db"
-		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | cut -d " " -f2 | tr -d \"
-	else
-		fin docker search "docksal" | grep "^docksal\/"
-	fi
-}
-
 create_site ()
 {
 	while true; do
@@ -3598,6 +3614,27 @@ case "$1" in
 		shift
 		restart
 		;;
+	image)
+		shift
+		case "$1" in
+			save)
+				shift
+				image_save "$@"
+			;;
+			load)
+				shift
+				image_load "$@"
+			;;
+			registry)
+				shift
+				image_registry_list "$@"
+			;;
+			*)
+				echo -e "Unknown command $1. See ${yellow}fin help image${NC}"
+				exit 1
+			;;
+		esac
+		;;
 	project)
 		shift
 		case "$1" in
@@ -3654,6 +3691,10 @@ case "$1" in
 			update_config_files
 		elif [[ "$1" == "--bash-complete" ]]; then
 			install_bash_autocomplete
+		# TODO: add support for fin, tools and stack files. Only supports boot2docker.iso and system images for now.
+		elif [[ "$1" == "--portable" ]]; then
+			export PORTABLE=1
+			update
 		elif [[ "$1" != "" ]]; then
 			echo -e "${yellow}fin update${NC} does not support this parameter"
 		else
@@ -3777,9 +3818,6 @@ case "$1" in
 		if [[ "$1" == "generate" ]]; then
 			shift;
 			config_generate
-		elif [[ "$1" == "images" ]]; then
-			shift
-			config_images "$@"
 		else
 			config_show "$@"
 		fi
