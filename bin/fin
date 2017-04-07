@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.4.0
+FIN_VERSION=1.4.1
 
 # Console colors
 red='\033[0;91m'
@@ -2333,7 +2333,8 @@ install_tools_ubuntu ()
 		curl -sSL "${URL_DOCKER_NIX}" | \
 			# patch Docker installation script on the fly to install a specific Docker version
 			sed "s/apt-get install -y -q docker-engine/apt-get install -y --force-yes -q docker-engine/" | \
-			sh && \
+			# TODO: remove when docker updates to 17.05.0
+			sudo sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
