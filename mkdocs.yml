@@ -13,7 +13,7 @@ pages:
     - What's in the software?: getting-started/the-software.md
     - Setup instructions: getting-started/setup.md
     - System requirements: getting-started/system-requirements.md
-    - Docksal environment setup: getting-started/env-setup.md
+    - Docksal setup: getting-started/env-setup.md
     - Project setup: getting-started/project-setup.md
     - Docker for Mac/Windows: getting-started/env-setup-native.md
     - Upgrading from Drude (DDE): getting-started/upgrade-dde.md

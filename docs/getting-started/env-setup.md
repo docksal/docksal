@@ -1,4 +1,4 @@
-# Docksal environment setup
+# Docksal setup
 
 !!! tip "This is a one time setup"
     Once you have a working Docksal environment in place, you can use it for all Docksal powered projects.
