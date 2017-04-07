@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.5.1
+FIN_VERSION=1.5.2
 
 # Console colors
 red='\033[0;91m'
@@ -1344,6 +1344,12 @@ docker_machine_create ()
 	fi
 
 	echo-green "Creating docker machine '$machine_name'..."
+
+	# Use a local boot2docker.iso copy when provisioning in the portable mode
+	if [[ "$PORTABLE" ]] && [[ -f "boot2docker.iso" ]]; then
+		URL_BOOT2DOCKER="boot2docker.iso"
+	fi
+
 	docker-machine create \
  		--driver=virtualbox \
 		--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
@@ -2474,14 +2480,20 @@ update_start_script_shortcut()
 	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
 }
 
-# Update system conteainers' images
+# Update system service images
 update_system_images ()
 {
 	check_docker_running
 
-	docker pull "${IMAGE_VHOST_PROXY}"
-	docker pull "${IMAGE_DNS}"
-	docker pull "${IMAGE_SSH_AGENT}"
+	if [[ "$PORTABLE" ]] && [[ -f "docksal-system-images.tar" ]]; then
+		# Load system images from the current directory when running in portable mode
+		image_load "docksal-system-images.tar"
+	else
+		# Load system images as usually from Docker Hub
+		docker pull "${IMAGE_VHOST_PROXY}"
+		docker pull "${IMAGE_DNS}"
+		docker pull "${IMAGE_SSH_AGENT}"
+	fi
 	reset system
 }
 
@@ -2589,7 +2601,7 @@ update ()
 	update_config_files
 
 	# [Update - 3] Update start script and shortcut
-	if  is_windows; then
+	if is_windows; then
 		echo-green "Updating start script and shortcut..."
 		update_start_script_shortcut
 	fi
@@ -3679,6 +3691,10 @@ case "$1" in
 			update_config_files
 		elif [[ "$1" == "--bash-complete" ]]; then
 			install_bash_autocomplete
+		# TODO: add support for fin, tools and stack files. Only supports boot2docker.iso and system images for now.
+		elif [[ "$1" == "--portable" ]]; then
+			export PORTABLE=1
+			update
 		elif [[ "$1" != "" ]]; then
 			echo -e "${yellow}fin update${NC} does not support this parameter"
 		else
