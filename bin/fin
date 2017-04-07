@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.4.2
+FIN_VERSION=1.5.0
 
 # Console colors
 red='\033[0;91m'
@@ -946,6 +946,10 @@ show_help ()
 	printh "sqli [file]" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
 
 	echo
+	printh "image <command>" "Image management" "yellow"
+	printh "  save, load, registry" "See ${yellow}fin help image${NC} for details"
+
+	echo
 	printh "project <command>" "Project management" "yellow"
 	printh "  list, create" "See ${yellow}fin help project${NC} for details"
 
@@ -1064,6 +1068,24 @@ show_help_rm ()
 show_help_remove ()
 {
 	show_help_rm
+}
+
+show_help_image() {
+	echo-green "Image management"
+	printh "fin image <command>" "" "yellow"
+	echo
+	printh "save [--system|--project|--all]" "Save docker images into a tar archive."
+	printh "load <file>" "Load docker images from a tar archive."
+	echo
+	printh "registry" "Show all Docksal images on Docker Hub"
+	printh "registry [image name]" "Show all tags for a certain image"
+	echo
+	echo-green "Examples:"
+	printh "fin image save --system" "Save Docksal system images."
+	printh "fin image save --project" "Save current project's images."
+	printh "fin image save --all" "Save all images available on the host."
+	printh "fin image registry docksal/db" "Show all tags for docksal/db image"
+	echo
 }
 
 show_help_project() {
@@ -1236,10 +1258,6 @@ show_help_config ()
 	printh "show" "Display full effective configuration for the project"
 	printh "env" "Display only environment variables section"
 	printh "generate" "Generate Docksal configuration for the project"
-	printh "images" "Show all Docksal images on Docker Hub"
-	printh "images [image name]" "Show all tags for certain image"
-	echo-green "Examples:"
-	printh "fin config images docksal/db" "Show all tags for docksal/db image"
 	echo
 }
 
@@ -2713,6 +2731,46 @@ check_for_updates ()
 	fi
 }
 
+# Export docker images from the host into a tar archive
+# @param $1 mode: --system, --project, --all
+image_save ()
+{
+	local mode="$1"; shift
+	if [[ "$mode" == "--system" ]]; then
+		echo "Saving system images..."
+		docker ps --filter "label=io.docksal.group=system" --format "{{.Image}}" | xargs docker save -o docksal-system-images.tar
+	elif [[ "$mode" == "--project" ]]; then
+		load_configuration
+		echo "Saving ${COMPOSE_PROJECT_NAME} project images..."
+		docker-compose config | grep image | sed 's/.*image: \(.*\)/\1/' | xargs docker save -o docksal-${COMPOSE_PROJECT_NAME}-images.tar
+	elif [[ "$mode" == "--all" ]]; then
+		echo "Saving all images available on the host..."
+		docker image ls -q | xargs docker save -o docksal-all-images.tar
+	else
+		echo "Usage: save <mode> (--system, --project, --all)"
+	fi
+}
+
+# Import docker images from a tar archive
+# @param $1 file
+image_load ()
+{
+	local file="$1"; shift
+	docker load -i "$file"
+}
+
+image_registry_list ()
+{
+	if [[ "$1" != "" ]]; then
+		echo "$1 tags"
+		echo "----------"
+		# for instance $1 == "docksal/db"
+		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | cut -d " " -f2 | tr -d \"
+	else
+		fin docker search "docksal" | grep "^docksal\/"
+	fi
+}
+
 #-------------------------- Execution commands -----------------------------
 
 # Start an interactive bash session in a container
@@ -3389,18 +3447,6 @@ config_generate ()
 	fi
 }
 
-config_images ()
-{
-	if [[ "$1" != "" ]]; then
-		echo "$1 tags"
-		echo "----------"
-		# for instance $1 == "docksal/db"
-		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | cut -d " " -f2 | tr -d \"
-	else
-		fin docker search "docksal" | grep "^docksal\/"
-	fi
-}
-
 create_site ()
 {
 	while true; do
@@ -3598,6 +3644,27 @@ case "$1" in
 		shift
 		restart
 		;;
+	image)
+		shift
+		case "$1" in
+			save)
+				shift
+				image_save "$@"
+			;;
+			load)
+				shift
+				image_load "$@"
+			;;
+			registry)
+				shift
+				image_registry_list "$@"
+			;;
+			*)
+				echo -e "Unknown command $1. See ${yellow}fin help image${NC}"
+				exit 1
+			;;
+		esac
+		;;
 	project)
 		shift
 		case "$1" in
@@ -3777,9 +3844,6 @@ case "$1" in
 		if [[ "$1" == "generate" ]]; then
 			shift;
 			config_generate
-		elif [[ "$1" == "images" ]]; then
-			shift
-			config_images "$@"
 		else
 			config_show "$@"
 		fi
