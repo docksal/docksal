@@ -2516,14 +2516,14 @@ update_virtualbox () {
 	fi
 
 	if [[ -f "$vbox_pkg" ]]; then
-		_confirm "Found VirtualBox $REQUIREMENTS_VBOX in '$vbox_pkg'. Install it?"
+		echo-green "Found VirtualBox $REQUIREMENTS_VBOX in '$vbox_pkg'. Using it..."
 	else
 		if is_tty; then
 			_confirm "Do you want to download VirtualBox $REQUIREMENTS_VBOX to '$vbox_pkg' and install it?"
 		else
 			echo-green "Downloading and installing VirtualBox $REQUIREMENTS_VBOX"
 		fi
-		curl -kfL "$url" -o "$vbox_pkg"
+		curl -L# "$url" -o "$vbox_pkg"
 	fi
 
 	# Stop VM
@@ -2649,8 +2649,9 @@ update_system_images ()
 	check_docker_running
 
 	IMAGE_FILE=${IMAGE_FILE:-docksal-system-images.tar}
-	if [[ -f "$IMAGE_FILE" ]] && (_confirm "Found $IMAGE_FILE. Use it?"); then
+	if [[ -f "$IMAGE_FILE" ]]; then
 		# Load system images from the current directory when available
+		echo-green "Found $IMAGE_FILE. Using it..."
 		image_load "$IMAGE_FILE"
 	else
 		# Load system images as usually from Docker Hub
