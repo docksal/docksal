@@ -2225,27 +2225,63 @@ install_tools_mac ()
 
 	# Install Docker client
 	if ! is_docker_version; then
+		local docker_pkg=$(basename "$URL_DOCKER_MAC")
 		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
-		(cd "$CONFIG_DOWNLOADS_DIR" && \
-			curl -sSL "$URL_DOCKER_MAC" | tar zxf - && \
-			mv "docker/docker" "$CONFIG_BIN_DIR/")
-		if_failed "Check file permissions and internet connection."
+		if [[ ! -f "$docker_pkg" ]]; then
+			echo-green "Downloading ${docker_pkg}..."
+			curl -L# "$URL_DOCKER_MAC" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
+			if_failed "Check internet connection."
+		# Use a local/portable copy if available
+		else
+			echo-green "Found a local copy of ${docker_pkg}. Using it..."
+			cp -f "$docker_pkg" "$CONFIG_DOWNLOADS_DIR"
+			if_failed "Check file permissions."
+		fi
+
+		# Run in sub-shell so we don't have to cd back
+		(
+			cd "$CONFIG_DOWNLOADS_DIR" && \
+			tar zxf "$docker_pkg" && \
+			mv "docker/docker" "$CONFIG_BIN_DIR/" && \
+			chmod +x "$DOCKER_BIN"
+		)
+		if_failed "Check file permissions."
 	fi
 
 	# Install docker-compose
 	if ! is_docker_compose_version; then
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_MAC")
 		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
-		curl -sSL "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN"
-		if_failed "Check file permissions and internet connection."
+		if [[ ! -f "$dc_pkg" ]]; then
+			echo-green "Downloading ${dc_pkg}..."
+			curl -L# "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
+				chmod +x "$DOCKER_COMPOSE_BIN"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo-green "Found a local copy of ${dc_pkg}. Using it..."
+			cp -f "$dc_pkg" "$DOCKER_COMPOSE_BIN" && \
+				chmod +x "$DOCKER_COMPOSE_BIN"
+			if_failed "Check file permissions."
+		fi
 	fi
 
 	# Install docker-machine
 	if ! is_docker_machine_version; then
+		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_MAC")
 		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
-			chmod +x "$DOCKER_MACHINE_BIN"
-		if_failed "Check file permissions and internet connection."
+		if [[ ! -f "$dm_pkg" ]]; then
+			echo-green "Downloading ${dm_pkg}..."
+			curl -L# "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
+				chmod +x "$DOCKER_MACHINE_BIN"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo-green "Found a local copy of ${dm_pkg}. Using it..."
+			cp -f "$dm_pkg" "$DOCKER_MACHINE_BIN" && \
+				chmod +x "$DOCKER_MACHINE_BIN"
+			if_failed "Check file permissions."
+		fi
 	fi
 
 	# Cleanup
