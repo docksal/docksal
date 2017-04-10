@@ -942,8 +942,8 @@ show_help ()
 	echo
 	printh "sqlc" "Opens mysql shell to current project database (${yellow}fin help sqlc${NC})"
 	printh "sqls" "Show list of available databases (${yellow}fin help sqls${NC})"
-	printh "sqld [file]" "Dump specified database into file (${yellow}fin help sqld${NC})"
-	printh "sqli [file]" "Truncate database and import from sql dump (${yellow}fin help sqli${NC})"
+	printh "sqld [file]" "Dump the database into a file (${yellow}fin help sqld${NC})"
+	printh "sqli [file]" "Truncate the database and import from sql dump (${yellow}fin help sqli${NC})"
 
 	echo
 	printh "image <command>" "Image management" "yellow"
