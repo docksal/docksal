@@ -1347,8 +1347,10 @@ docker_machine_create ()
 
 	# Use a local boot2docker.iso copy when available
 	ISO_FILE=${ISO_FILE:-boot2docker.iso}
-	[[ -f "$ISO_FILE" ]] && (_confirm "Found $ISO_FILE. Use it?") && \
+	if [[ -f "$ISO_FILE" ]]; then
+		echo "Found $ISO_FILE. Using it..."
 		URL_BOOT2DOCKER="$ISO_FILE"
+	fi
 
 	docker-machine create \
  		--driver=virtualbox \
@@ -2233,7 +2235,7 @@ install_tools_mac ()
 			if_failed "Check internet connection."
 		# Use a local/portable copy if available
 		else
-			echo-green "Found a local copy of ${docker_pkg}. Using it..."
+			echo "Found a local copy of ${docker_pkg}. Using it..."
 			cp -f "$docker_pkg" "$CONFIG_DOWNLOADS_DIR"
 			if_failed "Check file permissions."
 		fi
@@ -2259,7 +2261,7 @@ install_tools_mac ()
 			if_failed "Check file permissions and internet connection."
 		# Use a local/portable copy if available
 		else
-			echo-green "Found a local copy of ${dc_pkg}. Using it..."
+			echo "Found a local copy of ${dc_pkg}. Using it..."
 			cp -f "$dc_pkg" "$DOCKER_COMPOSE_BIN" && \
 				chmod +x "$DOCKER_COMPOSE_BIN"
 			if_failed "Check file permissions."
@@ -2277,7 +2279,7 @@ install_tools_mac ()
 			if_failed "Check file permissions and internet connection."
 		# Use a local/portable copy if available
 		else
-			echo-green "Found a local copy of ${dm_pkg}. Using it..."
+			echo "Found a local copy of ${dm_pkg}. Using it..."
 			cp -f "$dm_pkg" "$DOCKER_MACHINE_BIN" && \
 				chmod +x "$DOCKER_MACHINE_BIN"
 			if_failed "Check file permissions."
@@ -2330,7 +2332,7 @@ install_tools_windows ()
 			if_failed "Check internet connection."
 		# Use a local/portable copy if available
 		else
-			echo-green "Found a local copy of ${docker_pkg}. Using it..."
+			echo "Found a local copy of ${docker_pkg}. Using it..."
 			cp -f ${docker_pkg} "$CONFIG_DOWNLOADS_DIR"
 			if_failed "Check file permissions."
 		fi
@@ -2357,7 +2359,7 @@ install_tools_windows ()
 			if_failed "Check file permissions and internet connection."
 		# Use a local/portable copy if available
 		else
-			echo-green "Found a local copy of ${dc_pkg}. Using it..."
+			echo "Found a local copy of ${dc_pkg}. Using it..."
 			cp -f "$dc_pkg" "$DOCKER_COMPOSE_BIN.exe" && \
 				chmod +x "$DOCKER_COMPOSE_BIN.exe"
 			if_failed "Check file permissions."
@@ -2375,7 +2377,7 @@ install_tools_windows ()
 			if_failed "Check file permissions and internet connection."
 		# Use a local/portable copy if available
 		else
-			echo-green "Found a local copy of ${dm_pkg}. Using it..."
+			echo "Found a local copy of ${dm_pkg}. Using it..."
 			cp -f "$dm_pkg" "$DOCKER_MACHINE_BIN.exe" && \
 				chmod +x "$DOCKER_MACHINE_BIN.exe"
 			if_failed "Check file permissions."
@@ -2392,7 +2394,7 @@ install_tools_windows ()
 			if_failed "Check internet connection."
 		# Use a local/portable copy if available
 		else
-			echo-green "Found a local copy of ${winpty_pkg}. Using it..."
+			echo "Found a local copy of ${winpty_pkg}. Using it..."
 			cp -f "$winpty_pkg" "$CONFIG_DOWNLOADS_DIR"
 			if_failed "Check file permissions."
 		fi
@@ -2515,14 +2517,16 @@ update_virtualbox () {
 		vbox_pkg="./"$(basename "$url")
 	fi
 
+	# Check again that file exists either in the current folder or in Downloads
 	if [[ -f "$vbox_pkg" ]]; then
-		echo-green "Found VirtualBox $REQUIREMENTS_VBOX in '$vbox_pkg'. Using it..."
+		echo "Found VirtualBox $REQUIREMENTS_VBOX in '$vbox_pkg'. Using it..."
 	else
 		if is_tty; then
 			_confirm "Do you want to download VirtualBox $REQUIREMENTS_VBOX to '$vbox_pkg' and install it?"
 		else
 			echo-green "Downloading and installing VirtualBox $REQUIREMENTS_VBOX"
 		fi
+		# curl with download the package to the Downloads location
 		curl -L# "$url" -o "$vbox_pkg"
 	fi
 
@@ -2531,11 +2535,12 @@ update_virtualbox () {
 
 	# Download and install Mac
 	is_mac && (
- 		(hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1 || true) && \
-		hdiutil attach "$vbox_pkg" -quiet && \
-		open "/Volumes/VirtualBox" && \
-		sleep 1 && \
-		open "/Volumes/VirtualBox/VirtualBox.pkg"
+		echo "Attaching ${vbox_pkg}"
+		hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1
+		hdiutil attach "$vbox_pkg" -quiet &&
+			open "/Volumes/VirtualBox" &&
+			sleep 1 &&
+			open "/Volumes/VirtualBox/VirtualBox.pkg"
 	)
 
 	# Download and install Win
@@ -2651,7 +2656,7 @@ update_system_images ()
 	IMAGE_FILE=${IMAGE_FILE:-docksal-system-images.tar}
 	if [[ -f "$IMAGE_FILE" ]]; then
 		# Load system images from the current directory when available
-		echo-green "Found $IMAGE_FILE. Using it..."
+		echo "Found $IMAGE_FILE. Using it..."
 		image_load "$IMAGE_FILE"
 	else
 		# Load system images as usually from Docker Hub
