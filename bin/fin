@@ -2412,44 +2412,51 @@ install_tools_ubuntu ()
 }
 
 update_virtualbox () {
-	local downloads
 	local url
-
-	# Confirmation
-	is_windows && downloads=$(cygpath -u "$USERPROFILE/Downloads")
-	is_mac && downloads="$HOME/Downloads"
-	if is_tty; then
-		_confirm "Do you want to download VirtualBox $REQUIREMENTS_VBOX to '$downloads' and install it?"
-	else
-		echo-green "Downloading and installing VirtualBox $REQUIREMENTS_VBOX"
-	fi
+	local vbox_pkg
 
 	# Preparation
-	is_windows &&
-		url="$URL_VBOX_WIN"
-	is_mac &&
-		url="$URL_VBOX_MAC" &&
-		hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1
+	if is_windows; then
+ 		url="$URL_VBOX_WIN"
+		vbox_pkg=$(cygpath -u "$USERPROFILE/Downloads")/$(basename "$url")
+	fi
+
+	if is_mac; then
+		url="$URL_VBOX_MAC"
+		vbox_pkg="$HOME/Downloads"/$(basename "$url")
+	fi
+
+	# Prefer the package found in the current directory
+	if [[ -f $(basename "$url") ]]; then
+		vbox_pkg="./"$(basename "$url")
+	fi
+
+	if [[ -f "$vbox_pkg" ]]; then
+		_confirm "Found VirtualBox $REQUIREMENTS_VBOX in '$vbox_pkg'. Install it?"
+	else
+		if is_tty; then
+			_confirm "Do you want to download VirtualBox $REQUIREMENTS_VBOX to '$vbox_pkg' and install it?"
+		else
+			echo-green "Downloading and installing VirtualBox $REQUIREMENTS_VBOX"
+		fi
+		curl -kfL "$url" -o "$vbox_pkg"
+	fi
 
 	# Stop VM
 	fin vm stop >/dev/null 2>&1
 
 	# Download and install Mac
 	is_mac && (
-		cd "$downloads" &&
-		curl -kfLO "$url" &&
-		echo "Attaching $(basename "$url")"
-		hdiutil attach $(basename "$url") -quiet &&
-		open "/Volumes/VirtualBox" &&
-		sleep 1 &&
+ 		(hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1 || true) && \
+		hdiutil attach "$vbox_pkg" -quiet && \
+		open "/Volumes/VirtualBox" && \
+		sleep 1 && \
 		open "/Volumes/VirtualBox/VirtualBox.pkg"
 	)
 
 	# Download and install Win
 	is_windows && (
-		cd "$downloads" &&
-		curl -kfLO "$url" &&
-		cmd /c start $(basename "$url")
+		cmd /c start "$vbox_pkg"
 	)
 
 	# Wait for installation to finish
