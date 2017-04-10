@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FIN_VERSION=1.5.2
+FIN_VERSION=1.6.0
 
 # Console colors
 red='\033[0;91m'
@@ -1347,8 +1347,10 @@ docker_machine_create ()
 
 	# Use a local boot2docker.iso copy when available
 	ISO_FILE=${ISO_FILE:-boot2docker.iso}
-	[[ -f "$ISO_FILE" ]] && (_confirm "Found $ISO_FILE. Use it?") && \
+	if [[ -f "$ISO_FILE" ]]; then
+		echo "Found $ISO_FILE. Using it..."
 		URL_BOOT2DOCKER="$ISO_FILE"
+	fi
 
 	docker-machine create \
  		--driver=virtualbox \
@@ -2225,27 +2227,63 @@ install_tools_mac ()
 
 	# Install Docker client
 	if ! is_docker_version; then
+		local docker_pkg=$(basename "$URL_DOCKER_MAC")
 		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
-		(cd "$CONFIG_DOWNLOADS_DIR" && \
-			curl -sSL "$URL_DOCKER_MAC" | tar zxf - && \
-			mv "docker/docker" "$CONFIG_BIN_DIR/")
-		if_failed "Check file permissions and internet connection."
+		if [[ ! -f "$docker_pkg" ]]; then
+			echo-green "Downloading ${docker_pkg}..."
+			curl -L# "$URL_DOCKER_MAC" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
+			if_failed "Check internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${docker_pkg}. Using it..."
+			cp -f "$docker_pkg" "$CONFIG_DOWNLOADS_DIR"
+			if_failed "Check file permissions."
+		fi
+
+		# Run in sub-shell so we don't have to cd back
+		(
+			cd "$CONFIG_DOWNLOADS_DIR" && \
+			tar zxf "$docker_pkg" && \
+			mv "docker/docker" "$CONFIG_BIN_DIR/" && \
+			chmod +x "$DOCKER_BIN"
+		)
+		if_failed "Check file permissions."
 	fi
 
 	# Install docker-compose
 	if ! is_docker_compose_version; then
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_MAC")
 		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
-		curl -sSL "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN"
-		if_failed "Check file permissions and internet connection."
+		if [[ ! -f "$dc_pkg" ]]; then
+			echo-green "Downloading ${dc_pkg}..."
+			curl -L# "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
+				chmod +x "$DOCKER_COMPOSE_BIN"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${dc_pkg}. Using it..."
+			cp -f "$dc_pkg" "$DOCKER_COMPOSE_BIN" && \
+				chmod +x "$DOCKER_COMPOSE_BIN"
+			if_failed "Check file permissions."
+		fi
 	fi
 
 	# Install docker-machine
 	if ! is_docker_machine_version; then
+		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_MAC")
 		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -sSL "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
-			chmod +x "$DOCKER_MACHINE_BIN"
-		if_failed "Check file permissions and internet connection."
+		if [[ ! -f "$dm_pkg" ]]; then
+			echo-green "Downloading ${dm_pkg}..."
+			curl -L# "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
+				chmod +x "$DOCKER_MACHINE_BIN"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${dm_pkg}. Using it..."
+			cp -f "$dm_pkg" "$DOCKER_MACHINE_BIN" && \
+				chmod +x "$DOCKER_MACHINE_BIN"
+			if_failed "Check file permissions."
+		fi
 	fi
 
 	# Cleanup
@@ -2286,39 +2324,87 @@ install_tools_windows ()
 
 	# Install Docker client
 	if ! is_docker_version; then
+		local docker_pkg=$(basename "$URL_DOCKER_WIN")
 		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
-		(cd "$CONFIG_DOWNLOADS_DIR" && \
-			curl -sSL "$URL_DOCKER_WIN" -o docker.zip && \
-			unzip docker.zip && \
-			rm docker.zip && \
+		if [[ ! -f "$docker_pkg" ]]; then
+			echo-green "Downloading ${docker_pkg}..."
+			curl -L# "$URL_DOCKER_WIN" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
+			if_failed "Check internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${docker_pkg}. Using it..."
+			cp -f ${docker_pkg} "$CONFIG_DOWNLOADS_DIR"
+			if_failed "Check file permissions."
+		fi
+
+		# Run in sub-shell so we don't have to cd back
+		(
+			cd "$CONFIG_DOWNLOADS_DIR" && \
+			unzip ${docker_pkg} && \
 			mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
-			chmod +x "$DOCKER_BIN")
-		if_failed "Check file permissions and internet connection."
+			chmod +x "$DOCKER_BIN"
+		)
+		if_failed "Check file permissions."
 	fi
 
-		# Install Docker Compose
+
+	# Install docker-compose
 	if ! is_docker_compose_version; then
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_WIN")
 		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
-		curl -sSL "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
-			chmod +x "$DOCKER_COMPOSE_BIN.exe"
-		if_failed "Check file permissions and internet connection."
+		if [[ ! -f "$dc_pkg" ]]; then
+			echo-green "Downloading ${dc_pkg}..."
+			curl -L# "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
+				chmod +x "$DOCKER_COMPOSE_BIN.exe"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${dc_pkg}. Using it..."
+			cp -f "$dc_pkg" "$DOCKER_COMPOSE_BIN.exe" && \
+				chmod +x "$DOCKER_COMPOSE_BIN.exe"
+			if_failed "Check file permissions."
+		fi
 	fi
 
-		# Install Docker Machine
+	# Install docker-machine
 	if ! is_docker_machine_version; then
+		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
 		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		curl -ksSL "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
-			chmod +x "$DOCKER_MACHINE_BIN.exe"
-		if_failed "Check file permissions and internet connection."
+		if [[ ! -f "$dm_pkg" ]]; then
+			echo-green "Downloading ${dm_pkg}..."
+			curl -L# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
+				chmod +x "$DOCKER_MACHINE_BIN.exe"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${dm_pkg}. Using it..."
+			cp -f "$dm_pkg" "$DOCKER_MACHINE_BIN.exe" && \
+				chmod +x "$DOCKER_MACHINE_BIN.exe"
+			if_failed "Check file permissions."
+		fi
 	fi
 
 	# Install winpty
 	if ! is_winpty_version; then
 		echo-green "Installing winpty v${REQUIREMENTS_WINPTY}..."
-		(cd "$CONFIG_DOWNLOADS_DIR" && \
-			curl -sSL "$URL_WINPTY" | tar -xzf - && \
-			mv winpty-*/bin/* "$CONFIG_BIN_DIR/")
-		if_failed "Check file permissions and internet connection."
+		local winpty_pkg=$(basename "$URL_WINPTY")
+		if [[ ! -f "$winpty_pkg" ]]; then
+			echo-green "Downloading ${winpty_pkg}..."
+			curl -L# "$URL_WINPTY" -o "$CONFIG_DOWNLOADS_DIR/$winpty_pkg"
+			if_failed "Check internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${winpty_pkg}. Using it..."
+			cp -f "$winpty_pkg" "$CONFIG_DOWNLOADS_DIR"
+			if_failed "Check file permissions."
+		fi
+		# Run in sub-shell so we don't have to cd back
+		(
+			cd "$CONFIG_DOWNLOADS_DIR" && \
+			tar zxf "$winpty_pkg" && \
+			mv winpty-*/bin/* "$CONFIG_BIN_DIR/"
+		)
+		if_failed "Check file permissions."
 	fi
 
 	# Cleanup
@@ -2412,44 +2498,54 @@ install_tools_ubuntu ()
 }
 
 update_virtualbox () {
-	local downloads
 	local url
-
-	# Confirmation
-	is_windows && downloads=$(cygpath -u "$USERPROFILE/Downloads")
-	is_mac && downloads="$HOME/Downloads"
-	if is_tty; then
-		_confirm "Do you want to download VirtualBox $REQUIREMENTS_VBOX to '$downloads' and install it?"
-	else
-		echo-green "Downloading and installing VirtualBox $REQUIREMENTS_VBOX"
-	fi
+	local vbox_pkg
 
 	# Preparation
-	is_windows &&
-		url="$URL_VBOX_WIN"
-	is_mac &&
-		url="$URL_VBOX_MAC" &&
-		hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1
+	if is_windows; then
+ 		url="$URL_VBOX_WIN"
+		vbox_pkg=$(cygpath -u "$USERPROFILE/Downloads")/$(basename "$url")
+	fi
+
+	if is_mac; then
+		url="$URL_VBOX_MAC"
+		vbox_pkg="$HOME/Downloads"/$(basename "$url")
+	fi
+
+	# Prefer the package found in the current directory
+	if [[ -f $(basename "$url") ]]; then
+		vbox_pkg="./"$(basename "$url")
+	fi
+
+	# Check again that file exists either in the current folder or in Downloads
+	if [[ -f "$vbox_pkg" ]]; then
+		echo "Found VirtualBox $REQUIREMENTS_VBOX in '$vbox_pkg'. Using it..."
+	else
+		if is_tty; then
+			_confirm "Do you want to download VirtualBox $REQUIREMENTS_VBOX to '$vbox_pkg' and install it?"
+		else
+			echo-green "Downloading and installing VirtualBox $REQUIREMENTS_VBOX"
+		fi
+		# curl with download the package to the Downloads location
+		curl -L# "$url" -o "$vbox_pkg"
+	fi
 
 	# Stop VM
 	fin vm stop >/dev/null 2>&1
 
 	# Download and install Mac
 	is_mac && (
-		cd "$downloads" &&
-		curl -kfLO "$url" &&
-		echo "Attaching $(basename "$url")"
-		hdiutil attach $(basename "$url") -quiet &&
-		open "/Volumes/VirtualBox" &&
-		sleep 1 &&
-		open "/Volumes/VirtualBox/VirtualBox.pkg"
+		echo "Attaching ${vbox_pkg}"
+		hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1
+		hdiutil attach "$vbox_pkg" -quiet &&
+			open "/Volumes/VirtualBox" &&
+			sleep 1 &&
+			open "/Volumes/VirtualBox/VirtualBox.pkg"
 	)
 
 	# Download and install Win
 	is_windows && (
-		cd "$downloads" &&
-		curl -kfLO "$url" &&
-		cmd /c start $(basename "$url")
+		cmd /c start "$vbox_pkg"
 	)
 
 	# Wait for installation to finish
@@ -2558,8 +2654,9 @@ update_system_images ()
 	check_docker_running
 
 	IMAGE_FILE=${IMAGE_FILE:-docksal-system-images.tar}
-	if [[ -f "$IMAGE_FILE" ]] && (_confirm "Found $IMAGE_FILE. Use it?"); then
+	if [[ -f "$IMAGE_FILE" ]]; then
 		# Load system images from the current directory when available
+		echo "Found $IMAGE_FILE. Using it..."
 		image_load "$IMAGE_FILE"
 	else
 		# Load system images as usually from Docker Hub
