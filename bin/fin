@@ -1969,6 +1969,77 @@ project_list ()
 		--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
 }
 
+project_create ()
+{
+	while true; do
+		read -p "Please enter the name of your project (all one word, no spaces or slashes): " project_name
+		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
+			echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
+			continue
+		fi
+		break
+	done
+	echo ''
+
+	echo -e "What would you like to install?"
+	echo -e "${green}[1]${NC} Drupal 7"
+	echo -e "${green}[2]${NC} Drupal 8"
+	echo -e "${green}[3]${NC} Wordpress"
+	echo -e "${green}[4]${NC} Magento"
+	echo -e ""
+	while true; do
+		read -p ": " choice
+		case ${choice} in
+			1)
+				target_cms="Drupal 7"
+				target_host_name_search_string="drupal7"
+				target_repo="$URL_REPO_DRUPAL7"
+				break
+				;;
+			2)
+				target_cms="Drupal 8"
+				target_host_name_search_string="drupal8"
+				target_repo="$URL_REPO_DRUPAL8"
+				break
+				;;
+			3)
+				target_cms="Wordpress"
+				target_host_name_search_string="wordpress"
+				target_repo="$URL_REPO_WORDPRESS"
+				break
+				;;
+			4)
+				target_cms="Magento"
+				target_host_name_search_string="magento"
+				target_repo="$URL_REPO_MAGENTO"
+				break
+				;;
+			* )
+				echo 'Please enter 1, 2, 3 or 4.'
+				continue
+		esac
+		break
+	done
+	echo ''
+
+	echo -e "Your site will be created at ${yellow}$(pwd)/$project_name${NC}"
+	echo -e "Your site will run ${yellow}${target_cms}${NC}"
+	echo -e "The URL of your site will be ${yellow}http://$project_name.docksal${NC}"
+	echo ''
+
+	_confirm "Do you wish to proceed?"
+
+	echo -e "${green} Cloning repository...${NC}"
+	git clone -b master ${target_repo} ${project_name}
+	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
+
+	cd ${project_name}/.docksal &&
+		# Edit docksal.env to use a custom user-supplied host name
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1 &&
+		cd ".." &&
+		fin init
+}
+
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
@@ -3418,77 +3489,6 @@ config_generate ()
 	fi
 }
 
-create_site ()
-{
-	while true; do
-		read -p "Please enter the name of your project (all one word, no spaces or slashes): " project_name
-		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
-			echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
-			continue
-		fi
-		break
-	done
-	echo ''
-
-	echo -e "What would you like to install?"
-	echo -e "${green}[1]${NC} Drupal 7"
-	echo -e "${green}[2]${NC} Drupal 8"
-	echo -e "${green}[3]${NC} Wordpress"
-	echo -e "${green}[4]${NC} Magento"
-	echo -e ""
-	while true; do
-		read -p ": " choice
-		case ${choice} in
-			1)
-				target_cms="Drupal 7"
-				target_host_name_search_string="drupal7"
-				target_repo="$URL_REPO_DRUPAL7"
-				break
-				;;
-			2)
-				target_cms="Drupal 8"
-				target_host_name_search_string="drupal8"
-				target_repo="$URL_REPO_DRUPAL8"
-				break
-				;;
-			3)
-				target_cms="Wordpress"
-				target_host_name_search_string="wordpress"
-				target_repo="$URL_REPO_WORDPRESS"
-				break
-				;;
-			4)
-				target_cms="Magento"
-				target_host_name_search_string="magento"
-				target_repo="$URL_REPO_MAGENTO"
-				break
-				;;
-			* )
-				echo 'Please enter 1, 2, 3 or 4.'
-				continue
-		esac
-		break
-	done
-	echo ''
-
-	echo -e "Your site will be created at ${yellow}$(pwd)/$project_name${NC}"
-	echo -e "Your site will run ${yellow}${target_cms}${NC}"
-	echo -e "The URL of your site will be ${yellow}http://$project_name.docksal${NC}"
-	echo ''
-
-	_confirm "Do you wish to proceed?"
-
-	echo -e "${green} Cloning repository...${NC}"
-	git clone -b master ${target_repo} ${project_name}
-	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
-
-	cd ${project_name}/.docksal &&
-		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1 &&
-		cd ".." &&
-		fin init
-}
-
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Override PATH to use our utilities
@@ -3640,7 +3640,7 @@ case "$1" in
 		shift
 		case "$1" in
 			create)
-				create_site
+				project_create
 				;;
 			list)
 				shift
@@ -3832,7 +3832,7 @@ case "$1" in
 	# TODO: remove create-site in September 2017 in favor of project create
 	create-site)
 		echo -e "${yellow}Notice:${NC} create-site is deprecated and will be removed. Use ${yellow}fin project create${NC} instead."
-		create_site
+		project_create
 		;;
 	init|*)
 		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
