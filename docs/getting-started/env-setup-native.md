@@ -13,7 +13,7 @@ On Mac and Windows, you can use native Docker applications instead of VirtualBox
 **2.** Install `fin` and run `fin update`, unless already installed.
 
 ```bash
-sudo curl -L https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
+sudo curl -fsSL https://raw.githubusercontent.com/docksal/docksal/master/bin/fin -o /usr/local/bin/fin && \
 sudo chmod +x /usr/local/bin/fin
 fin update
 ```

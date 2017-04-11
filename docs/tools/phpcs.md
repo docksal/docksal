@@ -10,7 +10,7 @@ From your project's root folder (where the `.docksal` folder is) download the sa
 
 ```bash
 mkdir -p .docksal/commands
-curl https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/phpcs -ko .docksal/commands/phpcs
+curl -fsSL https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/phpcs -o .docksal/commands/phpcs
 chmod +x .docksal/commands/phpcs
 ```
 
