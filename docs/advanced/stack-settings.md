@@ -27,15 +27,15 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 
 ```bash
-CLI_IMAGE='docksal/cli:1.1-php5'
+CLI_IMAGE='docksal/cli:1.2-php5'
 ```
 
 Remember to run `fin up` to apply the configuration.
 
 Available images:
 
-- PHP 5 - `docksal/cli:1.1-php5`
-- PHP 7 - `docksal/cli:1.1-php7`
+- PHP 5 - `docksal/cli:1.2-php5`
+- PHP 7 - `docksal/cli:1.2-php7`
 
 For projects using a custom stack configuration check [here](../advanced/stack-config.md#php-version).
 

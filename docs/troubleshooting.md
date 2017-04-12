@@ -68,7 +68,7 @@ exports:11: export option conflict for /Users
 
 With NFS a single directory can only be exported once. It can not be exported several times with different settings.
    
-Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, then run `fin vm restart`.
+Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin vm start` again.
 
 ## Conflicting ports
 
@@ -109,7 +109,30 @@ fin vm start
 Error with pre-create check: "VirtualBox is configured with multiple host-only adapters with the same IP \"192.168.64.1\". Please remove one."
 ```
 
-1. Open VirtulBox UI
+1. Open VirtualBox UI
 2. Open Preferences > Network tab
 3. Click "Host-only Networks" tab
 4. Click through adapters in list and delete the ones with the `192.168.64.1` IP
+
+## DNS server misbehaving
+
+```
+ERROR: error pulling image configuration: Get https://dseasb33srnrn.cloudfront.net/registry-v2/docker/registry/v2/blobs/sha256/9f/9fb8c0aed5fc7cc710884dc9cbd0974cc606053989b4f73f20e8b363e7d6cc7f/data?Expires=1490711517&Signature=SzvWOicPa6yZRxlBh1~vsl2xHtkOXR8xDj~usSP8aS9ZFhNQ8oH5pAcfZyx3sxgPgtqPgSOzuoaBtw5lT0~i0mpt~QCBpkgRhgyRQ8rzkbI1sG9ZRDXvRQ4sG49ckorbHyUT8isG5mEWl3Ar8kateU9he9fdlRhe5V5Zvn-et0s_&Key-Pair-Id=APKAJECH5M7VWIS5YZ6Q: dial tcp: lookup dseasb33srnrn.cloudfront.net on 10.0.2.3:53: server misbehaving
+```
+
+```
+Pulling db (docksal/db:1.0-mysql-5.5)...
+ERROR: Get https://registry-1.docker.io/v2/: dial tcp: lookup registry-1.docker.io on 10.0.2.3:53: server misbehaving
+```
+
+Your system DNS server does not properly resolve `index.docker.io`.
+
+Use [Google Public DNS server](https://developers.google.com/speed/public-dns/) or [Open DNS](https://www.opendns.com/setupguide/).
+
+1. Please [refer to the doc on how to apply DNS](https://developers.google.com/speed/public-dns/docs/using) on your operating system.
+2. `fin vm restart` after you apply your new DNS settings.
+
+macOS DNS settings example:
+
+![macOS DNS settings](_img/troubleshooting-network-dns.png)
+

@@ -22,6 +22,7 @@ mail:
     - MH_UI_BIND_ADDR=0.0.0.0:80
   labels:
     - io.docksal.virtual-host=webmail.${VIRTUAL_HOST}
+  user: root
 ```
 
 Apply new configuration with `fin up`.

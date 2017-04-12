@@ -2,13 +2,10 @@
 
 ## Coming up next
 
-- Official Magento support and a sample project setup
-- A tray app for Linux, Mac and Windows to display/control Docksal status 
-- Docksal web UI to view project statuses, configuration, logs and resources
+Checkout project [Milestones](https://github.com/docksal/docksal/milestones) to get a sense of what's coming up next 
+and when.
 
+## Also considering
 
-## Considering
-
-- Switch to Docker v1.13.0
-- Switch to Docker Compose v1.10.0 and v3.0 compose file format
+- Switch to Docker Compose file format v3
 - Documenting and open-sourcing Docksal CI

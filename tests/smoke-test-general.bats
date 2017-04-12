@@ -15,6 +15,14 @@ teardown() {
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
 #SKIP=1
 
+# Cannot do cleanup outside of a test case as bats will evaluate/run that code before every single test case.
+@test "uber cleanup" {
+	[[ $SKIP == 1 ]] && skip
+
+	fin rm -f
+	return 0
+}
+
 @test "fin start" {
 	[[ $SKIP == 1 ]] && skip
 	
@@ -204,31 +212,44 @@ teardown() {
 	run fin exec uname -a
 	[[ "$output" =~ "Linux cli" ]]
 	
-	run fin exec pwd
-	[[ "$(echo $output | tr -d '[:cntrl:]')" == "/var/www" ]]
+	# Test output in TTY vs no-TTY mode.
+	[[ "$(fin exec echo)" != "$(fin exec -T echo)" ]]
+
+	# Test the no-TTY output is a "clean" string (does not have extra control characters and can be compared)
+	run fin exec -T pwd
+	[[ "$output" == "/var/www" ]]
 
 	# Test that switching directories on host carries over into cli
 	cd docroot
-	run fin exec pwd
-	[[ "$(echo $output | tr -d '[:cntrl:]')" == "/var/www/docroot" ]]
+	run fin exec -T pwd
+	[[ "$output" == "/var/www/docroot" ]]
+
+	# fin exec uses the docker user
+	run fin exec -T id -un
+	[[ "$output" == "docker" ]]
+
+	# docker user uid/gid in cli matches the host user uid/gid
+	run fin exec -T 'echo $(id -u):$(id -g)'
+	[[ "$output" == "$(id -u):$(id -g)" ]]
 }
 
-@test "fin drush" {
+@test "fin run-cli" {
 	[[ $SKIP == 1 ]] && skip
-	
-	# Default drush (8)
-	run fin drush --version
-	echo "$output" | egrep "Drush Version   :  8.*"
 
-	# Drush 6
-	run fin exec drush6 --version
-	echo "$output" | egrep "Drush Version   :  6.*"
+	# Dummy command to pre-pull the image run-cli is using.
+	fin rc uname
 
-	# Drush 7
-	run fin exec drush7 --version
-	echo "$output" | egrep "Drush Version   :  7.*"
+	# Test output in TTY vs no-TTY mode.
+	[[ "$(fin rc echo)" != "$(fin rc -T echo)" ]]
+
+	# fin rc uses the docker user
+	run fin rc -T id -un
+	[[ "$output" == "docker" ]]
+
+	# docker user uid/gid in cli matches the host user uid/gid
+	run fin rc -T 'echo $(id -u):$(id -g)'
+	[[ "$output" == "$(id -u):$(id -g)" ]]
 }
-
 
 @test "fin rm -f" {
 	[[ $SKIP == 1 ]] && skip

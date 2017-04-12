@@ -13,9 +13,11 @@ pages:
     - What's in the software?: getting-started/the-software.md
     - Setup instructions: getting-started/setup.md
     - System requirements: getting-started/system-requirements.md
-    - Docksal environment setup: getting-started/env-setup.md
+    - Docksal setup: getting-started/env-setup.md
     - Project setup: getting-started/project-setup.md
     - Docker for Mac/Windows: getting-started/env-setup-native.md
+    - Upgrading from Drude (DDE): getting-started/upgrade-dde.md
+    - Portable installation: getting-started/portable.md
   - Troubleshooting: troubleshooting.md
   - Docksal Fin:
     - fin: fin/fin.md
@@ -39,7 +41,7 @@ pages:
       - Stack configuration: advanced/stack-config.md
       - PHP/MySQL/etc. settings: advanced/stack-settings.md
       - Drupal settings: advanced/drupal-settings.md
-      - Multiple projects: advanced/multiple-projects.md
+      - Multiple projects/domains: advanced/multiple-projects.md
       - VM resources: advanced/vm.md
       - Networking: advanced/networking.md
     - SSH agent: advanced/ssh-agent.md
@@ -47,4 +49,7 @@ pages:
       - Database access: advanced/db-access.md
       - Automatic database import: advanced/db-import.md
       - Database sandbox mode: advanced/db-sandbox.md
+    - Web Server:
+      - HTTP Basic Authentication: advanced/web-http-auth.md
+      - Web server logs: advanced/web-logs.md
     - Docksal volumes: advanced/volumes.md
