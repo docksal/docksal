@@ -1193,22 +1193,23 @@ show_help_vm ()
 	printh "fin vm <command>" "" "yellow"
 	echo
 	echo-green "Commands:"
-	printh "start" "Start a machine (create if needed)"
-	printh "stop" "Stop active machine"
-	printh "kill" "Forcibely stop active machine"
-	printh "restart" "Restart a machine"
-	printh "status" "Get the status of a machine"
-	printh "ls" "List all docker machines"
-	printh "ssh" "Log into or run a command on the active machine with SSH"
-	printh "remove" "Remove active machine"
-	printh "ip" "Get machine IP address"
+	printh "start" "Start the machine (create if needed)"
+	printh "stop" "Stop the machine"
+	printh "kill" "Forcibely stop the machine"
+	printh "restart" "Restart the machine"
+	printh "status" "Get the status"
+	printh "ssh [command]" "Log into ssh or run a command via ssh"
+	printh "remove" "Remove Docksal machine and cleanup after it"
+	printh "ip" "Show the machine IP address"
 	# printh "ip [new ip]" "Set machine IP address (requires vm restart)"
+	printh "ls" "List all docker machines"
 	printh "env" "Display the commands to set up the shell for direct use of Docker client"
-	echo
 	printh "mount" "Try remounting host filesystem (NFS on macOS, SMB on Windows)"
-	printh "ram" "Get machine memory size"
-	printh "ram [megabytes]" "Set machine memory size. Default is 1024 (requires vm restart)"
-	printh "stats" "Show machine HDD/RAM usage stats"
+	echo
+	printh "ram" "Show memory size"
+	printh "ram [megabytes]" "Set memory size. Default is 1024 (requires vm restart)"
+	printh "hdd" "Show disk size and usage"
+	printh "stats" "Show CPU and network usage"
 	echo
 }
 
@@ -1854,6 +1855,10 @@ vm ()
 			shift
 			vm-ram "$@"
 			;;
+		hdd)
+			shift
+			vm-hdd "$@"
+			;;
 		*)
 			echo-error "Unknown command fin vm $1" "See ${yellow}fin help vm${NC} for list of available commands"
 			;;
@@ -1865,7 +1870,7 @@ vm-stats ()
 	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
 	check_docker_running # should be running
 	check_vbox_version
-	metrics="CPU/Load/User,CPU/Load/Kernel,Disk/Usage/Used,RAM/Usage/Used,Net/Rate/Rx,Net/Rate/Tx"
+	metrics="CPU/Load/User,CPU/Load/Kernel,Net/Rate/Rx,Net/Rate/Tx"
 	"$vboxmanage" metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
 	sleep 1
 	"$vboxmanage" metrics query "$DOCKER_MACHINE_NAME" "$metrics"
@@ -1883,6 +1888,10 @@ vm-ram () {
 			echo "Memory size updated."
 		[[ ${running} == 1 ]] && docker_machine_start
 	fi
+}
+
+vm-hdd () {
+	docker-machine ssh "$DOCKER_MACHINE_NAME" df -h /mnt/sda1
 }
 
 #------------------------------- Other Commands -----------------------------------
