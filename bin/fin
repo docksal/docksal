@@ -921,17 +921,17 @@ show_help ()
 	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
 	printh "remove (rm)" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
 	printh "status (ps)" "List project services"
+	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
 
 	echo
+	printh "project <command>" "Project management commands: list, create (${yellow}fin help project${NC})" "yellow"
 	if ! is_linux && ! is_docker_native; then
-		printh "vm <command>" "Docksal's Virtualbox machine commands (${yellow}fin help vm${NC})" "yellow"
-		printh "  start, stop, restart, status, ls, ssh, remove, ip, env, ram, stats"
+		printh "vm <command>" "VM commands: start, stop,... (${yellow}fin help vm${NC})" "yellow"
 	fi
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "exec <command|file>" "Execute a command or a file in ${yellow}cli${NC}"
-	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
+	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "logs [service]" "Show Docker logs for service container (e.g. Apache logs)"
 
 	echo
@@ -946,23 +946,16 @@ show_help ()
 	printh "sqli [file]" "Truncate the database and import from sql dump (${yellow}fin help sqli${NC})"
 
 	echo
-	printh "image <command>" "Image management" "yellow"
-	printh "  save, load, registry" "See ${yellow}fin help image${NC} for details"
-
-	echo
-	printh "project <command>" "Project management" "yellow"
-	printh "  list, create" "See ${yellow}fin help project${NC} for details"
-
-	echo
 	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent (${yellow}fin help ssh-add${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images and projects that are no longer present"
 
 	echo
-	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
-	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "share" "Share web server of the current project on the internet using ngrok"
-	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "alias" "Create/remove folder aliases (${yellow}fin help alias${NC})"
+	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
+	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
+	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
+	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] - prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
