@@ -3123,7 +3123,9 @@ mysql_import ()
 	fi
 
 	#-- 2) IMPORTING
-	echo "Importing..."
+	[[ "$__input" != "/dev/fd/0" ]] &&
+		echo "Importing..." ||
+		echo "Importing from stdin..." ||
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command direclty (no bash wrapper) so that stdin could be received inside that exec
 	container_id=$(get_container_id "db")
