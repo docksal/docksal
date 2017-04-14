@@ -991,12 +991,15 @@ show_help_list_of_custom_commands ()
 
 	custom_commands_list=$(ls "$_path" 2>/dev/null | tr "\n" " ")
 	if [ ! -z "$custom_commands_list" ]; then
+		local word
+		[ "$1" == 'project' ] && word='Project' || word='Global'
 		echo
-		echo -e "Custom commands found in ${yellow}$1 commands${NC}:";
+		echo-green "  $word addons:";
 		for cmd_name in $(ls "$_path")
 		do
 			# command description is lines that start with ##
 			local cmd_desc=$(cat "$_path/$cmd_name" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
+			cmd_desc="${cmd_desc:-No description}"
 			printh "$cmd_name" "$cmd_desc"
 		done
 	fi
