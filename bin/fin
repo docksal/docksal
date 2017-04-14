@@ -921,18 +921,19 @@ show_help ()
 	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
 	printh "remove (rm)" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
 	printh "status (ps)" "List project services"
-	printh "config" "Display/generate project configuration (${yellow}fin help config${NC})"
+	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
+	printh "config" "Show project configuration (See ${yellow}fin help config${NC} for generate)"
 
 	echo
-	printh "project <command>" "Project management commands: list, create (${yellow}fin help project${NC})" "yellow"
+	printh "db <command>" "DB commands: import, dump, list, cli (${yellow}fin help db${NC})" "yellow"
+	printh "project <command>" "Projects management commands: list, create (${yellow}fin help project${NC})" "yellow"
 	if ! is_linux && ! is_docker_native; then
-		printh "vm <command>" "VM commands: start, stop,... (${yellow}fin help vm${NC})" "yellow"
+		printh "vm <command>" "VM commands: start, stop, restart and more. See ${yellow}fin help vm${NC}" "yellow"
 	fi
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
 	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
-	printh "logs [service]" "Show Docker logs for service container (e.g. Apache logs)"
 
 	echo
 	printh "drush [command]" "Execute Drush command (Drupal)"
@@ -940,23 +941,17 @@ show_help ()
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
 
 	echo
-	printh "sqlc" "Opens mysql shell to current project database (${yellow}fin help sqlc${NC})"
-	printh "sqls" "Show list of available databases (${yellow}fin help sqls${NC})"
-	printh "sqld [file]" "Dump the database into a file (${yellow}fin help sqld${NC})"
-	printh "sqli [file]" "Truncate the database and import from sql dump (${yellow}fin help sqli${NC})"
-
-	echo
-	printh "ssh-add [-lD] [key]" "Adds private key identities to the authentication agent (${yellow}fin help ssh-add${NC})"
+	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
 	printh "cleanup [--hard]" "Remove unused docker images and projects that are no longer present"
 
 	echo
-	printh "share" "Share web server of the current project on the internet using ngrok"
+	printh "share" "Create temporary public url for current project using ngrok"
 	printh "alias" "Create/remove folder aliases (${yellow}fin help alias${NC})"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
-	printh "version (v, -v)" "Print fin version. [v, -v] - prints short version"
+	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
 	# Show list of custom commands and their help if available
@@ -1187,6 +1182,33 @@ show_help_mysql-dump ()
 	show_help_sqld
 }
 
+show_help_db ()
+{
+	echo-green "Database related commands"
+	printh "fin db <command>" "" "yellow"
+	echo
+	echo-green "Commands:"
+	printh "import [file]" "Truncate the database and import from sql dump file or stdin"
+	printh "dump [file]" "Dump the database into a file or stdout"
+	printh "list (ls)" "Show list of available databases"
+	printh "cli" "Opens command line interface to MySQL server"
+	echo
+	echo-green "Parameters:"
+	printh "--db=drupal" "Use another database (default is the one set with 'MYSQL_DATABASE')"
+	printh "--db-user=admin" "Use another mysql username (default is 'root')"
+	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
+	echo
+	echo-green "Examples:"
+	printh "fin db import ~/dump.sql" "Import from dump.sql file"
+	printh "cat dump.sql | fin db import" "Import dump from stdin into default database"
+	printh "fin db dump ~/dump.sql" "Export default database into dump.sql"
+	printh "fin db dump --db=drupal" "Export database 'drupal' dump into stdout"
+	printh "fin db" "Opens command line interface"
+	printh "fin db ls" "List databases"
+	printh "fin db dump --db=mysql --db-user=root --db-password=root mysql.sql    Export mysql database as root into mysql.sql"
+	echo
+}
+
 show_help_vm ()
 {
 	echo-green "Control docker machine directly"
@@ -1229,7 +1251,7 @@ show_help_alias ()
 	printh "fin alias ~/site1/docroot dev" "Create alias ${yellow}dev${NC} that is linked to ${yellow}~/site1/docroot${NC}"
 	printh "fin @dev drush st" "Execute 'drush st' command in directory linked by ${yellow}dev${NC} alias"
 	printh "" "Hint: create alias to Drupal sub-site folder to launch subsite targeted commands"
-	printh "fin alias remove dev"	"Delete ${yellow}dev${NC} alias"
+	printh "fin alias remove dev" "Delete ${yellow}dev${NC} alias"
 	echo
 	echo "Aliases are effectively symlinks stored in $CONFIG_ALIASES"
 }
@@ -3841,6 +3863,7 @@ case "$1" in
 		shift
 		run_cli "$@"
 		;;
+	# TODO: Remove mysql and sql* commands in fin 2.0
 	mysql|sqlc)
 		shift
 		mysql "$@"
@@ -3856,6 +3879,30 @@ case "$1" in
 	mysql-dump|sqld)
 		shift
 		mysql_dump "$@"
+		;;
+	db)
+		shift
+		case "$1" in
+			cli)
+				shift
+				mysql "$@"
+				;;
+			list|ls)
+				shift
+				mysql_list "$@"
+				;;
+			import)
+				shift
+				mysql_import "$@"
+				;;
+			dump)
+				shift
+				mysql_dump "$@"
+				;;
+			*)
+				mysql "$@"
+				;;
+		esac
 		;;
 	drush)
 		shift
