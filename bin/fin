@@ -922,7 +922,7 @@ show_help ()
 	printh "remove (rm)" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
 	printh "status (ps)" "List project services"
 	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
-	printh "config" "Show project configuration (See ${yellow}fin help config${NC} for generate)"
+	printh "config [command]" "Show project configuration (See ${yellow}fin help config${NC} for generate)"
 
 	echo
 	printh "db <command>" "DB commands: import, dump, list, cli (${yellow}fin help db${NC})" "yellow"
@@ -934,6 +934,7 @@ show_help ()
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
 	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
+	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
 
 	echo
 	printh "drush [command]" "Execute Drush command (Drupal)"
@@ -941,15 +942,12 @@ show_help ()
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
 
 	echo
-	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
-	printh "cleanup [--hard]" "Remove unused docker images and projects that are no longer present"
-
-	echo
 	printh "share" "Create temporary public url for current project using ngrok"
-	printh "alias" "Create/remove folder aliases (${yellow}fin help alias${NC})"
+	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
+	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
