@@ -1074,17 +1074,19 @@ show_help_image() {
 	echo-green "Image management"
 	printh "fin image <command>" "" "yellow"
 	echo
-	printh "save [--system|--project|--all]" "Save docker images into a tar archive."
-	printh "load <file>" "Load docker images from a tar archive."
-	echo
+	echo-green "Commands:"
 	printh "registry" "Show all Docksal images on Docker Hub"
 	printh "registry [image name]" "Show all tags for a certain image"
 	echo
+	printh "save [--system|--project|--all]" "Save docker images into a tar archive."
+	printh "load <file>" "Load docker images from a tar archive."
+	echo
 	echo-green "Examples:"
+	printh "fin image registry" "Show all available Docksal images on Docker Hub"
+	printh "fin image registry docksal/db" "Show all tags for docksal/db image"
 	printh "fin image save --system" "Save Docksal system images."
 	printh "fin image save --project" "Save current project's images."
 	printh "fin image save --all" "Save all images available on the host."
-	printh "fin image registry docksal/db" "Show all tags for docksal/db image"
 	echo
 }
 
@@ -1092,11 +1094,13 @@ show_help_project() {
 	echo-green "Project management"
 	printh "fin project <command>" "" "yellow"
 	echo
+	echo-green "Commands:"
 	printh "list (pl) [-a (--all)]" "List running Docksal projects (-a to show stopped as well)"
 	printh "create" "Create and install new Drupal, Wordpress or Magento project."
 	echo
 	echo-green "Examples:"
 	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
+	printh "fin project create" "Start project wizard"
 	echo
 }
 
@@ -1858,6 +1862,9 @@ vm ()
 		hdd)
 			shift
 			vm-hdd "$@"
+			;;
+		help)
+			show_help_vm
 			;;
 		*)
 			echo-error "Unknown command fin vm $1" "See ${yellow}fin help vm${NC} for list of available commands"
@@ -3736,6 +3743,13 @@ case "$1" in
 				shift
 				image_registry_list "$@"
 			;;
+			'')
+				echo -e "See ${yellow}fin help image${NC}"
+				exit 1
+				;;
+			help)
+				show_help_image
+				;;
 			*)
 				echo -e "Unknown command $1. See ${yellow}fin help image${NC}"
 				exit 1
@@ -3751,6 +3765,13 @@ case "$1" in
 			list)
 				shift
 				project_list "$@"
+				;;
+			'')
+				echo -e "See ${yellow}fin help project${NC}"
+				exit 1
+				;;
+			help)
+				show_help_project
 				;;
 			*)
 				echo -e "Unknown command $1. See ${yellow}fin help project${NC}"
@@ -3947,8 +3968,8 @@ case "$1" in
 		# If not found search global docksal commands folder
 		[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
 		# If not found there as well then it is a wrong command
-		[ ! -f "$command_script" ] && \
-			echo-yellow "Unknown command '$*'. See 'fin help' for list of available commands" && \
+		[ ! -f "$command_script" ] &&
+			echo-yellow "Unknown command '$*'. See 'fin help' for list of available commands" &&
 			exit 1
 
 		# if it's not executable let's fix it
