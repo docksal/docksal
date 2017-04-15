@@ -908,9 +908,8 @@ show_help ()
 		fi
 	fi
 
-	printh "Docksal Fin v$FIN_VERSION command reference" "" "green"
+	printh "Docksal Fin v$FIN_VERSION commands:" "" "green"
 
-	echo
 	if is_linux; then
 		printh "start (up)" "Start project services"
 	else
