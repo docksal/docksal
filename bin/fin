@@ -3655,7 +3655,7 @@ hosts_add ()
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
 		echo "$DOCKSAL_DEFAULT_IP $1" | tee -a "$tmp" >/dev/null
-		unix2dos "$tmp"
+		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
 		echo "$DOCKSAL_DEFAULT_IP $1" | sudo tee -a "$HOSTS_FILE" >/dev/null
@@ -3676,7 +3676,7 @@ hosts_remove ()
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
 		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$tmp" >/dev/null
-		unix2dos "$tmp"
+		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
 		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$HOSTS_FILE" >/dev/null
