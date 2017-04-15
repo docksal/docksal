@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.6.0
+FIN_VERSION=1.7.0
 
 # Console colors
 red='\033[0;91m'
@@ -948,6 +948,7 @@ show_help ()
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
 	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
+	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
@@ -1285,13 +1286,29 @@ show_help_config ()
 show_help_cleanup ()
 {
 	echo-green "Perform a cleanup"
-	printh "fin cleaup [--hard]" "" "yellow"
+	printh "fin cleanup [--hard]" "" "yellow"
 	echo
 	printh "Removes unused docker images to save disk space on VM."
 	printh "Removes orphaned containers. Orphaned are those, which folders were deleted on filesystem"
 	printh "without removing their containers with 'fin rm' first."
 	echo-green "Parameters:"
 	printh "--hard" "Also remove all stopped containers (potentially destructive operation)"
+	echo
+}
+
+show_help_hosts ()
+{
+	echo-green "Can add/remove lines to/from OS-dependent hosts file"
+	printh "fin hosts <command>" "" "yellow"
+	echo
+	printh "Always uses $DOCKSAL_DEFAULT_IP for IP."
+	echo-green "Commands:"
+	printh "add <hostname>" "Add hostname to hosts file"
+	printh "remove <hostname>" "Remove all lines containing hostname from hosts file"
+	printh "list (or no command)" "Output hosts file"
+	echo-green "Examples:"
+	printh "fin hosts add demo.docksal" "Append a line '$DOCKSAL_DEFAULT_IP demo.docksal' to hosts file"
+	printh "fin hosts" "Output hosts file"
 	echo
 }
 
@@ -3620,6 +3637,77 @@ config_generate ()
 	fi
 }
 
+# Can add or remove a host to/from hosts file
+hosts ()
+{
+	is_windows && HOSTS_FILE="/c/windows/system32/drivers/etc/hosts"
+	is_mac && HOSTS_FILE="/etc/hosts"
+	is_linux && HOSTS_FILE="/etc/hosts"
+	case "$1" in
+		add)
+			shift
+			hosts_add "$1"
+			;;
+		remove)
+			shift
+			hosts_remove "$1"
+			;;
+		'')
+			cat "$HOSTS_FILE"
+			;;
+		*)
+			echo "Usage: fin host < add | remove > [ hostname ]"
+			;;
+	esac
+}
+
+hosts_add ()
+{
+	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
+	[[ ! "$1" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
+
+	hosts_backup
+	echo "Adding: $DOCKSAL_DEFAULT_IP $1"
+	if is_windows; then
+		local tmp="/tmp/hosts.bak.$RANDOM"
+		cp "$HOSTS_FILE" "$tmp"
+		echo "$DOCKSAL_DEFAULT_IP $1" | tee -a "$tmp" >/dev/null
+		unix2dos -q "$tmp"
+		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
+	else
+		echo "$DOCKSAL_DEFAULT_IP $1" | sudo tee -a "$HOSTS_FILE" >/dev/null
+	fi
+}
+
+hosts_remove ()
+{
+	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
+	[[ ! "$1" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
+	# Double insurance from removing lines containing localhost or broadcasthost as it may damage system
+	[[ "$1" =~ "localhost" ]] && echo-error "Cannot remove localhost" && exit 1
+	[[ "$1" =~ "broadcasthost" ]] && echo-error "Cannot remove broadcasthost" && exit 1
+
+	hosts_backup
+	echo "Removing '$1'..."
+	if is_windows; then
+		local tmp="/tmp/hosts.bak.$RANDOM"
+		cp "$HOSTS_FILE" "$tmp"
+		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$tmp" >/dev/null
+		unix2dos -q "$tmp"
+		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
+	else
+		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$HOSTS_FILE" >/dev/null
+	fi
+}
+
+hosts_backup ()
+{
+	local bkp="/tmp/hosts.bak.$RANDOM"
+	echo "Backing up to $bkp"
+	sudo cp "$HOSTS_FILE" "$bkp"
+}
+
+
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Override PATH to use our utilities
@@ -4004,7 +4092,11 @@ case "$1" in
 		echo -e "${yellow}Notice:${NC} create-site is deprecated and will be removed. Use ${yellow}fin project create${NC} instead."
 		project_create
 		;;
-	init|*)
+	hosts)
+		shift
+		hosts "$@"
+		;;
+	*)
 		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
 		# First search project commands folder
 		command_script="$(get_project_path)/$DOCKSAL_COMMANDS_PATH/$1"
