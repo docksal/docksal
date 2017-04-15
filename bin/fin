@@ -3651,7 +3651,14 @@ hosts_add ()
 
 	hosts_backup
 	echo "Adding: $DOCKSAL_DEFAULT_IP $1"
-	echo "$DOCKSAL_DEFAULT_IP $1" | sudo tee -a "$HOSTS_FILE" >/dev/null
+	if is_windows; then
+		local tmp="/tmp/hosts.bak.$RANDOM"
+		cp "$HOSTS_FILE" "$tmp"
+		echo "$DOCKSAL_DEFAULT_IP $1" | tee -a "$tmp" >/dev/null
+		winsudo "cp $tmp $HOSTS_FILE && rm $tmp"
+	else
+		echo "$DOCKSAL_DEFAULT_IP $1" | sudo tee -a "$HOSTS_FILE" >/dev/null
+	fi
 }
 
 hosts_remove ()
@@ -3664,7 +3671,14 @@ hosts_remove ()
 
 	hosts_backup
 	echo "Removing '$1'..."
-	cat /etc/hosts | grep -v "$1" | sudo tee "$HOSTS_FILE" >/dev/null
+	if is_windows; then
+		local tmp="/tmp/hosts.bak.$RANDOM"
+		cp "$HOSTS_FILE" "$tmp"
+		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$tmp" >/dev/null
+		winsudo "cp $tmp $HOSTS_FILE && rm $tmp"
+	else
+		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$HOSTS_FILE" >/dev/null
+	fi
 }
 
 hosts_backup ()
