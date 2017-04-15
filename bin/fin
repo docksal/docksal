@@ -3620,6 +3620,61 @@ config_generate ()
 	fi
 }
 
+# Can add or remove a host to/from hosts file
+hosts ()
+{
+	is_windows && HOSTS_FILE="/c/windows/system32/drivers/etc/hosts"
+	is_mac && HOSTS_FILE="/etc/hosts"
+	is_linux && HOSTS_FILE="/etc/hosts"
+	case "$1" in
+		add)
+			shift
+			hosts_add "$1"
+			;;
+		remove)
+			shift
+			hosts_remove "$1"
+			;;
+		'')
+			cat "$HOSTS_FILE"
+			;;
+		*)
+			echo "Usage: fin host < add | remove > [ hostname ]"
+			;;
+	esac
+}
+
+hosts_add ()
+{
+	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
+	[[ ! "$1" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
+
+	hosts_backup
+	echo "Adding: $DOCKSAL_DEFAULT_IP $1"
+	echo "$DOCKSAL_DEFAULT_IP $1" | sudo tee -a "$HOSTS_FILE" >/dev/null
+}
+
+hosts_remove ()
+{
+	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
+	[[ ! "$1" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
+	# Double insurance from removing lines containing localhost or broadcasthost as it may damage system
+	[[ "$1" =~ "localhost" ]] && echo-error "Cannot remove localhost" && exit 1
+	[[ "$1" =~ "broadcasthost" ]] && echo-error "Cannot remove broadcasthost" && exit 1
+
+	hosts_backup
+	echo "Removing '$1'..."
+	cat /etc/hosts | grep -v "$1" | sudo tee "$HOSTS_FILE" >/dev/null
+}
+
+hosts_backup ()
+{
+	local bkp="/tmp/hosts.bak.$RANDOM"
+	echo "Backing up to $bkp"
+	sudo cp "$HOSTS_FILE" "$bkp"
+}
+
+
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Override PATH to use our utilities
@@ -4004,7 +4059,11 @@ case "$1" in
 		echo -e "${yellow}Notice:${NC} create-site is deprecated and will be removed. Use ${yellow}fin project create${NC} instead."
 		project_create
 		;;
-	init|*)
+	hosts)
+		shift
+		hosts "$@"
+		;;
+	*)
 		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
 		# First search project commands folder
 		command_script="$(get_project_path)/$DOCKSAL_COMMANDS_PATH/$1"
