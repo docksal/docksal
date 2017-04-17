@@ -316,6 +316,23 @@ get_current_relative_path ()
 	fi
 }
 
+# Returns addon path if can find it in project or global addons. Otherwise returns empty string
+get_addon_path ()
+{
+	# Search for addons
+	ADDON_ROOT="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
+	# First search project commands folder for script
+	command_script="$ADDON_ROOT/$1"
+	# Then search project commands folder for addon directory
+	[ ! -f "$command_script" ] && ADDON_ROOT="$command_script" && command_script="$ADDON_ROOT/$1"
+	# Then search global docksal commands directory for script
+	[ ! -f "$command_script" ] && ADDON_ROOT="$HOME/$DOCKSAL_COMMANDS_PATH" && command_script="$ADDON_ROOT/$1"
+	# Then search global docksal commands directory for addon directory
+	[ ! -f "$command_script" ] && ADDON_ROOT="$command_script" && command_script="$ADDON_ROOT/$1"
+
+	[ -f "$command_script" ] && export ADDON_ROOT && echo "$command_script"
+}
+
 # Get mysql connection string
 get_mysql_connect ()
 {
@@ -886,15 +903,13 @@ show_help ()
 			show_help_$1
 			exit
 		fi
-		# Check for custom command file
-		# Try global command
-		local _command="$global_commands_path/$1"
-		# But if local command exists then override
-		[ -f "$project_commands_path/$1" ] && _command="$project_commands_path/$1"
-		#
-		if [ -f "$_command" ]; then
+
+		# Search for addons
+		addon="$(get_addon_path $1)"
+
+		if [ -f "$addon" ]; then
 			echo -en "${green}fin $1${NC} - "
-			local _help_contents=$(cat "$_command" | grep '^##' | sed "s/^##[ ]*//g")
+			local _help_contents=$(cat "$addon" | grep '^##' | sed -E "s/^##[ ]?//g")
 			echo -e "$_help_contents"
 			echo
 			exit
@@ -947,37 +962,40 @@ show_help ()
 
 	# Show list of custom commands and their help if available
 	if [ ! -z "$(get_project_path)" ]; then
-		show_help_list_of_custom_commands 'project'
+		show_help_list_addons_in_help 'project'
 	fi
 	if [ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]; then
-		show_help_list_of_custom_commands 'global'
+		show_help_list_addons_in_help 'global'
 	fi
 
 	echo
 }
 
 # param $1 - 'project' or 'global'
-show_help_list_of_custom_commands ()
+show_help_list_addons_in_help ()
 {
-	local _path
+	local addons_path
 	if [[ "$1" == 'project' ]]; then
-		_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
+		addons_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
 		# avoid taking global .docksal folder for project one
-		if [[ "$_path" == "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then return; fi
+		[[ "$addons_path" == "$HOME/$DOCKSAL_COMMANDS_PATH" ]] && return
 	else
-		_path="$HOME/$DOCKSAL_COMMANDS_PATH"
+		addons_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	fi
 
-	custom_commands_list=$(ls "$_path" 2>/dev/null | tr "\n" " ")
-	if [ ! -z "$custom_commands_list" ]; then
-		local word
-		[ "$1" == 'project' ] && word='Project' || word='Global'
+	local addons_list=$(ls "$addons_path" 2>/dev/null | tr "\n" " ")
+	if [ ! -z "$addons_list" ]; then
+		local scope
+		[ "$1" == 'project' ] && scope='Project' || scope='Global'
 		echo
-		echo-green "  $word addons:";
-		for cmd_name in $(ls "$_path")
+		echo-green "  $scope addons:";
+		for cmd_name in $(ls "$addons_path")
 		do
 			# command description is lines that start with ##
-			local cmd_desc=$(cat "$_path/$cmd_name" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
+			local filename="$addons_path/$cmd_name"
+			local cmd_desc
+			[ -d "$filename" ] && filename="$filename/$cmd_name"
+			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
 			cmd_desc="${cmd_desc:-No description}"
 			printh "$cmd_name" "$cmd_desc"
 		done
@@ -4089,27 +4107,25 @@ case "$1" in
 		hosts "$@"
 		;;
 	*)
-		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
-		# First search project commands folder
-		command_script="$(get_project_path)/$DOCKSAL_COMMANDS_PATH/$1"
-		# If not found search global docksal commands folder
-		[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
-		# If not found there as well then it is a wrong command
-		[ ! -f "$command_script" ] &&
-			echo-yellow "Unknown command '$*'. See 'fin help' for list of available commands" &&
+		addon="$(get_addon_path $1)"
+
+		# If no addon was found then it's an unknown command
+		[ ! -f "$addon" ] &&
+			echo-yellow "Unknown command ${NC}$*${yellow}. See 'fin help' for list of available commands" &&
 			exit 1
 
+		export ADDON_ROOT=$(dirname "$addon")
 		# if it's not executable let's fix it
-		if [[ ! -x "$command_script" ]]; then
-			echo -e "${yellow}$command_script${NC} is not set to be executable."
+		if [[ ! -x "$addon" ]]; then
+			echo -e "${yellow}$addon${NC} is not set to be executable."
 			_confirm "Fix automatically?"
-			chmod +x "$command_script"
-			if_failed "Could not make $command_script executable"
+			chmod +x "$addon"
+			if_failed "Could not make $addon executable"
 		fi
 
 		# if it has windows line endings let's fix it
-		fix_crlf_warning "$command_script"
+		fix_crlf_warning "$addon"
 
 		shift
-		exec "$command_script" "$@"
+		exec "$addon" "$@"
 esac
