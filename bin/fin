@@ -827,14 +827,7 @@ cleanup ()
 	_remove_dangling_volumes
 
 	# TODO: remove below lines in September 2017
-	rm -f "$OLD_CONFIG_DIR/Vagrantfile."* >/dev/null 2>&1
-	rm -f "$OLD_CONFIG_DIR/backups/Vagrantfile."* >/dev/null 2>&1
-	rm -r "$OLD_CONFIG_DIR/backups" >/dev/null 2>&1
-	rm -f "$OLD_CONFIG_DIR/vagrant.yml."* >/dev/null 2>&1
-	rm -f "$OLD_CONFIG_DIR/backups/vagrant.yml."* >/dev/null 2>&1
-	rm -f "$OLD_CONFIG_DIR/b2d_version" >/dev/null 2>&1
-
-	# TODO: remove in September 2017
+	rm -rf "$OLD_CONFIG_DIR/" >/dev/null 2>&1
 	rm -f "$CONFIG_DIR/last_check" >/dev/null 2>&1
 }
 
