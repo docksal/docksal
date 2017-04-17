@@ -995,6 +995,8 @@ show_help_list_addons_in_help ()
 			local filename="$addons_path/$cmd_name"
 			local cmd_desc
 			[ -d "$filename" ] && filename="$filename/$cmd_name"
+			# if addon is invalid because there is no addon file then don't show it
+			[ ! -f "$filename" ] && continue
 			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
 			cmd_desc="${cmd_desc:-No description}"
 			printh "$cmd_name" "$cmd_desc"
@@ -4127,5 +4129,12 @@ case "$1" in
 		fix_crlf_warning "$addon"
 
 		shift
-		exec "$addon" "$@"
+		if [[ "$1" != "version" ]] && [[ "$1" != "-v" ]]; then
+			exec "$addon" "$@"
+		else
+			# special case for addon version command
+			addon_version=$(cat "$addon" | grep ^VERSION | cut -d = -f 2 | tr -d \" | tr -d \')
+			addon_version="${addon_version:-0.0}"
+			echo "$addon_version"
+		fi
 esac
