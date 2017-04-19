@@ -112,7 +112,6 @@ DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
 DEFAULT_MACHINE_VBOX_RAM='1024' #mb
 DEFAULT_MACHINE_VBOX_HDD='50000' #mb
-DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
 
 # Stats
 # fin sends a minimal ping with OS and fin version number
@@ -127,6 +126,7 @@ URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
+URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
 URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
@@ -1321,6 +1321,18 @@ show_help_hosts ()
 	echo-green "Examples:"
 	printh "fin hosts add demo.docksal" "Append a line '$DOCKSAL_DEFAULT_IP demo.docksal' to hosts file"
 	printh "fin hosts" "Output hosts file"
+	echo
+}
+
+show_help_addon ()
+{
+	echo-green "Addons management commands"
+	echo
+	echo-green "Commands:"
+	# printh "list" "List available addons"
+	printh "install <addon>" "Install an addon to the current project"
+	# printh "install -g <addon>" "Install an addon globally"
+	# printh "update" "Update available addons"
 	echo
 }
 
@@ -3673,6 +3685,7 @@ hosts ()
 	esac
 }
 
+# Add a host to hosts file
 hosts_add ()
 {
 	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
@@ -3691,6 +3704,7 @@ hosts_add ()
 	fi
 }
 
+# Remove a host from hosts file
 hosts_remove ()
 {
 	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
@@ -3712,6 +3726,7 @@ hosts_remove ()
 	fi
 }
 
+# Backup hosts file
 hosts_backup ()
 {
 	local bkp="/tmp/hosts.bak.$RANDOM"
@@ -3719,6 +3734,61 @@ hosts_backup ()
 	sudo cp "$HOSTS_FILE" "$bkp"
 }
 
+# Advanced addons management
+addon () {
+	case "$1" in
+		install)
+			[[ "$2" == "" ]] && echo-error "No addon name provided" && exit 1
+			check_docksal_environment
+			addon_install "$2"
+			;;
+		*)
+			show_help_addon && exit 1
+			;;
+	esac
+}
+
+# Download addon
+addon_install ()
+{
+	local addon_name="$1"
+	# Create target addon dir
+	local TARGET_PATH="$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH/$addon_name"
+	if [ -d "$TARGET_PATH" ] || [ -f "$TARGET_PATH" ]; then
+		echo-error "$TARGET_PATH already exists"
+		exit 1
+	fi
+	mkdir -p "$TARGET_PATH"
+	if_failed_error "Could not create $TARGET_PATH" "Check file permissions and try again"
+
+	# Download addon files list
+	local file_list
+	file_list=$(curl -fsL "$URL_REPO_ADDONS/master/$addon_name/$addon_name.filelist")
+	if_failed_error "Could not get $addon_name.filelist" "Check your internet connection and try again"
+
+	# Download files
+	echo "Downloading files..."
+	if [[ "$file_list" != "" ]]; then
+		(
+			cd "$TARGET_PATH" || exit 1
+			for f in ${file_list}; do
+				echo "$f"
+				# filename can contain subdir name, which we need to create
+				local subdir=$(dirname "$f")
+				if [[ "$subdir" != "." ]]; then
+					mkdir -p "$subdir" || exit 1
+				fi
+				# exit subshell with error if download failed
+				curl -fsSL "$URL_REPO_ADDONS/master/$addon_name/$f" -o "$f" || exit 1
+			done
+		)
+		if_failed_error "Download has failed" "Check log above for messages"
+	fi
+	echo "$addon_name"
+	curl -fsL "$URL_REPO_ADDONS/master/$addon_name/$addon_name" -o "$TARGET_PATH/$addon_name"
+	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
+	echo "Done"
+}
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
@@ -4107,6 +4177,10 @@ case "$1" in
 	hosts)
 		shift
 		hosts "$@"
+		;;
+	addon)
+		shift
+		addon "$@"
 		;;
 	*)
 		addon="$(get_addon_path $1)"
