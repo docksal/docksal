@@ -3738,10 +3738,14 @@ hosts_backup ()
 # Advanced addons management
 addon () {
 	case "$1" in
-		install)
+		install|in)
 			[[ "$2" == "" ]] && echo-error "No addon name provided" && exit 1
 			check_docksal_environment
 			addon_install "$2"
+			;;
+		remove|rm)
+			[[ "$2" == "" ]] && echo-error "No addon name provided" && exit 1
+			addon_remove "$2"
 			;;
 		*)
 			show_help_addon && exit 1
@@ -3761,18 +3765,20 @@ addon_install ()
 	fi
 	mkdir -p "$TARGET_PATH"
 	if_failed_error "Could not create $TARGET_PATH" "Check file permissions and try again"
+	local URL_ADDON="$URL_REPO_ADDONS/master/$addon_name"
 
 	# Download addon files list
 	local file_list
-	file_list=$(curl -fsL "$URL_REPO_ADDONS/master/$addon_name/$addon_name.filelist")
-	if_failed_error "Could not get $addon_name.filelist" "Check your internet connection and try again"
+	file_list=$(curl -fsL "$URL_ADDON/$addon_name.filelist")
 
 	# Download files
-	echo "Downloading files..."
 	if [[ "$file_list" != "" ]]; then
+	echo "Downloading files..."
 		(
 			cd "$TARGET_PATH" || exit 1
 			for f in ${file_list}; do
+				# Skip comments that start with '#'
+
 				echo "$f"
 				# filename can contain subdir name, which we need to create
 				local subdir=$(dirname "$f")
@@ -3780,15 +3786,53 @@ addon_install ()
 					mkdir -p "$subdir" || exit 1
 				fi
 				# exit subshell with error if download failed
-				curl -fsSL "$URL_REPO_ADDONS/master/$addon_name/$f" -o "$f" || exit 1
+				curl -fsSL "$URL_ADDON/$f" -o "$f" || exit 1
 			done
 		)
 		if_failed_error "Download has failed" "Check log above for messages"
 	fi
-	echo "$addon_name"
-	curl -fsL "$URL_REPO_ADDONS/master/$addon_name/$addon_name" -o "$TARGET_PATH/$addon_name"
+	echo "Downloading main script for $addon_name"
+	curl -fsL "$URL_ADDON/$addon_name" -o "$TARGET_PATH/$addon_name"
+	chmod +x "$TARGET_PATH/$addon_name"
 	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
+
+	addon_hook "$URL_ADDON/post-install"
 	echo "Done"
+}
+
+# Execute a hook
+# $1 - URL_HOOK
+# $2 - TARGET_PATH
+addon_hook ()
+{
+	local script
+	script=$(curl -fsL "$1/$hook" -o "$2/$hook")
+	if [ $? -eq 0 ]; then
+		echo "Executing $hook..."
+		chmod +x "$2/$hook"
+		"$1/$hook"
+	fi
+}
+
+addon_remove () {
+	local addon=$(get_addon_path "$1")
+	# Do not change this condition to -d for security and safety reasons
+	if [ ! -f "$addon" ] && [ ! -f "$addon/$1" ]; then
+		if [ -d "$addon" ]; then
+			echo-error "Directory '$addon' does not contain a valid Docksal addon"
+			return 1
+		else
+			# Addon should be a file or a dir with a main file
+			echo-error "Could not find addon $1"
+			return 1
+		fi
+	fi
+
+	echo "Removing $addon"
+	# Last line of defence to avoid removal of wrong things
+	[[ "$addon" =~ ".docksal" ]] &&
+		rm -rf "$addon"
+
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
@@ -4185,7 +4229,7 @@ case "$1" in
 		shift
 		hosts "$@"
 		;;
-	addon)
+	addon|a)
 		shift
 		addon "$@"
 		;;
