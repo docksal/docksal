@@ -3735,20 +3735,17 @@ hosts_backup ()
 	sudo cp "$HOSTS_FILE" "$bkp"
 }
 
-# Advanced addons management
+# Addons management
 addon () {
 	case "$1" in
 		install|in)
-			[[ "$2" == "" ]] && echo-error "No addon name provided" && exit 1
-			check_docksal_environment
 			addon_install "$2"
 			;;
 		remove|rm)
-			[[ "$2" == "" ]] && echo-error "No addon name provided" && exit 1
 			addon_remove "$2"
 			;;
 		*)
-			show_help_addon && exit 1
+			show_help_addon
 			;;
 	esac
 }
@@ -3756,7 +3753,12 @@ addon () {
 # Download addon
 addon_install ()
 {
+	# TODO: check that non-global install
+	check_docksal_environment
+
 	local addon_name="$1"
+	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
+
 	# Create target addon dir
 	local TARGET_PATH="$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH/$addon_name"
 	if [ -d "$TARGET_PATH" ] || [ -f "$TARGET_PATH" ]; then
@@ -3791,31 +3793,32 @@ addon_install ()
 		)
 		if_failed_error "Download has failed" "Check log above for messages"
 	fi
+
+	# Pre-install hook
+	addon_hook "$addon" "$addon_name" "pre-install"
+	if [ ! $? -eq 0 ]; then
+		"Pre-install hook has failed and aborted the installation."
+		return 1
+	fi
+
+	# Installation
 	echo "Downloading main script for $addon_name"
 	curl -fsL "$URL_ADDON/$addon_name" -o "$TARGET_PATH/$addon_name"
 	chmod +x "$TARGET_PATH/$addon_name"
 	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
 
-	addon_hook "$URL_ADDON/post-install"
+	# Post-install hook
+	addon_hook "$addon" "$addon_name" "post-install"
+
 	echo "Done"
 }
 
-# Execute a hook
-# $1 - URL_HOOK
-# $2 - TARGET_PATH
-addon_hook ()
-{
-	local script
-	script=$(curl -fsL "$1/$hook" -o "$2/$hook")
-	if [ $? -eq 0 ]; then
-		echo "Executing $hook..."
-		chmod +x "$2/$hook"
-		"$1/$hook"
-	fi
-}
-
+# Remove addon
 addon_remove () {
-	local addon=$(get_addon_path "$1")
+	local addon_name="$1"
+	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
+
+	local addon=$(get_addon_path "$addon_name")
 	# Do not change this condition to -d for security and safety reasons
 	if [ ! -f "$addon" ] && [ ! -f "$addon/$1" ]; then
 		if [ -d "$addon" ]; then
@@ -3828,11 +3831,35 @@ addon_remove () {
 		fi
 	fi
 
-	echo "Removing $addon"
+	# Pre-uninstall hook
+	addon_hook "$addon" "$addon_name" "pre-uninstall"
+	if [ ! $? -eq 0 ]; then
+		"Pre-uninstall hook has failed and aborted the uninstallation."
+		return 1
+	fi
+
 	# Last line of defence to avoid removal of wrong things
 	[[ "$addon" =~ ".docksal" ]] &&
-		rm -rf "$addon"
+		(echo "Removing $addon" && rm -rf "$addon") ||
+		echo "Not removing $addon because it's not inside .docksal folder. How did we get here?"
 
+	# Post-uninstall hook
+	addon_hook "$addon" "$addon_name" "post-uninstall"
+}
+
+# Execute a hook script for an addon
+addon_hook ()
+{
+	local addon_path="$1"
+	local addon_name="$2"
+	local hook_name="$3"
+	local hook="$addon_path/$addon_name.$hook_name"
+	# no hook is ok
+	[ ! -f "$hook" ] && return
+	# execute hook
+	[ -f "$hook" ] &&
+		chmod +x "$hook" &&
+		exec "$hook"
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
