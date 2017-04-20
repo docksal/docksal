@@ -3941,34 +3941,34 @@ if [[ "$1" == "@"* ]]; then
 fi
 
 # TODO: figure out a better way to determine when to skip load_configuration
-# Load YML files and check for updates except some cases
-[[ "$1" != "update" ]] &&
+# Load YML files and check for updates except for some cases
+if
+	[[ "$*" != "" ]] &&
+	[[ "$1" != "update" ]] &&
 	[[ "$1" != "install" ]] &&
-	[[ "$1" != "version" ]] &&
-	[[ "$1" != "-v" ]] &&
-	[[ "$1" != "v" ]] &&
+	[[ "$1" != "addon" ]] &&
+	[[ "$1" != "alias" ]] &&
+	[[ "$1" != "help" ]] &&
+	[[ "$1" != "version" ]] && [[ "$1" != "-v" ]] && [[ "$1" != "v" ]] &&
 	[[ "$1" != "sysinfo" ]] &&
 	[[ "$1" != "bash_comp_words" ]] &&
 	[[ "$1" != "ssh-add" ]] &&
 	[[ "$1" != "vm" ]] &&
-	[[ "$1" != "docker" ]] &&
-	[[ "$1" != "d" ]] &&
-	[[ "$1" != "docker-machine" ]] &&
-	[[ "$1" != "dm" ]] &&
+	[[ "$1" != "docker" ]] && [[ "$1" != "d" ]] &&
+	[[ "$1" != "docker-machine" ]] && [[ "$1" != "dm" ]] &&
 	[[ "$1" != "exec-url" ]] &&
+	[[ "$1" != "rc" ]] && [[ "$1" != "run-cli" ]]
 	[[ "$1" != "cleanup" ]] &&
-	[[ "$1" != "help" ]] &&
-	[[ "$*" != "" ]] &&
 	[[ "$1" != "fix-smb" ]] &&
-	[[ "$1" != "alias" ]] &&
 	[[ "$*" != "reset dns" ]] &&
 	[[ "$*" != "reset proxy" ]] &&
 	[[ "$*" != "reset ssh-agent" ]] &&
 	[[ "$*" != "reset system" ]] &&
-	[[ "$1" != "projects" ]] &&
-	[[ "$1" != "rc" ]] &&
-	load_configuration &&
-	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
+	[[ "$1" != "projects" ]] && [[ "$1" != "project" ]];
+	then
+		load_configuration
+		[[ "$NO_UPDATES" != "1" ]] && check_for_updates
+fi
 
 # Parse command line parameters
 case "$1" in
