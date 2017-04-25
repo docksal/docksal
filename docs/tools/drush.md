@@ -32,9 +32,8 @@ drush --version
 <a name="site-aliases"></a>
 ## Drush site aliases
 
-When working with projects hosted on a remote server you would often use drush site aliases.
+There are several places where Drush looks for the alias files.
 
-There are several places where Drush looks for the alias files.  
 The following locations will work in Docksal:
 
 ```bash
@@ -45,9 +44,10 @@ $DOCROOT/../drush/aliases
 
 Where `$DOCROOT` is the project's `docroot` folder.
 
-To check the list of available site aliases run `fin drush sa`.  
-Project specific site aliases are only visible when running drush within the project's `docroot` folders.
+Recommended location is `$DOCROOT/../drush/aliases` which is usually equals `$PROJECT_ROOT/drush/aliases`.
 
-With site aliases in place you can use them inside `fin bash` or directly using `fin drush @alias command`
+To check the list of available site aliases run `fin drush sa`. Project specific site aliases are only visible when running drush within the project's `docroot` folder.
+
+Use them directly using `fin drush @alias command` or inside `fin bash`.
 
 For more information on drush site aliases see [example.aliases.drushrc.php](https://github.com/drush-ops/drush/blob/master/examples/example.aliases.drushrc.php).
