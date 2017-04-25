@@ -9,6 +9,8 @@ services:
   - docker
 
 install:
+  - env
+  - git remote -v
   - sudo cp ./bin/fin /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
   - fin version
   - export DOCKSAL_VERSION="$TRAVIS_BRANCH"
