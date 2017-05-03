@@ -3744,8 +3744,11 @@ addon () {
 		remove|rm)
 			addon_remove "$2"
 			;;
-		*)
+		help)
 			show_help_addon
+			;;
+		*)
+			echo-yellow "Unknown sub-command. See ${NC}fin addon help${yellow} for details."
 			;;
 	esac
 }
@@ -3758,11 +3761,14 @@ addon_install ()
 
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
+	[[ "$addon_name" =~ / ]] && echo-error "No slashes in addon name" && exit 1
+	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
+	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
 
 	# Create target addon dir
 	local TARGET_PATH="$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH/$addon_name"
 	if [ -d "$TARGET_PATH" ] || [ -f "$TARGET_PATH" ]; then
-		echo-error "$TARGET_PATH already exists"
+		echo-error "Addon already exists in" "$TARGET_PATH"
 		exit 1
 	fi
 	mkdir -p "$TARGET_PATH"
@@ -3798,6 +3804,9 @@ addon_install ()
 	addon_hook "$addon" "$addon_name" "pre-install"
 	if [ ! $? -eq 0 ]; then
 		"Pre-install hook has failed and aborted the installation."
+		# Delete downloaded files if pre-install hook fails
+		[ -d "$addon" ] && [[ "$addon" =~ ".docksal" ]] &&
+			rm -rf "$addon"
 		return 1
 	fi
 
@@ -3817,6 +3826,9 @@ addon_install ()
 addon_remove () {
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
+	[[ "$addon_name" =~ / ]] && echo-error "No slashes in addon name" && exit 1
+	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
+	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
 
 	local addon=$(get_addon_path "$addon_name")
 	# Do not change this condition to -d for security and safety reasons
@@ -3831,6 +3843,11 @@ addon_remove () {
 		fi
 	fi
 
+	if [ -f "$addon" ]; then
+		echo "Removing $addon" && rm -rf "$addon"
+		return $?
+	fi
+
 	# Pre-uninstall hook
 	addon_hook "$addon" "$addon_name" "pre-uninstall"
 	if [ ! $? -eq 0 ]; then
@@ -3838,13 +3855,26 @@ addon_remove () {
 		return 1
 	fi
 
+	# Prepare post-uninstall hook
+	local tempfile="/tmp/$addon_name.$RANDOM.post-uninstall"
+	local tempfile_copy_res=1
+
+	cp -fp "$addon/$addon_name.post-uninstall" "$tempfile" >/dev/null 2>&1
+	tempfile_copy_res=$?
+
+	# Remove addon files physically
 	# Last line of defence to avoid removal of wrong things
-	[[ "$addon" =~ ".docksal" ]] &&
-		(echo "Removing $addon" && rm -rf "$addon") ||
+	if [[ "$addon" =~ ".docksal" ]]; then
+		[ -d "$addon" ] && (echo "Removing $addon" && rm -rf "$addon")
+	else
 		echo "Not removing $addon because it's not inside .docksal folder. How did we get here?"
+	fi
 
 	# Post-uninstall hook
-	addon_hook "$addon" "$addon_name" "post-uninstall"
+	if [ $tempfile_copy_res -eq 0 ]; then
+		chmod +x "$tempfile" && exec "$tempfile"
+		rm -f "$tempfile" >dev/null 2>&1
+	fi
 }
 
 # Execute a hook script for an addon
