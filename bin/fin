@@ -2679,15 +2679,18 @@ EOF
 }
 
 # Update start script and shortcut
+# TODO: deprecated, remove in September 2017
 update_start_script_shortcut()
 {
 	rm "$BABUN_HOME/docksal.bat" >/dev/null 2>&1
 	rm "$BABUN_HOME/docksal.ico" >/dev/null 2>&1
 	rm "$BABUN_HOME/tools/link_icon.vbs" >/dev/null 2>&1
-	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/link_icon.vbs" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
-	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.bat" -o "$(cygpath $BABUN_HOME)/docksal.bat"
-	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.ico" -o "$(cygpath $BABUN_HOME)/docksal.ico"
-	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
+	rm $(cygpath "$USERPROFILE\Desktop\Docksal.lnk") >/dev/null 2>&1
+
+#	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/link_icon.vbs" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
+#	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.bat" -o "$(cygpath $BABUN_HOME)/docksal.bat"
+#	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.ico" -o "$(cygpath $BABUN_HOME)/docksal.ico"
+#	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
 }
 
 # Update system service images
@@ -2813,6 +2816,7 @@ update ()
 	update_config_files
 
 	# [Update - 3] Update start script and shortcut
+	# TODO: deprecated, remove in September 2017
 	if is_windows; then
 		echo-green "Updating start script and shortcut..."
 		update_start_script_shortcut
