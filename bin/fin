@@ -1939,6 +1939,7 @@ vm ()
 	esac
 }
 
+# TODO: deprecated. Remove as this command is not very useful right now.
 vm-stats ()
 {
 	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
