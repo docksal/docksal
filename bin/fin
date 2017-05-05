@@ -1933,7 +1933,8 @@ vm ()
 			show_help_vm
 			;;
 		*)
-			echo-error "Unknown command fin vm $1" "See ${yellow}fin help vm${NC} for list of available commands"
+			show_help_vm
+			return 1
 			;;
 	esac
 }
@@ -3918,7 +3919,7 @@ case "$1" in
 				show_help_project
 				;;
 			*)
-				echo -e "Unknown command $1. See ${yellow}fin help project${NC}"
+				show_help_project
 				exit 1
 				;;
 		esac
@@ -4024,7 +4025,8 @@ case "$1" in
 				mysql_dump "$@"
 				;;
 			*)
-				mysql "$@"
+				show_help_db
+				exit 1
 				;;
 		esac
 		;;
