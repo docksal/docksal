@@ -1743,13 +1743,28 @@ smb_share_mount()
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
+	# User ntlmssp by default. For some Windows machines ntlm should be used instead
+	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
+	SMB_SEC="${SMB_SEC:-ntlmssp}"
 	# Doing unmount first to make it possible to rerun this command without restarting the VM (e.g. when debugging)
 	# Specifying domain when mounting. May help when a Windows machine is in a domain environment.
 	command_mount="
 		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
 		sudo mkdir -p $mount_point && \
-		sudo mount -t cifs -o username='${USERNAME}',pass='$password',domain='${USERDOMAIN}',sec=ntlm,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
+		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+
+	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
+	if [[ $? != 0 ]]; then
+		echo-yellow "Mount command failed... Trying an alternative method..."
+		# Switch sec to ntlm and try again
+		command_mount=$(echo $command_mount | sed 's/sec=.*,/sec=ntlm,/')
+		docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+
+		local ret=$?
+		[[ $ret == 0 ]] && echo-green 'Seccess!' || echo-yellow 'No luck. Sorry...'
+		return $ret
+	fi
 }
 
 docker_machine_mount_smb ()
