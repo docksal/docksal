@@ -1651,8 +1651,10 @@ docker_machine_mount_nfs ()
 			sleep 5
 			docker-machine ssh "$machine_name" \
 				"sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
-			[ ! $? -eq 0 ] &&
-				echo-red "NFS share mount has failed. Try fin vm restart."
+			if [[ $? != 0 ]]; then
+				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
+				return 1
+			fi
 		fi
 	done
 
@@ -1716,28 +1718,66 @@ EOF
 }
 
 # Method to create the user and SMB network share on Windows.
-# @param share_name, path
+# @param share_name, share_path
 smb_share_add()
 {
+	local share_name=$1
+	local share_path=$2
+
 	# Add SMB share if it does not exist.
-	if [[ "$(net share)" != *"${1}"*"Docksal ${2} drive"* ]];
+	if [[ "$(net share)" != *"${share_name}"*"Docksal ${share_path} drive"* ]];
 	then
-		command_share="net share ${1}=${2} /grant:${USERNAME},FULL /REMARK:\"Docksal ${2} drive\""
+		command_share="net share ${share_name}=${share_path} /grant:${USERNAME},FULL /REMARK:\"Docksal ${share_path} drive\""
 		echo-green "Adding docker SMB share..."
 		winsudo "$command_share"
+
+		if [[ $? != 0 ]]; then
+			echo-error "SMB share creation failed." \
+				"Share name: ${share_name}" \
+				"Share path: ${share_path}"
+			return 1
+		fi
 	fi
 }
 
 # Method to mount the SMB share in Docker machine.
-# @param share_path, mount_point, password
+# @param share_name, mount_point, password
 smb_share_mount()
 {
+	local share_name=$1
+	local mount_point=$2
+	local password=$3
+
 	#DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
-	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o username='${USERNAME}',pass='$3',sec=ntlm,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 $2"
+	# User ntlmssp by default. For some Windows machines ntlm should be used instead
+	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
+	SMB_SEC="${SMB_SEC:-ntlmssp}"
+	# Doing unmount first to make it possible to rerun this command without restarting the VM (e.g. when debugging)
+	# Specifying domain when mounting. May help when a Windows machine is in a domain environment.
+	command_mount="
+		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
+		sudo mkdir -p $mount_point && \
+		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+
+	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
+	if [[ $? != 0 ]]; then
+		echo-yellow "Mount command failed... Trying an alternative method..."
+		# Switch sec to ntlm and try again
+		command_mount=$(echo $command_mount | sed 's/sec=.*,/sec=ntlm,/')
+		docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+
+		if [[ $? == 0 ]]; then
+			echo-green 'Success!'
+		else
+			echo-error "SMB share mount failed." \
+ 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again."
+			return 1
+		fi
+	fi
 }
 
 docker_machine_mount_smb ()
@@ -1747,38 +1787,39 @@ docker_machine_mount_smb ()
 	# use his password for mount -t cifs ...
 
 	# Get a list of logical drives (type 3 = Local disk).
-	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
-	read -s -p "Enter your Windows account password: " PASSWORD
+	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	read -s -p "Enter your Windows account password: " password
 	echo # Add a new line after user input.
 
-	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
-		smb_share_add "$MOUNT_POINT" "$DRIVE" && \
-			smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
-			(echo-red "Error creating share" && exit 1)
+	for drive in ${drives}; do
+		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Avoid conflicts with existing drive shares buy using a unique share name
+		local share_name="docksal-$mount_point"
+		smb_share_add "$share_name" "$drive" &&
+			smb_share_mount "$share_name" "/$mount_point" "$password"
 	done
 }
 
 docker_machine_remove_smb ()
 {
-	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
-	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
-		command_share="net share ${MOUNT_POINT} /DELETE"
+	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	for drive in ${drives}; do
+		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Avoid conflicts with existing drive shares buy using a unique share name
+		local share_name="docksal-$mount_point"
+		command_share="net share ${share_name} /DELETE"
 		winsudo "$command_share"
 	done
 }
 
 docker_machine_mounts ()
 {
-	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
-		if is_mac; then
-			echo-green "Configuring NFS shares..."
-			docker_machine_mount_nfs "/Users:/Users"
-		elif is_windows; then
-			echo-green "Configuring SMB shares..."
-			docker_machine_mount_smb
-		fi
+	if is_mac; then
+		echo-green "Configuring NFS shares..."
+		docker_machine_mount_nfs "/Users:/Users" || exit 1
+	elif is_windows; then
+		echo-green "Configuring SMB shares..."
+		docker_machine_mount_smb || exit 1
 	fi
 }
 
