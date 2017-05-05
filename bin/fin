@@ -1723,7 +1723,7 @@ smb_share_add()
 	local share_path=$2
 
 	# Add SMB share if it does not exist.
-	if [[ "$(net share)" != *"${1}"*"Docksal ${share_path} drive"* ]];
+	if [[ "$(net share)" != *"${share_name}"*"Docksal ${share_path} drive"* ]];
 	then
 		command_share="net share ${share_name}=${share_path} /grant:${USERNAME},FULL /REMARK:\"Docksal ${share_path} drive\""
 		echo-green "Adding docker SMB share..."
@@ -1762,7 +1762,7 @@ smb_share_mount()
 		docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 
 		local ret=$?
-		[[ $ret == 0 ]] && echo-green 'Seccess!' || echo-yellow 'No luck. Sorry...'
+		[[ $ret == 0 ]] && echo-green 'Success!' || echo-yellow 'No luck. Sorry...'
 		return $ret
 	fi
 }
@@ -1782,8 +1782,8 @@ docker_machine_mount_smb ()
 		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
 		# Avoid conflicts with existing drive shares buy using a unique share name
 		local share_name="docksal-$mount_point"
-		smb_share_add "$share_name" "$drive" && \
-			smb_share_mount "$share_name" "/$mount_point" "$password" || \
+		smb_share_add "$share_name" "$drive" &&
+			smb_share_mount "$share_name" "/$mount_point" "$password" ||
 			(echo-red "Error creating share" && exit 1)
 	done
 }
@@ -1795,22 +1795,19 @@ docker_machine_remove_smb ()
 		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
 		# Avoid conflicts with existing drive shares buy using a unique share name
 		local share_name="docksal-$mount_point"
-		# TODO: remove legacy style shares removal (net share ${mount_point} /DELETE) in September 2017
-		command_share="net share ${mount_point} /DELETE & net share ${share_name} /DELETE"
+		command_share="net share ${share_name} /DELETE"
 		winsudo "$command_share"
 	done
 }
 
 docker_machine_mounts ()
 {
-	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
-		if is_mac; then
-			echo-green "Configuring NFS shares..."
-			docker_machine_mount_nfs "/Users:/Users"
-		elif is_windows; then
-			echo-green "Configuring SMB shares..."
-			docker_machine_mount_smb
-		fi
+	if is_mac; then
+		echo-green "Configuring NFS shares..."
+		docker_machine_mount_nfs "/Users:/Users"
+	elif is_windows; then
+		echo-green "Configuring SMB shares..."
+		docker_machine_mount_smb
 	fi
 }
 
