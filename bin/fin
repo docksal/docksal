@@ -2725,10 +2725,10 @@ EOF
 # TODO: deprecated, remove in September 2017
 update_start_script_shortcut()
 {
-	rm "$BABUN_HOME/docksal.bat" >/dev/null 2>&1
-	rm "$BABUN_HOME/docksal.ico" >/dev/null 2>&1
-	rm "$BABUN_HOME/tools/link_icon.vbs" >/dev/null 2>&1
-	rm $(cygpath "$USERPROFILE\Desktop\Docksal.lnk") >/dev/null 2>&1
+	rm -f "$BABUN_HOME/docksal.bat" >/dev/null 2>&1
+	rm -f "$BABUN_HOME/docksal.ico" >/dev/null 2>&1
+	rm -f "$BABUN_HOME/tools/link_icon.vbs" >/dev/null 2>&1
+	rm -f "$(cygpath ${USERPROFILE}\Desktop\Docksal.lnk)" >/dev/null 2>&1
 
 #	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/link_icon.vbs" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
 #	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.bat" -o "$(cygpath $BABUN_HOME)/docksal.bat"
