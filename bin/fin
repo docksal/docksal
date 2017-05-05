@@ -3890,15 +3890,8 @@ case "$1" in
 				shift
 				image_registry_list "$@"
 			;;
-			'')
-				echo -e "See ${yellow}fin help image${NC}"
-				exit 1
-				;;
-			help)
-				show_help_image
-				;;
 			*)
-				echo -e "Unknown command $1. See ${yellow}fin help image${NC}"
+				show_help_image
 				exit 1
 			;;
 		esac
