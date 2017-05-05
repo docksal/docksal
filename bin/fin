@@ -3851,7 +3851,9 @@ fi
 	[[ "$*" != "reset ssh-agent" ]] &&
 	[[ "$*" != "reset system" ]] &&
 	[[ "$1" != "projects" ]] &&
+	[[ "$1" != "run-cli" ]] &&
 	[[ "$1" != "rc" ]] &&
+	[[ "$1" != "hosts" ]] &&
 	load_configuration &&
 	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
