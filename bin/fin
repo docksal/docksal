@@ -1651,8 +1651,10 @@ docker_machine_mount_nfs ()
 			sleep 5
 			docker-machine ssh "$machine_name" \
 				"sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
-			[ ! $? -eq 0 ] &&
-				echo-red "NFS share mount has failed. Try fin vm restart."
+			if [[ $? != 0 ]]; then
+				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
+				return 1
+			fi
 		fi
 	done
 
@@ -1728,6 +1730,13 @@ smb_share_add()
 		command_share="net share ${share_name}=${share_path} /grant:${USERNAME},FULL /REMARK:\"Docksal ${share_path} drive\""
 		echo-green "Adding docker SMB share..."
 		winsudo "$command_share"
+
+		if [[ $? != 0 ]]; then
+			echo-error "SMB share creation failed." \
+				"Share name: ${share_name}" \
+				"Share path: ${share_path}"
+			return 1
+		fi
 	fi
 }
 
@@ -1761,9 +1770,13 @@ smb_share_mount()
 		command_mount=$(echo $command_mount | sed 's/sec=.*,/sec=ntlm,/')
 		docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 
-		local ret=$?
-		[[ $ret == 0 ]] && echo-green 'Success!' || echo-yellow 'No luck. Sorry...'
-		return $ret
+		if [[ $? == 0 ]]; then
+			echo-green 'Success!'
+		else
+			echo-error "SMB share mount failed." \
+ 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again."
+			return 1
+		fi
 	fi
 }
 
@@ -1783,8 +1796,7 @@ docker_machine_mount_smb ()
 		# Avoid conflicts with existing drive shares buy using a unique share name
 		local share_name="docksal-$mount_point"
 		smb_share_add "$share_name" "$drive" &&
-			smb_share_mount "$share_name" "/$mount_point" "$password" ||
-			(echo-red "Error creating share" && exit 1)
+			smb_share_mount "$share_name" "/$mount_point" "$password"
 	done
 }
 
@@ -1804,10 +1816,10 @@ docker_machine_mounts ()
 {
 	if is_mac; then
 		echo-green "Configuring NFS shares..."
-		docker_machine_mount_nfs "/Users:/Users"
+		docker_machine_mount_nfs "/Users:/Users" || exit 1
 	elif is_windows; then
 		echo-green "Configuring SMB shares..."
-		docker_machine_mount_smb
+		docker_machine_mount_smb || exit 1
 	fi
 }
 
