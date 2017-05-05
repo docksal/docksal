@@ -1716,27 +1716,38 @@ EOF
 }
 
 # Method to create the user and SMB network share on Windows.
-# @param share_name, path
+# @param share_name, share_path
 smb_share_add()
 {
+	local share_name=$1
+	local share_path=$2
+
 	# Add SMB share if it does not exist.
-	if [[ "$(net share)" != *"${1}"*"Docksal ${2} drive"* ]];
+	if [[ "$(net share)" != *"${1}"*"Docksal ${share_path} drive"* ]];
 	then
-		command_share="net share ${1}=${2} /grant:${USERNAME},FULL /REMARK:\"Docksal ${2} drive\""
+		command_share="net share ${share_name}=${share_path} /grant:${USERNAME},FULL /REMARK:\"Docksal ${share_path} drive\""
 		echo-green "Adding docker SMB share..."
 		winsudo "$command_share"
 	fi
 }
 
 # Method to mount the SMB share in Docker machine.
-# @param share_path, mount_point, password
+# @param share_name, mount_point, password
 smb_share_mount()
 {
+	local share_name=$1
+	local mount_point=$2
+	local password=$3
+
 	#DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
-	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o username='${USERNAME}',pass='$3',sec=ntlm,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 $2"
+	# Doing unmount first to make it possible to rerun this command without restarting the VM (e.g. when debugging)
+	command_mount="
+		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
+		sudo mkdir -p $mount_point && \
+		sudo mount -t cifs -o username='${USERNAME}',pass='$password',sec=ntlm,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 }
 
@@ -1747,24 +1758,29 @@ docker_machine_mount_smb ()
 	# use his password for mount -t cifs ...
 
 	# Get a list of logical drives (type 3 = Local disk).
-	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
-	read -s -p "Enter your Windows account password: " PASSWORD
+	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	read -s -p "Enter your Windows account password: " password
 	echo # Add a new line after user input.
 
-	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
-		smb_share_add "$MOUNT_POINT" "$DRIVE" && \
-			smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
+	for drive in ${drives}; do
+		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Avoid conflicts with existing drive shares buy using a unique share name
+		local share_name="docksal-$mount_point"
+		smb_share_add "$share_name" "$drive" && \
+			smb_share_mount "$share_name" "/$mount_point" "$password" || \
 			(echo-red "Error creating share" && exit 1)
 	done
 }
 
 docker_machine_remove_smb ()
 {
-	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
-	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
-		command_share="net share ${MOUNT_POINT} /DELETE"
+	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	for drive in ${drives}; do
+		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Avoid conflicts with existing drive shares buy using a unique share name
+		local share_name="docksal-$mount_point"
+		# TODO: remove legacy style shares removal (net share ${mount_point} /DELETE) in September 2017
+		command_share="net share ${mount_point} /DELETE & net share ${share_name} /DELETE"
 		winsudo "$command_share"
 	done
 }
