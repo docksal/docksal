@@ -3326,6 +3326,7 @@ reset ()
 	else
 		remove "$@"
 	fi
+	is_linux && [[ "$@" == "" ]] && ssh_add
 	_start_containers
 }
 
