@@ -3509,6 +3509,7 @@ alias_list ()
 
 load_configuration ()
 {
+	check_docksal
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
