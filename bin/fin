@@ -1299,8 +1299,9 @@ show_help_hosts ()
 	echo
 	echo-green "Commands:"
 	printh "add [hostname]" "Add hostname to hosts file. If no provided uses ${yellow}VIRTUAL_HOST${NC}"
-	printh "remove <hostname>" "Remove all lines containing hostname from hosts file"
-	printh "list (or no params)" "Output hosts file"
+	printh "remove [hostname]" "Remove all lines containing hostname from hosts file. Uses ${yellow}VIRTUAL_HOST${NC} if none provided"
+	printh "list" "Output hosts file"
+	printh "<no command>" "Output hosts file"
 	printh "help" "Show this help"
 	echo
 	echo-green "Examples:"
