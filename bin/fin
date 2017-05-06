@@ -940,7 +940,7 @@ show_help ()
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
 	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
-	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
+	printh "hosts [command]" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
@@ -1290,19 +1290,29 @@ show_help_cleanup ()
 
 show_help_hosts ()
 {
-	echo-green "Can add/remove lines to/from OS-dependent hosts file"
-	printh "fin hosts <command>" "" "yellow"
+	echo-green "Can add or remove lines to/from OS-dependent hosts file"
 	echo
-	printh "Always uses $DOCKSAL_DEFAULT_IP for IP."
+	printh "fin hosts [command]" "" "yellow"
+	echo
+	printh "Uses $DOCKSAL_DEFAULT_IP for IP when VirtualBox is used."
+	printh "Uses 127.0.0.1 for IP when DOCKER_NATIVE is set."
+	echo
 	echo-green "Commands:"
-	printh "add <hostname>" "Add hostname to hosts file"
+	printh "add [hostname]" "Add hostname to hosts file. If no provided uses ${yellow}VIRTUAL_HOST${NC}"
 	printh "remove <hostname>" "Remove all lines containing hostname from hosts file"
-	printh "list (or no command)" "Output hosts file"
+	printh "list (or no params)" "Output hosts file"
+	printh "help" "Show this help"
+	echo
 	echo-green "Examples:"
-	printh "fin hosts add demo.docksal" "Append a line '$DOCKSAL_DEFAULT_IP demo.docksal' to hosts file"
+	printh "fin hosts add" "Append current project's VIRTUAL_HOST to hosts file"
+	printh "fin hosts add demo.docksal" "Append a line '$DOCKSAL_DEFAULT_IP demo.docksal' to hosts file if Virtualbox is used"
+	printh "fin hosts remove" "Remove current project's VIRTUAL_HOST from hosts file"
+	printh "fin hosts remove demo.docksal" "Remove *all* lines containing demo.docksal from hosts file"
 	printh "fin hosts" "Output hosts file"
 	echo
 }
+
+#---------- END HELP FUNCTIONS
 
 # Display fin version
 # @option --short - Display only the version number
@@ -3696,47 +3706,71 @@ hosts ()
 			cat "$HOSTS_FILE"
 			;;
 		*)
-			echo "Usage: fin host < add | remove > [ hostname ]"
+			show_help_hosts
+			exit 1
 			;;
 	esac
 }
 
 hosts_add ()
 {
-	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
-	[[ ! "$1" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
+	local hostname="$1"
+	local hostip="$DOCKSAL_DEFAULT_IP"
+	[[ $DOCKER_NATIVE == 1 ]] && hostip="127.0.0.1"
+	# Use VIRTUAL_HOST if no parameters provided
+	if [ "$hostname" == "" ]; then
+		check_docksal_environment
+		load_configuration
+		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
+		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
+	fi
+	[[ ! "$hostname" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
 
+	# Always make hosts file backup
 	hosts_backup
-	echo "Adding: $DOCKSAL_DEFAULT_IP $1"
+
+	# Add to hosts
+	echo -e "Adding: ${yellow}$hostip $hostname${NC}"
 	if is_windows; then
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
-		echo "$DOCKSAL_DEFAULT_IP $1" | tee -a "$tmp" >/dev/null
+		echo "$hostip $hostname" | tee -a "$tmp" >/dev/null
 		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
-		echo "$DOCKSAL_DEFAULT_IP $1" | sudo tee -a "$HOSTS_FILE" >/dev/null
+		echo "$hostip $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
 	fi
 }
 
 hosts_remove ()
 {
-	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
-	[[ ! "$1" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
-	# Double insurance from removing lines containing localhost or broadcasthost as it may damage system
-	[[ "$1" =~ "localhost" ]] && echo-error "Cannot remove localhost" && exit 1
-	[[ "$1" =~ "broadcasthost" ]] && echo-error "Cannot remove broadcasthost" && exit 1
+	local hostname="$1"
+	if [ "$hostname" == "" ]; then
+		check_docksal_environment
+		load_configuration
+		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
+		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
+	fi
 
+	[[ ! "$hostname" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
+	# Double insurance from removing lines that may damage system
+	( [[ "$hostname" =~ "localhost" ]] || [[ "$hostname" =~ "loopback" ]] || [[ "$hostname" =~ "localnet" ]] || [[ "$hostname" =~ "allnodes" ]] ) &&
+		echo-error "Cannot remove localhost" && exit 1
+	[[ "$hostname" =~ "broadcasthost" ]] && echo-error "Cannot remove broadcasthost" && exit 1
+
+	# Always make hosts file backup
 	hosts_backup
-	echo "Removing '$1'..."
+
+	# Remove from hosts
+	echo -e "Removing lines containing ${yellow}$hostname${NC}"
 	if is_windows; then
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
-		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$tmp" >/dev/null
+		cat "$HOSTS_FILE" | grep -v "$hostname" | sudo tee "$tmp" >/dev/null
 		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
-		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$HOSTS_FILE" >/dev/null
+		cat "$HOSTS_FILE" | grep -v "$hostname" | sudo tee "$HOSTS_FILE" >/dev/null
 	fi
 }
 
@@ -3744,7 +3778,7 @@ hosts_backup ()
 {
 	local bkp="/tmp/hosts.bak.$RANDOM"
 	echo "Backing up to $bkp"
-	sudo cp "$HOSTS_FILE" "$bkp"
+	cp "$HOSTS_FILE" "$bkp"
 }
 
 
