@@ -3588,11 +3588,19 @@ load_configuration ()
 	# Set defaults
 	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.docksal}
 	export DOCROOT=${DOCROOT:-docroot}
-	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
+	if is_docker_native; then
+		export DOCKSAL_IP="127.0.0.1"
+	else
+		export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
+	fi
 
 	# DNS servers for containers
 	# Internal name resolution (for *.docksal domains)
-	export DOCKSAL_DNS1=${DOCKSAL_DEFAULT_IP}
+	if is_docker_native; then
+		export DOCKSAL_DNS1="127.0.0.1"
+	else
+		export DOCKSAL_DNS1=${DOCKSAL_DEFAULT_IP}
+	fi
 	# External name resolution (everything else)
 	if ! is_linux; then
 		export DOCKSAL_DNS2=${DOCKSAL_DEFAULT_DNS}
