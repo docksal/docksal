@@ -3901,6 +3901,7 @@ fi
 	[[ "$1" != "run-cli" ]] &&
 	[[ "$1" != "rc" ]] &&
 	[[ "$1" != "hosts" ]] &&
+	[[ "$1" != "image" ]] &&
 	load_configuration &&
 	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
