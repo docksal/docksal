@@ -4182,6 +4182,10 @@ case "$1" in
 		;;
 	drush)
 		shift
+		# cd to docroot if alias was used and alias leads to project root
+		[[ "$USED_ALIAS" != "" ]] &&
+			[[ "$(pwd)" == "$PROJECT_ROOT" ]] &&
+			cd "$DOCROOT"
 		if [[ $1 == "" ]]; then
 			_exec drush
 		else
