@@ -2190,6 +2190,11 @@ stats_ping ()
 
 install_proxy_service ()
 {
+	# Bind to the default VM IP unless in native mode. Bind to localhost in native.
+	# In either case the IP proxy binds to can be overridden via DOCKSAL_VHOST_PROXY_IP env variable
+	local ip="${DOCKSAL_DEFAULT_IP}"
+	is_docker_native && ip='127.0.0.1'
+
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
 
@@ -2206,7 +2211,7 @@ install_proxy_service ()
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
 	# entirely wiped out from the host (e.g. 168h). WARNING: use at your own risk!
 	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always \
-		-p "${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
+		-p "${DOCKSAL_VHOST_PROXY_IP:-$ip}:${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_IP:-$ip}:${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
 		-v docksal_projects:/projects \
