@@ -3905,6 +3905,7 @@ fi
 	[[ "$1" != "hosts" ]] &&
 	[[ "$1" != "image" ]] &&
 	[[ "$1" != "project" ]] &&
+	[[ "$1" != "pl" ]] &&
 	load_configuration &&
 	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
