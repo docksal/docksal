@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.7.0
+FIN_VERSION=1.8.0
 
 # Console colors
 red='\033[0;91m'
@@ -1311,16 +1311,25 @@ show_help_cleanup ()
 
 show_help_hosts ()
 {
-	echo-green "Can add/remove lines to/from OS-dependent hosts file"
-	printh "fin hosts <command>" "" "yellow"
+	echo-green "Can add or remove lines to/from OS-dependent hosts file"
 	echo
-	printh "Always uses $DOCKSAL_DEFAULT_IP for IP."
+	printh "fin hosts [command]" "" "yellow"
+	echo
+	printh "Uses $DOCKSAL_DEFAULT_IP for IP when VirtualBox is used."
+	printh "Uses 127.0.0.1 for IP when DOCKER_NATIVE is set."
+	echo
 	echo-green "Commands:"
-	printh "add <hostname>" "Add hostname to hosts file"
-	printh "remove <hostname>" "Remove all lines containing hostname from hosts file"
-	printh "list (or no command)" "Output hosts file"
+	printh "add [hostname]" "Add hostname to hosts file. If no provided uses ${yellow}VIRTUAL_HOST${NC}"
+	printh "remove [hostname]" "Remove all lines containing hostname from hosts file. Uses ${yellow}VIRTUAL_HOST${NC} if none provided"
+	printh "list" "Output hosts file"
+	printh "<no command>" "Output hosts file"
+	printh "help" "Show this help"
+	echo
 	echo-green "Examples:"
-	printh "fin hosts add demo.docksal" "Append a line '$DOCKSAL_DEFAULT_IP demo.docksal' to hosts file"
+	printh "fin hosts add" "Append current project's VIRTUAL_HOST to hosts file"
+	printh "fin hosts add demo.docksal" "Append a line '$DOCKSAL_DEFAULT_IP demo.docksal' to hosts file if Virtualbox is used"
+	printh "fin hosts remove" "Remove current project's VIRTUAL_HOST from hosts file"
+	printh "fin hosts remove demo.docksal" "Remove *all* lines containing demo.docksal from hosts file"
 	printh "fin hosts" "Output hosts file"
 	echo
 }
@@ -1336,6 +1345,8 @@ show_help_addon ()
 	# printh "update" "Update available addons"
 	echo
 }
+
+#---------- END HELP FUNCTIONS
 
 # Display fin version
 # @option --short - Display only the version number
@@ -1418,7 +1429,7 @@ docker_machine_create ()
 	docker-machine create \
  		--driver=virtualbox \
 		--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
-		--virtualbox-disk-size "$DEFAULT_MACHINE_VBOX_HDD" \
+		--virtualbox-disk-size "${VBOX_HDD:-$DEFAULT_MACHINE_VBOX_HDD}" \
 		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 		--virtualbox-hostonly-cidr "$DOCKSAL_DEFAULT_SUBNET" \
 		--virtualbox-no-share \
@@ -1684,8 +1695,10 @@ docker_machine_mount_nfs ()
 			sleep 5
 			docker-machine ssh "$machine_name" \
 				"sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
-			[ ! $? -eq 0 ] &&
-				echo-red "NFS share mount has failed. Try fin vm restart."
+			if [[ $? != 0 ]]; then
+				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
+				return 1
+			fi
 		fi
 	done
 
@@ -1749,28 +1762,66 @@ EOF
 }
 
 # Method to create the user and SMB network share on Windows.
-# @param share_name, path
+# @param share_name, share_path
 smb_share_add()
 {
+	local share_name=$1
+	local share_path=$2
+
 	# Add SMB share if it does not exist.
-	if [[ "$(net share)" != *"${1}"*"Docksal ${2} drive"* ]];
+	if [[ "$(net share)" != *"${share_name}"*"Docksal ${share_path} drive"* ]];
 	then
-		command_share="net share ${1}=${2} /grant:${USERNAME},FULL /REMARK:\"Docksal ${2} drive\""
+		command_share="net share ${share_name}=${share_path} /grant:${USERNAME},FULL /REMARK:\"Docksal ${share_path} drive\""
 		echo-green "Adding docker SMB share..."
 		winsudo "$command_share"
+
+		if [[ $? != 0 ]]; then
+			echo-error "SMB share creation failed." \
+				"Share name: ${share_name}" \
+				"Share path: ${share_path}"
+			return 1
+		fi
 	fi
 }
 
 # Method to mount the SMB share in Docker machine.
-# @param share_path, mount_point, password
+# @param share_name, mount_point, password
 smb_share_mount()
 {
+	local share_name=$1
+	local mount_point=$2
+	local password=$3
+
 	#DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
-	command_mount="sudo mkdir -p $2 && sudo mount -t cifs -o username='${USERNAME}',pass='$3',sec=ntlm,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$1 $2"
+	# User ntlmssp by default. For some Windows machines ntlm should be used instead
+	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
+	SMB_SEC="${SMB_SEC:-ntlmssp}"
+	# Doing unmount first to make it possible to rerun this command without restarting the VM (e.g. when debugging)
+	# Specifying domain when mounting. May help when a Windows machine is in a domain environment.
+	command_mount="
+		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
+		sudo mkdir -p $mount_point && \
+		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+
+	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
+	if [[ $? != 0 ]]; then
+		echo-yellow "Mount command failed... Trying an alternative method..."
+		# Switch sec to ntlm and try again
+		command_mount=$(echo $command_mount | sed 's/sec=.*,/sec=ntlm,/')
+		docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+
+		if [[ $? == 0 ]]; then
+			echo-green 'Success!'
+		else
+			echo-error "SMB share mount failed." \
+ 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again."
+			return 1
+		fi
+	fi
 }
 
 docker_machine_mount_smb ()
@@ -1780,38 +1831,39 @@ docker_machine_mount_smb ()
 	# use his password for mount -t cifs ...
 
 	# Get a list of logical drives (type 3 = Local disk).
-	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
-	read -s -p "Enter your Windows account password: " PASSWORD
+	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	read -s -p "Enter your Windows account password: " password
 	echo # Add a new line after user input.
 
-	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
-		smb_share_add "$MOUNT_POINT" "$DRIVE" && \
-			smb_share_mount "$MOUNT_POINT" "/$MOUNT_POINT" "$PASSWORD" || \
-			(echo-red "Error creating share" && exit 1)
+	for drive in ${drives}; do
+		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Avoid conflicts with existing drive shares buy using a unique share name
+		local share_name="docksal-$mount_point"
+		smb_share_add "$share_name" "$drive" &&
+			smb_share_mount "$share_name" "/$mount_point" "$password"
 	done
 }
 
 docker_machine_remove_smb ()
 {
-	local DRIVES=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
-	for DRIVE in ${DRIVES}; do
-		local MOUNT_POINT=$(cygpath -u "$DRIVE" | sed 's/^\/cygdrive\///')
-		command_share="net share ${MOUNT_POINT} /DELETE"
+	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	for drive in ${drives}; do
+		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Avoid conflicts with existing drive shares buy using a unique share name
+		local share_name="docksal-$mount_point"
+		command_share="net share ${share_name} /DELETE"
 		winsudo "$command_share"
 	done
 }
 
 docker_machine_mounts ()
 {
-	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
-		if is_mac; then
-			echo-green "Configuring NFS shares..."
-			docker_machine_mount_nfs "/Users:/Users"
-		elif is_windows; then
-			echo-green "Configuring SMB shares..."
-			docker_machine_mount_smb
-		fi
+	if is_mac; then
+		echo-green "Configuring NFS shares..."
+		docker_machine_mount_nfs "/Users:/Users" || exit 1
+	elif is_windows; then
+		echo-green "Configuring SMB shares..."
+		docker_machine_mount_smb || exit 1
 	fi
 }
 
@@ -1925,11 +1977,13 @@ vm ()
 			show_help_vm
 			;;
 		*)
-			echo-error "Unknown command fin vm $1" "See ${yellow}fin help vm${NC} for list of available commands"
+			show_help_vm
+			return 1
 			;;
 	esac
 }
 
+# TODO: deprecated. Remove as this command is not very useful right now.
 vm-stats ()
 {
 	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
@@ -2169,6 +2223,11 @@ stats_ping ()
 
 install_proxy_service ()
 {
+	# Bind to the default VM IP unless in native mode. Bind to localhost in native.
+	# In either case the IP proxy binds to can be overridden via DOCKSAL_VHOST_PROXY_IP env variable
+	local ip="${DOCKSAL_DEFAULT_IP}"
+	is_docker_native && ip='127.0.0.1'
+
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
 
@@ -2185,7 +2244,7 @@ install_proxy_service ()
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
 	# entirely wiped out from the host (e.g. 168h). WARNING: use at your own risk!
 	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always \
-		-p "${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
+		-p "${DOCKSAL_VHOST_PROXY_IP:-$ip}:${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_IP:-$ip}:${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
 		-v docksal_projects:/projects \
@@ -2619,7 +2678,8 @@ update_virtualbox () {
 
 	# Download and install Win
 	is_windows && (
-		cmd /c start "$vbox_pkg"
+		# Using cygpath -w here to get a Windows native path to the installer, so that cmd will understand it.
+		cmd /c start "$(cygpath -w $vbox_pkg)"
 	)
 
 	# Wait for installation to finish
@@ -2711,15 +2771,18 @@ EOF
 }
 
 # Update start script and shortcut
+# TODO: deprecated, remove in September 2017
 update_start_script_shortcut()
 {
-	rm "$BABUN_HOME/docksal.bat" >/dev/null 2>&1
-	rm "$BABUN_HOME/docksal.ico" >/dev/null 2>&1
-	rm "$BABUN_HOME/tools/link_icon.vbs" >/dev/null 2>&1
-	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/link_icon.vbs" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
-	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.bat" -o "$(cygpath $BABUN_HOME)/docksal.bat"
-	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.ico" -o "$(cygpath $BABUN_HOME)/docksal.ico"
-	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
+	rm -f "$BABUN_HOME/docksal.bat" >/dev/null 2>&1
+	rm -f "$BABUN_HOME/docksal.ico" >/dev/null 2>&1
+	rm -f "$BABUN_HOME/tools/link_icon.vbs" >/dev/null 2>&1
+	rm -f "$(cygpath ${USERPROFILE}\Desktop\Docksal.lnk)" >/dev/null 2>&1
+
+#	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/link_icon.vbs" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
+#	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.bat" -o "$(cygpath $BABUN_HOME)/docksal.bat"
+#	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.ico" -o "$(cygpath $BABUN_HOME)/docksal.ico"
+#	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
 }
 
 # Update system service images
@@ -2845,6 +2908,7 @@ update ()
 	update_config_files
 
 	# [Update - 3] Update start script and shortcut
+	# TODO: deprecated, remove in September 2017
 	if is_windows; then
 		echo-green "Updating start script and shortcut..."
 		update_start_script_shortcut
@@ -3300,6 +3364,7 @@ reset ()
 	else
 		remove "$@"
 	fi
+	is_linux && [[ "$@" == "" ]] && ssh_add
 	_start_containers
 }
 
@@ -3482,6 +3547,7 @@ alias_list ()
 
 load_configuration ()
 {
+	check_docksal
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
@@ -3560,17 +3626,22 @@ load_configuration ()
 	# Set defaults
 	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.docksal}
 	export DOCROOT=${DOCROOT:-docroot}
-	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
+	if is_docker_native; then
+		export DOCKSAL_IP="127.0.0.1"
+	else
+		export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
+	fi
 
 	# DNS servers for containers
-	# Internal name resolution (for *.docksal domains)
-	export DOCKSAL_DNS1=${DOCKSAL_DEFAULT_IP}
-	# External name resolution (everything else)
-	if ! is_linux; then
-		export DOCKSAL_DNS2=${DOCKSAL_DEFAULT_DNS}
+	# Internal name resolution (for *.docksal domains) via docksal-dns service
+	if is_docker_native; then
+		export DOCKSAL_DNS1="127.0.0.1"
 	else
-		export DOCKSAL_DNS2=${DOCKSAL_DEFAULT_DNS_NIX}
+		export DOCKSAL_DNS1=${DOCKSAL_DEFAULT_IP}
 	fi
+	# TODO: deprecate this? docksal-dns service (^) should be able to handle all DNS resolution needs.
+	# External/backup name resolution for containers
+	export DOCKSAL_DNS2=${DOCKSAL_DEFAULT_DNS_NIX}
 
 	# Make project root globally available
 	export DOCKSAL_PATH="$(get_project_path)"
@@ -3681,7 +3752,8 @@ hosts ()
 			cat "$HOSTS_FILE"
 			;;
 		*)
-			echo "Usage: fin host < add | remove > [ hostname ]"
+			show_help_hosts
+			exit 1
 			;;
 	esac
 }
@@ -3689,41 +3761,64 @@ hosts ()
 # Add a host to hosts file
 hosts_add ()
 {
-	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
-	[[ ! "$1" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
+	local hostname="$1"
+	local hostip="$DOCKSAL_DEFAULT_IP"
+	[[ $DOCKER_NATIVE == 1 ]] && hostip="127.0.0.1"
+	# Use VIRTUAL_HOST if no parameters provided
+	if [ "$hostname" == "" ]; then
+		check_docksal_environment
+		load_configuration
+		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
+		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
+	fi
+	[[ ! "$hostname" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
 
+	# Always make hosts file backup
 	hosts_backup
-	echo "Adding: $DOCKSAL_DEFAULT_IP $1"
+
+	# Add to hosts
+	echo -e "Adding: ${yellow}$hostip $hostname${NC}"
 	if is_windows; then
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
-		echo "$DOCKSAL_DEFAULT_IP $1" | tee -a "$tmp" >/dev/null
+		echo "$hostip $hostname" | tee -a "$tmp" >/dev/null
 		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
-		echo "$DOCKSAL_DEFAULT_IP $1" | sudo tee -a "$HOSTS_FILE" >/dev/null
+		echo "$hostip $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
 	fi
 }
 
 # Remove a host from hosts file
 hosts_remove ()
 {
-	[ "$1" == "" ] && echo-error "Hostname was not provided" && exit 1
-	[[ ! "$1" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
-	# Double insurance from removing lines containing localhost or broadcasthost as it may damage system
-	[[ "$1" =~ "localhost" ]] && echo-error "Cannot remove localhost" && exit 1
-	[[ "$1" =~ "broadcasthost" ]] && echo-error "Cannot remove broadcasthost" && exit 1
+	local hostname="$1"
+	if [ "$hostname" == "" ]; then
+		check_docksal_environment
+		load_configuration
+		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
+		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
+	fi
 
+	[[ ! "$hostname" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
+	# Double insurance from removing lines that may damage system
+	( [[ "$hostname" =~ "localhost" ]] || [[ "$hostname" =~ "loopback" ]] || [[ "$hostname" =~ "localnet" ]] || [[ "$hostname" =~ "allnodes" ]] ) &&
+		echo-error "Cannot remove localhost" && exit 1
+	[[ "$hostname" =~ "broadcasthost" ]] && echo-error "Cannot remove broadcasthost" && exit 1
+
+	# Always make hosts file backup
 	hosts_backup
-	echo "Removing '$1'..."
+
+	# Remove from hosts
+	echo -e "Removing lines containing ${yellow}$hostname${NC}"
 	if is_windows; then
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
-		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$tmp" >/dev/null
+		cat "$HOSTS_FILE" | grep -v "$hostname" | sudo tee "$tmp" >/dev/null
 		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
-		cat "$HOSTS_FILE" | grep -v "$1" | sudo tee "$HOSTS_FILE" >/dev/null
+		cat "$HOSTS_FILE" | grep -v "$hostname" | sudo tee "$HOSTS_FILE" >/dev/null
 	fi
 }
 
@@ -3732,7 +3827,7 @@ hosts_backup ()
 {
 	local bkp="/tmp/hosts.bak.$RANDOM"
 	echo "Backing up to $bkp"
-	sudo cp "$HOSTS_FILE" "$bkp"
+	cp "$HOSTS_FILE" "$bkp"
 }
 
 # Addons management
@@ -3989,12 +4084,17 @@ if
 	[[ "$1" != "exec-url" ]] &&
 	[[ "$1" != "rc" ]] && [[ "$1" != "run-cli" ]]
 	[[ "$1" != "cleanup" ]] &&
+	[[ "$*" != "config generate" ]] &&
 	[[ "$1" != "fix-smb" ]] &&
 	[[ "$*" != "reset dns" ]] &&
 	[[ "$*" != "reset proxy" ]] &&
 	[[ "$*" != "reset ssh-agent" ]] &&
 	[[ "$*" != "reset system" ]] &&
-	[[ "$1" != "projects" ]] && [[ "$1" != "project" ]];
+	[[ "$1" != "projects" ]] && [[ "$1" != "project" ]] && [[ "$1" != "pl" ]]
+	[[ "$1" != "run-cli" ]] &&
+	[[ "$1" != "rc" ]] &&
+	[[ "$1" != "hosts" ]] &&
+	[[ "$1" != "image" ]];
 	then
 		load_configuration
 		[[ "$NO_UPDATES" != "1" ]] && check_for_updates
@@ -4033,15 +4133,8 @@ case "$1" in
 				shift
 				image_registry_list "$@"
 			;;
-			'')
-				echo -e "See ${yellow}fin help image${NC}"
-				exit 1
-				;;
-			help)
-				show_help_image
-				;;
 			*)
-				echo -e "Unknown command $1. See ${yellow}fin help image${NC}"
+				show_help_image
 				exit 1
 			;;
 		esac
@@ -4064,7 +4157,7 @@ case "$1" in
 				show_help_project
 				;;
 			*)
-				echo -e "Unknown command $1. See ${yellow}fin help project${NC}"
+				show_help_project
 				exit 1
 				;;
 		esac
@@ -4169,14 +4262,9 @@ case "$1" in
 				shift
 				mysql_dump "$@"
 				;;
-			help)
-				show_help_db
-				;;
-			'')
-				mysql "$@"
-				;;
 			*)
-				echo-error "Unknown command 'fin db $1'" "See ${yellow}fin help db${NC}."
+				show_help_db
+				exit 1
 				;;
 		esac
 		;;
