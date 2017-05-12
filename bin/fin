@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.8.0
+FIN_VERSION=1.8.1
 
 # Console colors
 red='\033[0;91m'
@@ -4043,7 +4043,9 @@ if [[ "$1" == "@"* ]]; then
 	USED_ALIAS=${1#@}
 	shift
 	# Search alias first between aliases then between running projects
-	if [[ -h "$CONFIG_ALIASES/$USED_ALIAS" ]]; then
+	if [[ "$USED_ALIAS" == "self" ]]; then
+		_alias_cd="$(get_project_path)"
+	elif [[ -h "$CONFIG_ALIASES/$USED_ALIAS" ]]; then
 		# alias found
 		_alias_cd=$(readlink "$CONFIG_ALIASES/$USED_ALIAS")
 	else
@@ -4056,7 +4058,7 @@ if [[ "$1" == "@"* ]]; then
 			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS\t" | cut -d$'\t' -f 2)
 		else
 			# nothing was found. error out
-			echo-red "No such alias $USED_ALIAS"
+			echo-red "No such fin alias: @$USED_ALIAS"
 			exit 1
 		fi
 	fi
