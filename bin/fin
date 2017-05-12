@@ -2238,7 +2238,7 @@ install_dns_service ()
 
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
-		-p "$DOCKSAL_IP":53:53/udp --cap-add=NET_ADMIN --dns="$dns" \
+		-p "${DOCKSAL_DNS_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$dns" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
@@ -3787,19 +3787,26 @@ if [[ "$DOCKSAL_UUID" == "" ]]; then
 fi
 
 # Network settings
+# DOCKSAL_IP - Docker/VM IP
+# DOCKSAL_HOST_IP - IP containers can use to access the host
+# DOCKSAL_DNS_IP - IP docksal-dns binds to
+# DOCKSAL_DNS - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
 if is_docker_native && is_mac; then
 	export DOCKSAL_IP=${DOCKSAL_D4MAC_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_D4MAC_HOST_IP}
+	export DOCKSAL_DNS_IP=${DOCKSAL_IP}
+	export DOCKSAL_DNS=${DOCKSAL_HOST_IP}
 elif is_docker_native && is_windows; then
 	export DOCKSAL_IP=${DOCKSAL_D4WIN_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_D4WIN_HOST_IP}
+	export DOCKSAL_DNS_IP=${DOCKSAL_IP}
+	export DOCKSAL_DNS=${DOCKSAL_HOST_IP}
 else
 	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_DEFAULT_HOST_IP}
+	export DOCKSAL_DNS_IP=${DOCKSAL_IP}
+	export DOCKSAL_DNS=${DOCKSAL_IP}
 fi
-# DOCKSAL_DNS is used for internal name resolution (for *.docksal domains) via docksal-dns service.
-# Points to the endpoint where docksal-dns service is listening.
-export DOCKSAL_DNS=${DOCKSAL_IP}
 
 # Export environment variables to properly reach Docker server
 if is_docker_native; then
