@@ -18,8 +18,7 @@ services:
     depends_on:
       - cli
     dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
+      - ${DOCKSAL_DNS}
 
   # DB
   db:
@@ -33,8 +32,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
     dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
+      - ${DOCKSAL_DNS}
 
   # CLI
   # Used for all console commands and tools.
@@ -51,5 +49,4 @@ services:
     environment:
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
     dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
+      - ${DOCKSAL_DNS}

@@ -18,8 +18,7 @@ services:
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
     dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
+      - ${DOCKSAL_DNS}
 
   # DB
   db:
@@ -36,8 +35,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
     dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
+      - ${DOCKSAL_DNS}
 
   # CLI
   # Used for all console commands and tools.
@@ -56,8 +54,7 @@ services:
       - HOST_GID=${HOST_GID}
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
     dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
+      - ${DOCKSAL_DNS}
 
   # Varnish
   varnish:
@@ -68,8 +65,7 @@ services:
     environment:
       - VARNISH_BACKEND_HOST=web
     dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
+      - ${DOCKSAL_DNS}
 
   # Memcached
   memcached:
@@ -79,13 +75,11 @@ services:
       # Memcached memory limit in megabytes
       - MEMCACHED_MEMORY_LIMIT=${MEMCACHED_MEMORY_LIMIT:-128}
     dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
+      - ${DOCKSAL_DNS}
 
   # Solr
   solr:
     hostname: solr
     image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}
     dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
+      - ${DOCKSAL_DNS}

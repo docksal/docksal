@@ -98,22 +98,35 @@ mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
 
 # Network settings
-DOCKSAL_HOST_IP_BOOT2DOCKER="192.168.64.1"
-DOCKSAL_HOST_IP_NATIVE="192.168.65.1"
+## Docker for Mac
+DOCKSAL_D4MAC_HOST_IP="192.168.65.1"
+DOCKSAL_D4MAC_IP="127.0.0.1"
+
+## Docker for Windows
+DOCKSAL_D4WIN_HOST_IP="10.0.75.1"
+DOCKSAL_D4WIN_IP="127.0.0.1"
+
+## Default (Linux, boot2docker/VirtualBox on Mac and Win)
+DOCKSAL_DEFAULT_HOST_IP="192.168.64.1"
 DOCKSAL_DEFAULT_IP="192.168.64.100"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
-DOCKSAL_DEFAULT_DNS="10.0.2.3"
-DOCKSAL_DEFAULT_DNS_NIX="8.8.8.8"
+
+DOCKSAL_DNS_VBOX="10.0.2.3"
+DOCKSAL_DNS_EXT="${DOCKSAL_DNS_EXT:-8.8.8.8}"
+DOCKSAL_DNS_UPSTREAM=''
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
-DOCKSAL_VHOST_PROXY_PORT_HTTP="${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}"
-DOCKSAL_VHOST_PROXY_PORT_HTTPS="${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}"
+
+# Declaring possible vhost-proxy settings overrides
+DOCKSAL_VHOST_PROXY_IP=''
+DOCKSAL_VHOST_PROXY_PORT_HTTP=''
+DOCKSAL_VHOST_PROXY_PORT_HTTPS=''
+PROJECT_INACTIVITY_TIMEOUT=''
+PROJECT_DANGLING_TIMEOUT=''
 
 DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
 DEFAULT_MACHINE_VBOX_RAM='1024' #mb
 DEFAULT_MACHINE_VBOX_HDD='50000' #mb
-DEFAULT_MACHINE_DO_SIZE='1gb' # digitalocean default size (512mb, 1gb, 2gb...)
-
 # Stats
 # fin sends a minimal ping with OS and fin version number
 DOCKSAL_STATS_TID='UA-93724315-1'
@@ -1295,7 +1308,7 @@ show_help_hosts ()
 	printh "fin hosts [command]" "" "yellow"
 	echo
 	printh "Uses $DOCKSAL_DEFAULT_IP for IP when VirtualBox is used."
-	printh "Uses 127.0.0.1 for IP when DOCKER_NATIVE is set."
+	printh "Uses $DOCKSAL_D4MAC_IP for IP when DOCKER_NATIVE is set."
 	echo
 	echo-green "Commands:"
 	printh "add [hostname]" "Add hostname to hosts file. If no provided uses ${yellow}VIRTUAL_HOST${NC}"
@@ -1306,7 +1319,7 @@ show_help_hosts ()
 	echo
 	echo-green "Examples:"
 	printh "fin hosts add" "Append current project's VIRTUAL_HOST to hosts file"
-	printh "fin hosts add demo.docksal" "Append a line '$DOCKSAL_DEFAULT_IP demo.docksal' to hosts file if Virtualbox is used"
+	printh "fin hosts add demo.docksal" "Append a line '$DOCKSAL_IP demo.docksal' to hosts file"
 	printh "fin hosts remove" "Remove current project's VIRTUAL_HOST from hosts file"
 	printh "fin hosts remove demo.docksal" "Remove *all* lines containing demo.docksal from hosts file"
 	printh "fin hosts" "Output hosts file"
@@ -1759,7 +1772,6 @@ smb_share_mount()
 	local mount_point=$2
 	local password=$3
 
-	#DOCKER_MACHINE_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
 
@@ -2188,13 +2200,9 @@ stats_ping ()
 	return 0
 }
 
+# Start system-wide vhost-proxy service
 install_proxy_service ()
 {
-	# Bind to the default VM IP unless in native mode. Bind to localhost in native.
-	# In either case the IP proxy binds to can be overridden via DOCKSAL_VHOST_PROXY_IP env variable
-	local ip="${DOCKSAL_DEFAULT_IP}"
-	is_docker_native && ip='127.0.0.1'
-
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
 
@@ -2211,7 +2219,7 @@ install_proxy_service ()
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
 	# entirely wiped out from the host (e.g. 168h). WARNING: use at your own risk!
 	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always \
-		-p "${DOCKSAL_VHOST_PROXY_IP:-$ip}:${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_IP:-$ip}:${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
+		-p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
 		-v docksal_projects:/projects \
@@ -2219,37 +2227,33 @@ install_proxy_service ()
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 }
 
-# @param $1 ip address defaults to 0.0.0.0
+# Start system-wide dns service
 install_dns_service ()
 {
-	# Use default DNS on Linux and VirtualBox's buit-in DNS if using boot2docker
-	local dns
-	local ip="${1:-0.0.0.0}"
-	if is_linux; then dns="$DOCKSAL_DEFAULT_DNS_NIX"; else dns="$DOCKSAL_DEFAULT_DNS"; fi
-
-	# Support for boot2docker-vagrant
-	local docker_ip_map="-p 172.17.42.1:53:53/udp"
-	if is_linux; then docker_ip_map=""; fi
+	# Allow overriding DNS upstream via DOCKSAL_DNS_UPSTREAM
+	# Use VBox/host resolver when VBox is used
+	local dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_VBOX}}
+	# Forward DNS requests to DOCKSAL_DNS_EXT on Docker for Mac/Win and on Linux
+	( is_docker_native || is_linux ) && dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_EXT}}
 
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
-		-p "$ip":53:53/udp --cap-add=NET_ADMIN --dns "$dns" \
-		-e DNS_IP="$ip" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
+		-p "$DOCKSAL_IP":53:53/udp --cap-add=NET_ADMIN --dns="$dns" \
+		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
 }
 
 # Configure system-wide *.docksal resolver using /etc/resolver
 configure_resolver_mac () {
-	local TARGET_IP="$1"
-	if (grep "^nameserver $TARGET_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
+	if (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
 		return
 	fi
 	sudo mkdir -p /etc/resolver
 	# deleting old resolver is the only way to get mac to update config
 	sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
 	# NO \n at the beginning of line here!
-	echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $TARGET_IP" | \
+	echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $DOCKSAL_IP" | \
 		sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 	sudo dscacheutil -flushcache
 	# to check: scutil --dns
@@ -2274,6 +2278,7 @@ EOF
 }
 
 # Configure system-wide *.docksal resolver
+# TODO: one day, maybe....
 configure_resolver_windows () {
 	return
 }
@@ -2282,22 +2287,11 @@ configure_resolver_windows () {
 configure_resolver ()
 {
 	check_docker_running
-	local TARGET_IP="$DOCKSAL_DEFAULT_IP"
 
-	if is_mac; then
-		is_docker_native && TARGET_IP="127.0.0.1"
-		install_dns_service "$TARGET_IP"
-		configure_resolver_mac "$TARGET_IP"
-
-	elif is_linux; then
-		install_dns_service "$DOCKSAL_DEFAULT_IP"
-		configure_resolver_linux
-
-	elif is_windows; then
-		is_docker_native && TARGET_IP="127.0.0.1"
-		install_dns_service "$TARGET_IP"
-		configure_resolver_windows "$TARGET_IP" # maybe someday
-	fi
+	install_dns_service
+	is_mac && configure_resolver_mac
+	is_linux && configure_resolver_linux
+	is_windows && configure_resolver_windows
 }
 
 install_sshagent_service ()
@@ -3429,7 +3423,7 @@ sysinfo ()
 	version
 
 	# Native vs VM
-	echo "Mode: " $( ([[ "$DOCKER_NATIVE" == "1" ]] || is_linux) && echo "Native / Docker for Mac/Windows" || echo "VirtualBox VM" )
+	echo "Mode: " $( ( is_docker_native || is_linux) && echo "Native / Docker for Mac/Windows" || echo "VirtualBox VM" )
 
 	(which 'docker-machine' >/dev/null 2>&1) && \
 		echo "███  INSTANCES" && \
@@ -3593,22 +3587,6 @@ load_configuration ()
 	# Set defaults
 	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.docksal}
 	export DOCROOT=${DOCROOT:-docroot}
-	if is_docker_native; then
-		export DOCKSAL_IP="127.0.0.1"
-	else
-		export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
-	fi
-
-	# DNS servers for containers
-	# Internal name resolution (for *.docksal domains) via docksal-dns service
-	if is_docker_native; then
-		export DOCKSAL_DNS1="127.0.0.1"
-	else
-		export DOCKSAL_DNS1=${DOCKSAL_DEFAULT_IP}
-	fi
-	# TODO: deprecate this? docksal-dns service (^) should be able to handle all DNS resolution needs.
-	# External/backup name resolution for containers
-	export DOCKSAL_DNS2=${DOCKSAL_DEFAULT_DNS_NIX}
 
 	# Make project root globally available
 	export DOCKSAL_PATH="$(get_project_path)"
@@ -3645,14 +3623,9 @@ config_show ()
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
 	echo "VIRTUAL_HOST_ALIASES: *.${VIRTUAL_HOST}"
+	echo "IP: $DOCKSAL_IP"
 
-	local IP;
-	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" != 1 ]] && IP="$DOCKSAL_DEFAULT_IP"
-	(is_mac || is_windows) && [[ "$DOCKER_NATIVE" == 1 ]] && IP="127.0.0.1"
-	(is_linux) && IP="$DOCKSAL_DEFAULT_IP"
-	echo "IP: $IP"
-
-	echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$IP/")
+	echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$DOCKSAL_IP/")
 	[[ "$1" == "env" ]] && return
 
 	echo
@@ -3728,8 +3701,6 @@ hosts ()
 hosts_add ()
 {
 	local hostname="$1"
-	local hostip="$DOCKSAL_DEFAULT_IP"
-	[[ $DOCKER_NATIVE == 1 ]] && hostip="127.0.0.1"
 	# Use VIRTUAL_HOST if no parameters provided
 	if [ "$hostname" == "" ]; then
 		check_docksal_environment
@@ -3743,15 +3714,15 @@ hosts_add ()
 	hosts_backup
 
 	# Add to hosts
-	echo -e "Adding: ${yellow}$hostip $hostname${NC}"
+	echo -e "Adding: ${yellow}$DOCKSAL_IP $hostname${NC}"
 	if is_windows; then
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
-		echo "$hostip $hostname" | tee -a "$tmp" >/dev/null
+		echo "$DOCKSAL_IP $hostname" | tee -a "$tmp" >/dev/null
 		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
-		echo "$hostip $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
+		echo "$DOCKSAL_IP $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
 	fi
 }
 
@@ -3815,12 +3786,25 @@ if [[ "$DOCKSAL_UUID" == "" ]]; then
 	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
 fi
 
+# Network settings
+if is_docker_native && is_mac; then
+	export DOCKSAL_IP=${DOCKSAL_D4MAC_IP}
+	export DOCKSAL_HOST_IP=${DOCKSAL_D4MAC_HOST_IP}
+elif is_docker_native && is_windows; then
+	export DOCKSAL_IP=${DOCKSAL_D4WIN_IP}
+	export DOCKSAL_HOST_IP=${DOCKSAL_D4WIN_HOST_IP}
+else
+	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
+	export DOCKSAL_HOST_IP=${DOCKSAL_DEFAULT_HOST_IP}
+fi
+# DOCKSAL_DNS is used for internal name resolution (for *.docksal domains) via docksal-dns service.
+# Points to the endpoint where docksal-dns service is listening.
+export DOCKSAL_DNS=${DOCKSAL_IP}
+
 # Export environment variables to properly reach Docker server
-if [[ "$DOCKER_NATIVE" == "1" ]]; then
+if is_docker_native; then
 	# no vm used
 	export DOCKER_HOST=""
-	# Host IP on Docker for Mac
-	export DOCKSAL_HOST_IP="$DOCKSAL_HOST_IP_NATIVE"
 else
 	# get active machine and it's status
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
@@ -3842,8 +3826,6 @@ else
 	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
 	#fi
 	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
-
-	export DOCKSAL_HOST_IP="$DOCKSAL_HOST_IP_BOOT2DOCKER"
 fi
 
 # Handle Alias
