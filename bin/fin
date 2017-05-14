@@ -99,8 +99,12 @@ DOCKSAL_COMMANDS_PATH=".docksal/commands"
 
 # Network settings
 ## Docker for Mac
-DOCKSAL_D4MAC_HOST_IP="192.168.65.1"
-DOCKSAL_D4MAC_IP="127.0.0.1"
+#DOCKSAL_D4MAC_HOST_IP="192.168.65.1"
+#DOCKSAL_D4MAC_IP="127.0.0.1"
+# It is possible (tought not advisable) to have both D4M and Docksal VBox VM running at the same time on Mac.
+# We use a different subnet (74) for Docker for Mac to avoid conflicts with the VirtualBox subnet (64).
+DOCKSAL_D4MAC_HOST_IP="192.168.74.1"
+DOCKSAL_D4MAC_IP="192.168.74.100"
 
 ## Docker for Windows
 #DOCKSAL_D4WIN_HOST_IP="10.0.75.1"
@@ -2204,7 +2208,14 @@ stats_ping ()
 
 configure_network ()
 {
-	# Reset network settings in Docker for Windows
+	# Docker for Mac
+	if is_mac && is_docker_native; then
+		sudo ifconfig lo0 alias ${DOCKSAL_D4MAC_IP} 255.255.255.0
+		# Wait 5s for network configuration to apply
+		sleep 5
+	fi
+
+	# Docker for Windows
 	if is_windows && is_docker_native; then
 		local cmd_set_ip="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_D4WIN_IP} mask=255.255.255.0"
 		local cmd_set_dns="netsh interface ip set dns \"vEthernet (DockerNAT)\" static ${DOCKSAL_D4WIN_IP}"
@@ -3817,12 +3828,12 @@ if is_docker_native && is_mac; then
 	export DOCKSAL_IP=${DOCKSAL_D4MAC_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_D4MAC_HOST_IP}
 	export DOCKSAL_DNS_IP=${DOCKSAL_IP}
-	export DOCKSAL_DNS=${DOCKSAL_HOST_IP}
+	export DOCKSAL_DNS=${DOCKSAL_IP}
 elif is_docker_native && is_windows; then
 	export DOCKSAL_IP=${DOCKSAL_D4WIN_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_D4WIN_HOST_IP}
 	export DOCKSAL_DNS_IP=${DOCKSAL_IP}
-	export DOCKSAL_DNS=${DOCKSAL_HOST_IP}
+	export DOCKSAL_DNS=${DOCKSAL_IP}
 else
 	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_DEFAULT_HOST_IP}
