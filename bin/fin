@@ -103,8 +103,10 @@ DOCKSAL_D4MAC_HOST_IP="192.168.65.1"
 DOCKSAL_D4MAC_IP="127.0.0.1"
 
 ## Docker for Windows
-DOCKSAL_D4WIN_HOST_IP="10.0.75.1"
-DOCKSAL_D4WIN_IP="127.0.0.1"
+#DOCKSAL_D4WIN_HOST_IP="10.0.75.1"
+#DOCKSAL_D4WIN_IP="127.0.0.1"
+DOCKSAL_D4WIN_HOST_IP="192.168.64.1"
+DOCKSAL_D4WIN_IP="192.168.64.100"
 
 ## Default (Linux, boot2docker/VirtualBox on Mac and Win)
 DOCKSAL_DEFAULT_HOST_IP="192.168.64.1"
@@ -2200,6 +2202,18 @@ stats_ping ()
 	return 0
 }
 
+configure_network ()
+{
+	# Reset network settings in Docker for Windows
+	if is_windows && is_docker_native; then
+		local cmd_set_ip="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_D4WIN_IP} mask=255.255.255.0"
+		local cmd_set_dns="netsh interface ip set dns \"vEthernet (DockerNAT)\" static ${DOCKSAL_D4WIN_IP}"
+		winsudo "$cmd_set_ip & $cmd_set_dns"
+		# Wait 5s for network configuration to apply
+		sleep 5
+	fi
+}
+
 # Start system-wide vhost-proxy service
 install_proxy_service ()
 {
@@ -3288,6 +3302,12 @@ reset ()
 {
 	check_docker_running
 
+	if [[ "$1" == "network" ]] ; then
+		echo-green 'Resetting network settings...'
+		configure_network
+		return
+	fi
+
 	if [[ "$1" == "proxy" ]] ; then
 		echo-green 'Resetting Docksal HTTP/HTTPS reverse proxy service...'
 		install_proxy_service
@@ -3307,6 +3327,8 @@ reset ()
 	fi
 
 	if [[ "$1" == "system" ]] ; then
+		echo-green 'Resetting network settings...'
+		configure_network
 		echo-green 'Resetting Docksal services...'
 		echo ' * proxy'
 		install_proxy_service
