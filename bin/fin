@@ -1489,10 +1489,11 @@ docker_machine_start ()
 	check_binary_found 'docker-machine'
 
 	if is_docker_machine_exist; then
-		docker-machine start "$DOCKER_MACHINE_NAME" && DOCKER_MACHINE_STATUS='Running' && \
+		docker-machine start "$DOCKER_MACHINE_NAME" && DOCKER_MACHINE_STATUS='Running' &&
 			# Disable IP change for now
-			#docker_machine_change_ip && \
-			docker_machine_env && \
+			#docker_machine_change_ip &&
+			docker_machine_env &&
+			configure_resolver &&
 			docker_machine_mounts
 	else
 		# only auto-create default machine
@@ -1503,9 +1504,9 @@ docker_machine_start ()
 			exit 1
 		fi
 
-		docker_machine_create && \
+		docker_machine_create &&
 			# Disable IP change for now
-			#docker_machine_change_ip && \
+			#docker_machine_change_ip &&
 			docker_machine_env
 		[[ $? != 0 ]] && _docker_machine_start_exception
 
@@ -2273,15 +2274,16 @@ install_dns_service ()
 
 # Configure system-wide *.docksal resolver using /etc/resolver
 configure_resolver_mac () {
-	if (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
-		return
+	# Check whether resolver is already configured
+	if ! (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
+		sudo mkdir -p /etc/resolver
+		# deleting old resolver is the only way to get mac to update config
+		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
+		# NO \n at the beginning of line here!
+		echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $DOCKSAL_IP" | \
+			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 	fi
-	sudo mkdir -p /etc/resolver
-	# deleting old resolver is the only way to get mac to update config
-	sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
-	# NO \n at the beginning of line here!
-	echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $DOCKSAL_IP" | \
-		sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
+	# Flush DNS cache
 	sudo dscacheutil -flushcache
 	# to check: scutil --dns
 }
@@ -2315,24 +2317,25 @@ configure_resolver_windows () {
 		network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
 	fi
 
-	if [[ "$network_id" != "" ]]; then
-		winsudo "netsh interface ip set dns \"${network_id}\" static ${DOCKSAL_IP}"
-		# Flush DNS cache
-		ipconfig /flushdns
-	else
-		echo-error "DNS resolver configuration failed"
+	# Check whether DNS resolver is already configured
+	if ! (netsh interface ip show dns \"${network_id}\" | grep ${DOCKSAL_IP} >/dev/null 2>&1); then
+		if [[ "$network_id" != "" ]]; then
+			winsudo "netsh interface ip set dns \"${network_id}\" static ${DOCKSAL_IP}"
+		else
+			echo-error "DNS resolver configuration failed"
+		fi
 	fi
+
+	# Flush DNS cache
+	ipconfig /flushdns >/dev/null 2>&1
 }
 
 # Configure system-wide *.docksal resolver (Windows is not supported)
 configure_resolver ()
 {
-	check_docker_running
-
-	install_dns_service
-	is_mac && configure_resolver_mac
-	is_linux && configure_resolver_linux
-	is_windows && configure_resolver_windows
+	is_mac && configure_resolver_mac && return $?
+	is_linux && configure_resolver_linux && return $?
+	is_windows && configure_resolver_windows && return $?
 }
 
 install_sshagent_service ()
@@ -3351,6 +3354,7 @@ reset ()
 
 	if [[ "$1" == "dns" ]] ; then
 		echo-green 'Resetting Docksal DNS service and configuring resolver for .docksal domain...'
+		install_dns_service
 		configure_resolver
 		return
 	fi
@@ -3366,6 +3370,7 @@ reset ()
 		echo ' * proxy'
 		install_proxy_service
 		echo ' * dns and resolver for .docksal domain'
+		install_dns_service
 		configure_resolver
 		echo ' * ssh-agent'
 		install_sshagent_service
