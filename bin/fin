@@ -2196,24 +2196,28 @@ stats_ping ()
 
 configure_network ()
 {
-	# Docker for Mac
 	if is_mac; then
+	 	# Docker for Mac
 	 	if is_docker_native; then
-			# Add IP alias
+			# Add Docksal IP alias on the local loopback adapter
 			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
 		else
-			# Add IP alias
+			# Remove Docksal IP alias from the local loopback adapter
 			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP}
 		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
 	fi
 
-	# Docker for Windows
-	if is_windows && is_docker_native; then
-		local cmd_set_ip="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
-		local cmd_set_dns="netsh interface ip set dns \"vEthernet (DockerNAT)\" static ${DOCKSAL_NATIVE_IP}"
-		winsudo "$cmd_set_ip & $cmd_set_dns"
+	if is_windows; then
+		# Docker for Win
+		if is_docker_native; then
+			# Add Docksal IP alias on the DockerNAT adapter
+			winsudo "netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
+		else
+			# Remove Docksal IP alias on the DockerNAT adapter
+			winsudo "netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
+		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
 	fi
@@ -2301,9 +2305,21 @@ EOF
 }
 
 # Configure system-wide *.docksal resolver
-# TODO: one day, maybe....
 configure_resolver_windows () {
-	return
+	local network_id
+	if is_docker_native; then
+		# Use the default DockerNAT adapter
+		network_id="vEthernet (DockerNAT)"
+	else
+		# Figure out the name of the network (not the name of the adapter) the VM is using
+		network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+	fi
+
+	if [[ "$network_id" != "" ]]; then
+		winsudo "netsh interface ip set dns \"${network_id}\" static ${DOCKSAL_IP}"
+	else
+		echo-error "DNS resolver configuration failed"
+	fi
 }
 
 # Configure system-wide *.docksal resolver (Windows is not supported)
