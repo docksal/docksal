@@ -2317,6 +2317,8 @@ configure_resolver_windows () {
 
 	if [[ "$network_id" != "" ]]; then
 		winsudo "netsh interface ip set dns \"${network_id}\" static ${DOCKSAL_IP}"
+		# Flush DNS cache
+		ipconfig /flushdns
 	else
 		echo-error "DNS resolver configuration failed"
 	fi
