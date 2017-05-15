@@ -98,22 +98,10 @@ mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
 
 # Network settings
-## Docker for Mac
-#DOCKSAL_D4MAC_HOST_IP="192.168.65.1"
-#DOCKSAL_D4MAC_IP="127.0.0.1"
-# It is possible (tought not advisable) to have both D4M and Docksal VBox VM running at the same time on Mac.
-# We use a different subnet (74) for Docker for Mac to avoid conflicts with the VirtualBox subnet (64).
-DOCKSAL_D4MAC_HOST_IP="192.168.74.1"
-DOCKSAL_D4MAC_IP="192.168.74.100"
-
-## Docker for Windows
-#DOCKSAL_D4WIN_HOST_IP="10.0.75.1"
-#DOCKSAL_D4WIN_IP="127.0.0.1"
-DOCKSAL_D4WIN_HOST_IP="192.168.64.1"
-DOCKSAL_D4WIN_IP="192.168.64.100"
+## Docker for Mac/Win
+DOCKSAL_NATIVE_IP="192.168.64.100"
 
 ## Default (Linux, boot2docker/VirtualBox on Mac and Win)
-DOCKSAL_DEFAULT_HOST_IP="192.168.64.1"
 DOCKSAL_DEFAULT_IP="192.168.64.100"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
 
@@ -1314,7 +1302,7 @@ show_help_hosts ()
 	printh "fin hosts [command]" "" "yellow"
 	echo
 	printh "Uses $DOCKSAL_DEFAULT_IP for IP when VirtualBox is used."
-	printh "Uses $DOCKSAL_D4MAC_IP for IP when DOCKER_NATIVE is set."
+	printh "Uses $DOCKSAL_NATIVE_IP for IP when DOCKER_NATIVE is set."
 	echo
 	echo-green "Commands:"
 	printh "add [hostname]" "Add hostname to hosts file. If no provided uses ${yellow}VIRTUAL_HOST${NC}"
@@ -2209,16 +2197,22 @@ stats_ping ()
 configure_network ()
 {
 	# Docker for Mac
-	if is_mac && is_docker_native; then
-		sudo ifconfig lo0 alias ${DOCKSAL_D4MAC_IP} 255.255.255.0
+	if is_mac; then
+	 	if is_docker_native; then
+			# Add IP alias
+			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
+		else
+			# Add IP alias
+			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP}
+		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
 	fi
 
 	# Docker for Windows
 	if is_windows && is_docker_native; then
-		local cmd_set_ip="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_D4WIN_IP} mask=255.255.255.0"
-		local cmd_set_dns="netsh interface ip set dns \"vEthernet (DockerNAT)\" static ${DOCKSAL_D4WIN_IP}"
+		local cmd_set_ip="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
+		local cmd_set_dns="netsh interface ip set dns \"vEthernet (DockerNAT)\" static ${DOCKSAL_NATIVE_IP}"
 		winsudo "$cmd_set_ip & $cmd_set_dns"
 		# Wait 5s for network configuration to apply
 		sleep 5
@@ -2257,13 +2251,17 @@ install_dns_service ()
 {
 	# Allow overriding DNS upstream via DOCKSAL_DNS_UPSTREAM
 	# Use VBox/host resolver when VBox is used
-	local dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_VBOX}}
+	local dns
 	# Forward DNS requests to DOCKSAL_DNS_EXT on Docker for Mac/Win and on Linux
-	( is_docker_native || is_linux ) && dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_EXT}}
+	if is_docker_native || is_linux; then
+		dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_EXT}}
+	else
+		dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_VBOX}}
+	fi
 
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
-		-p "${DOCKSAL_DNS_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$dns" \
+		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$dns" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
@@ -3311,13 +3309,21 @@ exec_url ()
 # @param $1 $2... containers names
 reset ()
 {
-	check_docker_running
+	# Configure network has to happen before any communications with the docker daemon happen (before check_docker_running)
+	if [[ "$1" == "system" ]] ; then
+		echo-green 'Resetting network settings...'
+		configure_network
+	fi
 
+	# Configure network has to happen before any communications with the docker daemon happen (before check_docker_running)
 	if [[ "$1" == "network" ]] ; then
 		echo-green 'Resetting network settings...'
 		configure_network
 		return
 	fi
+
+	# Make sure docker daemon is accessible
+	check_docker_running
 
 	if [[ "$1" == "proxy" ]] ; then
 		echo-green 'Resetting Docksal HTTP/HTTPS reverse proxy service...'
@@ -3338,8 +3344,6 @@ reset ()
 	fi
 
 	if [[ "$1" == "system" ]] ; then
-		echo-green 'Resetting network settings...'
-		configure_network
 		echo-green 'Resetting Docksal services...'
 		echo ' * proxy'
 		install_proxy_service
@@ -3821,24 +3825,16 @@ fi
 
 # Network settings
 # DOCKSAL_IP - Docker/VM IP
-# DOCKSAL_HOST_IP - IP containers can use to access the host
-# DOCKSAL_DNS_IP - IP docksal-dns binds to
-# DOCKSAL_DNS - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
-if is_docker_native && is_mac; then
-	export DOCKSAL_IP=${DOCKSAL_D4MAC_IP}
-	export DOCKSAL_HOST_IP=${DOCKSAL_D4MAC_HOST_IP}
-	export DOCKSAL_DNS_IP=${DOCKSAL_IP}
-	export DOCKSAL_DNS=${DOCKSAL_IP}
-elif is_docker_native && is_windows; then
-	export DOCKSAL_IP=${DOCKSAL_D4WIN_IP}
-	export DOCKSAL_HOST_IP=${DOCKSAL_D4WIN_HOST_IP}
-	export DOCKSAL_DNS_IP=${DOCKSAL_IP}
-	export DOCKSAL_DNS=${DOCKSAL_IP}
+# DOCKSAL_DNS1 - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
+# DOCKSAL_DNS2 - a backup external DNS server
+if is_docker_native; then
+	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
+	export DOCKSAL_DNS1=${DOCKSAL_IP}
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 else
 	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
-	export DOCKSAL_HOST_IP=${DOCKSAL_DEFAULT_HOST_IP}
-	export DOCKSAL_DNS_IP=${DOCKSAL_IP}
-	export DOCKSAL_DNS=${DOCKSAL_IP}
+	export DOCKSAL_DNS1=${DOCKSAL_IP}
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 fi
 
 # Export environment variables to properly reach Docker server
