@@ -4092,6 +4092,7 @@ if [[ "$1" == "@"* ]]; then
 		# alias found
 		_alias_cd=$(readlink "$CONFIG_ALIASES/$USED_ALIAS")
 	else
+		check_docker_running
 		# alias not found. search project names
 		_alias_projects=$(docker ps --all \
 			--filter 'label=com.docker.compose.service=web' \
@@ -4101,7 +4102,7 @@ if [[ "$1" == "@"* ]]; then
 			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS\t" | cut -d$'\t' -f 2)
 		else
 			# nothing was found. error out
-			echo-red "No such fin alias: @$USED_ALIAS"
+			echo-error "No such fin alias: @$USED_ALIAS"
 			exit 1
 		fi
 	fi
