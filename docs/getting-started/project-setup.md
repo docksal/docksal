@@ -63,7 +63,3 @@ Your project stack is now running. Access it in your browser: `http://myproject.
     By default the virtual host name is equal to the project's folder name sans spaces and dashes, 
     with the `.docksal` domain appended to it.  
     `myproject => myproject.docksal`
-
-!!! attention "Windows users must edit their host file configuration"
-    On Windows you have to add each project manually to the hosts file.  
-    `192.168.64.100  myproject.docksal`

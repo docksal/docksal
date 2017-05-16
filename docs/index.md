@@ -27,7 +27,7 @@ limited to these features, we think you'll find these to be some of its main sel
 having to create or understand any configurations.
 - Easy to create [configurations](advanced/stack-config.md) to partially or fully override any defaults.
 - Tools such as drush, console, and WP-CLI are builtin so you don't need to have them installed locally.
-- Automatic virtual host configuration ([except for Windows](advanced/multiple-projects.md#windows).)
+- Automatic virtual host configuration
 - Support for [custom commands](fin/custom-commands.md) using any interpreter you want.
 - Easily [share your site](tools/ngrok.md) over the internet using ngrok. This lets show your project to others without having to 
 move your project to a web host somewhere.
