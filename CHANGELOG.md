@@ -1,5 +1,38 @@
 # Changelog
 
+# 1.3.0 (2017-05-16)
+
+## New Features
+
+* `*.docksal` domain resolver now works on Windows removing the need to edit the `hosts` file! 
+* `fin db <command>` replaces all previously existing mysql related commands (`sqli` is now `db import` etc.). See `fin db help` for details. Old commands still work for compatibility.
+* `fin vm hdd` - show VM hdd capacity and usage. `fin vm stats` will only show CPU and network stats now
+* `fin hosts` - easily add or remove a host to/from OS-dependent `hosts` file (Relates to #113)
+* Override VirtualBox HDD size during VM creation. Set `VBOX_HDD` environment variable to the desired size in megabytes. Default is `50000`. (see https://github.com/docksal/docksal/commit/d50e00367514f64ad0ae4421f6d08cc614d39e2e for details)
+
+## Changes and improvements
+
+* Windows SMB share creation and mount refactoring
+    - Prefix Docksal SMB shares with `docksal-` to avoid conflicts with existing shares. Docksal share names on Windows will now look like `\\computer\docksal-c` instead of `\\computer\c` before. Should address file permissions issues some Windows users had had.
+    - Domain name is now properly passed during shares mount. Should address share mount issues for domain users.
+    - Mount SMB shares with `ntlmssp` or `ntlm` security options. Perform two attempts: use `ntlmssp` by default, use `ntlm` as a fallback. Should address issues for many users of corporate Windows laptops (#117)
+    - Perform umount before mount in `smb_share_mount` to simplify debugging (e.g. `fin vm mount` to remount the share)
+    - Allow overriding CIFS `sec` option by setting `SEC_SMB` environment variable. Useful for debugging or for edge cases when neither of existing options work. `SMB_SEC=ntlmv2 fin vm mount`. Also see [unix.stackexchange.com/questions/124342](https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352)
+* Improve messaging to show when database dump is being imported from stdin 
+* Fix automatic VirtualBox installation on Windows
+* Docksal console desktop icon is deprecated. With the winpty improvements there is no need in this experimental console approach anymore.
+* Import SSH keys during containers reset on Linux (#180)
+* `vhost-proxy` and `dns` are now binding to `192.168.64.100` on all platforms. This should help to avoid conflicts with local web server instances (assuming they also don't bind to `0.0.0.0`, but use a specific IP instead (e.g. Apache on Linux can now run on `127.0.0.1` in parallel with Docksal)
+
+## Documentation
+
+* How to increase Docksal VirtualBox VM disk size 
+* Drush site aliases documentation improvements
+* New edge case in Troubleshooting: `FastCGI: incomplete headers`
+* Updated "Working with multiple projects/domains"
+* Added "Stats and analytics" section
+
+
 ## 1.2.0 (2017-04-12)
 
 ### New features
@@ -51,6 +84,7 @@
 - Troubleshooting
 - Installing Docksal from a USB drive ("portable" mode) 
 - Added Github issue and pull request templates
+
 
 ## 1.1.0 (2017-03-07)
 
