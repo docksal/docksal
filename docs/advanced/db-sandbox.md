@@ -23,7 +23,7 @@ db:
   command: "--datadir /var/lib/mysql-sandbox"
 ```
 
-3) Reset the db service: `fin db reset`  
+3) Reset the db service: `fin reset db`  
 4) Import the database: `fin sqli db.sql`  
 5) Create a snapshot image from the `db` container
 

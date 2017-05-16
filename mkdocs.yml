@@ -53,3 +53,4 @@ pages:
       - HTTP Basic Authentication: advanced/web-http-auth.md
       - Web server logs: advanced/web-logs.md
     - Docksal volumes: advanced/volumes.md
+    - Stats and analytics: advanced/analytics.md
