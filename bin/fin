@@ -2204,7 +2204,7 @@ configure_network ()
 			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
 		else
 			# Remove Docksal IP alias from the local loopback adapter
-			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP}
+			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP} >/dev/null 2>&1
 		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
