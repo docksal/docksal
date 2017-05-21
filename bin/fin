@@ -711,9 +711,9 @@ _start_containers ()
 	check_docker_running
 	echo-green "Starting services..."
 	docker-compose up -d --remove-orphans && \
-		# Give time for startup.sh in CLI to execute otherwise UID is changed too quickly
-		# which prevents xdebug from loading properly
-		sleep 1 && \
+		# Give cli some time to start. Necessary for UID/GID overrides, optionally enabling xdebug/etc.
+		# TODO: replace this with a Docker native health check
+		sleep 2 && \
 		# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
 		_set_cli_uid && \
 		_vhost_proxy_connect
@@ -3402,6 +3402,9 @@ logs ()
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
 {
+	# Skip Windows, as Linux permissions and ownership do not matter over SMB
+	is_windows && return
+
 	# Let uid to be set with the FIN_SET_UID env variable
 	local host_uid=${FIN_SET_UID:-$(id -u)}
 	local host_gid=${FIN_SET_GID:-$(id -g)}
@@ -3413,12 +3416,12 @@ _set_cli_uid ()
 		return;
 	fi
 
-	local container_uid
+	local container_uid_gid
 	# Get both uid and gid in one shot to save time
 	container_uid_gid=$(docker exec -u docker ${cli} bash -c 'echo -n $(id -u):$(id -g)')
 	if [[ ! $? -eq 0 ]]; then
-		echo-red 'Error getting uid from cli container'
-		echo "You might need to recreate containers with fin reset"
+		echo-error "Error getting uid from cli container" \
+			"You might need to recreate containers with ${yellow}fin reset${NC}"
 		return
 	fi
 
@@ -3656,8 +3659,12 @@ load_configuration ()
 	export COMPOSE_CONVERT_WINDOWS_PATHS=0
 
 	# Export host user uid/gid
-	export HOST_UID=$(id -u)
-	export HOST_GID=$(id -g)
+	# The startup script in the cli container picks these up and updates the docker user inside of the container
+	# On Windows this is not necessary, as Linux permissions and ownership do not matter over SMB
+	if ! is_windows; then
+		export HOST_UID=$(id -u)
+		export HOST_GID=$(id -g)
+	fi
 
 	if is_docker_running; then
 		export DOCKER_RUNNING="true"
