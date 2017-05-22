@@ -2319,6 +2319,7 @@ configure_resolver_mac () {
 			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 	fi
 	# Flush DNS cache
+	echo-green "Clearing DNS cache..."
 	sudo dscacheutil -flushcache
 	# to check: scutil --dns
 }
@@ -2362,6 +2363,7 @@ configure_resolver_windows () {
 	fi
 
 	# Flush DNS cache
+	echo-green "Clearing DNS cache..."
 	ipconfig /flushdns >/dev/null 2>&1
 }
 
