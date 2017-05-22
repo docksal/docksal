@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.9.1
+FIN_VERSION=1.9.2
 
 # Console colors
 red='\033[0;91m'
@@ -494,7 +494,9 @@ testing_warn ()
 # param $1 version string of 3 components max (e.g. 1.10.3)
 ver_to_int ()
 {
-	printf "%03d%03d%03d" $(echo "$1" | tr -d '[:alpha:]' | tr -d '-' | tr '.' ' ')
+	local leading_zeros=$(printf "%03d%03d%03d" $(echo "$1" | tr -d '[:alpha:]' | tr -d '-' | tr '.' ' '))
+	# Remove leading zeroes because otherwise bash tried to handle the number as octal which leads to errors if version contains 9
+	echo "$leading_zeros" | sed "s/^0*//"
 }
 
 #---------------------------- Control functions -------------------------------
