@@ -1,5 +1,16 @@
 # Changelog
 
+# 1.3.1 (2017-05-25)
+
+## New software versions 
+* **fin 1.9.2**
+
+## Fixes and improvements
+
+* Fix retrospective bug that was making `DOCKSAL_DNS2` value empty
+* Fix permissions issues on Windows that were related to improper `uid`/`gid`
+* Fix edge case with software versions comparison, that prevented software installations in some cases (#224)
+
 # 1.3.0 (2017-05-16)
 
 ## New Features
