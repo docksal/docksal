@@ -2,15 +2,26 @@
 
 Below is a list of known rare issues and ways to resolve them.
 
-## Failed creating Docksal virtual machine
+## Failed creating Docksal virtual machine on Windows
 
-Mostly on Windows 7, but sometimes on other OS-s, VirtualBox fails to create a new virtual machine on the first run. 
-Errors might vary. Removing the failed machine and trying again usually helps.
-
-```bash
-fin vm remove
-fin vm start
 ```
+...
+(docksal) Downloading C:\Users\alex\.docker\machine\cache\boot2docker.iso from https://github.com/boot2docker/boot2docker/releases/download/v17.04.0-ce/boot2docker.iso...
+(docksal) 0%....10%....20%....30%....40%....50%....60%....70%....80%....90%....100%
+(docksal) Creating VirtualBox VM...
+(docksal) Creating SSH key...
+Wrapper Docker Machine process exiting due to closed plugin server (read tcp 127.0.0.1:49393->127.0.0.1:49392: wsarecv: An existing connection was forcibly closed by the remote host.)
+Error creating machine: Error in driver during machine creation: read tcp 127.0.0.1:49393->127.0.0.1:49392: wsarecv: An existing connection was forcibly closed by the remote host.
+ ERROR:  Proper creation of virtual machine has failed
+         For details please refer to the log above.
+         It is recommended to remove malfunctioned virtual machine.
+Remove docksal? [y/n]:
+```
+
+If you see this error then most likely you had just installed Virtual Box.
+Sometimes Virtual Box fails to initialize it's network interfaces properly. You just need to reboot your host and try again.
+
+**NOTE:** reply yes to remove malfunctioned virtual machine.
 
 ## Error checking TLS connection (vm is not accessible)
 
@@ -93,7 +104,7 @@ different/specific IPs (e.g. `127.0.0.1:80` and `127.0.0.1:443`).
 open /Users/John.Doe/.docker/machine/machines/docksal/config.json: permission denied
 ```
 
-You careated the Docksal VM as the root user (probably using `sudo`).  
+You created the Docksal VM as the root user (probably using `sudo`).
 This is not recommended in particular because of the problems like this.
 
 Re-create vm as a regular user
@@ -147,3 +158,7 @@ web_1        | 172.19.0.6 - - [19/Apr/2017:14:57:37 +0000] "GET / HTTP/1.1" 500 
 Errors like this appear when your Apache is misconfigured. Most often it happens because of misconfigured environment variables in `docksal.yml`. Sometimes it can be misconfiguration in `.htaccess`.
 
 Check those files for errors, fix them and run `fin start`.
+
+## SMB share creation, share mounting and related issues on Windows
+
+Please see a separate [troubleshooting document on share creation, share mounting and related issues](troubleshooting-smb.md).
