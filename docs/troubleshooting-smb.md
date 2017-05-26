@@ -142,10 +142,29 @@ it not password or policies, then see step 6.
 
 ### 5. Check your password
 
-The password is being passed over to the mount command. In some rare cases some crazy
-password with special symbols can break it. While we try to eliminate edge cases
-they still happen. Try simplifying your password if you suspect it might be an issue.
-If it works with new password, then please report the old one, so we could investigate and fix.
+Check that you use the correct password. For Microsoft Account use Microsoft Account password
+not the one you use to unlock your PC.
+
+Also note, that the password is being passed over to the console mount command. In some rare
+cases some crazy password with special symbols can break it. While we try to eliminate edge cases
+they still might happen.
+
+In case mount command got broken because of we failed to scape some symbol the console output
+will look like this:
+
+```
+...
+Configuring SMB shares...
+Enter your Windows account password:
+mount: mounting //192.168.64.1/docksal-c on /c failed: Invalid argument
+exit status 255
+Mount command failed... Trying an alternative method...
+mount: mounting //192.168.64.1/docksal-c on /c failed: Invalid argument
+exit status 255
+```
+
+Try simplifying your password if you suspect it might be an issue. If it works with new password,
+then please report the old one, so we could investigate and fix.
 
 ### 6. Report an issue
 
