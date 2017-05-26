@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.9.4
+FIN_VERSION=1.9.5
 
 # Console colors
 red='\033[0;91m'
@@ -3055,6 +3055,8 @@ image_load ()
 	docker load -i "$file"
 }
 
+# Show a list of Docksal images or a list of tags for a certain Docksal's Docker hub image
+# @param $1 image name
 image_registry_list ()
 {
 	if [[ "$1" != "" ]]; then
