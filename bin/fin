@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.9.3
+FIN_VERSION=1.9.4
 
 # Console colors
 red='\033[0;91m'
@@ -1768,6 +1768,8 @@ smb_share_mount()
 	local share_name=$1
 	local mount_point=$2
 	local password=$3
+	# single quotes are banned from being used in password
+	password=${password//\'/}
 
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
@@ -1810,6 +1812,13 @@ docker_machine_mount_smb ()
 	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	read -s -p "Enter your Windows account password: " password
 	echo # Add a new line after user input.
+
+	if ([[ "$password" =~ \' ]] || [[ "$password" =~ , ]] || [[ "$password" =~ \\ ]]); then
+		echo-error "Password contains illegal characters" \
+			"Your password contains a single quote ('), a comma (,) or a back slash (\\)" \
+			"Please change you password and run ${yellow}fin vm restart${NC}"
+		return 1
+	fi
 
 	for drive in ${drives}; do
 		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')

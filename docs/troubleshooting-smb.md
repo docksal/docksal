@@ -145,9 +145,10 @@ it not password or policies, then see step 6.
 Check that you use the correct password. For Microsoft Account use Microsoft Account password
 not the one you use to unlock your PC.
 
-Also note, that the password is being passed over to the console mount command. In some rare
-cases some crazy password with special symbols can break it. While we try to eliminate edge cases
-they still might happen.
+Also note, that the password is being passed over to the console mount command. So there are
+some limitations that apply.
+
+**Your password can NOT contain:** `,` (comma), `\` (back slash) or `'` (single quote) symbol.
 
 In case mount command got broken because of we failed to scape some symbol the console output
 will look like this:
