@@ -145,13 +145,11 @@ it not password or policies, then see step 6.
 Check that you use the correct password. For Microsoft Account use Microsoft Account password
 not the one you use to unlock your PC.
 
-Also note, that the password is being passed over to the console mount command. So there are
-some limitations that apply.
+**Your password can NOT contain:** `,` (comma), `\` (back slash) or `'` (single quote) symbol
+because the password is being passed to the console mount command.
 
-**Your password can NOT contain:** `,` (comma), `\` (back slash) or `'` (single quote) symbol.
-
-In case mount command got broken because of we failed to scape some symbol the console output
-will look like this:
+Other special symbols are not an issue but in case your password contains some other special
+symbols and you see errors that contain `Invalid argument`:
 
 ```
 ...
@@ -164,8 +162,8 @@ mount: mounting //192.168.64.1/docksal-c on /c failed: Invalid argument
 exit status 255
 ```
 
-Try simplifying your password if you suspect it might be an issue. If it works with new password,
-then please report the old one, so we could investigate and fix.
+In this case try simplifying your password and if it works with a new password,
+then create an issue on GitHub (see step 6), so we could investigate and fix.
 
 ### 6. Report an issue
 
