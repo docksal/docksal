@@ -1,8 +1,8 @@
-# Troubleshooting SMB share creation, share mounting and related issues on Windows
+# Troubleshooting SMB shares creation, mounting and related issues on Windows
 
-## How it looks
+## How SMB related errors look
 
-You may see errors during VM start that may look like this:
+SMB related errors happen during VM start and look like one of the following:
 
 ```
 Adding docker SMB share
@@ -15,7 +15,7 @@ mount: mounting //192.168.64.1/c on /c failed: Operation now in progress...
 exit status 255
 ```
 
-If you ignored these errors and tried to start a project, then it will probably fail with errors like this:
+If you ignored these errors and tried to start a project, then it will probably fail with error like this:
 
 ```
 ERROR: for cli  Cannot create container for service cli: error while mounting vo
@@ -26,7 +26,7 @@ ERROR: Encountered errors while bringing up the project.
 
 ## Root cause
 
-During VM start Docksal creates shares for all your local drives `docksal-c` for `C:`,
+During VM start Docksal creates shares for all your local drives, `docksal-c` for `C:`,
 `docksal-d` for `D:` etc. If Docksal fails to create them for any reason,
 then Docker will not be able to access your files.
 
@@ -37,10 +37,9 @@ for any reason, then Docker will not be able to access your files.
 
 ### 1. Windows 7 and minimized elevated prompts
 
-Only when Docksal VM is being created, VirtualBox needs to configure network adapter
-and requires administrative permissions for that.
-Those elevated prompt requests are sometimes appear minimized on the taskbar
-and there are warnings about that in console:
+When Docksal VM is being created, VirtualBox needs to configure network adapter and requires
+administrative permissions for that. Those elevated prompts are sometimes appear minimized on the taskbar.
+Pay attention to them and reply **Yes**. There are warning about this in console:
 
 ```
 (docksal) Check network to re-create if needed...
@@ -51,11 +50,11 @@ and there are warnings about that in console:
 ```
 
 If you ignored those elevated requests or got distracted and they had timed out,
-or you accidentally replied "no", then the adapter will not be created properly and
+or if you accidentally replied **No**, then the adapter fail to set up properly and
 your only option would be to remove vm with `fin vm remove` and start it again.
 
 
-### 2. Check it is not your Windows network settings issue
+### 2. Check for Windows network settings issues
 
 Determine your local IP address. Usually you can do that by running `ipconfig` and
 looking for an active adapter that has "Local Area Connection" in the name.
@@ -65,12 +64,12 @@ looking for an active adapter that has "Local Area Connection" in the name.
 Open explorer and navigate to `\\<your.host.ip.address>\`.
 It should open with no errors and you should see your network shares.
 
+Usually there are some shares, but you may have none. If there is no shares but IP opens
+without any error messages, then you should be good with this step.
+
 ![Getting your IP](_img/troubleshooting-smb-your-shares.png)
 
-Usually there are some shares, but sometimes you may have none. If there are no shares but
-IP opens without any errors, then you should be good with this step.
-
-If you get errors when trying to access IP, then there is an issue with your Windows settings and
+But if you get errors when trying to access IP, then there is an issue with your Windows network settings and
 you need to fix it. Docksal can not fix it for you, because there are dozens of reasons why it
 might fail to work.
 
@@ -89,14 +88,14 @@ make sure it works.
 
 ### 3. Check that Docksal IP is working
 
-**NOTE:** At this step we assume you already did `fin vm start` and that command had failed
-with error related to shares or mounting, and you checked out the first step. If your error with vm
-start is not related to mounting or shares, then see regular [troubleshooting guide](troubleshooting.md)
+**NOTE:** At this step we assume you had already run `fin vm start` and it had failed
+with error related to shares or mounting. You checked out the first step and there seems to be no
+issues with accessing your local IP via explorer. (If error with vm
+start is not related to mounting or shares, then see regular [troubleshooting guide](troubleshooting.md).)
 
-Now we need to check Docksal IP. Open explorer and navigate to `\\192.168.64.1\`. This is the IP
-that VirtualBox adapter assigns to your host machine. Just like in previous step it should open
-with no errors and you should see your network shares (if it opens but you see no shares, then
-see next step).
+In this step you need to check access to Docksal IP. Open explorer and navigate to `\\192.168.64.1\`.
+This is the IP that VirtualBox adapter assigns to your host machine. Just like in previous step it
+should open with no errors and now you should see your network shares.
 
 ![Getting your IP](_img/troubleshooting-smb-your-shares2.png)
 
@@ -109,11 +108,11 @@ If you disabled Windows Firewall, but you still can not access this IP address, 
 firewall to blame. You would need to refer to the same
 [elaborate post on superuser about issues with File/Printer sharing on Windows](https://superuser.com/a/446500/140872).
 
-In worst case try removing Docksal VM with `fin vm rm`, uninstall VirtualBox, **reboot**, install
-VirtualBox and start vm with `fin vm start`.
+In worst case try removing Docksal VM with `fin vm remove`, uninstall VirtualBox, **reboot**, install
+VirtualBox and start vm again.
 
-Again, if any option fails you might be limited to re-installing Windows. We had cases when
-people that had mysterious share mounting related issues re-installed Windows and everything
+If any option fails you might be limited to re-installing Windows. We had cases when
+people had mysterious issues related to shares mounting. They re-installed Windows and everything
 worked like a charm.
 
 ### 4. Check that drives' shares exist
@@ -124,9 +123,9 @@ Open explorer and navigate to `\\192.168.64.1\`. Make sure that you see and can
 access shares, that Docksal should have created for your local drives. `docksal-c`, `docksal-d` etc.
 
 If you see the shares, but can not access them then most likely you hit some edge case. Easiest
-fix is to stop Docksal VM, remove those shares manually and start it back again.
+fix is to stop Docksal VM, remove those shares manually using Windows UI and start VM back again.
 
-If you don't see those shares altogether, then there is an issue with share creation.
+If you don't see those shares altogether, then there is an issue with shares creation.
 
 Possible common reasons:
 
@@ -142,8 +141,7 @@ it not password or policies, then see step 6.
 
 ### 5. Check your password
 
-Check that you use the correct password. For Microsoft Account use Microsoft Account password
-not the one you use to unlock your PC.
+For Microsoft Account use Microsoft Account password not the one you use to unlock your PC.
 
 **Your password can NOT contain:** `,` (comma), `\` (back slash) or `'` (single quote) symbol
 because the password is being passed to the console mount command.
