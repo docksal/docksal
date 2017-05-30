@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.9.5
+FIN_VERSION=1.9.6
 
 # Console colors
 red='\033[0;91m'
@@ -1948,7 +1948,7 @@ vm ()
 		env)
 			shift
 			DOCKER_MACHINE_NAME="${1:-$DOCKER_MACHINE_NAME}"
-			docker_machine_env
+			docker-machine env "$DOCKER_MACHINE_NAME"
 			;;
 		ram)
 			shift
