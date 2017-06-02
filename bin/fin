@@ -4128,7 +4128,8 @@ case "$1" in
 			exit
 		elif [[ "$1" == "--tools" ]]; then
 			update_tools
-		elif [[ "$1" == "--config" ]]; then
+		# TODO: "--config" deprecated, remove at some point
+		elif [[ "$1" == "--config" ]] || [[ "$1" == "--stacks" ]]; then
 			update_config_files
 		elif [[ "$1" == "--bash-complete" ]]; then
 			install_bash_autocomplete
