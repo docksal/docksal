@@ -2322,8 +2322,11 @@ configure_resolver_windows () {
 	# Check whether DNS resolver is already configured
 	if ! (netsh interface ip show dns \"${network_id}\" | grep ${DOCKSAL_IP} >/dev/null 2>&1); then
 		if [[ "$network_id" != "" ]]; then
-			winsudo "netsh interface ip set dnsservers \"${network_id}\" static ${DOCKSAL_IP} none &&
-					netsh interface ip set interface \"${network_id}\" metric=10"
+			# Set DNS server to Docksal IP on the VM's VBox adapter
+			local command1="netsh interface ip set dnsservers \"${network_id}\" static ${DOCKSAL_IP} none"
+			# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
+			local command2="netsh interface ip set interface \"${network_id}\" metric=10"
+			winsudo "$command1 && $command2"
 		else
 			echo-error "DNS resolver configuration failed"
 		fi
@@ -3974,6 +3977,7 @@ fi
 	[[ "$*" != "reset dns" ]] &&
 	[[ "$*" != "reset proxy" ]] &&
 	[[ "$*" != "reset ssh-agent" ]] &&
+	[[ "$*" != "reset network" ]] &&
 	[[ "$*" != "reset system" ]] &&
 	[[ "$1" != "projects" ]] &&
 	[[ "$1" != "run-cli" ]] &&
