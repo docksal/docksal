@@ -110,6 +110,8 @@ DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM:-8.8.8.8}"
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
 # Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
 DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
+# Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
+DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
 
 # Declaring possible vhost-proxy settings overrides
 DOCKSAL_VHOST_PROXY_IP="${DOCKSAL_VHOST_PROXY_IP}"
@@ -2275,7 +2277,7 @@ install_dns_service ()
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
 		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" \
-		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
+		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
 }

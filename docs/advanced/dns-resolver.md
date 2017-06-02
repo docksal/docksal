@@ -47,3 +47,17 @@ default upstream DNS settings.
 
 Inspect you LAN or WiFi interface settings and connection status to figure out the DNS server your network is using.
 
+
+## Enable DNS query logging (for debugging) 
+
+Enable logging
+
+```
+DOCKSAL_DNS_DEBUG=true fin reset dns
+```
+
+View logs
+
+```
+fin docker logs docksal-dns
+```
