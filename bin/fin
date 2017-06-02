@@ -2782,7 +2782,7 @@ update_tools ()
 
 update_config_files ()
 {
-	echo-green "Updating default configs..."
+	echo-green "Updating stack files..."
 	files_to_download="
 			$URL_STACKS_SERVICES
 			$URL_STACKS_STACK_ACQUIA
@@ -2804,7 +2804,7 @@ update_config_files ()
 		done
 	)
 
-	if_failed_error "One of the default configs was not downloaded." \
+	if_failed_error "One of the stack files was not downloaded." \
 		"Check your internet connection and file permission on $CONFIG_STACKS_DIR"
 }
 
