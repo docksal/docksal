@@ -1906,6 +1906,8 @@ vm ()
 			docker-machine status "$machine_name"
 			;;
 		stop)
+			# Disable resolver configuration before machine is turned off
+			configure_resolver off
 			docker_machine_stop
 			;;
 		ssh)
@@ -1916,6 +1918,8 @@ vm ()
 			vm-stats
 			;;
 		kill)
+			# Disable resolver configuration before machine is turned off
+			configure_resolver off
 			shift
 			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
 			docker-machine kill "$machine_name"
@@ -1924,6 +1928,8 @@ vm ()
 			docker-machine ls
 			;;
 		remove|rm)
+			# Disable resolver configuration before machine is turned off
+			configure_resolver off
 			shift
 			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
 			docker_machine_remove "$machine_name"
@@ -2276,15 +2282,22 @@ install_dns_service ()
 
 # Configure system-wide *.docksal resolver using /etc/resolver
 configure_resolver_mac () {
-	# Check whether resolver is already configured
-	if ! (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
-		sudo mkdir -p /etc/resolver
-		# deleting old resolver is the only way to get mac to update config
+	local mode="$1"
+
+	if [[ "$mode" != "off" ]]; then
+		# Check whether resolver is already configured
+		if ! (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
+			sudo mkdir -p /etc/resolver
+			# deleting old resolver is the only way to get mac to update config
+			sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
+			# NO \n at the beginning of line here!
+			echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $DOCKSAL_IP" | \
+				sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
+		fi
+	else
 		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
-		# NO \n at the beginning of line here!
-		echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $DOCKSAL_IP" | \
-			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 	fi
+
 	# Flush DNS cache
 	sudo dscacheutil -flushcache
 	# to check: scutil --dns
@@ -2292,6 +2305,12 @@ configure_resolver_mac () {
 
 # Configure system-wide *.docksal resolver using custom subnet and dns-nameservers instruction
 configure_resolver_linux () {
+	local mode="$1"
+
+	# TODO: implement the off/disabled mode on Linux
+	[[ "$mode" == "off" ]] && return
+
+	# TODO: split resolver and network configuration into different functions
 	# Adding a subnet for Docksal. Make sure we don't do this twice
 	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
 		echo-green "Adding a subnet for Docksal..."
@@ -2309,7 +2328,19 @@ EOF
 }
 
 # Configure system-wide *.docksal resolver
+# @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
 configure_resolver_windows () {
+	local mode="$1"
+
+	local dns_ip="$DOCKSAL_IP"
+	# 10 is used increase the adapter's priority. 75 to - deprioritize it
+	local metric=10
+	# Enable resolver by default
+	if [[ "$mode" == "off" ]]; then
+		dns_ip="none"
+		metric=75
+	fi
+
 	local network_id
 	if is_docker_native; then
 		# Use the default DockerNAT adapter
@@ -2319,18 +2350,16 @@ configure_resolver_windows () {
 		network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
 	fi
 
-	# Check whether DNS resolver is already configured
-	if ! (netsh interface ip show dns \"${network_id}\" | grep ${DOCKSAL_IP} >/dev/null 2>&1); then
-		if [[ "$network_id" != "" ]]; then
-			# Set DNS server to Docksal IP on the VM's VBox adapter
-			local command1="netsh interface ip set dnsservers \"${network_id}\" static ${DOCKSAL_IP} none"
-			# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
-			local command2="netsh interface ip set interface \"${network_id}\" metric=10"
-			winsudo "$command1 && $command2"
-		else
-			echo-error "DNS resolver configuration failed"
-		fi
+	if [[ "$network_id" == "" ]]; then
+		echo-error "DNS resolver configuration failed"
+		return 1
 	fi
+
+	# Set DNS server to Docksal IP on the VM's VBox adapter
+	local command1="netsh interface ip set dnsservers \"${network_id}\" static ${dns_ip} none"
+	# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
+	local command2="netsh interface ip set interface \"${network_id}\" metric=${metric}"
+	winsudo "$command1 && $command2"
 
 	# Flush DNS cache
 	ipconfig /flushdns >/dev/null 2>&1
@@ -2342,23 +2371,33 @@ configure_resolver ()
 	# Do not configure the resolver if asked so
 	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "" ]] && return
 
-	# Probing the upstream DNS server
-	# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
-	# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
-	# nslookup returns 0 exit code regardless of the results, so have to pipe it ot grep
-	nslookup -tymeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
-	if [[ $? == 0 ]]; then
-		is_mac && configure_resolver_mac && return $?
-		is_linux && configure_resolver_linux && return $?
-		is_windows && configure_resolver_windows && return $?
+	local mode="$1"
+
+	if [[ "$mode" != "off" ]]; then
+		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
+
+		# Probing the upstream DNS server
+		# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
+		# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
+		# nslookup returns 0 exit code regardless of the results, so have to pipe it ot grep
+		nslookup -tymeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+		local ret=$?
+
+		if [[ "$ret" != "0" ]]; then
+			echo-error "The upstream DNS server ($DOCKSAL_DNS_UPSTREAM) is not reachable." \
+				"You are either offline, $DOCKSAL_DNS_UPSTREAM is not a valid DNS server or DNS requests to $DOCKSAL_DNS_UPSTREAM are blocked." \
+				"Once the current operation completes, follow the steps below:" \
+				"  1. Open ${yellow}~/.docksal/docksal.env${NC} and set ${yellow}DOCKSAL_DNS_UPSTREAM${NC} to your local network DNS server" \
+				"  2. Run ${yellow}fin reset dns${NC} to see if it works"
+			_confirm "Continue?"
+		fi
 	else
-		echo-error "The upstream DNS server ($DOCKSAL_DNS_UPSTREAM) is not reachable." \
-			"You are either not connected to the internet or DNS requests to $DOCKSAL_DNS_UPSTREAM are blocked." \
-			"You can proceed with the current operation. When it's done:" \
-			"  1. Open ${yellow}~/.docksal/docksal.env${NC} and set ${yellow}DOCKSAL_DNS_UPSTREAM${NC} to your local network DNS server" \
-			"  2. Run ${yellow}fin reset dns${NC} to see if it works"
-		_confirm "Do you want to continue?"
+		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
 	fi
+
+	is_mac && configure_resolver_mac "$mode" && return $?
+	is_linux && configure_resolver_linux "$mode" && return $?
+	is_windows && configure_resolver_windows "$mode" && return $?
 }
 
 install_sshagent_service ()
