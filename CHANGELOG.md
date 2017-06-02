@@ -1,15 +1,25 @@
 # Changelog
 
-# 1.3.1 (2017-05-25)
+# 1.3.1 (2017-06-02)
 
 ## New software versions 
-* **fin 1.9.2**
+* **fin 1.10.0**
 
 ## Fixes and improvements
 
 * Fix retrospective bug that was making `DOCKSAL_DNS2` value empty
 * Fix permissions issues on Windows that were related to improper `uid`/`gid`
 * Fix edge case with software versions comparison, that prevented software installations in some cases (#224)
+* Refactored automatic DNS resolver configuration
+  - Doing a DNS probe to make sure the upstream DNS server is reachable
+  - Using `8.8.8.8` a the default upstream DNS on all platforms
+  - `DOCKSAL_DNS_UPSTREAM` can be used to override the default upstream DNS server
+  - Automatic DNS resolver can now be disabled via `DOCKSAL_NO_DNS_RESOLVER=true`
+  - Set interface metric on Windows. This makes sure our VBox adapters is the first in the list and thus it's DNS server settings will be used by Windows
+  - Adding configure_resolver "off" mode. This will revert resolver settings when the VM is stopped, killed, removed
+  - Added a flag to control query logging in `docksal-dns`
+  - Updated docs regarding the DNS resolver
+
 
 # 1.3.0 (2017-05-16)
 
