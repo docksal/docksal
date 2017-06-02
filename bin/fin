@@ -2322,7 +2322,8 @@ configure_resolver_windows () {
 	# Check whether DNS resolver is already configured
 	if ! (netsh interface ip show dns \"${network_id}\" | grep ${DOCKSAL_IP} >/dev/null 2>&1); then
 		if [[ "$network_id" != "" ]]; then
-			winsudo "netsh interface ip set dns \"${network_id}\" static ${DOCKSAL_IP}"
+			winsudo "netsh interface ip set dnsservers \"${network_id}\" static ${DOCKSAL_IP} none &&
+					netsh interface ip set interface \"${network_id}\" metric=10"
 		else
 			echo-error "DNS resolver configuration failed"
 		fi
