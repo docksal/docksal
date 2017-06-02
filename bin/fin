@@ -2380,7 +2380,7 @@ configure_resolver ()
 		# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
 		# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
 		# nslookup returns 0 exit code regardless of the results, so have to pipe it ot grep
-		nslookup -tymeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+		nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
 		local ret=$?
 
 		if [[ "$ret" != "0" ]]; then
