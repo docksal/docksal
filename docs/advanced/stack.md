@@ -20,13 +20,10 @@ See [Using ssh-agent service](../advanced/ssh-agent.md) for more information.
 
 ### DNS
 
-[docksal-dns](https://github.com/docksal/service-dns) contains a running `bind` server that resolves `*.docksal` URI's 
+[docksal-dns](https://github.com/docksal/service-dns) contains a running `dnsmasq` server that resolves `*.docksal` URI's 
 to the Docksal VM IP address (or localhost if you're running a [native Docker app](../getting-started/env-setup-native.md)).
 
-!!! warning "Windows users"
-    On macOS and Linux Docksal automatically configures itself to become a DNS resolver for `.docksal` domain. 
-    On Windows this is not configured automatically, because this may cause DNS resolution issues in case the VM is down or freezes.  
-    You can manually configure `192.168.64.100` to be your primary DNS and you ISP/office DNS to be the secondary one.
+See [DNS resolver](../advanced/dns-resolver.md) for more information.
 
 ### Reverse proxy
 

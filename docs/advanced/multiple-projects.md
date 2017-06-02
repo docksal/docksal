@@ -3,7 +3,7 @@
 Docksal has a built-in reverse proxy container that adds support for running multiple projects or using multiple (arbitrary domains).  
 The container binds to `192.168.64.100:80` and routes web requests based on the host name.
 
-DNS resolution and routing for `*.docksal` domains is automatically configured upon the first `fin update`. 
+DNS resolution and routing for `*.docksal` domains is automatically configured. 
 
 
 ## Default virtual host / domain name
