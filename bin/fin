@@ -105,10 +105,11 @@ DOCKSAL_NATIVE_IP="192.168.64.100"
 DOCKSAL_DEFAULT_IP="192.168.64.100"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
 
-DOCKSAL_DNS_VBOX="10.0.2.3"
-DOCKSAL_DNS_EXT="${DOCKSAL_DNS_EXT:-8.8.8.8}"
-DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
+# For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
+DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM:-8.8.8.8}"
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
+# Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
+DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
 
 # Declaring possible vhost-proxy settings overrides
 DOCKSAL_VHOST_PROXY_IP="${DOCKSAL_VHOST_PROXY_IP}"
@@ -2265,19 +2266,9 @@ install_proxy_service ()
 # Start system-wide dns service
 install_dns_service ()
 {
-	# Allow overriding DNS upstream via DOCKSAL_DNS_UPSTREAM
-	# Use VBox/host resolver when VBox is used
-	local dns
-	# Forward DNS requests to DOCKSAL_DNS_EXT on Docker for Mac/Win and on Linux
-	if is_docker_native || is_linux; then
-		dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_EXT}}
-	else
-		dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_VBOX}}
-	fi
-
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
-		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$dns" \
+		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
@@ -2344,9 +2335,26 @@ configure_resolver_windows () {
 # Configure system-wide *.docksal resolver (Windows is not supported)
 configure_resolver ()
 {
-	is_mac && configure_resolver_mac && return $?
-	is_linux && configure_resolver_linux && return $?
-	is_windows && configure_resolver_windows && return $?
+	# Do not configure the resolver if asked so
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "" ]] && return
+
+	# Probing the upstream DNS server
+	# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
+	# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
+	# nslookup returns 0 exit code regardless of the results, so have to pipe it ot grep
+	nslookup -tymeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+	if [[ $? == 0 ]]; then
+		is_mac && configure_resolver_mac && return $?
+		is_linux && configure_resolver_linux && return $?
+		is_windows && configure_resolver_windows && return $?
+	else
+		echo-error "The upstream DNS server ($DOCKSAL_DNS_UPSTREAM) is not reachable." \
+			"You are either not connected to the internet or DNS requests to $DOCKSAL_DNS_UPSTREAM are blocked." \
+			"You can proceed with the current operation. When it's done:" \
+			"  1. Open ${yellow}~/.docksal/docksal.env${NC} and set ${yellow}DOCKSAL_DNS_UPSTREAM${NC} to your local network DNS server" \
+			"  2. Run ${yellow}fin reset dns${NC} to see if it works"
+		_confirm "Do you want to continue?"
+	fi
 }
 
 install_sshagent_service ()
@@ -3878,11 +3886,11 @@ fi
 if is_docker_native; then
 	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DNS_EXT}
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 else
 	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DNS_EXT}
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 fi
 
 # Export environment variables to properly reach Docker server
