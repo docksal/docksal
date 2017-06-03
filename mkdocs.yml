@@ -44,6 +44,7 @@ pages:
       - Multiple projects/domains: advanced/multiple-projects.md
       - VM resources: advanced/vm.md
       - Networking: advanced/networking.md
+      - DNS resolver: advanced/dns-resolver.md
     - SSH agent: advanced/ssh-agent.md
     - Database:
       - Database access: advanced/db-access.md

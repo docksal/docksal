@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.9.1
+FIN_VERSION=1.10.0
 
 # Console colors
 red='\033[0;91m'
@@ -105,10 +105,13 @@ DOCKSAL_NATIVE_IP="192.168.64.100"
 DOCKSAL_DEFAULT_IP="192.168.64.100"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
 
-DOCKSAL_DNS_VBOX="10.0.2.3"
-DOCKSAL_DNS_EXT="${DOCKSAL_DNS_EXT:-8.8.8.8}"
-DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
+# For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
+DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM:-8.8.8.8}"
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
+# Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
+DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
+# Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
+DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
 
 # Declaring possible vhost-proxy settings overrides
 DOCKSAL_VHOST_PROXY_IP="${DOCKSAL_VHOST_PROXY_IP}"
@@ -513,7 +516,9 @@ testing_warn ()
 # param $1 version string of 3 components max (e.g. 1.10.3)
 ver_to_int ()
 {
-	printf "%03d%03d%03d" $(echo "$1" | tr -d '[:alpha:]' | tr -d '-' | tr '.' ' ')
+	local leading_zeros=$(printf "%03d%03d%03d" $(echo "$1" | tr -d '[:alpha:]' | tr -d '-' | tr '.' ' '))
+	# Remove leading zeroes because otherwise bash tried to handle the number as octal which leads to errors if version contains 9
+	echo "$leading_zeros" | sed "s/^0*//"
 }
 
 #---------------------------- Control functions -------------------------------
@@ -730,9 +735,9 @@ _start_containers ()
 	check_docker_running
 	echo-green "Starting services..."
 	docker-compose up -d --remove-orphans && \
-		# Give time for startup.sh in CLI to execute otherwise UID is changed too quickly
-		# which prevents xdebug from loading properly
-		sleep 1 && \
+		# Give cli some time to start. Necessary for UID/GID overrides, optionally enabling xdebug/etc.
+		# TODO: replace this with a Docker native health check
+		sleep 2 && \
 		# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
 		_set_cli_uid && \
 		_vhost_proxy_connect
@@ -1801,6 +1806,8 @@ smb_share_mount()
 	local share_name=$1
 	local mount_point=$2
 	local password=$3
+	# single quotes are banned from being used in password
+	password=${password//\'/}
 
 	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
 	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
@@ -1843,6 +1850,13 @@ docker_machine_mount_smb ()
 	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	read -s -p "Enter your Windows account password: " password
 	echo # Add a new line after user input.
+
+	if ([[ "$password" =~ \' ]] || [[ "$password" =~ , ]] || [[ "$password" =~ \\ ]]); then
+		echo-error "Password contains illegal characters" \
+			"Your password contains a single quote ('), a comma (,) or a back slash (\\)" \
+			"Please change you password and run ${yellow}fin vm restart${NC}"
+		return 1
+	fi
 
 	for drive in ${drives}; do
 		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
@@ -1929,6 +1943,8 @@ vm ()
 			docker-machine status "$machine_name"
 			;;
 		stop)
+			# Disable resolver configuration before machine is turned off
+			configure_resolver off
 			docker_machine_stop
 			;;
 		ssh)
@@ -1939,6 +1955,8 @@ vm ()
 			vm-stats
 			;;
 		kill)
+			# Disable resolver configuration before machine is turned off
+			configure_resolver off
 			shift
 			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
 			docker-machine kill "$machine_name"
@@ -1947,6 +1965,8 @@ vm ()
 			docker-machine ls
 			;;
 		remove|rm)
+			# Disable resolver configuration before machine is turned off
+			configure_resolver off
 			shift
 			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
 			docker_machine_remove "$machine_name"
@@ -1972,7 +1992,7 @@ vm ()
 		env)
 			shift
 			DOCKER_MACHINE_NAME="${1:-$DOCKER_MACHINE_NAME}"
-			docker_machine_env
+			docker-machine env "$DOCKER_MACHINE_NAME"
 			;;
 		ram)
 			shift
@@ -2239,7 +2259,7 @@ configure_network ()
 			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
 		else
 			# Remove Docksal IP alias from the local loopback adapter
-			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP}
+			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP} >/dev/null 2>&1
 		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
@@ -2289,35 +2309,32 @@ install_proxy_service ()
 # Start system-wide dns service
 install_dns_service ()
 {
-	# Allow overriding DNS upstream via DOCKSAL_DNS_UPSTREAM
-	# Use VBox/host resolver when VBox is used
-	local dns
-	# Forward DNS requests to DOCKSAL_DNS_EXT on Docker for Mac/Win and on Linux
-	if is_docker_native || is_linux; then
-		dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_EXT}}
-	else
-		dns=${DOCKSAL_DNS_UPSTREAM:-${DOCKSAL_DNS_VBOX}}
-	fi
-
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
-		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$dns" \
-		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" \
+		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" \
+		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
 }
 
 # Configure system-wide *.docksal resolver using /etc/resolver
 configure_resolver_mac () {
-	# Check whether resolver is already configured
-	if ! (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
-		sudo mkdir -p /etc/resolver
-		# deleting old resolver is the only way to get mac to update config
+	local mode="$1"
+
+	if [[ "$mode" != "off" ]]; then
+		# Check whether resolver is already configured
+		if ! (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
+			sudo mkdir -p /etc/resolver
+			# deleting old resolver is the only way to get mac to update config
+			sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
+			# NO \n at the beginning of line here!
+			echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $DOCKSAL_IP" | \
+				sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
+		fi
+	else
 		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
-		# NO \n at the beginning of line here!
-		echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $DOCKSAL_IP" | \
-			sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 	fi
+
 	# Flush DNS cache
 	echo-green "Clearing DNS cache..."
 	sudo dscacheutil -flushcache
@@ -2326,6 +2343,12 @@ configure_resolver_mac () {
 
 # Configure system-wide *.docksal resolver using custom subnet and dns-nameservers instruction
 configure_resolver_linux () {
+	local mode="$1"
+
+	# TODO: implement the off/disabled mode on Linux
+	[[ "$mode" == "off" ]] && return
+
+	# TODO: split resolver and network configuration into different functions
 	# Adding a subnet for Docksal. Make sure we don't do this twice
 	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
 		echo-green "Adding a subnet for Docksal..."
@@ -2343,7 +2366,19 @@ EOF
 }
 
 # Configure system-wide *.docksal resolver
+# @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
 configure_resolver_windows () {
+	local mode="$1"
+
+	local dns_ip="$DOCKSAL_IP"
+	# 10 is used increase the adapter's priority. 75 to - deprioritize it
+	local metric=10
+	# Enable resolver by default
+	if [[ "$mode" == "off" ]]; then
+		dns_ip="none"
+		metric=75
+	fi
+
 	local network_id
 	if is_docker_native; then
 		# Use the default DockerNAT adapter
@@ -2353,14 +2388,16 @@ configure_resolver_windows () {
 		network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
 	fi
 
-	# Check whether DNS resolver is already configured
-	if ! (netsh interface ip show dns \"${network_id}\" | grep ${DOCKSAL_IP} >/dev/null 2>&1); then
-		if [[ "$network_id" != "" ]]; then
-			winsudo "netsh interface ip set dns \"${network_id}\" static ${DOCKSAL_IP}"
-		else
-			echo-error "DNS resolver configuration failed"
-		fi
+	if [[ "$network_id" == "" ]]; then
+		echo-error "DNS resolver configuration failed"
+		return 1
 	fi
+
+	# Set DNS server to Docksal IP on the VM's VBox adapter
+	local command1="netsh interface ip set dnsservers \"${network_id}\" static ${dns_ip} none"
+	# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
+	local command2="netsh interface ip set interface \"${network_id}\" metric=${metric}"
+	winsudo "$command1 && $command2"
 
 	# Flush DNS cache
 	echo-green "Clearing DNS cache..."
@@ -2370,9 +2407,36 @@ configure_resolver_windows () {
 # Configure system-wide *.docksal resolver (Windows is not supported)
 configure_resolver ()
 {
-	is_mac && configure_resolver_mac && return $?
-	is_linux && configure_resolver_linux && return $?
-	is_windows && configure_resolver_windows && return $?
+	# Do not configure the resolver if asked so
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "" ]] && return
+
+	local mode="$1"
+
+	if [[ "$mode" != "off" ]]; then
+		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
+
+		# Probing the upstream DNS server
+		# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
+		# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
+		# nslookup returns 0 exit code regardless of the results, so have to pipe it ot grep
+		nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+		local ret=$?
+
+		if [[ "$ret" != "0" ]]; then
+			echo-error "The upstream DNS server ($DOCKSAL_DNS_UPSTREAM) is not reachable." \
+				"You are either offline, $DOCKSAL_DNS_UPSTREAM is not a valid DNS server or DNS requests to $DOCKSAL_DNS_UPSTREAM are blocked." \
+				"Once the current operation completes, follow the steps below:" \
+				"  1. Open ${yellow}~/.docksal/docksal.env${NC} and set ${yellow}DOCKSAL_DNS_UPSTREAM${NC} to your local network DNS server" \
+				"  2. Run ${yellow}fin reset dns${NC} to see if it works"
+			_confirm "Continue?"
+		fi
+	else
+		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
+	fi
+
+	is_mac && configure_resolver_mac "$mode" && return $?
+	is_linux && configure_resolver_linux "$mode" && return $?
+	is_windows && configure_resolver_windows "$mode" && return $?
 }
 
 install_sshagent_service ()
@@ -2487,9 +2551,11 @@ install_tools_windows ()
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
+	# Remove old incorrect line
+	sed -i "s/^\\\\nexport.*$//" "$HOME/.babunrc"
 	# Disable Babun update checks as they often bring problems
 	if ! (grep '^export DISABLE_CHECK_ON_STARTUP="true"' "$HOME/.babunrc" >/dev/null 2>&1); then
-		echo "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> "$HOME/.babunrc"
+		echo -e "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> "$HOME/.babunrc"
 	fi
 
 	if ! is_docker_native; then
@@ -2753,7 +2819,7 @@ update_tools ()
 
 update_config_files ()
 {
-	echo-green "Updating default configs..."
+	echo-green "Updating stack files..."
 	files_to_download="
 			$URL_STACKS_SERVICES
 			$URL_STACKS_STACK_ACQUIA
@@ -2775,7 +2841,7 @@ update_config_files ()
 		done
 	)
 
-	if_failed_error "One of the default configs was not downloaded." \
+	if_failed_error "One of the stack files was not downloaded." \
 		"Check your internet connection and file permission on $CONFIG_STACKS_DIR"
 }
 
@@ -3079,13 +3145,18 @@ image_load ()
 	docker load -i "$file"
 }
 
+# Show a list of Docksal images or a list of tags for a certain Docksal's Docker hub image
+# @param $1 image name
 image_registry_list ()
 {
 	if [[ "$1" != "" ]]; then
-		echo "$1 tags"
-		echo "----------"
+		tag_escaped=${1//\//\\\/}
 		# for instance $1 == "docksal/db"
-		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | cut -d " " -f2 | tr -d \"
+		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | \
+			grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | \
+			cut -d " " -f2 | \
+			tr -d \" | \
+			sed "s/^/${tag_escaped}:/"
 	else
 		fin docker search "docksal" | grep "^docksal\/"
 	fi
@@ -3439,6 +3510,9 @@ logs ()
 # Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
 _set_cli_uid ()
 {
+	# Skip Windows, as Linux permissions and ownership do not matter over SMB
+	is_windows && return
+
 	# Let uid to be set with the FIN_SET_UID env variable
 	local host_uid=${FIN_SET_UID:-$(id -u)}
 	local host_gid=${FIN_SET_GID:-$(id -g)}
@@ -3450,12 +3524,12 @@ _set_cli_uid ()
 		return;
 	fi
 
-	local container_uid
+	local container_uid_gid
 	# Get both uid and gid in one shot to save time
 	container_uid_gid=$(docker exec -u docker ${cli} bash -c 'echo -n $(id -u):$(id -g)')
 	if [[ ! $? -eq 0 ]]; then
-		echo-red 'Error getting uid from cli container'
-		echo "You might need to recreate containers with fin reset"
+		echo-error "Error getting uid from cli container" \
+			"You might need to recreate containers with ${yellow}fin reset${NC}"
 		return
 	fi
 
@@ -3693,8 +3767,12 @@ load_configuration ()
 	export COMPOSE_CONVERT_WINDOWS_PATHS=0
 
 	# Export host user uid/gid
-	export HOST_UID=$(id -u)
-	export HOST_GID=$(id -g)
+	# The startup script in the cli container picks these up and updates the docker user inside of the container
+	# On Windows this is not necessary, as Linux permissions and ownership do not matter over SMB
+	if ! is_windows; then
+		export HOST_UID=$(id -u)
+		export HOST_GID=$(id -g)
+	fi
 
 	if is_docker_running; then
 		export DOCKER_RUNNING="true"
@@ -4049,11 +4127,11 @@ fi
 if is_docker_native; then
 	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DNS_EXT}
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 else
 	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DNS_EXT}
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 fi
 
 # Export environment variables to properly reach Docker server
@@ -4129,6 +4207,7 @@ if
 	[[ "$1" != "vm" ]] &&
 	[[ "$1" != "docker" ]] && [[ "$1" != "d" ]] &&
 	[[ "$1" != "docker-machine" ]] && [[ "$1" != "dm" ]] &&
+	[[ "$1" != "debug" ]] &&
 	[[ "$1" != "exec-url" ]] &&
 	[[ "$1" != "rc" ]] && [[ "$1" != "run-cli" ]] &&
 	[[ "$1" != "cleanup" ]] &&
@@ -4137,6 +4216,7 @@ if
 	[[ "$*" != "reset dns" ]] &&
 	[[ "$*" != "reset proxy" ]] &&
 	[[ "$*" != "reset ssh-agent" ]] &&
+	[[ "$*" != "reset network" ]] &&
 	[[ "$*" != "reset system" ]] &&
 	[[ "$1" != "projects" ]] && [[ "$1" != "project" ]] && [[ "$1" != "pl" ]] &&
 	[[ "$1" != "run-cli" ]] &&
@@ -4246,7 +4326,8 @@ case "$1" in
 			exit
 		elif [[ "$1" == "--tools" ]]; then
 			update_tools
-		elif [[ "$1" == "--config" ]]; then
+		# TODO: "--config" deprecated, remove at some point
+		elif [[ "$1" == "--config" ]] || [[ "$1" == "--stacks" ]]; then
 			update_config_files
 		elif [[ "$1" == "--bash-complete" ]]; then
 			install_bash_autocomplete
