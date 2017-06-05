@@ -23,6 +23,9 @@ this manual. You should understand what project containers are and which project
 2. [Switching MySQL version](#mysql-version)
 3. [Finding supported PHP/MySQL/etc. versions](#docksal-images)
 
+**Other**
+4. [Sub-domains and new server aliases](#virtual-host)
+
 <a name="basics"></a>
 ## Basics
 
@@ -335,6 +338,30 @@ Note, that when not using a predefined stack, you must fully describe all other 
 
 Switching MySQL versions is performed in the same way as the PHP version switch. 
 Instead of the `cli` service image you will be modifying the `db` service image.
+
+<a name="virtual-host"></a>
+## Sub-domains and new server aliases
+
+Sub-domain functionality is included out-of-the box, e.g. `sub.example.docksal` is served to `example.docksal`.
+For further domains (new server aliases) you can extend the `io.docksal.virtual-host` label of the `web` container in the either `docksal-local.yml` or `docksal.yml` file in your project.
+
+```yaml
+version: "2.1"
+
+services:
+  web:
+    labels:
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},otherdomain.domain
+```
+
+Where `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}` is a default value.
+
+Please note that non-docksal domain (e.g. example.com) is not going to get resolved into IP address.
+You will have to modify hosts file for this:
+
+```
+otherdomain.domain  192.168.64.100
+```
 
 <a name="docksal-images"></a>
 ## Docksal images and versions
