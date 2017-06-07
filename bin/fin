@@ -337,6 +337,7 @@ get_mysql_connect ()
 # Get container id by service name
 # @param $1 docker compose service name (e.g. cli)
 # @return docker container id
+# TODO: deprecate in favor of ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 get_container_id ()
 {
 	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
@@ -716,9 +717,7 @@ _start_containers ()
 	check_docker_running
 	echo-green "Starting services..."
 	docker-compose up -d --remove-orphans && \
-		# Give cli some time to start. Necessary for UID/GID overrides, optionally enabling xdebug/etc.
-		# TODO: replace this with a Docker native health check
-		sleep 2 && \
+		_healthcheck_wait && \
 		# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
 		_set_cli_uid && \
 		_vhost_proxy_connect
@@ -854,6 +853,57 @@ _vhost_proxy_connect ()
 		# Run a dummy container to trigger docker-gen to refresh proxy configuration.
 		docker run --rm --entrypoint=echo ${IMAGE_VHOST_PROXY} >/dev/null 2>&1
 	fi
+}
+
+# Checks container health status (if available)
+# Relies on healchecks introduced in docksal/cli v1.3.0+, uses `sleep` as a fallback
+# @param $1 container id/name
+_healthcheck ()
+{
+	local health_status
+	health_status=$(docker inspect --format='{{json .State.Health.Status}}' "$1" 2>/dev/null)
+
+	# Wait for 5s then exit with 0 if a container does not have a health status property
+	# Necessary for backward compatibility with images that do not support health checks
+	if [[ $? != 0 ]]; then
+		echo "Waiting 10s for container to start..."
+		sleep 10
+		return 0
+	fi
+
+	# If it does, check the status
+	echo $health_status | grep '"healthy"' >/dev/null 2>&1
+}
+
+# Waits for containers to become healthy
+# For reasoning why we are not using  `depends_on` `condition` see here:
+# https://github.com/docksal/docksal/issues/225#issuecomment-306604063
+# TODO: make this universal. Currently hardcoded for cli only.
+_healthcheck_wait ()
+{
+	# Wait for cli to become ready by watching its health status
+	local container_name="${COMPOSE_PROJECT_NAME_SAFE}_cli_1"
+	local delay=5
+	local timeout=30
+	local elapsed=0
+
+	until _healthcheck "$container_name"; do
+		echo "Waiting for $container_name to become ready..."
+		sleep "$delay";
+
+		# Give the container 30s to become ready
+		elapsed=$((elapsed + delay))
+		echo "elapsed: $elapsed"
+		echo "timeout: $timeout"
+		if ((elapsed > timeout)); then
+			echo-error "$container_name heathcheck failed" \
+				"Container did not enter a healthy state within the expected amount of time." \
+				"Try ${yellow}fin restart${NC}"
+			exit 1
+		fi
+	done
+
+	return 0
 }
 
 #------------------------------ Help functions --------------------------------
@@ -3158,6 +3208,7 @@ _exec ()
 	[[ $1 == "-T" ]] && \
 		local no_tty=true && shift
 
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	CONTAINER_NAME=${CONTAINER_NAME:-cli}
 	container_id=$(get_container_id "$CONTAINER_NAME")
@@ -3263,6 +3314,7 @@ mysql ()
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
 
 	check_docksal_environment
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	${winpty} docker exec -it "$container_id" mysql ${__mysql_command}
@@ -3330,6 +3382,7 @@ mysql_import ()
 		echo "Importing from stdin..." ||
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command direclty (no bash wrapper) so that stdin could be received inside that exec
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	__mysql_command=$(echo "$__mysql_command" | sed -e 's/[^a-zA-Z0-9_-]$//')
@@ -3368,6 +3421,7 @@ mysql_dump ()
 		echo-green "Exporting..."
 	fi
 
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	if [[ "${ARGV[0]}" == "" ]]; then
@@ -3479,6 +3533,7 @@ _set_cli_uid ()
 	# Let uid to be set with the FIN_SET_UID env variable
 	local host_uid=${FIN_SET_UID:-$(id -u)}
 	local host_gid=${FIN_SET_GID:-$(id -g)}
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	local cli=$(get_container_id cli || true)
 
 	# If there is no cli, move on.
