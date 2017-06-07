@@ -878,14 +878,28 @@ _healthcheck ()
 # For reasoning why we are not using  `depends_on` `condition` see here:
 # https://github.com/docksal/docksal/issues/225#issuecomment-306604063
 # TODO: make this universal. Currently hardcoded for cli only.
-# TODO: add a timeout after which we give up trying the health check
 _healthcheck_wait ()
 {
 	# Wait for cli to become ready by watching its health status
 	local container_name="${COMPOSE_PROJECT_NAME_SAFE}_cli_1"
+	local delay=5
+	local timeout=30
+	local elapsed=0
+
 	until _healthcheck "$container_name"; do
 		echo "Waiting for $container_name to become ready..."
-		sleep 5;
+		sleep "$delay";
+
+		# Give the container 30s to become ready
+		elapsed=$((elapsed + delay))
+		echo "elapsed: $elapsed"
+		echo "timeout: $timeout"
+		if ((elapsed > timeout)); then
+			echo-error "$container_name heathcheck failed" \
+				"Container did not enter a healthy state within the expected amount of time." \
+				"Try ${yellow}fin restart${NC}"
+			exit 1
+		fi
 	done
 
 	return 0
