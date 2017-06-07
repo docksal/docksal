@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.11.0
+FIN_VERSION=1.11.1
 
 # Console colors
 red='\033[0;91m'
@@ -893,8 +893,6 @@ _healthcheck_wait ()
 
 		# Give the container 30s to become ready
 		elapsed=$((elapsed + delay))
-		echo "elapsed: $elapsed"
-		echo "timeout: $timeout"
 		if ((elapsed > timeout)); then
 			echo-error "$container_name heathcheck failed" \
 				"Container did not enter a healthy state within the expected amount of time." \
