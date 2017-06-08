@@ -53,6 +53,9 @@ To do this, add the `browser` service under the `services` section in `.docksal/
 browser:
   hostname: browser
   image: selenium/standalone-chrome
+  dns:
+    - ${DOCKSAL_DNS1}
+    - ${DOCKSAL_DNS2}
 ```
 
 You can also use the Firefox image instead of Chrome: `selenium/standalone-firefox`
@@ -98,10 +101,11 @@ In such cases, a [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) 
 ```yaml
 # Browser
 browser:
-  hostname: browser
+  ...
   image: selenium/standalone-chrome-debug
   ports:
     - "5900:5900"
+  ...
 ```
 
 You have to use `selenium/standalone-chrome-debug` or `selenium/standalone-firefox-debug` images. They both include a VNC server.  
