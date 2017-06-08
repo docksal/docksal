@@ -1,5 +1,6 @@
 # Enabling Apache Solr service
 
+
 ## Docksal configuration
 
 Add the Apache Solr service to `.docksal/docksal.yml` under `services`.
@@ -12,6 +13,7 @@ solr:
 ```
 
 Run `fin up` to apply the new configuration.
+
 
 ## Drupal configuration
 
@@ -31,7 +33,8 @@ For the Search API module use these values:
 | Host | `solr` |
 | Port | `8983` |
 | Solr path | `/solr` |
-| Solr core |  |
+| Solr core | `collection1` |
+
 
 ## Updating Solr configuration
 
@@ -53,3 +56,24 @@ solr:
 ```
 
 Apply configuration changes with `fin up`
+
+
+## Versions
+
+Run `fin image registry docksal/solr` to get a list of available image tags.
+
+```bash
+fin image registry docksal/solr
+docksal/solr:solr4
+docksal/solr:solr3
+docksal/solr:1.0-solr4
+docksal/solr:1.0-solr3
+docksal/solr:4.x
+docksal/solr:3.x
+```
+
+Legend: 
+
+- `solr4` - the latest stable `Solr 4` image versions
+- `1.0-solr4` - stable `Solr 4` image version `1.0`
+- `solr:4.x` - `Solr 4` development image version  
