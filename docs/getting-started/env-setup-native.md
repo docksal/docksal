@@ -41,9 +41,10 @@ fin reset system
 
 Remove `DOCKER_NATIVE=1` from `~/.docksal/docksal.env` 
 
-**3.** Start Docksal VM and reset Docksal system services.
+**3.** Reset networks settings, start Docksal VM and reset Docksal system services.
 
 ```bash
+fin reset network
 fin vm start
 fin reset system
 ```
