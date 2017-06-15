@@ -74,10 +74,9 @@ services:
   # Memcached
   memcached:
     hostname: memcached
-    image: ${MEMCACHED_IMAGE:-memcached}
-    environment:
-      # Memcached memory limit in megabytes
-      - MEMCACHED_MEMORY_LIMIT=${MEMCACHED_MEMORY_LIMIT:-128}
+    image: ${MEMCACHED_IMAGE:-memcached:1.4-alpine}
+    # Set memcached memory limit to 128 MB by default
+    command: ["-m", "128"]
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
