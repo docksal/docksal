@@ -46,15 +46,15 @@ is_mac ()
 
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
-REQUIREMENTS_DOCKER='17.04.0-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.12.0'
-REQUIREMENTS_DOCKER_MACHINE='0.10.0'
-REQUIREMENTS_VBOX='5.1.18'
-REQUIREMENTS_WINPTY='0.4.2'
-REQUIREMENTS_WINPTY_CYGWIN='2.6.1'
+REQUIREMENTS_DOCKER='17.05.0-ce'
+REQUIREMENTS_DOCKER_COMPOSE='1.13.0'
+REQUIREMENTS_DOCKER_MACHINE='0.12.0'
+REQUIREMENTS_VBOX='5.1.22'
+REQUIREMENTS_WINPTY='0.4.3'
+REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.18/VirtualBox-5.1.18-114002-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.18/VirtualBox-5.1.18-114002-Win.exe"
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.22/VirtualBox-5.1.22-115126-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.22/VirtualBox-5.1.22-115126-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
