@@ -3283,6 +3283,9 @@ run_cli ()
 	local IMAGE="${IMAGE:-docksal/cli:1.2-php7}"
 	local cmd="$@"
 
+	# Assume bash if no command was given
+	[[ "$cmd" == "" ]] && cmd="bash"
+
 	# Source $HOME/.docksalrc in cli.
 	# Commands in this file will be sourced for both interactive and non-interactive sessions.
 	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
