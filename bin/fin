@@ -4060,6 +4060,8 @@ fi
 	[[ "$1" != "d" ]] &&
 	[[ "$1" != "docker-machine" ]] &&
 	[[ "$1" != "dm" ]] &&
+	[[ "$1" != "docker-compose" ]] &&
+	[[ "$1" != "dc" ]] &&
 	[[ "$1" != "debug" ]] &&
 	[[ "$1" != "exec-url" ]] &&
 	[[ "$1" != "cleanup" ]] &&
@@ -4080,6 +4082,8 @@ fi
 	[[ "$1" != "image" ]] &&
 	[[ "$1" != "project" ]] &&
 	[[ "$1" != "pl" ]] &&
+	[[ "$*" != "stop --all" ]] &&
+	[[ "$*" != "stop -a" ]] &&
 	load_configuration &&
 	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
 
