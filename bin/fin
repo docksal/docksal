@@ -3782,8 +3782,8 @@ load_configuration ()
 	export DOCKSAL_PATH="$(get_project_path)"
 	export PROJECT_ROOT="$(get_project_path)"
 	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
-	# Set this to 0 to account for docker-compose bug https://github.com/docker/compose/pull/4294
-	export COMPOSE_CONVERT_WINDOWS_PATHS=0
+	# https://docs.docker.com/compose/reference/envvars/#compose_convert_windows_paths
+	export COMPOSE_CONVERT_WINDOWS_PATHS=1
 
 	# Export host user uid/gid
 	# The startup script in the cli container picks these up and updates the docker user inside of the container
