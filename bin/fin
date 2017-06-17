@@ -2230,6 +2230,8 @@ ssh_add () {
 	fi
 
 	local ssh_path="$HOME/.ssh"
+	# On Windows docker and docker-compose expect a Windows style path
+	is_windows && ssh_path=$(cygpath -w "$ssh_path")
 
 	# Copy all keys from the host to the ssh-agent container
 	docker cp "$ssh_path" docksal-ssh-agent:/
