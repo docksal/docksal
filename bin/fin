@@ -2215,6 +2215,7 @@ project_create ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
+	check_docker_running
 	check_winpty_found
 
 	# Check if ssh-agent container is running
@@ -2234,7 +2235,8 @@ ssh_add () {
 	is_windows && ssh_path=$(cygpath -w "$ssh_path")
 
 	# Copy all keys from the host to the ssh-agent container
-	docker cp "$ssh_path" docksal-ssh-agent:/
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	[[ "${1#-}" == "$1" ]] && docker cp "$ssh_path" docksal-ssh-agent:/
 
 	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
 	if is_tty; then
@@ -2248,7 +2250,8 @@ ssh_add () {
 	local ret=$?
 
 	# Remove copied keys from the ssh-agent container after loading into the ssh-agent
-	docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
 	return "$ret"
 }
 
