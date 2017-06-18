@@ -56,8 +56,8 @@ services:
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
     environment:
-      - HOST_UID=${HOST_UID:-1000}
-      - HOST_GID=${HOST_GID:-100}
+      - HOST_UID
+      - HOST_GID
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
     dns:
       - ${DOCKSAL_DNS1}
