@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.11.1
+FIN_VERSION=1.11.2
 
 # Console colors
 red='\033[0;91m'
@@ -3531,12 +3531,8 @@ _set_cli_uid ()
 	# Skip Windows, as Linux permissions and ownership do not matter over SMB
 	is_windows && return
 
-	# Let uid to be set with the FIN_SET_UID env variable
-	local host_uid=${FIN_SET_UID:-$(id -u)}
-	local host_gid=${FIN_SET_GID:-$(id -g)}
 	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	local cli=$(get_container_id cli || true)
-
 	# If there is no cli, move on.
 	if [[ -z ${cli} ]]; then
 		echo-yellow 'Expected service "cli" is missing.'
@@ -3552,21 +3548,22 @@ _set_cli_uid ()
 		return
 	fi
 
-	if [[ "$container_uid_gid" == "$host_uid:$host_gid" ]]; then
-		return
-	fi
+	echo "container_uid_gid: $container_uid_gid"
+	echo "HOST_UID:HOST_GID: $HOST_UID:$HOST_GID"
+
+	[[ "$container_uid_gid" == "$HOST_UID:$HOST_GID" ]] && return
 
 	# TODO: output a note to the user about updating their custom yml configuration (point to the docs).
 	if [[ "$host_uid" != "0" ]] ; then
-		echo-green "Changing uid/gid in cli to $host_uid/$host_gid to match the host"
+		echo-green "Changing uid/gid in cli to $HOST_UID/$HOST_GID to match the host"
 	else
 		echo -e "${green}Changing user id in cli to 0 to match host user id ${NC}${yellow}(running as root is not recommended)...${NC}"
 	fi
-	docker exec -u root ${cli} usermod -u "$host_uid" -o docker >/dev/null 2>&1
-	docker exec -u root ${cli} groupmod -g "$host_gid" -o users >/dev/null 2>&1
+	docker exec -u root ${cli} bash -c "usermod -u $HOST_UID -o docker"
+	docker exec -u root ${cli} bash -c "groupmod -g $HOST_GID -o \$(id -gn docker)"
 	# TODO: remove once confirmed this is no longer necessary
 	echo-green "Resetting permissions on /var/www..."
-	docker exec -u root ${cli} chown -R -h $host_uid:$host_gid /var/www
+	docker exec -u root ${cli} chown -R -h $HOST_UID:$HOST_GID /var/www
 
 	echo-green "Restarting php daemon..."
 	docker exec -u root ${cli} supervisorctl restart php-fpm >/dev/null
