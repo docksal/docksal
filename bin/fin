@@ -3548,9 +3548,6 @@ _set_cli_uid ()
 		return
 	fi
 
-	echo "container_uid_gid: $container_uid_gid"
-	echo "HOST_UID:HOST_GID: $HOST_UID:$HOST_GID"
-
 	[[ "$container_uid_gid" == "$HOST_UID:$HOST_GID" ]] && return
 
 	# TODO: output a note to the user about updating their custom yml configuration (point to the docs).
