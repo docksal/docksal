@@ -51,8 +51,6 @@ services:
     volumes:
       # Project root volume
       - project_root:/var/www:rw,nocopy
-      # Host home volume (for SSH keys and other credentials).
-      - host_home:/.home:ro
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
     environment:

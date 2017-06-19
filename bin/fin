@@ -67,8 +67,6 @@ if is_windows; then
 	# Cannot use cygpath_abs_unix here as it's being defined much later
 	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
-# DO NOT REMOVE HOST_HOME. It is used in some stack yml files and is necessary on Windows.
-export HOST_HOME="$HOME"
 OLD_CONFIG_DIR="$HOME/.drude"
 CONFIG_DIR="$HOME/.docksal"
 CONFIG_ENV="$CONFIG_DIR/docksal.env"
@@ -2215,30 +2213,44 @@ project_create ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
+	check_docker_running
 	check_winpty_found
 
 	# Check if ssh-agent container is running
 	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
-	[[ "$running" != "true" ]] && return
+	# Start the ssh-agent if not running
+	if [[ "$running" != "true" ]]; then
+		echo-error "docksal-ssh-agent is not running" \
+			"Please report this issue, as this should not usually happen." \
+			"Run ${yellow}fin reset ssh-agent${NC} to start the service."
+		# We could automatically run install_sshagent_service here, however that may lead to an endless recursion
+		# if something is terribly wrong. So it's better to alret the user and ask them to try a manual fix.
+		return 1
+	fi
 
 	local ssh_path="$HOME/.ssh"
-	local key_path=""
+	# On Windows docker and docker-compose expect a Windows style path
+	is_windows && ssh_path=$(cygpath -w "$ssh_path")
 
-	# When no arguments provided, check if ssh-agent already has at least one identity. If so, stop here.
-	docker exec docksal-ssh-agent ssh-add -l >/dev/null
-	if [[ $1 == "" && $? == 0 ]]; then return; fi
+	# Copy all keys from the host to the ssh-agent container
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	[[ "${1#-}" == "$1" ]] && docker cp "$ssh_path" docksal-ssh-agent:/
 
-	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
-	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
+	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
 	if is_tty; then
 		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+		${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "$@"
 	else
 		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
-		docker run --rm -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+		docker exec docksal-ssh-agent /run.sh ssh-add "$@"
 	fi
-	return $?
+	local ret=$?
+
+	# Remove copied keys from the ssh-agent container after loading into the ssh-agent
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
+	return "$ret"
 }
 
 #----- Installations and updates -----
