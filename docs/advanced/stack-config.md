@@ -163,7 +163,7 @@ You should not remove or change these values.
   web:
     volumes:
       # Project root volume
-      - project_root:/var/www:ro
+      - project_root:/var/www:ro,nocopy
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
       - io.docksal.project-root=${PROJECT_ROOT}
@@ -182,7 +182,7 @@ In the `cli` service there is the `volumes` section. You should not remove or ch
   cli:
     volumes:
       # Project root volume
-      - project_root:/var/www:rw
+      - project_root:/var/www:rw,nocopy
       # Host home volume (for SSH keys and other credentials).
       - host_home:/.home:ro
       # Shared ssh-agent socket
@@ -231,7 +231,7 @@ services:
     volumes:
     - host_home:/.home:ro
     - docksal_ssh_agent:/.ssh-agent:ro
-    - project_root:/var/www:rw
+    - project_root:/var/www:rw,nocopy
   db:
     environment:
       MYSQL_DATABASE: default
@@ -251,7 +251,7 @@ services:
       io.docksal.project-root: /Users/testuser/projects/myproject
       io.docksal.virtual-host: myproject.docksal
     volumes:
-    - project_root:/var/www:ro
+    - project_root:/var/www:ro,nocopy
 version: '2.0'
 volumes:
   docksal_ssh_agent:
@@ -325,7 +325,7 @@ services:
     volumes:
     - host_home:/.home:ro
     - docksal_ssh_agent:/.ssh-agent:ro
-    - project_root:/var/www:rw
+    - project_root:/var/www:rw,nocopy
 ```
 
 Note, that when not using a predefined stack, you must fully describe all other services (`web`, `db`, etc.) as well.
