@@ -5,14 +5,6 @@ version: "2.1"
 
 volumes:
 # Bind volumes
-  host_home:
-    driver: local
-    driver_opts:
-      type: none
-      # $HOST_HOME is a cross-platform version of $HOME. It is exported by fin.
-      # It returns a Unix style path on Windows (which is what we need here), while $HOME return a Windows style path.
-      device: ${HOST_HOME}
-      o: bind
   project_root:
     driver: local
     driver_opts:

@@ -183,8 +183,6 @@ In the `cli` service there is the `volumes` section. You should not remove or ch
     volumes:
       # Project root volume
       - project_root:/var/www:rw,nocopy
-      # Host home volume (for SSH keys and other credentials).
-      - host_home:/.home:ro
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
 ```
@@ -229,7 +227,6 @@ services:
     hostname: cli
     image: docksal/cli:1.2-php7
     volumes:
-    - host_home:/.home:ro
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
   db:
@@ -257,12 +254,6 @@ volumes:
   docksal_ssh_agent:
     external: true
     external_name: docksal_ssh_agent
-  host_home:
-    driver: local
-    driver_opts:
-      device: /Users/testuser
-      o: bind
-      type: none
   project_root:
     driver: local
     driver_opts:
@@ -323,7 +314,6 @@ services:
     hostname: cli
     image: docksal/cli:1.2-php5
     volumes:
-    - host_home:/.home:ro
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
 ```
