@@ -2074,7 +2074,7 @@ vm-stats ()
 
 vm-ram () {
 	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
-	echo "Current $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
+	echo "Total $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
 		local running
 		is_docker_machine_running && running=1
@@ -2083,6 +2083,12 @@ vm-ram () {
 		"$vboxmanage" modifyvm "$DOCKER_MACHINE_NAME" --memory "$1" && \
 			echo "Memory size updated."
 		[[ ${running} == 1 ]] && docker_machine_start
+	else
+		output=$(fin vm ssh free -m)
+		echo -n "Available Memory:	"
+		echo "$output" | grep "buffers/cache" | awk '{ print $4, "MB" }'
+		echo -n "Available Swap:		"
+		echo "$output" | grep "Swap" | awk '{ print $4, "MB" }'
 	fi
 }
 
