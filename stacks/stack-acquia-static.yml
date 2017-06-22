@@ -16,7 +16,7 @@ services:
     image: docksal/web:1.0-apache2.2
     volumes:
       # Project root volume
-      - project_root:/var/www:ro
+      - project_root:/var/www:ro,nocopy
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
       - io.docksal.project-root=${PROJECT_ROOT}
@@ -50,14 +50,12 @@ services:
     image: docksal/cli:1.2-php7
     volumes:
       # Project root volume
-      - project_root:/var/www:rw
-      # Host home volume (for SSH keys and other credentials).
-      - host_home:/.home:ro
+      - project_root:/var/www:rw,nocopy
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
     environment:
-      - HOST_UID=${HOST_UID:-1000}
-      - HOST_GID=${HOST_GID:-100}
+      - HOST_UID
+      - HOST_GID
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
     dns:
       - ${DOCKSAL_DNS1}
@@ -80,10 +78,9 @@ services:
   # Memcached
   memcached:
     hostname: memcached
-    image: memcached
-    environment:
-      # Memcached memory limit in megabytes
-      - MEMCACHED_MEMORY_LIMIT=${MEMCACHED_MEMORY_LIMIT:-128}
+    image: ${MEMCACHED_IMAGE:-memcached:1.4-alpine}
+    # Set memcached memory limit to 128 MB by default
+    command: ["-m", "128"]
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}

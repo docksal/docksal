@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.11.1
+FIN_VERSION=1.12.0
 
 # Console colors
 red='\033[0;91m'
@@ -46,15 +46,15 @@ is_mac ()
 
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
-REQUIREMENTS_DOCKER='17.04.0-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.12.0'
-REQUIREMENTS_DOCKER_MACHINE='0.10.0'
-REQUIREMENTS_VBOX='5.1.18'
-REQUIREMENTS_WINPTY='0.4.2'
-REQUIREMENTS_WINPTY_CYGWIN='2.6.1'
+REQUIREMENTS_DOCKER='17.05.0-ce'
+REQUIREMENTS_DOCKER_COMPOSE='1.13.0'
+REQUIREMENTS_DOCKER_MACHINE='0.12.0'
+REQUIREMENTS_VBOX='5.1.22'
+REQUIREMENTS_WINPTY='0.4.3'
+REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.18/VirtualBox-5.1.18-114002-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.18/VirtualBox-5.1.18-114002-Win.exe"
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.22/VirtualBox-5.1.22-115126-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.22/VirtualBox-5.1.22-115126-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
@@ -67,8 +67,6 @@ if is_windows; then
 	# Cannot use cygpath_abs_unix here as it's being defined much later
 	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
-# DO NOT REMOVE HOST_HOME. It is used in some stack yml files and is necessary on Windows.
-export HOST_HOME="$HOME"
 OLD_CONFIG_DIR="$HOME/.drude"
 CONFIG_DIR="$HOME/.docksal"
 CONFIG_ENV="$CONFIG_DIR/docksal.env"
@@ -2256,30 +2254,44 @@ project_create ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
+	check_docker_running
 	check_winpty_found
 
 	# Check if ssh-agent container is running
 	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
-	[[ "$running" != "true" ]] && return
+	# Start the ssh-agent if not running
+	if [[ "$running" != "true" ]]; then
+		echo-error "docksal-ssh-agent is not running" \
+			"Please report this issue, as this should not usually happen." \
+			"Run ${yellow}fin reset ssh-agent${NC} to start the service."
+		# We could automatically run install_sshagent_service here, however that may lead to an endless recursion
+		# if something is terribly wrong. So it's better to alret the user and ask them to try a manual fix.
+		return 1
+	fi
 
 	local ssh_path="$HOME/.ssh"
-	local key_path=""
+	# On Windows docker and docker-compose expect a Windows style path
+	is_windows && ssh_path=$(cygpath -w "$ssh_path")
 
-	# When no arguments provided, check if ssh-agent already has at least one identity. If so, stop here.
-	docker exec docksal-ssh-agent ssh-add -l >/dev/null
-	if [[ $1 == "" && $? == 0 ]]; then return; fi
+	# Copy all keys from the host to the ssh-agent container
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	[[ "${1#-}" == "$1" ]] && docker cp "$ssh_path" docksal-ssh-agent:/
 
-	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
-	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
+	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
 	if is_tty; then
 		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+		${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "$@"
 	else
 		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
-		docker run --rm -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+		docker exec docksal-ssh-agent /run.sh ssh-add "$@"
 	fi
-	return $?
+	local ret=$?
+
+	# Remove copied keys from the ssh-agent container after loading into the ssh-agent
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
+	return "$ret"
 }
 
 #----- Installations and updates -----
@@ -3326,6 +3338,9 @@ run_cli ()
 	local IMAGE="${IMAGE:-docksal/cli:1.2-php7}"
 	local cmd="$@"
 
+	# Assume bash if no command was given
+	[[ "$cmd" == "" ]] && cmd="bash"
+
 	# Source $HOME/.docksalrc in cli.
 	# Commands in this file will be sourced for both interactive and non-interactive sessions.
 	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
@@ -3571,12 +3586,8 @@ _set_cli_uid ()
 	# Skip Windows, as Linux permissions and ownership do not matter over SMB
 	is_windows && return
 
-	# Let uid to be set with the FIN_SET_UID env variable
-	local host_uid=${FIN_SET_UID:-$(id -u)}
-	local host_gid=${FIN_SET_GID:-$(id -g)}
 	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	local cli=$(get_container_id cli || true)
-
 	# If there is no cli, move on.
 	if [[ -z ${cli} ]]; then
 		echo-yellow 'Expected service "cli" is missing.'
@@ -3592,21 +3603,19 @@ _set_cli_uid ()
 		return
 	fi
 
-	if [[ "$container_uid_gid" == "$host_uid:$host_gid" ]]; then
-		return
-	fi
+	[[ "$container_uid_gid" == "$HOST_UID:$HOST_GID" ]] && return
 
 	# TODO: output a note to the user about updating their custom yml configuration (point to the docs).
 	if [[ "$host_uid" != "0" ]] ; then
-		echo-green "Changing uid/gid in cli to $host_uid/$host_gid to match the host"
+		echo-green "Changing uid/gid in cli to $HOST_UID/$HOST_GID to match the host"
 	else
 		echo -e "${green}Changing user id in cli to 0 to match host user id ${NC}${yellow}(running as root is not recommended)...${NC}"
 	fi
-	docker exec -u root ${cli} usermod -u "$host_uid" -o docker >/dev/null 2>&1
-	docker exec -u root ${cli} groupmod -g "$host_gid" -o users >/dev/null 2>&1
+	docker exec -u root ${cli} bash -c "usermod -u $HOST_UID -o docker"
+	docker exec -u root ${cli} bash -c "groupmod -g $HOST_GID -o \$(id -gn docker)"
 	# TODO: remove once confirmed this is no longer necessary
 	echo-green "Resetting permissions on /var/www..."
-	docker exec -u root ${cli} chown -R -h $host_uid:$host_gid /var/www
+	docker exec -u root ${cli} chown -R -h $HOST_UID:$HOST_GID /var/www
 
 	echo-green "Restarting php daemon..."
 	docker exec -u root ${cli} supervisorctl restart php-fpm >/dev/null
@@ -3822,8 +3831,8 @@ load_configuration ()
 	export DOCKSAL_PATH="$(get_project_path)"
 	export PROJECT_ROOT="$(get_project_path)"
 	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
-	# Set this to 0 to account for docker-compose bug https://github.com/docker/compose/pull/4294
-	export COMPOSE_CONVERT_WINDOWS_PATHS=0
+	# https://docs.docker.com/compose/reference/envvars/#compose_convert_windows_paths
+	export COMPOSE_CONVERT_WINDOWS_PATHS=1
 
 	# Export host user uid/gid
 	# The startup script in the cli container picks these up and updates the docker user inside of the container
@@ -4266,6 +4275,7 @@ if
 	[[ "$1" != "vm" ]] &&
 	[[ "$1" != "docker" ]] && [[ "$1" != "d" ]] &&
 	[[ "$1" != "docker-machine" ]] && [[ "$1" != "dm" ]] &&
+	[[ "$1" != "docker-compose" ]] && [[ "$1" != "dc" ]] &&
 	[[ "$1" != "debug" ]] &&
 	[[ "$1" != "exec-url" ]] &&
 	[[ "$1" != "rc" ]] && [[ "$1" != "run-cli" ]] &&
@@ -4281,7 +4291,11 @@ if
 	[[ "$1" != "run-cli" ]] &&
 	[[ "$1" != "rc" ]] &&
 	[[ "$1" != "hosts" ]] &&
-	[[ "$1" != "image" ]];
+	[[ "$1" != "image" ]] &&
+	[[ "$1" != "project" ]] &&
+	[[ "$1" != "pl" ]] &&
+	[[ "$*" != "stop --all" ]] &&
+	[[ "$*" != "stop -a" ]];
 	then
 		load_configuration
 		[[ "$NO_UPDATES" != "1" ]] && check_for_updates

@@ -36,13 +36,9 @@ You will see output similar to the following:
 Starting services...
 Creating network "myproject_default" with the default driver
 Creating volume "myproject_project_root" with local driver
-Creating volume "myproject_host_home" with local driver
 Creating myproject_cli_1
 Creating myproject_db_1
 Creating myproject_web_1
-Changing user id in cli to 501 to match host user id...
-Resetting permissions on /var/www...
-Restarting php daemon...
 Connected vhost-proxy to "myproject_default" network.
 ```
 

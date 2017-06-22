@@ -7,12 +7,6 @@ version: "2.1"
 
 volumes:
 # NFS volumes
-  host_home:
-    driver: local
-    driver_opts:
-      type: nfs
-      device: :${HOME}
-      o: addr=${DOCKSAL_HOST_IP},vers=3,nolock,noacl,nocto,noatime,nodiratime,tcp,actimeo=1
   project_root:
     driver: local
     driver_opts:
