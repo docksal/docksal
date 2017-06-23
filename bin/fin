@@ -4013,12 +4013,20 @@ hosts_backup ()
 
 # Addons management
 addon () {
+	eval $(parse_params "$@")
+
+	if [[ "$global" == "global" ]] || [[ "$g" == "g" ]]; then
+		is_global="global"
+	fi
+
+	local addon_name=${ARGV[1]} # ARGV[0] is install, remove,...
+
 	case "$1" in
 		install|in)
-			addon_install "$2"
+				addon_install "$addon_name" ${is_global}
 			;;
 		remove|rm)
-			addon_remove "$2"
+			addon_remove "$addon_name" ${is_global}
 			;;
 		help)
 			show_help_addon
@@ -4030,10 +4038,11 @@ addon () {
 }
 
 # Download addon
+# $1 - addon name
+# $2 - optional flag to install globally
 addon_install ()
 {
-	# TODO: check that non-global install
-	check_docksal_environment
+	[[ "$2" != "global" ]] && check_docksal_environment
 
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
@@ -4042,7 +4051,13 @@ addon_install ()
 	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
 
 	# Create target addon dir
-	local TARGET_PATH="$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH/$addon_name"
+	local TARGET_PATH
+	if [[ "$2" != "global" ]]; then
+		TARGET_PATH="$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH/$addon_name"
+	else
+		TARGET_PATH="$CONFIG_DIR/$DOCKSAL_COMMANDS_PATH/$addon_name"
+	fi
+
 	if [ -d "$TARGET_PATH" ] || [ -f "$TARGET_PATH" ]; then
 		echo-error "Addon already exists in" "$TARGET_PATH"
 		exit 1
@@ -4057,7 +4072,7 @@ addon_install ()
 
 	# Download files
 	if [[ "$file_list" != "" ]]; then
-	echo "Downloading files..."
+		echo "Downloading files..."
 		(
 			cd "$TARGET_PATH" || exit 1
 			for f in ${file_list}; do
@@ -4099,35 +4114,44 @@ addon_install ()
 }
 
 # Remove addon
+# $1 - addon name
+# $2 - optional flag to remove global addon
 addon_remove () {
+	[[ "$2" != "global" ]] && check_docksal_environment
+
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
 	[[ "$addon_name" =~ / ]] && echo-error "No slashes in addon name" && exit 1
 	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
 	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
 
-	local addon=$(get_addon_path "$addon_name")
-	# Do not change this condition to -d for security and safety reasons
-	if [ ! -f "$addon" ] && [ ! -f "$addon/$1" ]; then
-		if [ -d "$addon" ]; then
-			echo-error "Directory '$addon' does not contain a valid Docksal addon"
+	local addon_path=$(get_addon_path "$addon_name")
+
+	# Check if found addon is a valid addon
+	# Note: do not change this condition to -d for security and safety reasons.
+	#				By double checking for Docksal addon structure it prevents possible
+	#				damage if get_addon_path returns terribly wrong path for any reason.
+	if [ ! -f "$addon_path" ] && [ ! -f "$addon_path/$1" ]; then
+		if [ -d "$addon_path" ]; then
+			echo-error "Directory '$addon_path' does not contain a valid Docksal addon"
 			return 1
 		else
 			# Addon should be a file or a dir with a main file
-			echo-error "Could not find addon $1"
+			echo-error "Could not find addon '$1'"
 			return 1
 		fi
 	fi
 
-	if [ -f "$addon" ]; then
-		echo "Removing $addon" && rm -rf "$addon"
-		return $?
+	# Do not remove global addon unless --global is passed
+	if [[ "$addon_path" =~ "$CONFIG_DIR" ]] && [[ "$2" != "global" ]];  then
+		echo -e "${red}ERROR:${NC} to remove global addon '$addon_name' use ${yellow}--global${NC} option"
+		exit 1
 	fi
 
 	# Pre-uninstall hook
-	addon_hook "$addon" "$addon_name" "pre-uninstall"
+	addon_hook "$addon_path" "$addon_name" "pre-uninstall"
 	if [ ! $? -eq 0 ]; then
-		"Pre-uninstall hook has failed and aborted the uninstallation."
+		"Pre-uninstall hook has failed and aborted addon removal."
 		return 1
 	fi
 
@@ -4135,19 +4159,19 @@ addon_remove () {
 	local tempfile="/tmp/$addon_name.$RANDOM.post-uninstall"
 	local tempfile_copy_res=1
 
-	cp -fp "$addon/$addon_name.post-uninstall" "$tempfile" >/dev/null 2>&1
+	cp -fp "$addon_path/$addon_name.post-uninstall" "$tempfile" >/dev/null 2>&1
 	tempfile_copy_res=$?
 
 	# Remove addon files physically
 	# Last line of defence to avoid removal of wrong things
-	if [[ "$addon" =~ ".docksal" ]]; then
-		[ -d "$addon" ] && (echo "Removing $addon" && rm -rf "$addon")
+	if [[ "$addon_path" =~ ".docksal" ]]; then
+		[ -d "$addon_path" ] && (echo "Removing $addon_path" && rm -rf "$addon_path")
 	else
-		echo "Not removing $addon because it's not inside .docksal folder. How did we get here?"
+		echo "Not removing $addon_path because it's not inside .docksal folder. How did we get here?"
 	fi
 
 	# Post-uninstall hook
-	if [ $tempfile_copy_res -eq 0 ]; then
+	if [ ${tempfile_copy_res} -eq 0 ]; then
 		chmod +x "$tempfile" && exec "$tempfile"
 		rm -f "$tempfile" >dev/null 2>&1
 	fi
