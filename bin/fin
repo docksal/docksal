@@ -4051,48 +4051,49 @@ addon_install ()
 	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
 
 	# Create target addon dir
-	local TARGET_PATH
+	local addon_path
 	if [[ "$2" != "global" ]]; then
-		TARGET_PATH="$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH/$addon_name"
+		addon_path="$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH/$addon_name"
 	else
-		TARGET_PATH="$CONFIG_DIR/$DOCKSAL_COMMANDS_PATH/$addon_name"
+		addon_path="$CONFIG_DIR/$DOCKSAL_COMMANDS_PATH/$addon_name"
 	fi
 
-	if [ -d "$TARGET_PATH" ] || [ -f "$TARGET_PATH" ]; then
-		echo-error "Addon already exists in" "$TARGET_PATH"
-		exit 1
+	if [ -d "$addon_path" ] || [ -f "$addon_path" ]; then
+		echo-yellow "Addon already exists in $addon_path"
+		#_confirm "Overwrite?"
 	fi
-	mkdir -p "$TARGET_PATH"
-	if_failed_error "Could not create $TARGET_PATH" "Check file permissions and try again"
+	mkdir -p "$addon_path"
+	if_failed_error "Could not create $addon_path" "Check file permissions and try again"
 	local URL_ADDON="$URL_REPO_ADDONS/master/$addon_name"
 
-	# Download addon files list
+	# Get files list
 	local file_list
 	file_list=$(curl -fsL "$URL_ADDON/$addon_name.filelist")
 
-	# Download files
+	# Download only hook files first
+	local hooks_regex="$addon_name.pre-install\|$addon_name.post-install\|$addon_name.pre-uninstall\|$addon_name.post-uninstall"
 	if [[ "$file_list" != "" ]]; then
-		echo "Downloading files..."
-		(
-			cd "$TARGET_PATH" || exit 1
-			for f in ${file_list}; do
-				# Skip comments that start with '#'
-
-				echo "$f"
-				# filename can contain subdir name, which we need to create
-				local subdir=$(dirname "$f")
-				if [[ "$subdir" != "." ]]; then
-					mkdir -p "$subdir" || exit 1
-				fi
-				# exit subshell with error if download failed
-				curl -fsSL "$URL_ADDON/$f" -o "$f" || exit 1
-			done
-		)
-		if_failed_error "Download has failed" "Check log above for messages"
+		# Skip line comments, comments are lines that start with '#'
+		file_list=$(echo "$file_list" | grep -v '^#')
+		# Get only hooks
+		local hooks_file_list
+		hooks_file_list=$(echo "$file_list" | grep "$hooks_regex")
+		if [[ "$hooks_file_list" != "" ]]; then
+			echo-green "Downloading addon hook files..."
+			(
+				cd "$addon_path" || exit 1
+				for f in ${hooks_file_list}; do
+					echo "  $f"
+					# Exit subshell with error if download failed
+					curl -fsSL "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
+				done
+			)
+			if_failed_error "Download has failed" "Check log above for messages"
+		fi
 	fi
 
 	# Pre-install hook
-	addon_hook "$addon" "$addon_name" "pre-install"
+	addon_hook "$addon_path" "$addon_name" "pre-install"
 	if [ ! $? -eq 0 ]; then
 		"Pre-install hook has failed and aborted the installation."
 		# Delete downloaded files if pre-install hook fails
@@ -4101,16 +4102,40 @@ addon_install ()
 		return 1
 	fi
 
-	# Installation
-	echo "Downloading main script for $addon_name"
-	curl -fsL "$URL_ADDON/$addon_name" -o "$TARGET_PATH/$addon_name"
-	chmod +x "$TARGET_PATH/$addon_name"
+	# Download main script
+	echo-green "Downloading addon main script"
+	echo "  $addon_name/$addon_name"
+	curl -fsL "$URL_ADDON/$addon_name" -o "$addon_path/$addon_name"
+	chmod +x "$addon_path/$addon_name"
 	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
 
-	# Post-install hook
-	addon_hook "$addon" "$addon_name" "post-install"
+	# Download other files
+	if [[ "$file_list" != "" ]]; then
+		# Exclude hooks
+		file_list=$(echo "$file_list" | grep -v "$hooks_regex")
+		if [[ "$file_list" != "" ]]; then
+			echo-green "Downloading other addon files..."
+			(
+				cd "$addon_path" || exit 1
+				for f in ${file_list}; do
+					echo "  $f"
+					# Filename can contain subdir name, which we need to create
+					local subdir=$(dirname "$f")
+					if [[ "$subdir" != "." ]]; then
+						mkdir -p "$subdir" || exit 1
+					fi
+					# Exit subshell with error if download failed
+					curl -fsSL "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
+				done
+			)
+			if_failed_error "Download has failed" "Check log above for messages"
+		fi
+	fi
 
-	echo "Done"
+	# Post-install hook
+	addon_hook "$addon_path" "$addon_name" "post-install"
+
+	echo-green "Addon $addon_name was installed"
 }
 
 # Remove addon
@@ -4188,8 +4213,10 @@ addon_hook ()
 	[ ! -f "$hook" ] && return
 	# execute hook
 	[ -f "$hook" ] &&
+		echo-green "Running $hook_name hook..." &&
 		chmod +x "$hook" &&
-		exec "$hook"
+		# Encapsulate exec into a sub-shell because exec replaces the shell it runs in
+		( exec "$hook" )
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
