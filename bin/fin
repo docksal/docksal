@@ -1459,6 +1459,7 @@ show_help_addon ()
 	echo-green "Commands:"
 	printh "install <name> [-g|--global]" "Install addon (optionally into global location)"
 	printh "remove <name> [-g|--global]" "Remove addon (optionally remove global addon)"
+	printh "version" "Show addon version if available"
 	echo
 	echo-green "Examples:"
 	printh "install example" "Install an example addon to the current project"
