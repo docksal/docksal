@@ -718,18 +718,21 @@ check_project_unique ()
 
 # Yes/no confirmation dialog with an optional message
 # @param $1 confirmation message
+# @param $2 --no-exit
 _confirm ()
 {
 	# Skip checks if not running interactively (not a tty or not on Windows)
 	if ! is_tty; then return 0; fi
 
 	while true; do
-		read -p "$1 [y/n]: " answer
+		echo -en "$1 "
+		read -p "[y/n]: " answer
 		case "$answer" in
 			[Yy]|[Yy][Ee][Ss] )
 				break
 				;;
 			[Nn]|[Nn][Oo] )
+				[[ "$2" == "--no-exit" ]] && return 1
 				exit 1
 				;;
 			* )
@@ -1753,6 +1756,22 @@ docker_machine_mount_nfs ()
 	exports="${exports}\n${exports_open}\n"
 	for share in ${ARGV[@]}; do
 		local share_export=(${share//:/ });
+		# Check for NFS exports conflicts manually
+		if [[ "$exports" =~ "$share_export" ]]; then
+			echo
+			echo -e "${red}ERROR:${NC} Attempt to share $share_export via NFS would create a conflict in ${yellow}/etc/exports${NC}."
+			echo -e "       To solve the problem you can override the default Docksal projects folder."
+			echo -e "       by setting ${yellow}DOCKSAL_NFS_PATH${NC} value in ${yellow}$CONFIG_ENV${NC}."
+			sleep 1
+			echo
+			echo-green "Attempting auto-fix:"
+			_confirm "Do you want to use ${yellow}$HOME/Projects${NC} as Docksal projects path?"
+			# Write proposed DOCKSAL_NFS_PATH and try remounting nfs
+			mkdir -p "$HOME/Projects"
+			echo -e "\nDOCKSAL_NFS_PATH=\"$HOME/Projects\"\n" | tee -a ${CONFIG_ENV} >/dev/null
+			docker_machine_mount_nfs "$HOME/Projects:$HOME/Projects"
+			return $?
+		fi
 		# TODO: move exports into a separate function and make it work with D4M with or without VirtualBox.
 		exports="${exports}$share_export 127.0.0.1 $machine_ip -alldirs -maproot=0:0\n"
 	done
@@ -1993,10 +2012,11 @@ docker_machine_mounts ()
 {
 	if is_mac; then
 		echo-green "Configuring NFS shares..."
-		docker_machine_mount_nfs "/Users:/Users" || exit 1
+		local MOUNT_POINT="${DOCKSAL_NFS_PATH:-/Users}"
+		docker_machine_mount_nfs "$MOUNT_POINT:$MOUNT_POINT"
 	elif is_windows; then
 		echo-green "Configuring SMB shares..."
-		docker_machine_mount_smb || exit 1
+		docker_machine_mount_smb
 	fi
 }
 
