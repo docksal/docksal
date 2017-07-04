@@ -94,6 +94,8 @@ mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
 
 # Where custom commands live (relative path)
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
+# Where addons live (relative path)
+DOCKSAL_ADDONS_PATH=".docksal/addons"
 
 # Network settings
 ## Docker for Mac/Win
@@ -122,6 +124,7 @@ DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
 DEFAULT_MACHINE_VBOX_RAM='1024' #mb
 DEFAULT_MACHINE_VBOX_HDD='50000' #mb
+
 # Stats
 # fin sends a minimal ping with OS and fin version number
 DOCKSAL_STATS_TID='UA-93724315-1'
@@ -135,6 +138,7 @@ URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
+URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
 URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
@@ -322,6 +326,32 @@ get_current_relative_path ()
 		local pathdiff=${cwd#${proj_root}/}
 		echo "$pathdiff"
 	fi
+}
+
+# Returns addon path if can find it in project or global addons. Otherwise returns empty string
+# $1 - addon name
+get_addon_script ()
+{
+	ADDON_ROOT="$(get_project_path)/$DOCKSAL_ADDONS_PATH"
+	# First search project addons dir for the addon
+	command_script="$ADDON_ROOT/$1/$1"
+	# Then search global docksal addons directory for the addon
+	[ ! -f "$command_script" ] && ADDON_ROOT="$command_script" && command_script="$HOME/$DOCKSAL_ADDONS_PATH/$1/$1"
+	# If addon was found then return it
+	[ -f "$command_script" ] && export ADDON_ROOT && echo "$command_script"
+}
+
+# Returns command path if can find it in project or global commands. Otherwise returns empty string
+# $1 - command name
+get_command_script ()
+{
+	COMMANDS_ROOT="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
+	# First search project commands folder for the command
+	command_script="$COMMANDS_ROOT/$1"
+	# Then search global docksal commands directory for the command
+	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
+	# If command was found then return it
+	[ -f "$command_script" ] && echo "$command_script"
 }
 
 # Get mysql connection string
@@ -944,19 +974,19 @@ show_help ()
 			show_help_$1
 			exit
 		fi
-		# Check for custom command file
-		# Try global command
-		local _command="$global_commands_path/$1"
-		# But if local command exists then override
-		[ -f "$project_commands_path/$1" ] && _command="$project_commands_path/$1"
-		#
-		if [ -f "$_command" ]; then
+
+		# Search for addons
+		addon="$(get_addon_script $1)"
+		# If no such addon then search for command
+		[[ ! -f "$addon" ]] && addon="$(get_command_script $1)"
+
+		if [ -f "$addon" ]; then
 			echo -en "${green}fin $1${NC} - "
-			local _help_contents=$(cat "$_command" | grep '^##' | sed "s/^##[ ]*//g")
+			local _help_contents=$(cat "$addon" | grep '^##' | sed -E "s/^##[ ]?//g")
 			echo -e "$_help_contents"
 			echo
 			exit
-		fi
+			fi
 	fi
 
 	printh "Docksal Fin v$FIN_VERSION commands:" "" "green"
@@ -992,52 +1022,101 @@ show_help ()
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
 
 	echo
-	printh "share" "Create temporary public url for current project using ngrok"
+	printh "addon <name>" "Addons management commands"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
+	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
+	printh "share" "Create temporary public url for current project using ngrok"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
-	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
-	printh "hosts [command]" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
+	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
 	# Show list of custom commands and their help if available
-	if [ ! -z "$(get_project_path)" ]; then
-		show_help_list_of_custom_commands 'project'
+	if [[ ! -z "$(get_project_path)" ]] || [[ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then
+		echo
+		echo-green "  Addons:"
 	fi
-	if [ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]; then
-		show_help_list_of_custom_commands 'global'
+	if [[ ! -z "$(get_project_path)" ]]; then
+		show_help_list_addons_in_help 'project'
+	fi
+	if [[ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then
+		show_help_list_addons_in_help 'global'
+	fi
+
+	# Show list of custom commands and their help if available
+	if [[ ! -z "$(get_project_path)" ]] || [[ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then
+		echo
+		echo-green "  Custom commands:"
+	fi
+	if [[ ! -z "$(get_project_path)" ]]; then
+		show_help_list_commands_in_help 'project'
+	fi
+	if [[ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then
+		show_help_list_commands_in_help 'global'
 	fi
 
 	echo
 }
 
 # param $1 - 'project' or 'global'
-show_help_list_of_custom_commands ()
+show_help_list_commands_in_help ()
 {
-	local _path
+	local addons_path
 	if [[ "$1" == 'project' ]]; then
-		_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
+		addons_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
 		# avoid taking global .docksal folder for project one
-		if [[ "$_path" == "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then return; fi
+		[[ "$addons_path" == "$HOME/$DOCKSAL_COMMANDS_PATH" ]] && return
 	else
-		_path="$HOME/$DOCKSAL_COMMANDS_PATH"
+		addons_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	fi
 
-	custom_commands_list=$(ls "$_path" 2>/dev/null | tr "\n" " ")
-	if [ ! -z "$custom_commands_list" ]; then
-		local word
-		[ "$1" == 'project' ] && word='Project' || word='Global'
-		echo
-		echo-green "  $word addons:";
-		for cmd_name in $(ls "$_path")
+	local addons_list=$(ls "$addons_path" 2>/dev/null | tr "\n" " ")
+	if [ ! -z "$addons_list" ]; then
+		local scope
+		for cmd_name in $(ls "$addons_path")
 		do
+			local g
+			[[ "$1" == 'global' ]] && g=' [g]'
 			# command description is lines that start with ##
-			local cmd_desc=$(cat "$_path/$cmd_name" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
+			local filename="$addons_path/$cmd_name"
+			local cmd_desc
+			[ ! -f "$filename" ] && continue
+			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
 			cmd_desc="${cmd_desc:-No description}"
-			printh "$cmd_name" "$cmd_desc"
+			printh "${cmd_name}${g}" "$cmd_desc"
+		done
+	fi
+}
+
+# param $1 - 'project' or 'global'
+show_help_list_addons_in_help ()
+{
+	local addons_path
+	if [[ "$1" == 'project' ]]; then
+		addons_path="$(get_project_path)/$DOCKSAL_ADDONS_PATH"
+		# avoid taking global .docksal folder for project one
+		[[ "$addons_path" == "$HOME/$DOCKSAL_ADDONS_PATH" ]] && return
+	else
+		addons_path="$HOME/$DOCKSAL_ADDONS_PATH"
+	fi
+
+	local addons_list=$(ls "$addons_path" 2>/dev/null | tr "\n" " ")
+	if [ ! -z "$addons_list" ]; then
+		local scope
+		for cmd_name in $(ls "$addons_path")
+		do
+			local g
+			[[ "$1" == 'global' ]] && g=' [g]'
+			# command description is lines that start with ##
+			local filename="$addons_path/$cmd_name/$cmd_name"
+			local cmd_desc
+			[ ! -f "$filename" ] && continue
+			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
+			cmd_desc="${cmd_desc:-No description}"
+			printh "${cmd_name}${g}" "$cmd_desc"
 		done
 	fi
 }
@@ -1368,6 +1447,26 @@ show_help_hosts ()
 	printh "fin hosts remove" "Remove current project's VIRTUAL_HOST from hosts file"
 	printh "fin hosts remove demo.docksal" "Remove *all* lines containing demo.docksal from hosts file"
 	printh "fin hosts" "Output hosts file"
+	echo
+}
+
+show_help_addon ()
+{
+	echo-green "Addons management command"
+	echo
+	printh "fin addon <command> <name>" "" "yellow"
+	echo
+	echo-green "Commands:"
+	printh "install <name> [-g|--global]" "Install addon (optionally into global location)"
+	printh "remove <name> [-g|--global]" "Remove addon (optionally remove global addon)"
+	printh "version" "Show addon version if available"
+	echo
+	echo-green "Examples:"
+	printh "install example" "Install an example addon to the current project"
+	printh "remove example" "Uninstall an example addon from the current project"
+	printh "install -g example" "Install an example addon globally"
+	printh "install example --global" "Install an example addon globally (long notation)"
+	printh "remove example -g" "Uninstall a globally installed example addon"
 	echo
 }
 
@@ -2037,7 +2136,7 @@ vm-stats ()
 
 vm-ram () {
 	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
-	echo "Current $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
+	echo "Total $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
 		local running
 		is_docker_machine_running && running=1
@@ -2046,6 +2145,12 @@ vm-ram () {
 		"$vboxmanage" modifyvm "$DOCKER_MACHINE_NAME" --memory "$1" && \
 			echo "Memory size updated."
 		[[ ${running} == 1 ]] && docker_machine_start
+	else
+		output=$(fin vm ssh free -m)
+		echo -n "Available Memory:	"
+		echo "$output" | grep "buffers/cache" | awk '{ print $4, "MB" }'
+		echo -n "Available Swap:		"
+		echo "$output" | grep "Swap" | awk '{ print $4, "MB" }'
 	fi
 }
 
@@ -2361,6 +2466,7 @@ configure_resolver_mac () {
 	fi
 
 	# Flush DNS cache
+	echo-green "Clearing DNS cache..."
 	sudo dscacheutil -flushcache
 	# to check: scutil --dns
 }
@@ -2424,6 +2530,7 @@ configure_resolver_windows () {
 	winsudo "$command1 && $command2"
 
 	# Flush DNS cache
+	echo-green "Clearing DNS cache..."
 	ipconfig /flushdns >/dev/null 2>&1
 }
 
@@ -3897,6 +4004,7 @@ hosts ()
 	esac
 }
 
+# Add a host to hosts file
 hosts_add ()
 {
 	local hostname="$1"
@@ -3925,6 +4033,7 @@ hosts_add ()
 	fi
 }
 
+# Remove a host from hosts file
 hosts_remove ()
 {
 	local hostname="$1"
@@ -3957,6 +4066,7 @@ hosts_remove ()
 	fi
 }
 
+# Backup hosts file
 hosts_backup ()
 {
 	local bkp="/tmp/hosts.bak.$RANDOM"
@@ -3964,6 +4074,220 @@ hosts_backup ()
 	cp "$HOSTS_FILE" "$bkp"
 }
 
+# Addons management
+addon () {
+	eval $(parse_params "$@")
+
+	if [[ "$global" == "global" ]] || [[ "$g" == "g" ]]; then
+		is_global="global"
+	fi
+
+	local addon_name=${ARGV[1]} # ARGV[0] is install, remove,...
+
+	case "$1" in
+		install|in)
+				addon_install "$addon_name" ${is_global}
+			;;
+		remove|rm)
+			addon_remove "$addon_name" ${is_global}
+			;;
+		version|v)
+			# special case for addon version command
+			addon_script=$(get_addon_script "$addon_name")
+			[ ! -f "$addon_script" ] && echo "-1" && exit
+			addon_version=$(cat "$addon_script" | grep ^VERSION | cut -d = -f 2 | tr -d \" | tr -d \')
+			addon_version="${addon_version:-0}"
+			echo "$addon_version"
+			;;
+		help)
+			show_help_addon
+			;;
+		*)
+			echo-yellow "Unknown sub-command. See ${NC}fin addon help${yellow} for details."
+			;;
+	esac
+}
+
+# Download addon
+# $1 - addon name
+# $2 - optional flag to install globally
+addon_install ()
+{
+	[[ "$2" != "global" ]] && check_docksal_environment && load_configuration
+
+	local addon_name="$1"
+	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
+	[[ "$addon_name" =~ / ]] && echo-error "No slashes in addon name" && exit 1
+	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
+	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
+
+	# Create target addon dir
+	local addon_path
+	if [[ "$2" != "global" ]]; then
+		addon_path="$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH/$addon_name"
+	else
+		addon_path="$HOME/$DOCKSAL_ADDONS_PATH/$addon_name"
+	fi
+
+	if [ -d "$addon_path" ] || [ -f "$addon_path" ]; then
+		echo-yellow "Addon already exists in $addon_path"
+		#_confirm "Overwrite?"
+	fi
+	mkdir -p "$addon_path"
+	if_failed_error "Could not create $addon_path" "Check file permissions and try again"
+	local URL_ADDON="$URL_REPO_ADDONS/master/$addon_name"
+
+	# Get files list
+	local file_list
+	file_list=$(curl -fsL "$URL_ADDON/$addon_name.filelist")
+
+	# Download only hook files first
+	local hooks_regex="$addon_name.pre-install\|$addon_name.post-install\|$addon_name.pre-uninstall\|$addon_name.post-uninstall"
+	if [[ "$file_list" != "" ]]; then
+		# Skip line comments, comments are lines that start with '#'
+		file_list=$(echo "$file_list" | grep -v '^#')
+		# Get only hooks
+		local hooks_file_list
+		hooks_file_list=$(echo "$file_list" | grep "$hooks_regex")
+		if [[ "$hooks_file_list" != "" ]]; then
+			echo-green "Downloading addon hook files..."
+			(
+				cd "$addon_path" || exit 1
+				for f in ${hooks_file_list}; do
+					echo "  $f"
+					# Exit subshell with error if download failed
+					curl -fsSL "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
+				done
+			)
+			if_failed_error "Download has failed" "Check log above for messages"
+		fi
+	fi
+
+	# Pre-install hook
+	addon_hook "$addon_path" "$addon_name" "pre-install"
+	if [ ! $? -eq 0 ]; then
+		"Pre-install hook has failed and aborted the installation."
+		# Delete downloaded files if pre-install hook fails
+		[ -d "$addon" ] && [[ "$addon" =~ ".docksal" ]] &&
+			rm -rf "$addon"
+		return 1
+	fi
+
+	# Download main script
+	echo-green "Downloading addon main script"
+	echo "  $addon_name/$addon_name"
+	curl -fsL "$URL_ADDON/$addon_name" -o "$addon_path/$addon_name"
+	chmod +x "$addon_path/$addon_name"
+	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
+
+	# Download other files
+	if [[ "$file_list" != "" ]]; then
+		# Exclude hooks
+		file_list=$(echo "$file_list" | grep -v "$hooks_regex")
+		if [[ "$file_list" != "" ]]; then
+			echo-green "Downloading other addon files..."
+			(
+				cd "$addon_path" || exit 1
+				for f in ${file_list}; do
+					echo "  $f"
+					# Filename can contain subdir name, which we need to create
+					local subdir=$(dirname "$f")
+					if [[ "$subdir" != "." ]]; then
+						mkdir -p "$subdir" || exit 1
+					fi
+					# Exit subshell with error if download failed
+					curl -fsSL "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
+				done
+			)
+			if_failed_error "Download has failed" "Check log above for messages"
+		fi
+	fi
+
+	# Post-install hook
+	addon_hook "$addon_path" "$addon_name" "post-install"
+
+	[[ "$2" == "global" ]] && _globally="globally"
+	echo-green "Addon ${NC}$addon_name${green} was installed ${_globally}"
+}
+
+# Remove addon
+# $1 - addon name
+# $2 - optional flag to remove global addon
+addon_remove () {
+	[[ "$2" != "global" ]] && check_docksal_environment && load_configuration
+
+	local addon_name="$1"
+	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
+	[[ "$addon_name" =~ / ]] && echo-error "No slashes in addon name" && exit 1
+	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
+	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
+
+	local addon_script=$(get_addon_script "$addon_name")
+	local addon_path=$(dirname "$addon_script")
+
+	# Check if found addon is a valid addon
+	# Note: do not change this condition to -d for security and safety reasons.
+	#				Double checking for Docksal addon structure prevents possible
+	#				damage if get_addon_script returns terribly wrong path for any reason.
+	if [[ ! -f "$addon_script" ]]; then
+		echo-error "Could not find addon: ${NC}$1"
+		return 1
+	fi
+
+	# Do not remove global addon unless --global is passed
+	if [[ "$addon_path" =~ "$CONFIG_DIR" ]] && [[ "$2" != "global" ]];  then
+		echo-error "Refusing to remove global addon" \
+								"To remove global addon use ${yellow}--global${NC} or ${yellow}-g${NC} option"
+		exit 1
+	fi
+
+	# Pre-uninstall hook
+	addon_hook "$addon_path" "$addon_name" "pre-uninstall"
+
+	if [ ! $? -eq 0 ]; then
+		"Pre-uninstall hook has failed and aborted addon removal."
+		return 1
+	fi
+
+	# Prepare post-uninstall hook
+	local tempfile="/tmp/$addon_name.$RANDOM.post-uninstall"
+	local tempfile_copy_res=1
+
+	cp -fp "$addon_path/$addon_name.post-uninstall" "$tempfile" >/dev/null 2>&1
+	tempfile_copy_res=$?
+
+	# Remove addon files physically
+	# Last line of defence to avoid removal of wrong things
+	if [[ "$addon_path" =~ ".docksal" ]]; then
+		[ -d "$addon_path" ] &&
+			(echo-green "Removing $addon_path" && rm -r "$addon_path" && echo-green "Removed addon")
+	else
+		echo "Not removing $addon_path because it's not inside .docksal folder. How did we get here?"
+	fi
+
+	# Post-uninstall hook
+	if [ ${tempfile_copy_res} -eq 0 ]; then
+		chmod +x "$tempfile" && exec "$tempfile"
+		rm -f "$tempfile" >dev/null 2>&1
+	fi
+}
+
+# Execute a hook script for an addon
+addon_hook ()
+{
+	local addon_path="$1"
+	local addon_name="$2"
+	local hook_name="$3"
+	local hook="$addon_path/$addon_name.$hook_name"
+	# no hook is ok
+	[ ! -f "$hook" ] && return
+	# execute hook
+	[ -f "$hook" ] &&
+		echo-green "Running $hook_name hook..." &&
+		chmod +x "$hook" &&
+		# Encapsulate exec into a sub-shell because exec replaces the shell it runs in
+		( exec "$hook" )
+}
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
@@ -4031,10 +4355,13 @@ if [[ "$1" == "@"* ]]; then
 	USED_ALIAS=${1#@}
 	shift
 	# Search alias first between aliases then between running projects
-	if [[ -h "$CONFIG_ALIASES/$USED_ALIAS" ]]; then
+	if [[ "$USED_ALIAS" == "self" ]]; then
+		_alias_cd="$(get_project_path)"
+	elif [[ -h "$CONFIG_ALIASES/$USED_ALIAS" ]]; then
 		# alias found
 		_alias_cd=$(readlink "$CONFIG_ALIASES/$USED_ALIAS")
 	else
+		check_docker_running
 		# alias not found. search project names
 		_alias_projects=$(docker ps --all \
 			--filter 'label=com.docker.compose.service=web' \
@@ -4044,7 +4371,7 @@ if [[ "$1" == "@"* ]]; then
 			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS\t" | cut -d$'\t' -f 2)
 		else
 			# nothing was found. error out
-			echo-red "No such alias $USED_ALIAS"
+			echo-error "No such fin alias: @$USED_ALIAS"
 			exit 1
 		fi
 	fi
@@ -4054,36 +4381,34 @@ if [[ "$1" == "@"* ]]; then
 fi
 
 # TODO: figure out a better way to determine when to skip load_configuration
-# Load YML files and check for updates except some cases
-[[ "$1" != "update" ]] &&
+# Load YML files and check for updates except for some cases
+if
+	[[ "$*" != "" ]] &&
+	[[ "$1" != "update" ]] &&
 	[[ "$1" != "install" ]] &&
-	[[ "$1" != "version" ]] &&
-	[[ "$1" != "-v" ]] &&
-	[[ "$1" != "v" ]] &&
+	[[ "$1" != "addon" ]] &&
+	[[ "$1" != "alias" ]] &&
+	[[ "$1" != "help" ]] &&
+	[[ "$1" != "version" ]] && [[ "$1" != "-v" ]] && [[ "$1" != "v" ]] &&
 	[[ "$1" != "sysinfo" ]] &&
 	[[ "$1" != "bash_comp_words" ]] &&
 	[[ "$1" != "ssh-add" ]] &&
 	[[ "$1" != "vm" ]] &&
-	[[ "$1" != "docker" ]] &&
-	[[ "$1" != "d" ]] &&
-	[[ "$1" != "docker-machine" ]] &&
-	[[ "$1" != "dm" ]] &&
-	[[ "$1" != "docker-compose" ]] &&
-	[[ "$1" != "dc" ]] &&
+	[[ "$1" != "docker" ]] && [[ "$1" != "d" ]] &&
+	[[ "$1" != "docker-machine" ]] && [[ "$1" != "dm" ]] &&
+	[[ "$1" != "docker-compose" ]] && [[ "$1" != "dc" ]] &&
 	[[ "$1" != "debug" ]] &&
 	[[ "$1" != "exec-url" ]] &&
+	[[ "$1" != "rc" ]] && [[ "$1" != "run-cli" ]] &&
 	[[ "$1" != "cleanup" ]] &&
-	[[ "$1" != "help" ]] &&
-	[[ "$*" != "" ]] &&
 	[[ "$*" != "config generate" ]] &&
 	[[ "$1" != "fix-smb" ]] &&
-	[[ "$1" != "alias" ]] &&
 	[[ "$*" != "reset dns" ]] &&
 	[[ "$*" != "reset proxy" ]] &&
 	[[ "$*" != "reset ssh-agent" ]] &&
 	[[ "$*" != "reset network" ]] &&
 	[[ "$*" != "reset system" ]] &&
-	[[ "$1" != "projects" ]] &&
+	[[ "$1" != "projects" ]] && [[ "$1" != "project" ]] && [[ "$1" != "pl" ]] &&
 	[[ "$1" != "run-cli" ]] &&
 	[[ "$1" != "rc" ]] &&
 	[[ "$1" != "hosts" ]] &&
@@ -4091,9 +4416,11 @@ fi
 	[[ "$1" != "project" ]] &&
 	[[ "$1" != "pl" ]] &&
 	[[ "$*" != "stop --all" ]] &&
-	[[ "$*" != "stop -a" ]] &&
-	load_configuration &&
-	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
+	[[ "$*" != "stop -a" ]];
+	then
+		load_configuration
+		[[ "$NO_UPDATES" != "1" ]] && check_for_updates
+fi
 
 # Parse command line parameters
 case "$1" in
@@ -4266,6 +4593,10 @@ case "$1" in
 		;;
 	drush)
 		shift
+		# cd to docroot if alias was used and alias leads to project root
+		[[ "$USED_ALIAS" != "" ]] &&
+			[[ "$(pwd)" == "$PROJECT_ROOT" ]] &&
+			cd "$DOCROOT"
 		if [[ $1 == "" ]]; then
 			_exec drush
 		else
@@ -4370,28 +4701,34 @@ case "$1" in
 		shift
 		hosts "$@"
 		;;
+	addon|a)
+		shift
+		addon "$@"
+		;;
 	*)
-		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
-		# First search project commands folder
-		command_script="$(get_project_path)/$DOCKSAL_COMMANDS_PATH/$1"
-		# If not found search global docksal commands folder
-		[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
-		# If not found there as well then it is a wrong command
-		[ ! -f "$command_script" ] &&
-			echo-yellow "Unknown command '$*'. See 'fin help' for list of available commands" &&
-			exit 1
-
-		# if it's not executable let's fix it
-		if [[ ! -x "$command_script" ]]; then
-			echo -e "${yellow}$command_script${NC} is not set to be executable."
-			_confirm "Fix automatically?"
-			chmod +x "$command_script"
-			if_failed "Could not make $command_script executable"
+		addon="$(get_addon_script $1)"
+		if [[ ! -f "$addon" ]]; then
+			# If no addon was found then try command
+			addon="$(get_command_script $1)"
+		# If no command was found either then show error
+			[[ ! -f "$addon" ]] &&
+				echo-yellow "Unknown command ${NC}$*${yellow}. See 'fin help' for list of available commands" &&
+				exit 1
+		else
+			export ADDON_ROOT=$(dirname "$addon")
 		fi
 
-		# if it has windows line endings let's fix it
-		fix_crlf_warning "$command_script"
+		# If executable is not set, then fix it
+		if [[ ! -x "$addon" ]]; then
+			echo -e "${yellow}$addon${NC} is not set to be executable."
+			_confirm "Fix automatically?"
+			chmod +x "$addon"
+			if_failed "Could not make $addon executable"
+		fi
+
+		# If it has windows line endings, then fix it
+		fix_crlf_warning "$addon"
 
 		shift
-		exec "$command_script" "$@"
+		exec "$addon" "$@"
 esac
