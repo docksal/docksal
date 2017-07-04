@@ -162,3 +162,36 @@ Check those files for errors, fix them and run `fin start`.
 ## SMB share creation, share mounting and related issues on Windows
 
 Please see a separate [troubleshooting document on share creation, share mounting and related issues](troubleshooting-smb.md).
+
+## Common Mysql related issues
+
+```
+ERROR 2003 (HY000): Can't connect to MySQL server on 'db' (111)
+```
+
+There may be many different errors. Check Mysql logs with `fin logs db` for details.
+Here we will just look at the most common case.
+
+If you see error like:
+
+```
+db_1   | 170614 14:26:54 [Note] Plugin 'FEDERATED' is disabled.
+db_1   | 170614 14:26:54 InnoDB: The InnoDB memory heap is disabled
+db_1   | 170614 14:26:54 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+db_1   | 170614 14:26:54 InnoDB: Compressed tables use zlib 1.2.3
+db_1   | 170614 14:26:54 InnoDB: Using Linux native AIO
+db_1   | 170614 14:26:54 InnoDB: Initializing buffer pool, size = 256.0M
+db_1   | InnoDB: mmap(274726912 bytes) failed; errno 12
+db_1   | 170614 14:26:54 InnoDB: Completed initialization of buffer pool
+db_1   | 170614 14:26:54 InnoDB: Fatal error: cannot allocate memory for the buffer pool
+db_1   | 170614 14:26:54 [ERROR] Plugin 'InnoDB' init function returned error.
+db_1   | 170614 14:26:54 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+db_1   | 170614 14:26:54 [ERROR] Unknown/unsupported storage engine: InnoDB
+db_1   | 170614 14:26:54 [ERROR] Aborting
+db_1   |
+db_1   | 170614 14:26:54 [Note] mysqld: Shutdown complete
+```
+
+Then `cannot allocate memory for the buffer pool` means you don't have enough of free memory on your Docksal VM to run the project.
+
+Stop other projects or increase VM memory size with `fin vm ram ...` command and try again.
