@@ -4186,17 +4186,17 @@ addon_install ()
 	# Pre-install hook
 	addon_hook "$addon_path" "$addon_name" "pre-install"
 	if [ ! $? -eq 0 ]; then
-		"Pre-install hook has failed and aborted the installation."
+		echo-red "Pre-install hook has failed and aborted the installation."
 		# Delete downloaded files if pre-install hook fails
-		[ -d "$addon" ] && [[ "$addon" =~ ".docksal" ]] &&
-			rm -rf "$addon"
+		[[ -d "$addon_path" ]] && [[ "$addon_path" =~ ".docksal" ]] &&
+			rm -r "$addon_path"
 		return 1
 	fi
 
 	# Download main script
 	echo-green "Downloading addon main script"
 	echo "  $addon_name/$addon_name"
-	curl -fsL "$URL_ADDON/$addon_name" -o "$addon_path/$addon_name"
+	curl -fsL "$URL_ADDON/$addon_name?$RANDOM" -o "$addon_path/$addon_name"
 	chmod +x "$addon_path/$addon_name"
 	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
 
@@ -4225,9 +4225,9 @@ addon_install ()
 
 	# Post-install hook
 	addon_hook "$addon_path" "$addon_name" "post-install"
-
+	[[ $? != 0 ]] && _with_errors="${yellow}with errors${NC}"
 	[[ "$2" == "global" ]] && _globally="globally"
-	echo-green "Addon ${NC}$addon_name${green} was installed ${_globally}"
+	echo-green "Addon ${NC}$addon_name${green} was installed ${_globally} ${_with_errors}"
 }
 
 # Remove addon
@@ -4265,7 +4265,7 @@ addon_remove () {
 	addon_hook "$addon_path" "$addon_name" "pre-uninstall"
 
 	if [ ! $? -eq 0 ]; then
-		"Pre-uninstall hook has failed and aborted addon removal."
+		echo-red "Pre-uninstall hook has failed and aborted addon removal."
 		return 1
 	fi
 
