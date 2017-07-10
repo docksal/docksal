@@ -3958,6 +3958,7 @@ config_show ()
 	echo "Docker Compose configuration"
 	echo "---------------------"
 	docker-compose config
+	[[ $? != 0 ]] && return 1
 	echo "---------------------"
 }
 
