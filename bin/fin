@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.13.0
+FIN_VERSION=1.14.0
 
 # Console colors
 red='\033[0;91m'
@@ -994,11 +994,7 @@ show_help ()
 
 	printh "Docksal Fin v$FIN_VERSION commands:" "" "green"
 
-	if is_linux; then
-		printh "start (up)" "Start project services"
-	else
-		printh "start (up)" "Start project services"
-	fi
+	printh "start (up)" "Start project services ('up' forces re-read of configuration)"
 	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects)"
 	printh "restart" "Restart project services"
 	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
@@ -4449,7 +4445,13 @@ case "$1" in
 		shift
 		bash_comp_words "$@"
 		;;
-	up|start)
+	start)
+		shift
+		up
+		;;
+	up)
+		# Force re-reading of configuration files
+		COMPOSE_FILE="" load_configuration
 		shift
 		up
 		;;
