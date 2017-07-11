@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.14.0
+FIN_VERSION=1.15.0
 
 # Console colors
 red='\033[0;91m'
@@ -785,12 +785,12 @@ _stop_containers ()
 
 	check_docksal_environment
 	echo-green "Stopping services..."
-	docker-compose stop
+	docker-compose stop "$@"
 }
 
 _restart_containers ()
 {
-	_stop_containers && _start_containers
+	_stop_containers "$@" && _start_containers
 }
 
 # @param $1 container_name
@@ -2214,7 +2214,7 @@ restart ()
 	is_linux && ssh_add
 	check_project_unique
 
-	_restart_containers
+	_restart_containers "$@"
 }
 
 # Remove container(s)
@@ -4461,7 +4461,7 @@ case "$1" in
 		;;
 	restart)
 		shift
-		restart
+		restart "$@"
 		;;
 	image)
 		shift
