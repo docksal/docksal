@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.16.0
+FIN_VERSION=1.16.1
 
 # Console colors
 red='\033[0;91m'
@@ -4200,7 +4200,8 @@ addon_install ()
 	fi
 
 	# Pre-install hook
-	addon_hook "$addon_path" "$addon_name" "pre-install"
+	[[ "$2" == "global" ]] && addon_global="global"
+	addon_hook "$addon_path" "$addon_name" "pre-install" "$addon_global"
 	if [ ! $? -eq 0 ]; then
 		echo-red "Pre-install hook has failed and aborted the installation."
 		# Delete downloaded files if pre-install hook fails
@@ -4240,7 +4241,7 @@ addon_install ()
 	fi
 
 	# Post-install hook
-	addon_hook "$addon_path" "$addon_name" "post-install"
+	addon_hook "$addon_path" "$addon_name" "post-install" "$addon_global"
 	[[ $? != 0 ]] && _with_errors="${yellow}with errors${NC}"
 	[[ "$2" == "global" ]] && _globally="globally"
 	echo-green "Addon ${NC}$addon_name${green} was installed ${_globally} ${_with_errors}"
@@ -4278,7 +4279,8 @@ addon_remove () {
 	fi
 
 	# Pre-uninstall hook
-	addon_hook "$addon_path" "$addon_name" "pre-uninstall"
+	[[ "$2" == "global" ]] && addon_global="global"
+	addon_hook "$addon_path" "$addon_name" "pre-uninstall" "$addon_global"
 
 	if [ ! $? -eq 0 ]; then
 		echo-red "Pre-uninstall hook has failed and aborted addon removal."
@@ -4303,26 +4305,38 @@ addon_remove () {
 
 	# Post-uninstall hook
 	if [ ${tempfile_copy_res} -eq 0 ]; then
-		chmod +x "$tempfile" && exec "$tempfile"
+		(
+			export ADDON_GLOBAL="$addon_global";
+			chmod +x "$tempfile" && exec "$tempfile"
+		)
 		rm -f "$tempfile" >dev/null 2>&1
 	fi
 }
 
 # Execute a hook script for an addon
+# $1 - addon path
+# $2 - addon name
+# $3 - hook name
+# $4 - "global" is addon installed as global (optional)
 addon_hook ()
 {
 	local addon_path="$1"
 	local addon_name="$2"
 	local hook_name="$3"
+	local addon_global=""
 	local hook="$addon_path/$addon_name.$hook_name"
-	# no hook is ok
-	[ ! -f "$hook" ] && return
-	# execute hook
-	[ -f "$hook" ] &&
-		echo-green "Running $hook_name hook..." &&
-		chmod +x "$hook" &&
-		# Encapsulate exec into a sub-shell because exec replaces the shell it runs in
-		( exec "$hook" )
+	# Assign is global
+	[[ "$4" == "global" ]] && addon_global="true"
+	# No hook is not an error
+	[[ ! -f "$hook" ]] && return
+	# Execute hook
+	echo-green "Running $hook_name hook..." &&
+	chmod +x "$hook" || return 1
+	# Encapsulate exec into a sub-shell because exec replaces the shell it runs in
+	(
+		export ADDON_GLOBAL="$addon_global";
+		exec "$hook"
+	)
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
