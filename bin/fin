@@ -2341,7 +2341,7 @@ project_create ()
 		mkdir "docroot"
 		echo "<html><body>Hello, Docksal!</body></html>" > "docroot/index.html"
 		fin up
-		echo "Done! Visit ${yellow}http://$project_name.docksal${NC}"
+		echo -e "Done! Visit ${yellow}http://$project_name.docksal${NC}"
 		exit
 	fi
 
