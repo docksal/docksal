@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.15.0
+FIN_VERSION=1.16.0
 
 # Console colors
 red='\033[0;91m'
@@ -2277,6 +2277,7 @@ project_create ()
 	echo -e "${green}[2]${NC} Drupal 8"
 	echo -e "${green}[3]${NC} Wordpress"
 	echo -e "${green}[4]${NC} Magento"
+	echo -e "${green}[5]${NC} Static HTML site"
 	echo -e ""
 	while true; do
 		read -p ": " choice
@@ -2305,6 +2306,11 @@ project_create ()
 				target_repo="$URL_REPO_MAGENTO"
 				break
 				;;
+			5)
+				target_cms="Plain HTML"
+				target_host_name_search_string=""
+				target_repo=""
+				;;
 			* )
 				echo 'Please enter 1, 2, 3 or 4.'
 				continue
@@ -2319,6 +2325,16 @@ project_create ()
 	echo ''
 
 	_confirm "Do you wish to proceed?"
+
+	if [[ "$target_cms" == "Plain HTML" ]]; then
+		mkdir "${project_name}" && cd "${project_name}" || exit 1
+		mkdir ".docksal"
+		mkdir "docroot"
+		echo "<html><body>Hello, Docksal!</body></html>" > "docroot/index.html"
+		fin up
+		echo "Done! Visit ${yellow}http://$project_name.docksal${NC}"
+		exit
+	fi
 
 	echo -e "${green} Cloning repository...${NC}"
 	git clone -b master ${target_repo} ${project_name}
