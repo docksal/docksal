@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.14.0
+FIN_VERSION=1.15.0
 
 # Console colors
 red='\033[0;91m'
@@ -1401,13 +1401,14 @@ show_help_share ()
 
 show_help_config ()
 {
-	echo-green "Display/generate project configuration"
+	echo-green "Project configuration management"
 	printh "fin config [command]" "" "yellow"
 	echo
 	echo-green "Config commands:"
 	printh "show" "Display full effective configuration for the project"
 	printh "env" "Display only environment variables section"
-	printh "generate" "Generate Docksal configuration for the project"
+	printh "generate" "Generate static configuration from current stack into docksal.yml"
+	printh "reload" "Reloads config from disk (useful for scripts that change config)."
 	echo
 }
 
@@ -4701,6 +4702,8 @@ case "$1" in
 		if [[ "$1" == "generate" ]]; then
 			shift;
 			config_generate
+		elif [[ "$1" == "reload" ]]; then
+			COMPOSE_FILE="" load_configuration
 		else
 			config_show "$@"
 		fi
