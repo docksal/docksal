@@ -426,6 +426,15 @@ parse_params ()
 	done
 }
 
+# Check if dir is empty
+# $1 - dir path
+# $2 - -a optional to also search for hidden files
+empty_dir ()
+{
+	[[ "$2" == "-a" ]] && _all=" -A " || _all=""
+	[[ -z "$(ls ${_all} $1 2>/dev/null)" ]]
+}
+
 #------------------------- Basics check functions -----------------------------
 
 is_docker_native ()
@@ -1034,7 +1043,7 @@ show_help ()
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
 	# Show list of custom commands and their help if available
-	if [[ ! -z "$(get_project_path)" ]] || [[ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then
+	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH" || ! empty_dir "$HOME/$DOCKSAL_ADDONS_PATH"; then
 		echo
 		echo-green "  Addons:"
 	fi
@@ -1046,7 +1055,7 @@ show_help ()
 	fi
 
 	# Show list of custom commands and their help if available
-	if [[ ! -z "$(get_project_path)" ]] || [[ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then
+	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH" || ! empty_dir "$HOME/$DOCKSAL_COMMANDS_PATH"; then
 		echo
 		echo-green "  Custom commands:"
 	fi
