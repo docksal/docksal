@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.16.3
+FIN_VERSION=1.17.0
 
 # Console colors
 red='\033[0;91m'
@@ -2207,7 +2207,6 @@ stop ()
 	# Do not do any checks for "stop all projects" action
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
 		_stop_containers "$@"
-		# TODO: set stopped state to all projects
 		return $?
 	fi
 
@@ -4447,77 +4446,43 @@ if [[ "$1" == "@"* ]]; then
 	if_failed_error "Could not navigate to directory linked by $1 alias"
 fi
 
-# TODO: figure out a better way to determine when to skip load_configuration
-# Load YML files and check for updates except for some cases
-if
-	[[ "$*" != "" ]] &&
-	[[ "$1" != "update" ]] &&
-	[[ "$1" != "install" ]] &&
-	[[ "$1" != "addon" ]] &&
-	[[ "$1" != "alias" ]] &&
-	[[ "$1" != "help" ]] &&
-	[[ "$1" != "version" ]] && [[ "$1" != "-v" ]] && [[ "$1" != "v" ]] &&
-	[[ "$1" != "sysinfo" ]] &&
-	[[ "$1" != "bash_comp_words" ]] &&
-	[[ "$1" != "ssh-add" ]] &&
-	[[ "$1" != "vm" ]] &&
-	[[ "$1" != "docker" ]] && [[ "$1" != "d" ]] &&
-	[[ "$1" != "docker-machine" ]] && [[ "$1" != "dm" ]] &&
-	[[ "$1" != "docker-compose" ]] && [[ "$1" != "dc" ]] &&
-	[[ "$1" != "debug" ]] &&
-	[[ "$1" != "exec-url" ]] &&
-	[[ "$1" != "rc" ]] && [[ "$1" != "run-cli" ]] &&
-	[[ "$1" != "cleanup" ]] &&
-	[[ "$*" != "config generate" ]] &&
-	[[ "$1" != "fix-smb" ]] &&
-	[[ "$*" != "reset dns" ]] &&
-	[[ "$*" != "reset proxy" ]] &&
-	[[ "$*" != "reset ssh-agent" ]] &&
-	[[ "$*" != "reset network" ]] &&
-	[[ "$*" != "reset system" ]] &&
-	[[ "$1" != "projects" ]] && [[ "$1" != "project" ]] && [[ "$1" != "pl" ]] &&
-	[[ "$1" != "run-cli" ]] &&
-	[[ "$1" != "rc" ]] &&
-	[[ "$1" != "hosts" ]] &&
-	[[ "$1" != "image" ]] &&
-	[[ "$1" != "project" ]] &&
-	[[ "$1" != "pl" ]] &&
-	[[ "$*" != "stop --all" ]] &&
-	[[ "$*" != "stop -a" ]];
-	then
-		load_configuration
-		[[ "$NO_UPDATES" != "1" ]] && check_for_updates
-fi
-
 # Parse command line parameters
 case "$1" in
 	bash_comp_words)
+		# no load_configuration
 		shift
 		bash_comp_words "$@"
 		;;
 	start)
+		load_configuration
+		check_for_updates
 		shift
 		up
 		;;
 	up)
 		# Force re-reading of configuration files
 		COMPOSE_FILE="" load_configuration
+		check_for_updates
 		shift
 		up
 		;;
 	stop)
 		shift
+		([[ "$1" != "-a" ]] && [[ "$1" != "--all" ]]) && load_configuration
 		stop "$@"
 		;;
 	restart)
+		load_configuration
 		shift
 		restart "$@"
 		;;
 	image)
+		# no load_configuration
 		shift
 		case "$1" in
 			save)
 				shift
+				[[ "$1" == "--project" ]] && load_configuration
 				image_save "$@"
 			;;
 			load)
@@ -4535,6 +4500,7 @@ case "$1" in
 		esac
 		;;
 	project)
+		# no load_configuration
 		shift
 		case "$1" in
 			create)
@@ -4558,29 +4524,35 @@ case "$1" in
 		esac
 		;;
 	status|ps)
+		load_configuration
+		check_for_updates
 		project_status
 		;;
 	# TODO: remove "projects" alias in July 2017
 	projects|pl)
+		# no load_configuration
+		check_for_updates
 		shift
 		project_list "$@"
 		;;
 	reset)
 		shift
+		# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
+		[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
 		reset "$@"
 		;;
 	remove|rm)
+		load_configuration
 		shift
 		remove "$@"
 		;;
 	vm)
+		# no load_configuration
 		shift
 		vm "$@"
 		;;
-	install)
-		echo -e "${yellow}fin install${NC} is deprecated, please use ${yellow}fin update${NC} instead"
-		;;
 	update)
+		# no load_configuration
 		shift
 		if [[ "$1" == "--system-images" ]]; then
 			update_system_images
@@ -4605,10 +4577,12 @@ case "$1" in
 		fi
 		;;
 	bash)
+		load_configuration
 		shift
 		_bash "$@"
 		;;
 	exec|run)
+		load_configuration
 		shift
 		if [ -f "$1" ]; then
 			# if a file is passed then run it inside cli container
@@ -4619,27 +4593,33 @@ case "$1" in
 		fi
 		;;
 	run-cli|rc)
+		# no load_configuration
 		shift
 		run_cli "$@"
 		;;
 	# TODO: Remove mysql and sql* commands in fin 2.0
 	mysql|sqlc)
+		load_configuration
 		shift
 		mysql "$@"
 		;;
 	mysql-list|sqls)
+		load_configuration
 		shift
 		mysql_list "$@"
 		;;
 	mysql-import|sqli)
+		load_configuration
 		shift
 		mysql_import "$@"
 		;;
 	mysql-dump|sqld)
+		load_configuration
 		shift
 		mysql_dump "$@"
 		;;
 	db)
+		load_configuration
 		shift
 		case "$1" in
 			cli)
@@ -4665,6 +4645,7 @@ case "$1" in
 		esac
 		;;
 	drush)
+		load_configuration
 		shift
 		# cd to docroot if alias was used and alias leads to project root
 		[[ "$USED_ALIAS" != "" ]] &&
@@ -4677,6 +4658,7 @@ case "$1" in
 		fi
 		;;
 	drupal)
+		load_configuration
 		shift
 		if [[ "$1" == "" ]]; then
 			_exec drupal
@@ -4685,6 +4667,7 @@ case "$1" in
 		fi
 		;;
 	wp)
+		load_configuration
 		shift
 		if [[ "$1" == "" ]]; then
 			_exec wp
@@ -4693,72 +4676,98 @@ case "$1" in
 		fi
 		;;
 	ssh-add)
+		# no load_configuration
 		shift
 		ssh_add "$@"
 		;;
 	docker|d)
+		# no load_configuration
 		shift
 		is_docker_running # exports env
 		check_winpty_found
 		${winpty} docker "$@"
 		;;
 	docker-compose|dc)
+		load_configuration
 		shift
 		is_docker_running # exports env
 		docker-compose "$@"
 		;;
 	docker-machine|dm)
+		# no load_configuration
 		shift
 		is_docker_running # exports env
 		docker-machine "$@"
 		;;
 	debug)
+		# no load_configuration
 		shift
 		eval "$@"
 		;;
 	exec-url)
+		# no load_configuration
 		shift
 		exec_url "$@"
 		;;
 	share)
+		load_configuration
 		ngrok_share
 		;;
 	cleanup)
+		# no load_configuration
+		check_for_updates
 		shift
 		cleanup $1
 		;;
 	-v | v)
+		# no load_configuration
+		check_for_updates
 		version --short
 		;;
 	version)
+		# no load_configuration
+		check_for_updates
 		version
 		;;
 	logs)
+		load_configuration
 		shift
 		logs "$@"
 		;;
 	"")
+		# no load_configuration
+		check_for_updates
 		show_help
 		;;
 	help)
+		# no load_configuration
+		check_for_updates
 		show_help "$2"
 		;;
 	sysinfo)
+		# no load_configuration
+		check_for_updates
 		sysinfo
 		;;
 	config)
+		# different load_configuration
 		shift
 		if [[ "$1" == "generate" ]]; then
-			shift;
+			# no load_configuration
+			shift
 			config_generate
 		else
+			load_configuration
+			check_for_updates
 			config_show "$@"
 		fi
 		;;
 	fix-smb)
+		# no load_configuration
 		smb_windows_fix
 		;;
 	alias)
+		# no load_configuration
 		shift
 		[[ "$*" == "" ]] && alias_list && exit
 		[[ "$*" == "list" ]] && alias_list && exit
@@ -4767,14 +4776,17 @@ case "$1" in
 		;;
 	# TODO: remove create-site in September 2017 in favor of project create
 	create-site)
+		# no load_configuration
 		echo -e "${yellow}Notice:${NC} create-site is deprecated and will be removed. Use ${yellow}fin project create${NC} instead."
 		project_create
 		;;
 	hosts)
+		# no load_configuration
 		shift
 		hosts "$@"
 		;;
 	addon|a)
+		# configuration will be loaded by end functions if needed
 		shift
 		addon "$@"
 		;;
