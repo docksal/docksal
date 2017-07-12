@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.16.2
+FIN_VERSION=1.16.3
 
 # Console colors
 red='\033[0;91m'
@@ -1509,6 +1509,10 @@ bash_comp_words ()
 		;;
 		config)
 			echo "generate show env"
+			exit 0
+			;;
+		db)
+			echo "import dump list cli"
 			exit 0
 			;;
 		fin)
@@ -3509,7 +3513,7 @@ mysql_import ()
 
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
-	local __database="${db:-default}"
+	local __database="${db:-${MYSQL_DATABASE:-default}}"
 	# /dev/fd/0 is the stdin stream for current script
 	# IMPORTANT: don't run "docker exec" with "-i" until value of /dev/fd/0 is used or it's value will be lost
 	local __input="${ARGV[0]:-/dev/fd/0}"
@@ -3584,7 +3588,7 @@ mysql_dump ()
 
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
-	local __database="${db:-default}"
+	local __database="${db:-${MYSQL_DATABASE:-default}}"
 	local __output="${ARGV[0]}"
 
 	if [[ "${ARGV[0]}" != "" ]]; then
