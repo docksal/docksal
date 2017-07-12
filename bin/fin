@@ -1521,8 +1521,29 @@ bash_comp_words ()
 				--filter 'label=com.docker.compose.service=web' \
 				--format '@{{.Label "com.docker.compose.project"}}' | xargs
 			)
+
+  		local project_commands_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
+  		local global_commands_path="$HOME/$DOCKSAL_COMMANDS_PATH"
+			local custom_commands
+
+			local project_custom_commands=$(ls "$project_commands_path" 2>/dev/null | tr "\n" " ")
+			if [ ! -z "$project_custom_commands" ]; then
+				for cmd_name in $(ls "$project_commands_path")
+				do
+					custom_commands+=" $cmd_name"
+				done
+			fi
+
+			local global_custom_commands=$(ls "$global_commands_path" 2>/dev/null | tr "\n" " ")
+			if [ ! -z "$global_custom_commands" ]; then
+				for cmd_name in $(ls "$global_commands_path")
+				do
+					custom_commands+=" $cmd_name"
+				done
+			fi
+
 			echo "$aliases $projects vm start stop restart status reset remove bash exec config create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
-			ssh-add update version cleanup sysinfo logs"
+			ssh-add update version cleanup sysinfo logs $custom_commands"
 			exit 0
 			;;
 		*)
