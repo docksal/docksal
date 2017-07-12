@@ -1043,6 +1043,7 @@ show_help ()
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
 	# Show list of custom commands and their help if available
+	PROJECT_ROOT="$(get_project_path)"
 	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH" || ! empty_dir "$HOME/$DOCKSAL_ADDONS_PATH"; then
 		echo
 		echo-green "  Addons:"
