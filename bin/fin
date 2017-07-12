@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.17.0
+FIN_VERSION=1.18.0
 
 # Console colors
 red='\033[0;91m'
@@ -1522,25 +1522,29 @@ bash_comp_words ()
 				--format '@{{.Label "com.docker.compose.project"}}' | xargs
 			)
 
-  		local project_commands_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
-  		local global_commands_path="$HOME/$DOCKSAL_COMMANDS_PATH"
+			local project_commands_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
+			local project_addons_path="$(get_project_path)/$DOCKSAL_ADDONS_PATH"
+			local global_commands_path="$HOME/$DOCKSAL_COMMANDS_PATH"
+			local global_addons_path="$HOME/$DOCKSAL_ADDONS_PATH"
 			local custom_commands
 
-			local project_custom_commands=$(ls "$project_commands_path" 2>/dev/null | tr "\n" " ")
-			if [ ! -z "$project_custom_commands" ]; then
-				for cmd_name in $(ls "$project_commands_path")
-				do
-					custom_commands+=" $cmd_name"
-				done
-			fi
+			for cmd_name in $(ls "$project_commands_path" 2>/dev/null | tr "\n" " "); do
+				custom_commands+=" $cmd_name"
+			done
 
-			local global_custom_commands=$(ls "$global_commands_path" 2>/dev/null | tr "\n" " ")
-			if [ ! -z "$global_custom_commands" ]; then
-				for cmd_name in $(ls "$global_commands_path")
-				do
+			for cmd_name in $(ls "$project_addons_path" 2>/dev/null); do
+				[[ -f "$project_addons_path/$cmd_name/$cmd_name" ]] &&
 					custom_commands+=" $cmd_name"
-				done
-			fi
+			done
+
+			for cmd_name in $(ls "$global_commands_path" 2>/dev/null | tr "\n" " "); do
+				custom_commands+=" $cmd_name"
+			done
+
+			for cmd_name in $(ls "$global_addons_path" 2>/dev/null); do
+				[[ -f "$global_addons_path/$cmd_name/$cmd_name" ]] &&
+					custom_commands+=" $cmd_name"
+			done
 
 			echo "$aliases $projects vm start stop restart status reset remove bash exec config create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
 			ssh-add update version cleanup sysinfo logs $custom_commands"
