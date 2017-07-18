@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.18.1
+FIN_VERSION=1.18.2
 
 # Console colors
 red='\033[0;91m'
@@ -3891,24 +3891,6 @@ load_configuration ()
 	check_docksal
 	# Use ":" as the path separator across the board (by default Mac and Linux use ":" as a separator, Windows uses ";").
 	export COMPOSE_PATH_SEPARATOR=':'
-	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
-	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
-	if [[ -f "$env_file" ]]; then
-		ENV_FILE="$env_file"
-		fix_crlf_warning "$env_file"
-		# Source and allexport variables in the .env file
-		set -a; source "$env_file"; set +a
-	fi
-
-	# Source local env file if it exist
-	# Allow using this with the pre-configured stacks by not checking docksal.env presence.
-	if [[ -f "$local_env_file" ]]; then
-			ENV_FILE="${ENV_FILE}:${local_env_file}"
-			fix_crlf_warning "$local_env_file"
-			# Source and allexport variables in the .env file
-			set -a; source "$local_env_file"; set +a
-	fi
-	export ENV_FILE
 
 	# Set COMPOSE_FILE unless it has been already set by user
 	if [[ "$COMPOSE_FILE" == "" ]]; then
@@ -3982,6 +3964,26 @@ load_configuration ()
 		export HOST_UID=$(id -u)
 		export HOST_GID=$(id -g)
 	fi
+
+	# Source env files in the very end take make all exported variables from above accessible.
+	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
+	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
+	if [[ -f "$env_file" ]]; then
+		ENV_FILE="$env_file"
+		fix_crlf_warning "$env_file"
+		# Source and allexport variables in the .env file
+		set -a; source "$env_file"; set +a
+	fi
+
+	# Source local env file if it exist
+	# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+	if [[ -f "$local_env_file" ]]; then
+			ENV_FILE="${ENV_FILE}:${local_env_file}"
+			fix_crlf_warning "$local_env_file"
+			# Source and allexport variables in the .env file
+			set -a; source "$local_env_file"; set +a
+	fi
+	export ENV_FILE
 }
 
 config_show ()
