@@ -4419,12 +4419,18 @@ else
 	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
 	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
 	if [[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]; then
-		export DOCKER_RUNNING="true"
 		# Use cached environment variables if possible
 		[[ -f "$CONFIG_MACHINES_ENV" ]] &&
 			eval $(cat "$CONFIG_MACHINES_ENV") ||
 			docker_machine_env
 	fi
+
+	if is_docker_running; then
+		export DOCKER_RUNNING="true"
+	else
+		export DOCKER_RUNNING="false"
+	fi
+
 	# current active machine folder
 	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
 	mkdir -p "$DOCKER_MACHINE_FOLDER"
