@@ -100,7 +100,7 @@ teardown() {
 
 	# Import mysql dump
     run fin mysql-import dump.sql --force
-    echo "$output" | grep "Truncating default database"
+    echo "$output" | grep "Truncating"
     echo "$output" | grep "Importing"
 
 	# Check that the site is available
@@ -113,7 +113,7 @@ teardown() {
 
 	# Import mysql dump
 	run fin mysql-import dump.sql --db-user="user" --db-password="user" --force
-    echo "$output" | grep "Truncating default database"
+    echo "$output" | grep "Truncating"
     echo "$output" | grep "Importing"
 
 	# Check that the site is available
@@ -125,8 +125,8 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	# Import mysql dump
-	run fin mysql-import dump.sql --db-user="wront-user" --db-password="wrong-password" --force
-    echo "$output" | grep "Truncating default database"
+	run fin mysql-import dump.sql --db-user="wrong-user" --db-password="wrong-password" --force
+    echo "$output" | grep "Truncating"
     echo "$output" | grep "Importing"
     echo "$output" | grep "Import failed"
 }
@@ -136,7 +136,7 @@ teardown() {
 
 	# Import mysql dump
 	run fin mysql-import dump.sql --db-user="user" --db-password="user" --db="nondefault" --force
-	echo "$output" | grep "Truncating nondefault database"
+	echo "$output" | grep "Truncating" | grep "nondefault"
 	echo "$output" | grep "Importing"
 	echo "$output" | grep "Import failed"
 }
