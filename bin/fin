@@ -3543,8 +3543,16 @@ mysql_import ()
 		echo-error "Can not read $__input" "Please check file path and permissions" && exit 1
 
 	local confirm=0
-	if [[ "$force" == "force" ]]; then
-		confirm=1
+	[[ "$force" == "force" ]] && confirm=1
+	# Use cat to pipe dump content by default
+	local pipe_cmd='cat'
+	# Show DB import progress if requested and pv binary is available
+	if [[ "$progress" == "progress" ]]; then
+		if (which 'pv' >/dev/null 2>&1); then
+			pipe_cmd='pv'
+		else
+			echo-yellow "Cannot display import progress: pv binary is needed, but missing."
+		fi
 	fi
 
 	#-- 1) RECREATE DATABASE WITH THE SAME CHARSET AND COLLATION
@@ -3584,14 +3592,14 @@ mysql_import ()
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	__mysql_command=$(echo "$__mysql_command" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
-	cat ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
+	${pipe_cmd} ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
-	# Check if import succeded or not and print results.
+	# Check if import succeeded or not and print results.
 	if [ $? -eq 0 ]; then
-		echo-rewrite-ok "Importing ${yellow}$(basename $__input)${NC}..."
+		echo-green "Done"
 		exit 0
 	else
-		echo-red "Import failed";
+		echo-red "Import failed"
 		exit 1
 	fi
 }
