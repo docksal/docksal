@@ -756,7 +756,7 @@ _start_containers ()
 {
 	check_docker_running
 	echo-green "Starting services..."
-	docker-compose up -d --remove-orphans && \
+	docker-compose up -d --remove-orphans --build && \
 		_healthcheck_wait && \
 		# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
 		_set_cli_uid && \
@@ -1011,6 +1011,7 @@ show_help ()
 	printh "status (ps)" "List project services"
 	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
 	printh "config [command]" "Show project configuration (See ${yellow}fin help config${NC} for generate)"
+	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
 
 	echo
 	printh "db <command>" "DB commands: import, dump, list, cli (${yellow}fin help db${NC})" "yellow"
@@ -4497,6 +4498,11 @@ case "$1" in
 		# no load_configuration
 		shift
 		bash_comp_words "$@"
+		;;
+	build)
+		load_configuration
+		shift
+		docker-compose build "$@"
 		;;
 	start)
 		load_configuration
