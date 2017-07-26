@@ -225,7 +225,7 @@ networks: {}
 services:
   cli:
     hostname: cli
-    image: docksal/cli:1.2-php7
+    image: docksal/cli:1.3-php7
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
@@ -236,7 +236,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: user
     hostname: db
-    image: docksal/db:1.0-mysql-5.5
+    image: docksal/db:1.1-mysql-5.6
   web:
     depends_on:
     - cli
@@ -267,7 +267,7 @@ volumes:
 <a name="php-version"></a>
 ## Switching PHP versions
 
-The PHP version is defined by the `cli` service. The default image used is `docksal/cli:1.2-php7` which uses PHP 7.
+The PHP version is defined by the `cli` service. The default image used is `docksal/cli:1.3-php7` which uses PHP 7.
 
 A service image name consists of two parts: a docker image name and a tag.
 Here `docksal/cli` is the name of the docker image, while `1.2-php7` is the image tag.
@@ -292,7 +292,7 @@ version: "2.1"
 
 services:
   cli:
-    image: docksal/cli:1.2-php5
+    image: docksal/cli:1.3-php5
 ```
 
 `docksal-local.yml` will append or modify the configuration that was loaded before it, regardless of whether it was 
@@ -312,7 +312,7 @@ An example section of a `docksal.yml` file that describes the `cli` service and 
 services:
   cli:
     hostname: cli
-    image: docksal/cli:1.2-php5
+    image: docksal/cli:1.3-php5
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy

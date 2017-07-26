@@ -27,15 +27,15 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 
 ```bash
-CLI_IMAGE='docksal/cli:1.2-php5'
+CLI_IMAGE='docksal/cli:1.3-php5'
 ```
 
 Remember to run `fin up` to apply the configuration.
 
 Available images:
 
-- PHP 5 - `docksal/cli:1.2-php5`
-- PHP 7 - `docksal/cli:1.2-php7`
+- PHP 5 - `docksal/cli:1.3-php5`
+- PHP 7 - `docksal/cli:1.3-php7`
 
 For projects using a custom stack configuration check [here](../advanced/stack-config.md#php-version).
 
@@ -46,7 +46,7 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `DB_IMAGE` variable in `.docksal/docksal.env`.
 
 ```bash
-DB_IMAGE='docksal/db:1.0-mysql-5.5'
+DB_IMAGE='docksal/db:1.1-mysql-5.6'
 ```
 
 Remember to run `fin up` to apply the configuration.
@@ -58,9 +58,9 @@ Remember to run `fin up` to apply the configuration.
 
 Available images:
 
-- MySQL 5.5 - `docksal/db:1.0-mysql-5.5`
-- MySQL 5.6 - `docksal/db:1.0-mysql-5.6`
-- MySQL 5.7 - `docksal/db:1.0-mysql-5.7`
-- MySQL 8.0 - `docksal/db:1.0-mysql-8.0`
+- MySQL 5.5 - `docksal/db:1.1-mysql-5.5`
+- MySQL 5.6 - `docksal/db:1.1-mysql-5.6`
+- MySQL 5.7 - `docksal/db:1.1-mysql-5.7`
+- MySQL 8.0 - `docksal/db:1.1-mysql-8.0`
 
 For projects using a custom stack configuration check [here](../advanced/stack-config.md#mysql-version).

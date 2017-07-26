@@ -132,7 +132,7 @@ ERROR: error pulling image configuration: Get https://dseasb33srnrn.cloudfront.n
 ```
 
 ```
-Pulling db (docksal/db:1.0-mysql-5.5)...
+Pulling db (docksal/db:1.1-mysql-5.6)...
 ERROR: Get https://registry-1.docker.io/v2/: dial tcp: lookup registry-1.docker.io on 10.0.2.3:53: server misbehaving
 ```
 
