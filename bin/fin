@@ -4868,6 +4868,16 @@ case "$1" in
 		# If it has windows line endings, then fix it
 		fix_crlf_warning "$addon"
 
+		# Read host/cli execution settings
+		_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
+
 		shift
-		exec "$addon" "$@"
+		if [[ "$_exec_target" == "cli" ]]; then
+			# Replace host addon path with the matching path inside cli
+			# "\$PROJECT_ROOT" will be resolved in cli to /var/www
+			cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
+			fin exec "$cli_addon_path $@"
+		else
+			exec "$addon" "$@"
+		fi
 esac
