@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.18.2
+FIN_VERSION=1.18.3
 
 # Console colors
 red='\033[0;91m'
@@ -2219,6 +2219,10 @@ up ()
 	# This should not be the last command in a function as it will exit 1 on non Linux systems.
 	is_linux && ssh_add
 	check_project_unique
+
+	# Temporary workaround for NFS issues on Mac
+	# See https://github.com/docksal/docksal/issues/265
+	is_mac && find . -type d > /dev/null 2>&1
 
 	_start_containers
 }
