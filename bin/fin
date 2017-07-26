@@ -1338,6 +1338,7 @@ show_help_db ()
 	echo
 	echo-green "Examples:"
 	printh "fin db import ~/dump.sql" "Import from dump.sql file"
+	printh "fin db import --progress ~/dump.sql" "Import from dump.sql file showing import progress"
 	printh "cat dump.sql | fin db import" "Import dump from stdin into default database"
 	printh "fin db dump ~/dump.sql" "Export default database into dump.sql"
 	printh "fin db dump --db=drupal" "Export database 'drupal' dump into stdout"
