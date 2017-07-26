@@ -1,5 +1,67 @@
 # Changelog
 
+# 1.4.0 (2017-07-27)
+
+## Breaking changes
+
+For custom configurations (using `docksal.yml`), if you are getting:
+
+```bash
+ERROR: Named volume "host_home:/.home:ro" is used in service "cli" but no declaration was found in the volumes section.
+```
+
+Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin up`.
+
+## New software versions
+
+- docker v17.06.0-ce
+- docker-compose v1.14.0
+- docker-machine v0.12.0
+- VirtualBox v5.1.22
+- winpty-0.4.3-cygwin-2.8.0-ia32
+- fin v1.20.0
+- Stack version changes
+  - `db`: [docksal/db:1.1](https://github.com/docksal/service-db/releases/tag/v1.1.0)
+  - `cli`: [docksal/cli:1.3-php5](https://github.com/docksal/service-cli/releases/tag/v1.3.0) and [docksal/cli:1.3-php7](https://github.com/docksal/service-cli/releases/tag/v1.3.0-php7)
+
+## New Features
+
+- Implemented a Docker healthcheck for cli
+  - Requires docksal/cli v1.3.0+. Falls back to waiting for 10s for the container to become ready for older versions.
+- Addons (experimental)
+  - Ability to install and remove addons (custom commands) per project or globally from statically defined repo docksal/addons
+- Prevent NFS conflicts on macOS. (#133)
+  - `DOCKSAL_NFS_PATH` can be used to override Docksal projects folder which effectively serves as NFS mount point. 
+- Added support for simple static site creation in `fin project create` (#177)
+- Added custom commands to bash autocomplete (#232)
+- `fin sql-import --progress`
+  - `--progress` displays import progress using `pv` (if installed on the host)
+- `fin build` - support for `docker-compose build` workflow
+- Support for executing custom commands in `cli` instead of host
+  - Add `#: exec_target = cli` in the header of the custom command to tell fin to execute the command within `cli` via `fin exec`
+
+## Changes and improvements
+
+- Use `nocopy` mode for `project_root` volume
+  - This tells Docker to not merge the content of the volume with the destination directory in the container (if one is not empty)
+- SSH Agent usage refactoring
+  - Removed dependency on the host's `$HOME` directory mount.
+- `host_home` volume is deprecated and removed from stack files
+  - **This is a breaking change!**
+  - See instructions above on the necessary adjustments to `docksal.yml`. 
+- Ability to stop at restart certain service container, e.g. `fin restart db`
+- Fix mysql import for large database (#279)
+  - Database truncation was rewritten. Now database will be dropped and re-created. Should work faster and more reliable.
+- Mysql import and dump functions will properly read `MYSQL_DATABASE` environment variable (#276)
+- Temporary workaround for NFS issues on Mac (#265)
+- Other fixes and improvements 
+
+## Documentation
+
+- Updated Docker for Mac, Solr, Memcached, Behat and Blackfire docs
+- Update troubleshooting.md with mysql memory edge case
+
+
 # 1.3.1 (2017-06-02)
 
 ## New software versions 
