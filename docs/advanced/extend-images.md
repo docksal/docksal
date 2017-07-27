@@ -1,7 +1,6 @@
 # Extending stock Docksal images
 
-!!! warning Think contributing first and only then forking
-
+!!! warning "Think contributing first and only then forking"
     If you find something is missing or can be improved in the stock Docksal Docker images and you believe others would 
     benefit from it too, then go ahead and submit an feature request or a PR for the respective repo.
     By using customized images you do not break any warranties, however this will make it more difficult to maintain, 
@@ -93,8 +92,8 @@ services:
 
 Replace `<service-name>` with the actual service name you are extending, e.g. `cli`.
 
-If there is already a custom `docksal.yml` file in the project repo, then make the corresponding changes in it as shown above.  
-Note: The existing `image` attribute should be replaced.
+If there is already a custom `docksal.yml` file in the project repo, then make the corresponding changes in it as shown 
+above. Note: The existing `image` attribute should be replaced.
 
 Following the previous example, here's what it would look like for `cli`:
 
