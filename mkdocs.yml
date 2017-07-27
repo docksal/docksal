@@ -45,6 +45,7 @@ pages:
       - VM resources: advanced/vm.md
       - Networking: advanced/networking.md
       - DNS resolver: advanced/dns-resolver.md
+      - Extending stock images: advanced/extend-images.md
     - SSH agent: advanced/ssh-agent.md
     - Database:
       - Database access: advanced/db-access.md

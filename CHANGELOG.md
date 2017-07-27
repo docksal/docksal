@@ -59,7 +59,8 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin up`.
 ## Documentation
 
 - Updated Docker for Mac, Solr, Memcached, Behat and Blackfire docs
-- Update troubleshooting.md with mysql memory edge case
+- Updated troubleshooting.md with mysql memory edge case
+- Added docs on extending the official Docksal images
 
 
 # 1.3.1 (2017-06-02)
