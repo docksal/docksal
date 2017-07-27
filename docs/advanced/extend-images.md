@@ -1,6 +1,7 @@
 # Extending stock Docksal images
 
 !!! warning Think contributing first and only then forking
+
     If you find something is missing or can be improved in the stock Docksal Docker images and you believe others would 
     benefit from it too, then go ahead and submit an feature request or a PR for the respective repo.
     By using customized images you do not break any warranties, however this will make it more difficult to maintain, 
