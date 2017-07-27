@@ -6,7 +6,6 @@ extra_css:
   - _css/extra.css
 markdown_extensions:
   - markdown.extensions.admonition
-  - markdown.extensions.nl2br
 pages:
   - Home: index.md
   - Getting started:
