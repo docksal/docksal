@@ -17,6 +17,8 @@ services:
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
+      - APACHE_BASIC_AUTH_USER
+      - APACHE_BASIC_AUTH_PASS
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}

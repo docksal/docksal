@@ -24,6 +24,8 @@ services:
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
+      - APACHE_BASIC_AUTH_USER
+      - APACHE_BASIC_AUTH_PASS
     depends_on:
       - cli
     dns:
@@ -36,9 +38,6 @@ services:
     image: docksal/db:1.1-mysql-5.6
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
-    volumes:
-      # Project root volume
-      - project_root:/var/www:ro,nocopy
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-user}
@@ -59,6 +58,8 @@ services:
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
     environment:
+      - HOST_UID
+      - HOST_GID
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
     dns:
       - ${DOCKSAL_DNS1}
