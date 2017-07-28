@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.20.0
+FIN_VERSION=1.20.1
 
 # Console colors
 red='\033[0;91m'
@@ -3909,8 +3909,8 @@ load_global_configuration ()
 load_configuration ()
 {
 	check_docksal
-	# Use ":" as the path separator across the board (by default Mac and Linux use ":" as a separator, Windows uses ";").
-	export COMPOSE_PATH_SEPARATOR=':'
+	# Mac and Linux use ":"" as a separator, Windows uses ";"
+	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
 	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
 	if [[ -f "$env_file" ]]; then
@@ -3923,7 +3923,7 @@ load_configuration ()
 	# Source local env file if it exist
 	# Allow using this with the pre-configured stacks by not checking docksal.env presence.
 	if [[ -f "$local_env_file" ]]; then
-			ENV_FILE="${ENV_FILE}:${local_env_file}"
+			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_env_file}"
 			fix_crlf_warning "$local_env_file"
 			# Source and allexport variables in the .env file
 			set -a; source "$local_env_file"; set +a
@@ -3941,7 +3941,7 @@ load_configuration ()
 
 		# Include both the stack and the project yml files if both exist
 		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
-			COMPOSE_FILE="${stack_yml_file}:${yml_file}"
+			COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
 		# Otherwise try including only one that exists
 		else
 			[[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
@@ -3956,7 +3956,7 @@ load_configuration ()
 			# Include docksal-local.yml (if exists)
 			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
 			local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
-			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}:${local_yml_file}"
+			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
 		# Include a volumes yml if requested. Use bind mount for volumes by default.
@@ -3964,7 +3964,7 @@ load_configuration ()
 		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
 			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 			if [[ -f "$volumes_yml_file" ]]; then
-				COMPOSE_FILE="${volumes_yml_file}:${COMPOSE_FILE}"
+				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 			else
 				echo-error "Volumes definition not found in ${volumes_yml_file}." \
 					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
@@ -4012,9 +4012,10 @@ config_show ()
 	# echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
 	echo "COMPOSE_PROJECT_NAME_SAFE: ${COMPOSE_PROJECT_NAME_SAFE}"
 	# Replace separators with new lines
-	echo -e "COMPOSE_FILE:\n$(echo ${COMPOSE_FILE} | tr ':' '\n')"
+	local SEPARATOR=':'; is_windows && SEPARATOR=';'
+	echo -e "COMPOSE_FILE:\n$(echo ${COMPOSE_FILE} | tr ${SEPARATOR} '\n')"
 	[[ "$ENV_FILE" != "" ]] &&
-		echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ':' '\n')"
+		echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
 	echo
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
