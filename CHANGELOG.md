@@ -21,6 +21,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin up`.
 - winpty-0.4.3-cygwin-2.8.0-ia32
 - fin v1.20.0
 - Stack version changes
+  - `web`: [docksal/web:2.0-apache2.2](https://github.com/docksal/service-web/releases/tag/v2.0.0) and [docksal/web:2.0-apache2.4](https://github.com/docksal/service-web/releases/tag/v2.0.0)
   - `db`: [docksal/db:1.1](https://github.com/docksal/service-db/releases/tag/v1.1.0)
   - `cli`: [docksal/cli:1.3-php5](https://github.com/docksal/service-cli/releases/tag/v1.3.0) and [docksal/cli:1.3-php7](https://github.com/docksal/service-cli/releases/tag/v1.3.0-php7)
 
