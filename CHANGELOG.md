@@ -1,6 +1,6 @@
 # Changelog
 
-# 1.4.0 (2017-07-27)
+# 1.4.0 (2017-08-03)
 
 ## Breaking changes
 
@@ -19,9 +19,10 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin up`.
 - docker-machine v0.12.0
 - VirtualBox v5.1.22
 - winpty-0.4.3-cygwin-2.8.0-ia32
-- fin v1.20.0
-- Stack version changes
-  - `web`: [docksal/web:2.0-apache2.2](https://github.com/docksal/service-web/releases/tag/v2.0.0) and [docksal/web:2.0-apache2.4](https://github.com/docksal/service-web/releases/tag/v2.0.0)
+- fin v1.21.0
+- System and stack images updates
+  - `vhost-proxy`: [docksal/vhost-proxy:1.1](https://github.com/docksal/service-vhost-proxy/releases/tag/v1.1.0) 
+  - `web`: [docksal/web:2.0-apache2.2](https://github.com/docksal/service-web/releases/tag/v2.0.1) and [docksal/web:2.0-apache2.4](https://github.com/docksal/service-web/releases/tag/v2.0.1)
   - `db`: [docksal/db:1.1](https://github.com/docksal/service-db/releases/tag/v1.1.0)
   - `cli`: [docksal/cli:1.3-php5](https://github.com/docksal/service-cli/releases/tag/v1.3.0) and [docksal/cli:1.3-php7](https://github.com/docksal/service-cli/releases/tag/v1.3.0-php7)
 
@@ -55,6 +56,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin up`.
   - Database truncation was rewritten. Now database will be dropped and re-created. Should work faster and more reliable.
 - Mysql import and dump functions will properly read `MYSQL_DATABASE` environment variable (#276)
 - Temporary workaround for NFS issues on Mac (#265)
+- Fixed the install/update process handling when Docker is already installed (#298)
 - Other fixes and improvements 
 
 ## Documentation

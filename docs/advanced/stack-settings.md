@@ -27,7 +27,7 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 
 ```bash
-CLI_IMAGE='docksal/cli:1.3-php5'
+CLI_IMAGE='docksal/cli:1.3-php7'
 ```
 
 Remember to run `fin up` to apply the configuration.
