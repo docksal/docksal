@@ -107,8 +107,9 @@ _stop ()
 		# Skip containers with empty values
 		[[ "$project_name" == "" ]] && continue
 
-		# See if there was any recent container activity (entries in container logs)
-		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $PROJECT_INACTIVITY_TIMEOUT $container_id)" != "" ]]; then
+		# See if there was any recent container activity (entries in the container logs)
+		# docker log does honor stdout vs stderr outputs. We route everything to stdout to do the comparison (2>&1)
+		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $PROJECT_INACTIVITY_TIMEOUT $container_id 2>&1)" != "" ]]; then
 			# Active
 			echo "Project: $project_name is active. Skipping."
 		else
