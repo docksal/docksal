@@ -16,11 +16,11 @@ teardown() {
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
 #SKIP=1
 
-@test "Proxy container is up and using the \"${IMAGE_VHOST_PROXY}\" image" {
+@test "Proxy container is up and using the \"${IMAGE_NAME}\" image" {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin docker ps --filter "name=docksal-vhost-proxy" --format "{{ .Image }}"
-	[[ $output =~ "${IMAGE_VHOST_PROXY}" ]]
+	[[ $output =~ "${IMAGE_NAME}" ]]
 }
 
 @test "Proxy returns 404 for a non-existing virtual-host" {
