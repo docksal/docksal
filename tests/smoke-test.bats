@@ -40,7 +40,7 @@ teardown() {
 	[[ $output =~ "robots.txt" ]]
 }
 
-@test "Proxy stopped project containers after \"${PROJECT_INACTIVITY_TIMEOUT}\" of inactivity" {
+@test "Proxy stops project containers after \"${PROJECT_INACTIVITY_TIMEOUT}\" of inactivity" {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
@@ -56,7 +56,7 @@ teardown() {
 	[[ $(fin docker network ls -q --filter "name=drupal7_default" | wc -l) =~ "0" ]]
 }
 
-@test "Proxy can start an existing stopped project" {
+@test "Proxy starts an existing stopped project" {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
@@ -66,7 +66,7 @@ teardown() {
 	[[ $output =~ "Waking up the daemons..." ]]
 }
 
-@test "Proxy started the project within 15 seconds" {
+@test "Proxy starts the project within 15 seconds" {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
@@ -78,7 +78,7 @@ teardown() {
 	[[ $output =~ "robots.txt" ]]
 }
 
-@test "Proxy can start an existing stopped project by https" {
+@test "Proxy starts an existing stopped project via HTTPS" {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
@@ -92,7 +92,7 @@ teardown() {
 	[[ $output =~ "Waking up the daemons..." ]]
 }
 
-@test "Proxy started the project by https within 15 seconds" {
+@test "Proxy starts the project via HTTPS within 15 seconds" {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
@@ -104,7 +104,7 @@ teardown() {
 	[[ $output =~ "robots.txt" ]]
 }
 
-@test "Proxy cleaned up projects after \"${PROJECT_DANGLING_TIMEOUT}\" of inactivity" {
+@test "Proxy cleans up projects after \"${PROJECT_DANGLING_TIMEOUT}\" of inactivity" {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
@@ -122,7 +122,7 @@ teardown() {
 	[[ ! -d "/projects/drupal7" ]]
 }
 
-@test "Proxy did not clean up permanent projects" {
+@test "Proxy does not clean up permanent projects" {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
