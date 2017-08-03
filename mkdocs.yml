@@ -6,7 +6,6 @@ extra_css:
   - _css/extra.css
 markdown_extensions:
   - markdown.extensions.admonition
-  - markdown.extensions.nl2br
 pages:
   - Home: index.md
   - Getting started:
@@ -22,6 +21,7 @@ pages:
   - Docksal Fin:
     - fin: fin/fin.md
     - Custom commands: fin/custom-commands.md
+    - Folder aliases: fin/aliases.md
   - Tools and integrations:
     - Apache Solr: tools/apache-solr.md
     - Behat: tools/behat.md
@@ -45,6 +45,7 @@ pages:
       - VM resources: advanced/vm.md
       - Networking: advanced/networking.md
       - DNS resolver: advanced/dns-resolver.md
+      - Extending stock images: advanced/extend-images.md
     - SSH agent: advanced/ssh-agent.md
     - Database:
       - Database access: advanced/db-access.md
@@ -53,5 +54,6 @@ pages:
     - Web Server:
       - HTTP Basic Authentication: advanced/web-http-auth.md
       - Web server logs: advanced/web-logs.md
-    - Docksal volumes: advanced/volumes.md
+    - File sharing: advanced/file-sharing.md
+    - Docker volumes: advanced/volumes.md
     - Stats and analytics: advanced/analytics.md

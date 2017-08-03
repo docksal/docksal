@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.10.0
+FIN_VERSION=1.22.0
 
 # Console colors
 red='\033[0;91m'
@@ -46,15 +46,15 @@ is_mac ()
 
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
-REQUIREMENTS_DOCKER='17.04.0-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.12.0'
-REQUIREMENTS_DOCKER_MACHINE='0.10.0'
-REQUIREMENTS_VBOX='5.1.18'
-REQUIREMENTS_WINPTY='0.4.2'
-REQUIREMENTS_WINPTY_CYGWIN='2.6.1'
+REQUIREMENTS_DOCKER='17.06.0-ce'
+REQUIREMENTS_DOCKER_COMPOSE='1.14.0'
+REQUIREMENTS_DOCKER_MACHINE='0.12.0'
+REQUIREMENTS_VBOX='5.1.22'
+REQUIREMENTS_WINPTY='0.4.3'
+REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.18/VirtualBox-5.1.18-114002-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.18/VirtualBox-5.1.18-114002-Win.exe"
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.22/VirtualBox-5.1.22-115126-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.22/VirtualBox-5.1.22-115126-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
@@ -67,8 +67,6 @@ if is_windows; then
 	# Cannot use cygpath_abs_unix here as it's being defined much later
 	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
-# DO NOT REMOVE HOST_HOME. It is used in some stack yml files and is necessary on Windows.
-export HOST_HOME="$HOME"
 OLD_CONFIG_DIR="$HOME/.drude"
 CONFIG_DIR="$HOME/.docksal"
 CONFIG_ENV="$CONFIG_DIR/docksal.env"
@@ -96,6 +94,8 @@ mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
 
 # Where custom commands live (relative path)
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
+# Where addons live (relative path)
+DOCKSAL_ADDONS_PATH=".docksal/addons"
 
 # Network settings
 ## Docker for Mac/Win
@@ -122,8 +122,9 @@ PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT}"
 
 DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
-DEFAULT_MACHINE_VBOX_RAM='1024' #mb
+DEFAULT_MACHINE_VBOX_RAM='2048' #mb
 DEFAULT_MACHINE_VBOX_HDD='50000' #mb
+
 # Stats
 # fin sends a minimal ping with OS and fin version number
 DOCKSAL_STATS_TID='UA-93724315-1'
@@ -137,6 +138,7 @@ URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
+URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
 URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
@@ -147,9 +149,9 @@ URL_STACKS_VOLUMES_BIND="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-bind.yml"
 URL_STACKS_VOLUMES_NFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-nfs.yml"
 URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-unison.yml"
 
-URL_DOCKER_MAC="https://get.docker.com/builds/Darwin/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
-URL_DOCKER_WIN="https://get.docker.com/builds/Windows/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_WIN="https://download.docker.com/win/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
@@ -161,7 +163,7 @@ URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v$
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.0}
-IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.0}
+IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.1}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.0}
 
 #---------------------------- Helper functions --------------------------------
@@ -326,6 +328,32 @@ get_current_relative_path ()
 	fi
 }
 
+# Returns addon path if can find it in project or global addons. Otherwise returns empty string
+# $1 - addon name
+get_addon_script ()
+{
+	ADDON_ROOT="$(get_project_path)/$DOCKSAL_ADDONS_PATH"
+	# First search project addons dir for the addon
+	command_script="$ADDON_ROOT/$1/$1"
+	# Then search global docksal addons directory for the addon
+	[ ! -f "$command_script" ] && ADDON_ROOT="$command_script" && command_script="$HOME/$DOCKSAL_ADDONS_PATH/$1/$1"
+	# If addon was found then return it
+	[ -f "$command_script" ] && export ADDON_ROOT && echo "$command_script"
+}
+
+# Returns command path if can find it in project or global commands. Otherwise returns empty string
+# $1 - command name
+get_command_script ()
+{
+	COMMANDS_ROOT="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
+	# First search project commands folder for the command
+	command_script="$COMMANDS_ROOT/$1"
+	# Then search global docksal commands directory for the command
+	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
+	# If command was found then return it
+	[ -f "$command_script" ] && echo "$command_script"
+}
+
 # Get mysql connection string
 get_mysql_connect ()
 {
@@ -337,6 +365,7 @@ get_mysql_connect ()
 # Get container id by service name
 # @param $1 docker compose service name (e.g. cli)
 # @return docker container id
+# TODO: deprecate in favor of ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 get_container_id ()
 {
 	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
@@ -395,6 +424,15 @@ parse_params ()
 		fi
 		shift
 	done
+}
+
+# Check if dir is empty
+# $1 - dir path
+# $2 - -a optional to also search for hidden files
+empty_dir ()
+{
+	[[ "$2" == "-a" ]] && _all=" -A " || _all=""
+	[[ -z "$(ls ${_all} $1 2>/dev/null)" ]]
 }
 
 #------------------------- Basics check functions -----------------------------
@@ -469,6 +507,17 @@ is_docker_running ()
 	# Check if docker is running via docker info.
 	# This operation is instant even if docker is not running (assuming a socket is used).
 	which docker >/dev/null 2>&1 && docker info >/dev/null || return 1
+}
+
+is_docksal_running ()
+{
+	local system_services=$(docker ps --filter "label=io.docksal.group=system" --format '{{.Names}}' 2>/dev/null)
+	# Assume Docksal is running when the following system services are running
+	(echo "$system_services" | grep 'docksal-vhost-proxy' >/dev/null 2>&1) || return 1
+	(echo "$system_services" | grep 'docksal-ssh-agent' >/dev/null 2>&1) || return 1
+	(echo "$system_services" | grep 'docksal-dns' >/dev/null 2>&1) || return 1
+
+	return 0
 }
 
 # Check whether we have a working tty.
@@ -689,18 +738,21 @@ check_project_unique ()
 
 # Yes/no confirmation dialog with an optional message
 # @param $1 confirmation message
+# @param $2 --no-exit
 _confirm ()
 {
 	# Skip checks if not running interactively (not a tty or not on Windows)
 	if ! is_tty; then return 0; fi
 
 	while true; do
-		read -p "$1 [y/n]: " answer
+		echo -en "$1 "
+		read -p "[y/n]: " answer
 		case "$answer" in
 			[Yy]|[Yy][Ee][Ss] )
 				break
 				;;
 			[Nn]|[Nn][Oo] )
+				[[ "$2" == "--no-exit" ]] && return 1
 				exit 1
 				;;
 			* )
@@ -715,10 +767,8 @@ _start_containers ()
 {
 	check_docker_running
 	echo-green "Starting services..."
-	docker-compose up -d --remove-orphans && \
-		# Give cli some time to start. Necessary for UID/GID overrides, optionally enabling xdebug/etc.
-		# TODO: replace this with a Docker native health check
-		sleep 2 && \
+	docker-compose up -d --remove-orphans --build && \
+		_healthcheck_wait && \
 		# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
 		_set_cli_uid && \
 		_vhost_proxy_connect
@@ -755,12 +805,12 @@ _stop_containers ()
 
 	check_docksal_environment
 	echo-green "Stopping services..."
-	docker-compose stop
+	docker-compose stop "$@"
 }
 
 _restart_containers ()
 {
-	_stop_containers && _start_containers
+	_stop_containers "$@" && _start_containers
 }
 
 # @param $1 container_name
@@ -856,6 +906,55 @@ _vhost_proxy_connect ()
 	fi
 }
 
+# Checks container health status (if available)
+# Relies on healchecks introduced in docksal/cli v1.3.0+, uses `sleep` as a fallback
+# @param $1 container id/name
+_healthcheck ()
+{
+	local health_status
+	health_status=$(docker inspect --format='{{json .State.Health.Status}}' "$1" 2>/dev/null)
+
+	# Wait for 5s then exit with 0 if a container does not have a health status property
+	# Necessary for backward compatibility with images that do not support health checks
+	if [[ $? != 0 ]]; then
+		echo "Waiting 10s for container to start..."
+		sleep 10
+		return 0
+	fi
+
+	# If it does, check the status
+	echo $health_status | grep '"healthy"' >/dev/null 2>&1
+}
+
+# Waits for containers to become healthy
+# For reasoning why we are not using  `depends_on` `condition` see here:
+# https://github.com/docksal/docksal/issues/225#issuecomment-306604063
+# TODO: make this universal. Currently hardcoded for cli only.
+_healthcheck_wait ()
+{
+	# Wait for cli to become ready by watching its health status
+	local container_name="${COMPOSE_PROJECT_NAME_SAFE}_cli_1"
+	local delay=5
+	local timeout=30
+	local elapsed=0
+
+	until _healthcheck "$container_name"; do
+		echo "Waiting for $container_name to become ready..."
+		sleep "$delay";
+
+		# Give the container 30s to become ready
+		elapsed=$((elapsed + delay))
+		if ((elapsed > timeout)); then
+			echo-error "$container_name heathcheck failed" \
+				"Container did not enter a healthy state within the expected amount of time." \
+				"Try ${yellow}fin restart${NC}"
+			exit 1
+		fi
+	done
+
+	return 0
+}
+
 #------------------------------ Help functions --------------------------------
 
 # Nicely prints command help
@@ -898,28 +997,24 @@ show_help ()
 			show_help_$1
 			exit
 		fi
-		# Check for custom command file
-		# Try global command
-		local _command="$global_commands_path/$1"
-		# But if local command exists then override
-		[ -f "$project_commands_path/$1" ] && _command="$project_commands_path/$1"
-		#
-		if [ -f "$_command" ]; then
+
+		# Search for addons
+		addon="$(get_addon_script $1)"
+		# If no such addon then search for command
+		[[ ! -f "$addon" ]] && addon="$(get_command_script $1)"
+
+		if [ -f "$addon" ]; then
 			echo -en "${green}fin $1${NC} - "
-			local _help_contents=$(cat "$_command" | grep '^##' | sed "s/^##[ ]*//g")
+			local _help_contents=$(cat "$addon" | grep '^##' | sed -E "s/^##[ ]?//g")
 			echo -e "$_help_contents"
 			echo
 			exit
-		fi
+			fi
 	fi
 
 	printh "Docksal Fin v$FIN_VERSION commands:" "" "green"
 
-	if is_linux; then
-		printh "start (up)" "Start project services"
-	else
-		printh "start (up)" "Start project services"
-	fi
+	printh "start (up)" "Start project services ('up' forces re-read of configuration)"
 	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects)"
 	printh "restart" "Restart project services"
 	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
@@ -927,6 +1022,7 @@ show_help ()
 	printh "status (ps)" "List project services"
 	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
 	printh "config [command]" "Show project configuration (See ${yellow}fin help config${NC} for generate)"
+	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
 
 	echo
 	printh "db <command>" "DB commands: import, dump, list, cli (${yellow}fin help db${NC})" "yellow"
@@ -946,52 +1042,102 @@ show_help ()
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
 
 	echo
-	printh "share" "Create temporary public url for current project using ngrok"
+	printh "addon <name>" "Addons management commands"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
+	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
+	printh "share" "Create temporary public url for current project using ngrok"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
-	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
-	printh "hosts [command]" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
+	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
 	printh "sysinfo" "Show diagnostics information for bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
 	# Show list of custom commands and their help if available
-	if [ ! -z "$(get_project_path)" ]; then
-		show_help_list_of_custom_commands 'project'
+	load_global_configuration
+	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH" || ! empty_dir "$HOME/$DOCKSAL_ADDONS_PATH"; then
+		echo
+		echo-green "  Addons:"
 	fi
-	if [ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]; then
-		show_help_list_of_custom_commands 'global'
+	if [[ ! -z "$(get_project_path)" ]]; then
+		show_help_list_addons_in_help 'project'
+	fi
+	if [[ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then
+		show_help_list_addons_in_help 'global'
+	fi
+
+	# Show list of custom commands and their help if available
+	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH" || ! empty_dir "$HOME/$DOCKSAL_COMMANDS_PATH"; then
+		echo
+		echo-green "  Custom commands:"
+	fi
+	if [[ ! -z "$(get_project_path)" ]]; then
+		show_help_list_commands_in_help 'project'
+	fi
+	if [[ ! -z "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then
+		show_help_list_commands_in_help 'global'
 	fi
 
 	echo
 }
 
 # param $1 - 'project' or 'global'
-show_help_list_of_custom_commands ()
+show_help_list_commands_in_help ()
 {
-	local _path
+	local addons_path
 	if [[ "$1" == 'project' ]]; then
-		_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
+		addons_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
 		# avoid taking global .docksal folder for project one
-		if [[ "$_path" == "$HOME/$DOCKSAL_COMMANDS_PATH" ]]; then return; fi
+		[[ "$addons_path" == "$HOME/$DOCKSAL_COMMANDS_PATH" ]] && return
 	else
-		_path="$HOME/$DOCKSAL_COMMANDS_PATH"
+		addons_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	fi
 
-	custom_commands_list=$(ls "$_path" 2>/dev/null | tr "\n" " ")
-	if [ ! -z "$custom_commands_list" ]; then
-		local word
-		[ "$1" == 'project' ] && word='Project' || word='Global'
-		echo
-		echo-green "  $word addons:";
-		for cmd_name in $(ls "$_path")
+	local addons_list=$(ls "$addons_path" 2>/dev/null | tr "\n" " ")
+	if [ ! -z "$addons_list" ]; then
+		local scope
+		for cmd_name in $(ls "$addons_path")
 		do
+			local g
+			[[ "$1" == 'global' ]] && g=' [g]'
 			# command description is lines that start with ##
-			local cmd_desc=$(cat "$_path/$cmd_name" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
+			local filename="$addons_path/$cmd_name"
+			local cmd_desc
+			[ ! -f "$filename" ] && continue
+			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
 			cmd_desc="${cmd_desc:-No description}"
-			printh "$cmd_name" "$cmd_desc"
+			printh "${cmd_name}${g}" "$cmd_desc"
+		done
+	fi
+}
+
+# param $1 - 'project' or 'global'
+show_help_list_addons_in_help ()
+{
+	local addons_path
+	if [[ "$1" == 'project' ]]; then
+		addons_path="$(get_project_path)/$DOCKSAL_ADDONS_PATH"
+		# avoid taking global .docksal folder for project one
+		[[ "$addons_path" == "$HOME/$DOCKSAL_ADDONS_PATH" ]] && return
+	else
+		addons_path="$HOME/$DOCKSAL_ADDONS_PATH"
+	fi
+
+	local addons_list=$(ls "$addons_path" 2>/dev/null | tr "\n" " ")
+	if [ ! -z "$addons_list" ]; then
+		local scope
+		for cmd_name in $(ls "$addons_path")
+		do
+			local g
+			[[ "$1" == 'global' ]] && g=' [g]'
+			# command description is lines that start with ##
+			local filename="$addons_path/$cmd_name/$cmd_name"
+			local cmd_desc
+			[ ! -f "$filename" ] && continue
+			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
+			cmd_desc="${cmd_desc:-No description}"
+			printh "${cmd_name}${g}" "$cmd_desc"
 		done
 	fi
 }
@@ -1203,6 +1349,7 @@ show_help_db ()
 	echo
 	echo-green "Examples:"
 	printh "fin db import ~/dump.sql" "Import from dump.sql file"
+	printh "fin db import --progress ~/dump.sql" "Import from dump.sql file showing import progress"
 	printh "cat dump.sql | fin db import" "Import dump from stdin into default database"
 	printh "fin db dump ~/dump.sql" "Export default database into dump.sql"
 	printh "fin db dump --db=drupal" "Export database 'drupal' dump into stdout"
@@ -1325,6 +1472,22 @@ show_help_hosts ()
 	echo
 }
 
+show_help_addon ()
+{
+	echo-green "Addons management command"
+	echo
+	printh "fin addon <command> <name>" "" "yellow"
+	echo
+	echo-green "Commands:"
+	printh "install <name>" "Install addon"
+	printh "remove <name>" "Remove addon"
+	echo
+	echo-green "Examples:"
+	printh "fin install example" "Install an example addon to the current project"
+	printh "fin remove example" "Uninstall an example addon from the current project"
+	echo
+}
+
 #---------- END HELP FUNCTIONS
 
 # Display fin version
@@ -1358,14 +1521,43 @@ bash_comp_words ()
 			echo "generate show env"
 			exit 0
 			;;
+		db)
+			echo "import dump list cli"
+			exit 0
+			;;
 		fin)
 			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			local projects=$(docker ps --all \
 				--filter 'label=com.docker.compose.service=web' \
 				--format '@{{.Label "com.docker.compose.project"}}' | xargs
 			)
+
+			local project_commands_path="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
+			local project_addons_path="$(get_project_path)/$DOCKSAL_ADDONS_PATH"
+			local global_commands_path="$HOME/$DOCKSAL_COMMANDS_PATH"
+			local global_addons_path="$HOME/$DOCKSAL_ADDONS_PATH"
+			local custom_commands
+
+			for cmd_name in $(ls "$project_commands_path" 2>/dev/null | tr "\n" " "); do
+				custom_commands+=" $cmd_name"
+			done
+
+			for cmd_name in $(ls "$project_addons_path" 2>/dev/null); do
+				[[ -f "$project_addons_path/$cmd_name/$cmd_name" ]] &&
+					custom_commands+=" $cmd_name"
+			done
+
+			for cmd_name in $(ls "$global_commands_path" 2>/dev/null | tr "\n" " "); do
+				custom_commands+=" $cmd_name"
+			done
+
+			for cmd_name in $(ls "$global_addons_path" 2>/dev/null); do
+				[[ -f "$global_addons_path/$cmd_name/$cmd_name" ]] &&
+					custom_commands+=" $cmd_name"
+			done
+
 			echo "$aliases $projects vm start stop restart status reset remove bash exec config create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
-			ssh-add update version cleanup sysinfo logs"
+			ssh-add update version cleanup sysinfo logs $custom_commands"
 			exit 0
 			;;
 		*)
@@ -1608,6 +1800,22 @@ docker_machine_mount_nfs ()
 	exports="${exports}\n${exports_open}\n"
 	for share in ${ARGV[@]}; do
 		local share_export=(${share//:/ });
+		# Check for NFS exports conflicts manually
+		if [[ "$exports" =~ "$share_export" ]]; then
+			echo
+			echo -e "${red}ERROR:${NC} Attempt to share $share_export via NFS would create a conflict in ${yellow}/etc/exports${NC}."
+			echo -e "       To solve the problem you can override the default Docksal projects folder."
+			echo -e "       by setting ${yellow}DOCKSAL_NFS_PATH${NC} value in ${yellow}$CONFIG_ENV${NC}."
+			sleep 1
+			echo
+			echo-green "Attempting auto-fix:"
+			_confirm "Do you want to use ${yellow}$HOME/Projects${NC} as Docksal projects path?"
+			# Write proposed DOCKSAL_NFS_PATH and try remounting nfs
+			mkdir -p "$HOME/Projects"
+			echo -e "\nDOCKSAL_NFS_PATH=\"$HOME/Projects\"\n" | tee -a ${CONFIG_ENV} >/dev/null
+			docker_machine_mount_nfs "$HOME/Projects:$HOME/Projects"
+			return $?
+		fi
 		# TODO: move exports into a separate function and make it work with D4M with or without VirtualBox.
 		exports="${exports}$share_export 127.0.0.1 $machine_ip -alldirs -maproot=0:0\n"
 	done
@@ -1848,10 +2056,11 @@ docker_machine_mounts ()
 {
 	if is_mac; then
 		echo-green "Configuring NFS shares..."
-		docker_machine_mount_nfs "/Users:/Users" || exit 1
+		local MOUNT_POINT="${DOCKSAL_NFS_PATH:-/Users}"
+		docker_machine_mount_nfs "$MOUNT_POINT:$MOUNT_POINT"
 	elif is_windows; then
 		echo-green "Configuring SMB shares..."
-		docker_machine_mount_smb || exit 1
+		docker_machine_mount_smb
 	fi
 }
 
@@ -1991,7 +2200,7 @@ vm-stats ()
 
 vm-ram () {
 	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
-	echo "Current $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
+	echo "Total $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
 		local running
 		is_docker_machine_running && running=1
@@ -2000,6 +2209,12 @@ vm-ram () {
 		"$vboxmanage" modifyvm "$DOCKER_MACHINE_NAME" --memory "$1" && \
 			echo "Memory size updated."
 		[[ ${running} == 1 ]] && docker_machine_start
+	else
+		output=$(fin vm ssh free -m)
+		echo -n "Available Memory:	"
+		echo "$output" | grep "buffers/cache" | awk '{ print $4, "MB" }'
+		echo -n "Available Swap:		"
+		echo "$output" | grep "Swap" | awk '{ print $4, "MB" }'
 	fi
 }
 
@@ -2018,6 +2233,10 @@ up ()
 	is_linux && ssh_add
 	check_project_unique
 
+	# Temporary workaround for NFS issues on Mac
+	# See https://github.com/docksal/docksal/issues/265
+	is_mac && find . -type d > /dev/null 2>&1
+
 	_start_containers
 }
 
@@ -2027,7 +2246,6 @@ stop ()
 	# Do not do any checks for "stop all projects" action
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
 		_stop_containers "$@"
-		# TODO: set stopped state to all projects
 		return $?
 	fi
 
@@ -2047,7 +2265,7 @@ restart ()
 	is_linux && ssh_add
 	check_project_unique
 
-	_restart_containers
+	_restart_containers "$@"
 }
 
 # Remove container(s)
@@ -2110,6 +2328,7 @@ project_create ()
 	echo -e "${green}[2]${NC} Drupal 8"
 	echo -e "${green}[3]${NC} Wordpress"
 	echo -e "${green}[4]${NC} Magento"
+	echo -e "${green}[5]${NC} Static HTML site"
 	echo -e ""
 	while true; do
 		read -p ": " choice
@@ -2138,6 +2357,11 @@ project_create ()
 				target_repo="$URL_REPO_MAGENTO"
 				break
 				;;
+			5)
+				target_cms="Plain HTML"
+				target_host_name_search_string=""
+				target_repo=""
+				;;
 			* )
 				echo 'Please enter 1, 2, 3 or 4.'
 				continue
@@ -2153,6 +2377,16 @@ project_create ()
 
 	_confirm "Do you wish to proceed?"
 
+	if [[ "$target_cms" == "Plain HTML" ]]; then
+		mkdir "${project_name}" && cd "${project_name}" || exit 1
+		mkdir ".docksal"
+		mkdir "docroot"
+		echo "<html><body>Hello, Docksal!</body></html>" > "docroot/index.html"
+		fin up
+		echo -e "Done! Visit ${yellow}http://$project_name.docksal${NC}"
+		exit
+	fi
+
 	echo -e "${green} Cloning repository...${NC}"
 	git clone -b master ${target_repo} ${project_name}
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
@@ -2167,30 +2401,44 @@ project_create ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
+	check_docker_running
 	check_winpty_found
 
 	# Check if ssh-agent container is running
 	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
-	[[ "$running" != "true" ]] && return
+	# Start the ssh-agent if not running
+	if [[ "$running" != "true" ]]; then
+		echo-error "docksal-ssh-agent is not running" \
+			"Please report this issue, as this should not usually happen." \
+			"Run ${yellow}fin reset ssh-agent${NC} to start the service."
+		# We could automatically run install_sshagent_service here, however that may lead to an endless recursion
+		# if something is terribly wrong. So it's better to alret the user and ask them to try a manual fix.
+		return 1
+	fi
 
 	local ssh_path="$HOME/.ssh"
-	local key_path=""
+	# On Windows docker and docker-compose expect a Windows style path
+	is_windows && ssh_path=$(cygpath -w "$ssh_path")
 
-	# When no arguments provided, check if ssh-agent already has at least one identity. If so, stop here.
-	docker exec docksal-ssh-agent ssh-add -l >/dev/null
-	if [[ $1 == "" && $? == 0 ]]; then return; fi
+	# Copy all keys from the host to the ssh-agent container
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	[[ "${1#-}" == "$1" ]] && docker cp "$ssh_path" docksal-ssh-agent:/
 
-	# $ssh_path should be mounted as /.ssh in the ssh-agent containers.
-	# When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
+	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
 	if is_tty; then
 		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker run --rm -it -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+		${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "$@"
 	else
 		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
-		docker run --rm -v=docksal_ssh_agent:/.ssh-agent -v "$ssh_path:/.ssh:ro" "${IMAGE_SSH_AGENT}" ssh-add "$@"
+		docker exec docksal-ssh-agent /run.sh ssh-add "$@"
 	fi
-	return $?
+	local ret=$?
+
+	# Remove copied keys from the ssh-agent container after loading into the ssh-agent
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
+	return "$ret"
 }
 
 #----- Installations and updates -----
@@ -2301,6 +2549,7 @@ configure_resolver_mac () {
 	fi
 
 	# Flush DNS cache
+	echo-green "Clearing DNS cache..."
 	sudo dscacheutil -flushcache
 	# to check: scutil --dns
 }
@@ -2364,6 +2613,7 @@ configure_resolver_windows () {
 	winsudo "$command1 && $command2"
 
 	# Flush DNS cache
+	echo-green "Clearing DNS cache..."
 	ipconfig /flushdns >/dev/null 2>&1
 }
 
@@ -2410,7 +2660,6 @@ install_sshagent_service ()
 	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always \
 		-v docksal_ssh_agent:/.ssh-agent \
-		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_SSH_AGENT}" >/dev/null
 	# Add default keys. Using || true here to suppress errors if there are not keys on the host.
 	fin ssh-add || true
@@ -2671,11 +2920,11 @@ install_tools_ubuntu ()
 		# Pin docker-engine version to avoid apt-get upgrade.
 		# Get rid of -ce part because linux packages use `~ce` suffix in repos and pin version will not work with it
 		local PIN_DOCKER_VERSION=$(echo ${REQUIREMENTS_DOCKER} | sed "s/-.*//")
-		echo -e "Package: docker-engine\nPin: version ${PIN_DOCKER_VERSION}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
+		echo -e "Package: docker-ce\nPin: version ${PIN_DOCKER_VERSION}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
 
 		curl -fsSL "${URL_DOCKER_NIX}" | \
 			# patch Docker installation script on the fly to install a specific Docker version
-			sed "s/apt-get install -y -q docker-engine/apt-get install -y --force-yes -q docker-engine/" | \
+			sed "s/apt-get install -y -q docker-ce/apt-get install -y --force-yes -q docker-ce/" | \
 			sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
@@ -2908,8 +3157,8 @@ update ()
 		is_docker_running
 		RUNNING_CODE=$? # cache status
 		if (exit ${RUNNING_CODE}); then
-			# If docker is already running, then we are doing an upgrade.
-			UPGRADE_IN_PROGRESS=1
+			# If docksal services present, then we are doing an upgrade.
+			is_docksal_running && UPGRADE_IN_PROGRESS=1
 		else
 			# Check out the case when current user on linux does not have access to docker daemon
 			if is_linux; then
@@ -3158,6 +3407,7 @@ _exec ()
 	[[ $1 == "-T" ]] && \
 		local no_tty=true && shift
 
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
 	CONTAINER_NAME=${CONTAINER_NAME:-cli}
 	container_id=$(get_container_id "$CONTAINER_NAME")
@@ -3231,8 +3481,11 @@ run_cli ()
 	[[ $1 == "-T" ]] && \
 		local no_tty=true && shift
 	# Set default image
-	local IMAGE="${IMAGE:-docksal/cli:1.2-php7}"
+	local IMAGE="${IMAGE:-docksal/cli:1.3-php7}"
 	local cmd="$@"
+
+	# Assume bash if no command was given
+	[[ "$cmd" == "" ]] && cmd="bash"
 
 	# Source $HOME/.docksalrc in cli.
 	# Commands in this file will be sourced for both interactive and non-interactive sessions.
@@ -3263,6 +3516,7 @@ mysql ()
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
 
 	check_docksal_environment
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	${winpty} docker exec -it "$container_id" mysql ${__mysql_command}
@@ -3297,7 +3551,7 @@ mysql_import ()
 
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
-	local __database="${db:-default}"
+	local __database="${db:-${MYSQL_DATABASE:-default}}"
 	# /dev/fd/0 is the stdin stream for current script
 	# IMPORTANT: don't run "docker exec" with "-i" until value of /dev/fd/0 is used or it's value will be lost
 	local __input="${ARGV[0]:-/dev/fd/0}"
@@ -3306,42 +3560,63 @@ mysql_import ()
 		echo-error "Can not read $__input" "Please check file path and permissions" && exit 1
 
 	local confirm=0
-	if [[ "$force" == "force" ]]; then
-		confirm=1
+	[[ "$force" == "force" ]] && confirm=1
+	# Use cat to pipe dump content by default
+	local pipe_cmd='cat'
+	# Show DB import progress if requested and pv binary is available
+	if [[ "$progress" == "progress" ]]; then
+		if (which 'pv' >/dev/null 2>&1); then
+			pipe_cmd='pv'
+		else
+			echo-yellow "Cannot display import progress: pv binary is needed, but missing."
+		fi
 	fi
 
-	#-- 1) TRUNCATING
-	echo "Truncating '$__database'..."
-	# next line should go in one line to be treated as a single command by _run and have pipe being run on container side
-	local TRUNCATE_DATABASE_COMMAND="mysqldump -u$__dump_user -p$__dump_password --add-drop-table --no-data $__database | grep -e '^DROP \| FOREIGN_KEY_CHECKS' | mysql -u$__dump_user -p$__dump_password $__database"
-
+	#-- 1) RECREATE DATABASE WITH THE SAME CHARSET AND COLLATION
+	echo -e "Truncating ${yellow}$__database${NC} database..."
+	read -r -d '' DBCREATE_COMMAND <<-EOF
+		SELECT
+			DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
+			INTO
+				@_charset, @_collation FROM information_schema.schemata
+			WHERE
+				schema_name = '$__database';
+		SET @CREATE_TEMPLATE = 'CREATE DATABASE \\\`{DBNAME}\\\` CHARACTER SET {DBCHARSET} COLLATE {DBCOLLATION};';
+		SET @SQL_SCRIPT = REPLACE(@CREATE_TEMPLATE, '{DBNAME}', '$__database');
+		SET @SQL_SCRIPT = REPLACE(@SQL_SCRIPT, '{DBCHARSET}', @_charset);
+		SET @SQL_SCRIPT = REPLACE(@SQL_SCRIPT, '{DBCOLLATION}', @_collation);
+		PREPARE DBCREATE FROM @SQL_SCRIPT;
+		DROP DATABASE \\\`$__database\\\`;
+		EXECUTE DBCREATE;
+	EOF
 	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-		_exec "${TRUNCATE_DATABASE_COMMAND}"
+		_exec "echo -e \"$DBCREATE_COMMAND\"| mysql -u$__dump_user -p$__dump_password $__database "
 
 	if [[ ! $? -eq 0 ]] && (exit ${confirm}); then
 		_confirm "There were errors during truncation. Continue anyways?"
 	else
-		echo-rewrite-ok "Truncating '$__database'..."
+		echo-rewrite-ok "Truncating ${yellow}$__database${NC} database..."
 	fi
 
 	#-- 2) IMPORTING
 	[[ "$__input" != "/dev/fd/0" ]] &&
-		echo "Importing..." ||
+		echo -e "Importing ${yellow}$(basename $__input)${NC}..." ||
 		echo "Importing from stdin..." ||
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command direclty (no bash wrapper) so that stdin could be received inside that exec
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	__mysql_command=$(echo "$__mysql_command" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
-	cat ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
+	${pipe_cmd} ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
-	# Check if import succeded or not and print results.
+	# Check if import succeeded or not and print results.
 	if [ $? -eq 0 ]; then
-		echo-rewrite-ok "Importing..."
+		echo-green "Done"
 		exit 0
 	else
-		echo-red "Import failed";
+		echo-red "Import failed"
 		exit 1
 	fi
 }
@@ -3359,7 +3634,7 @@ mysql_dump ()
 
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
-	local __database="${db:-default}"
+	local __database="${db:-${MYSQL_DATABASE:-default}}"
 	local __output="${ARGV[0]}"
 
 	if [[ "${ARGV[0]}" != "" ]]; then
@@ -3368,6 +3643,7 @@ mysql_dump ()
 		echo-green "Exporting..."
 	fi
 
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	if [[ "${ARGV[0]}" == "" ]]; then
@@ -3476,11 +3752,8 @@ _set_cli_uid ()
 	# Skip Windows, as Linux permissions and ownership do not matter over SMB
 	is_windows && return
 
-	# Let uid to be set with the FIN_SET_UID env variable
-	local host_uid=${FIN_SET_UID:-$(id -u)}
-	local host_gid=${FIN_SET_GID:-$(id -g)}
+	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	local cli=$(get_container_id cli || true)
-
 	# If there is no cli, move on.
 	if [[ -z ${cli} ]]; then
 		echo-yellow 'Expected service "cli" is missing.'
@@ -3496,21 +3769,19 @@ _set_cli_uid ()
 		return
 	fi
 
-	if [[ "$container_uid_gid" == "$host_uid:$host_gid" ]]; then
-		return
-	fi
+	[[ "$container_uid_gid" == "$HOST_UID:$HOST_GID" ]] && return
 
 	# TODO: output a note to the user about updating their custom yml configuration (point to the docs).
 	if [[ "$host_uid" != "0" ]] ; then
-		echo-green "Changing uid/gid in cli to $host_uid/$host_gid to match the host"
+		echo-green "Changing uid/gid in cli to $HOST_UID/$HOST_GID to match the host"
 	else
 		echo -e "${green}Changing user id in cli to 0 to match host user id ${NC}${yellow}(running as root is not recommended)...${NC}"
 	fi
-	docker exec -u root ${cli} usermod -u "$host_uid" -o docker >/dev/null 2>&1
-	docker exec -u root ${cli} groupmod -g "$host_gid" -o users >/dev/null 2>&1
+	docker exec -u root ${cli} bash -c "usermod -u $HOST_UID -o docker"
+	docker exec -u root ${cli} bash -c "groupmod -g $HOST_GID -o \$(id -gn docker)"
 	# TODO: remove once confirmed this is no longer necessary
 	echo-green "Resetting permissions on /var/www..."
-	docker exec -u root ${cli} chown -R -h $host_uid:$host_gid /var/www
+	docker exec -u root ${cli} chown -R -h $HOST_UID:$HOST_GID /var/www
 
 	echo-green "Restarting php daemon..."
 	docker exec -u root ${cli} supervisorctl restart php-fpm >/dev/null
@@ -3640,6 +3911,12 @@ alias_list ()
 
 #------------------------ Project configuration and variables ---------------------------
 
+load_global_configuration ()
+{
+	export DOCROOT=${DOCROOT:-docroot}
+	export PROJECT_ROOT="$(get_project_path)"
+}
+
 load_configuration ()
 {
 	check_docksal
@@ -3726,8 +4003,8 @@ load_configuration ()
 	export DOCKSAL_PATH="$(get_project_path)"
 	export PROJECT_ROOT="$(get_project_path)"
 	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
-	# Set this to 0 to account for docker-compose bug https://github.com/docker/compose/pull/4294
-	export COMPOSE_CONVERT_WINDOWS_PATHS=0
+	# https://docs.docker.com/compose/reference/envvars/#compose_convert_windows_paths
+	export COMPOSE_CONVERT_WINDOWS_PATHS=1
 
 	# Export host user uid/gid
 	# The startup script in the cli container picks these up and updates the docker user inside of the container
@@ -3735,12 +4012,6 @@ load_configuration ()
 	if ! is_windows; then
 		export HOST_UID=$(id -u)
 		export HOST_GID=$(id -g)
-	fi
-
-	if is_docker_running; then
-		export DOCKER_RUNNING="true"
-	else
-		export DOCKER_RUNNING="false"
 	fi
 }
 
@@ -3770,6 +4041,7 @@ config_show ()
 	echo "Docker Compose configuration"
 	echo "---------------------"
 	docker-compose config
+	[[ $? != 0 ]] && return 1
 	echo "---------------------"
 }
 
@@ -3836,6 +4108,7 @@ hosts ()
 	esac
 }
 
+# Add a host to hosts file
 hosts_add ()
 {
 	local hostname="$1"
@@ -3864,6 +4137,7 @@ hosts_add ()
 	fi
 }
 
+# Remove a host from hosts file
 hosts_remove ()
 {
 	local hostname="$1"
@@ -3896,6 +4170,7 @@ hosts_remove ()
 	fi
 }
 
+# Backup hosts file
 hosts_backup ()
 {
 	local bkp="/tmp/hosts.bak.$RANDOM"
@@ -3903,6 +4178,234 @@ hosts_backup ()
 	cp "$HOSTS_FILE" "$bkp"
 }
 
+# Addons management
+addon () {
+	eval $(parse_params "$@")
+
+	if [[ "$global" == "global" ]] || [[ "$g" == "g" ]]; then
+		is_global="global"
+	fi
+
+	local addon_name=${ARGV[1]} # ARGV[0] is install, remove,...
+
+	case "$1" in
+		install|in)
+				addon_install "$addon_name" ${is_global}
+			;;
+		remove|rm)
+			addon_remove "$addon_name" ${is_global}
+			;;
+		version|v)
+			# special case for addon version command
+			addon_script=$(get_addon_script "$addon_name")
+			[ ! -f "$addon_script" ] && echo "-1" && exit
+			addon_version=$(cat "$addon_script" | grep ^VERSION | cut -d = -f 2 | tr -d \" | tr -d \')
+			addon_version="${addon_version:-0}"
+			echo "$addon_version"
+			;;
+		help)
+			show_help_addon
+			;;
+		*)
+			echo-yellow "Unknown sub-command. See ${NC}fin addon help${yellow} for details."
+			;;
+	esac
+}
+
+# Download addon
+# $1 - addon name
+# $2 - optional flag to install globally
+addon_install ()
+{
+	[[ "$2" != "global" ]] && check_docksal_environment && load_configuration
+
+	local addon_name="$1"
+	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
+	[[ "$addon_name" =~ / ]] && echo-error "No slashes in addon name" && exit 1
+	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
+	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
+
+	# Create target addon dir
+	local addon_path
+	if [[ "$2" != "global" ]]; then
+		addon_path="$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH/$addon_name"
+	else
+		addon_path="$HOME/$DOCKSAL_ADDONS_PATH/$addon_name"
+	fi
+
+	if [ -d "$addon_path" ] || [ -f "$addon_path" ]; then
+		echo-yellow "Addon already exists in $addon_path"
+		#_confirm "Overwrite?"
+	fi
+	mkdir -p "$addon_path"
+	if_failed_error "Could not create $addon_path" "Check file permissions and try again"
+	local URL_ADDON="$URL_REPO_ADDONS/master/$addon_name"
+
+	# Get files list
+	local file_list
+	file_list=$(curl -fsL "$URL_ADDON/$addon_name.filelist")
+
+	# Download only hook files first
+	local hooks_regex="$addon_name.pre-install\|$addon_name.post-install\|$addon_name.pre-uninstall\|$addon_name.post-uninstall"
+	if [[ "$file_list" != "" ]]; then
+		# Skip line comments, comments are lines that start with '#'
+		file_list=$(echo "$file_list" | grep -v '^#')
+		# Get only hooks
+		local hooks_file_list
+		hooks_file_list=$(echo "$file_list" | grep "$hooks_regex")
+		if [[ "$hooks_file_list" != "" ]]; then
+			echo-green "Downloading addon hook files..."
+			(
+				cd "$addon_path" || exit 1
+				for f in ${hooks_file_list}; do
+					echo "  $f"
+					# Exit subshell with error if download failed
+					curl -fsSL "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
+				done
+			)
+			if_failed_error "Download has failed" "Check log above for messages"
+		fi
+	fi
+
+	# Pre-install hook
+	[[ "$2" == "global" ]] && addon_global="global"
+	addon_hook "$addon_path" "$addon_name" "pre-install" "$addon_global"
+	if [ ! $? -eq 0 ]; then
+		echo-red "Pre-install hook has failed and aborted the installation."
+		# Delete downloaded files if pre-install hook fails
+		[[ -d "$addon_path" ]] && [[ "$addon_path" =~ ".docksal" ]] &&
+			rm -r "$addon_path"
+		return 1
+	fi
+
+	# Download main script
+	echo-green "Downloading addon main script"
+	echo "  $addon_name/$addon_name"
+	curl -fsL "$URL_ADDON/$addon_name?$RANDOM" -o "$addon_path/$addon_name"
+	chmod +x "$addon_path/$addon_name"
+	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
+
+	# Download other files
+	if [[ "$file_list" != "" ]]; then
+		# Exclude hooks
+		file_list=$(echo "$file_list" | grep -v "$hooks_regex")
+		if [[ "$file_list" != "" ]]; then
+			echo-green "Downloading other addon files..."
+			(
+				cd "$addon_path" || exit 1
+				for f in ${file_list}; do
+					echo "  $f"
+					# Filename can contain subdir name, which we need to create
+					local subdir=$(dirname "$f")
+					if [[ "$subdir" != "." ]]; then
+						mkdir -p "$subdir" || exit 1
+					fi
+					# Exit subshell with error if download failed
+					curl -fsSL "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
+				done
+			)
+			if_failed_error "Download has failed" "Check log above for messages"
+		fi
+	fi
+
+	# Post-install hook
+	addon_hook "$addon_path" "$addon_name" "post-install" "$addon_global"
+	[[ $? != 0 ]] && _with_errors="${yellow}with errors${NC}"
+	[[ "$2" == "global" ]] && _globally="globally"
+	echo-green "Addon ${NC}$addon_name${green} was installed ${_globally} ${_with_errors}"
+}
+
+# Remove addon
+# $1 - addon name
+# $2 - optional flag to remove global addon
+addon_remove () {
+	[[ "$2" != "global" ]] && check_docksal_environment && load_configuration
+
+	local addon_name="$1"
+	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
+	[[ "$addon_name" =~ / ]] && echo-error "No slashes in addon name" && exit 1
+	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
+	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
+
+	local addon_script=$(get_addon_script "$addon_name")
+	local addon_path=$(dirname "$addon_script")
+
+	# Check if found addon is a valid addon
+	# Note: do not change this condition to -d for security and safety reasons.
+	#				Double checking for Docksal addon structure prevents possible
+	#				damage if get_addon_script returns terribly wrong path for any reason.
+	if [[ ! -f "$addon_script" ]]; then
+		echo-error "Could not find addon: ${NC}$1"
+		return 1
+	fi
+
+	# Do not remove global addon unless --global is passed
+	if [[ "$addon_path" =~ "$CONFIG_DIR" ]] && [[ "$2" != "global" ]];  then
+		echo-error "Refusing to remove global addon" \
+								"To remove global addon use ${yellow}--global${NC} or ${yellow}-g${NC} option"
+		exit 1
+	fi
+
+	# Pre-uninstall hook
+	[[ "$2" == "global" ]] && addon_global="global"
+	addon_hook "$addon_path" "$addon_name" "pre-uninstall" "$addon_global"
+
+	if [ ! $? -eq 0 ]; then
+		echo-red "Pre-uninstall hook has failed and aborted addon removal."
+		return 1
+	fi
+
+	# Prepare post-uninstall hook
+	local tempfile="/tmp/$addon_name.$RANDOM.post-uninstall"
+	local tempfile_copy_res=1
+
+	cp -fp "$addon_path/$addon_name.post-uninstall" "$tempfile" >/dev/null 2>&1
+	tempfile_copy_res=$?
+
+	# Remove addon files physically
+	# Last line of defence to avoid removal of wrong things
+	if [[ "$addon_path" =~ ".docksal" ]]; then
+		[ -d "$addon_path" ] &&
+			(echo-green "Removing $addon_path" && rm -r "$addon_path" && echo-green "Removed addon")
+	else
+		echo "Not removing $addon_path because it's not inside .docksal folder. How did we get here?"
+	fi
+
+	# Post-uninstall hook
+	if [ ${tempfile_copy_res} -eq 0 ]; then
+		(
+			export ADDON_GLOBAL="$addon_global";
+			chmod +x "$tempfile" && exec "$tempfile"
+		)
+		rm -f "$tempfile" >dev/null 2>&1
+	fi
+}
+
+# Execute a hook script for an addon
+# $1 - addon path
+# $2 - addon name
+# $3 - hook name
+# $4 - "global" is addon installed as global (optional)
+addon_hook ()
+{
+	local addon_path="$1"
+	local addon_name="$2"
+	local hook_name="$3"
+	local addon_global=""
+	local hook="$addon_path/$addon_name.$hook_name"
+	# Assign is global
+	[[ "$4" == "global" ]] && addon_global="true"
+	# No hook is not an error
+	[[ ! -f "$hook" ]] && return
+	# Execute hook
+	echo-green "Running $hook_name hook..." &&
+	chmod +x "$hook" || return 1
+	# Encapsulate exec into a sub-shell because exec replaces the shell it runs in
+	(
+		export ADDON_GLOBAL="$addon_global";
+		exec "$hook"
+	)
+}
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
@@ -3953,6 +4456,13 @@ else
 			eval $(cat "$CONFIG_MACHINES_ENV") ||
 			docker_machine_env
 	fi
+
+	if is_docker_running; then
+		export DOCKER_RUNNING="true"
+	else
+		export DOCKER_RUNNING="false"
+	fi
+
 	# current active machine folder
 	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
 	mkdir -p "$DOCKER_MACHINE_FOLDER"
@@ -3970,10 +4480,13 @@ if [[ "$1" == "@"* ]]; then
 	USED_ALIAS=${1#@}
 	shift
 	# Search alias first between aliases then between running projects
-	if [[ -h "$CONFIG_ALIASES/$USED_ALIAS" ]]; then
+	if [[ "$USED_ALIAS" == "self" ]]; then
+		_alias_cd="$(get_project_path)"
+	elif [[ -h "$CONFIG_ALIASES/$USED_ALIAS" ]]; then
 		# alias found
 		_alias_cd=$(readlink "$CONFIG_ALIASES/$USED_ALIAS")
 	else
+		check_docker_running
 		# alias not found. search project names
 		_alias_projects=$(docker ps --all \
 			--filter 'label=com.docker.compose.service=web' \
@@ -3983,7 +4496,7 @@ if [[ "$1" == "@"* ]]; then
 			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS\t" | cut -d$'\t' -f 2)
 		else
 			# nothing was found. error out
-			echo-red "No such alias $USED_ALIAS"
+			echo-error "No such fin alias: @$USED_ALIAS"
 			exit 1
 		fi
 	fi
@@ -3992,67 +4505,48 @@ if [[ "$1" == "@"* ]]; then
 	if_failed_error "Could not navigate to directory linked by $1 alias"
 fi
 
-# TODO: figure out a better way to determine when to skip load_configuration
-# Load YML files and check for updates except some cases
-[[ "$1" != "update" ]] &&
-	[[ "$1" != "install" ]] &&
-	[[ "$1" != "version" ]] &&
-	[[ "$1" != "-v" ]] &&
-	[[ "$1" != "v" ]] &&
-	[[ "$1" != "sysinfo" ]] &&
-	[[ "$1" != "bash_comp_words" ]] &&
-	[[ "$1" != "ssh-add" ]] &&
-	[[ "$1" != "vm" ]] &&
-	[[ "$1" != "docker" ]] &&
-	[[ "$1" != "d" ]] &&
-	[[ "$1" != "docker-machine" ]] &&
-	[[ "$1" != "dm" ]] &&
-	[[ "$1" != "debug" ]] &&
-	[[ "$1" != "exec-url" ]] &&
-	[[ "$1" != "cleanup" ]] &&
-	[[ "$1" != "help" ]] &&
-	[[ "$*" != "" ]] &&
-	[[ "$*" != "config generate" ]] &&
-	[[ "$1" != "fix-smb" ]] &&
-	[[ "$1" != "alias" ]] &&
-	[[ "$*" != "reset dns" ]] &&
-	[[ "$*" != "reset proxy" ]] &&
-	[[ "$*" != "reset ssh-agent" ]] &&
-	[[ "$*" != "reset network" ]] &&
-	[[ "$*" != "reset system" ]] &&
-	[[ "$1" != "projects" ]] &&
-	[[ "$1" != "run-cli" ]] &&
-	[[ "$1" != "rc" ]] &&
-	[[ "$1" != "hosts" ]] &&
-	[[ "$1" != "image" ]] &&
-	[[ "$1" != "project" ]] &&
-	[[ "$1" != "pl" ]] &&
-	load_configuration &&
-	[[ "$NO_UPDATES" != "1" ]] && check_for_updates
-
 # Parse command line parameters
 case "$1" in
 	bash_comp_words)
+		# no load_configuration
 		shift
 		bash_comp_words "$@"
 		;;
-	up|start)
+	build)
+		load_configuration
+		shift
+		docker-compose build "$@"
+		;;
+	start)
+		load_configuration
+		check_for_updates
+		shift
+		up
+		;;
+	up)
+		# Force re-reading of configuration files
+		COMPOSE_FILE="" load_configuration
+		check_for_updates
 		shift
 		up
 		;;
 	stop)
 		shift
+		([[ "$1" != "-a" ]] && [[ "$1" != "--all" ]]) && load_configuration
 		stop "$@"
 		;;
 	restart)
+		load_configuration
 		shift
-		restart
+		restart "$@"
 		;;
 	image)
+		# no load_configuration
 		shift
 		case "$1" in
 			save)
 				shift
+				[[ "$1" == "--project" ]] && load_configuration
 				image_save "$@"
 			;;
 			load)
@@ -4070,6 +4564,7 @@ case "$1" in
 		esac
 		;;
 	project)
+		# no load_configuration
 		shift
 		case "$1" in
 			create)
@@ -4093,29 +4588,35 @@ case "$1" in
 		esac
 		;;
 	status|ps)
+		load_configuration
+		check_for_updates
 		project_status
 		;;
 	# TODO: remove "projects" alias in July 2017
 	projects|pl)
+		# no load_configuration
+		check_for_updates
 		shift
 		project_list "$@"
 		;;
 	reset)
 		shift
+		# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
+		[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
 		reset "$@"
 		;;
 	remove|rm)
+		load_configuration
 		shift
 		remove "$@"
 		;;
 	vm)
+		# no load_configuration
 		shift
 		vm "$@"
 		;;
-	install)
-		echo -e "${yellow}fin install${NC} is deprecated, please use ${yellow}fin update${NC} instead"
-		;;
 	update)
+		# no load_configuration
 		shift
 		if [[ "$1" == "--system-images" ]]; then
 			update_system_images
@@ -4140,10 +4641,12 @@ case "$1" in
 		fi
 		;;
 	bash)
+		load_configuration
 		shift
 		_bash "$@"
 		;;
 	exec|run)
+		load_configuration
 		shift
 		if [ -f "$1" ]; then
 			# if a file is passed then run it inside cli container
@@ -4154,27 +4657,33 @@ case "$1" in
 		fi
 		;;
 	run-cli|rc)
+		# no load_configuration
 		shift
 		run_cli "$@"
 		;;
 	# TODO: Remove mysql and sql* commands in fin 2.0
 	mysql|sqlc)
+		load_configuration
 		shift
 		mysql "$@"
 		;;
 	mysql-list|sqls)
+		load_configuration
 		shift
 		mysql_list "$@"
 		;;
 	mysql-import|sqli)
+		load_configuration
 		shift
 		mysql_import "$@"
 		;;
 	mysql-dump|sqld)
+		load_configuration
 		shift
 		mysql_dump "$@"
 		;;
 	db)
+		load_configuration
 		shift
 		case "$1" in
 			cli)
@@ -4200,7 +4709,12 @@ case "$1" in
 		esac
 		;;
 	drush)
+		load_configuration
 		shift
+		# cd to docroot if alias was used and alias leads to project root
+		[[ "$USED_ALIAS" != "" ]] &&
+			[[ "$(pwd)" == "$PROJECT_ROOT" ]] &&
+			cd "$DOCROOT"
 		if [[ $1 == "" ]]; then
 			_exec drush
 		else
@@ -4208,6 +4722,7 @@ case "$1" in
 		fi
 		;;
 	drupal)
+		load_configuration
 		shift
 		if [[ "$1" == "" ]]; then
 			_exec drupal
@@ -4216,6 +4731,7 @@ case "$1" in
 		fi
 		;;
 	wp)
+		load_configuration
 		shift
 		if [[ "$1" == "" ]]; then
 			_exec wp
@@ -4224,72 +4740,98 @@ case "$1" in
 		fi
 		;;
 	ssh-add)
+		# no load_configuration
 		shift
 		ssh_add "$@"
 		;;
 	docker|d)
+		# no load_configuration
 		shift
 		is_docker_running # exports env
 		check_winpty_found
 		${winpty} docker "$@"
 		;;
 	docker-compose|dc)
+		load_configuration
 		shift
 		is_docker_running # exports env
 		docker-compose "$@"
 		;;
 	docker-machine|dm)
+		# no load_configuration
 		shift
 		is_docker_running # exports env
 		docker-machine "$@"
 		;;
 	debug)
+		# no load_configuration
 		shift
 		eval "$@"
 		;;
 	exec-url)
+		# no load_configuration
 		shift
 		exec_url "$@"
 		;;
 	share)
+		load_configuration
 		ngrok_share
 		;;
 	cleanup)
+		# no load_configuration
+		check_for_updates
 		shift
 		cleanup $1
 		;;
 	-v | v)
+		# no load_configuration
+		check_for_updates
 		version --short
 		;;
 	version)
+		# no load_configuration
+		check_for_updates
 		version
 		;;
 	logs)
+		load_configuration
 		shift
 		logs "$@"
 		;;
 	"")
+		# no load_configuration
+		check_for_updates
 		show_help
 		;;
 	help)
+		# no load_configuration
+		check_for_updates
 		show_help "$2"
 		;;
 	sysinfo)
+		# no load_configuration
+		check_for_updates
 		sysinfo
 		;;
 	config)
+		# different load_configuration
 		shift
 		if [[ "$1" == "generate" ]]; then
-			shift;
+			# no load_configuration
+			shift
 			config_generate
 		else
+			load_configuration
+			check_for_updates
 			config_show "$@"
 		fi
 		;;
 	fix-smb)
+		# no load_configuration
 		smb_windows_fix
 		;;
 	alias)
+		# no load_configuration
 		shift
 		[[ "$*" == "" ]] && alias_list && exit
 		[[ "$*" == "list" ]] && alias_list && exit
@@ -4298,35 +4840,57 @@ case "$1" in
 		;;
 	# TODO: remove create-site in September 2017 in favor of project create
 	create-site)
+		# no load_configuration
 		echo -e "${yellow}Notice:${NC} create-site is deprecated and will be removed. Use ${yellow}fin project create${NC} instead."
 		project_create
 		;;
 	hosts)
+		# no load_configuration
 		shift
 		hosts "$@"
 		;;
+	addon|a)
+		# configuration will be loaded by end functions if needed
+		shift
+		addon "$@"
+		;;
 	*)
-		# Search for custom commands in $DOCKSAL_COMMANDS_PATH
-		# First search project commands folder
-		command_script="$(get_project_path)/$DOCKSAL_COMMANDS_PATH/$1"
-		# If not found search global docksal commands folder
-		[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
-		# If not found there as well then it is a wrong command
-		[ ! -f "$command_script" ] &&
-			echo-yellow "Unknown command '$*'. See 'fin help' for list of available commands" &&
-			exit 1
-
-		# if it's not executable let's fix it
-		if [[ ! -x "$command_script" ]]; then
-			echo -e "${yellow}$command_script${NC} is not set to be executable."
-			_confirm "Fix automatically?"
-			chmod +x "$command_script"
-			if_failed "Could not make $command_script executable"
+		addon="$(get_addon_script $1)"
+		if [[ ! -f "$addon" ]]; then
+			# If no addon was found then try command
+			addon="$(get_command_script $1)"
+		# If no command was found either then show error
+			[[ ! -f "$addon" ]] &&
+				echo-yellow "Unknown command ${NC}$*${yellow}. See 'fin help' for list of available commands" &&
+				exit 1
+		else
+			export ADDON_ROOT=$(dirname "$addon")
 		fi
 
-		# if it has windows line endings let's fix it
-		fix_crlf_warning "$command_script"
+		load_global_configuration
+		[[ "$PROJECT_ROOT" != "" ]] && load_configuration
+
+		# If executable is not set, then fix it
+		if [[ ! -x "$addon" ]]; then
+			echo -e "${yellow}$addon${NC} is not set to be executable."
+			_confirm "Fix automatically?"
+			chmod +x "$addon"
+			if_failed "Could not make $addon executable"
+		fi
+
+		# If it has windows line endings, then fix it
+		fix_crlf_warning "$addon"
+
+		# Read host/cli execution settings
+		_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
 
 		shift
-		exec "$command_script" "$@"
+		if [[ "$_exec_target" == "cli" ]]; then
+			# Replace host addon path with the matching path inside cli
+			# "\$PROJECT_ROOT" will be resolved in cli to /var/www
+			cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
+			fin exec "$cli_addon_path $@"
+		else
+			exec "$addon" "$@"
+		fi
 esac

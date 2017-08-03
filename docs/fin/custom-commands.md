@@ -90,6 +90,32 @@ print "Custom python command!"
 console.log("Custom NodeJS command!")
 ```
 
+## Executing commands inside cli
+
+In some cases you'd want a command to be executed inside `cli` instead of the host (e.g. when you do not want to rely on
+any dependencies installed on the host and use the tools available in `cli`).
+
+One way to achieve this is to write two commands:
+
+- one with the actual code, that you want to execute (e.g. `mycommand-cli`)
+- one that does `fin exec '/var/www/.docksal/commands/mycommand-cli'` (e.g. `mycommand`)
+
+Users can then run the command as `fin mycommand` to get the `mycommand-cli` executed in cli.
+
+This approach may not be very convenient.
+
+Alternatively the following notation inside a custom command can be used to tell fin to run the command inside cli:
+
+```bash
+#!/bin/bash
+
+#: exec_target = cli
+
+## Lists current directory inside cli
+
+pwd
+```
+
 ## More examples
 
 Check the commands directory (examples/.docksal/commands) located in the [Docksal project](https://github.com/docksal/docksal).

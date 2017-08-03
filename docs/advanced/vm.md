@@ -2,11 +2,20 @@
 
 These instructions are only applicable to macOS and Windows.
 
-## Increasing Docksal's Virtualbox VM memory (RAM)
+## Set Docksal's Virtualbox VM memory (RAM)
 
 `fin vm ram` - will show the current memory size
 
-`fin vm ram 2048` - will set the vm memory to 2048MB
+For hosts with limited RAM (less than 8GB) it may be necessary to limit the VM memory to 1GB:
+
+`fin vm ram 1024` - will set the VM memory to 1024MB
+
+1GB of RAM provides enough memory to run 2 basic LAMP stacks at the same time.
+
+When working with multiple projects, it is best to limit the number of active projects to 1 or 2. 
+Trying to launch more than 2 at the same time may result in unpredictable issues.
+
+Use `fin stop --all` to stop all projects, then `fin start` to restart the one you plan to work with.
 
 ## Increasing Docksal's Virtualbox VM disk size (HDD)
 

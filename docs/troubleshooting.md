@@ -57,12 +57,17 @@ The following exception is caused by a lack of memory and not having swap config
 Check https://getcomposer.org/doc/articles/troubleshooting.md#proc-open-fork-failed-errors for details
 ```
 
-By default, a Docksal virtual machine is provisioned with 1GB (1024MB) of RAM. Drupal 8 tools sometimes require more that that.
+By default, a Docksal virtual machine is provisioned with 2GB (2048MB) of RAM. This should be enough for a decent size 
+Drupal 8 project and composer.
 
-Set a bigger amount of RAM for the VM, e.g. 2048 Mb
+If the VM keeps running out of memory or you are getting weird issue with the `db` (or other) services failing, then 
+try stopping all active projects (`fin stop --all`) and only start the one you need.
+
+Alternatively give the VM more RAM (e.g. 4096 MB). This may only be necessary when running several very heavy 
+stacks/projects at the same time.
 
 ```bash
-fin vm ram 2048
+fin vm ram 4096
 ```
 
 ## Conflicting exports (files are not accessible)
@@ -132,7 +137,7 @@ ERROR: error pulling image configuration: Get https://dseasb33srnrn.cloudfront.n
 ```
 
 ```
-Pulling db (docksal/db:1.0-mysql-5.5)...
+Pulling db (docksal/db:1.1-mysql-5.6)...
 ERROR: Get https://registry-1.docker.io/v2/: dial tcp: lookup registry-1.docker.io on 10.0.2.3:53: server misbehaving
 ```
 
@@ -162,3 +167,37 @@ Check those files for errors, fix them and run `fin start`.
 ## SMB share creation, share mounting and related issues on Windows
 
 Please see a separate [troubleshooting document on share creation, share mounting and related issues](troubleshooting-smb.md).
+
+## Common MySQL related issues
+
+```
+ERROR 2003 (HY000): Can't connect to MySQL server on 'db' (111)
+```
+
+There may be many different errors. Check Mysql logs with `fin logs db` for details.
+Here we will just look at the most common case.
+
+If you see error like:
+
+```
+db_1   | 170614 14:26:54 [Note] Plugin 'FEDERATED' is disabled.
+db_1   | 170614 14:26:54 InnoDB: The InnoDB memory heap is disabled
+db_1   | 170614 14:26:54 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+db_1   | 170614 14:26:54 InnoDB: Compressed tables use zlib 1.2.3
+db_1   | 170614 14:26:54 InnoDB: Using Linux native AIO
+db_1   | 170614 14:26:54 InnoDB: Initializing buffer pool, size = 256.0M
+db_1   | InnoDB: mmap(274726912 bytes) failed; errno 12
+db_1   | 170614 14:26:54 InnoDB: Completed initialization of buffer pool
+db_1   | 170614 14:26:54 InnoDB: Fatal error: cannot allocate memory for the buffer pool
+db_1   | 170614 14:26:54 [ERROR] Plugin 'InnoDB' init function returned error.
+db_1   | 170614 14:26:54 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+db_1   | 170614 14:26:54 [ERROR] Unknown/unsupported storage engine: InnoDB
+db_1   | 170614 14:26:54 [ERROR] Aborting
+db_1   |
+db_1   | 170614 14:26:54 [Note] mysqld: Shutdown complete
+```
+
+Then `cannot allocate memory for the buffer pool` means you don't have enough of free memory on your Docksal VM 
+to run the project.
+
+Stop other projects (`fin stop --all`) or increase VM memory size with `fin vm ram ...` command and try again.
