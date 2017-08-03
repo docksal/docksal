@@ -21,6 +21,7 @@ pages:
   - Docksal Fin:
     - fin: fin/fin.md
     - Custom commands: fin/custom-commands.md
+    - Folder aliases: fin/aliases.md
   - Tools and integrations:
     - Apache Solr: tools/apache-solr.md
     - Behat: tools/behat.md
