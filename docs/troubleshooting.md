@@ -57,12 +57,17 @@ The following exception is caused by a lack of memory and not having swap config
 Check https://getcomposer.org/doc/articles/troubleshooting.md#proc-open-fork-failed-errors for details
 ```
 
-By default, a Docksal virtual machine is provisioned with 1GB (1024MB) of RAM. Drupal 8 tools sometimes require more that that.
+By default, a Docksal virtual machine is provisioned with 2GB (2048MB) of RAM. This should be enough for a decent size 
+Drupal 8 project and composer.
 
-Set a bigger amount of RAM for the VM, e.g. 2048 Mb
+If the VM keeps running out of memory or you are getting weird issue with the `db` (or other) services failing, then 
+try stopping all active projects (`fin stop --all`) and only start the one you need.
+
+Alternatively give the VM more RAM (e.g. 4096 MB). This may only be necessary when running several very heavy 
+stacks/projects at the same time.
 
 ```bash
-fin vm ram 2048
+fin vm ram 4096
 ```
 
 ## Conflicting exports (files are not accessible)
@@ -163,7 +168,7 @@ Check those files for errors, fix them and run `fin start`.
 
 Please see a separate [troubleshooting document on share creation, share mounting and related issues](troubleshooting-smb.md).
 
-## Common Mysql related issues
+## Common MySQL related issues
 
 ```
 ERROR 2003 (HY000): Can't connect to MySQL server on 'db' (111)
@@ -192,6 +197,7 @@ db_1   |
 db_1   | 170614 14:26:54 [Note] mysqld: Shutdown complete
 ```
 
-Then `cannot allocate memory for the buffer pool` means you don't have enough of free memory on your Docksal VM to run the project.
+Then `cannot allocate memory for the buffer pool` means you don't have enough of free memory on your Docksal VM 
+to run the project.
 
-Stop other projects or increase VM memory size with `fin vm ram ...` command and try again.
+Stop other projects (`fin stop --all`) or increase VM memory size with `fin vm ram ...` command and try again.
