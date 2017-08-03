@@ -54,5 +54,6 @@ pages:
     - Web Server:
       - HTTP Basic Authentication: advanced/web-http-auth.md
       - Web server logs: advanced/web-logs.md
-    - Docksal volumes: advanced/volumes.md
+    - File sharing: advanced/file-sharing.md
+    - Docker volumes: advanced/volumes.md
     - Stats and analytics: advanced/analytics.md
