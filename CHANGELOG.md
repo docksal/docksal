@@ -19,12 +19,12 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin up`.
 - docker-machine v0.12.0
 - VirtualBox v5.1.22
 - winpty-0.4.3-cygwin-2.8.0-ia32
-- fin v1.21.0
+- fin v1.22.0
 - System and stack images updates
-  - `vhost-proxy`: [docksal/vhost-proxy:1.1](https://github.com/docksal/service-vhost-proxy/releases/tag/v1.1.0) 
-  - `web`: [docksal/web:2.0-apache2.2](https://github.com/docksal/service-web/releases/tag/v2.0.1) and [docksal/web:2.0-apache2.4](https://github.com/docksal/service-web/releases/tag/v2.0.1)
-  - `db`: [docksal/db:1.1](https://github.com/docksal/service-db/releases/tag/v1.1.0)
-  - `cli`: [docksal/cli:1.3-php5](https://github.com/docksal/service-cli/releases/tag/v1.3.0) and [docksal/cli:1.3-php7](https://github.com/docksal/service-cli/releases/tag/v1.3.0-php7)
+  - `vhost-proxy`: [docksal/vhost-proxy:1.1](https://github.com/docksal/service-vhost-proxy/releases) 
+  - `web`: [docksal/web:2.0-apache2.2](https://github.com/docksal/service-web/releases) and [docksal/web:2.0-apache2.4](https://github.com/docksal/service-web/releases)
+  - `db`: [docksal/db:1.1](https://github.com/docksal/service-db/releases)
+  - `cli`: [docksal/cli:1.3-php5](https://github.com/docksal/service-cli/releases) and [docksal/cli:1.3-php7](https://github.com/docksal/service-cli/releases)
 
 ## New Features
 
@@ -44,6 +44,8 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin up`.
 
 ## Changes and improvements
 
+- The VM on Mac and Windows will now use 2GB of RAM by default
+  - Anyone who's low on RAM (< 8GB) can use `fin vm ram 1024` to limit the VM memory to 1GB
 - Use `nocopy` mode for `project_root` volume
   - This tells Docker to not merge the content of the volume with the destination directory in the container (if one is not empty)
 - SSH Agent usage refactoring
