@@ -33,7 +33,9 @@ COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY conf/nginx/default.conf.tmpl /etc/nginx/default.conf.tmpl
 COPY conf/nginx/default_locations.conf /etc/nginx/default_locations.conf
 COPY conf/sudoers /etc/sudoers
-COPY conf/supervisord.conf /etc/supervisor.d/supervisord.ini
+# Override the main supervisord config file, since some parameters are not overridable via an include
+# See https://github.com/Supervisor/supervisor/issues/962
+COPY conf/supervisord.conf /etc/supervisord.conf
 COPY conf/crontab /var/spool/cron/crontabs/root
 COPY bin /usr/local/bin
 COPY www /var/www/proxy
