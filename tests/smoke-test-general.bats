@@ -51,12 +51,8 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin init
-	echo "$output" | grep "Initializing local project configuration"
-	echo "$output" | grep "Recreating services"
-	echo "$output" | grep "Installing site"
-	echo "$output" | grep "Congratulations, you installed Drupal!"
 
-	# Check if site is available and it's name is correct
+	# Check if site is available and its name is correct
 	run curl -sL http://drupal8.docksal
 	echo "$output" | grep "My Drupal 8 Site"
 }
