@@ -3,7 +3,6 @@ sudo: required
 language: generic
 
 env:
-  OS: linux
   IMAGE_NAME: vhost-proxy:test
   # Only use seconds here, so that these can be used with "sleep" as well
   PROJECT_INACTIVITY_TIMEOUT: 30s
