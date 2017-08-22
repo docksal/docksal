@@ -49,27 +49,29 @@ Some more complex management commands have their own help sections.
 
     $ fin help db
     Database related commands
-      fin db <command>           
-    
+      fin db <command> [file] [options]
+
     Commands:
-      import [file]              Truncate the database and import from sql dump file or stdin
-      dump [file]                Dump the database into a file or stdout
-      list (ls)                  Show list of available databases
-      cli                        Opens command line interface to MySQL server
-    
+      import [file] [options]  	Truncate the database and import from sql dump file or stdin.
+               --progress      	Show import progess (requires pv).
+               --no-truncate   	Do no truncate database before import.
+      dump [file]              	Dump the database into a file or stdout.
+      list (ls)                	Show list of available databases.
+      cli                      	Open command line interface to the DB server.
+
     Parameters:
-      --db=drupal                Use another database (default is the one set with 'MYSQL_DATABASE')
-      --db-user=admin            Use another mysql username (default is 'root')
-      --db-password=p4$$         Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see fin config)
-    
+      --db=drupal              	Use another database (default is the one set with 'MYSQL_DATABASE')
+      --db-user=admin          	Use another mysql username (default is 'root')
+      --db-password=p4$$       	Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see fin config)
+
     Examples:
-      fin db import ~/dump.sql   Import from dump.sql file
-      fin db import --progress ~/dump.sql  Import from dump.sql file showing import progress
-      cat dump.sql | fin db import  Import dump from stdin into default database
-      fin db dump ~/dump.sql     Export default database into dump.sql
-      fin db dump --db=drupal    Export database 'drupal' dump into stdout
-      fin db                     Opens command line interface
-      fin db ls                  List databases
+      fin db import ~/dump.sql 			Import from dump.sql file
+      fin db import ~/dump.sql --progress		Import from dump.sql file showing import progress
+      fin db import ~/partial.sql --no-truncate	Import partial.sql without truncating DB
+
+      cat dump.sql | fin db import			Import dump from stdin into default database
+      fin db dump ~/dump.sql   			Export default database into dump.sql
+      fin db dump --db=drupal  			Export database 'drupal' dump into stdout
       fin db dump --db=mysql --db-user=root --db-password=root mysql.sql    Export mysql database as root into mysql.sql
 
 <a name="fin-help-project"></a>
