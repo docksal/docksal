@@ -4,13 +4,15 @@
 
 ## New software versions
 
-- fin v1.24.0
+- fin v1.26.0
 - Stack images updates
   - `web`: [docksal/web:2.1-apache2.2](https://github.com/docksal/service-web/releases) and [docksal/web:2.1-apache2.4](https://github.com/docksal/service-web/releases)
 
 ## New Features
 
 - `--no-truncate` option for `fin db import`
+- `fin db cli` now accepts query as an argument and `--db` parameter to specify the database to run query against
+- `fin db create` and `fin db drop` commands
 - `fin diagnose` command
 
 ## Changes and improvements
