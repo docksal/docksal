@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.24.0
+FIN_VERSION=1.25.0
 
 # Console colors
 red='\033[0;91m'
@@ -384,7 +384,7 @@ winsudo ()
 # Parses multi-valued named params into array (--path=path1 --path=path2 creates ${path[*]} array)
 # Parses un-named params into ${ARGV[*]} array
 # @author Oleksii Chekulaiev
-# @version v1.1 (Jul-14-2016)
+# @version v1.2 (Aug-24-2017)
 parse_params ()
 {
 	local existing_named
@@ -420,7 +420,9 @@ parse_params ()
 			echo "local $_key=\"$_key\";"
 		# non-named parameter
 		else
-			echo "ARGV+=('$1');"
+			# escape asterisk to prevent bash asterisk expansion
+			_escaped=${1/\*/\'\"*\"\'}
+			echo "ARGV+=('$_escaped');"
 		fi
 		shift
 	done
@@ -1343,7 +1345,7 @@ show_help_db ()
 	printh "         --no-truncate" "Do no truncate database before import."
 	printh "dump [file]" "Dump the database into a file or stdout."
 	printh "list (ls)" "Show list of available databases."
-	printh "cli" "Open command line interface to the DB server."
+	printh "cli [query]" "Open command line interface to the DB server (and execute query if provided)."
 	echo
 	echo-green "Parameters:"
 	printh "--db=drupal" "Use another database (default is the one set with 'MYSQL_DATABASE')"
@@ -1359,6 +1361,8 @@ show_help_db ()
 	printh "fin db dump ~/dump.sql" "		Export default database into dump.sql"
 	printh "fin db dump --db=drupal" "		Export database 'drupal' dump into stdout"
 	printh "fin db dump --db=mysql --db-user=root --db-password=root mysql.sql    Export mysql database as root into mysql.sql"
+	echo
+	printh "fin db cli --db=nondefault 'select * from users'    Execute query on database other than MYSQL_DATABASE"
 	echo
 }
 
@@ -3510,6 +3514,7 @@ run_cli ()
 # Start interactive mysql shell
 # --db-user="admin" to override mysql username
 # --db-password="otherpass" to override mysql password
+# --db="drupal" to override database (only applies to queries)
 mysql ()
 {
 	check_winpty_found
@@ -3517,12 +3522,21 @@ mysql ()
 
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+	local __database="${db:-${MYSQL_DATABASE:-default}}"
+
+	local _query=""
+	for _arg in "${ARGV[@]}"; do
+		_query="$_query $_arg"
+	done
 
 	check_docksal_environment
-	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
-	container_id=$(get_container_id "db")
+	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
-	${winpty} docker exec -it "$container_id" mysql ${__mysql_command}
+	if [[ "$_query" != "" ]]; then
+		${winpty} docker exec -it "$container_id" mysql ${__mysql_command} ${__database} -e "$_query"
+	else
+		${winpty} docker exec -it "$container_id" mysql ${__mysql_command}
+	fi
 }
 
 # Show databases list
