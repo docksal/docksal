@@ -1,5 +1,32 @@
 # Changelog
 
+# 1.5.0 (2017-08-24)
+
+## New software versions
+
+- fin v1.24.0
+- Stack images updates
+  - `web`: [docksal/web:2.1-apache2.2](https://github.com/docksal/service-web/releases) and [docksal/web:2.1-apache2.4](https://github.com/docksal/service-web/releases)
+
+## New Features
+
+- `--no-truncate` option for `fin db import`
+- `fin diagnose` command
+
+## Changes and improvements
+
+- Basic automated test in example repos
+- Removed old icon scripts on for Windows
+- Made `DOCROOT` variable accessing in `cli`
+
+## Documentation
+
+- New: [Troubleshooting SMB shares creation, mounting and related issues on Windows](http://docs.docksal.io/en/v1.5.0/troubleshooting-smb)
+- New: [Web server: Configuration overrides](http://docs.docksal.io/en/v1.5.0/advanced/web-configuration-overrides) 
+- Updated: `fin db` docs regarding `--no-truncate`
+- Updated: added recommendations for running custom commands in `cli`
+
+
 # 1.4.0 (2017-08-03)
 
 ## Breaking changes
