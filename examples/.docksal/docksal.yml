@@ -15,7 +15,7 @@ services:
   # Web
   web:
     hostname: web
-    image: docksal/web:2.0-apache2.4
+    image: docksal/web:2.1-apache2.4
     volumes:
       # Project root volume
       - project_root:/var/www:ro,nocopy

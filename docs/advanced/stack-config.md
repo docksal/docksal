@@ -243,7 +243,7 @@ services:
     environment:
       APACHE_DOCUMENTROOT: /var/www/docroot
     hostname: web
-    image: docksal/web:2.0-apache2.4
+    image: docksal/web:2.1-apache2.4
     labels:
       io.docksal.project-root: /Users/testuser/projects/myproject
       io.docksal.virtual-host: myproject.docksal

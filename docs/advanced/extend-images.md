@@ -63,7 +63,7 @@ Here's another example for `web`:
 
 ```Dockerfile
 # Use a stock Docksal image as the base
-FROM docksal/web:2.0-apache2.4
+FROM docksal/web:2.1-apache2.4
 
 # Install addtional apt packages
 RUN apt-get update && apt-get -y --no-install-recommends install \
