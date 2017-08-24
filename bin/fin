@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.25.0
+FIN_VERSION=1.26.0
 
 # Console colors
 red='\033[0;91m'
@@ -1340,17 +1340,21 @@ show_help_db ()
 	printh "fin db <command> [file] [options]" "" "yellow"
 	echo
 	echo-green "Commands:"
-	printh "import [file] [options]" "Truncate the database and import from sql dump file or stdin."
+	printh "import [file] [options]" "Truncate the database and import from SQL dump file or stdin."
 	printh "         --progress" "Show import progess (requires pv)."
 	printh "         --no-truncate" "Do no truncate database before import."
-	printh "dump [file]" "Dump the database into a file or stdout."
-	printh "list (ls)" "Show list of available databases."
+	printh "dump [file]" "Dump a database into an SQL dump file or stdout."
+	printh "list (ls)" "Show list of existing databases."
 	printh "cli [query]" "Open command line interface to the DB server (and execute query if provided)."
+	printh "create <name>" "Create a database."
+	printh "drop <name>" "Delete a database."
 	echo
 	echo-green "Parameters:"
 	printh "--db=drupal" "Use another database (default is the one set with 'MYSQL_DATABASE')"
 	printh "--db-user=admin" "Use another mysql username (default is 'root')"
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
+	printh "--db-charset=utf8" "Override charset when creating a database (default is utf8)"
+	printh "--db-collation=utf8" "Override collation when creating a database (default is utf8_general_ci)"
 	echo
 	echo-green "Examples:"
 	printh "fin db import ~/dump.sql" "		Import from dump.sql file"
@@ -1363,6 +1367,7 @@ show_help_db ()
 	printh "fin db dump --db=mysql --db-user=root --db-password=root mysql.sql    Export mysql database as root into mysql.sql"
 	echo
 	printh "fin db cli --db=nondefault 'select * from users'    Execute query on database other than MYSQL_DATABASE"
+	printh "fin db create project2 --db-charset=utf8mb4    Create database project2 with utf8mb4 charset"
 	echo
 }
 
@@ -3555,6 +3560,53 @@ mysql_list ()
 		_exec "echo 'show databases' | mysql -N -u $__dump_user -p${__dump_password}"
 }
 
+# Create a database
+# --db-user="admin" to override mysql username
+# --db-password="otherpass" to override mysql password
+# --db-charset="..." to override charset (default is utf8)
+# --db-collation="..." to override collation (default is utf8_general_ci)
+mysql_db_create ()
+{
+	check_docksal_environment
+	eval $(parse_params "$@")
+
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+	local __db="${ARGV[0]}"
+	local __db_charset="${dbuser:-utf8}"
+	local __db_collation="${dbuser:-utf8_general_ci}"
+
+	[[ "$__db" == "" ]] && echo-error "Provide a database name to create." && exit 1
+
+	mysql --db-user="$__dump_user" --db-password="$__dump_password" \
+		'CREATE DATABASE `'${__db}'` CHARACTER SET '${__db_charset}' COLLATE '${__db_collation}
+
+	if_failed_error "Database creation has failed"
+
+	echo "Database ${__db} is created"
+}
+
+# Delete a database
+# --db-user="admin" to override mysql username
+# --db-password="otherpass" to override mysql password
+mysql_db_drop ()
+{
+	check_docksal_environment
+	eval $(parse_params "$@")
+
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+	local __db="${ARGV[0]}"
+
+	[[ "$__db" == "" ]] && echo-error "Provide a database name to drop." && exit 1
+
+	mysql --db-user="$__dump_user" --db-password="$__dump_password" \
+		'DROP DATABASE `'${__db}'`'
+
+	if_failed_error "Database deletion has failed"
+	echo "Database ${__db} was deleted."
+}
+
 # Truncate db and import from sql dump
 # @params
 # $1 - file name
@@ -4748,6 +4800,14 @@ case "$1" in
 			dump)
 				shift
 				mysql_dump "$@"
+				;;
+			create)
+				shift
+				mysql_db_create "$@"
+				;;
+			drop)
+				shift
+				mysql_db_drop "$@"
 				;;
 			*)
 				show_help_db

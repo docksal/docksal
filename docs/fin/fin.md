@@ -50,36 +50,43 @@ Some more complex management commands have their own help sections.
 
     $ fin help db
     Database related commands
-      fin db <command> [file] [options]    
-    
+      fin db <command> [file] [options]
+
     Commands:
-      import [file] [options]      Truncate the database and import from sql dump file or stdin.
-               --progress          Show import progess (requires pv).
-               --no-truncate       Do no truncate database before import.
-      dump [file]                  Dump the database into a file or stdout.
-      list (ls)                    Show list of available databases.
-      cli                          Open command line interface to the DB server.
-    
+      import [file] [options]       Truncate the database and import from SQL dump file or stdin.
+               --progress           Show import progess (requires pv).
+               --no-truncate        Do no truncate database before import.
+      dump [file]                   Dump a database into an SQL dump file or stdout.
+      list (ls)                     Show list of existing databases.
+      cli [query]                   Open command line interface to the DB server (and execute query if provided).
+      create <name>                 Create a database.
+      drop <name>                   Delete a database.
+
     Parameters:
-      --db=drupal                  Use another database (default is the one set with 'MYSQL_DATABASE')
-      --db-user=admin              Use another mysql username (default is 'root')
-      --db-password=p4$$           Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see fin config)
-    
+      --db=drupal                   Use another database (default is the one set with 'MYSQL_DATABASE')
+      --db-user=admin               Use another mysql username (default is 'root')
+      --db-password=p4$$            Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see fin config)
+      --db-charset=utf8             Override charset when creating a database (default is utf8)
+      --db-collation=utf8           Override collation when creating a database (default is utf8_general_ci)
+
     Examples:
-      fin db import ~/dump.sql             Import from dump.sql file
-      fin db import ~/dump.sql --progress        Import from dump.sql file showing import progress
-      fin db import ~/partial.sql --no-truncate    Import partial.sql without truncating DB
-    
-      cat dump.sql | fin db import            Import dump from stdin into default database
-      fin db dump ~/dump.sql               Export default database into dump.sql
-      fin db dump --db=drupal              Export database 'drupal' dump into stdout
+      fin db import ~/dump.sql                      Import from dump.sql file
+      fin db import ~/dump.sql --progress           Import from dump.sql file showing import progress
+      fin db import ~/partial.sql --no-truncate     Import partial.sql without truncating DB
+
+      cat dump.sql | fin db import                  Import dump from stdin into default database
+      fin db dump ~/dump.sql                        Export default database into dump.sql
+      fin db dump --db=drupal                       Export database 'drupal' dump into stdout
       fin db dump --db=mysql --db-user=root --db-password=root mysql.sql    Export mysql database as root into mysql.sql
+
+      fin db cli --db=nondefault 'select * from users'    Execute query on database other than MYSQL_DATABASE
+      fin db create project2 --db-charset=utf8mb4    Create database project2 with utf8mb4 charset
 
 <a name="fin-help-project"></a>
 
     $ fin help project
     Project management
-      fin project <command>        
+      fin project <command>
     
     Commands:
       list (pl) [-a (--all)]       List running Docksal projects (-a to show stopped as well)
@@ -94,7 +101,7 @@ Some more complex management commands have their own help sections.
 
     $ fin help vm
     Control docker machine directly
-      fin vm <command>             
+      fin vm <command>
     
     Commands:
       start                        Start the machine (create if needed)
@@ -118,7 +125,7 @@ Some more complex management commands have their own help sections.
 
     $ fin help image
     Image management
-      fin image <command>          
+      fin image <command>
     
     Commands:
       registry                     Show all Docksal images on Docker Hub
@@ -139,10 +146,10 @@ Some more complex management commands have their own help sections.
     $ fin help hosts
     Can add or remove lines to/from OS-dependent hosts file
     
-      fin hosts [command]          
+      fin hosts [command]
     
-      Uses 192.168.64.100 for IP when VirtualBox is used.    
-      Uses 192.168.64.100 for IP when DOCKER_NATIVE is set.    
+      Uses 192.168.64.100 for IP when VirtualBox is used.
+      Uses 192.168.64.100 for IP when DOCKER_NATIVE is set.
     
     Commands:
       add [hostname]               Add hostname to hosts file. If no provided uses VIRTUAL_HOST
