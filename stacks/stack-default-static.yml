@@ -51,6 +51,7 @@ services:
     environment:
       - HOST_UID
       - HOST_GID
+      - DOCROOT
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
     dns:
       - ${DOCKSAL_DNS1}
