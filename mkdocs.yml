@@ -56,6 +56,7 @@ pages:
     - Web Server:
       - HTTP Basic Authentication: advanced/web-http-auth.md
       - Web server logs: advanced/web-logs.md
+      - Configuration overrides: advanced/web-configuration-overrides.md
     - File sharing: advanced/file-sharing.md
     - Docker volumes: advanced/volumes.md
     - Stats and analytics: advanced/analytics.md

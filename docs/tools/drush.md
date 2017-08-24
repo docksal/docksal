@@ -44,7 +44,7 @@ $DOCROOT/../drush/aliases
 
 Where `$DOCROOT` is the project's `docroot` folder.
 
-Recommended location is `$DOCROOT/../drush/aliases` which is usually equals `$PROJECT_ROOT/drush/aliases`.
+Recommended location is `$DOCROOT/../drush/aliases` which usually equals to `$PROJECT_ROOT/drush/aliases`.
 
 To check the list of available site aliases run `fin drush sa`. Project specific site aliases are only visible when running drush within the project's `docroot` folder.
 

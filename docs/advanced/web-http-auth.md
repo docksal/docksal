@@ -1,4 +1,4 @@
-# HTTP Basic Authentication
+# Web server: HTTP Basic Authentication
 
 
 If using the default stacks, add the following two lines in `docksal.env` or `docksal-local.env`:
