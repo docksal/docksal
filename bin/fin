@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.23.0
+FIN_VERSION=1.24.0
 
 # Console colors
 red='\033[0;91m'
@@ -1050,7 +1050,8 @@ show_help ()
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
 	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
-	printh "sysinfo" "Show diagnostics information for bug reporting"
+	printh "sysinfo" "Show system information for bug reporting"
+	printh "diagnose" "Show statistics for troubleshooting and bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
 
@@ -3819,6 +3820,34 @@ ngrok_share ()
 		ngrok http -host-header ${VIRTUAL_HOST} ${container_name}.${network}:80
 }
 
+diagnose ()
+{
+	echo "███  HDD Usage"
+	if is_linux; then
+		df -h # Linux
+	elif ! is_docker_native; then
+		vm hdd # boot2docker
+	elif is_mac; then
+		df -h # mac native
+	else
+		wmic logicaldisk get size,freespace,caption # win native
+	fi
+
+	echo "███  RAM Usage"
+	if is_linux; then
+		free # Linux
+	elif ! is_docker_native; then
+		vm ssh free # boot2docker
+	elif is_mac; then
+		vm_stat # mac native
+	else
+		systeminfo | find "Available Physical Memory"  # win native
+	fi
+
+	echo "███  RAM Usage per container"
+	docker stats $(docker ps --format='{{.Names}}') --no-stream
+}
+
 sysinfo ()
 {
 	# os
@@ -4816,6 +4845,10 @@ case "$1" in
 		# no load_configuration
 		check_for_updates
 		sysinfo
+		;;
+	diagnose)
+		# no load_configuration
+		diagnose
 		;;
 	config)
 		# different load_configuration
