@@ -15,7 +15,7 @@ services:
   # Web
   web:
     hostname: web
-    image: docksal/web:2.0-apache2.4
+    image: docksal/web:2.1-apache2.4
     volumes:
       # Project root volume
       - project_root:/var/www:ro,nocopy
@@ -60,6 +60,7 @@ services:
     environment:
       - HOST_UID
       - HOST_GID
+      - DOCROOT
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
     dns:
       - ${DOCKSAL_DNS1}

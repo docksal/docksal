@@ -116,6 +116,32 @@ Alternatively the following notation inside a custom command can be used to tell
 pwd
 ```
 
+When using `#: exec_target = cli` for commands you have to consider the following:
+
+1. there is no `fin` in `cli`
+2. calling other commands can be done via `${PROJECT_ROOT}/.docksal/commands/my-command` (which resolves to `/var/www/.docksal/commands/my-command` inside cli)
+3. the command being called cannot use `fin` (due to 1)
+4. variables defined in `docksal.env` are not passed to `cli` (though, they can be passed selectively via `docksal.yml`)
+
+Here's how 4 can be handled:
+
+**docksal.yml**
+
+```yaml
+
+version: '2.1'
+
+services:
+  cli:
+    environment:
+      # These variables are set here
+      - ACAPI_EMAIL=email
+      - ACAPI_KEY=key
+      # These variables are passed from the host (including values in `docksal.env`/`docksal-local.env`)
+      - SOURCE_ALIAS
+      - VIRTUAL_HOST
+```
+
 ## More examples
 
 Check the commands directory (examples/.docksal/commands) located in the [Docksal project](https://github.com/docksal/docksal).

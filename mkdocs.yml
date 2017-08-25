@@ -17,7 +17,9 @@ pages:
     - Docker for Mac/Windows: getting-started/env-setup-native.md
     - Upgrading from Drude (DDE): getting-started/upgrade-dde.md
     - Portable installation: getting-started/portable.md
-  - Troubleshooting: troubleshooting.md
+  - Troubleshooting:
+    - General: troubleshooting.md
+    - Windows SMB shares: troubleshooting-smb.md
   - Docksal Fin:
     - fin: fin/fin.md
     - Custom commands: fin/custom-commands.md
@@ -54,6 +56,7 @@ pages:
     - Web Server:
       - HTTP Basic Authentication: advanced/web-http-auth.md
       - Web server logs: advanced/web-logs.md
+      - Configuration overrides: advanced/web-configuration-overrides.md
     - File sharing: advanced/file-sharing.md
     - Docker volumes: advanced/volumes.md
     - Stats and analytics: advanced/analytics.md
