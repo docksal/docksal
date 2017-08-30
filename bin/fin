@@ -49,12 +49,12 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 REQUIREMENTS_DOCKER='17.06.0-ce'
 REQUIREMENTS_DOCKER_COMPOSE='1.14.0'
 REQUIREMENTS_DOCKER_MACHINE='0.12.0'
-REQUIREMENTS_VBOX='5.1.22'
+REQUIREMENTS_VBOX='5.1.26'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.22/VirtualBox-5.1.22-115126-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.22/VirtualBox-5.1.22-115126-Win.exe"
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.26/VirtualBox-5.1.26-117224-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.26/VirtualBox-5.1.26-117224-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
