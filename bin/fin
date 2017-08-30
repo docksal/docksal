@@ -1354,7 +1354,7 @@ show_help_db ()
 	printh "--db-user=admin" "Use another mysql username (default is 'root')"
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	printh "--db-charset=utf8" "Override charset when creating a database (default is utf8)"
-	printh "--db-collation=utf8" "Override collation when creating a database (default is utf8_general_ci)"
+	printh "--db-collation=utf8mb4" "Override collation when creating a database (default is utf8_general_ci)"
 	echo
 	echo-green "Examples:"
 	printh "fin db import ~/dump.sql" "		Import from dump.sql file"
