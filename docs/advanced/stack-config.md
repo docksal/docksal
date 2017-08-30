@@ -332,13 +332,13 @@ Instead of the `cli` service image you will be modifying the `db` service image.
 To see all Docker Hub images produced and supported by Docksal team run:
 
 ```bash
-fin config images
+fin image registry
 ```
 
 To get all tags of a certain image provide its name with the same command. E.g.:
 
 ```bash
-fin config images docksal/db
+fin image registry docksal/db
 ```
 
 ## Automate the initialization process
