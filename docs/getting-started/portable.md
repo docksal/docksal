@@ -14,7 +14,7 @@ This is useful for conferences/trainings/etc. where internet bandwidth is an iss
 The following download script can be used to pre-download most of the dependencies and Docker images..
 
 ```bash
-curl -fsSL get.docksal.io/portable | sh
+curl -fsSL https://get.docksal.io/portable | sh
 ```
 
 Here's is what the script will download:
@@ -32,7 +32,7 @@ The following download options are available:
 Example:
 
 ```bash
-curl -fsSL get.docksal.io/portable | SKIP_DEPS=1 sh
+curl -fsSL https://get.docksal.io/portable | SKIP_DEPS=1 sh
 ```
 
 Once downloaded, place the contents of the folder on a USB drive/etc and distribute.
@@ -80,7 +80,7 @@ Docksal's one-line installer supports portable mode installation and will detect
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL get.docksal.io | sh
+curl -fsSL https://get.docksal.io | sh
 fin vm start
 fin image load docksal-default-images.tar
 ```
@@ -97,7 +97,7 @@ Start the app and wait until Docker says it's running.
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL get.docksal.io | DOCKER_NATIVE=1 sh
+curl -fsSL https://get.docksal.io | DOCKER_NATIVE=1 sh
 fin image load docksal-default-images.tar
 ```
 
@@ -111,6 +111,6 @@ fin image load docksal-default-images.tar
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL get.docksal.io | sh
+curl -fsSL https://get.docksal.io | sh
 fin image load docksal-default-images.tar
 ```

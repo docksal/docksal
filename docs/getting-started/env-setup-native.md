@@ -24,7 +24,7 @@ Set `DOCKER_NATIVE=1` in `~/.docksal/docksal.env`
 **4.** Install Docksal (unless already installed).
 
 ```bash
-curl -fsSL get.docksal.io | sh
+curl -fsSL https://get.docksal.io | sh
 ```
 
 **5.** Reset Docksal system services.
