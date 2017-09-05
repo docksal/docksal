@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.26.2
+FIN_VERSION=1.26.3
 
 # Console colors
 red='\033[0;91m'
@@ -610,6 +610,16 @@ check_docker_running ()
 				sudo service docker start
 			fi
 		else
+			# Check for certificates error
+			if (docker-machine env "$DOCKER_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
+				echo-error "Error connecting to VM due to certificates error." \
+					"WHAT TO DO?" \
+					"1. Try restarting your host." \
+					"2. Try running ${yellow}fin vm regenerate-certs${NC}." \
+					"3. If above did not help, then remove VM by ${yellow}fin vm remove${NC} and re-create with ${yellow}fin vm start${NC}."
+				exit 1
+			fi
+
 			echo-error "Looks like your Docker client and Docker server are incompatible." \
 				"${green}Run ${NC}${yellow}fin update${NC}${green} to update.${NC}"
 			exit 1
@@ -1395,6 +1405,8 @@ show_help_vm ()
 	printh "hdd" "Show disk size and usage"
 	printh "stats" "Show CPU and network usage"
 	echo
+	printh "regenerate-certs" "Regenerate TLS certificates and restart the VM"
+	echo
 }
 
 show_help_alias ()
@@ -1656,10 +1668,24 @@ docker_machine_provider ()
 
 docker_machine_env ()
 {
+	local _env
+	local res
+
 	#remove cache
 	rm -f "$CONFIG_MACHINES_ENV" 2>/dev/null
-	local _env=$(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+
+	# get the env
+	_env=$(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+	res=$?
+
+	# apply the env
 	eval ${_env}
+
+	# return if there was an error
+	if [[ "$res" != "0" ]]; then
+		return ${res}
+	fi
+
 	# Save to file for reuse during subsequent fin runs to avoid running env which is expensive
 	echo "${_env}" | tee "$CONFIG_MACHINES_ENV" >/dev/null
 }
@@ -1698,12 +1724,15 @@ docker_machine_start ()
 	check_binary_found 'docker-machine'
 
 	if is_docker_machine_exist; then
-		docker-machine start "$DOCKER_MACHINE_NAME" && DOCKER_MACHINE_STATUS='Running' &&
-			# Disable IP change for now
-			#docker_machine_change_ip &&
-			docker_machine_env &&
-			configure_resolver &&
-			docker_machine_mounts
+		docker-machine start "$DOCKER_MACHINE_NAME"
+		if_failed_error "Failed starting virtual machine"
+		DOCKER_MACHINE_STATUS='Running'
+		# Disable IP change for now
+		#docker_machine_change_ip &&
+		docker_machine_env
+		if_failed_error "Failed starting virtual machine"
+		configure_resolver
+		docker_machine_mounts
 	else
 		# only auto-create default machine
 		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
@@ -2190,6 +2219,10 @@ vm ()
 			;;
 		help)
 			show_help_vm
+			;;
+		regenerate-certs)
+			docker-machine regenerate-certs -f "$DOCKER_MACHINE_NAME"
+			vm restart
 			;;
 		*)
 			show_help_vm
@@ -4558,9 +4591,13 @@ else
 	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
 	if [[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]; then
 		# Use cached environment variables if possible
-		[[ -f "$CONFIG_MACHINES_ENV" ]] &&
-			eval $(cat "$CONFIG_MACHINES_ENV") ||
-			docker_machine_env
+		if [[ -f "$CONFIG_MACHINES_ENV" ]]; then
+			eval $(cat "$CONFIG_MACHINES_ENV")
+			# if DOCKER_HOST is still not set then get environment variables once again
+			if [[ DOCKER_HOST == "" ]]; then
+				docker_machine_env
+			fi
+		fi
 	fi
 
 	if is_docker_running; then
