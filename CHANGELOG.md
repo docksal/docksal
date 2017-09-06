@@ -1,5 +1,15 @@
 # Changelog
 
+# 1.5.1 (2017-09-06)
+
+This is a hotfix release aimed to address sporadic issues with TLS certificates caused by a regression between 
+docker-machine 0.12.0 and docker engine 17.06.0.
+
+## New software versions
+
+- docker-machine v0.12.2
+
+
 # 1.5.0 (2017-08-24)
 
 ## New software versions
