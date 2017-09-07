@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.27.0
+FIN_VERSION=1.27.1
 
 # Console colors
 red='\033[0;91m'
@@ -3484,7 +3484,7 @@ _exec ()
 
 	# ------------------------------------------------ #
 	# 2) convert array of parameters into escaped string
-	# Escape spaces that are "spaces" and not parameter delimeters (i.e. param1 param2\ with\ spaces param3)
+	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g. fin run "ls -la | grep txt")
@@ -5044,7 +5044,9 @@ case "$1" in
 			# Replace host addon path with the matching path inside cli
 			# "\$PROJECT_ROOT" will be resolved in cli to /var/www
 			cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
-			fin exec "$cli_addon_path $@"
+			# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
+			cmd="$cli_addon_path "$(printf " %q" "$@")
+			_exec "$cmd"
 		else
 			exec "$addon" "$@"
 		fi
