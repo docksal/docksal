@@ -79,16 +79,22 @@ It is not imperative to use bash. You can use any interpreter for your custom co
 
 ```python
 #!/usr/bin/env python
+
 print "Custom python command!"
 ```
 
 ```node
 #!/usr/bin/env node
+
 /*
 ## Custom node command description
 */
+
 console.log("Custom NodeJS command!")
 ```
+
+Note in the above example for node, that custom command meta information lines are wrapped in a comment block 
+relevant to this interpreter.
 
 ## Executing commands inside cli
 
@@ -115,6 +121,21 @@ Alternatively the following notation inside a custom command can be used to tell
 
 pwd
 ```
+
+```node
+#!/usr/bin/env node
+
+/*
+#: exec_target = cli
+
+## Custom node command description
+*/
+
+console.log("Custom NodeJS command!")
+```
+
+Note in the above example for node, that custom command meta information lines are wrapped in a comment block 
+relevant to this interpreter.
 
 When using `#: exec_target = cli` for commands you have to consider the following:
 
