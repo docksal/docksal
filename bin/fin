@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.27.1
+FIN_VERSION=1.27.2
 
 # Console colors
 red='\033[0;91m'
@@ -3613,13 +3613,15 @@ mysql_db_create ()
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
 	local __db="${ARGV[0]}"
+	local __db_user="\$MYSQL_USER"
 	local __db_charset="${dbuser:-utf8}"
 	local __db_collation="${dbuser:-utf8_general_ci}"
 
 	[[ "$__db" == "" ]] && echo-error "Provide a database name to create." && exit 1
 
 	mysql --db-user="$__dump_user" --db-password="$__dump_password" \
-		'CREATE DATABASE `'${__db}'` CHARACTER SET '${__db_charset}' COLLATE '${__db_collation}
+		'CREATE DATABASE '${__db}' CHARACTER SET '${__db_charset}' COLLATE '${__db_collation}';
+		GRANT ALL PRIVILEGES ON '${__db}'.* TO '${__db_user}'@"%"'
 
 	if_failed_error "Database creation has failed"
 
