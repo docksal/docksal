@@ -3285,7 +3285,6 @@ update ()
 	# [Update - 5] Update system images
 
 	# Always update system images during upgrade
-	# Same applies to native mode (Docker for Mac/Win)
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		echo-green "Updating system images..."
 		update_system_images
