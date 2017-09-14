@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.28.0
+FIN_VERSION=1.29.0
 
 # Console colors
 red='\033[0;91m'
@@ -3090,7 +3090,6 @@ update_tools ()
 
 update_config_files ()
 {
-	echo-green "Updating stack files..."
 	files_to_download="
 			$URL_STACKS_SERVICES
 			$URL_STACKS_STACK_ACQUIA
@@ -3243,10 +3242,17 @@ update ()
 		fi
 	fi
 
-	# [Update - 1] Update fin unless already running fin.updated binary
+	# [STEP 0] Define total steps. Upgrade has 2 more steps
+	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
+		TOTAL_STEPS=6
+	else
+		TOTAL_STEPS=4
+	fi
+
+	# [STEP 1] Update fin unless already running fin.updated binary
 	if (${FULL_UPDATE}); then
 		testing_warn
-		echo-green "Updating fin..."
+		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 		local new_fin
 		new_fin=$(curl -kfsSL "$URL_FIN?r=$RANDOM")
 		if_failed_error "fin download failed."
@@ -3279,56 +3285,57 @@ update ()
 			sudo mv "$FIN_PATH_UPDATED" "$FIN_PATH"
 			exit
 		else
-			echo-rewrite "Updating fin... $FIN_VERSION ${green}[OK]${NC}"
+			echo-rewrite "[STEP 1/$TOTAL_STEPS] Updating fin... $FIN_VERSION ${green}[OK]${NC}"
 		fi
 	fi
 
-	# [Update - 2] Update default configs
+	# [STEP 2] Update stacks
+	echo-green "[STEP 2/$TOTAL_STEPS] Updating stack files..."
 	update_config_files
 
-	# [Update - 3] Update start script and shortcut
-	# TODO: deprecated, remove in September 2017
-	if is_windows; then
-		echo-green "Updating start script and shortcut..."
-		update_start_script_shortcut
-	fi
-
-	# [Update - 4] Update third party tools
+	# [STEP 3] Update third party tools
+	echo-green "[STEP 3/$TOTAL_STEPS] Updating tools..."
 	update_tools
 
-	# [Update - 5] Update system images
+	# [STEP 4] Update system images
 
-	# Always update system images during upgrade
+	echo-green "[STEP 4/$TOTAL_STEPS] Updating system images..."
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		echo-green "Updating system images..."
+		# [4.1] Always update system images during upgrade
+		# On Win and Mac update only during upgrade because it is done in docker_machine_start
 		update_system_images
 		# Run cleanup to get rid of outdated images
 		cleanup
+	else
+		# [4.2] On Linux update during install, but use sudo as user will not be in docker group yet.
+		if is_linux; then
+			# On Linux a subnet needs to be created first
+			configure_resolver_linux
+			# Override docker to run it via sudo
+			docker () {
+				sudo "$(which docker)" "$@"
+			}
+			update_system_images
+		fi
+
+		# [4.3] With native mode update during install, but no cleanup
+		if is_docker_native; then
+			update_system_images
+		fi
 	fi
 
-	# On Linux also do it during install, but use sudo as user will not be in docker group yet.
-	# On Win and Mac it is done in docker_machine_start
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]] && is_linux; then
-		# On Linux a subnet needs to be created first
-		configure_resolver_linux
-		echo-green "Updating system images..."
-		# Override docker to run it via sudo
-		docker () {
-			sudo "$(which docker)" "$@"
-		}
-		update_system_images
+	# [STEP 5] Update project images
+	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
+		echo-green "[STEP 5/$TOTAL_STEPS] Updating project images"
+		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal | sort | uniq); do
+			docker pull "$_image"
+		done
 	fi
 
-	# With native mode also do it during install
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]] && is_docker_native; then
-		echo-green "Updating system images..."
-		update_system_images
-	fi
-
-	# [Update - 6] Restart running projects if BOOT2DOCKER was not restarted
+	# [STEP 6] Restart running projects if BOOT2DOCKER was not restarted
 	# This is needed to re-append restarted vhost-proxy to containers networks
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
-		echo-green "Restarting running projects..."
+		echo-green "[STEP 6/$TOTAL_STEPS] Restarting running projects..."
 		running_projects=$(docker ps --all \
 			--filter 'status=running' \
 			--filter 'label=com.docker.compose.service=web' \
@@ -3341,6 +3348,7 @@ update ()
 		done
 	fi
 
+	# [STEP - POST UPDATE]
 	[ $? -eq 0 ] && echo-green "Update finished"
 
 	if is_linux && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
@@ -4831,7 +4839,8 @@ case "$1" in
 		elif [[ "$1" == "--tools" ]]; then
 			update_tools
 		# TODO: "--config" deprecated, remove at some point
-		elif [[ "$1" == "--config" ]] || [[ "$1" == "--stacks" ]]; then
+		elif [[ "$1" == "--config" ]] || [[ "$1" == "--stack" ]] || [[ "$1" == "--stacks" ]]; then
+			echo-green "Updating stack files..."
 			update_config_files
 		elif [[ "$1" == "--bash-complete" ]]; then
 			install_bash_autocomplete
