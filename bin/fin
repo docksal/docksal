@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.27.3
+FIN_VERSION=1.28.0
 
 # Console colors
 red='\033[0;91m'
 red_bg='\033[101m'
+yellow_bg='\033[43m'
 green='\033[0;32m'
 green_bg='\033[42m'
 yellow='\033[1;33m'
@@ -174,6 +175,16 @@ echo-red () { echo -e "${red}$1${NC}"; }
 echo-green () { echo -e "${green}$1${NC}"; }
 echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
+echo-warning () {
+	echo -e "${yellow_bg} WARNING: ${NC} ${yellow}$1${NC}";
+	local unused="$2$3" # avoid IDE warning
+	shift
+	# Echo other parameters indented. Can be used for error description or suggestions.
+	while [[ "$1" != "" ]]; do
+		echo -e "         $1";
+		shift
+	done
+}
 echo-error () {
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}";
 	local unused="$2$3" # avoid IDE warning
@@ -193,6 +204,9 @@ echo-rewrite ()
 echo-rewrite-ok ()
 {
 	echo-rewrite "$1 ${green}[OK]${NC}"
+}
+echo-repeat () {
+    seq  -f $1 -s '' $2; echo
 }
 
 # Exits fin if previous command exited with non-zero code
@@ -3945,6 +3959,7 @@ diagnose ()
 		wmic logicaldisk get size,freespace,caption # win native
 	fi
 
+	echo
 	echo "███  RAM Usage"
 	if is_linux; then
 		free # Linux
@@ -3956,54 +3971,83 @@ diagnose ()
 		systeminfo | find "Available Physical Memory"  # win native
 	fi
 
+	echo
 	echo "███  RAM Usage per container"
 	docker stats $(docker ps --format='{{.Names}}') --no-stream
 }
 
 sysinfo ()
 {
-	# os
-	echo "███  OS & BASICS"
-	uname -a
+	echo "███  OS"
 	# OS version
 	is_linux && echo $(lsb_release -si) $(lsb_release -sr)
 	is_mac && echo $(sw_vers -productName) $(sw_vers -productVersion)
 	is_windows && echo $(cmd /c ver)
-	# fin version
+	uname -a
+	# Docker Mode
+	echo -n "Mode: "
+	is_linux && echo "Linux Kernel"
+	if is_docker_native; then
+		is_mac && echo "Docker for Mac"
+		is_widows && echo "Docker for Window"
+	else
+		echo "VirtualBox VM"
+	fi
+
+	echo
+	echo "███  FIN" &&
 	version
 
-	# Native vs VM
-	echo "Mode: " $( ( is_docker_native || is_linux) && echo "Native / Docker for Mac/Windows" || echo "VirtualBox VM" )
-
-	(which 'docker-machine' >/dev/null 2>&1) && \
-		echo "███  INSTANCES" && \
-		docker-machine ls
-
-	echo "███  DOCKER"
-	echo "DOCKER_HOST:	$DOCKER_HOST"
 	echo
-	echo "Docker: $(docker version)"
+	echo "███  ENVIRONMENT" &&
+	echo "DOCKER_HOST		| $DOCKER_HOST"
+	if [[ "$DOCKER_HOST" != "tcp://192.168.64.100:2376" ]]; then
+		echo-warning "Non-default DOCKER_HOST"
+	fi
+	is_mac &&
+		echo-repeat '-' 60 &&
+		echo "DOCKSAL_NFS_PATH	| $DOCKSAL_NFS_PATH"
+
+	echo
+	echo "███  DOCKER"
+	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER"
+	echo
+	docker version
+
+	echo
+	echo "███  DOCKER INFO"
+	docker info
 
 	echo "███  DOCKER COMPOSE"
-	echo "Docker Compose: $(docker-compose version)"
+	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_COMPOSE"
+	docker-compose version
 
-	(which 'docker-machine' >/dev/null 2>&1) && \
-		echo "███  DOCKER MACHINE" && \
+	if ! is_linux && (which 'docker-machine' >/dev/null 2>&1); then
+		echo
+		echo "███  DOCKER MACHINE"
+		echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_MACHINE"
 		docker-machine --version
+		echo
+		docker-machine ls
+	fi
 
 	if is_docker_running; then
+		echo
 		echo "███  DOCKER: IMAGES"
 		docker images
 
+		echo
 		echo "███  DOCKER: CONTAINERS"
 		docker ps
 	fi
 
 	if which "$vboxmanage" >/dev/null 2>&1; then
+		echo
 		echo "███  VIRTUALBOX"
+		echo "EXPECTED VERSION: $REQUIREMENTS_VBOX"
 		"$vboxmanage" --version
-
-		echo "███  NETWORK INTERFACES"
+		echo
+		echo "███  VIRTUALBOX NETWORK INTERFACES"
 		"$vboxmanage" list hostonlyifs
 	fi
 
@@ -4013,9 +4057,17 @@ sysinfo ()
 	fi
 
 	if is_docker_machine_running; then
-		echo "███  MOUNTS"
-		vm ssh mount
+		echo
+		echo "███  DOCKSAL MOUNTS"
+		vm ssh mount | grep '192.168.64'
+		if [[ $? != 0 ]]; then
+			echo-error "Mounts matching 192.168.64* were not found!"
+		fi
 	fi
+
+	# add diagnostics information
+	echo
+	diagnose
 
 	# Ping stats server
 	stats_ping
