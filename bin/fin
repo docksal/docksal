@@ -4124,7 +4124,7 @@ load_configuration ()
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
 	local local_docksal_env_file="$(get_project_path_dc)/.docksal/docksal.${DOCKSAL_ENVIRONMENT}.env"
-	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
+	local local_env_file="$(get_project_path_dc)/.docksal/local.env"
 	if [[ -f "$env_file" ]]; then
 		ENV_FILE="$env_file"
 		fix_crlf_warning "$env_file"
@@ -4238,6 +4238,7 @@ config_show ()
 	[[ "$ENV_FILE" != "" ]] &&
 		echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
 	echo
+	echo "ENVIRONMENT: ${DOCKSAL_ENVIRONMENT}"
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
