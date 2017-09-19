@@ -66,6 +66,10 @@ variables for your automation scripts (see [custom commands](../fin/custom-comma
 are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom port](../advanced/networking.md#expose-port) 
 or switching PHP versions.
 
+These files are intended for local overrides. They should be added to `.gitignore` and never committed into a project 
+repo. You can always include an example file in the repo, e.g. `example.docksal-local.env` and instruct users to copy 
+it and adjust as necessary.
+
 <a name="default-configurations"></a>
 ## Default stacks
 
