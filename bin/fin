@@ -2476,12 +2476,25 @@ ssh_add () {
 	fi
 
 	local ssh_path="$HOME/.ssh"
-	# On Windows docker and docker-compose expect a Windows style path
-	is_windows && ssh_path=$(cygpath -w "$ssh_path")
+	# Check that ssh_path exists and is a directory, abort otherwise
+	if [[ ! -d "$ssh_path" ]]; then
+		echo-yellow "You don't seem to have any SSH keys in the default location (${ssh_path})."
+		_confirm "Would you like to generate a default SSH key pair now?" --no-exit || return
+		# Generate an SSH key pair
+		echo "Generating a default SSH key pair..."
+		ssh-keygen -t rsa -b 4096 -f ${ssh_path}/id_rsa -q -N ""
+		chmod 600 ${ssh_path}/id_rsa
+		# For whatever reason pbcopy is not available in scripts in Babun, so defining it here.
+		is_windows && pbcopy () { cat >/dev/clipboard; }
+		pbcopy < ${ssh_path}/id_rsa.pub && echo "Your new public SSH key was copied to clipboard"
+	fi
 
+	# On Windows docker and docker-compose expect a Windows style path
+	local ssh_path_docker=${ssh_path}
+	is_windows && ssh_path_docker=$(cygpath -w ${ssh_path})
 	# Copy all keys from the host to the ssh-agent container
 	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
-	[[ "${1#-}" == "$1" ]] && docker cp "$ssh_path" docksal-ssh-agent:/
+	[[ "${1#-}" == "$1" ]] && docker cp ${ssh_path_docker} docksal-ssh-agent:/
 
 	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
 	if is_tty; then
