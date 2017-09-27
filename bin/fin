@@ -2484,9 +2484,8 @@ ssh_add () {
 		echo "Generating a default SSH key pair..."
 		ssh-keygen -t rsa -b 4096 -f ${ssh_path}/id_rsa -q -N ""
 		chmod 600 ${ssh_path}/id_rsa
-		# For whatever reason pbcopy is not available in scripts in Babun, so defining it here.
-		is_windows && pbcopy () { cat >/dev/clipboard; }
-		pbcopy < ${ssh_path}/id_rsa.pub && echo "Your new public SSH key was copied to clipboard"
+		echo "Your new public SSH key:"
+		echo && cat ${ssh_path}/id_rsa.pub && echo
 	fi
 
 	# On Windows docker and docker-compose expect a Windows style path
