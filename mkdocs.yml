@@ -2,6 +2,7 @@ site_name: Docksal Documentation
 theme: readthedocs
 theme_dir: docs/_custom_theme
 repo_url: https://github.com/docksal/docksal
+site_url: https://docs.docksal.io
 extra_css:
   - _css/extra.css
 markdown_extensions:
