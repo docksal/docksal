@@ -3607,25 +3607,30 @@ run_cli ()
 _mysql ()
 {
 	check_winpty_found
+	check_docksal_environment
 	eval $(parse_params "$@")
 
+	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	# Bring in MYSQL env variables from the container, so that we can use them here
+	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	eval ${container_mysql_vars}
+
 	local __dump_user="${dbuser:-root}"
-	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
-	local __database="${db:-${MYSQL_DATABASE:-default}}"
+	# MYSQL_* variable expansion happens here
+	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
+	local __database="${db:-$MYSQL_DATABASE}"
 
 	local _query=""
 	for _arg in "${ARGV[@]}"; do
 		_query="$_query $_arg"
 	done
 
-	check_docksal_environment
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
-	__mysql_command=$(docker exec "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
-	if [[ "$_query" != "" ]]; then
-		${winpty} docker exec -it "$container_id" bash -c "mysql ${__mysql_command} ${__database} -e \"${_query}\""
-	else
-		${winpty} docker exec -it "$container_id" bash -c "mysql ${__mysql_command}"
-	fi
+	#[[ "$_query" != "" ]] && _query="-e $(eval 'echo ${_query}')"
+	#${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${_query}"
+	echo ${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database}
+	echo "$MYSQL_USER";
+	echo "${_query}"
+	echo $(eval "echo ${_query}")
 }
 
 # Show databases list
@@ -3636,8 +3641,13 @@ mysql_list ()
 	check_docksal_environment
 	eval $(parse_params "$@")
 
+	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	# Bring in MYSQL env variables from the container, so that we can use them here
+	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	eval ${container_mysql_vars}
+
 	local __dump_user="${dbuser:-root}"
-	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 
 	# -N parameter suppresses columns header
 	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
@@ -3654,23 +3664,27 @@ mysql_db_create ()
 	check_docksal_environment
 	eval $(parse_params "$@")
 
+	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	# Bring in MYSQL env variables from the container, so that we can use them here
+	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	eval ${container_mysql_vars}
+
 	local __dump_user="${dbuser:-root}"
-	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 	local __db="${ARGV[0]}"
-	local __db_user="\$MYSQL_USER"
 	local __db_charset="${dbcharset:-utf8}"
 	local __db_collation="${dbcollation:-utf8_general_ci}"
 
-	[[ "${__db}" == "" ]] && echo-error "Provide the database name to create" && exit 1
+	[[ "${__db}" == "" ]] && echo-error "Provide a name for the database to create" && exit 1
 
-	# set db to space to avoid database parameter for mysql command because it might be nonexistent
-	_mysql --db-user="${__dump_user}" --db-password="${__dump_password}" \
-		"CREATE DATABASE ${__db} CHARACTER SET ${__db_charset} COLLATE ${__db_collation};" \
-		"GRANT ALL PRIVILEGES ON ${__db}.* TO ${__db_user};"
+	# Set db to space since the db does not exist here yet
+	_mysql --db=" " --db-user="${__dump_user}" --db-password="${__dump_password}" \
+		"CREATE DATABASE \`${__db}\` CHARACTER SET ${__db_charset} COLLATE ${__db_collation};" \
+		"GRANT ALL PRIVILEGES ON \`${__db}\`.* TO ${MYSQL_USER};"
 
-	if_failed_error "Database creation failed"
+	if_failed_error "Database '${__db}' creation failed"
 
-	echo "Database ${__db} has been created"
+	echo "Database '${__db}' created"
 }
 
 # Delete a database
@@ -3681,17 +3695,22 @@ mysql_db_drop ()
 	check_docksal_environment
 	eval $(parse_params "$@")
 
+	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	# Bring in MYSQL env variables from the container, so that we can use them here
+	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	eval ${container_mysql_vars}
+
 	local __dump_user="${dbuser:-root}"
-	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 	local __db="${ARGV[0]}"
 
-	[[ "${__db}" == "" ]] && echo-error "Provide a database name to drop." && exit 1
+	[[ "${__db}" == "" ]] && echo-error "Provide the name of the database to drop." && exit 1
 
 	_mysql --db-user="${__dump_user}" --db-password="${__dump_password}" \
-		"DROP DATABASE ${__db}"
+		"DROP DATABASE \`${__db}\`"
 
-	if_failed_error "Database deletion has failed"
-	echo "Database ${__db} was deleted."
+	if_failed_error "Dropping '${__db}' database failed"
+	echo "Database '${__db}' dropped"
 }
 
 # Truncate db and import from sql dump
@@ -3706,8 +3725,13 @@ mysql_import ()
 	check_docksal_environment
 	eval $(parse_params "$@")
 
+	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	# Bring in MYSQL env variables from the container, so that we can use them here
+	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	eval ${container_mysql_vars}
+
 	local __dump_user="${dbuser:-root}"
-	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 	local __database="${db:-${MYSQL_DATABASE:-default}}"
 	# /dev/fd/0 is the stdin stream for current script
 	# IMPORTANT: don't run "docker exec" with "-i" until value of /dev/fd/0 is used or it's value will be lost
@@ -3739,12 +3763,12 @@ mysql_import ()
 					@_charset, @_collation FROM information_schema.schemata
 				WHERE
 					schema_name = '${__database}';
-			SET @CREATE_TEMPLATE = 'CREATE DATABASE {DBNAME} CHARACTER SET {DBCHARSET} COLLATE {DBCOLLATION};';
+			SET @CREATE_TEMPLATE = 'CREATE DATABASE \\\`{DBNAME}\\\` CHARACTER SET {DBCHARSET} COLLATE {DBCOLLATION};';
 			SET @SQL_SCRIPT = REPLACE(@CREATE_TEMPLATE, '{DBNAME}', '${__database}');
 			SET @SQL_SCRIPT = REPLACE(@SQL_SCRIPT, '{DBCHARSET}', @_charset);
 			SET @SQL_SCRIPT = REPLACE(@SQL_SCRIPT, '{DBCOLLATION}', @_collation);
 			PREPARE DBCREATE FROM @SQL_SCRIPT;
-			DROP DATABASE ${__database};
+			DROP DATABASE \\\`${__database}\\\`;
 			EXECUTE DBCREATE;
 		EOF
 		_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
@@ -3762,7 +3786,7 @@ mysql_import ()
 		echo -e "Importing ${yellow}$(basename ${__input})${NC}..." ||
 		echo "Importing from stdin..."
 	# We can not use _run here because we need to launch docker exec with only -i param
-	# and only mysql command direclty (no bash wrapper) so that stdin could be received inside that exec
+	# and only mysql command directly (no bash wrapper) so that stdin could be received inside that exec
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	__mysql_command=$(echo "${__mysql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
@@ -3790,8 +3814,13 @@ mysql_dump ()
 	check_docksal_environment
 	eval $(parse_params "$@")
 
+	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	# Bring in MYSQL env variables from the container, so that we can use them here
+	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	eval ${container_mysql_vars}
+
 	local __dump_user="${dbuser:-root}"
-	local __dump_password="${dbpassword:-\$MYSQL_ROOT_PASSWORD}"
+	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 	local __database="${db:-${MYSQL_DATABASE:-default}}"
 	local __output="${ARGV[0]}"
 
