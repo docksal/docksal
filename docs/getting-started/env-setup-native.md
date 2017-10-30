@@ -33,6 +33,20 @@ curl -fsSL https://get.docksal.io | sh
 fin reset system
 ```
 
+**6.** Configure file sharing as necessary (see below).
+
+
+### File sharing
+
+Docker for Mac automatically shares most commonly used volumes/directories. 
+See [here](https://docs.docker.com/docker-for-mac/#file-sharing) for details.  
+It is usually not necessary to adjust these settings.
+
+Docker for Windows does NOT share drives automatically. This has to be done manually. 
+See [here](https://docs.docker.com/docker-for-windows/#shared-drives) for details.  
+Configure sharing for the drive where your "Projects" folder is (`C:` in most cases).
+
+
 ## Switching back to VirtualBox
 
 **1.** Close the "native" Docker app.
