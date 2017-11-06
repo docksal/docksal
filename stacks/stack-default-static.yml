@@ -29,6 +29,9 @@ services:
     image: docksal/db:1.1-mysql-5.6
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
+    volumes:
+      # Project root volume
+      - project_root:/var/www:ro,nocopy
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-user}
