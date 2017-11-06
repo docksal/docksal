@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.29.1
+FIN_VERSION=1.29.2
 
 # Console colors
 red='\033[0;91m'
@@ -4628,6 +4628,8 @@ FIN_SET_UID=""
 # Generate Docksal instance uuid if not available
 if [[ "$DOCKSAL_UUID" == "" ]]; then
 	export DOCKSAL_UUID=$(uuidgen)
+	# Make sure the is a new line at the end of the config file, then write to it
+	sed -i~ '$ a\' "$CONFIG_ENV"
 	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
 fi
 
