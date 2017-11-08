@@ -2580,8 +2580,12 @@ install_proxy_service ()
 install_dns_service ()
 {
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
+	# This container cannot use the host's resolver configuration. The host itself may be configured to use this
+	# container for DNS resolution (Windows and Linux), so we will get into a recursion.
+	# DOCKSAL_DNS_UPSTREAM can be set to the controlled network DNS server address (VPN/LAN) in the global docksal.env file.
+	# When user disconnects from that network, the backup DNS will handle name resolution (assuming 8.8.4.4 is reachable).
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
-		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" \
+		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="8.8.4.4" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
