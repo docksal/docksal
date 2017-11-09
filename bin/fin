@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.29.2
+FIN_VERSION=1.29.3
 
 # Console colors
 red='\033[0;91m'
@@ -3950,6 +3950,7 @@ ngrok_share ()
 
 	# Based on https://github.com/wernight/docker-ngrok
 	${winpty} docker run --rm -it \
+		--publish 4040 \
 		--net ${network} \
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
