@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.29.5
+FIN_VERSION=1.29.6
 
 # Console colors
 red='\033[0;91m'
@@ -2487,6 +2487,9 @@ ssh_add () {
 	local ssh_path="$HOME/.ssh"
 	# On Windows docker and docker-compose expect a Windows style path
 	is_windows && ssh_path=$(cygpath -w "$ssh_path")
+
+	# Ensure ssh_path exists
+	mkdir -p "$ssh_path"
 
 	# Copy all keys from the host to the ssh-agent container
 	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
