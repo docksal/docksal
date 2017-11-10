@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.29.4
+FIN_VERSION=1.29.5
 
 # Console colors
 red='\033[0;91m'
@@ -1939,14 +1939,14 @@ docker_machine_mount_nfs ()
 		echo "Mounting local $share_export to $share_mount"
 		docker-machine ssh "$machine_name" \
 			"sudo mkdir -p $share_mount ;
-			sudo umount $share_mount 2>/dev/null ;
-			sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
+			timeout -t 5 sudo umount $share_mount 2>/dev/null ;
+			timeout -t 20 sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			# [!!] Think twice about performance before changing nfs settings
 		if [ ! $? -eq 0 ]; then
 			echo "Retrying mounting local $share_export to $share_mount"
 			sleep 5
 			docker-machine ssh "$machine_name" \
-				"sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
+				"timeout -t 20 sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			if [[ $? != 0 ]]; then
 				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
 				return 1
