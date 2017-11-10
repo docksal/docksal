@@ -98,6 +98,9 @@ DOCKSAL_COMMANDS_PATH=".docksal/commands"
 # Where addons live (relative path)
 DOCKSAL_ADDONS_PATH=".docksal/addons"
 
+# Docksal environment
+DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
+
 # Network settings
 ## Docker for Mac/Win
 DOCKSAL_NATIVE_IP="192.168.64.100"
@@ -4146,12 +4149,22 @@ load_configuration ()
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
-	local local_env_file="$(get_project_path_dc)/.docksal/docksal-local.env"
+	local local_docksal_env_file="$(get_project_path_dc)/.docksal/docksal.${DOCKSAL_ENVIRONMENT}.env"
+	local local_env_file="$(get_project_path_dc)/.docksal/local.env"
 	if [[ -f "$env_file" ]]; then
 		ENV_FILE="$env_file"
 		fix_crlf_warning "$env_file"
 		# Source and allexport variables in the .env file
 		set -a; source "$env_file"; set +a
+	fi
+
+	# Source local docksal env file if it exists
+	# Allow override global docksal.env for a custom environment
+	if [[ -f "$local_docksal_env_file" ]]; then
+			ENV_FILE="${ENV_FILE}${SEPARATOR}${local_docksal_env_file}"
+			fix_crlf_warning "$local_docksal_env_file"
+			# Source and allexport variables in the .env file
+			set -a; source "$local_docksal_env_file"; set +a
 	fi
 
 	# Source local env file if it exist
@@ -4251,6 +4264,7 @@ config_show ()
 	[[ "$ENV_FILE" != "" ]] &&
 		echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
 	echo
+	echo "ENVIRONMENT: ${DOCKSAL_ENVIRONMENT}"
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
