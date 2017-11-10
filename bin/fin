@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.29.3
+FIN_VERSION=1.29.4
 
 # Console colors
 red='\033[0;91m'
@@ -177,22 +177,23 @@ echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
 echo-yellow () { echo -e "${yellow}$1${NC}"; }
 echo-warning () {
 	echo -e "${yellow_bg} WARNING: ${NC} ${yellow}$1${NC}";
-	local unused="$2$3" # avoid IDE warning
 	shift
-	# Echo other parameters indented. Can be used for error description or suggestions.
-	while [[ "$1" != "" ]]; do
-		echo -e "         $1";
-		shift
+	for arg in "$@"; do
+		echo -e "           $arg"
 	done
 }
 echo-error () {
-	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}";
-	local unused="$2$3" # avoid IDE warning
+	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}"
 	shift
-	# Echo other parameters indented. Can be used for error description or suggestions.
-	while [[ "$1" != "" ]]; do
-		echo -e "         $1";
-		shift
+	for arg in "$@"; do
+		echo -e "         $arg"
+	done
+}
+echo-alert () {
+	echo -e "${red_bg} ALERT: ${NC} ${red}$1${NC}"
+	shift
+	for arg in "$@"; do
+		echo -e "         $arg"
 	done
 }
 # rewrite previous line
@@ -574,24 +575,28 @@ check_docksal_environment ()
 
 check_docker_running ()
 {
+	# Immediately break on upgrade
 	[[ "$UPGRADE_IN_PROGRESS" == "1" ]] && return 0
+
+	# Check docker versions in this function
+	if ! is_docker_version; then
+		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
+			"Run ${yellow}fin update${NC} to update to the required version."
+	fi
+
 	# Check cached value
 	[[ "$DOCKER_RUNNING" == "true" ]] && return 0
+
+	# If we got here then cached value is not true
 	local docker_status
 
 	check_binary_found 'docker'
 	check_binary_found 'docker-compose'
-	if ! is_docker_native && ! is_docker_version; then
-		echo-error "Required Docker version is $REQUIREMENTS_DOCKER"
-		echo -e "Run ${yellow}fin update${NC} to update"
-		exit 1
-	fi
-	if is_docker_native && ! is_docker_version; then
-		echo-yellow "Your Docker version is out of date. Please update to $REQUIREMENTS_DOCKER"
-	fi
 
 	is_docker_running
 	docker_status=$?
+	# Last chance to return non-error code
+	[[ ${docker_status} -eq 0 ]] && return
 
 	if [[ ${docker_status} -eq 255 ]] && ! is_docker_native; then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
@@ -604,36 +609,42 @@ check_docker_running ()
 		docker_status=$?
 	fi
 
-	if [[ ${docker_status} -eq 0 ]]; then
-		DOCKER_RUNNING="true"
-	else
-		if is_docker_native; then
+	if is_linux; then
+		# Remind the user about running 'newgrp docker' after install.
+		if ! (id -nG | grep docker >/dev/null 2>&1) && [[ "$(id -u)" != "0" ]] ; then
+			echo-error "Current user is not part of the docker group." \
+				"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin update${NC}?"
 			exit 1
-		elif is_linux; then
-			# Remind the used about running 'newgrp docker' after install.
-			if ! (id -nG | grep docker >/dev/null 2>&1) && [[ "$(id -u)" != "0" ]] ; then
-				echo-error "Current user is not part of the docker group." \
-					"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin update${NC}?"
-				exit 1
-			fi
-			# Check if docker daemon is running and offer to start it if not.
-			if ! (ps aux | grep dockerd | grep -v grep); then
-				_confirm "Start docker daemon now ('service docker start')?"
-				sudo service docker start
-			fi
-		else
-			# Check for certificates error
-			if (docker-machine env "$DOCKER_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
-				echo-error "Error connecting to VM due to certificates error." \
-					"WHAT TO DO?" \
-					"1. Try restarting your host." \
-					"2. Try running ${yellow}fin vm regenerate-certs${NC}." \
-					"3. If above did not help, then remove VM by ${yellow}fin vm remove${NC} and re-create with ${yellow}fin vm start${NC}."
-				exit 1
-			fi
+		fi
+		# Check if docker daemon is running and offer to start it if not.
+		if ! (ps aux | grep dockerd | grep -v grep); then
+			_confirm "Start docker daemon now ('service docker start')?"
+			sudo service docker start
+		fi
+	else # MacOS, Windows
+		# Check for certificates error
+		if (docker-machine env "$DOCKER_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
+			echo-error "Error connecting to Docker due to certificates error" \
+				"WHAT TO DO?" \
+				"1. Try ${yellow}fin vm restart${NC}." \
+				"2. If #1 did not help, try restarting your local host." \
+				"3. If #2 did not help, try ${yellow}fin vm regenerate-certs${NC}."
+			exit 1
+		fi
 
-			echo-error "Looks like your Docker client and Docker server are incompatible." \
-				"${green}Run ${NC}${yellow}fin update${NC}${green} to update.${NC}"
+		# Other generic errors
+		if is_docker_native; then
+			echo-error "Your Docker client is unable to talk to the Docker server." \
+				"WHAT TO DO?" \
+				"1. Check error logs above." \
+				"2. Check errors you see in troubleshooting doc https://docs.docksal.io/en/master/troubleshooting"
+			exit 1
+		else
+			echo-error "Your Docker client is unable to talk to the Docker server." \
+				"WHAT TO DO?" \
+				"1. Try ${yellow}fin vm restart${NC}." \
+				"2. If #1 did not help, run ${yellow}fin update${NC} to update." \
+				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/en/master/troubleshooting"
 			exit 1
 		fi
 	fi
@@ -1605,8 +1616,6 @@ bash_comp_words ()
 
 is_docker_machine_running ()
 {
-#	check_binary_found 'docker-machine'
-#	docker-machine status "$DOCKER_MACHINE_NAME" 2>/dev/null | grep "Running" 2>&1 1>/dev/null
 	[[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]
 }
 
@@ -1742,7 +1751,9 @@ docker_machine_start ()
 		# Disable IP change for now
 		#docker_machine_change_ip &&
 		docker_machine_env
-		if_failed_error "Failed starting virtual machine"
+		if_failed_error "Failed starting virtual machine" \
+			"In case you see certificates problem, reboot your local host." \
+			"Common issues: https://docs.docksal.io/en/master/troubleshooting"
 		configure_resolver
 		docker_machine_mounts
 	else
