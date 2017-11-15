@@ -639,8 +639,7 @@ check_docker_running ()
 		if is_docker_native; then
 			echo-error "Your Docker client is unable to talk to the Docker server." \
 				"WHAT TO DO?" \
-				"1. Check error logs above." \
-				"2. Check errors you see in troubleshooting doc https://docs.docksal.io/en/master/troubleshooting"
+				"Check that you Docker for Mac/Win app is running."
 			exit 1
 		else
 			echo-error "Your Docker client is unable to talk to the Docker server." \
@@ -1940,6 +1939,7 @@ docker_machine_mount_nfs ()
 		local share_mount="${share_[1]}"
 		# Add new exports
 		echo "Mounting local $share_export to $share_mount"
+		# Timeout will break mount command, that can freeze if connection to host is blocked by firewall
 		docker-machine ssh "$machine_name" \
 			"sudo mkdir -p $share_mount ;
 			timeout -t 5 sudo umount $share_mount 2>/dev/null ;
