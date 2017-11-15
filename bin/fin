@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.30.1
+FIN_VERSION=1.30.2
 
 # Console colors
 red='\033[0;91m'
@@ -4225,7 +4225,7 @@ load_configuration ()
 	fi
 
 	# Set defaults
-	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.docksal}
+	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	export DOCROOT=${DOCROOT:-docroot}
 
 	# Make project root globally available
