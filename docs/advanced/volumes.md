@@ -75,7 +75,7 @@ volumes:
 In the example above, `project_root` and `docksal_ssh_agent` are "named volumes". The first one is a project level one,
 while the second one is a global volume and is used by all projects.
 
-See [stacks/volumes-bind.yml](/stacks/volumes-bind.yml)
+See [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/stacks/volumes-bind.yml)
 
 Defining volumes this way makes it much easier to override volume settings in one place (`volumes` section) vs multiple 
 places in the yaml file. We can now swap bind mounting with something else. See below.
@@ -97,7 +97,7 @@ volumes:
     external: true
 ```
 
-See [stacks/volumes-bind.yml](/stacks/volumes-nfs.yml).
+See [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/stacks/volumes-nfs.yml).
 
 This is what the file sharing chain looks like with a NFS volume. 
 
@@ -119,7 +119,7 @@ with Docker for Mac, for testing and performance comparison purposes.
 We can also do more advanced and pretty interesting solutions, like using Unison to synchronize files between the host 
 and the `project_root` volume. 
 
-See [stacks/volumes-unison.yml](/stacks/volumes-unison.yml)
+See [stacks/volumes-unison.yml](https://github.com/docksal/docksal/blob/master/stacks/stacks/volumes-unison.yml)
 
 Unison volumes make the most sense for Docker for Mac users as an alternative to the (still slow) `osxfs` file sharing.
 
@@ -151,7 +151,7 @@ The downsides:
 
 ### Using Unison volumes
 
-- Follow instructions [here](http://docksal.readthedocs.io/en/master/getting-started/env-setup-native/) to properly 
+- Follow instructions [here](http://docs.docksal.io/en/master/getting-started/env-setup-native/) to properly 
 configure Docksal for use with Docker for Mac. Make sure you have the most recent fin version installed.
 - Add `DOCKSAL_VOLUMES=unison` in `.docksal/docksal.env` in a project
 - `fin reset`
