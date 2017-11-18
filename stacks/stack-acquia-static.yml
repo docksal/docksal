@@ -63,6 +63,10 @@ services:
       - HOST_GID
       - DOCROOT
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
+      # Point xdebug to the host IP
+      - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}
+      # This helps with console scripts debugging in PHPStorm
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
