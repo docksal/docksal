@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.30.2
+FIN_VERSION=1.30.3
 
 # Console colors
 red='\033[0;91m'
@@ -3894,6 +3894,10 @@ reset ()
 	else
 		remove "$@"
 	fi
+	# Return here if there are errors with remove
+	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
+	[[ "$?" != 0 ]] && return $?
+
 	is_linux && [[ "$@" == "" ]] && ssh_add
 	_start_containers
 }
