@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.30.3
+FIN_VERSION=1.30.4
 
 # Console colors
 red='\033[0;91m'
@@ -2299,9 +2299,9 @@ vm-hdd () {
 up ()
 {
 	check_docksal_environment
-	# Run ssh_add here, since there is no better place to get it triggered on Linux.
-	# This should not be the last command in a function as it will exit 1 on non Linux systems.
-	is_linux && ssh_add
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
+	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
 
 	# Temporary workaround for NFS issues on Mac
@@ -2331,9 +2331,9 @@ stop ()
 restart ()
 {
 	check_docksal_environment
-	# Run ssh_add here, since there is no better place to get it triggered on Linux.
-	# This should not be the last command in a function as it will exit 1 on non Linux systems.
-	is_linux && ssh_add
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
+	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
 
 	_restart_containers "$@"
@@ -3898,7 +3898,8 @@ reset ()
 	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
 	[[ "$?" != 0 ]] && return $?
 
-	is_linux && [[ "$@" == "" ]] && ssh_add
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
 	_start_containers
 }
 
