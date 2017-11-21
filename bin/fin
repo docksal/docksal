@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.30.4
+FIN_VERSION=1.31.0
 
 # Console colors
 red='\033[0;91m'
@@ -4773,7 +4773,6 @@ case "$1" in
 		check_for_updates
 		shift
 		up
-		vhosts
 		;;
 	up)
 		# Force re-reading of configuration files
@@ -4781,7 +4780,6 @@ case "$1" in
 		check_for_updates
 		shift
 		up
-		vhosts
 		;;
 	stop)
 		shift
