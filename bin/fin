@@ -1087,6 +1087,7 @@ show_help ()
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
 	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
+	printh "vhosts" "List all virtual *.docksal hosts registered in docksal proxy"
 	printh "sysinfo" "Show system information for bug reporting"
 	printh "diagnose" "Show statistics for troubleshooting and bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
@@ -4412,6 +4413,16 @@ hosts_backup ()
 	cp "$HOSTS_FILE" "$bkp"
 }
 
+vhosts ()
+{
+	NAMES=`docker exec docksal-vhost-proxy sh -c "grep server_name /etc/nginx/conf.d/* -r |sort |uniq|sed 's/;//g' |sed 's/^.*_name//g'"`
+
+	echo-yellow "\nAvailable websites are:"
+	for n in $NAMES ;do
+		echo-green "http://$n"
+	done
+}
+
 # Addons management
 addon () {
 	eval $(parse_params "$@")
@@ -4762,6 +4773,7 @@ case "$1" in
 		check_for_updates
 		shift
 		up
+		vhosts
 		;;
 	up)
 		# Force re-reading of configuration files
@@ -4769,6 +4781,7 @@ case "$1" in
 		check_for_updates
 		shift
 		up
+		vhosts
 		;;
 	stop)
 		shift
@@ -5101,6 +5114,10 @@ case "$1" in
 		# no load_configuration
 		shift
 		hosts "$@"
+		;;
+	vhosts)
+		# no load_configuration
+		vhosts
 		;;
 	addon|a)
 		# configuration will be loaded by end functions if needed
