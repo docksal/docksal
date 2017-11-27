@@ -19,7 +19,7 @@ With Docksal starting a complete LAMP stack for Drupal, WordPress or a pure HTML
 
 ```bash
 git clone <sample-project-repo>
-fin init
+fin config generate
 ```
 
 Try one of the example projects:
