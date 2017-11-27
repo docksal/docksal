@@ -49,13 +49,18 @@ Configure sharing for the drive where your "Projects" folder is (`C:` in most ca
 
 ## Switching back to VirtualBox
 
-**1.** Close the "native" Docker app.
+**1.** Close the "native" Docker app
 
-**2.** Disable "native" apps mode.
+On Windows, you will also have to **completely uninstall Hyper-V** (a dependency for Docker for Windows).  
+You won't be able to use VirtualBox (or any other hypervisor) while Hyper-V is installed. 
+Hyper-V locks the VT-x extension to itself, so other hypervisors are not able to use the hardware virtualization 
+support and cannot run 64bit VMs because of that.
+
+**2.** Disable the "native" apps mode
 
 Remove `DOCKER_NATIVE=1` from `~/.docksal/docksal.env` 
 
-**3.** Reset networks settings, start Docksal VM and reset Docksal system services.
+**3.** Reset networks settings, start Docksal VM and reset Docksal system services
 
 ```bash
 fin reset network
