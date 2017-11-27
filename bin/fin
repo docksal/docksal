@@ -104,9 +104,11 @@ DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 # Network settings
 ## Docker for Mac/Win
 DOCKSAL_NATIVE_IP="192.168.64.100"
+DOCKSAL_NATIVE_HOST_IP="192.168.64.1"
 
 ## Default (Linux, boot2docker/VirtualBox on Mac and Win)
 DOCKSAL_DEFAULT_IP="192.168.64.100"
+DOCKSAL_DEFAULT_HOST_IP="192.168.64.1"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
 
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
@@ -1087,6 +1089,7 @@ show_help ()
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
 	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
+	printh "vhosts" "List all virtual *.docksal hosts registered in docksal proxy"
 	printh "sysinfo" "Show system information for bug reporting"
 	printh "diagnose" "Show statistics for troubleshooting and bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
@@ -2299,9 +2302,9 @@ vm-hdd () {
 up ()
 {
 	check_docksal_environment
-	# Run ssh_add here, since there is no better place to get it triggered on Linux.
-	# This should not be the last command in a function as it will exit 1 on non Linux systems.
-	is_linux && ssh_add
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
+	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
 
 	# Temporary workaround for NFS issues on Mac
@@ -2331,9 +2334,9 @@ stop ()
 restart ()
 {
 	check_docksal_environment
-	# Run ssh_add here, since there is no better place to get it triggered on Linux.
-	# This should not be the last command in a function as it will exit 1 on non Linux systems.
-	is_linux && ssh_add
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
+	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
 
 	_restart_containers "$@"
@@ -2542,11 +2545,13 @@ configure_network ()
 	if is_mac; then
 	 	# Docker for Mac
 	 	if is_docker_native; then
-			# Add Docksal IP alias on the local loopback adapter
+			# Add Docksal IP aliases on the local loopback adapter
 			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
+			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_HOST_IP} 255.255.255.0
 		else
 			# Remove Docksal IP alias from the local loopback adapter
 			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP} >/dev/null 2>&1
+			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_HOST_IP} >/dev/null 2>&1
 		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
@@ -2555,11 +2560,15 @@ configure_network ()
 	if is_windows; then
 		# Docker for Win
 		if is_docker_native; then
-			# Add Docksal IP alias on the DockerNAT adapter
-			winsudo "netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
+			# Add Docksal IP aliases on the DockerNAT adapter
+			local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
+			local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP} mask=255.255.255.0"
+			winsudo "$command1 && $command2"
 		else
-			# Remove Docksal IP alias on the DockerNAT adapter
-			winsudo "netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
+			# Remove Docksal IP aliases on the DockerNAT adapter
+			local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
+			local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP}"
+			winsudo "$command1 && $command2"
 		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
@@ -3898,7 +3907,8 @@ reset ()
 	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
 	[[ "$?" != 0 ]] && return $?
 
-	is_linux && [[ "$@" == "" ]] && ssh_add
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
 	_start_containers
 }
 
@@ -4417,6 +4427,16 @@ hosts_backup ()
 	cp "$HOSTS_FILE" "$bkp"
 }
 
+vhosts ()
+{
+	NAMES=`docker exec docksal-vhost-proxy sh -c "grep server_name /etc/nginx/conf.d/* -r |sort |uniq|sed 's/;//g' |sed 's/^.*_name//g'"`
+
+	echo-yellow "\nAvailable websites are:"
+	for n in $NAMES ;do
+		echo-green "http://$n"
+	done
+}
+
 # Addons management
 addon () {
 	eval $(parse_params "$@")
@@ -4674,10 +4694,12 @@ fi
 # DOCKSAL_DNS2 - a backup external DNS server
 if is_docker_native; then
 	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
+	export DOCKSAL_HOST_IP=${DOCKSAL_NATIVE_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 else
 	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
+	export DOCKSAL_HOST_IP=${DOCKSAL_DEFAULT_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 fi
@@ -5106,6 +5128,10 @@ case "$1" in
 		# no load_configuration
 		shift
 		hosts "$@"
+		;;
+	vhosts)
+		# no load_configuration
+		vhosts
 		;;
 	addon|a)
 		# configuration will be loaded by end functions if needed
