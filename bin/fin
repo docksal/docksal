@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.31.0
+FIN_VERSION=1.32.0
 
 # Console colors
 red='\033[0;91m'
@@ -48,7 +48,7 @@ is_mac ()
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 REQUIREMENTS_DOCKER='17.09.0-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.16.1'
+REQUIREMENTS_DOCKER_COMPOSE='1.17.1'
 REQUIREMENTS_DOCKER_MACHINE='0.13.0'
 REQUIREMENTS_VBOX='5.1.28'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
@@ -4225,6 +4225,12 @@ load_configuration ()
 					"You may need to run ${yellow}fin update${NC} to download volume definitions."
 				exit 1
 			fi
+		fi
+
+		# Enable osxfs:cached for cli on Docker for Mac
+		overrides_osxfs_file="$(get_config_dir_dc)/stacks/overrides-osxfs.yml"
+		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]]; then
+			COMPOSE_FILE="${overrides_osxfs_file}${SEPARATOR}${COMPOSE_FILE}"
 		fi
 	fi
 	export COMPOSE_FILE
