@@ -1,9 +1,9 @@
 # Acquia alike stack
 #
-# - Apache 2.2
-# - MySQL 5.5
+# - Apache 2.4
+# - MySQL 5.6
 # - PHP 5.6 / PHP 7.0
-# - Varnish 3
+# - Varnish 4
 # - Memcached 1.4
 # - ApacheSolr 4.x
 
@@ -63,6 +63,10 @@ services:
       - HOST_GID
       - DOCROOT
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
+      # Point xdebug to the host IP
+      - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}
+      # This helps with console scripts debugging in PHPStorm
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}

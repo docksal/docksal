@@ -104,9 +104,11 @@ DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 # Network settings
 ## Docker for Mac/Win
 DOCKSAL_NATIVE_IP="192.168.64.100"
+DOCKSAL_NATIVE_HOST_IP="192.168.64.1"
 
 ## Default (Linux, boot2docker/VirtualBox on Mac and Win)
 DOCKSAL_DEFAULT_IP="192.168.64.100"
+DOCKSAL_DEFAULT_HOST_IP="192.168.64.1"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
 
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
@@ -2543,11 +2545,13 @@ configure_network ()
 	if is_mac; then
 	 	# Docker for Mac
 	 	if is_docker_native; then
-			# Add Docksal IP alias on the local loopback adapter
+			# Add Docksal IP aliases on the local loopback adapter
 			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
+			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_HOST_IP} 255.255.255.0
 		else
 			# Remove Docksal IP alias from the local loopback adapter
 			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP} >/dev/null 2>&1
+			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_HOST_IP} >/dev/null 2>&1
 		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
@@ -2556,11 +2560,15 @@ configure_network ()
 	if is_windows; then
 		# Docker for Win
 		if is_docker_native; then
-			# Add Docksal IP alias on the DockerNAT adapter
-			winsudo "netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
+			# Add Docksal IP aliases on the DockerNAT adapter
+			local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
+			local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP} mask=255.255.255.0"
+			winsudo "$command1 && $command2"
 		else
-			# Remove Docksal IP alias on the DockerNAT adapter
-			winsudo "netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
+			# Remove Docksal IP aliases on the DockerNAT adapter
+			local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
+			local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP}"
+			winsudo "$command1 && $command2"
 		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
@@ -4680,10 +4688,12 @@ fi
 # DOCKSAL_DNS2 - a backup external DNS server
 if is_docker_native; then
 	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
+	export DOCKSAL_HOST_IP=${DOCKSAL_NATIVE_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 else
 	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
+	export DOCKSAL_HOST_IP=${DOCKSAL_DEFAULT_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 fi
