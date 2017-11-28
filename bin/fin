@@ -730,8 +730,8 @@ check_vbox_version ()
 
 	is_vbox_version
 	local res=$?
-	[[ "$res" == "1" ]] && echo-red "$vboxmanage binary was not found" && update_virtualbox
-	[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && update_virtualbox
+	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
+	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
 }
 
 # Check that .docksal is present
@@ -2758,11 +2758,6 @@ install_sshagent_service ()
 # Install tools on Mac
 install_tools_mac ()
 {
-	if ! is_docker_native; then
-		# Check VirtualBox
-		check_vbox_version
-	fi
-
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
@@ -2858,11 +2853,6 @@ install_tools_windows ()
 	# Disable Babun update checks as they often bring problems
 	if ! (grep '^export DISABLE_CHECK_ON_STARTUP="true"' "$HOME/.babunrc" >/dev/null 2>&1); then
 		echo -e "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> "$HOME/.babunrc"
-	fi
-
-	if ! is_docker_native; then
-		# Check VirtualBox
-		check_vbox_version
 	fi
 
 	# Install Docker client
@@ -3226,12 +3216,23 @@ update_project_images ()
 # Update Docksal
 update ()
 {
-	# Do not run full update is running from $FIN_PATH_UPDATED (self initiated sub-shell)
+	# If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
 	[[ "$0" == "$FIN_PATH_UPDATED" ]] && FULL_UPDATE="exit 1"
 
 	# Pre-update check #1: check if there is existing but stopped Docksal machine
 	# We need it running to know Docker server version
 	if (${FULL_UPDATE}); then
+		if ! is_linux && ! is_docker_native; then
+			# Check VirtualBox
+			is_vbox_version
+			local res=$?
+			if [[ "$res" != "0" ]]; then
+				[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher"
+				update_virtualbox
+				vm start
+			fi
+		fi
+
 		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
 				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
