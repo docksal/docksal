@@ -3032,6 +3032,12 @@ install_tools_ubuntu ()
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 
+	# Install ifup/ifdown if they are missing
+	if ! (which ifup >/dev/null 2>&1) || ! (which ifdown >/dev/null 2>&1) || ! (which resolvconf >/dev/null 2>&1); then
+		sudo apt-get update
+		sudo apt-get install ifupdown resolvconf -y
+	fi
+
 	# Install docker-machine
 	#	if ! is_docker_machine_version; then
 	#		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
