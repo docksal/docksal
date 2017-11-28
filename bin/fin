@@ -3033,7 +3033,7 @@ install_tools_ubuntu ()
 	fi
 
 	# Install ifup/ifdown if they are missing
-	if ! (which ifup >/dev/null 2>&1) || ! (which ifdown >/dev/null 2>&1); then
+	if ! (which ifup >/dev/null 2>&1) || ! (which ifdown >/dev/null 2>&1) || ! (which resolvconf >/dev/null 2>&1); then
 		sudo apt-get update
 		sudo apt-get install ifupdown resolvconf -y
 	fi
