@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.33.0
+FIN_VERSION=1.34.0
 
 # Console colors
 red='\033[0;91m'
@@ -144,6 +144,9 @@ URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
+URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
+URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
+# Remove URL_REPO_ADDONS in Nov 2018
 URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
@@ -4466,6 +4469,14 @@ addon () {
 
 	local addon_name=${ARGV[1]} # ARGV[0] is install, remove,...
 
+	# If addon contains 3 slash separated parts treat them as path
+	# i.e. username/repo/addon_name
+	_regex="(.*\/.*)\/(.*)"
+	if [[ "$addon_name" =~ $_regex ]]; then
+		URL_ADDONS_REPO="$URL_ADDONS_HOSTING/${BASH_REMATCH[1]}"
+		addon_name=${BASH_REMATCH[2]}
+	fi
+
 	case "$1" in
 		install|in)
 				addon_install "$addon_name" ${is_global}
@@ -4517,7 +4528,7 @@ addon_install ()
 	fi
 	mkdir -p "$addon_path"
 	if_failed_error "Could not create $addon_path" "Check file permissions and try again"
-	local URL_ADDON="$URL_REPO_ADDONS/master/$addon_name"
+	local URL_ADDON="$URL_ADDONS_REPO/master/$addon_name"
 
 	# Get files list
 	local file_list
