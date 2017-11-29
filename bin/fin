@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.32.0
+FIN_VERSION=1.33.0
 
 # Console colors
 red='\033[0;91m'
@@ -573,9 +573,16 @@ ver_to_int ()
 
 #---------------------------- Control functions -------------------------------
 
+# Check that project root exists and Docker is running.
+check_project_environment ()
+{
+	check_project_root && check_docker_running
+}
+
+# Check that project root exists, Docker is running and Docksal system services are running
 check_docksal_environment ()
 {
-	check_docksal && check_docker_running
+	check_project_root && check_docksal_running
 }
 
 check_docker_running ()
@@ -586,7 +593,7 @@ check_docker_running ()
 	# Check docker versions in this function
 	if ! is_docker_version; then
 		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
-			"Run ${yellow}fin update${NC} to update to the required version."
+			"Run ${yellow}fin update${NC} to update to the required version." \ ""
 	fi
 
 	# Check cached value
@@ -651,6 +658,16 @@ check_docker_running ()
 				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/en/master/troubleshooting"
 			exit 1
 		fi
+	fi
+}
+
+check_docksal_running ()
+{
+	check_docker_running
+	if ! is_docksal_running; then
+		echo-alert "Some Docksal services were not running" "Restarting Docksal system services..."
+		sleep 1
+		reset system
 	fi
 }
 
@@ -735,7 +752,7 @@ check_vbox_version ()
 }
 
 # Check that .docksal is present
-check_docksal ()
+check_project_root ()
 {
 	if [[ "$(get_project_path)" == "" ]] ; then
 		echo-error "Cannot detect project root." \
@@ -842,7 +859,8 @@ _stop_containers ()
 		return
 	fi
 
-	check_docksal_environment
+	load_configuration
+	check_project_unique
 	echo-green "Stopping services..."
 	docker-compose stop "$@"
 }
@@ -855,7 +873,7 @@ _restart_containers ()
 # @param $1 container_name
 _remove_containers ()
 {
-	check_docksal_environment
+	check_project_environment
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 
@@ -2325,9 +2343,6 @@ stop ()
 		return $?
 	fi
 
-	check_docksal_environment
-	check_project_unique
-
 	_stop_containers "$@"
 }
 
@@ -2348,7 +2363,7 @@ restart ()
 # @param $1 $2... container names
 remove ()
 {
-	check_docksal_environment
+	check_project_environment
 	check_project_unique
 
 	if [[ $1 == "" ]]; then
@@ -2477,7 +2492,6 @@ project_create ()
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
-	check_docker_running
 	check_winpty_found
 
 	# Check if ssh-agent container is running
@@ -2753,8 +2767,8 @@ install_sshagent_service ()
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always \
 		-v docksal_ssh_agent:/.ssh-agent \
 		"${IMAGE_SSH_AGENT}" >/dev/null
-	# Add default keys. Using || true here to suppress errors if there are not keys on the host.
-	fin ssh-add || true
+	# Add default keys. Using || true here to suppress errors if there are no keys on the host.
+	ssh_add || true
 }
 
 # Install tools on Mac
@@ -3511,7 +3525,7 @@ _exec ()
 {
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
-	check_docksal_environment
+	check_project_environment
 	check_winpty_found
 
 	# Allow disabling TTY mode.
@@ -3635,7 +3649,7 @@ mysql ()
 		_query="$_query $_arg"
 	done
 
-	check_docksal_environment
+	check_project_environment
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u$__dump_user -p$__dump_password")
 	if [[ "$_query" != "" ]]; then
@@ -3650,7 +3664,7 @@ mysql ()
 # --db-password="otherpass" to override mysql password
 mysql_list ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	local __dump_user="${dbuser:-root}"
@@ -3668,7 +3682,7 @@ mysql_list ()
 # --db-collation="..." to override collation (default is utf8_general_ci)
 mysql_db_create ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	local __dump_user="${dbuser:-root}"
@@ -3699,7 +3713,7 @@ mysql_db_create ()
 # --db-password="otherpass" to override mysql password
 mysql_db_drop ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	local __dump_user="${dbuser:-root}"
@@ -3724,7 +3738,7 @@ mysql_db_drop ()
 # --no-truncate to avoid truncate
 mysql_import ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	local __dump_user="${dbuser:-root}"
@@ -3808,7 +3822,7 @@ mysql_import ()
 # --db-password="otherpass" to override mysql password
 mysql_dump ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	local __dump_user="${dbuser:-root}"
@@ -3869,9 +3883,6 @@ reset ()
 		return
 	fi
 
-	# Make sure docker daemon is accessible
-	check_docker_running
-
 	if [[ "$1" == "proxy" ]] ; then
 		echo-green 'Resetting Docksal HTTP/HTTPS reverse proxy service...'
 		install_proxy_service
@@ -3903,7 +3914,7 @@ reset ()
 		return
 	fi
 
-	check_docksal
+	check_project_root
 	# support quiet removal
 	if [[ $1 == "-f" ]]; then
 		shift
@@ -4170,7 +4181,7 @@ load_global_configuration ()
 
 load_configuration ()
 {
-	check_docksal
+	check_project_root
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
@@ -4371,7 +4382,7 @@ hosts_add ()
 	local hostname="$1"
 	# Use VIRTUAL_HOST if no parameters provided
 	if [ "$hostname" == "" ]; then
-		check_docksal_environment
+		check_project_environment
 		load_configuration
 		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
 		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
@@ -4399,7 +4410,7 @@ hosts_remove ()
 {
 	local hostname="$1"
 	if [ "$hostname" == "" ]; then
-		check_docksal_environment
+		check_project_environment
 		load_configuration
 		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
 		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
@@ -4484,7 +4495,7 @@ addon () {
 # $2 - optional flag to install globally
 addon_install ()
 {
-	[[ "$2" != "global" ]] && check_docksal_environment && load_configuration
+	[[ "$2" != "global" ]] && check_project_environment && load_configuration
 
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
@@ -4586,7 +4597,7 @@ addon_install ()
 # $1 - addon name
 # $2 - optional flag to remove global addon
 addon_remove () {
-	[[ "$2" != "global" ]] && check_docksal_environment && load_configuration
+	[[ "$2" != "global" ]] && check_project_environment && load_configuration
 
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
@@ -4807,7 +4818,7 @@ case "$1" in
 		;;
 	stop)
 		shift
-		([[ "$1" != "-a" ]] && [[ "$1" != "--all" ]]) && load_configuration
+		# load_configuration is called later in _stop_containers
 		stop "$@"
 		;;
 	restart)
@@ -4876,6 +4887,8 @@ case "$1" in
 		;;
 	reset)
 		shift
+		# Make sure docker daemon is accessible
+		check_docker_running
 		# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
 		[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
 		reset "$@"
@@ -5026,6 +5039,7 @@ case "$1" in
 	ssh-add)
 		# no load_configuration
 		shift
+		check_docker_running
 		ssh_add "$@"
 		;;
 	docker|d)
