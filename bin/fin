@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.34.0
+FIN_VERSION=1.35.0
 
 # Console colors
 red='\033[0;91m'
@@ -5203,13 +5203,13 @@ case "$1" in
 		_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
 
 		shift
-		if [[ "$_exec_target" == "cli" ]]; then
+		if [[ "$_exec_target" != "" ]]; then
 			# Replace host addon path with the matching path inside cli
 			# "\$PROJECT_ROOT" will be resolved in cli to /var/www
 			cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
 			# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
 			cmd="$cli_addon_path "$(printf " %q" "$@")
-			_exec "$cmd"
+			CONTAINER_NAME="$_exec_target" _exec "$cmd"
 		else
 			exec "$addon" "$@"
 		fi
