@@ -1882,6 +1882,8 @@ docker_machine_mount_nfs ()
 			# Write proposed DOCKSAL_NFS_PATH and try remounting nfs
 			mkdir -p "$HOME/Projects"
 			echo -e "\nDOCKSAL_NFS_PATH=\"$HOME/Projects\"\n" | tee -a ${CONFIG_ENV} >/dev/null
+			# Remove extra new lines
+			cat -s ${CONFIG_ENV} > ${CONFIG_ENV}
 			docker_machine_mount_nfs "$HOME/Projects:$HOME/Projects"
 			return $?
 		fi
