@@ -1547,7 +1547,8 @@ show_help_hosts ()
 
 show_help_addon ()
 {
-	echo-green "Addons management command"
+	echo-green "Addons management commands."
+	echo -e "See available addons in the Addons Repository ${yellow}https://github.com/docksal/addons${NC}"
 	echo
 	printh "fin addon <command> <name>" "" "yellow"
 	echo
@@ -1556,8 +1557,8 @@ show_help_addon ()
 	printh "remove <name>" "Remove addon"
 	echo
 	echo-green "Examples:"
-	printh "fin install example" "Install an example addon to the current project"
-	printh "fin remove example" "Uninstall an example addon from the current project"
+	printh "fin addon install solr" "Install solr addon to the current project"
+	printh "fin addon remove solr" "Uninstall solr addon from the current project"
 	echo
 }
 
