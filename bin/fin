@@ -3034,8 +3034,8 @@ install_tools_ubuntu ()
 		echo -e "Package: docker-ce\nPin: version ${PIN_DOCKER_VERSION}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
 
 		curl -fsSL "${URL_DOCKER_NIX}" | \
-			# patch Docker installation script on the fly to install a specific Docker version
-			sed "s/apt-get install -y -q docker-ce/apt-get install -y --force-yes -q docker-ce/" | \
+			# Patch get.docker.com script on the fly to force installation of the pinned docker-ce version
+			sed "s/--force-yes docker-ce >/docker-ce >/" | \
 			sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
