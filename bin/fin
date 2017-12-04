@@ -2671,15 +2671,10 @@ configure_resolver_linux () {
 
 	# TODO: split resolver and network configuration into different functions
 	# Adding a subnet for Docksal. Make sure we don't do this twice
-	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
+  if ! grep -q 'docksal' `nmcli dev status`; then
 		echo-green "Adding a subnet for Docksal..."
-		cat > /tmp/docksal.ip.addr <<EOF
-	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	dns-nameservers ${DOCKSAL_DEFAULT_IP}
-EOF
-		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
-		rm -f /tmp/docksal.ip.addr
+    nmcli con add con-name lo:docksal ifname docksal0 type bridge ip4 ${DOCKSAL_DEFAULT_SUBNET}
+    nmcli con modify lo:docksal ipv4.dns ${DOCKSAL_DEFAULT_IP}
 		sudo ifdown --force lo 2>/dev/null
 		sudo ifup lo
 		sudo resolvconf -u
