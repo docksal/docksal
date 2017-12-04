@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.35.1
+FIN_VERSION=1.35.2
 
 # Console colors
 red='\033[0;91m'
@@ -3055,8 +3055,9 @@ install_tools_ubuntu ()
 
 	# Install ifup/ifdown if they are missing
 	if ! (which ifup >/dev/null 2>&1) || ! (which ifdown >/dev/null 2>&1) || ! (which resolvconf >/dev/null 2>&1); then
-		sudo apt-get update
-		sudo apt-get install ifupdown resolvconf -y
+		echo-green "Installing missing network utilities..."
+		sudo apt-get update -qq >/dev/null
+		sudo apt-get install -y -qq --no-install-recommends ifupdown resolvconf >/dev/null
 	fi
 
 	# Install docker-machine
