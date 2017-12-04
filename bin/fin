@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.35.3
+FIN_VERSION=1.35.4
 
 # Console colors
 red='\033[0;91m'
@@ -4902,8 +4902,8 @@ case "$1" in
 		;;
 	reset)
 		shift
-		# Make sure docker daemon is accessible
-		check_docker_running
+		# Make sure docker daemon is accessible. reset network is a special excluded case.
+		[[ ! "network" =~ "$1" ]] && check_docker_running
 		# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
 		[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
 		reset "$@"
