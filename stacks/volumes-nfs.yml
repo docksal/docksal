@@ -6,13 +6,11 @@
 version: "2.1"
 
 volumes:
-# NFS volumes
-  project_root:
+  project_root:  # Project root volume (NFS)
     driver: local
     driver_opts:
       type: nfs
       device: :${PROJECT_ROOT}
       o: addr=${DOCKSAL_HOST_IP},vers=3,nolock,noacl,nocto,noatime,nodiratime,tcp,actimeo=1
-  # Shared ssh-agent volume
-  docksal_ssh_agent:
+  docksal_ssh_agent:  # Shared ssh-agent volume
     external: true
