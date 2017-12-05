@@ -3271,8 +3271,6 @@ update ()
 		local b2d_version=$(docker version --format '{{.Server.Version}}')
 		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") ]]; then
 			BOOT2DOCKER_NEEDS_AN_UPGRADE=1
-			(${FULL_UPDATE}) &&
-				_confirm "All running projects will be stopped for vm upgrade. Continue?"
 		fi
 	fi
 
