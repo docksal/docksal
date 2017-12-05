@@ -1,21 +1,41 @@
 # Troubleshooting SMB shares creation, mounting and related issues on Windows
 
+## Windows 10 Fall Creators Update 1709
+
+!!! warning "Windows 10 Fall Creators Update 1709"
+    Windows 10 Fall Creators Update 1709 disables SMBv1 protocol. You will have to to manually re-enable it.
+
+The mount errors looks like this: 
+
+```
+Configuring SMB shares...
+Enter your Windows account password:
+mount: mounting //192.168.64.1/docksal-c on /c failed: Host is down
+exit status 255
+```
+
+You will have to manually enable `SMB 1.0/CIFS Server` package in Windows Feature and reboot the host.  
+See [this](https://github.com/docksal/docksal/issues/382) issue for details.
+
 ## How SMB related errors look
 
 SMB related errors happen during VM start and look like one of the following:
 
 ```
-Adding docker SMB share
+Configuring SMB shares...
+Enter your Windows account password:
 mount: mounting //192.168.64.1/docksal-c on /c failed: Connection refused
-Error creating share
+exit status 255
 ```
 
 ```
+Configuring SMB shares...
+Enter your Windows account password:
 mount: mounting //192.168.64.1/c on /c failed: Operation now in progress...
 exit status 255
 ```
 
-If you ignored these errors and tried to start a project, then it will probably fail with error like this:
+If you ignored these errors and tried to start a project, then it will most likely fail with an error like this:
 
 ```
 ERROR: for cli  Cannot create container for service cli: error while mounting vo
@@ -26,12 +46,11 @@ ERROR: Encountered errors while bringing up the project.
 
 ## Root cause
 
-During VM start Docksal creates shares for all your local drives, `docksal-c` for `C:`,
-`docksal-d` for `D:` etc. If Docksal fails to create them for any reason,
-then Docker will not be able to access your files.
+During VM start Docksal creates shares for all your local drives, `docksal-c` for `C:`, `docksal-d` for `D:` etc. 
+If share creation fails, Docker will not be able to access your files.
 
-But even if shares were created successfully, then if mounting those shares from within Docksal VM fails
-for any reason, then Docker will not be able to access your files.
+Even if shares were created successfully, mounting them from within the VM may still fail for some reason.
+In that case, Docker also will not be able to access your files.
 
 ## Troubleshooting
 

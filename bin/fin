@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.35.4
+FIN_VERSION=1.35.5
 
 # Console colors
 red='\033[0;91m'
@@ -2102,7 +2102,8 @@ smb_share_mount()
 			echo-green 'Success!'
 		else
 			echo-error "SMB share mount failed." \
- 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again."
+ 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again." \
+ 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/en/master/troubleshooting-smb${NC}"
 			return 1
 		fi
 	fi
