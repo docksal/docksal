@@ -4,13 +4,11 @@
 version: "2.1"
 
 volumes:
-# Bind volumes
-  project_root:
+  project_root:  # Project root volume (bind)
     driver: local
     driver_opts:
       type: none
       device: ${PROJECT_ROOT}
       o: bind
-  # Shared ssh-agent volume
-  docksal_ssh_agent:
+  docksal_ssh_agent:  # Shared ssh-agent volume
     external: true

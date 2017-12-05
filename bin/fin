@@ -144,6 +144,9 @@ URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
+URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
+URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
+# Remove URL_REPO_ADDONS in Nov 2018
 URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
@@ -154,6 +157,7 @@ URL_STACKS_STACK_DEFAULT_STATIC="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-def
 URL_STACKS_VOLUMES_BIND="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-bind.yml"
 URL_STACKS_VOLUMES_NFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-nfs.yml"
 URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-unison.yml"
+URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
 
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
@@ -1546,7 +1550,8 @@ show_help_hosts ()
 
 show_help_addon ()
 {
-	echo-green "Addons management command"
+	echo-green "Addons management commands."
+	echo -e "See available addons in the Addons Repository ${yellow}https://github.com/docksal/addons${NC}"
 	echo
 	printh "fin addon <command> <name>" "" "yellow"
 	echo
@@ -1555,8 +1560,8 @@ show_help_addon ()
 	printh "remove <name>" "Remove addon"
 	echo
 	echo-green "Examples:"
-	printh "fin install example" "Install an example addon to the current project"
-	printh "fin remove example" "Uninstall an example addon from the current project"
+	printh "fin addon install solr" "Install solr addon to the current project"
+	printh "fin addon remove solr" "Uninstall solr addon from the current project"
 	echo
 }
 
@@ -2099,7 +2104,8 @@ smb_share_mount()
 			echo-green 'Success!'
 		else
 			echo-error "SMB share mount failed." \
- 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again."
+ 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again." \
+ 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/en/master/troubleshooting-smb${NC}"
 			return 1
 		fi
 	fi
@@ -3031,8 +3037,8 @@ install_tools_ubuntu ()
 		echo -e "Package: docker-ce\nPin: version ${PIN_DOCKER_VERSION}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
 
 		curl -fsSL "${URL_DOCKER_NIX}" | \
-			# patch Docker installation script on the fly to install a specific Docker version
-			sed "s/apt-get install -y -q docker-ce/apt-get install -y --force-yes -q docker-ce/" | \
+			# Patch get.docker.com script on the fly to force installation of the pinned docker-ce version
+			sed "s/--force-yes docker-ce >/docker-ce >/" | \
 			sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
@@ -3052,8 +3058,9 @@ install_tools_ubuntu ()
 
 	# Install ifup/ifdown if they are missing
 	if ! (which ifup >/dev/null 2>&1) || ! (which ifdown >/dev/null 2>&1) || ! (which resolvconf >/dev/null 2>&1); then
-		sudo apt-get update
-		sudo apt-get install ifupdown resolvconf -y
+		echo-green "Installing missing network utilities..."
+		sudo apt-get update -qq >/dev/null
+		sudo apt-get install -y -qq --no-install-recommends ifupdown resolvconf >/dev/null
 	fi
 
 	# Install docker-machine
@@ -3154,6 +3161,7 @@ update_config_files ()
 			$URL_STACKS_VOLUMES_BIND
 			$URL_STACKS_VOLUMES_NFS
 			$URL_STACKS_VOLUMES_UNISON
+			$URL_STACKS_OVERRIDES_OSXFS
 	"
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
@@ -4468,6 +4476,14 @@ addon () {
 
 	local addon_name=${ARGV[1]} # ARGV[0] is install, remove,...
 
+	# If addon contains 3 slash separated parts treat them as path
+	# i.e. username/repo/addon_name
+	_regex="(.*\/.*)\/(.*)"
+	if [[ "$addon_name" =~ $_regex ]]; then
+		URL_ADDONS_REPO="$URL_ADDONS_HOSTING/${BASH_REMATCH[1]}"
+		addon_name=${BASH_REMATCH[2]}
+	fi
+
 	case "$1" in
 		install|in)
 				addon_install "$addon_name" ${is_global}
@@ -4519,7 +4535,7 @@ addon_install ()
 	fi
 	mkdir -p "$addon_path"
 	if_failed_error "Could not create $addon_path" "Check file permissions and try again"
-	local URL_ADDON="$URL_REPO_ADDONS/master/$addon_name"
+	local URL_ADDON="$URL_ADDONS_REPO/master/$addon_name"
 
 	# Get files list
 	local file_list
@@ -5244,13 +5260,13 @@ case "$1" in
 		_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
 
 		shift
-		if [[ "$_exec_target" == "cli" ]]; then
+		if [[ "$_exec_target" != "" ]]; then
 			# Replace host addon path with the matching path inside cli
 			# "\$PROJECT_ROOT" will be resolved in cli to /var/www
 			cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
 			# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
 			cmd="$cli_addon_path "$(printf " %q" "$@")
-			_exec "$cmd"
+			CONTAINER_NAME="$_exec_target" _exec "$cmd"
 		else
 			exec "$addon" "$@"
 		fi

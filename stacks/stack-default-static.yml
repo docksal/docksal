@@ -8,8 +8,7 @@ services:
     hostname: web
     image: docksal/web:2.1-apache2.4
     volumes:
-      # Project root volume
-      - project_root:/var/www:ro,nocopy
+      - project_root:/var/www:ro,nocopy  # Project root volume
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
       - io.docksal.project-root=${PROJECT_ROOT}
@@ -30,8 +29,7 @@ services:
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
-      # Project root volume
-      - project_root:/var/www:ro,nocopy
+      - project_root:/var/www:ro,nocopy  # Project root volume
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-user}
@@ -41,25 +39,20 @@ services:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
 
-  # CLI
-  # Used for all console commands and tools.
+  # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
     image: docksal/cli:1.3-php7
     volumes:
-      # Project root volume
-      - project_root:/var/www:rw,nocopy
-      # Shared ssh-agent socket
-      - docksal_ssh_agent:/.ssh-agent:ro
+      - project_root:/var/www:rw,nocopy  # Project root volume
+      - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
     environment:
       - HOST_UID
       - HOST_GID
       - DOCROOT
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-      # Point xdebug to the host IP
-      - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}
-      # This helps with console scripts debugging in PHPStorm
-      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
+      - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}  # Point xdebug to the host IP
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}  # This helps with console scripts debugging in PHPStorm
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
