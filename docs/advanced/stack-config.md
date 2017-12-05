@@ -34,8 +34,8 @@ Please read the documentation to understand their main sections.
     Some containers and their parameters are required for Docksal to work properly. 
     **Please see [Don't break your Docksal setup!](#warning) section.**
 
-You have to run `fin start` to apply configuration changes. 
-If you remove services or volumes you have to remove them with `fin rm [service]`.
+You have to run `fin project start` (`fin p start` for short) to apply configuration changes.
+If you remove services or volumes you have to remove them with `fin project rm [service]`.
 
 ## Project configuration files
 <a name="docksal-yml"></a>
@@ -112,7 +112,7 @@ To see the files loaded for a particular project run `fin config show`.
 <a name="zero-configuration"></a>
 ## Zero-configuration
 
-You can simply create a `.docksal` folder in your project root and run `fin start`.
+You can simply create a `.docksal` folder in your project root and run `fin project start` (`fin start` for short).
 The default stack (`~/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case.
 
 This is a great way to start developing a new project. This approach can also be used on a permanent basis, 
@@ -122,7 +122,7 @@ so you'll be getting the latest stack versions with every Docksal update.
 ### Zero-configuration stacks
 
 You can switch between pre-created zero-configuration stacks by adding the following line to your `docksal.env` file 
-and running `fin reset`.
+and running `fin project reset`.
 
 ```
 DOCKSAL_STACK="acquia"
@@ -131,7 +131,7 @@ DOCKSAL_STACK="acquia"
 The following stacks are available:
 
 - `default` - web, db, cli (assumed, when none specified.)
-- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acqui](https://www.acquia.com/) hosted projects.)
+- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects.)
 
 <a name="custom-configuration"></a>
 ## Custom configuration

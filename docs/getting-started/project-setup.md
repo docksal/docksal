@@ -27,7 +27,7 @@ The `.docksal` directory is where all Docksal configurations and commands for th
 
 ```bash
 cd ~/projects/myproject
-fin start
+fin project start
 ```
 
 You will see output similar to the following:

@@ -13,7 +13,7 @@ varnish:
     - VARNISH_BACKEND_HOST=web
 ```
 
-Apply new configuration with `fin up`.
+Apply new configuration with `fin project start` (`fin p start`).
 
 Use `http://varnish.<VIRTUAL_HOST>` to access the site via Varnish.
  

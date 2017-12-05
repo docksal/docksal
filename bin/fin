@@ -1008,7 +1008,7 @@ _healthcheck_wait ()
 		if ((elapsed > timeout)); then
 			echo-error "$container_name heathcheck failed" \
 				"Container did not enter a healthy state within the expected amount of time." \
-				"Try ${yellow}fin restart${NC}"
+				"Try ${yellow}fin project restart${NC}"
 			exit 1
 		fi
 	done
@@ -1245,6 +1245,7 @@ show_help_reset ()
 	echo -e "Docksal has several system services."
 	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and should not be used in projects."
 	echo
+	printh "fin project reset" "Recreate project containers"
 	printh "fin reset dns" "Recreate Docksal DNS service"
 	printh "fin reset proxy" "Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
 	printh "fin reset ssh-agent" "Recreate Docksal ssh-agent service"
@@ -1255,7 +1256,7 @@ show_help_reset ()
 show_help_rm ()
 {
 	echo-green "Remove services"
-	printh "fin remove" "" "yellow"
+	printh "fin project remove" "" "yellow"
 	echo
 	echo "Removes project containers and frees up space consumed by them."
 	echo
@@ -3970,7 +3971,7 @@ _set_cli_uid ()
 	container_uid_gid=$(docker exec -u docker ${cli} bash -c 'echo -n $(id -u):$(id -g)')
 	if [[ ! $? -eq 0 ]]; then
 		echo-error "Error getting uid from cli container" \
-			"You might need to recreate containers with ${yellow}fin reset${NC}"
+			"You might need to recreate containers with ${yellow}fin project reset${NC}"
 		return
 	fi
 
@@ -4355,7 +4356,7 @@ config_generate ()
 	fi
 
 	if [[ $? == 0 ]]; then
-		echo-green "Configuration was generated. You can start it with ${yellow}fin start${NC}"
+		echo-green "Configuration was generated. You can start it with ${yellow}fin project start${NC}"
 	else
 		echo-error "Something went wrong. Check error messages above."
 	fi

@@ -12,7 +12,7 @@ solr:
   image: docksal/solr:1.0-solr4
 ```
 
-Run `fin up` to apply the new configuration.
+Apply new configuration with `fin project start` (`fin p start`).
 
 
 ## Drupal configuration
@@ -55,7 +55,7 @@ solr:
     - ${PROJECT_ROOT}/.docksal/etc/solr/conf:/var/lib/solr/conf:ro
 ```
 
-Apply configuration changes with `fin up`
+Apply configuration changes with `fin project start` (`fin p start`)
 
 
 ## Versions

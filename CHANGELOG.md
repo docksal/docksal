@@ -49,7 +49,7 @@ For custom configurations (using `docksal.yml`), if you are getting:
 ERROR: Named volume "host_home:/.home:ro" is used in service "cli" but no declaration was found in the volumes section.
 ```
 
-Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin up`.
+Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 
 ## New software versions
 

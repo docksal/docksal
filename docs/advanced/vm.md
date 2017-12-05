@@ -15,7 +15,7 @@ For hosts with limited RAM (less than 8GB) it may be necessary to limit the VM m
 When working with multiple projects, it is best to limit the number of active projects to 1 or 2. 
 Trying to launch more than 2 at the same time may result in unpredictable issues.
 
-Use `fin stop --all` to stop all projects, then `fin start` to restart the one you plan to work with.
+Use `fin stop --all` to stop all projects, then `fin project start` to restart the one you plan to work with.
 
 ## Increasing Docksal's Virtualbox VM disk size (HDD)
 
