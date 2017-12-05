@@ -4,7 +4,7 @@ On Mac and Windows, you can use native Docker applications instead of VirtualBox
 
 !!! info "Soon to be mainstream"
     Docker for Mac/Windows will soon become the recommended way of working with Docksal on Mac and Windows.
-    VirtualBox will still be supported, however the focus will shit towards using the native Docker apps. 
+    VirtualBox will still be supported, however the focus will shift towards using the native Docker apps. 
 
 On Mac, `osxfs:cached` mode for Docker for Mac provides a decent read performance (still not as fast as NFS, but 
 getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/issues/249)
