@@ -3228,6 +3228,7 @@ update ()
 			local res=$?
 			if [[ "$res" != "0" ]]; then
 				[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher"
+				vm stop
 				update_virtualbox
 				vm start
 			fi
