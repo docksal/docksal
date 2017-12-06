@@ -70,7 +70,7 @@ See an example of command documentation in the phpcs command (examples/.docksal/
 
 ## Global custom commands
 
-Put your command in `~/.docksal/commands` and it will be accessible globally.  
+Put your command in `$HOME/.docksal/commands` and it will be accessible globally.
 This is useful for tedious tasks that you need in every project.
 
 ## Advanced use

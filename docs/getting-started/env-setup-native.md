@@ -25,7 +25,7 @@ fin vm stop
 
 **3.** Enable "native" apps mode.
 
-Set `DOCKER_NATIVE=1` in `~/.docksal/docksal.env`
+Set `DOCKER_NATIVE=1` in `$HOME/.docksal/docksal.env`
 
 **4.** Install Docksal (unless already installed).
 
@@ -69,7 +69,7 @@ support and cannot run 64bit VMs because of that.
 
 **2.** Disable the "native" apps mode
 
-Remove `DOCKER_NATIVE=1` from `~/.docksal/docksal.env` 
+Remove `DOCKER_NATIVE=1` from `$HOME/.docksal/docksal.env`
 
 **3.** Reset networks settings, start Docksal VM and reset Docksal system services
 
