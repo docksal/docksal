@@ -4237,7 +4237,7 @@ load_configuration ()
 		else
 			# Include docksal-local.yml (if exists)
 			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
-			local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
+			local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
