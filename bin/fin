@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.36.0
+FIN_VERSION=1.37.0
 
 # Console colors
 red='\033[0;91m'
@@ -145,6 +145,7 @@ URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
 URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
+URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 # Remove URL_REPO_ADDONS in Nov 2018
@@ -2432,9 +2433,10 @@ project_create ()
 	echo -e "${green}   [4]${NC} Magento"
 	echo -e "${green}   [5]${NC} Static HTML site"
 	echo -e "${green}   [6]${NC} Grav CMS"
+	echo -e "${green}   [7]${NC} Gatsby JS"
 	echo -e ""
 	while true; do
-		read -p "Enter your choice (1-6): " choice
+		read -p "Enter your choice (1-7): " choice
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
@@ -2470,8 +2472,13 @@ project_create ()
 				target_host_name_search_string=""
 				target_repo="$URL_REPO_GRAV"
 				;;
+			7)
+				target_cms="Gatsby JS"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_GATSBY"
+				;;
 			* )
-				echo 'Enter a number between 1 and 6.'
+				echo 'Enter a number between 1 and 7.'
 				continue
 		esac
 		break
@@ -2498,6 +2505,8 @@ project_create ()
 	echo -e "${green}Cloning repository...${NC}"
 	git clone -b master ${target_repo} ${project_name}
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
+
+	echo -e "${yellow}3. Installing site${NC}"
 
 	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
 		cd "${project_name}/.docksal"
