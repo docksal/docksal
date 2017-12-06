@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.35.6
+FIN_VERSION=1.35.7
 
 # Console colors
 red='\033[0;91m'
@@ -871,7 +871,7 @@ _stop_containers ()
 
 _restart_containers ()
 {
-	_stop_containers "$@" && _start_containers
+	_stop_containers "$@" && sleep 1 && _start_containers
 }
 
 # @param $1 container_name
@@ -2338,6 +2338,7 @@ up ()
 	is_mac && find . -type d > /dev/null 2>&1
 
 	_start_containers
+	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
 }
 
 # Stop containers
