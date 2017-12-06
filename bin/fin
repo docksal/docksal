@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.35.7
+FIN_VERSION=1.36.0
 
 # Console colors
 red='\033[0;91m'
@@ -144,6 +144,7 @@ URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
+URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 # Remove URL_REPO_ADDONS in Nov 2018
@@ -2411,8 +2412,11 @@ project_list ()
 
 project_create ()
 {
+	echo-green "             -= Docksal project wizard =-"
+	echo
 	while true; do
-		read -p "Please enter the name of your project (all one word, no spaces or slashes): " project_name
+		echo -en "${yellow}1. Enter the name of your project${NC} (no spaces or slashes): "
+		read -p "" project_name
 		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
 			echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
 			continue
@@ -2421,15 +2425,16 @@ project_create ()
 	done
 	echo ''
 
-	echo -e "What would you like to install?"
-	echo -e "${green}[1]${NC} Drupal 7"
-	echo -e "${green}[2]${NC} Drupal 8"
-	echo -e "${green}[3]${NC} Wordpress"
-	echo -e "${green}[4]${NC} Magento"
-	echo -e "${green}[5]${NC} Static HTML site"
+	echo -e "${yellow}2. What would you like to install?${NC}"
+	echo -e "${green}   [1]${NC} Drupal 7"
+	echo -e "${green}   [2]${NC} Drupal 8"
+	echo -e "${green}   [3]${NC} Wordpress"
+	echo -e "${green}   [4]${NC} Magento"
+	echo -e "${green}   [5]${NC} Static HTML site"
+	echo -e "${green}   [6]${NC} Grav CMS"
 	echo -e ""
 	while true; do
-		read -p ": " choice
+		read -p "Enter your choice (1-6): " choice
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
@@ -2460,8 +2465,13 @@ project_create ()
 				target_host_name_search_string=""
 				target_repo=""
 				;;
+			6)
+				target_cms="Grav CMS"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_GRAV"
+				;;
 			* )
-				echo 'Please enter 1, 2, 3 or 4.'
+				echo 'Enter a number between 1 and 6.'
 				continue
 		esac
 		break
@@ -2485,15 +2495,19 @@ project_create ()
 		exit
 	fi
 
-	echo -e "${green} Cloning repository...${NC}"
+	echo -e "${green}Cloning repository...${NC}"
 	git clone -b master ${target_repo} ${project_name}
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
-	cd ${project_name}/.docksal &&
+	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
+		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1 &&
-		cd ".." &&
-		fin init
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env
+		rm -f docksal.env.bak > /dev/null 2>&1
+	)
+
+	cd "${project_name}"
+	fin init
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
