@@ -23,6 +23,13 @@ fin vm stop
 
 **2.** Install Docker for [Mac](https://docs.docker.com/docker-for-mac) or [Windows](https://docs.docker.com/docker-for-windows).
 
+On Windows you will also need to share your drives with Docker.
+
+Open Docker for Windows settings (right click in tray and select Settings...), click Shared Drives,
+and check off whichever drives are going to be storing your project files (you can check all).
+
+Only those drives you share will be accessible to Docker!
+
 **3.** Enable "native" apps mode.
 
 Set `DOCKER_NATIVE=1` in `$HOME/.docksal/docksal.env`
