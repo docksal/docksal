@@ -5,7 +5,7 @@ FIN_VERSION=1.40.0
 # Console colors
 red='\033[0;91m'
 red_bg='\033[101m'
-yellow_bg='\033[43m'
+yellow_bg='\033[43;90m'
 green='\033[0;32m'
 green_bg='\033[42m'
 yellow='\033[1;33m'
@@ -144,6 +144,9 @@ URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
+URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
+URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
+URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 # Remove URL_REPO_ADDONS in Nov 2018
@@ -871,7 +874,7 @@ _stop_containers ()
 
 _restart_containers ()
 {
-	_stop_containers "$@" && _start_containers
+	_stop_containers "$@" && sleep 1 && _start_containers
 }
 
 # @param $1 container_name
@@ -996,7 +999,7 @@ _healthcheck_wait ()
 	# Wait for cli to become ready by watching its health status
 	local container_name="${COMPOSE_PROJECT_NAME_SAFE}_cli_1"
 	local delay=5
-	local timeout=30
+	local timeout=60
 	local elapsed=0
 
 	until _healthcheck "$container_name"; do
@@ -2341,6 +2344,7 @@ up ()
 	is_mac && find . -type d > /dev/null 2>&1
 
 	_start_containers
+	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
 }
 
 # Stop containers
@@ -2413,8 +2417,11 @@ project_list ()
 
 project_create ()
 {
+	echo-green "             -= Docksal project wizard =-"
+	echo
 	while true; do
-		read -p "Please enter the name of your project (all one word, no spaces or slashes): " project_name
+		echo -en "${yellow}1. Enter the name of your project${NC} (no spaces or slashes): "
+		read -p "" project_name
 		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
 			echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
 			continue
@@ -2423,15 +2430,18 @@ project_create ()
 	done
 	echo ''
 
-	echo -e "What would you like to install?"
-	echo -e "${green}[1]${NC} Drupal 7"
-	echo -e "${green}[2]${NC} Drupal 8"
-	echo -e "${green}[3]${NC} Wordpress"
-	echo -e "${green}[4]${NC} Magento"
-	echo -e "${green}[5]${NC} Static HTML site"
+	echo -e "${yellow}2. What would you like to install?${NC}"
+	echo -e "${green}   [1]${NC} Drupal 7"
+	echo -e "${green}   [2]${NC} Drupal 8"
+	echo -e "${green}   [3]${NC} Wordpress"
+	echo -e "${green}   [4]${NC} Magento"
+	echo -e "${green}   [5]${NC} Static HTML site"
+	echo -e "${green}   [6]${NC} Grav CMS"
+	echo -e "${green}   [7]${NC} Gatsby JS"
+	echo -e "${green}   [8]${NC} Laravel"
 	echo -e ""
 	while true; do
-		read -p ": " choice
+		read -p "Enter your choice (1-8): " choice
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
@@ -2462,8 +2472,23 @@ project_create ()
 				target_host_name_search_string=""
 				target_repo=""
 				;;
+			6)
+				target_cms="Grav CMS"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_GRAV"
+				;;
+			7)
+				target_cms="Gatsby JS"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_GATSBY"
+				;;
+			8)
+				target_cms="Laravel"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_LARAVEL"
+				;;
 			* )
-				echo 'Please enter 1, 2, 3 or 4.'
+				echo 'Enter a number between 1 and 8.'
 				continue
 		esac
 		break
@@ -2487,15 +2512,21 @@ project_create ()
 		exit
 	fi
 
-	echo -e "${green} Cloning repository...${NC}"
+	echo -e "${green}Cloning repository...${NC}"
 	git clone -b master ${target_repo} ${project_name}
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
-	cd ${project_name}/.docksal &&
+	echo -e "${yellow}3. Installing site${NC}"
+
+	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
+		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1 &&
-		cd ".." &&
-		fin init
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env
+		rm -f docksal.env.bak > /dev/null 2>&1
+	)
+
+	cd "${project_name}"
+	fin init
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
@@ -4239,7 +4270,7 @@ load_configuration ()
 		else
 			# Include docksal-local.yml (if exists)
 			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
-			local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
+			local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 

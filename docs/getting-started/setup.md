@@ -50,7 +50,7 @@ The steps below will remove the Docksal VM and cleanup all Docksal stuff.
 
 ```bash
 fin vm remove
-rm -rf ~/.docksal
+rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 

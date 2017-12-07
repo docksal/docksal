@@ -73,7 +73,7 @@ it and adjust as necessary.
 <a name="default-configurations"></a>
 ## Default stacks
 
-Docksal ships with a set of default configurations (stacks), which are `yml` files stored in `~/.docksal/stacks/`.
+Docksal ships with a set of default configurations (stacks), which are `yml` files stored in `$HOME/.docksal/stacks/`.
 These files are a good reference, when you begin creating a custom project configuration.
 
 | File name                  | Description |
@@ -100,8 +100,8 @@ The list below goes from the earliest to the latest in this queue.
 
 Loading order:
 
-1. `~/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md).)
-2. `~/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`.
+1. `$HOME/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md).)
+2. `$HOME/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`.
 3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise.
 4. `docksal.env` - sets or modifies environment variables.
 5. `docksal-local.yml` - extends the loaded stack or `docksal.yml`.
@@ -113,7 +113,7 @@ To see the files loaded for a particular project run `fin config show`.
 ## Zero-configuration
 
 You can simply create a `.docksal` folder in your project root and run `fin project start` (`fin start` for short).
-The default stack (`~/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case.
+The default stack (`$HOME/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case.
 
 This is a great way to start developing a new project. This approach can also be used on a permanent basis, 
 if your needs are simple. `stack-default.yml` extends the configuration from `services.yml`, 
@@ -308,7 +308,7 @@ services:
 
 When not using a predefined stack (`docksal.yml` is present and `DOCKSAL_STACK` is not set in `docksal.env`), 
 you are in control of everything. In this case the stack configuration is not inherited from 
-`services.yml` (`~/.docksal/services.yml`), so you must fully describe the `cli` service in the project's `docksal.yml`.
+`services.yml` (`$HOME/.docksal/services.yml`), so you must fully describe the `cli` service in the project's `docksal.yml`.
 
 An example section of a `docksal.yml` file that describes the `cli` service and overrides the PHP version:
 

@@ -4,7 +4,7 @@ On Mac and Windows, you can use native Docker applications instead of VirtualBox
 
 !!! info "Soon to be mainstream"
     Docker for Mac/Windows will soon become the recommended way of working with Docksal on Mac and Windows.
-    VirtualBox will still be supported, however the focus will shit towards using the native Docker apps. 
+    VirtualBox will still be supported, however the focus will shift towards using the native Docker apps. 
 
 On Mac, `osxfs:cached` mode for Docker for Mac provides a decent read performance (still not as fast as NFS, but 
 getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/issues/249)
@@ -23,9 +23,16 @@ fin vm stop
 
 **2.** Install Docker for [Mac](https://docs.docker.com/docker-for-mac) or [Windows](https://docs.docker.com/docker-for-windows).
 
+On Windows you will also need to share your drives with Docker.
+
+Open Docker for Windows settings (right click in tray and select Settings...), click Shared Drives,
+and check off whichever drives are going to be storing your project files (you can check all).
+
+Only those drives you share will be accessible to Docker!
+
 **3.** Enable "native" apps mode.
 
-Set `DOCKER_NATIVE=1` in `~/.docksal/docksal.env`
+Set `DOCKER_NATIVE=1` in `$HOME/.docksal/docksal.env`
 
 **4.** Install Docksal (unless already installed).
 
@@ -69,7 +76,7 @@ support and cannot run 64bit VMs because of that.
 
 **2.** Disable the "native" apps mode
 
-Remove `DOCKER_NATIVE=1` from `~/.docksal/docksal.env` 
+Remove `DOCKER_NATIVE=1` from `$HOME/.docksal/docksal.env`
 
 **3.** Reset networks settings, start Docksal VM and reset Docksal system services
 
