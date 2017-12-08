@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.30.2
+FIN_VERSION=1.41.0
 
 # Console colors
 red='\033[0;91m'
@@ -3682,12 +3682,11 @@ _mysql ()
 {
 	check_winpty_found
 	check_docksal_environment
-	check_project_environment
 	eval $(parse_params "$@")
 
+	# Bring in MYSQL env variables from the db container, so that we can use them here
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
-	# Bring in MYSQL env variables from the container, so that we can use them here
-	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
 	local __dump_user="${dbuser:-root}"
@@ -3715,9 +3714,9 @@ mysql_list ()
 	check_project_environment
 	eval $(parse_params "$@")
 
+	# Bring in MYSQL env variables from the db container, so that we can use them here
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
-	# Bring in MYSQL env variables from the container, so that we can use them here
-	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
 	local __dump_user="${dbuser:-root}"
@@ -3738,9 +3737,9 @@ mysql_db_create ()
 	check_project_environment
 	eval $(parse_params "$@")
 
+	# Bring in MYSQL env variables from the db container, so that we can use them here
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
-	# Bring in MYSQL env variables from the container, so that we can use them here
-	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
 	local __dump_user="${dbuser:-root}"
@@ -3752,9 +3751,11 @@ mysql_db_create ()
 	[[ "${__db}" == "" ]] && echo-error "Provide a name for the database to create" && exit 1
 
 	# Set db to space since the db does not exist here yet
-	_mysql --db=" " --db-user="${__dump_user}" --db-password="${__dump_password}" \
-		"CREATE DATABASE \`${__db}\` CHARACTER SET ${__db_charset} COLLATE ${__db_collation};" \
-		"GRANT ALL PRIVILEGES ON \`${__db}.*\` TO \`${MYSQL_USER}\`;"
+	(_mysql --db=" " --db-user="${__dump_user}" --db-password="${__dump_password}" \
+		"CREATE DATABASE \`${__db}\` CHARACTER SET ${__db_charset} COLLATE ${__db_collation};") &&
+		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+		(_mysql --db="${__db}" --db-user="${__dump_user}" --db-password="${__dump_password}" \
+		"GRANT ALL PRIVILEGES ON \`${__db}.*\` TO \`${MYSQL_USER}\`; FLUSH PRIVILEGES;")
 
 	if_failed_error "Database '${__db}' creation failed"
 
@@ -3769,9 +3770,9 @@ mysql_db_drop ()
 	check_project_environment
 	eval $(parse_params "$@")
 
+	# Bring in MYSQL env variables from the db container, so that we can use them here
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
-	# Bring in MYSQL env variables from the container, so that we can use them here
-	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
 	local __dump_user="${dbuser:-root}"
@@ -3780,7 +3781,7 @@ mysql_db_drop ()
 
 	[[ "${__db}" == "" ]] && echo-error "Provide the name of the database to drop." && exit 1
 
-	_mysql --db-user="${__dump_user}" --db-password="${__dump_password}" \
+	_mysql --db=" " --db-user="${__dump_user}" --db-password="${__dump_password}" \
 		"DROP DATABASE \`${__db}\`"
 
 	if_failed_error "Dropping '${__db}' database failed"
@@ -3799,9 +3800,9 @@ mysql_import ()
 	check_project_environment
 	eval $(parse_params "$@")
 
+	# Bring in MYSQL env variables from the db container, so that we can use them here
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
-	# Bring in MYSQL env variables from the container, so that we can use them here
-	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
 	local __dump_user="${dbuser:-root}"
@@ -3888,9 +3889,9 @@ mysql_dump ()
 	check_project_environment
 	eval $(parse_params "$@")
 
+	# Bring in MYSQL env variables from the db container, so that we can use them here
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
-	# Bring in MYSQL env variables from the container, so that we can use them here
-	container_mysql_vars=$(docker exec "$container_id" env | grep MYSQL)
+	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
 	local __dump_user="${dbuser:-root}"
