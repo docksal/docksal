@@ -6,10 +6,11 @@
 
 ## New software versions
 
-- docker/boot2docker - 17.09.0-ce
-- docker-compose - 1.16.1
-- docker-machine - 0.13.0
-- virtualbox - 5.1.28 (the latest boot2docker is using VirtualBox Guest Additions v5.1.28)
+* fin v1.41.0
+* docker/boot2docker v17.09.0-ce
+* docker-compose v1.16.1
+* docker-machine v0.13.0
+* virtualbox v5.1.28 (the latest boot2docker is using VirtualBox Guest Additions v5.1.28)
 
 ## Non-breaking deprecation
 
