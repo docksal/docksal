@@ -1,5 +1,83 @@
 # Changelog
 
+# 1.6.0 (2017-12-08)
+
+**IMPORTANT NOTE:** if you use VirtualBox run `fin update` **twice** for this release.
+
+## New software versions
+
+* fin v1.41.0
+* docker/boot2docker v17.09.0-ce
+* docker-compose v1.16.1
+* docker-machine v0.13.0
+* virtualbox v5.1.28 (the latest boot2docker is using VirtualBox Guest Additions v5.1.28)
+
+## Non-breaking deprecation
+
+From now on the default way to launch commands against projects is via `fin project` command subset.  
+E.g. `fin project start` (`fin p start`), `fin project stop`, `fin project reset` etc.  
+Old `fin start`, `fin stop` etc. aliases will still work for compatibility, but are removed from the documentation.
+
+## New Features
+
+* Enable osxfs caching automatically with Docker for Mac to improve read performance. (#249, #397)
+* You can add environment dependent ENV and YML files based on `$DOCKSAL_ENVIRONMENT` variable, e.g. `docksal-myenv.yml`,
+ that would only apply, if `DOCKSAL_ENVIRONMENT=myenv` (#383, #354). Official documentation is pending.
+* [Grav](https://github.com/docksal/example-grav) project creation wizard
+* [Gatsby JS](https://github.com/docksal/example-gatsby) project creation wizard
+* [Laravel](https://github.com/docksal/example-laravel) project creation wizard
+* Address DNS issue of corporate networks and VPN
+
+    Added backup upstream DNS server for docksal-dns. This addresses cases when `DOCKSAL_DNS_UPSTREAM` is set to an internal IP (VPN/LAN) and becomes inaccessible when user disconnects from that network. `8.8.4.4` will now be used as a backup when DOCKSAL_DNS_UPSTREAM is not reachable.
+
+* Expose ngrok Web UI on a random port to make it accessible from the host  (#379)
+* Project images are auto-updated during overall update
+* New `vhosts` command to show all registered Docksal virtual hosts
+* Show virtual host name after project start
+* Docker for Mac/Win networking setup is now aligned with the VirtualBox mode and Linux:
+
+```
+  192.168.64.1 - host IP
+  192.168.64.100 - Docksal IP
+```
+
+* Allow installing Docksal addons from a non-default GitHub repo
+* Allow any `exec_target` for addons and custom commands (#356).
+
+    Requires that container specified as `exec_target` has `project_root` volume defined, just like cli:
+    ```
+        volumes:
+          # Project root volume
+          - project_root:/var/www:rw,nocopy
+    ```
+
+## Changes and improvements
+
+* Fix version comparison bug
+* Fixed MySQL permissions and default db missing bugs in `fin db create` (#351, #371, #372)
+* Fix the bug that Virtualbox update breaks docker-machine upgrade and users need to run `fin update` twice. (#280)
+* Fin will check that Docksal System services (`dns`, `vhost-proxy`, `ssh-agent`) are running and restart them otherwise
+* Docker for Mac: Add ssh keys on up/restart/reset (#396)
+* Use `DOCKSAL_DNS_DOMAIN` variable value for default `VIRTUAL_HOST` (#390)
+* Fix that system images were not updated during install in Docker for Mac/Win mode
+* Ensure `~/.ssh` exists. This prevents errors for users with no ssh keys
+* Fixed xdebug on Docker for Mac. (#389, #393)
+* (Ubuntu 17.10) Install `ifupdown` and `resolvconf` if they are missing (#321)
+* (Ubuntu) Address slow fs performance with the `overlay2` storage driver (defaut in Docker for Mac/Win and Ubuntu 17.04+) by adding `/home/docker` volume in `cli` (#325)
+* Increase CLI healthcheck wait timeout to 60 seconds for intensive operations during custom healthchecks
+
+## Documentation
+
+* Documented SMBv1 issues on Windows 10 Fall Creators Update 1709
+* Unison volumes documentation
+* Added docs on file sharing with Docker for Mac/Windows
+* Update docs on getting a list of Docksal images on Docker Hub
+* Switch to using https://get.docksal.io for installs
+* Updated portable installation instructions
+  - Added support for Docker for Mac/Windows
+  - Organized instructions per OS
+* Improved custom commands documentation
+
 # 1.5.1 (2017-09-06)
 
 This is a hotfix release aimed to address sporadic issues with TLS certificates caused by a regression between 
@@ -49,7 +127,7 @@ For custom configurations (using `docksal.yml`), if you are getting:
 ERROR: Named volume "host_home:/.home:ro" is used in service "cli" but no declaration was found in the volumes section.
 ```
 
-Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin up`.
+Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 
 ## New software versions
 

@@ -38,7 +38,7 @@ VIRTUAL_HOST: custom-domain.docksal
 VIRTUAL_HOST_ALIASES: *.custom-domain.docksal
 ````
 
-Apply configuration changes with `fin up`.
+Apply configuration changes with `fin project start` (`fin p start` for short).
 
 
 ## Using arbitrary custom domains
@@ -59,7 +59,7 @@ services:
 
 `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}` is the default value.
 
-Apply configuration changes with `fin up`.
+Apply configuration changes with `fin project start` (`fin p start` for short).
 
 Please note, that non `.docksal` domains (e.g. `example.com`) will not be resolved automatically.
 You can use [fin hosts](advanced/fin.md#fin-help-hosts) command to add and manage additional domain names via the system's `hosts` file. 

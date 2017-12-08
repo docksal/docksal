@@ -12,11 +12,7 @@ When the following settings files are added to the project, they can be used to 
 Copy `examples/.docksal/etc` from the [Docksal](https://github.com/docksal/docksal) project repo into the `.docksal` 
 folder in your project repo and modify as necessary.
 
-!!! important "Applying the settings changes"
-    When adding the settings files initially into a project a reset is necessary for containers to pick them up properly.  
-    Run `fin reset cli` for PHP and `fin reset db` for MySQL (**WARNING: this will destroy your database!**).  
-    When the settings files are already in place, configuration changes can be propagated by restarting the containers 
-    with `fin restart`.
+Apply changes with `fin project restart` (`fin p restart`).
 
 <a name="php-versions"></a>
 ## Using different PHP versions
@@ -30,7 +26,7 @@ via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 CLI_IMAGE='docksal/cli:1.3-php7'
 ```
 
-Remember to run `fin up` to apply the configuration.
+Remember to run `fin project start` (`fin p start`) to apply the configuration.
 
 Available images:
 
@@ -49,11 +45,11 @@ via the `DB_IMAGE` variable in `.docksal/docksal.env`.
 DB_IMAGE='docksal/db:1.1-mysql-5.6'
 ```
 
-Remember to run `fin up` to apply the configuration.
+Remember to run `fin project start` (`fin p start`) to apply the configuration.
 
 !!! warning "MySQL versions compatibility"
 
-    Different MySQL versions may not be fully compatible. A complete `db` service reset (`fin reset db`) might be necessary 
+    Different MySQL versions may not be fully compatible. A complete `db` service reset (`fin project reset db`) might be necessary
     followed by a DB re-import.
 
 Available images:

@@ -24,3 +24,19 @@ Use `*.ngrok.io` web address displayed there to share you project with others:
 ![](../_img/ngrok.png)
 
 Use `Ctrl+C` to stop ngrok and sharing.
+
+To access ngrok web UI, open another console window and run
+
+```bash
+fin docker ps --format "{{.Names}} {{.Ports}}" | grep ngrok
+```
+
+In the output, look for the port number assigned to the container:
+
+```bash
+$ fin docker ps --format "{{.Names}} {{.Ports}}" | grep ngrok
+
+project_web_1_ngrok 0.0.0.0:32769->4040/tcp
+``` 
+
+Access ngrok web UI at `http://192.168.64.100:32769`

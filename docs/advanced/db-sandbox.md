@@ -23,12 +23,12 @@ db:
   command: "--datadir /var/lib/mysql-sandbox"
 ```
 
-3) Reset the db service: `fin reset db`  
+3) Reset the db service: `fin project reset db`
 4) Import the database: `fin sqli db.sql`  
 5) Create a snapshot image from the `db` container
 
 ```bash
-fin stop
+fin project stop
 fin docker commit $(fin docker-compose ps -q db) <tag>
 ```
 
@@ -44,11 +44,11 @@ db:
   command: "--datadir /var/lib/mysql-sandbox"
 ```
 
-7) Update the stack configuration: `fin up`
+7) Update the stack configuration: `fin project start` (`fin p start` for short)
 
 Now the `db` service container is using an ephemeral storage for the database (changes) - `/var/lib/mysql-sandbox`.
 
-To reset it to the snapshot you took in step 1 run `fin reset db`.  
+To reset it to the snapshot you took in step 1 run `fin project reset db` (`fin p reset db`).
 
 ## Disabling sandbox mode
 
@@ -56,7 +56,7 @@ You will need a DB dump to revert.
 Either use the one created before enabling the sandbox mode or create a new one.
 
 1) Revert the changes done to the `db` service in `docksal.yml`.  
-2) Reset the `db` service: `fin reset db`  
+2) Reset the `db` service: `fin project reset db`
 3) Import the DB dump.
 
 Now the `db` service container is using a persistent storage volume for the database - `/var/lib/mysql`.

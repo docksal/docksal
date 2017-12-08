@@ -50,7 +50,7 @@ The steps below will remove the Docksal VM and cleanup all Docksal stuff.
 
 ```bash
 fin vm remove
-rm -rf ~/.docksal
+rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 
@@ -79,7 +79,7 @@ First, try these quick fix steps in the order listed below. Check if the issue h
 
 - Update Docksal to the latest version. See the [updates](#updates) section.
 - (Mac and Windows) Restart the Docksal VM: `fin vm restart`
-- Reset Docksal system services with `fin reset system` and restart project containers with `fin up`
+- Reset Docksal system services with `fin reset system` and restart project containers with `fin project restart`
 - Reboot the host (your computer or remote server)
 - (Mac and Windows) Re-create Docksal VM: `fin vm remove` then `fin vm start` (**WARNING**: backup your DB data before doing this)
 

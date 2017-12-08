@@ -24,7 +24,7 @@ Docksal is not tested and does not support other Linux-type shells on Windows.
 ### 2. Install Docksal
 
 ```bash
-curl -fsSL get.docksal.io | sh
+curl -fsSL https://get.docksal.io | sh
 ```
 
 ### 3. Create and start the vm
@@ -47,7 +47,7 @@ You are done with the one time environment installation. Now you can [configure 
 ### 1. Install Docksal
 
 ```bash
-curl -fsSL get.docksal.io | sh
+curl -fsSL https://get.docksal.io | sh
 ```
 
 ### 2. Create and start the vm
@@ -76,7 +76,7 @@ You either need to stop Apache or reconfigure it to listen on different ports (e
 ### 2. Install Docksal
 
 ```bash
-curl -fsSL get.docksal.io | sh
+curl -fsSL https://get.docksal.io | sh
 ```
 
 ### 3. Congratulations!

@@ -107,7 +107,7 @@ Following the previous example, here's what it would look like for `cli`:
 
 ## Building
 
-Building a customized image happens automatically with `fin up`.  
+Building a customized image happens automatically with `fin project start`.
 The built image will be stored locally and used as the service image from there on.
 
 Additionally, `fin build` command is a proxy command to [docker-compose build](https://docs.docker.com/compose/reference/build/) 

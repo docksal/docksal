@@ -37,7 +37,7 @@ Use it when maintaining a static stack configuration, that is fully defined in t
       - ${DOCKSAL_DNS2}
 ```
 
-Apply new configuration with `fin up`.
+Apply new configuration with `fin project start` (`fin p start`).
 
 Use `memcached:11211` as the memcached endpoint.
 
@@ -55,4 +55,4 @@ This can be overridden via the command arguments in the service definition.
     command: ["-m", "128"]
     ...
 ```
-Add and adjust as necessary in `docksal.yml`. Apply new configuration with `fin up`.
+Add and adjust as necessary in `docksal.yml`. Apply new configuration with `fin project start` (`fin p start`).

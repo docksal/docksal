@@ -34,8 +34,8 @@ Please read the documentation to understand their main sections.
     Some containers and their parameters are required for Docksal to work properly. 
     **Please see [Don't break your Docksal setup!](#warning) section.**
 
-You have to run `fin start` to apply configuration changes. 
-If you remove services or volumes you have to remove them with `fin rm [service]`.
+You have to run `fin project start` (`fin p start` for short) to apply configuration changes.
+If you remove services or volumes you have to remove them with `fin project rm [service]`.
 
 ## Project configuration files
 <a name="docksal-yml"></a>
@@ -66,10 +66,14 @@ variables for your automation scripts (see [custom commands](../fin/custom-comma
 are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom port](../advanced/networking.md#expose-port) 
 or switching PHP versions.
 
+These files are intended for local overrides. They should be added to `.gitignore` and never committed into a project 
+repo. You can always include an example file in the repo, e.g. `example.docksal-local.env` and instruct users to copy 
+it and adjust as necessary.
+
 <a name="default-configurations"></a>
 ## Default stacks
 
-Docksal ships with a set of default configurations (stacks), which are `yml` files stored in `~/.docksal/stacks/`.
+Docksal ships with a set of default configurations (stacks), which are `yml` files stored in `$HOME/.docksal/stacks/`.
 These files are a good reference, when you begin creating a custom project configuration.
 
 | File name                  | Description |
@@ -96,8 +100,8 @@ The list below goes from the earliest to the latest in this queue.
 
 Loading order:
 
-1. `~/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md).)
-2. `~/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`.
+1. `$HOME/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md).)
+2. `$HOME/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`.
 3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise.
 4. `docksal.env` - sets or modifies environment variables.
 5. `docksal-local.yml` - extends the loaded stack or `docksal.yml`.
@@ -108,8 +112,8 @@ To see the files loaded for a particular project run `fin config show`.
 <a name="zero-configuration"></a>
 ## Zero-configuration
 
-You can simply create a `.docksal` folder in your project root and run `fin start`.
-The default stack (`~/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case.
+You can simply create a `.docksal` folder in your project root and run `fin project start` (`fin start` for short).
+The default stack (`$HOME/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case.
 
 This is a great way to start developing a new project. This approach can also be used on a permanent basis, 
 if your needs are simple. `stack-default.yml` extends the configuration from `services.yml`, 
@@ -118,7 +122,7 @@ so you'll be getting the latest stack versions with every Docksal update.
 ### Zero-configuration stacks
 
 You can switch between pre-created zero-configuration stacks by adding the following line to your `docksal.env` file 
-and running `fin reset`.
+and running `fin project reset`.
 
 ```
 DOCKSAL_STACK="acquia"
@@ -127,7 +131,7 @@ DOCKSAL_STACK="acquia"
 The following stacks are available:
 
 - `default` - web, db, cli (assumed, when none specified.)
-- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acqui](https://www.acquia.com/) hosted projects.)
+- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects.)
 
 <a name="custom-configuration"></a>
 ## Custom configuration
@@ -304,7 +308,7 @@ services:
 
 When not using a predefined stack (`docksal.yml` is present and `DOCKSAL_STACK` is not set in `docksal.env`), 
 you are in control of everything. In this case the stack configuration is not inherited from 
-`services.yml` (`~/.docksal/services.yml`), so you must fully describe the `cli` service in the project's `docksal.yml`.
+`services.yml` (`$HOME/.docksal/services.yml`), so you must fully describe the `cli` service in the project's `docksal.yml`.
 
 An example section of a `docksal.yml` file that describes the `cli` service and overrides the PHP version:
 
@@ -332,13 +336,13 @@ Instead of the `cli` service image you will be modifying the `db` service image.
 To see all Docker Hub images produced and supported by Docksal team run:
 
 ```bash
-fin config images
+fin image registry
 ```
 
 To get all tags of a certain image provide its name with the same command. E.g.:
 
 ```bash
-fin config images docksal/db
+fin image registry docksal/db
 ```
 
 ## Automate the initialization process
