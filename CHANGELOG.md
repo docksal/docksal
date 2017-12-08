@@ -1,5 +1,83 @@
 # Changelog
 
+# 1.6.0 (2017-12-08)
+
+**IMPORTANT NOTE:** if you use VirtualBox run `fin update` **twice**.
+
+Wait for update to fails the first time, then just run `fin update` again.
+This is because VirtualBox and docker-machine are being updated during one run.
+Hopefully this is fixed in this release and you will not need to run it twice again in future.
+
+## New software versions
+
+- docker/boot2docker - 17.09.0-ce
+- docker-compose - 1.16.1
+- docker-machine - 0.13.0
+- virtualbox - 5.1.28 (the latest boot2docker is using VirtualBox Guest Additions v5.1.28)
+
+## Non-breaking deprecation
+
+From now on the default way to launch commands against project is via `fin project` commands subset.
+
+E.g. `fin project start` (`fin p start`), `fin project stop`, `fin project reset` etc.
+
+Old `fin start`, `fin stop` etc. aliases will still work for compatibility but are removed from the documentation.
+
+## New Features
+
+* Enable cached osxfs automatically on Docker for Mac to boost performance. (#249, #397)
+* You can add environment dependent ENV and YML files based on `$DOCKSAL_ENVIRONMENT` variable, e.g. `docksal-myenv.yml`, that would only apply, if `DOCKSAL_ENVIRONMENT=myenv` (#383, #354). Official documentation is pending.
+
+* [Grav](https://github.com/docksal/example-grav) project creation wizard
+* [Gatsby JS](https://github.com/docksal/example-gatsby) project creation wizard
+* [Laravel](https://github.com/docksal/example-laravel) project creation wizard
+
+* Address DNS issue of corporate networks and VPN. Added backup upstream DNS server for docksal-dns. This addresses cases when DOCKSAL_DNS_UPSTREAM is set to an internal address (VPN/LAN) and becomes inaccessible when user disconnects from that network. `8.8.4.4` will now be used as a backup when DOCKSAL_DNS_UPSTREAM is not reachable.
+* Expose ngrok Web UI so that you could export and access Web UI from your host (#379)
+* Project images will be auto-updated during overall update
+* New `vhosts` command to show all registered Docksal virtual hosts
+* Show virtual host name after containers start
+* Docker for Mac/Win networking setup is now aligned with the VirtualBox mode and Linux:
+```
+  192.168.64.1 - host IP
+  192.168.64.100 - Docksal IP
+```
+* Allow installing Docksal addons from a different GitHub repo
+* Allow any `exec_target` for addons and custom commands (#356).
+Requires that container specified as exec_target to have project_root volume just like cli:
+```
+    volumes:
+      # Project root volume
+      - project_root:/var/www:rw,nocopy
+```
+
+## Changes and improvements
+
+* Fix version comparison bug
+* Fixed MySQL permissions and default db missing bugs in `fin db create` (#351, #371, #372)
+* Fix the bug that Virtualbox update breaks docker-machine upgrade and users need to run `fin update` twice. (#280)
+* Fin will check that Docksal System services (`dns`, `vhost-proxy`, `ssh-agent`) are running and restart them
+* Docker for Mac: Properly add ssh keys on up/restart/reset (#396)
+* 1.30.2. Use DOCKSAL_DNS_DOMAIN variable value for default VIRTUAL_HOST (#390)
+* Fix that system images were not updated during install in Docker for Mac/Win mode
+* Ensure ~/.ssh exists. This prevents errors for users with no ssh keys
+* Fixed that Xdebug was not working on Docker for Mac. (#389, #393)
+* (Ubuntu 17.10) Install `ifup`, `ifdown` and `resolvconf` if they are missing (#321)
+* (Ubuntu) Address slow fs performance with the `overlay2` storage driver by adding `/home/docker` volume in `cli` (#325)
+* Increase CLI healthcheck wait timeout to 60 seconds for intensive operations during custom healthchecks
+
+## Documentation
+
+* Documented SMBv1 issues on Windows 10 Fall Creators Update 1709
+* Unison volumes documentation
+* Added docs on file sharing with Docker for Mac/Windows
+* Update docs on getting a list of Docksal images on Docker Hub
+* Switch to using https://get.docksal.io for installs
+* Updated portable installation instructions
+  - Added support for Docker for Mac/Windows
+  - Organized instructions per OS
+* Improved custom commands documentation
+
 # 1.5.1 (2017-09-06)
 
 This is a hotfix release aimed to address sporadic issues with TLS certificates caused by a regression between 
