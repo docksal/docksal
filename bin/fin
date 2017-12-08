@@ -3992,7 +3992,7 @@ reset ()
 		remove "$@"
 	fi
 	# Return here if there are errors with remove
-	# This also helps with cases when there was a typo in the reset command, like "fin reset system"
+	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
 	[[ "$?" != 0 ]] && return $?
 
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
