@@ -68,7 +68,6 @@ if is_windows; then
 	# Cannot use cygpath_abs_unix here as it's being defined much later
 	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 fi
-OLD_CONFIG_DIR="$HOME/.drude"
 CONFIG_DIR="$HOME/.docksal"
 CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
@@ -832,8 +831,6 @@ _start_containers ()
 	echo-green "Starting services..."
 	docker-compose up -d --remove-orphans --build && \
 		_healthcheck_wait && \
-		# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
-		_set_cli_uid && \
 		_vhost_proxy_connect
 }
 
@@ -951,10 +948,6 @@ cleanup ()
 	_remove_dangling_containers
 	_remove_dangling_images
 	_remove_dangling_volumes
-
-	# TODO: remove below lines in September 2017
-	rm -rf "$OLD_CONFIG_DIR/" >/dev/null 2>&1
-	rm -f "$CONFIG_DIR/last_check" >/dev/null 2>&1
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -1712,15 +1705,6 @@ is_docker_machine_exist ()
 	fi
 }
 
-# Return docker machine provider
-docker_machine_provider ()
-{
-	# For now always return virtualbox
-	# TODO: remove if not used in September 2017
-	echo 'virtualbox'
-	#docker-machine ls | grep "$DOCKER_MACHINE_NAME" | awk '{print $3}' 2>/dev/null
-}
-
 docker_machine_env ()
 {
 	local _env
@@ -1837,29 +1821,24 @@ docker_machine_remove ()
 	local machine_name="${1:-$DOCKER_MACHINE_NAME}"
 
 	_confirm "Remove $machine_name?"
-	# VirtualBox
-	if [[ "$(docker_machine_provider)" == 'virtualbox' ]]; then
-		# Store host-only interface name before removing the VM.
-		local vboxifname=$("$vboxmanage" showvminfo "$machine_name" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
-		docker-machine rm -f "$machine_name"
-		if ! is_docker_machine_exist "$machine_name" "true"; then
-			# If the VM was removed, remove the DHCP server associated with its network interface.
-			# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
-			"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" >/dev/null 2>&1
-			# Killing the network interface also helps to avoid issues when VM is recreated.
-			"$vboxmanage" hostonlyif remove "$vboxifname" >/dev/null 2>&1
-		fi
+	# Store host-only interface name before removing the VM.
+	local vboxifname=$("$vboxmanage" showvminfo "$machine_name" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
+	docker-machine rm -f "$machine_name"
+	if ! is_docker_machine_exist "$machine_name" "true"; then
+		# If the VM was removed, remove the DHCP server associated with its network interface.
+		# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
+		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" >/dev/null 2>&1
+		# Killing the network interface also helps to avoid issues when VM is recreated.
+		"$vboxmanage" hostonlyif remove "$vboxifname" >/dev/null 2>&1
+	fi
 
-		if is_windows; then
-			echo-green "Removing SMB shares..."
-			docker_machine_remove_smb
-		fi
-		if is_mac; then
-			echo-green "Removing NFS exports..."
-			docker_machine_remove_nfs
-		fi
-	else
-		docker-machine rm -f "$machine_name"
+	if is_windows; then
+		echo-green "Removing SMB shares..."
+		docker_machine_remove_smb
+	fi
+	if is_mac; then
+		echo-green "Removing NFS exports..."
+		docker_machine_remove_nfs
 	fi
 }
 
@@ -2195,7 +2174,7 @@ vm ()
 			# Get/Set active vm
 			shift
 			if [[ "$1" == "" ]]; then
-				echo "$DOCKER_MACHINE_NAME ($(docker_machine_provider))"
+				echo "$DOCKER_MACHINE_NAME"
 			else
 				[[ "$1" == "$DOCKER_MACHINE_NAME" ]] && echo "$1 is already active" && return 0
 				! is_docker_machine_exist "$1" && echo "No docker machine with name $1" && return 1
@@ -2295,7 +2274,6 @@ vm ()
 # TODO: deprecated. Remove as this command is not very useful right now.
 vm-stats ()
 {
-	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
 	check_docker_running # should be running
 	check_vbox_version
 	metrics="CPU/Load/User,CPU/Load/Kernel,Net/Rate/Rx,Net/Rate/Tx"
@@ -2305,7 +2283,6 @@ vm-stats ()
 }
 
 vm-ram () {
-	[[ "$(docker_machine_provider)" != 'virtualbox' ]] && echo "This command is for virtualbox machines only" && exit 1
 	echo "Total $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
 		local running
@@ -3233,21 +3210,6 @@ EOF
 	fi
 }
 
-# Update start script and shortcut
-# TODO: deprecated, remove in September 2017
-update_start_script_shortcut()
-{
-	rm -f "$BABUN_HOME/docksal.bat" >/dev/null 2>&1
-	rm -f "$BABUN_HOME/docksal.ico" >/dev/null 2>&1
-	rm -f "$BABUN_HOME/tools/link_icon.vbs" >/dev/null 2>&1
-	rm -f "$(cygpath ${USERPROFILE}\Desktop\Docksal.lnk)" >/dev/null 2>&1
-
-#	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/link_icon.vbs" -o "$(cygpath $BABUN_HOME)/tools/link_icon.vbs"
-#	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.bat" -o "$(cygpath $BABUN_HOME)/docksal.bat"
-#	curl -kfsSL "${URL_REPO}/${DOCKSAL_VERSION}/scripts/docksal.ico" -o "$(cygpath $BABUN_HOME)/docksal.ico"
-#	cscript //Nologo "$BABUN_HOME\tools\link_icon.vbs" "$USERPROFILE\Desktop\Docksal.lnk" "$BABUN_HOME\docksal.bat" "$BABUN_HOME\docksal.ico"
-}
-
 # Update system service images
 update_system_images ()
 {
@@ -4006,49 +3968,6 @@ logs ()
 {
 	check_docker_running
 	docker-compose logs "$@"
-}
-
-# TODO: remove in September 2017, as this functionality was ported inside docksal/cli
-# Set uid of the primary "docker" user in the cli container
-# Useful to match the host uid with the uid in the cli container and avoid file permission issues this way.
-_set_cli_uid ()
-{
-	# Skip Windows, as Linux permissions and ownership do not matter over SMB
-	is_windows && return
-
-	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
-	local cli=$(get_container_id cli || true)
-	# If there is no cli, move on.
-	if [[ -z ${cli} ]]; then
-		echo-yellow 'Expected service "cli" is missing.'
-		return;
-	fi
-
-	local container_uid_gid
-	# Get both uid and gid in one shot to save time
-	container_uid_gid=$(docker exec -u docker ${cli} bash -c 'echo -n $(id -u):$(id -g)')
-	if [[ ! $? -eq 0 ]]; then
-		echo-error "Error getting uid from cli container" \
-			"You might need to recreate containers with ${yellow}fin project reset${NC}"
-		return
-	fi
-
-	[[ "$container_uid_gid" == "$HOST_UID:$HOST_GID" ]] && return
-
-	# TODO: output a note to the user about updating their custom yml configuration (point to the docs).
-	if [[ "$host_uid" != "0" ]] ; then
-		echo-green "Changing uid/gid in cli to $HOST_UID/$HOST_GID to match the host"
-	else
-		echo -e "${green}Changing user id in cli to 0 to match host user id ${NC}${yellow}(running as root is not recommended)...${NC}"
-	fi
-	docker exec -u root ${cli} bash -c "usermod -u $HOST_UID -o docker"
-	docker exec -u root ${cli} bash -c "groupmod -g $HOST_GID -o \$(id -gn docker)"
-	# TODO: remove once confirmed this is no longer necessary
-	echo-green "Resetting permissions on /var/www..."
-	docker exec -u root ${cli} chown -R -h $HOST_UID:$HOST_GID /var/www
-
-	echo-green "Restarting php daemon..."
-	docker exec -u root ${cli} supervisorctl restart php-fpm >/dev/null
 }
 
 # Share web container using ngrok service
@@ -5267,12 +5186,6 @@ case "$1" in
 		[[ "$*" == "list" ]] && alias_list && exit
 		[[ "$1" == "remove" ]] && shift && alias_remove "$@" && exit
 		alias_create "$@"
-		;;
-	# TODO: remove create-site in September 2017 in favor of project create
-	create-site)
-		# no load_configuration
-		echo -e "${yellow}Notice:${NC} create-site is deprecated and will be removed. Use ${yellow}fin project create${NC} instead."
-		project_create
 		;;
 	hosts)
 		# no load_configuration
