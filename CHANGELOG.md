@@ -2,11 +2,7 @@
 
 # 1.6.0 (2017-12-08)
 
-**IMPORTANT NOTE:** if you use VirtualBox run `fin update` **twice**.
-
-Wait for update to fail the first time, then just run `fin update` again.
-This is because VirtualBox and boot2docker are being updated during one run.
-Hopefully this is fixed in this release and you will not need to run it twice again in future.
+**IMPORTANT NOTE:** if you use VirtualBox run `fin update` **twice** for this release.
 
 ## New software versions
 
@@ -17,53 +13,56 @@ Hopefully this is fixed in this release and you will not need to run it twice ag
 
 ## Non-breaking deprecation
 
-From now on the default way to launch commands against project is via `fin project` commands subset.
-
-E.g. `fin project start` (`fin p start`), `fin project stop`, `fin project reset` etc.
-
-Old `fin start`, `fin stop` etc. aliases will still work for compatibility but are removed from the documentation.
+From now on the default way to launch commands against projects is via `fin project` command subset.  
+E.g. `fin project start` (`fin p start`), `fin project stop`, `fin project reset` etc.  
+Old `fin start`, `fin stop` etc. aliases will still work for compatibility, but are removed from the documentation.
 
 ## New Features
 
-* Enable cached osxfs automatically on Docker for Mac to boost performance. (#249, #397)
-* You can add environment dependent ENV and YML files based on `$DOCKSAL_ENVIRONMENT` variable, e.g. `docksal-myenv.yml`, that would only apply, if `DOCKSAL_ENVIRONMENT=myenv` (#383, #354). Official documentation is pending.
-
+* Enable osxfs caching automatically with Docker for Mac to improve read performance. (#249, #397)
+* You can add environment dependent ENV and YML files based on `$DOCKSAL_ENVIRONMENT` variable, e.g. `docksal-myenv.yml`,
+ that would only apply, if `DOCKSAL_ENVIRONMENT=myenv` (#383, #354). Official documentation is pending.
 * [Grav](https://github.com/docksal/example-grav) project creation wizard
 * [Gatsby JS](https://github.com/docksal/example-gatsby) project creation wizard
 * [Laravel](https://github.com/docksal/example-laravel) project creation wizard
+* Address DNS issue of corporate networks and VPN
 
-* Address DNS issue of corporate networks and VPN. Added backup upstream DNS server for docksal-dns. This addresses cases when DOCKSAL_DNS_UPSTREAM is set to an internal address (VPN/LAN) and becomes inaccessible when user disconnects from that network. `8.8.4.4` will now be used as a backup when DOCKSAL_DNS_UPSTREAM is not reachable.
-* Expose ngrok Web UI so that you could export and access Web UI from your host (#379)
-* Project images will be auto-updated during overall update
+    Added backup upstream DNS server for docksal-dns. This addresses cases when `DOCKSAL_DNS_UPSTREAM` is set to an internal IP (VPN/LAN) and becomes inaccessible when user disconnects from that network. `8.8.4.4` will now be used as a backup when DOCKSAL_DNS_UPSTREAM is not reachable.
+
+* Expose ngrok Web UI on a random port to make it accessible from the host  (#379)
+* Project images are auto-updated during overall update
 * New `vhosts` command to show all registered Docksal virtual hosts
-* Show virtual host name after containers start
+* Show virtual host name after project start
 * Docker for Mac/Win networking setup is now aligned with the VirtualBox mode and Linux:
+
 ```
   192.168.64.1 - host IP
   192.168.64.100 - Docksal IP
 ```
-* Allow installing Docksal addons from a different GitHub repo
+
+* Allow installing Docksal addons from a non-default GitHub repo
 * Allow any `exec_target` for addons and custom commands (#356).
-Requires that container specified as exec_target to have project_root volume just like cli:
-```
-    volumes:
-      # Project root volume
-      - project_root:/var/www:rw,nocopy
-```
+
+    Requires that container specified as `exec_target` has `project_root` volume defined, just like cli:
+    ```
+        volumes:
+          # Project root volume
+          - project_root:/var/www:rw,nocopy
+    ```
 
 ## Changes and improvements
 
 * Fix version comparison bug
 * Fixed MySQL permissions and default db missing bugs in `fin db create` (#351, #371, #372)
 * Fix the bug that Virtualbox update breaks docker-machine upgrade and users need to run `fin update` twice. (#280)
-* Fin will check that Docksal System services (`dns`, `vhost-proxy`, `ssh-agent`) are running and restart them
-* Docker for Mac: Properly add ssh keys on up/restart/reset (#396)
-* 1.30.2. Use DOCKSAL_DNS_DOMAIN variable value for default VIRTUAL_HOST (#390)
+* Fin will check that Docksal System services (`dns`, `vhost-proxy`, `ssh-agent`) are running and restart them otherwise
+* Docker for Mac: Add ssh keys on up/restart/reset (#396)
+* Use `DOCKSAL_DNS_DOMAIN` variable value for default `VIRTUAL_HOST` (#390)
 * Fix that system images were not updated during install in Docker for Mac/Win mode
-* Ensure ~/.ssh exists. This prevents errors for users with no ssh keys
-* Fixed that Xdebug was not working on Docker for Mac. (#389, #393)
-* (Ubuntu 17.10) Install `ifup`, `ifdown` and `resolvconf` if they are missing (#321)
-* (Ubuntu) Address slow fs performance with the `overlay2` storage driver by adding `/home/docker` volume in `cli` (#325)
+* Ensure `~/.ssh` exists. This prevents errors for users with no ssh keys
+* Fixed xdebug on Docker for Mac. (#389, #393)
+* (Ubuntu 17.10) Install `ifupdown` and `resolvconf` if they are missing (#321)
+* (Ubuntu) Address slow fs performance with the `overlay2` storage driver (defaut in Docker for Mac/Win and Ubuntu 17.04+) by adding `/home/docker` volume in `cli` (#325)
 * Increase CLI healthcheck wait timeout to 60 seconds for intensive operations during custom healthchecks
 
 ## Documentation
