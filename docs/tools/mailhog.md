@@ -25,7 +25,7 @@ mail:
   user: root
 ```
 
-Apply new configuration with `fin up`.
+Apply new configuration with `fin project start` (`fin p start`).
 
 ### PHP settings
 

@@ -25,7 +25,7 @@ You can also pick from the [list](https://confluence.jetbrains.com/display/PhpSt
 XDEBUG_ENABLED=1
 ```
 
-2) Update container configuration with `fin up`  
+2) Apply container configuration with `fin project start` (`fin p start`)
 
 3) Open your project in PHPStorm  
 
@@ -60,7 +60,7 @@ services:
       - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
 ```
 
-2) Update container configuration with `fin up`
+2) Apply container configuration with `fin project start` (`fin p start`)
 
 3) Configure PHPStorm to be able to handle drush debugging
 ![Screenshot](../_img/xdebug-phpstorm-drush.png)
@@ -107,7 +107,7 @@ To configure debugging in browser follow **Prerequisites** and **Setup**.
 XDEBUG_ENABLED=1
 ```
 
-2) Update container configuration with `fin up`  
+2) Apply container configuration with `fin project start` (`fin p start`)
 
 3) Open NetBeans Debugging configuration (follow menu "Tools" -> "Options" -> "PHP" -> "Debugging") and set "DebuggerPort" to 9000
 

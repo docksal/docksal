@@ -4,7 +4,7 @@ The ssh-agent service allows adding multiple keys (including the ones protected 
 ssh keys, which can be shared across multiple projects.
 
 The default ssh keys (`~/.ssh/id_rsa`, `~/.ssh/id_dsa`, `~/.ssh/id_ecdsa`) are loaded into the agent automatically.  
-On macOS and Windows this happens when the Docksal VM is (re)started, on Linux - whenever `fin up` is used.
+On macOS and Windows this happens when the Docksal VM is (re)started, on Linux - whenever `fin project start` is used.
 
 
 ## Project setup
@@ -22,7 +22,7 @@ cli:
   ...
 ```
 
-Reset the `cli` container `fin reset cli`.
+Reset the `cli` container `fin project reset cli`.
 
 
 ## Command line reference

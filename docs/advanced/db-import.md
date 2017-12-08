@@ -21,7 +21,7 @@ db:
   ...
 ```
 
-Run `fin reset db` to reinitialize the `db` service.
+Run `fin project reset db` (`fin p reset db`) to reinitialize the `db` service.
 
 It may take some time for the database server to initialize and import the dump.  
 Check container logs for progress and/or issues if necessary (`fin logs db`).

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.38.0
+FIN_VERSION=1.40.0
 
 # Console colors
 red='\033[0;91m'
@@ -784,7 +784,7 @@ check_project_unique ()
 		if [[ "$_project_name" == "$COMPOSE_PROJECT_NAME_SAFE" ]] && [[ "$_project_root" != "$PROJECT_ROOT" ]]; then
 			echo-error "Another project is already using the name '${COMPOSE_PROJECT_NAME_SAFE}'" \
 				"Change the name of the current project by renaming the project folder (folder name defines the project name and has to be unique)" \
-				"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$_project_root${NC}"
+				"or remove the other project's stack by running ${yellow}fin project remove${NC} in ${yellow}$_project_root${NC}"
 			exit 1
 		fi
 
@@ -793,7 +793,7 @@ check_project_unique ()
 		if [[ "$_project_vhost" =~ ^$VIRTUAL_HOST ]] && [[ "$_project_root" != "$PROJECT_ROOT" ]]; then
 			echo-error "Another project is already using the virtual hostname '${VIRTUAL_HOST}'" \
 				"Use a different hostname for this project by overriding the VIRTUAL_HOST variable in docksal.env" \
-				"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$_project_root${NC}"
+				"or remove the other project's stack by running ${yellow}fin project remove${NC} in ${yellow}$_project_root${NC}"
 			exit 1
 		fi
 	done
@@ -1011,7 +1011,7 @@ _healthcheck_wait ()
 		if ((elapsed > timeout)); then
 			echo-error "$container_name heathcheck failed" \
 				"Container did not enter a healthy state within the expected amount of time." \
-				"Try ${yellow}fin restart${NC}"
+				"Try ${yellow}fin project restart${NC}"
 			exit 1
 		fi
 	done
@@ -1078,27 +1078,18 @@ show_help ()
 
 	printh "Docksal Fin v$FIN_VERSION commands:" "" "green"
 
-	printh "start (up)" "Start project services ('up' forces re-read of configuration)"
-	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects)"
-	printh "restart" "Restart project services"
-	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
-	printh "remove (rm)" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
-	printh "status (ps)" "List project services"
-	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
-	printh "config [command]" "Show project configuration (See ${yellow}fin help config${NC} for generate)"
-	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
-
 	echo
-	printh "db <command>" "DB commands: import, dump, list, cli (${yellow}fin help db${NC})" "yellow"
-	printh "project <command>" "Projects management commands: list, create (${yellow}fin help project${NC})" "yellow"
+	printh "project <command>" "Project commands: start, stop, status and more... (${yellow}fin help project${NC})" "yellow"
 	if ! is_linux && ! is_docker_native; then
-		printh "vm <command>" "VM commands: start, stop, restart and more. See ${yellow}fin help vm${NC}" "yellow"
+		printh "vm <command>" "VM commands: start, stop, restart and more... (${yellow}fin help vm${NC})" "yellow"
 	fi
+	printh "db <command>" "DB commands: import, dump, list, cli (${yellow}fin help db${NC})" "yellow"
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
+	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
 	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
-	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
+	printh "config [command]" "Show or generate configuration (${yellow}fin help config${NC})"
 
 	echo
 	printh "drush [command]" "Execute Drush command (Drupal)"
@@ -1106,7 +1097,8 @@ show_help ()
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
 
 	echo
-	printh "addon <name>" "Addons management commands"
+	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
+	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
 	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
 	printh "share" "Create temporary public url for current project using ngrok"
@@ -1247,15 +1239,16 @@ show_help_exec ()
 
 show_help_reset ()
 {
-	printh "fin reset" "" "yellow"
+	printh "fin project reset" "" "yellow"
 	echo
-	echo-green "Recreate services/containers. Equal to fin rm followed by fin start"
-	echo "By default recreates project containers deleting all changes that were made to them."
+	echo-green "Recreate project services/containers. Equal to 'fin project remove' followed by 'fin project start'"
+	echo "Resets all file system changes that were made to the containers."
 	echo
 	echo-green "System services"
 	echo -e "Docksal has several system services."
 	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and should not be used in projects."
 	echo
+	printh "fin project reset" "Recreate project containers"
 	printh "fin reset dns" "Recreate Docksal DNS service"
 	printh "fin reset proxy" "Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
 	printh "fin reset ssh-agent" "Recreate Docksal ssh-agent service"
@@ -1266,7 +1259,7 @@ show_help_reset ()
 show_help_rm ()
 {
 	echo-green "Remove services"
-	printh "fin remove" "" "yellow"
+	printh "fin project remove" "" "yellow"
 	echo
 	echo "Removes project containers and frees up space consumed by them."
 	echo
@@ -1298,15 +1291,25 @@ show_help_image() {
 
 show_help_project() {
 	echo-green "Project management"
-	printh "fin project <command>" "" "yellow"
+	printh "fin project <command> [params]" "" "yellow"
 	echo
 	echo-green "Commands:"
-	printh "list (pl) [-a (--all)]" "List running Docksal projects (-a to show stopped as well)"
-	printh "create" "Create and install new Drupal, Wordpress or Magento project."
+	printh "start" "Start project services (alias: fin start)"
+	printh "up" "Forces re-read of configuration and start project services (alias: fin up)"
+	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects) (alias: fin stop)"
+	printh "status" "List project services (alias: fin ps)"
+	printh "restart" "Restart project services (alias: fin restart)"
+	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC}) (alias: fin reset)"
+	printh "remove or rm" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
+	printh "config" "Show project configuration"
+	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
+	printh "list [-a (--all)]" "List running Docksal projects (-a to show stopped as well) (alias: fin pl)"
+	printh "create" "Project wizard to create new Drupal, Wordpress, Magento or empty static project."
 	echo
 	echo-green "Examples:"
 	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
-	printh "fin project create" "Start project wizard"
+	printh "fin project reset db" "Reset only DB service to start with DB from scratch"
+	printh "fin project create" "Start a new project wizard"
 	echo
 }
 
@@ -1505,7 +1508,7 @@ show_help_config ()
 	printh "fin config [command]" "" "yellow"
 	echo
 	echo-green "Config commands:"
-	printh "show" "Display full effective configuration for the project"
+	printh "show" "Display configuration for the current project"
 	printh "env" "Display only environment variables section"
 	printh "generate" "Generate Docksal configuration for the project"
 	echo
@@ -1518,7 +1521,7 @@ show_help_cleanup ()
 	echo
 	printh "Removes unused docker images to save disk space on VM."
 	printh "Removes orphaned containers. Orphaned are those, which folders were deleted on filesystem"
-	printh "without removing their containers with 'fin rm' first."
+	printh "without removing their containers with 'fin project remove' first."
 	echo-green "Parameters:"
 	printh "--hard" "Also remove all stopped containers (potentially destructive operation)"
 	echo
@@ -3963,7 +3966,7 @@ reset ()
 		remove "$@"
 	fi
 	# Return here if there are errors with remove
-	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
+	# This also helps with cases when there was a typo in the reset command, like "fin reset system"
 	[[ "$?" != 0 ]] && return $?
 
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
@@ -4000,7 +4003,7 @@ _set_cli_uid ()
 	container_uid_gid=$(docker exec -u docker ${cli} bash -c 'echo -n $(id -u):$(id -g)')
 	if [[ ! $? -eq 0 ]]; then
 		echo-error "Error getting uid from cli container" \
-			"You might need to recreate containers with ${yellow}fin reset${NC}"
+			"You might need to recreate containers with ${yellow}fin project reset${NC}"
 		return
 	fi
 
@@ -4385,7 +4388,7 @@ config_generate ()
 	fi
 
 	if [[ $? == 0 ]]; then
-		echo-green "Configuration was generated. You can start it with ${yellow}fin start${NC}"
+		echo-green "Configuration was generated. You can start it with ${yellow}fin project start${NC}"
 	else
 		echo-error "Something went wrong. Check error messages above."
 	fi
@@ -4874,6 +4877,19 @@ case "$1" in
 		shift
 		restart "$@"
 		;;
+	reset)
+		shift
+		# Make sure docker daemon is accessible
+		check_docker_running
+		# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
+		[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
+		reset "$@"
+		;;
+	remove|rm)
+		load_configuration
+		shift
+		remove "$@"
+		;;
 	image)
 		# no load_configuration
 		shift
@@ -4897,7 +4913,7 @@ case "$1" in
 			;;
 		esac
 		;;
-	project)
+	project|p)
 		# no load_configuration
 		shift
 		case "$1" in
@@ -4909,8 +4925,59 @@ case "$1" in
 				project_list "$@"
 				;;
 			'')
-				echo -e "See ${yellow}fin help project${NC}"
+				echo -e "start stop list status ... (${yellow}fin help project${NC})"
 				exit 1
+				;;
+			status|st)
+				load_configuration
+				check_for_updates
+				project_status
+				;;
+			start)
+				load_configuration
+				check_for_updates
+				shift
+				up
+				;;
+			up)
+				# Force re-reading of configuration files
+				COMPOSE_FILE="" load_configuration
+				check_for_updates
+				shift
+				up
+				;;
+			stop)
+				shift
+				# load_configuration is called later in _stop_containers
+				stop "$@"
+				;;
+			restart)
+				load_configuration
+				shift
+				restart "$@"
+				;;
+			reset)
+				shift
+				# Make sure docker daemon is accessible
+				check_docker_running
+				# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
+				[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
+				reset "$@"
+				;;
+			remove|rm)
+				load_configuration
+				shift
+				remove "$@"
+				;;
+			config)
+				load_configuration
+				check_for_updates
+				config_show "$@"
+				;;
+			build)
+				load_configuration
+				shift
+				docker-compose build "$@"
 				;;
 			help)
 				show_help_project
@@ -4932,19 +4999,6 @@ case "$1" in
 		check_for_updates
 		shift
 		project_list "$@"
-		;;
-	reset)
-		shift
-		# Make sure docker daemon is accessible. reset network is a special excluded case.
-		[[ ! "network" =~ "$1" ]] && check_docker_running
-		# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
-		[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
-		reset "$@"
-		;;
-	remove|rm)
-		load_configuration
-		shift
-		remove "$@"
 		;;
 	vm)
 		# no load_configuration

@@ -111,7 +111,7 @@ with Docker for Mac, for testing and performance comparison purposes.
 ### Using NFS volumes
 
 - Add `DOCKSAL_VOLUMES=nfs` in `.docksal/docksal.env` in a project
-- `fin reset`
+- `fin project reset`
 
 
 ## Unison volumes
@@ -154,7 +154,7 @@ The downsides:
 - Follow instructions [here](http://docs.docksal.io/en/master/getting-started/env-setup-native/) to properly 
 configure Docksal for use with Docker for Mac. Make sure you have the most recent fin version installed.
 - Add `DOCKSAL_VOLUMES=unison` in `.docksal/docksal.env` in a project
-- `fin reset`
+- `fin project reset`
 - Wait until the osxfs process on you Mac "cools down" - that's how you know unison is done with the initial sync.
 
 Currently there is no good way to know when unison is done with the initial file sync. This makes it difficult to script 
