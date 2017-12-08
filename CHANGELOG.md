@@ -4,8 +4,8 @@
 
 **IMPORTANT NOTE:** if you use VirtualBox run `fin update` **twice**.
 
-Wait for update to fails the first time, then just run `fin update` again.
-This is because VirtualBox and docker-machine are being updated during one run.
+Wait for update to fail the first time, then just run `fin update` again.
+This is because VirtualBox and boot2docker are being updated during one run.
 Hopefully this is fixed in this release and you will not need to run it twice again in future.
 
 ## New software versions
