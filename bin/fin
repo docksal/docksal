@@ -784,7 +784,7 @@ check_project_unique ()
 		if [[ "$_project_name" == "$COMPOSE_PROJECT_NAME_SAFE" ]] && [[ "$_project_root" != "$PROJECT_ROOT" ]]; then
 			echo-error "Another project is already using the name '${COMPOSE_PROJECT_NAME_SAFE}'" \
 				"Change the name of the current project by renaming the project folder (folder name defines the project name and has to be unique)" \
-				"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$_project_root${NC}"
+				"or remove the other project's stack by running ${yellow}fin project remove${NC} in ${yellow}$_project_root${NC}"
 			exit 1
 		fi
 
@@ -793,7 +793,7 @@ check_project_unique ()
 		if [[ "$_project_vhost" =~ ^$VIRTUAL_HOST ]] && [[ "$_project_root" != "$PROJECT_ROOT" ]]; then
 			echo-error "Another project is already using the virtual hostname '${VIRTUAL_HOST}'" \
 				"Use a different hostname for this project by overriding the VIRTUAL_HOST variable in docksal.env" \
-				"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$_project_root${NC}"
+				"or remove the other project's stack by running ${yellow}fin project remove${NC} in ${yellow}$_project_root${NC}"
 			exit 1
 		fi
 	done
@@ -1294,21 +1294,21 @@ show_help_project() {
 	printh "fin project <command> [params]" "" "yellow"
 	echo
 	echo-green "Commands:"
-	printh "start" "Start project services (shorthand: fin start)"
-	printh "up" "Forces re-read of configuration and start project services (shorthand: fin up)"
-	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects) (shorthand: fin stop)"
-	printh "status" "List project services (shorthand: fin ps)"
-	printh "restart" "Restart project services (shorthand: fin restart)"
-	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC}) (shorthand: fin reset)"
+	printh "start" "Start project services (alias: fin start)"
+	printh "up" "Forces re-read of configuration and start project services (alias: fin up)"
+	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects) (alias: fin stop)"
+	printh "status" "List project services (alias: fin ps)"
+	printh "restart" "Restart project services (alias: fin restart)"
+	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC}) (alias: fin reset)"
 	printh "remove or rm" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
 	printh "config" "Show project configuration"
 	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
-	printh "list [-a (--all)]" "List running Docksal projects (-a to show stopped as well) (shorthand: fin pl)"
+	printh "list [-a (--all)]" "List running Docksal projects (-a to show stopped as well) (alias: fin pl)"
 	printh "create" "Project wizard to create new Drupal, Wordpress, Magento or empty static project."
 	echo
 	echo-green "Examples:"
 	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
-	printh "fin reset db" "Reset only DB service to start with DB from scratch"
+	printh "fin project reset db" "Reset only DB service to start with DB from scratch"
 	printh "fin project create" "Start a new project wizard"
 	echo
 }
@@ -1521,7 +1521,7 @@ show_help_cleanup ()
 	echo
 	printh "Removes unused docker images to save disk space on VM."
 	printh "Removes orphaned containers. Orphaned are those, which folders were deleted on filesystem"
-	printh "without removing their containers with 'fin rm' first."
+	printh "without removing their containers with 'fin project remove' first."
 	echo-green "Parameters:"
 	printh "--hard" "Also remove all stopped containers (potentially destructive operation)"
 	echo
@@ -3965,7 +3965,7 @@ reset ()
 		remove "$@"
 	fi
 	# Return here if there are errors with remove
-	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
+	# This also helps with cases when there was a typo in the reset command, like "fin reset system"
 	[[ "$?" != 0 ]] && return $?
 
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
