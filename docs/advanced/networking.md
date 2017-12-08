@@ -32,7 +32,7 @@ version: "2"
 
 **Note the quotes.** Yaml interprets some numbers with a colon as base64 numbers, so you need quotes here.
 
-**3.** Run `fin up` to apply the new configuration.
+**3.** Run `fin project start` to apply the new configuration.
 
 **4.** Now you can see that your port is exposed.
 

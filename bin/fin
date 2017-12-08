@@ -5,7 +5,7 @@ FIN_VERSION=1.30.2
 # Console colors
 red='\033[0;91m'
 red_bg='\033[101m'
-yellow_bg='\033[43m'
+yellow_bg='\033[43;90m'
 green='\033[0;32m'
 green_bg='\033[42m'
 yellow='\033[1;33m'
@@ -48,7 +48,7 @@ is_mac ()
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 REQUIREMENTS_DOCKER='17.09.0-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.16.1'
+REQUIREMENTS_DOCKER_COMPOSE='1.17.1'
 REQUIREMENTS_DOCKER_MACHINE='0.13.0'
 REQUIREMENTS_VBOX='5.1.28'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
@@ -104,9 +104,11 @@ DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 # Network settings
 ## Docker for Mac/Win
 DOCKSAL_NATIVE_IP="192.168.64.100"
+DOCKSAL_NATIVE_HOST_IP="192.168.64.1"
 
 ## Default (Linux, boot2docker/VirtualBox on Mac and Win)
 DOCKSAL_DEFAULT_IP="192.168.64.100"
+DOCKSAL_DEFAULT_HOST_IP="192.168.64.1"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
 
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
@@ -142,6 +144,12 @@ URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
+URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
+URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
+URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
+URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
+URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
+# Remove URL_REPO_ADDONS in Nov 2018
 URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
@@ -152,6 +160,7 @@ URL_STACKS_STACK_DEFAULT_STATIC="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-def
 URL_STACKS_VOLUMES_BIND="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-bind.yml"
 URL_STACKS_VOLUMES_NFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-nfs.yml"
 URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-unison.yml"
+URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
 
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
@@ -571,9 +580,16 @@ ver_to_int ()
 
 #---------------------------- Control functions -------------------------------
 
+# Check that project root exists and Docker is running.
+check_project_environment ()
+{
+	check_project_root && check_docker_running
+}
+
+# Check that project root exists, Docker is running and Docksal system services are running
 check_docksal_environment ()
 {
-	check_docksal && check_docker_running
+	check_project_root && check_docksal_running
 }
 
 check_docker_running ()
@@ -584,7 +600,7 @@ check_docker_running ()
 	# Check docker versions in this function
 	if ! is_docker_version; then
 		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
-			"Run ${yellow}fin update${NC} to update to the required version."
+			"Run ${yellow}fin update${NC} to update to the required version." \ ""
 	fi
 
 	# Check cached value
@@ -649,6 +665,16 @@ check_docker_running ()
 				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/en/master/troubleshooting"
 			exit 1
 		fi
+	fi
+}
+
+check_docksal_running ()
+{
+	check_docker_running
+	if ! is_docksal_running; then
+		echo-alert "Some Docksal services were not running" "Restarting Docksal system services..."
+		sleep 1
+		reset system
 	fi
 }
 
@@ -728,12 +754,12 @@ check_vbox_version ()
 
 	is_vbox_version
 	local res=$?
-	[[ "$res" == "1" ]] && echo-red "$vboxmanage binary was not found" && update_virtualbox
-	[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && update_virtualbox
+	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
+	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
 }
 
 # Check that .docksal is present
-check_docksal ()
+check_project_root ()
 {
 	if [[ "$(get_project_path)" == "" ]] ; then
 		echo-error "Cannot detect project root." \
@@ -758,7 +784,7 @@ check_project_unique ()
 		if [[ "$_project_name" == "$COMPOSE_PROJECT_NAME_SAFE" ]] && [[ "$_project_root" != "$PROJECT_ROOT" ]]; then
 			echo-error "Another project is already using the name '${COMPOSE_PROJECT_NAME_SAFE}'" \
 				"Change the name of the current project by renaming the project folder (folder name defines the project name and has to be unique)" \
-				"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$_project_root${NC}"
+				"or remove the other project's stack by running ${yellow}fin project remove${NC} in ${yellow}$_project_root${NC}"
 			exit 1
 		fi
 
@@ -767,7 +793,7 @@ check_project_unique ()
 		if [[ "$_project_vhost" =~ ^$VIRTUAL_HOST ]] && [[ "$_project_root" != "$PROJECT_ROOT" ]]; then
 			echo-error "Another project is already using the virtual hostname '${VIRTUAL_HOST}'" \
 				"Use a different hostname for this project by overriding the VIRTUAL_HOST variable in docksal.env" \
-				"or remove the other project's stack by running ${yellow}fin rm${NC} in ${yellow}$_project_root${NC}"
+				"or remove the other project's stack by running ${yellow}fin project remove${NC} in ${yellow}$_project_root${NC}"
 			exit 1
 		fi
 	done
@@ -840,20 +866,21 @@ _stop_containers ()
 		return
 	fi
 
-	check_docksal_environment
+	load_configuration
+	check_project_unique
 	echo-green "Stopping services..."
 	docker-compose stop "$@"
 }
 
 _restart_containers ()
 {
-	_stop_containers "$@" && _start_containers
+	_stop_containers "$@" && sleep 1 && _start_containers
 }
 
 # @param $1 container_name
 _remove_containers ()
 {
-	check_docksal_environment
+	check_project_environment
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 
@@ -972,7 +999,7 @@ _healthcheck_wait ()
 	# Wait for cli to become ready by watching its health status
 	local container_name="${COMPOSE_PROJECT_NAME_SAFE}_cli_1"
 	local delay=5
-	local timeout=30
+	local timeout=60
 	local elapsed=0
 
 	until _healthcheck "$container_name"; do
@@ -984,7 +1011,7 @@ _healthcheck_wait ()
 		if ((elapsed > timeout)); then
 			echo-error "$container_name heathcheck failed" \
 				"Container did not enter a healthy state within the expected amount of time." \
-				"Try ${yellow}fin restart${NC}"
+				"Try ${yellow}fin project restart${NC}"
 			exit 1
 		fi
 	done
@@ -1051,27 +1078,18 @@ show_help ()
 
 	printh "Docksal Fin v$FIN_VERSION commands:" "" "green"
 
-	printh "start (up)" "Start project services ('up' forces re-read of configuration)"
-	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects)"
-	printh "restart" "Restart project services"
-	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC})"
-	printh "remove (rm)" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
-	printh "status (ps)" "List project services"
-	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
-	printh "config [command]" "Show project configuration (See ${yellow}fin help config${NC} for generate)"
-	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
-
 	echo
-	printh "db <command>" "DB commands: import, dump, list, cli (${yellow}fin help db${NC})" "yellow"
-	printh "project <command>" "Projects management commands: list, create (${yellow}fin help project${NC})" "yellow"
+	printh "project <command>" "Project commands: start, stop, status and more... (${yellow}fin help project${NC})" "yellow"
 	if ! is_linux && ! is_docker_native; then
-		printh "vm <command>" "VM commands: start, stop, restart and more. See ${yellow}fin help vm${NC}" "yellow"
+		printh "vm <command>" "VM commands: start, stop, restart and more... (${yellow}fin help vm${NC})" "yellow"
 	fi
+	printh "db <command>" "DB commands: import, dump, list, cli (${yellow}fin help db${NC})" "yellow"
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
+	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
 	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
-	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
+	printh "config [command]" "Show or generate configuration (${yellow}fin help config${NC})"
 
 	echo
 	printh "drush [command]" "Execute Drush command (Drupal)"
@@ -1079,7 +1097,8 @@ show_help ()
 	printh "wp [command]" "Execute WP-CLI command (WordPress)"
 
 	echo
-	printh "addon <name>" "Addons management commands"
+	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
+	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
 	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
 	printh "share" "Create temporary public url for current project using ngrok"
@@ -1087,6 +1106,7 @@ show_help ()
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
 	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
+	printh "vhosts" "List all virtual *.docksal hosts registered in docksal proxy"
 	printh "sysinfo" "Show system information for bug reporting"
 	printh "diagnose" "Show statistics for troubleshooting and bug reporting"
 	printh "version (v, -v)" "Print fin version. [v, -v] prints short version"
@@ -1219,15 +1239,16 @@ show_help_exec ()
 
 show_help_reset ()
 {
-	printh "fin reset" "" "yellow"
+	printh "fin project reset" "" "yellow"
 	echo
-	echo-green "Recreate services/containers. Equal to fin rm followed by fin start"
-	echo "By default recreates project containers deleting all changes that were made to them."
+	echo-green "Recreate project services/containers. Equal to 'fin project remove' followed by 'fin project start'"
+	echo "Resets all file system changes that were made to the containers."
 	echo
 	echo-green "System services"
 	echo -e "Docksal has several system services."
 	echo -e "Names ${yellow}'dns'${NC}, ${yellow}'proxy'${NC}, ${yellow}'ssh-agent'${NC} and ${yellow}'system'${NC} are reserved and should not be used in projects."
 	echo
+	printh "fin project reset" "Recreate project containers"
 	printh "fin reset dns" "Recreate Docksal DNS service"
 	printh "fin reset proxy" "Recreate Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
 	printh "fin reset ssh-agent" "Recreate Docksal ssh-agent service"
@@ -1238,7 +1259,7 @@ show_help_reset ()
 show_help_rm ()
 {
 	echo-green "Remove services"
-	printh "fin remove" "" "yellow"
+	printh "fin project remove" "" "yellow"
 	echo
 	echo "Removes project containers and frees up space consumed by them."
 	echo
@@ -1270,15 +1291,25 @@ show_help_image() {
 
 show_help_project() {
 	echo-green "Project management"
-	printh "fin project <command>" "" "yellow"
+	printh "fin project <command> [params]" "" "yellow"
 	echo
 	echo-green "Commands:"
-	printh "list (pl) [-a (--all)]" "List running Docksal projects (-a to show stopped as well)"
-	printh "create" "Create and install new Drupal, Wordpress or Magento project."
+	printh "start" "Start project services (alias: fin start)"
+	printh "up" "Forces re-read of configuration and start project services (alias: fin up)"
+	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects) (alias: fin stop)"
+	printh "status" "List project services (alias: fin ps)"
+	printh "restart" "Restart project services (alias: fin restart)"
+	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC}) (alias: fin reset)"
+	printh "remove or rm" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
+	printh "config" "Show project configuration"
+	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
+	printh "list [-a (--all)]" "List running Docksal projects (-a to show stopped as well) (alias: fin pl)"
+	printh "create" "Project wizard to create new Drupal, Wordpress, Magento or empty static project."
 	echo
 	echo-green "Examples:"
 	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
-	printh "fin project create" "Start project wizard"
+	printh "fin project reset db" "Reset only DB service to start with DB from scratch"
+	printh "fin project create" "Start a new project wizard"
 	echo
 }
 
@@ -1477,7 +1508,7 @@ show_help_config ()
 	printh "fin config [command]" "" "yellow"
 	echo
 	echo-green "Config commands:"
-	printh "show" "Display full effective configuration for the project"
+	printh "show" "Display configuration for the current project"
 	printh "env" "Display only environment variables section"
 	printh "generate" "Generate Docksal configuration for the project"
 	echo
@@ -1490,7 +1521,7 @@ show_help_cleanup ()
 	echo
 	printh "Removes unused docker images to save disk space on VM."
 	printh "Removes orphaned containers. Orphaned are those, which folders were deleted on filesystem"
-	printh "without removing their containers with 'fin rm' first."
+	printh "without removing their containers with 'fin project remove' first."
 	echo-green "Parameters:"
 	printh "--hard" "Also remove all stopped containers (potentially destructive operation)"
 	echo
@@ -1523,7 +1554,8 @@ show_help_hosts ()
 
 show_help_addon ()
 {
-	echo-green "Addons management command"
+	echo-green "Addons management commands."
+	echo -e "See available addons in the Addons Repository ${yellow}https://github.com/docksal/addons${NC}"
 	echo
 	printh "fin addon <command> <name>" "" "yellow"
 	echo
@@ -1532,8 +1564,8 @@ show_help_addon ()
 	printh "remove <name>" "Remove addon"
 	echo
 	echo-green "Examples:"
-	printh "fin install example" "Install an example addon to the current project"
-	printh "fin remove example" "Uninstall an example addon from the current project"
+	printh "fin addon install solr" "Install solr addon to the current project"
+	printh "fin addon remove solr" "Uninstall solr addon from the current project"
 	echo
 }
 
@@ -1879,6 +1911,8 @@ docker_machine_mount_nfs ()
 			# Write proposed DOCKSAL_NFS_PATH and try remounting nfs
 			mkdir -p "$HOME/Projects"
 			echo -e "\nDOCKSAL_NFS_PATH=\"$HOME/Projects\"\n" | tee -a ${CONFIG_ENV} >/dev/null
+			# Remove extra new lines
+			cat -s ${CONFIG_ENV} > ${CONFIG_ENV}
 			docker_machine_mount_nfs "$HOME/Projects:$HOME/Projects"
 			return $?
 		fi
@@ -2074,7 +2108,8 @@ smb_share_mount()
 			echo-green 'Success!'
 		else
 			echo-error "SMB share mount failed." \
- 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again."
+ 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again." \
+ 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/en/master/troubleshooting-smb${NC}"
 			return 1
 		fi
 	fi
@@ -2299,9 +2334,9 @@ vm-hdd () {
 up ()
 {
 	check_docksal_environment
-	# Run ssh_add here, since there is no better place to get it triggered on Linux.
-	# This should not be the last command in a function as it will exit 1 on non Linux systems.
-	is_linux && ssh_add
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
+	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
 
 	# Temporary workaround for NFS issues on Mac
@@ -2309,6 +2344,7 @@ up ()
 	is_mac && find . -type d > /dev/null 2>&1
 
 	_start_containers
+	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
 }
 
 # Stop containers
@@ -2320,9 +2356,6 @@ stop ()
 		return $?
 	fi
 
-	check_docksal_environment
-	check_project_unique
-
 	_stop_containers "$@"
 }
 
@@ -2331,9 +2364,9 @@ stop ()
 restart ()
 {
 	check_docksal_environment
-	# Run ssh_add here, since there is no better place to get it triggered on Linux.
-	# This should not be the last command in a function as it will exit 1 on non Linux systems.
-	is_linux && ssh_add
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
+	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
 
 	_restart_containers "$@"
@@ -2343,7 +2376,7 @@ restart ()
 # @param $1 $2... container names
 remove ()
 {
-	check_docksal_environment
+	check_project_environment
 	check_project_unique
 
 	if [[ $1 == "" ]]; then
@@ -2384,8 +2417,11 @@ project_list ()
 
 project_create ()
 {
+	echo-green "             -= Docksal project wizard =-"
+	echo
 	while true; do
-		read -p "Please enter the name of your project (all one word, no spaces or slashes): " project_name
+		echo -en "${yellow}1. Enter the name of your project${NC} (no spaces or slashes): "
+		read -p "" project_name
 		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
 			echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
 			continue
@@ -2394,15 +2430,18 @@ project_create ()
 	done
 	echo ''
 
-	echo -e "What would you like to install?"
-	echo -e "${green}[1]${NC} Drupal 7"
-	echo -e "${green}[2]${NC} Drupal 8"
-	echo -e "${green}[3]${NC} Wordpress"
-	echo -e "${green}[4]${NC} Magento"
-	echo -e "${green}[5]${NC} Static HTML site"
+	echo -e "${yellow}2. What would you like to install?${NC}"
+	echo -e "${green}   [1]${NC} Drupal 7"
+	echo -e "${green}   [2]${NC} Drupal 8"
+	echo -e "${green}   [3]${NC} Wordpress"
+	echo -e "${green}   [4]${NC} Magento"
+	echo -e "${green}   [5]${NC} Static HTML site"
+	echo -e "${green}   [6]${NC} Grav CMS"
+	echo -e "${green}   [7]${NC} Gatsby JS"
+	echo -e "${green}   [8]${NC} Laravel"
 	echo -e ""
 	while true; do
-		read -p ": " choice
+		read -p "Enter your choice (1-8): " choice
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
@@ -2433,8 +2472,23 @@ project_create ()
 				target_host_name_search_string=""
 				target_repo=""
 				;;
+			6)
+				target_cms="Grav CMS"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_GRAV"
+				;;
+			7)
+				target_cms="Gatsby JS"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_GATSBY"
+				;;
+			8)
+				target_cms="Laravel"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_LARAVEL"
+				;;
 			* )
-				echo 'Please enter 1, 2, 3 or 4.'
+				echo 'Enter a number between 1 and 8.'
 				continue
 		esac
 		break
@@ -2458,21 +2512,26 @@ project_create ()
 		exit
 	fi
 
-	echo -e "${green} Cloning repository...${NC}"
+	echo -e "${green}Cloning repository...${NC}"
 	git clone -b master ${target_repo} ${project_name}
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
-	cd ${project_name}/.docksal &&
+	echo -e "${yellow}3. Installing site${NC}"
+
+	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
+		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env && rm docksal.env.bak > /dev/null 2>&1 &&
-		cd ".." &&
-		fin init
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env
+		rm -f docksal.env.bak > /dev/null 2>&1
+	)
+
+	cd "${project_name}"
+	fin init
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add () {
-	check_docker_running
 	check_winpty_found
 
 	# Check if ssh-agent container is running
@@ -2542,11 +2601,13 @@ configure_network ()
 	if is_mac; then
 	 	# Docker for Mac
 	 	if is_docker_native; then
-			# Add Docksal IP alias on the local loopback adapter
+			# Add Docksal IP aliases on the local loopback adapter
 			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
+			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_HOST_IP} 255.255.255.0
 		else
 			# Remove Docksal IP alias from the local loopback adapter
 			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP} >/dev/null 2>&1
+			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_HOST_IP} >/dev/null 2>&1
 		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
@@ -2555,11 +2616,15 @@ configure_network ()
 	if is_windows; then
 		# Docker for Win
 		if is_docker_native; then
-			# Add Docksal IP alias on the DockerNAT adapter
-			winsudo "netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
+			# Add Docksal IP aliases on the DockerNAT adapter
+			local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
+			local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP} mask=255.255.255.0"
+			winsudo "$command1 && $command2"
 		else
-			# Remove Docksal IP alias on the DockerNAT adapter
-			winsudo "netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
+			# Remove Docksal IP aliases on the DockerNAT adapter
+			local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
+			local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP}"
+			winsudo "$command1 && $command2"
 		fi
 		# Wait 5s for network configuration to apply
 		sleep 5
@@ -2742,18 +2807,13 @@ install_sshagent_service ()
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always \
 		-v docksal_ssh_agent:/.ssh-agent \
 		"${IMAGE_SSH_AGENT}" >/dev/null
-	# Add default keys. Using || true here to suppress errors if there are not keys on the host.
-	fin ssh-add || true
+	# Add default keys. Using || true here to suppress errors if there are no keys on the host.
+	ssh_add || true
 }
 
 # Install tools on Mac
 install_tools_mac ()
 {
-	if ! is_docker_native; then
-		# Check VirtualBox
-		check_vbox_version
-	fi
-
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
@@ -2849,11 +2909,6 @@ install_tools_windows ()
 	# Disable Babun update checks as they often bring problems
 	if ! (grep '^export DISABLE_CHECK_ON_STARTUP="true"' "$HOME/.babunrc" >/dev/null 2>&1); then
 		echo -e "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> "$HOME/.babunrc"
-	fi
-
-	if ! is_docker_native; then
-		# Check VirtualBox
-		check_vbox_version
 	fi
 
 	# Install Docker client
@@ -3004,8 +3059,8 @@ install_tools_ubuntu ()
 		echo -e "Package: docker-ce\nPin: version ${PIN_DOCKER_VERSION}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
 
 		curl -fsSL "${URL_DOCKER_NIX}" | \
-			# patch Docker installation script on the fly to install a specific Docker version
-			sed "s/apt-get install -y -q docker-ce/apt-get install -y --force-yes -q docker-ce/" | \
+			# Patch get.docker.com script on the fly to force installation of the pinned docker-ce version
+			sed "s/--force-yes docker-ce >/docker-ce >/" | \
 			sh && \
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
@@ -3021,6 +3076,13 @@ install_tools_ubuntu ()
 			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
+	fi
+
+	# Install ifup/ifdown if they are missing
+	if ! (which ifup >/dev/null 2>&1) || ! (which ifdown >/dev/null 2>&1) || ! (which resolvconf >/dev/null 2>&1); then
+		echo-green "Installing missing network utilities..."
+		sudo apt-get update -qq >/dev/null
+		sudo apt-get install -y -qq --no-install-recommends ifupdown resolvconf >/dev/null
 	fi
 
 	# Install docker-machine
@@ -3121,6 +3183,7 @@ update_config_files ()
 			$URL_STACKS_VOLUMES_BIND
 			$URL_STACKS_VOLUMES_NFS
 			$URL_STACKS_VOLUMES_UNISON
+			$URL_STACKS_OVERRIDES_OSXFS
 	"
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
@@ -3217,12 +3280,25 @@ update_project_images ()
 # Update Docksal
 update ()
 {
-	# Do not run full update is running from $FIN_PATH_UPDATED (self initiated sub-shell)
+	# If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
 	[[ "$0" == "$FIN_PATH_UPDATED" ]] && FULL_UPDATE="exit 1"
 
 	# Pre-update check #1: check if there is existing but stopped Docksal machine
 	# We need it running to know Docker server version
 	if (${FULL_UPDATE}); then
+		if ! is_linux && ! is_docker_native; then
+			# Check VirtualBox
+			is_vbox_version
+			local res=$?
+			if [[ "$res" != "0" ]]; then
+				[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher"
+				vm stop
+				DOCKER_MACHINE_STATUS="Stopped"
+				update_virtualbox
+				vm start
+			fi
+		fi
+
 		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
 				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
@@ -3259,8 +3335,6 @@ update ()
 		local b2d_version=$(docker version --format '{{.Server.Version}}')
 		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") ]]; then
 			BOOT2DOCKER_NEEDS_AN_UPGRADE=1
-			(${FULL_UPDATE}) &&
-				_confirm "All running projects will be stopped for vm upgrade. Continue?"
 		fi
 	fi
 
@@ -3494,7 +3568,7 @@ _exec ()
 {
 	[[ $1 == "" ]] && \
 		show_help_exec && exit
-	check_docksal_environment
+	check_project_environment
 	check_winpty_found
 
 	# Allow disabling TTY mode.
@@ -3608,6 +3682,7 @@ _mysql ()
 {
 	check_winpty_found
 	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
@@ -3625,12 +3700,11 @@ _mysql ()
 		_query="$_query $_arg"
 	done
 
-	#[[ "$_query" != "" ]] && _query="-e $(eval 'echo ${_query}')"
-	#${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${_query}"
-	echo ${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database}
-	echo "$MYSQL_USER";
-	echo "${_query}"
-	echo $(eval "echo ${_query}")
+	if [[ "$_query" != "" ]]; then
+		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${_query}"
+	else
+		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password}
+	fi
 }
 
 # Show databases list
@@ -3638,7 +3712,7 @@ _mysql ()
 # --db-password="otherpass" to override mysql password
 mysql_list ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
@@ -3661,7 +3735,7 @@ mysql_list ()
 # --db-collation="..." to override collation (default is utf8_general_ci)
 mysql_db_create ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
@@ -3692,7 +3766,7 @@ mysql_db_create ()
 # --db-password="otherpass" to override mysql password
 mysql_db_drop ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
@@ -3722,7 +3796,7 @@ mysql_db_drop ()
 # --no-truncate to avoid truncate
 mysql_import ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
@@ -3811,7 +3885,7 @@ mysql_import ()
 # --db-password="otherpass" to override mysql password
 mysql_dump ()
 {
-	check_docksal_environment
+	check_project_environment
 	eval $(parse_params "$@")
 
 	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
@@ -3877,9 +3951,6 @@ reset ()
 		return
 	fi
 
-	# Make sure docker daemon is accessible
-	check_docker_running
-
 	if [[ "$1" == "proxy" ]] ; then
 		echo-green 'Resetting Docksal HTTP/HTTPS reverse proxy service...'
 		install_proxy_service
@@ -3911,7 +3982,7 @@ reset ()
 		return
 	fi
 
-	check_docksal
+	check_project_root
 	# support quiet removal
 	if [[ $1 == "-f" ]]; then
 		shift
@@ -3919,7 +3990,12 @@ reset ()
 	else
 		remove "$@"
 	fi
-	is_linux && [[ "$@" == "" ]] && ssh_add
+	# Return here if there are errors with remove
+	# This also helps with cases when there was a typo in the reset command, like "fin reset system"
+	[[ "$?" != 0 ]] && return $?
+
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
 	_start_containers
 }
 
@@ -3952,7 +4028,7 @@ _set_cli_uid ()
 	container_uid_gid=$(docker exec -u docker ${cli} bash -c 'echo -n $(id -u):$(id -g)')
 	if [[ ! $? -eq 0 ]]; then
 		echo-error "Error getting uid from cli container" \
-			"You might need to recreate containers with ${yellow}fin reset${NC}"
+			"You might need to recreate containers with ${yellow}fin project reset${NC}"
 		return
 	fi
 
@@ -4173,7 +4249,7 @@ load_global_configuration ()
 
 load_configuration ()
 {
-	check_docksal
+	check_project_root
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
@@ -4220,7 +4296,7 @@ load_configuration ()
 		else
 			# Include docksal-local.yml (if exists)
 			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
-			local_yml_file="$(get_project_path_dc)/.docksal/docksal-local.yml"
+			local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
@@ -4236,6 +4312,12 @@ load_configuration ()
 					"You may need to run ${yellow}fin update${NC} to download volume definitions."
 				exit 1
 			fi
+		fi
+
+		# Enable osxfs:cached for cli on Docker for Mac
+		overrides_osxfs_file="$(get_config_dir_dc)/stacks/overrides-osxfs.yml"
+		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]]; then
+			COMPOSE_FILE="${overrides_osxfs_file}${SEPARATOR}${COMPOSE_FILE}"
 		fi
 	fi
 	export COMPOSE_FILE
@@ -4331,7 +4413,7 @@ config_generate ()
 	fi
 
 	if [[ $? == 0 ]]; then
-		echo-green "Configuration was generated. You can start it with ${yellow}fin start${NC}"
+		echo-green "Configuration was generated. You can start it with ${yellow}fin project start${NC}"
 	else
 		echo-error "Something went wrong. Check error messages above."
 	fi
@@ -4368,7 +4450,7 @@ hosts_add ()
 	local hostname="$1"
 	# Use VIRTUAL_HOST if no parameters provided
 	if [ "$hostname" == "" ]; then
-		check_docksal_environment
+		check_project_environment
 		load_configuration
 		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
 		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
@@ -4396,7 +4478,7 @@ hosts_remove ()
 {
 	local hostname="$1"
 	if [ "$hostname" == "" ]; then
-		check_docksal_environment
+		check_project_environment
 		load_configuration
 		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
 		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
@@ -4432,6 +4514,16 @@ hosts_backup ()
 	cp "$HOSTS_FILE" "$bkp"
 }
 
+vhosts ()
+{
+	NAMES=`docker exec docksal-vhost-proxy sh -c "grep server_name /etc/nginx/conf.d/* -r |sort |uniq|sed 's/;//g' |sed 's/^.*_name//g'"`
+
+	echo-yellow "\nAvailable websites are:"
+	for n in $NAMES ;do
+		echo-green "http://$n"
+	done
+}
+
 # Addons management
 addon () {
 	eval $(parse_params "$@")
@@ -4441,6 +4533,14 @@ addon () {
 	fi
 
 	local addon_name=${ARGV[1]} # ARGV[0] is install, remove,...
+
+	# If addon contains 3 slash separated parts treat them as path
+	# i.e. username/repo/addon_name
+	_regex="(.*\/.*)\/(.*)"
+	if [[ "$addon_name" =~ $_regex ]]; then
+		URL_ADDONS_REPO="$URL_ADDONS_HOSTING/${BASH_REMATCH[1]}"
+		addon_name=${BASH_REMATCH[2]}
+	fi
 
 	case "$1" in
 		install|in)
@@ -4471,7 +4571,7 @@ addon () {
 # $2 - optional flag to install globally
 addon_install ()
 {
-	[[ "$2" != "global" ]] && check_docksal_environment && load_configuration
+	[[ "$2" != "global" ]] && check_project_environment && load_configuration
 
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
@@ -4493,7 +4593,7 @@ addon_install ()
 	fi
 	mkdir -p "$addon_path"
 	if_failed_error "Could not create $addon_path" "Check file permissions and try again"
-	local URL_ADDON="$URL_REPO_ADDONS/master/$addon_name"
+	local URL_ADDON="$URL_ADDONS_REPO/master/$addon_name"
 
 	# Get files list
 	local file_list
@@ -4573,7 +4673,7 @@ addon_install ()
 # $1 - addon name
 # $2 - optional flag to remove global addon
 addon_remove () {
-	[[ "$2" != "global" ]] && check_docksal_environment && load_configuration
+	[[ "$2" != "global" ]] && check_project_environment && load_configuration
 
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
@@ -4689,10 +4789,12 @@ fi
 # DOCKSAL_DNS2 - a backup external DNS server
 if is_docker_native; then
 	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
+	export DOCKSAL_HOST_IP=${DOCKSAL_NATIVE_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 else
 	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
+	export DOCKSAL_HOST_IP=${DOCKSAL_DEFAULT_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 fi
@@ -4792,13 +4894,26 @@ case "$1" in
 		;;
 	stop)
 		shift
-		([[ "$1" != "-a" ]] && [[ "$1" != "--all" ]]) && load_configuration
+		# load_configuration is called later in _stop_containers
 		stop "$@"
 		;;
 	restart)
 		load_configuration
 		shift
 		restart "$@"
+		;;
+	reset)
+		shift
+		# Make sure docker daemon is accessible
+		check_docker_running
+		# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
+		[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
+		reset "$@"
+		;;
+	remove|rm)
+		load_configuration
+		shift
+		remove "$@"
 		;;
 	image)
 		# no load_configuration
@@ -4823,7 +4938,7 @@ case "$1" in
 			;;
 		esac
 		;;
-	project)
+	project|p)
 		# no load_configuration
 		shift
 		case "$1" in
@@ -4835,8 +4950,59 @@ case "$1" in
 				project_list "$@"
 				;;
 			'')
-				echo -e "See ${yellow}fin help project${NC}"
+				echo -e "start stop list status ... (${yellow}fin help project${NC})"
 				exit 1
+				;;
+			status|st)
+				load_configuration
+				check_for_updates
+				project_status
+				;;
+			start)
+				load_configuration
+				check_for_updates
+				shift
+				up
+				;;
+			up)
+				# Force re-reading of configuration files
+				COMPOSE_FILE="" load_configuration
+				check_for_updates
+				shift
+				up
+				;;
+			stop)
+				shift
+				# load_configuration is called later in _stop_containers
+				stop "$@"
+				;;
+			restart)
+				load_configuration
+				shift
+				restart "$@"
+				;;
+			reset)
+				shift
+				# Make sure docker daemon is accessible
+				check_docker_running
+				# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
+				[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
+				reset "$@"
+				;;
+			remove|rm)
+				load_configuration
+				shift
+				remove "$@"
+				;;
+			config)
+				load_configuration
+				check_for_updates
+				config_show "$@"
+				;;
+			build)
+				load_configuration
+				shift
+				docker-compose build "$@"
 				;;
 			help)
 				show_help_project
@@ -4858,17 +5024,6 @@ case "$1" in
 		check_for_updates
 		shift
 		project_list "$@"
-		;;
-	reset)
-		shift
-		# do not load configuration for resetting of dns, proxy, ssh-agent, network, system.
-		[[ ! "dns proxy ssh-agent network system" =~ "$1" ]] && load_configuration
-		reset "$@"
-		;;
-	remove|rm)
-		load_configuration
-		shift
-		remove "$@"
 		;;
 	vm)
 		# no load_configuration
@@ -5011,6 +5166,7 @@ case "$1" in
 	ssh-add)
 		# no load_configuration
 		shift
+		check_docker_running
 		ssh_add "$@"
 		;;
 	docker|d)
@@ -5122,6 +5278,10 @@ case "$1" in
 		shift
 		hosts "$@"
 		;;
+	vhosts)
+		# no load_configuration
+		vhosts
+		;;
 	addon|a)
 		# configuration will be loaded by end functions if needed
 		shift
@@ -5158,13 +5318,13 @@ case "$1" in
 		_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
 
 		shift
-		if [[ "$_exec_target" == "cli" ]]; then
+		if [[ "$_exec_target" != "" ]]; then
 			# Replace host addon path with the matching path inside cli
 			# "\$PROJECT_ROOT" will be resolved in cli to /var/www
 			cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
 			# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
 			cmd="$cli_addon_path "$(printf " %q" "$@")
-			_exec "$cmd"
+			CONTAINER_NAME="$_exec_target" _exec "$cmd"
 		else
 			exec "$addon" "$@"
 		fi

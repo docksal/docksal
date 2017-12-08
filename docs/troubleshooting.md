@@ -181,7 +181,7 @@ Errors like this appear when your Apache is misconfigured. Most often it happens
 
 ### How to resolve
 
-Check `docksal.yml` and `.htaccess` files for configuration errors, fix them and run `fin start`.
+Check `docksal.yml` and `.htaccess` files for configuration errors, fix them and run `fin project start` (`fin start` for short).
 
 ## Issue 10. SMB share creation, share mounting and related issues on Windows
 

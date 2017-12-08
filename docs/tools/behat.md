@@ -132,7 +132,7 @@ cli:
  ...
 ```
 
-2) Update the container configuration with `fin up`.  
+2) Update the container configuration with `fin project start` (`fin p start`).
 3) You should now be able to connect to the `cli` container via ssh. Use username `docker` and password `docker`:
 
 ```bash
