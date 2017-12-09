@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.41.0
+FIN_VERSION=1.41.1
 
 # Console colors
 red='\033[0;91m'
@@ -4197,6 +4197,7 @@ load_configuration ()
 
 		# Allow to define the stack file via DOCKSAL_STACK
 		# Set it to "default" if empty and there is no project yml file
+		[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
 		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
 		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 
@@ -4241,6 +4242,7 @@ load_configuration ()
 		fi
 	fi
 	export COMPOSE_FILE
+	export DOCKSAL_ENVIRONMENT
 
 	# Set project name if it was not set previously
 	if [[ -d $(get_project_path) ]]; then
