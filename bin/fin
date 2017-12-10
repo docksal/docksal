@@ -1080,7 +1080,7 @@ show_help ()
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
+	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
 	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "config [command]" "Show or generate configuration (${yellow}fin help config${NC})"
 
@@ -1562,6 +1562,21 @@ show_help_addon ()
 	echo
 }
 
+show_help_logs ()
+{
+	echo
+	echo-green "Show Docker container logs for a service"
+	echo
+	printh "fin logs [service]" "" "yellow"
+	echo
+	echo -e "Also shows Unison logs if ${yellow}DOCKSAL_VOLUMES=unison${NC} is enabled (${yellow}fin logs unison${NC})"
+	echo
+	echo-green "Examples:"
+	printh "fin logs web" "Show web server logs"
+	printh "fin logs unison" "Show unison logs"
+	printh "fin logs unison --tail" "Show unison logs and follow it"
+	echo
+}
 #---------- END HELP FUNCTIONS
 
 # Display fin version
@@ -1599,6 +1614,14 @@ bash_comp_words ()
 			echo "import dump list cli"
 			exit 0
 			;;
+		project|p)
+			echo "start stop status restart reset remove create"
+			exit 0
+			;;
+		logs)
+			echo "web unison"
+			exit 0
+			;;
 		fin)
 			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			local projects=$(docker ps --all \
@@ -1630,8 +1653,8 @@ bash_comp_words ()
 					custom_commands+=" $cmd_name"
 			done
 
-			echo "$aliases $projects vm start stop restart status reset remove bash exec config create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
-			ssh-add update version cleanup sysinfo logs $custom_commands"
+			echo "$aliases $projects vm start stop restart status reset remove bash exec config sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
+			ssh-add update version cleanup sysinfo logs project $custom_commands"
 			exit 0
 			;;
 		*)
@@ -4735,6 +4758,17 @@ unison_sync_wait () {
 	done
 }
 
+unison_logs () {
+	# If not unison volumes exit
+	[[ "$DOCKSAL_VOLUMES" != "unison" ]] && echo "No unison volumes enabled" && return
+
+	if [[ "$1" == "--tail"  ]]; then
+		docker exec -i ${COMPOSE_PROJECT_NAME_SAFE}_bg-sync_1 tail -f /root/unison.log
+	else
+		docker exec -i ${COMPOSE_PROJECT_NAME_SAFE}_bg-sync_1 cat /root/unison.log
+	fi
+}
+
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Override PATH to use our utilities
@@ -5195,7 +5229,12 @@ case "$1" in
 	logs)
 		load_configuration
 		shift
-		logs "$@"
+		if [[ "$1" == "unison" ]]; then
+			shift
+			unison_logs "$@"
+		else
+			logs "$@"
+		fi
 		;;
 	"")
 		# no load_configuration
@@ -5219,15 +5258,18 @@ case "$1" in
 	config)
 		# different load_configuration
 		shift
-		if [[ "$1" == "generate" ]]; then
-			# no load_configuration
-			shift
-			config_generate
-		else
-			load_configuration
-			check_for_updates
-			config_show "$@"
-		fi
+		case "$1" in
+			generate)
+				# no load_configuration
+				shift
+				config_generate
+				;;
+			*)
+				load_configuration
+				check_for_updates
+				config_show "$@"
+				;;
+		esac
 		;;
 	fix-smb)
 		# no load_configuration
