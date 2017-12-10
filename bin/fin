@@ -5135,7 +5135,7 @@ case "$1" in
 		elif [[ "$1" == "--self" ]]; then
 			echo "Downloading $URL_FIN"
 			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
-			diff "$FIN_PATH" "$FIN_PATH_UPDATED"
+			[[ "$2" == "--diff" ]] && diff "$FIN_PATH" "$FIN_PATH_UPDATED"
 			cp "$FIN_PATH_UPDATED" "$FIN_PATH"
 			[ $? -eq 0 ] && echo "Done"
 			exit
