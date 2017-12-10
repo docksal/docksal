@@ -275,10 +275,10 @@ upfind ()
 	if [[ $1 == '' ]]; then return 1; fi
 	local _path
 	_path=$( #incapsulate cd
-		while [[ ! -f $1 ]] && [[ ! -d $1 ]] && [[ $PWD != / ]]; do
+		while [[ ! -f $1 ]] && [[ ! -d $1 ]] && [[ $(pwd) != / ]]; do
 			cd ".."
 		done;
-		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; exit; fi
+		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $(pwd); exit; fi
 	)
 	# On Windows compensate for getting down to "" and return full absolute path in Unix notation
 	# upfind on windows may return FAKED HOME PATH! because of that. KEEP that in mind
