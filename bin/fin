@@ -534,7 +534,7 @@ check_winpty_found ()
 
 is_docker_running ()
 {
-	if ! is_linux && ! is_docker_native; then
+	if ! is_linux && ! is_docker_native && ! is_wsl; then
 		if ! is_docker_machine_running; then return 255; fi
 	fi
 	# Check if docker is running via docker info.
@@ -621,7 +621,7 @@ check_docker_running ()
 	# Last chance to return non-error code
 	[[ ${docker_status} -eq 0 ]] && return
 
-	if [[ ${docker_status} -eq 255 ]] && ! is_docker_native; then
+	if [[ ${docker_status} -eq 255 ]] && (! is_docker_native && ! is_wsl); then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
 		_confirm "Run 'fin vm start' to start it now?"
 		docker_machine_start
