@@ -589,14 +589,13 @@ ver_to_int ()
 # Check that project root exists and Docker is running.
 check_project_environment ()
 {
-	wsl_mount_drives
 	check_project_root && check_docker_running
 }
 
 # Check that project root exists, Docker is running and Docksal system services are running
 check_docksal_environment ()
 {
-	wsl_mount_drives
+
 	check_project_root && check_docksal_running
 }
 
@@ -2177,6 +2176,8 @@ docker_machine_mounts ()
 	fi
 }
 
+# Creates bind mounts on WSL from /mnt/c to /c so that docker-compose pth would match path inside docker
+# See overridden pwd function too
 wsl_mount_drives ()
 {
 	# Create mnt point binds if they don't exist
@@ -3176,6 +3177,8 @@ install_tools_wsl ()
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
+
+	reset system
 }
 
 update_virtualbox () {
@@ -3390,6 +3393,10 @@ update ()
 					"Run cmd.exe as an administrator, start bash in it and install Docksal in that session."
 			fi
 			rm -f "file.tmp"
+		fi
+
+		if is_wsl && ! is_docker_running; then
+			echo-error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
 		fi
 	fi
 
@@ -4904,6 +4911,9 @@ else
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 fi
+
+# Create drives bind mounts on wsl
+wsl_mount_drives
 
 # Export environment variables to properly reach Docker server
 if is_docker_native; then
