@@ -411,6 +411,12 @@ winsudo ()
 	cygstart --action=runas cmd /c "$@"
 }
 
+sudowin ()
+{
+	# left for future use
+	powershell.exe Start-Process -Verb runAs -FilePath "cmd.exe" -Args '/c','dir','/?'
+}
+
 # Universal Bash parameter parsing
 # Parse equals separated params into named local variables
 # Standalone named parameter value will equal param name (--force creates variable $force=="force")
@@ -3385,21 +3391,29 @@ update ()
 			fi
 		fi
 
-		if is_wsl && ! (ipconfig.exe | grep "192.168.64.100"); then
-			cd "/mnt/c"
-			touch "file.tmp"
-			if [[ "$?" != "0" ]]; then
-				echo-error "Docksal needs administrative privileges to install." \
-					"First update needs administrative privileges to set up virtual IP address."
-					"Run cmd.exe as an administrator, start bash in it and install Docksal in that session."
-			fi
-			rm -f "file.tmp"
-		fi
-
 		if is_wsl; then
+			# Check Docker for Win running
 			IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
 			nc -w 1 ${nc_host} ${nc_port}
 			if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
+
+			# Check for administrative privileges if needed
+			if ! (ipconfig.exe | grep "192.168.64.100") || ! (ipconfig.exe | grep "192.168.64.1"); then
+				cd "/mnt/c"
+				touch "file.tmp"
+				if [[ "$?" != "0" ]]; then
+					echo-error "Docksal needs administrative privileges to install." \
+						"The first Docksal update needs administrative privileges to set up network preferences." \
+						"WHAT TO DO:" \
+						"1. Close this bash window (you can't run elevated bash while this one is running)" \
+						"2. Run cmd.exe as an Administrator" \
+						"3. Start bash in that elevated cmd.exe session" \
+						"4. Run fin update in that elevated bash session"
+						# It is not allowed to start elevated and un-elevated bash simultaneously
+					exit 1
+				fi
+				rm -f "file.tmp"
+			fi
 		fi
 	fi
 
