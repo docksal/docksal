@@ -3398,6 +3398,7 @@ update ()
 
 		if is_wsl && ! is_docker_running; then
 			echo-error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
+			exit 1
 		fi
 	fi
 
