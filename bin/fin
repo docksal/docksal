@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.41.1
+FIN_VERSION=1.42.0
 
 # Console colors
 red='\033[0;91m'
@@ -2321,6 +2321,7 @@ up ()
 	is_mac && find . -type d > /dev/null 2>&1
 
 	_start_containers
+	unison_sync_wait
 	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
 }
 
@@ -2347,6 +2348,7 @@ restart ()
 	check_project_unique
 
 	_restart_containers "$@"
+	unison_sync_wait
 }
 
 # Remove container(s)
@@ -3960,6 +3962,7 @@ reset ()
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
 	_start_containers
+	unison_sync_wait
 }
 
 # Show logs
@@ -4681,6 +4684,55 @@ addon_hook ()
 		export ADDON_GLOBAL="$addon_global";
 		exec "$hook"
 	)
+}
+
+unison_sync_wait () {
+	# If not unison volumes exit
+	[[ "$DOCKSAL_VOLUMES" != "unison" ]] && return
+
+	# Tail /root/unison.log in bg-sync container waiting for Synchronization to complete
+	echo-green "Waiting for Unison to perform initial sync..."
+	FIRST_PASS=1
+	RESPONSE_TIMER=5 # default check frequency in seconds
+
+	until [[ "$SYNC_COMPLETE" == "1" ]]; do
+		LOG_TAIL=$(docker exec -i ${COMPOSE_PROJECT_NAME_SAFE}_bg-sync_1 tail /root/unison.log 2>/dev/null)
+
+		# If non-zero code was returned, then the log file does not exist yet
+		if [[ "$?" != "0" ]]; then
+			# On the first pass estimate time to finish
+			if [[ "$FIRST_PASS" == "1" ]]; then
+				FIRST_PASS=0
+				# Show current time at the beginning of each line
+				echo $(date +"%T") "Estimating time for initial sync"
+				# Get estimate by dividing project size in Mb by 10
+				# 10 MB/sec is guesstimate for copy speed
+				cd "$PROJECT_ROOT"
+				PROJECT_SIZE=$(du -d 1 -m -c | grep total | awk '{print $1}')
+				ESTIMATE=$(echo ${PROJECT_SIZE} | awk '{ sum=$1/10; printf "%.0f", sum }')
+				echo "         Project size: ${PROJECT_SIZE}M"
+				echo "         Estimated time to sync: $ESTIMATE seconds"
+				# Preferrably notify user 10 times
+				RESPONSE_TIMER=$((ESTIMATE/10))
+				# But not less often than every 10 seconds
+				[[ ${RESPONSE_TIMER} > 10 ]] && RESPONSE_TIMER=10
+				# Not more often than every 3 seconds
+				[[ ${RESPONSE_TIMER} < 3 ]] && RESPONSE_TIMER=3
+			else
+				# Show current time at the beginning of each line
+				echo $(date +"%T") "Waiting for Unison response..."
+				sleep ${RESPONSE_TIMER}
+			fi
+			continue
+		fi
+
+		if (echo "$LOG_TAIL" | grep "Synchronization complete"); then
+			break
+		else
+			echo $(date +"%T") $(echo "$LOG_TAIL" | tail -1)
+			sleep ${RESPONSE_TIMER}
+		fi
+	done
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
