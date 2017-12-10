@@ -252,6 +252,8 @@ pwd ()
 	# (resolves symlink into target dir). -L forces using logical dir just like running pwd alone
 	if is_windows; then
 		"$_PWD" "-L" | sed 's/^\/cygdrive//'
+	if is_wsl; then
+		"$_PWD" "-L" | sed 's/^\/mnt//'
 	else
 		"$_PWD" "-L"
 	fi
