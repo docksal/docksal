@@ -2180,9 +2180,10 @@ docker_machine_mounts ()
 # See overridden pwd function too
 wsl_mount_drives ()
 {
+	local mounts=$(mount)
 	# Create mnt point binds if they don't exist
 	for drive in $(ls "/mnt"); do
-		[[ ! -d "/$drive" ]] && \
+		! (echo "$mounts" | grep "/mnt/$drive" >/dev/null) && \
 			echo "Creating bind mount /mnt/c -> /$drive" && \
 			sudo mkdir "/$drive" && \
 			sudo mount --bind "/mnt/$drive" "/$drive"
