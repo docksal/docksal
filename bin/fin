@@ -2183,9 +2183,9 @@ wsl_mount_drives ()
 	local mounts=$(mount)
 	# Create mnt point binds if they don't exist
 	for drive in $(ls "/mnt"); do
-		! (echo "$mounts" | grep "/mnt/$drive" >/dev/null) && \
+		! (echo "$mounts" | grep "on /$drive" >/dev/null) && \
 			echo "Creating bind mount /mnt/c -> /$drive" && \
-			sudo mkdir "/$drive" && \
+			sudo mkdir -p "/$drive" && \
 			sudo mount --bind "/mnt/$drive" "/$drive"
 	done
 }
@@ -5062,10 +5062,10 @@ case "$1" in
 		# no load_configuration
 		shift
 		case "$1" in
-			create)
+			create|cr)
 				project_create
 				;;
-			list)
+			list|ls)
 				shift
 				project_list "$@"
 				;;
@@ -5073,12 +5073,12 @@ case "$1" in
 				echo -e "start stop list status ... (${yellow}fin help project${NC})"
 				exit 1
 				;;
-			status|st)
+			status|s)
 				load_configuration
 				check_for_updates
 				project_status
 				;;
-			start)
+			start|st)
 				load_configuration
 				check_for_updates
 				shift
@@ -5091,7 +5091,7 @@ case "$1" in
 				shift
 				up
 				;;
-			stop)
+			stop|sp)
 				shift
 				# load_configuration is called later in _stop_containers
 				stop "$@"
@@ -5114,7 +5114,7 @@ case "$1" in
 				shift
 				remove "$@"
 				;;
-			config)
+			config|conf)
 				load_configuration
 				check_for_updates
 				config_show "$@"
