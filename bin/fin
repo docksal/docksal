@@ -4887,7 +4887,7 @@ DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 FIN_SET_UID=""
 
 # Load environment variables overrides, use to permanently override some variables
-[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
+[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV" || touch "$CONFIG_ENV"
 
 # Generate Docksal instance uuid if not available
 if [[ "$DOCKSAL_UUID" == "" ]]; then
