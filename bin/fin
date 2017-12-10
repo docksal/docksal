@@ -3396,9 +3396,10 @@ update ()
 			rm -f "file.tmp"
 		fi
 
-		if is_wsl && ! is_docker_running; then
-			echo-error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
-			exit 1
+		if is_wsl; then
+			IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
+			nc -w 1 ${nc_host} ${nc_port}
+			if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
 		fi
 	fi
 
