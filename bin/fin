@@ -3402,9 +3402,8 @@ update ()
 				cd "/mnt/c"
 				touch "file.tmp"
 				if [[ "$?" != "0" ]]; then
-					echo-error "Docksal needs administrative privileges to install." \
-						"The first Docksal update needs administrative privileges to set up network preferences." \
-						"WHAT TO DO:" \
+					echo-error "Docksal needs administrative privileges to set up network preferences." \
+						"--" \
 						"1. Close this bash window (you can't run elevated bash while this one is running)" \
 						"2. Run cmd.exe as an Administrator" \
 						"3. Start bash in that elevated cmd.exe session" \
