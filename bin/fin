@@ -473,7 +473,7 @@ empty_dir ()
 is_docker_native ()
 {
 	# comparison returns error codes
-	[[ "$DOCKER_NATIVE" == "1" ]] || is_wsl
+	[[ "$DOCKER_NATIVE" == "1" ]]
 }
 
 # Check if file has crlf endings
