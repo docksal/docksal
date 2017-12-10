@@ -4897,7 +4897,7 @@ if is_docker_native; then
 	export DOCKER_HOST=""
 elif is_wsl; then
 	# no vm used
-	export DOCKER_HOST="127.0.0.1"
+	export DOCKER_HOST="127.0.0.1:2375"
 else
 	# get active machine and it's status
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
