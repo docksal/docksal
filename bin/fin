@@ -3162,6 +3162,14 @@ install_tools_wsl ()
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
+
+	# Create mnt point binds
+	for drive in $(ls "/mnt"); do
+		[[ ! -d "/$drive" ]] && \
+			echo "Creating bind mount /mnt/c -> /$drive" && \
+			sudo mkdir "/$drive" && \
+			sudo mount --bind "/mnt/$drive" "/$drive"
+	done
 }
 
 update_virtualbox () {
@@ -4897,7 +4905,7 @@ if is_docker_native; then
 	export DOCKER_HOST=""
 elif is_wsl; then
 	# no vm used
-	export DOCKER_HOST="127.0.0.1:2375"
+	export DOCKER_HOST="0.0.0.0:2375"
 else
 	# get active machine and it's status
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
