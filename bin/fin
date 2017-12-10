@@ -5098,7 +5098,9 @@ case "$1" in
 			update_project_images
 		elif [[ "$1" == "--self" ]]; then
 			echo "Downloading $URL_FIN"
-			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH" >/dev/null
+			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
+			diff "$FIN_PATH_UPDATED" "$FIN_PATH"
+			cp "$FIN_PATH_UPDATED" "$FIN_PATH"
 			[ $? -eq 0 ] && echo "Done"
 			exit
 		elif [[ "$1" == "--tools" ]]; then
