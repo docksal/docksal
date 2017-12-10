@@ -3111,7 +3111,7 @@ install_tools_ubuntu ()
 install_tools_wsl ()
 {
 	# Install Docker client
-	if ! is_docker_version || ! is_docker_server_version; then
+	if ! is_docker_version; then
 		echo-green "Installing Docker..."
 		sudo apt update
 		sudo apt install docker.io
@@ -3331,7 +3331,7 @@ update ()
 			fi
 		fi
 
-		if is_wsl && ! (ipconfig.exe | "grep 192.168.64.100"); then
+		if is_wsl && ! (ipconfig.exe | grep "192.168.64.100"); then
 			cd "/mnt/c"
 			touch "file.tmp"
 			if [[ "$?" != "0" ]]; then
