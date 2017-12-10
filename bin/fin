@@ -14,7 +14,7 @@ NC='\033[0m'
 #-------------------------------- OS Checks ------------------------------------
 is_linux ()
 {
-	uname | grep 'Linux' >/dev/null
+	uname -a | grep -v 'Microsoft' | grep 'Linux' >/dev/null
 }
 
 is_ubuntu ()
@@ -2774,6 +2774,33 @@ configure_resolver_windows () {
 	ipconfig /flushdns >/dev/null 2>&1
 }
 
+# Configure system-wide *.docksal resolver
+# @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
+configure_resolver_wsl () {
+	local mode="$1"
+
+	local dns_ip="$DOCKSAL_IP"
+	# 10 is used increase the adapter's priority. 75 to - deprioritize it
+	local metric=10
+	# Enable resolver by default
+	if [[ "$mode" == "off" ]]; then
+		dns_ip="none"
+		metric=75
+	fi
+
+	local network_id
+	network_id="vEthernet (DockerNAT)"
+
+	# Set DNS server to Docksal IP on the VM's VBox adapter
+	cmd.exe /c netsh interface ip set dnsservers "${network_id}" static ${dns_ip} none
+	# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
+	cmd.exe /c netsh interface ip set interface "${network_id}" metric=${metric}
+
+	# Flush DNS cache
+	echo-green "Clearing DNS cache..."
+	ipconfig.exe /flushdns >/dev/null 2>&1
+}
+
 # Configure system-wide *.docksal resolver (Windows is not supported)
 configure_resolver ()
 {
@@ -2810,6 +2837,7 @@ configure_resolver ()
 	is_mac && configure_resolver_mac "$mode" && return $?
 	is_linux && configure_resolver_linux "$mode" && return $?
 	is_windows && configure_resolver_windows "$mode" && return $?
+	is_wsl && configure_resolver_wsl "$mode" && return $?
 }
 
 install_sshagent_service ()
@@ -4851,7 +4879,7 @@ fi
 # DOCKSAL_IP - Docker/VM IP
 # DOCKSAL_DNS1 - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
 # DOCKSAL_DNS2 - a backup external DNS server
-if is_docker_native; then
+if is_docker_native || is_wsl; then
 	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_NATIVE_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
