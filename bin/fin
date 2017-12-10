@@ -36,6 +36,11 @@ is_windows ()
 	uname | grep 'CYGWIN_NT' >/dev/null
 }
 
+is_wsl ()
+{
+	uname -a | grep 'Microsoft' | grep 'Linux' >/dev/null
+}
+
 is_mac ()
 {
 	uname | grep 'Darwin' >/dev/null
@@ -468,7 +473,7 @@ empty_dir ()
 is_docker_native ()
 {
 	# comparison returns error codes
-	[[ "$DOCKER_NATIVE" == "1" ]]
+	[[ "$DOCKER_NATIVE" == "1" ]] || is_wsl
 }
 
 # Check if file has crlf endings
@@ -2631,6 +2636,13 @@ configure_network ()
 		# Wait 5s for network configuration to apply
 		sleep 5
 	fi
+
+	if is_wsl; then
+		cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_IP}" mask="255.255.255.0"
+		cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_HOST_IP}" mask="255.255.255.0"
+		# Wait 5s for network configuration to apply
+		sleep 5
+	fi
 }
 
 # Start system-wide vhost-proxy service
@@ -3095,6 +3107,27 @@ install_tools_ubuntu ()
 	#	fi
 }
 
+# Install everything required on Ubuntu 14.04+
+install_tools_wsl ()
+{
+	# Install Docker client
+	if ! is_docker_version || ! is_docker_server_version; then
+		echo-green "Installing Docker..."
+		sudo apt update
+		sudo apt install docker.io
+		if_failed "Docker installation/upgrade has failed."
+	fi
+
+	# Install Docker Compose
+	if ! is_docker_compose_version; then
+		echo-green "Installing Docker Compose..."
+		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
+			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+			docker-compose --version
+		if_failed "Docker Compose installation/upgrade has failed."
+	fi
+}
+
 update_virtualbox () {
 	local url
 	local vbox_pkg
@@ -3161,6 +3194,10 @@ update_virtualbox () {
 
 update_tools ()
 {
+	is_wsl && \
+		install_tools_wsl && \
+		return $?
+
 	is_windows && \
 		install_tools_windows && \
 		return $?
@@ -3273,7 +3310,7 @@ update ()
 	# Pre-update check #1: check if there is existing but stopped Docksal machine
 	# We need it running to know Docker server version
 	if (${FULL_UPDATE}); then
-		if ! is_linux && ! is_docker_native; then
+		if ! is_linux && ! is_docker_native && ! is_wsl; then
 			# Check VirtualBox
 			is_vbox_version
 			local res=$?
@@ -3286,12 +3323,23 @@ update ()
 			fi
 		fi
 
-		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
+		if ! is_linux && ! is_docker_native && ! is_wsl && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
 				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
 					"Start it with ${yellow}fin vm start${NC} or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
 				return 1
 			fi
+		fi
+
+		if is_wsl && ! (ipconfig.exe | "grep 192.168.64.100"); then
+			cd "/mnt/c"
+			touch "file.tmp"
+			if [[ "$?" != "0" ]]; then
+				echo-error "Docksal needs administrative privileges to install." \
+					"First update needs administrative privileges to set up virtual IP address."
+					"Run cmd.exe as an administrator, start bash in it and install Docksal in that session."
+			fi
+			rm -f "file.tmp"
 		fi
 	fi
 
@@ -3304,7 +3352,7 @@ update ()
 			is_docksal_running && UPGRADE_IN_PROGRESS=1
 		else
 			# Check out the case when current user on linux does not have access to docker daemon
-			if is_linux; then
+			if is_linux && ! is_wsl; then
 				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
 				[ ! $? -eq 0 ] && LINUX_DAEMON_RUNNING="exit 1"
 				# if daemon is running but docker info does not return 0 then this is the case
@@ -4811,6 +4859,9 @@ fi
 if is_docker_native; then
 	# no vm used
 	export DOCKER_HOST=""
+elif is_wsl; then
+	# no vm used
+	export DOCKER_HOST="127.0.0.1"
 else
 	# get active machine and it's status
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
