@@ -589,12 +589,14 @@ ver_to_int ()
 # Check that project root exists and Docker is running.
 check_project_environment ()
 {
+	wsl_mount_drives
 	check_project_root && check_docker_running
 }
 
 # Check that project root exists, Docker is running and Docksal system services are running
 check_docksal_environment ()
 {
+	wsl_mount_drives
 	check_project_root && check_docksal_running
 }
 
@@ -2175,6 +2177,17 @@ docker_machine_mounts ()
 	fi
 }
 
+wsl_mount_drives ()
+{
+	# Create mnt point binds if they don't exist
+	for drive in $(ls "/mnt"); do
+		[[ ! -d "/$drive" ]] && \
+			echo "Creating bind mount /mnt/c -> /$drive" && \
+			sudo mkdir "/$drive" && \
+			sudo mount --bind "/mnt/$drive" "/$drive"
+	done
+}
+
 #------------------------------- VM Commands -----------------------------------
 
 vm ()
@@ -2351,7 +2364,6 @@ up ()
 	is_mac && find . -type d > /dev/null 2>&1
 
 	_start_containers
-	unison_sync_wait
 	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
 }
 
@@ -3164,14 +3176,6 @@ install_tools_wsl ()
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
-
-	# Create mnt point binds
-	for drive in $(ls "/mnt"); do
-		[[ ! -d "/$drive" ]] && \
-			echo "Creating bind mount /mnt/c -> /$drive" && \
-			sudo mkdir "/$drive" && \
-			sudo mount --bind "/mnt/$drive" "/$drive"
-	done
 }
 
 update_virtualbox () {
