@@ -2372,6 +2372,7 @@ up ()
 	is_mac && find . -type d > /dev/null 2>&1
 
 	_start_containers
+	unison_sync_wait
 	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
 }
 
