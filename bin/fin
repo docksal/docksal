@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.42.0
+FIN_VERSION=1.43.0
 
 # Console colors
 red='\033[0;91m'
@@ -5167,6 +5167,10 @@ case "$1" in
 		vm "$@"
 		;;
 	update)
+		if [[ "$DOCKSAL_LOCK_UPDATES" != "" ]]; then
+			echo-error "Updates locked in this environment"
+			exit 1
+		fi
 		# no load_configuration
 		shift
 		if [[ "$1" == "--system-images" ]]; then
