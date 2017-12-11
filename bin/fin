@@ -2186,6 +2186,7 @@ docker_machine_mounts ()
 # See overridden pwd function too
 wsl_mount_drives ()
 {
+	! is_wsl && return;
 	local mounts=$(mount)
 	# Create mnt point binds if they don't exist
 	for drive in $(ls "/mnt"); do
