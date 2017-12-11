@@ -601,7 +601,6 @@ check_project_environment ()
 # Check that project root exists, Docker is running and Docksal system services are running
 check_docksal_environment ()
 {
-
 	check_project_root && check_docksal_running
 }
 
