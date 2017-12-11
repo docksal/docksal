@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.43.0
+FIN_VERSION=1.43.1
 
 # Console colors
 red='\033[0;91m'
@@ -2610,7 +2610,7 @@ ssh_add () {
 stats_ping ()
 {
 	[[ "$DOCKSAL_STATS_OPTOUT" != 0 ]] && return # Don't run if the user opted out
-	[[ "$CI" == "true" ]] && return # Don't run in CI
+	[[ "$CI" != "" ]] && return # Don't run in CI
 
 	# We are passing OS version via a custom User-Agent request header, which GA can parse
 	local user_agent
