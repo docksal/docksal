@@ -3377,10 +3377,10 @@ update ()
 			local res=$?
 			if [[ "$res" != "0" ]]; then
 				[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher"
-				vm stop
+				(which 'docker-machine' >/dev/null 2>&1) && vm stop
 				DOCKER_MACHINE_STATUS="Stopped"
 				update_virtualbox
-				vm start
+				(which 'docker-machine' >/dev/null 2>&1) && vm start
 			fi
 		fi
 
