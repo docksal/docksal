@@ -3242,29 +3242,27 @@ update_virtualbox () {
 	)
 
 	# Wait for installation to finish
-	is_mac && echo-yellow "NOTICE: Allow kernel extension in Security settings when prompted!" && sleep 1
-
 	echo
 	if ! is_tty; then
+		echo-yellow "Please allow kernel extension in System Preferences > Security & Privacy when prompted"
 		echo "Please finish VirtualBox installation using installer (Ctrl+C to exit)..."
 	fi
 
 	while ! is_vbox_version; do
+		echo-yellow "Please allow kernel extension in System Preferences > Security & Privacy when prompted"
 		read -p "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
 		sleep 1
 	done
 
-	if is_mac && ! (kextstat | grep VBoxNetAdp >/dev/null); then
+	if is_mac && ! (kextstat | grep VBox); then
 		echo-yellow "VirtualBox kernel extension was not loaded. Starting installation once again to fix it."
 		echo "Attaching ${vbox_pkg}"
 		hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1
 		hdiutil attach "$vbox_pkg" -quiet &&
 			open "/Volumes/VirtualBox/VirtualBox.pkg"
 		echo
-	 	while ! (kextstat | grep VBoxNetAdp >/dev/null); do
-			read -p "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
-			sleep 1
-		done
+		read -p "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
+		return $?
 	fi
 }
 
