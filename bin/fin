@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.44.0
+FIN_VERSION=1.43.1
 
 # Console colors
 red='\033[0;91m'
@@ -3242,9 +3242,9 @@ update_virtualbox () {
 	)
 
 	# Wait for installation to finish
-	echo
-	is_mac && echo-yellow "NOTICE: Allow kernel extension from Oracle in Security Preferences when prompted!" && sleep 1
+	is_mac && echo-yellow "NOTICE: Allow kernel extension in Security settings when prompted!" && sleep 1
 
+	echo
 	if ! is_tty; then
 		echo "Please finish VirtualBox installation using installer (Ctrl+C to exit)..."
 	fi
@@ -3255,7 +3255,6 @@ update_virtualbox () {
 	done
 
 	if is_mac && ! (kextstat | grep VBoxNetAdp >/dev/null); then
-		echo
 		echo-yellow "VirtualBox kernel extension was not loaded. Starting installation once again to fix it."
 		echo "Attaching ${vbox_pkg}"
 		hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1
