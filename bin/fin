@@ -4190,7 +4190,7 @@ sysinfo ()
 	is_linux && echo "Linux Kernel"
 	if is_docker_native; then
 		is_mac && echo "Docker for Mac"
-		is_widows && echo "Docker for Window"
+		is_windows && echo "Docker for Windows"
 	else
 		echo "VirtualBox VM"
 	fi
