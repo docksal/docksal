@@ -155,12 +155,7 @@ The downsides:
 configure Docksal for use with Docker for Mac. Make sure you have the most recent fin version installed.
 - Add `DOCKSAL_VOLUMES=unison` in `.docksal/docksal.env` in a project
 - `fin project reset`
-- Wait until the osxfs process on you Mac "cools down" - that's how you know unison is done with the initial sync.
-
-Currently there is no good way to know when unison is done with the initial file sync. This makes it difficult to script 
-the project provisioning process with `fin init`. The script will proceed with site install/etc. steps before the code 
-base is ready.
-
+- Wait until initial sync finishes.
 
 ## osxfs:cached mode with Docker for Mac
 

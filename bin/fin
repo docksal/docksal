@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.41.0
+FIN_VERSION=1.43.2
 
 # Console colors
 red='\033[0;91m'
@@ -14,7 +14,7 @@ NC='\033[0m'
 #-------------------------------- OS Checks ------------------------------------
 is_linux ()
 {
-	uname | grep 'Linux' >/dev/null
+	uname -a | grep -v 'Microsoft' | grep 'Linux' >/dev/null
 }
 
 is_ubuntu ()
@@ -34,6 +34,11 @@ is_ubuntu ()
 is_windows ()
 {
 	uname | grep 'CYGWIN_NT' >/dev/null
+}
+
+is_wsl ()
+{
+	uname -a | grep 'Microsoft' | grep 'Linux' >/dev/null
 }
 
 is_mac ()
@@ -247,6 +252,8 @@ pwd ()
 	# (resolves symlink into target dir). -L forces using logical dir just like running pwd alone
 	if is_windows; then
 		"$_PWD" "-L" | sed 's/^\/cygdrive//'
+	elif is_wsl; then
+		"$_PWD" "-L" | sed 's/^\/mnt//'
 	else
 		"$_PWD" "-L"
 	fi
@@ -268,10 +275,10 @@ upfind ()
 	if [[ $1 == '' ]]; then return 1; fi
 	local _path
 	_path=$( #incapsulate cd
-		while [[ ! -f $1 ]] && [[ ! -d $1 ]] && [[ $PWD != / ]]; do
+		while [[ ! -f $1 ]] && [[ ! -d $1 ]] && [[ $(pwd) != / ]]; do
 			cd ".."
 		done;
-		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $PWD; exit; fi
+		if [[ -f $1 ]] || [[ -d $1 ]]; then echo $(pwd); exit; fi
 	)
 	# On Windows compensate for getting down to "" and return full absolute path in Unix notation
 	# upfind on windows may return FAKED HOME PATH! because of that. KEEP that in mind
@@ -404,6 +411,12 @@ winsudo ()
 	cygstart --action=runas cmd /c "$@"
 }
 
+sudowin ()
+{
+	# left for future use
+	powershell.exe Start-Process -Verb runAs -FilePath "cmd.exe" -Args '/c','dir','/?'
+}
+
 # Universal Bash parameter parsing
 # Parse equals separated params into named local variables
 # Standalone named parameter value will equal param name (--force creates variable $force=="force")
@@ -529,7 +542,7 @@ check_winpty_found ()
 
 is_docker_running ()
 {
-	if ! is_linux && ! is_docker_native; then
+	if ! is_linux && ! is_docker_native && ! is_wsl; then
 		if ! is_docker_machine_running; then return 255; fi
 	fi
 	# Check if docker is running via docker info.
@@ -616,7 +629,7 @@ check_docker_running ()
 	# Last chance to return non-error code
 	[[ ${docker_status} -eq 0 ]] && return
 
-	if [[ ${docker_status} -eq 255 ]] && ! is_docker_native; then
+	if [[ ${docker_status} -eq 255 ]] && (! is_docker_native && ! is_wsl); then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
 		_confirm "Run 'fin vm start' to start it now?"
 		docker_machine_start
@@ -1080,7 +1093,7 @@ show_help ()
 
 	echo
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs)"
+	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
 	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "config [command]" "Show or generate configuration (${yellow}fin help config${NC})"
 
@@ -1562,6 +1575,21 @@ show_help_addon ()
 	echo
 }
 
+show_help_logs ()
+{
+	echo
+	echo-green "Show Docker container logs for a service"
+	echo
+	printh "fin logs [service]" "" "yellow"
+	echo
+	echo -e "Also shows Unison logs if ${yellow}DOCKSAL_VOLUMES=unison${NC} is enabled (${yellow}fin logs unison${NC})"
+	echo
+	echo-green "Examples:"
+	printh "fin logs web" "Show web server logs"
+	printh "fin logs unison" "Show unison logs"
+	printh "fin logs unison --tail" "Show unison logs and follow it"
+	echo
+}
 #---------- END HELP FUNCTIONS
 
 # Display fin version
@@ -1599,6 +1627,14 @@ bash_comp_words ()
 			echo "import dump list cli"
 			exit 0
 			;;
+		project|p)
+			echo "start stop status restart reset remove create"
+			exit 0
+			;;
+		logs)
+			echo "web unison"
+			exit 0
+			;;
 		fin)
 			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			local projects=$(docker ps --all \
@@ -1630,8 +1666,8 @@ bash_comp_words ()
 					custom_commands+=" $cmd_name"
 			done
 
-			echo "$aliases $projects vm start stop restart status reset remove bash exec config create-site sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
-			ssh-add update version cleanup sysinfo logs $custom_commands"
+			echo "$aliases $projects vm start stop restart status reset remove bash exec config sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
+			ssh-add update version cleanup sysinfo logs project $custom_commands"
 			exit 0
 			;;
 		*)
@@ -2145,6 +2181,21 @@ docker_machine_mounts ()
 	fi
 }
 
+# Creates bind mounts on WSL from /mnt/c to /c so that docker-compose pth would match path inside docker
+# See overridden pwd function too
+wsl_mount_drives ()
+{
+	! is_wsl && return;
+	local mounts=$(mount)
+	# Create mnt point binds if they don't exist
+	for drive in $(ls "/mnt"); do
+		! (echo "$mounts" | grep "on /$drive" >/dev/null) && \
+			echo "Creating bind mount /mnt/$drive -> /$drive" && \
+			sudo mkdir -p "/$drive" && \
+			sudo mount --bind "/mnt/$drive" "/$drive"
+	done
+}
+
 #------------------------------- VM Commands -----------------------------------
 
 vm ()
@@ -2321,6 +2372,7 @@ up ()
 	is_mac && find . -type d > /dev/null 2>&1
 
 	_start_containers
+	unison_sync_wait
 	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
 }
 
@@ -2347,6 +2399,7 @@ restart ()
 	check_project_unique
 
 	_restart_containers "$@"
+	unison_sync_wait
 }
 
 # Remove container(s)
@@ -2557,7 +2610,7 @@ ssh_add () {
 stats_ping ()
 {
 	[[ "$DOCKSAL_STATS_OPTOUT" != 0 ]] && return # Don't run if the user opted out
-	[[ "$CI" == "true" ]] && return # Don't run in CI
+	[[ "$CI" != "" ]] && return # Don't run in CI
 
 	# We are passing OS version via a custom User-Agent request header, which GA can parse
 	local user_agent
@@ -2603,6 +2656,13 @@ configure_network ()
 			local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP}"
 			winsudo "$command1 && $command2"
 		fi
+		# Wait 5s for network configuration to apply
+		sleep 5
+	fi
+
+	if is_wsl; then
+		cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_IP}" mask="255.255.255.0"
+		cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_HOST_IP}" mask="255.255.255.0"
 		# Wait 5s for network configuration to apply
 		sleep 5
 	fi
@@ -2737,6 +2797,33 @@ configure_resolver_windows () {
 	ipconfig /flushdns >/dev/null 2>&1
 }
 
+# Configure system-wide *.docksal resolver
+# @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
+configure_resolver_wsl () {
+	local mode="$1"
+
+	local dns_ip="$DOCKSAL_IP"
+	# 10 is used increase the adapter's priority. 75 to - deprioritize it
+	local metric=10
+	# Enable resolver by default
+	if [[ "$mode" == "off" ]]; then
+		dns_ip="none"
+		metric=75
+	fi
+
+	local network_id
+	network_id="vEthernet (DockerNAT)"
+
+	# Set DNS server to Docksal IP on the VM's VBox adapter
+	cmd.exe /c netsh interface ip set dnsservers "${network_id}" static ${dns_ip} none
+	# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
+	cmd.exe /c netsh interface ip set interface "${network_id}" metric=${metric}
+
+	# Flush DNS cache
+	echo-green "Clearing DNS cache..."
+	ipconfig.exe /flushdns >/dev/null 2>&1
+}
+
 # Configure system-wide *.docksal resolver (Windows is not supported)
 configure_resolver ()
 {
@@ -2773,6 +2860,7 @@ configure_resolver ()
 	is_mac && configure_resolver_mac "$mode" && return $?
 	is_linux && configure_resolver_linux "$mode" && return $?
 	is_windows && configure_resolver_windows "$mode" && return $?
+	is_wsl && configure_resolver_wsl "$mode" && return $?
 }
 
 install_sshagent_service ()
@@ -3070,6 +3158,37 @@ install_tools_ubuntu ()
 	#	fi
 }
 
+# Install everything required on Ubuntu 14.04+
+install_tools_wsl ()
+{
+	# Install Docker client
+	if ! is_docker_version; then
+		echo-green "Installing Docker..."
+		# Install packages to allow apt to use a repository over HTTPS
+		sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+		# Add Docker's official GPG key
+		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+		# Set up the repository
+		sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+		# Update source lists
+		sudo apt-get update
+		# Install Docker
+		sudo apt-get install docker-ce -y --allow-unauthenticated
+		if_failed "Docker installation/upgrade has failed."
+	fi
+
+	# Install Docker Compose
+	if ! is_docker_compose_version; then
+		echo-green "Installing Docker Compose..."
+		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
+			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+			docker-compose --version
+		if_failed "Docker Compose installation/upgrade has failed."
+	fi
+
+	reset system
+}
+
 update_virtualbox () {
 	local url
 	local vbox_pkg
@@ -3136,6 +3255,10 @@ update_virtualbox () {
 
 update_tools ()
 {
+	is_wsl && \
+		install_tools_wsl && \
+		return $?
+
 	is_windows && \
 		install_tools_windows && \
 		return $?
@@ -3248,24 +3371,48 @@ update ()
 	# Pre-update check #1: check if there is existing but stopped Docksal machine
 	# We need it running to know Docker server version
 	if (${FULL_UPDATE}); then
-		if ! is_linux && ! is_docker_native; then
+		if ! is_linux && ! is_docker_native && ! is_wsl; then
 			# Check VirtualBox
 			is_vbox_version
 			local res=$?
 			if [[ "$res" != "0" ]]; then
 				[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher"
-				vm stop
+				(which 'docker-machine' >/dev/null 2>&1) && vm stop
 				DOCKER_MACHINE_STATUS="Stopped"
 				update_virtualbox
-				vm start
+				(which 'docker-machine' >/dev/null 2>&1) && vm start
 			fi
 		fi
 
-		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
+		if ! is_linux && ! is_docker_native && ! is_wsl && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
 				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
 					"Start it with ${yellow}fin vm start${NC} or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
 				return 1
+			fi
+		fi
+
+		if is_wsl; then
+			# Check Docker for Win running
+			IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
+			nc -w 1 ${nc_host} ${nc_port}
+			if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
+
+			# Check for administrative privileges if needed
+			if ! (ipconfig.exe | grep "192.168.64.100") || ! (ipconfig.exe | grep "192.168.64.1"); then
+				cd "/mnt/c"
+				touch "file.tmp"
+				if [[ "$?" != "0" ]]; then
+					echo-error "Docksal needs administrative privileges to set up network preferences." \
+						"--" \
+						"1. Close this bash window (you can't run elevated bash while this one is running)" \
+						"2. Run cmd.exe as an Administrator" \
+						"3. Start bash in that elevated cmd.exe session" \
+						"4. Run fin update in that elevated bash session"
+						# It is not allowed to start elevated and un-elevated bash simultaneously
+					exit 1
+				fi
+				rm -f "file.tmp"
 			fi
 		fi
 	fi
@@ -3279,7 +3426,7 @@ update ()
 			is_docksal_running && UPGRADE_IN_PROGRESS=1
 		else
 			# Check out the case when current user on linux does not have access to docker daemon
-			if is_linux; then
+			if is_linux && ! is_wsl; then
 				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
 				[ ! $? -eq 0 ] && LINUX_DAEMON_RUNNING="exit 1"
 				# if daemon is running but docker info does not return 0 then this is the case
@@ -3960,6 +4107,7 @@ reset ()
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
 	_start_containers
+	unison_sync_wait
 }
 
 # Show logs
@@ -4197,6 +4345,7 @@ load_configuration ()
 
 		# Allow to define the stack file via DOCKSAL_STACK
 		# Set it to "default" if empty and there is no project yml file
+		[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
 		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
 		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
 
@@ -4241,6 +4390,7 @@ load_configuration ()
 		fi
 	fi
 	export COMPOSE_FILE
+	export DOCKSAL_ENVIRONMENT
 
 	# Set project name if it was not set previously
 	if [[ -d $(get_project_path) ]]; then
@@ -4681,6 +4831,66 @@ addon_hook ()
 	)
 }
 
+unison_sync_wait () {
+	# If not unison volumes exit
+	[[ "$DOCKSAL_VOLUMES" != "unison" ]] && return
+
+	# Tail /root/unison.log in bg-sync container waiting for Synchronization to complete
+	echo-green "Waiting for Unison to perform initial sync..."
+	FIRST_PASS=1
+	RESPONSE_TIMER=5 # default check frequency in seconds
+
+	until [[ "$SYNC_COMPLETE" == "1" ]]; do
+		LOG_TAIL=$(docker exec -i ${COMPOSE_PROJECT_NAME_SAFE}_bg-sync_1 tail /root/unison.log 2>/dev/null)
+
+		# If non-zero code was returned, then the log file does not exist yet
+		if [[ "$?" != "0" ]]; then
+			# On the first pass estimate time to finish
+			if [[ "$FIRST_PASS" == "1" ]]; then
+				FIRST_PASS=0
+				# Show current time at the beginning of each line
+				echo $(date +"%T") "Estimating time for initial sync"
+				# Get estimate by dividing project size in Mb by 10
+				# 10 MB/sec is guesstimate for copy speed
+				cd "$PROJECT_ROOT"
+				PROJECT_SIZE=$(du -d 1 -m -c | grep total | awk '{print $1}')
+				ESTIMATE=$(echo ${PROJECT_SIZE} | awk '{ sum=$1/10; printf "%.0f", sum }')
+				echo "         Project size: ${PROJECT_SIZE}M"
+				echo "         Estimated time to sync: $ESTIMATE seconds"
+				# Preferrably notify user 10 times
+				RESPONSE_TIMER=$((ESTIMATE/10))
+				# But not less often than every 10 seconds
+				[[ ${RESPONSE_TIMER} > 10 ]] && RESPONSE_TIMER=10
+				# Not more often than every 3 seconds
+				[[ ${RESPONSE_TIMER} < 3 ]] && RESPONSE_TIMER=3
+			else
+				# Show current time at the beginning of each line
+				echo $(date +"%T") "Waiting for Unison response..."
+				sleep ${RESPONSE_TIMER}
+			fi
+			continue
+		fi
+
+		if (echo "$LOG_TAIL" | grep "Synchronization complete"); then
+			break
+		else
+			echo $(date +"%T") $(echo "$LOG_TAIL" | tail -1)
+			sleep ${RESPONSE_TIMER}
+		fi
+	done
+}
+
+unison_logs () {
+	# If not unison volumes exit
+	[[ "$DOCKSAL_VOLUMES" != "unison" ]] && echo "No unison volumes enabled" && return
+
+	if [[ "$1" == "--tail"  ]]; then
+		docker exec -i ${COMPOSE_PROJECT_NAME_SAFE}_bg-sync_1 tail -f /root/unison.log
+	else
+		docker exec -i ${COMPOSE_PROJECT_NAME_SAFE}_bg-sync_1 cat /root/unison.log
+	fi
+}
+
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Override PATH to use our utilities
@@ -4693,7 +4903,7 @@ DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 FIN_SET_UID=""
 
 # Load environment variables overrides, use to permanently override some variables
-[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV"
+[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV" || touch "$CONFIG_ENV"
 
 # Generate Docksal instance uuid if not available
 if [[ "$DOCKSAL_UUID" == "" ]]; then
@@ -4707,7 +4917,7 @@ fi
 # DOCKSAL_IP - Docker/VM IP
 # DOCKSAL_DNS1 - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
 # DOCKSAL_DNS2 - a backup external DNS server
-if is_docker_native; then
+if is_docker_native || is_wsl; then
 	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_NATIVE_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
@@ -4719,10 +4929,16 @@ else
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
 fi
 
+# Create drives bind mounts on wsl
+wsl_mount_drives
+
 # Export environment variables to properly reach Docker server
 if is_docker_native; then
 	# no vm used
 	export DOCKER_HOST=""
+elif is_wsl; then
+	# no vm used
+	export DOCKER_HOST="0.0.0.0:2375"
 else
 	# get active machine and it's status
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
@@ -4862,10 +5078,10 @@ case "$1" in
 		# no load_configuration
 		shift
 		case "$1" in
-			create)
+			create|cr)
 				project_create
 				;;
-			list)
+			list|ls)
 				shift
 				project_list "$@"
 				;;
@@ -4873,12 +5089,12 @@ case "$1" in
 				echo -e "start stop list status ... (${yellow}fin help project${NC})"
 				exit 1
 				;;
-			status|st)
+			status|s)
 				load_configuration
 				check_for_updates
 				project_status
 				;;
-			start)
+			start|st)
 				load_configuration
 				check_for_updates
 				shift
@@ -4891,7 +5107,7 @@ case "$1" in
 				shift
 				up
 				;;
-			stop)
+			stop|sp)
 				shift
 				# load_configuration is called later in _stop_containers
 				stop "$@"
@@ -4914,7 +5130,7 @@ case "$1" in
 				shift
 				remove "$@"
 				;;
-			config)
+			config|conf)
 				load_configuration
 				check_for_updates
 				config_show "$@"
@@ -4951,6 +5167,10 @@ case "$1" in
 		vm "$@"
 		;;
 	update)
+		if [[ "$DOCKSAL_LOCK_UPDATES" != "" ]]; then
+			echo-error "Updates locked in this environment"
+			exit 1
+		fi
 		# no load_configuration
 		shift
 		if [[ "$1" == "--system-images" ]]; then
@@ -4959,7 +5179,9 @@ case "$1" in
 			update_project_images
 		elif [[ "$1" == "--self" ]]; then
 			echo "Downloading $URL_FIN"
-			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH" >/dev/null
+			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
+			[[ "$2" == "--diff" ]] && diff "$FIN_PATH" "$FIN_PATH_UPDATED"
+			cp "$FIN_PATH_UPDATED" "$FIN_PATH"
 			[ $? -eq 0 ] && echo "Done"
 			exit
 		elif [[ "$1" == "--tools" ]]; then
@@ -5141,7 +5363,12 @@ case "$1" in
 	logs)
 		load_configuration
 		shift
-		logs "$@"
+		if [[ "$1" == "unison" ]]; then
+			shift
+			unison_logs "$@"
+		else
+			logs "$@"
+		fi
 		;;
 	"")
 		# no load_configuration
@@ -5165,15 +5392,18 @@ case "$1" in
 	config)
 		# different load_configuration
 		shift
-		if [[ "$1" == "generate" ]]; then
-			# no load_configuration
-			shift
-			config_generate
-		else
-			load_configuration
-			check_for_updates
-			config_show "$@"
-		fi
+		case "$1" in
+			generate)
+				# no load_configuration
+				shift
+				config_generate
+				;;
+			*)
+				load_configuration
+				check_for_updates
+				config_show "$@"
+				;;
+		esac
 		;;
 	fix-smb)
 		# no load_configuration
