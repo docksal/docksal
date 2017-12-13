@@ -13,12 +13,13 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
 
 ## New Features
 
-- Windows: WSL (Windows Subsystem for Linux) support (beta)
+- Windows: WSL (Windows Subsystem for Linux) support (beta) (#188, #407, #421)
 - Docker for Mac, Unison volumes: `fin logs unison` - show Unison log
 
 ## Changes and improvements
 
-- Check for `docker-machine` binary existence during vm stop on update
+- Check for `docker-machine` binary existence during vm stop on update (#422)
+- Fixed xdebug configuration regression (#420)
 - Docker for Mac, Unison volumes: Added ability to wait for the initial sync to complete.
 - Added ability to lock Docksal updates
 
@@ -26,6 +27,7 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
 
 ## Documentation
 
+- Updated: [xdebug docs](https://docs.docksal.io/en/v1.6.0/tools/xdebug/)
 - Updated: Docker for Mac [Unison volumes](https://docs.docksal.io/en/v1.6.1/advanced/volumes/#unison-volumes)
 
 
