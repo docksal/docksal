@@ -44,14 +44,14 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
-	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
+		skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
 
-    sleep $PROJECT_INACTIVITY_TIMEOUT && sleep 5
-    # Trigger proxyctl stop manually to skip the cron job wait.
-    fin docker exec docksal-vhost-proxy proxyctl stop
+	sleep $PROJECT_INACTIVITY_TIMEOUT && sleep 5
+	# Trigger proxyctl stop manually to skip the cron job wait.
+	fin docker exec docksal-vhost-proxy proxyctl stop
 
-    # Check project was stopped
-    [[ $(fin docker ps -a --filter "name=drupal7_web_1" --format "{{ .Status }}") =~ "Exited (0)" ]]
+	# Check project was stopped
+	[[ $(fin docker ps -a --filter "name=drupal7_web_1" --format "{{ .Status }}") =~ "Exited (0)" ]]
 	# Check project network was removed
 	[[ $(fin docker network ls -q --filter "name=drupal7_default" | wc -l) =~ "0" ]]
 }
@@ -60,7 +60,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
-	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
+		skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
 
 	run curl http://drupal7.docksal/robots.txt
 	[[ $output =~ "Waking up the daemons..." ]]
@@ -70,7 +70,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
-	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
+		skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
 
 	# Wait for start
 	sleep 15
@@ -82,7 +82,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
-	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
+		skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
 
 	cwd=$(pwd)
 	cd ../drupal7 && fin stop
@@ -96,7 +96,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
-	    skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
+		skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
 
 	# Wait for start
 	sleep 15
@@ -108,13 +108,13 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
-	    skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
+		skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
 
-    sleep $PROJECT_DANGLING_TIMEOUT && sleep 5
-    # Trigger proxyctl cleanup manually to skip the cron job wait.
-    fin docker exec docksal-vhost-proxy proxyctl cleanup
+	sleep $PROJECT_DANGLING_TIMEOUT && sleep 5
+	# Trigger proxyctl cleanup manually to skip the cron job wait.
+	fin docker exec docksal-vhost-proxy proxyctl cleanup
 
-    # Check project containers were removed
+	# Check project containers were removed
 	[[ $(fin docker ps -a -q --filter "label=com.docker.compose.project=drupal7" | wc -l) =~ "0" ]]
 	# Check project network was removed
 	[[ $(fin docker network ls -q --filter "name=drupal7_default" | wc -l) =~ "0" ]]
@@ -126,7 +126,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] && \
-	    skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
+		skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
 
 	# Check that project containers exist
 	# Using both filter to be sure the label io.docksal.permanent was set properly on the drupal8 project web container
