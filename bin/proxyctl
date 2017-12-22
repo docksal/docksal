@@ -213,11 +213,11 @@ cleanup ()
 		[[ -d $mounted_project_root ]] && rm -rf $mounted_project_root
 	done
 
-	echo-green "Removing dangling images..."
+	echo "Removing dangling images..."
 	docker image prune -f
-	echo-green "Removing dangling volumes..."
+	echo "Removing dangling volumes..."
 	docker volume prune -f
-	echo-green "Removing dangling networks..."
+	echo "Removing dangling networks..."
 	docker network prune -f
 }
 
