@@ -95,6 +95,8 @@ _start ()
 # Stop containers for projects after a timeout set via PROJECT_INACTIVITY_TIMEOUT
 _stop ()
 {
+	_log "proxyctl-command: stop"
+
 	# Allow disabling PROJECT_INACTIVITY_TIMEOUT (0 = disabled)
 	[[ "$PROJECT_INACTIVITY_TIMEOUT" == 0 ]] && exit
 
@@ -149,6 +151,7 @@ _networks ()
 
 _cron ()
 {
+	_stats
 	_stop
 }
 
@@ -156,6 +159,8 @@ _cron ()
 # Projects with the label "io.docksal.permanent=true" are considered permanent and skipped.
 _cleanup ()
 {
+	_log "proxyctl-command: cleanup"
+
 	# Allow disabling PROJECT_DANGLING_TIMEOUT (0 = disabled)
 	[[ "$PROJECT_DANGLING_TIMEOUT" == 0 ]] && exit
 
@@ -213,6 +218,16 @@ _notify ()
 _log ()
 {
 	echo "$(date +"%F %H:%M:%S") $@"
+}
+
+# Print stats for projects
+_stats ()
+{
+	_log "proxyctl-command: stats"
+	
+	docker ps -a \
+		--filter "label=com.docker.compose.service=web" \
+		--format 'Project: {{.Label "com.docker.compose.project"}} | Created: {{.RunningFor}} | Status: {{.Status}} | Permanent: {{ .Label "io.docksal.permanent" }}'
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
