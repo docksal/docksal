@@ -9,16 +9,16 @@ RUN apk add --no-cache \
 	nginx-lua \
 	&& rm -rf /var/cache/apk/*
 
-ENV DOCKER_VERSION 17.06.0-ce
-ENV DOCKER_GEN_VERSION 0.7.3
+ARG DOCKER_VERSION=17.06.0-ce
+ARG DOCKER_GEN_VERSION=0.7.3
 
-# Install docker client binary from Github (if not mounting binary from host)
-RUN curl -sSL -O "https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz" \
+# Install docker client binary (if not mounting binary from host)
+RUN curl -sSL -O "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
 	&& tar zxf docker-$DOCKER_VERSION.tgz && mv docker/docker /usr/local/bin && rm -rf docker-$DOCKER_VERSION*
 
 # Install docker-gen
-ENV DOCKER_GEN_TARFILE docker-gen-alpine-linux-amd64-$DOCKER_GEN_VERSION.tar.gz
-RUN curl -sSL https://github.com/jwilder/docker-gen/releases/download/$DOCKER_GEN_VERSION/$DOCKER_GEN_TARFILE -O \
+ARG DOCKER_GEN_TARFILE=docker-gen-alpine-linux-amd64-$DOCKER_GEN_VERSION.tar.gz
+RUN curl -sSL -O "https://github.com/jwilder/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_TARFILE}" \
 	&& tar -C /usr/local/bin -xvzf $DOCKER_GEN_TARFILE && rm $DOCKER_GEN_TARFILE
 
 RUN chown -R nginx:nginx /var/lib/nginx
