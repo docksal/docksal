@@ -18,7 +18,11 @@ http {
     default_type  application/octet-stream;
 
     log_format simple '$remote_addr [$time_local] "$request" $status $body_bytes_sent "$http_referer"';
+    {{ if ne (getenv "PROXY_ACCESS_LOG") "0" }}
     access_log /dev/stdout simple;
+    {{ else }}
+    access_log off;
+    {{ end }}
 
     lua_shared_dict hosts 1m;
 

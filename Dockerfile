@@ -11,6 +11,7 @@ RUN apk add --no-cache \
 
 ARG DOCKER_VERSION=17.06.0-ce
 ARG DOCKER_GEN_VERSION=0.7.3
+ARG GOTPL_VERSION=0.1.5
 
 # Install docker client binary (if not mounting binary from host)
 RUN curl -sSL -O "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
@@ -21,6 +22,11 @@ ARG DOCKER_GEN_TARFILE=docker-gen-alpine-linux-amd64-$DOCKER_GEN_VERSION.tar.gz
 RUN curl -sSL -O "https://github.com/jwilder/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_TARFILE}" \
 	&& tar -C /usr/local/bin -xvzf $DOCKER_GEN_TARFILE && rm $DOCKER_GEN_TARFILE
 
+# Install gotpl
+ARG GOTPL_TARFILE=gotpl-alpine-linux-amd64-${GOTPL_VERSION}.tar.gz
+RUN curl -sSL -O "https://github.com/wodby/gotpl/releases/download/${GOTPL_VERSION}/${GOTPL_TARFILE}" \
+	&& tar -C /usr/local/bin -xvzf $GOTPL_TARFILE && rm $GOTPL_TARFILE
+
 RUN chown -R nginx:nginx /var/lib/nginx
 
 # Generate a self-signed cert
@@ -29,9 +35,7 @@ RUN apk add --no-cache openssl \
 		-keyout /etc/nginx/server.key -out /etc/nginx/server.crt \
 	&& apk del openssl
 
-COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY conf/nginx/default.conf.tmpl /etc/nginx/default.conf.tmpl
-COPY conf/nginx/default_locations.conf /etc/nginx/default_locations.conf
+COPY conf/nginx /opt/conf/nginx
 COPY conf/sudoers /etc/sudoers
 # Override the main supervisord config file, since some parameters are not overridable via an include
 # See https://github.com/Supervisor/supervisor/issues/962
@@ -49,6 +53,8 @@ ENV PROJECT_INACTIVITY_TIMEOUT 0
 ENV PROJECT_DANGLING_TIMEOUT 0
 # Disable debug output by default
 ENV PROXY_DEBUG 0
+# Disable access log by default
+ENV PROXY_ACCESS_LOG 0
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 

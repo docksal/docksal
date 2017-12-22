@@ -5,6 +5,10 @@
 
 # Service mode (run as root)
 if [[ "$1" == "supervisord" ]]; then
+	# Generate config files from templates
+	gotpl /opt/conf/nginx/nginx.conf.tmpl > /etc/nginx/nginx.conf
+	gotpl /opt/conf/nginx/default_locations.conf.tmpl > /etc/nginx/default_locations.conf
+
 	exec supervisord -c /etc/supervisord.conf
 # Command mode (run as docker user)
 else

@@ -63,3 +63,7 @@ docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --res
 `PROXY_DEBUG`
 
 Set to `1` to enable debug logging. Check logs with `docker logs docksal-vhost-proxy`.
+
+`PROXY_ACCESS_LOG`
+
+Set to `1` to enable access log. Check logs with `docker logs docksal-vhost-proxy`.
