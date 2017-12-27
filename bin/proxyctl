@@ -250,44 +250,58 @@ stats ()
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}:{{ .RunningFor }}:{{ .Status }}:{{ .Label "io.docksal.permanent" }}')
 
+	# Stats
+	local runing
+	local active
+	local permanent
+	local dangling
 	# Aggregated stats
-	local num_total=0
-	local num_running=0
-	local num_permanent=0
-	local num_active=0
-	local num_dangling=0
+	local sum_total=0
+	local sum_running=0
+	local sum_permanent=0
+	local sum_active=0
+	local sum_dangling=0
 	
 	IFS=$'\n';  # Split projects by newline only (otherwise spaces in the output also trigger a split)
 	for project in $projects; do
 		IFS=':' read container_id project_name created status permanent <<< "$project"
 		
-		let "num_total += 1"
-		[[ "$status" =~ "Up" ]] && let "num_running += 1"
-		if [[ "$permanent" != "true" ]]; then
-			permanent='false'
+		let "sum_total += 1"
+		
+		if [[ "$status" =~ "Up" ]]; then
+			let "sum_running += 1"
+			running=1
 		else
-			let "num_permanent += 1"
-			permanent='true'
-		fi
-		if is_container_active $container_id; then
-			let "num_active += 1"
-			active='true'
-		else
-			active='false'
-		fi
-		if is_container_dangling $container_id; then
-			let "num_dangling += 1"
-			dangling='true'
-		else
-			dangling='false'
+			running=0
 		fi
 		
-		log "Project: ${project_name} | Created: ${created} | Status: ${status} | Permanent: ${permanent} | Active: ${active} | Dangling: ${dangling}"
+		if is_container_active $container_id; then
+			let "sum_active += 1"
+			active=1
+		else
+			active=0
+		fi
+
+		if [[ "$permanent" != "true" ]]; then
+			permanent=0
+		else
+			let "sum_permanent += 1"
+			permanent=1
+		fi
+		
+		if is_container_dangling $container_id; then
+			let "sum_dangling += 1"
+			dangling=1
+		else
+			dangling=0
+		fi
+		
+		log "Project: ${project_name} | Created: ${created} | Status: ${status} | Running: ${running} | Active: ${active} | Permanent: ${permanent} | Dangling: ${dangling}"
 	done
 	unset IFS
 
 	# Aggregated stats
-	log "[summary] Total: ${num_total} | Running: ${num_running} | Permanent: ${num_permanent} | Active: ${num_active} | Dangling: ${num_dangling}"
+	log "[summary] Total: ${sum_total} | Running: ${sum_running} | Active: ${sum_active} | Permanent: ${sum_permanent} | Dangling: ${sum_dangling}"
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
