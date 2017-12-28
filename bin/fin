@@ -3620,8 +3620,7 @@ update ()
 	# This is needed to re-append restarted vhost-proxy to containers networks
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
 		echo-green "[STEP 6/$TOTAL_STEPS] Restarting running projects..."
-		running_projects=$(docker ps --all \
-			--filter 'status=running' \
+		running_projects=$(docker ps \
 			--filter 'label=com.docker.compose.service=web' \
 			--format '{{.Label "io.docksal.project-root"}}'
 		)
