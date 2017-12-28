@@ -5113,7 +5113,7 @@ case "$1" in
 		# no load_configuration
 		shift
 		case "$1" in
-			create|cr)
+			create)
 				project_create
 				;;
 			list|ls)
@@ -5124,12 +5124,12 @@ case "$1" in
 				echo -e "start stop list status ... (${yellow}fin help project${NC})"
 				exit 1
 				;;
-			status|s)
+			status|st)
 				load_configuration
 				check_for_updates
 				project_status
 				;;
-			start|st)
+			start)
 				load_configuration
 				check_for_updates
 				shift
@@ -5142,7 +5142,7 @@ case "$1" in
 				shift
 				up
 				;;
-			stop|sp)
+			stop)
 				shift
 				# load_configuration is called later in _stop_containers
 				stop "$@"
@@ -5163,7 +5163,7 @@ case "$1" in
 				shift
 				remove "$@"
 				;;
-			config|conf)
+			config)
 				load_configuration
 				check_for_updates
 				config_show "$@"
@@ -5182,25 +5182,25 @@ case "$1" in
 				;;
 		esac
 		;;
-	system|s)
+	system|sys)
 		# no load_configuration
 		shift
 		case "$1" in
-			reset|r)
+			reset)
 				shift
 				# Make sure docker daemon is accessible. reset network is a special excluded case.
 				[[ ! "network" =~ "$1" ]] && check_docker_running
 				system_reset "$@"
 				;;
-			start|st)
+			start)
 				shift
 				system_start
 				;;
-			status|s)
+			status|st)
 				shift
 				system_status
 				;;
-			stop|sp)
+			stop)
 				shift
 				system_stop
 				;;
