@@ -33,10 +33,10 @@ DOCKSAL_IP=192.168.64.100
 
 }
 
-@test "DNS: fin reset dns" {
+@test "DNS: fin system reset dns" {
 	[[ $SKIP == 1 ]] && skip
 
-	run fin reset dns
+	run fin system reset dns
 	echo "$output" | grep "Resetting Docksal DNS service and configuring resolver for .docksal domain"
 
   	# Wait 2s to let the service fully initialize
@@ -66,10 +66,10 @@ DOCKSAL_IP=192.168.64.100
     [[ "$(echo \"$output\" | grep "Address" | tail -1 | tr -d ' ' | awk -F ':' '{print $2}')" == "$DOCKSAL_IP" ]]
 }
 
-@test "VHOST-PROXY: fin reset proxy" {
+@test "VHOST-PROXY: fin system reset vhost-proxy" {
 	[[ $SKIP == 1 ]] && skip
 
-	run fin reset proxy
+	run fin system reset vhost-proxy
 	echo "$output" | grep "Resetting Docksal HTTP/HTTPS reverse proxy service"
 
   	# Wait 2s to let the service fully initialize
@@ -90,10 +90,10 @@ DOCKSAL_IP=192.168.64.100
 	echo "$output" | grep 'Welcome to nginx!'
 }
 
-@test "SSH-AGENT: fin reset ssh-agent" {
+@test "SSH-AGENT: fin system reset ssh-agent" {
 	[[ $SKIP == 1 ]] && skip
 
-	run fin reset ssh-agent
+	run fin system reset ssh-agent
 	echo "$output" | grep "Resetting Docksal ssh-agent service"
 	# Assuming there is at least one default key
 	echo "$output" | egrep "Identity added: id_.+ \(id_.+\)"
