@@ -43,7 +43,7 @@ default upstream DNS settings.
     DOCKSAL_DNS_UPSTREAM=192.168.0.1
     ```
 
-2. Run `fin reset dns`
+2. Run `fin system reset dns`
 
 Inspect you LAN or WiFi interface settings and connection status to figure out the DNS server your network is using.
 
@@ -53,7 +53,7 @@ Inspect you LAN or WiFi interface settings and connection status to figure out t
 Enable logging
 
 ```
-DOCKSAL_DNS_DEBUG=true fin reset dns
+DOCKSAL_DNS_DEBUG=true fin system reset dns
 ```
 
 View logs
