@@ -36,7 +36,7 @@ curl -fsSL https://get.docksal.io | sh
 **5.** Reset Docksal system services.
 
 ```bash
-fin reset system
+fin system reset
 ```
 
 **6.** Configure file sharing as necessary (see below).
@@ -74,7 +74,7 @@ Remove `DOCKER_NATIVE=1` from `$HOME/.docksal/docksal.env`
 **3.** Reset networks settings, start Docksal VM and reset Docksal system services
 
 ```bash
-fin reset network
+fin system reset network
 fin vm start
-fin reset system
+fin system reset
 ```
