@@ -2633,7 +2633,7 @@ system_stop ()
 	else
 		configure_resolver off
 		echo-green "Stopping Docksal system services..."
-		docker ps -q --filter "label=io.docksal.group=system" | xargs docker stop >/dev/null
+		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
 	fi
 }
 
