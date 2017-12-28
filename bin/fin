@@ -3287,7 +3287,7 @@ update_config_files ()
 install_bash_autocomplete ()
 {
 	local destination="$FIN_AUTOCOMPLETE_PATH"
-	tee "$destination" >/dev/null << 'EOF'
+	tee "$destination" >/dev/null <<'EOF'
 _docksal_completion()
 {
 	local cur=${COMP_WORDS[COMP_CWORD]} #current word part
