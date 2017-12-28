@@ -1304,13 +1304,13 @@ show_help_system() {
 	printh "fin system <command> [params]" "" "yellow"
 	echo
 	echo-green "Commands:"
-	printh "reset" "Reset Docksal system services"
-	printh "start" "Start Docksal system services"
-	printh "stop" "Stop Docksal system services"
-	printh "status" "Check Docksal system services"
+	printh "reset" "Reset Docksal"
+	printh "start" "Start Docksal"
+	printh "stop" "Stop Docksal"
+	printh "status" "Check Docksal status"
 	echo
 	echo-green "Examples:"
-	printh "fin system reset" "Reset all Docksal system services"
+	printh "fin system reset" "Reset all Docksal system services and settings"
 	printh "fin system reset dns" "Reset Docksal DNS service"
 	printh "fin system reset vhost-proxy" "Reset Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
 	printh "fin system reset ssh-agent" "Reset Docksal ssh-agent service"
@@ -2611,25 +2611,27 @@ system_status ()
 }
 
 # Starts all Docksal related things
+# TODO: add projects, network, /etc/exports, etc. here for a complete shutdown of Docksal
 system_start ()
 {
-	# TODO: add projects, network, /etc/exports, etc. here for a complete shutdown of Docksal
-	echo-green "Starting Docksal..."
-	
-	system_reset
+	if ! is_linux && ! is_docker_native && ! is_wsl; then
+		echo "Starting Docksal VM..."
+		vm start
+	else
+		echo "Starting Docksal system services..."
+		system_reset
+	fi
 }
 
 # Stops/disables all Docksal things
+# TODO: add projects, network, /etc/exports, etc. here for a complete shutdown of Docksal
 system_stop ()
 {
-	# TODO: add projects, network, /etc/exports, etc. here for a complete shutdown of Docksal
-	echo-green "Stopping Docksal..."
-	
-	configure_resolver off
-	if [[ ! is_linux && ! is_docker_native && ! is_wsl ]]; then
+	if ! is_linux && ! is_docker_native && ! is_wsl; then
 		echo-green "Stopping Docksal VM..."
-		docker_machine_stop
+		vm stop
 	else
+		configure_resolver off
 		echo-green "Stopping Docksal system services..."
 		docker ps -q --filter "label=io.docksal.group=system" | xargs docker stop >/dev/null
 	fi
