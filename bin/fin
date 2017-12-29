@@ -123,6 +123,12 @@ DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
 # Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
 DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
 
+# Declaring possible native Docker (Linux) overrides
+# Docksal system containers restart policy
+DOCKSAL_SYSTEM_RESTART="${DOCKSAL_SYSTEM_RESTART:-always}"
+# Check that we have a valid Docker restart policy parameter, otherwise set the default.
+case "${DOCKSAL_SYSTEM_RESTART}" in no|always|on-failure|unless-stopped);; *) DOCKSAL_SYSTEM_RESTART="always";; esac
+
 # Declaring possible vhost-proxy settings overrides
 DOCKSAL_VHOST_PROXY_IP="${DOCKSAL_VHOST_PROXY_IP}"
 DOCKSAL_VHOST_PROXY_PORT_HTTP="${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
@@ -2765,7 +2771,7 @@ install_proxy_service ()
 	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g. 0.5h)
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
 	# entirely wiped out from the host (e.g. 168h). WARNING: use at your own risk!
-	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always \
+	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart="${DOCKSAL_SYSTEM_RESTART}" \
 		-p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
@@ -2782,7 +2788,7 @@ install_dns_service ()
 	# container for DNS resolution (Windows and Linux), so we will get into a recursion.
 	# DOCKSAL_DNS_UPSTREAM can be set to the controlled network DNS server address (VPN/LAN) in the global docksal.env file.
 	# When user disconnects from that network, the backup DNS will handle name resolution (assuming 8.8.4.4 is reachable).
-	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
+	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart="${DOCKSAL_SYSTEM_RESTART}" \
 		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="8.8.4.4" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -2948,7 +2954,7 @@ install_sshagent_service ()
 	docker volume rm docksal_ssh_agent >/dev/null 2>&1 || true
 
 	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
-	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always \
+	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart="${DOCKSAL_SYSTEM_RESTART}" \
 		-v docksal_ssh_agent:/.ssh-agent \
 		"${IMAGE_SSH_AGENT}" >/dev/null
 	# Add default keys. Using || true here to suppress errors if there are no keys on the host.
