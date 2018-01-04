@@ -2466,9 +2466,10 @@ project_create ()
 	echo -e "${green}   [6]${NC} Grav CMS"
 	echo -e "${green}   [7]${NC} Gatsby JS"
 	echo -e "${green}   [8]${NC} Laravel"
+	echo -e "${green}   [9]${NC} Custom git repository"
 	echo -e ""
 	while true; do
-		read -p "Enter your choice (1-8): " choice
+		read -p "Enter your choice (1-9): " choice
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
@@ -2514,8 +2515,20 @@ project_create ()
 				target_host_name_search_string=""
 				target_repo="$URL_REPO_LARAVEL"
 				;;
+	        9)
+				target_host_name_search_string=""
+				target_cms="Custom git repository"
+				while true; do
+					read -p "Please enter repository url: " target_repo
+					if [[ -z "${target_repo// }" ]]; then
+						echo-red "Please provide repository url."
+						continue
+					fi
+					break
+				done
+				;;
 			* )
-				echo 'Enter a number between 1 and 8.'
+				echo 'Enter a number between 1 and 9.'
 				continue
 		esac
 		break
