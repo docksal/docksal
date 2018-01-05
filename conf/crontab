@@ -1,2 +1,5 @@
-*/1 * * * * /usr/local/bin/proxyctl cron
-0 0 * * * /usr/local/bin/proxyctl cleanup
+# Run `proxyctl cron` every minute
+* * * * * /usr/local/bin/proxyctl cron
+
+# Run `proxyctl cleanup` every hour
+0 * * * * /usr/local/bin/proxyctl cleanup

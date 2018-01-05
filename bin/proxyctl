@@ -171,8 +171,8 @@ networks ()
 
 cron ()
 {
-	stats
 	stop
+	stats
 }
 
 # Removed projects (containers and sources) after a timeout set via PROJECT_DANGLING_TIMEOUT.
