@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.44.0
+FIN_VERSION=1.44.1
 
 # Console colors
 red='\033[0;91m'
@@ -3932,8 +3932,8 @@ mysql_db_create ()
 	local __dump_user="${dbuser:-root}"
 	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 	local __db="${ARGV[0]}"
-	local __db_charset="${dbcharset:-utf8}"
-	local __db_collation="${dbcollation:-utf8_general_ci}"
+	local __db_charset="${dbcharset:-utf8mb4}"
+	local __db_collation="${dbcollation:-utf8mb4_unicode_ci}"
 
 	[[ "${__db}" == "" ]] && echo-error "Provide a name for the database to create" && exit 1
 
