@@ -30,14 +30,13 @@ start ()
 	log "Stoping docker-gen..."
 	supervisorctl stop docker-gen
 
-	# Match vhost to a web container (exact match only)
+	# Match vhost to the primary project container (exact match only)
 	local project_name
 	local container_id
 	
-	# Filter: web containers, part of a dc project, managed by Docksal
+	# Filter: primary containers with a defined virtual host
 	project_name=$(docker ps -a \
-		--filter "label=com.docker.compose.project" \
-		--filter "label=com.docker.compose.service=web" \
+		--filter "label=io.docksal.project-root" \
 		--filter "label=io.docksal.virtual-host=$vhost" \
 		--format '{{.Label "com.docker.compose.project"}}')
 
@@ -121,10 +120,9 @@ stop ()
 	# Allow disabling PROJECT_INACTIVITY_TIMEOUT (0 = disabled)
 	[[ "$PROJECT_INACTIVITY_TIMEOUT" == 0 ]] && exit
 
-	# Filter: web containers, part of a dc project, managed by Docksal
-	local running_webs=$(docker ps \
-		--filter "label=com.docker.compose.project" \
-		--filter "label=com.docker.compose.service=web" \
+	# Filter: primary containers with a defined virtual host
+	local running_projects=$(docker ps \
+		--filter "label=io.docksal.project-root" \
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}')
 
@@ -151,10 +149,9 @@ stop ()
 # Useful when proxy has been just re-provisioned and should be re-connected to existing project networks.
 networks ()
 {
-	# Filter: web containers, part of a dc project, managed by Docksal
+	# Filter: primary containers with a defined virtual host
 	project_names=$(docker ps \
-		--filter "label=com.docker.compose.project" \
-		--filter "label=com.docker.compose.service=web" \
+		--filter "label=io.docksal.project-root" \
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{.Label "com.docker.compose.project"}}')
 	for project_name in "$project_names"; do
@@ -185,10 +182,9 @@ cleanup ()
 	# Allow disabling PROJECT_DANGLING_TIMEOUT (0 = disabled)
 	[[ "$PROJECT_DANGLING_TIMEOUT" == 0 ]] && exit
 
-	# Filter: web containers, part of a dc project, managed by Docksal
+	# Filter: primary containers with a defined virtual host
 	projects=$(docker ps -a \
-		--filter "label=com.docker.compose.project" \
-		--filter "label=com.docker.compose.service=web" \
+		--filter "label=io.docksal.project-root" \
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}:{{ .Label "io.docksal.permanent" }}')
 
@@ -243,10 +239,9 @@ stats ()
 	# Set logging prefix for the function and trigger a log entry
 	export LOG_PREFIX='[stats]' && log
 	
-	# Filter: web containers, part of a dc project, managed by Docksal
+	# Filter: primary containers with a defined virtual host
 	projects=$(docker ps -a \
-		--filter "label=com.docker.compose.project" \
-		--filter "label=com.docker.compose.service=web" \
+		--filter "label=io.docksal.project-root" \
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}:{{ .RunningFor }}:{{ .Status }}:{{ .Label "io.docksal.permanent" }}')
 
