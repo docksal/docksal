@@ -8,7 +8,7 @@ env:
   PROJECT_INACTIVITY_TIMEOUT: 30s
   PROJECT_DANGLING_TIMEOUT: 60s
   PROXY_DEBUG: 1
-  DOCKSAL_VERSION: master
+  DOCKSAL_VERSION: develop
 
 services:
   - docker
@@ -18,7 +18,7 @@ install:
   - fin version
   - fin update
   - fin docker build -t ${IMAGE_NAME} .
-  - PROJECTS_ROOT=$TRAVIS_BUILD_DIR IMAGE_VHOST_PROXY=$IMAGE_NAME fin reset proxy
+  - PROJECTS_ROOT=$TRAVIS_BUILD_DIR IMAGE_VHOST_PROXY=$IMAGE_NAME fin system reset vhost-proxy
   - fin sysinfo
 
 before_script:
