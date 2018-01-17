@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.44.1
+FIN_VERSION=1.45.0
 
 # Console colors
 red='\033[0;91m'
@@ -786,7 +786,7 @@ check_project_unique ()
 {
 	# Format: project:project-root:virtual-host
 	local _projects=$(docker ps --all \
-				--filter 'label=com.docker.compose.service=web' \
+				--filter 'label=io.docksal.project-root' \
 				--format '{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.project-root"}}:{{.Label "io.docksal.virtual-host"}}')
 
 	for _project in $_projects; do
@@ -927,7 +927,6 @@ cleanup ()
 	echo-green "Checking for orphaned projects..."
 	local projects=$(docker ps --all \
 		--filter 'label=io.docksal.project-root' \
-		--filter 'label=com.docker.compose.project' \
 		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
 	for project in $projects; do
 		IFS=':' read project_name project_root <<< "$project"
@@ -1635,7 +1634,7 @@ bash_comp_words ()
 		fin)
 			local aliases=$(ls -l "$CONFIG_ALIASES" 2>/dev/null | grep -v total | awk '{printf "@%s ", $9}')
 			local projects=$(docker ps --all \
-				--filter 'label=com.docker.compose.service=web' \
+				--filter 'label=io.docksal.project-root' \
 				--format '@{{.Label "com.docker.compose.project"}}' | xargs
 			)
 
@@ -2438,7 +2437,7 @@ project_list ()
 	fi
 	check_docker_running
 	docker ps ${all} \
-		--filter 'label=com.docker.compose.service=web' \
+		--filter 'label=io.docksal.project-root' \
 		--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
 }
 
@@ -3621,7 +3620,7 @@ update ()
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
 		echo-green "[STEP 6/$TOTAL_STEPS] Restarting running projects..."
 		running_projects=$(docker ps \
-			--filter 'label=com.docker.compose.service=web' \
+			--filter 'label=io.docksal.project-root' \
 			--format '{{.Label "io.docksal.project-root"}}'
 		)
 		for project in ${running_projects}; do
@@ -5021,7 +5020,7 @@ if [[ "$1" == "@"* ]]; then
 		check_docker_running
 		# alias not found. search project names
 		_alias_projects=$(docker ps --all \
-			--filter 'label=com.docker.compose.service=web' \
+			--filter 'label=io.docksal.project-root' \
 			--format '{{.Label "com.docker.compose.project"}}\t{{.Label "io.docksal.project-root"}}')
 		if (echo "$_alias_projects" | grep "^$USED_ALIAS\t" >/dev/null 2>/dev/null); then
 			# project found
