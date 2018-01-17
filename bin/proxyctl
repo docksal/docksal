@@ -7,12 +7,12 @@
 is_container_active ()
 {
 	container_id="$1"
-	[[ "$(docker logs --tail 1 --since $PROJECT_INACTIVITY_TIMEOUT $container_id 2>&1)" != "" ]]
+	[[ "$(docker logs --tail 1 --since "$PROJECT_INACTIVITY_TIMEOUT" "$container_id" 2>&1)" != "" ]]
 }
 is_container_dangling ()
 {
 	container_id="$1"
-	[[ "$(docker logs --tail 1 --since $PROJECT_DANGLING_TIMEOUT $container_id 2>&1)" == "" ]]
+	[[ "$(docker logs --tail 1 --since "$PROJECT_DANGLING_TIMEOUT" "$container_id" 2>&1)" == "" ]]
 }
 
 ### Functions ###
@@ -54,14 +54,14 @@ start ()
 				--format '{{ .ID }}:{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.virtual-host"}}')
 
 			# Look for a matching label among all webs
-			for web in $webs; do
+			for web in "$webs"; do
 				# Read variables
 				IFS=':' read web_container_id web_project_name web_project_vhost <<< "$web";
 				# Split web_project_vhost
 				IFS=',' read -a web_project_vhost_arr <<< "$web_project_vhost"
 				for i in "${web_project_vhost_arr[@]}"; do
 					# Turn domain name into a regular expression (e.g. *.example.com => .*\.example\.com)
-					i_reg=$(echo $i | sed "s/\./\\\\./g" | sed "s/\*/\.\*/g")
+					i_reg=$(echo "$i" | sed "s/\./\\\\./g" | sed "s/\*/\.\*/g")
 					# Match vhost using the regular expression we created
 					echo "$vhost" | grep "^$i_reg$" >/dev/null
 					# Store match and break
@@ -128,13 +128,13 @@ stop ()
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}')
 
-	for running_web in $running_webs; do
+	for running_project in "$running_projects"; do
 		# Read variables
-		IFS=':' read container_id project_name <<< "$running_web";
+		IFS=':' read container_id project_name <<< "$running_project";
 		# Skip containers with empty values
 		[[ "$project_name" == "" ]] && continue
 		# Skip active projects
-		is_container_active $container_id && continue
+		is_container_active "$container_id" && continue
 
 		# Stop inactive project containers
 		log "Stopping inactive project: ${project_name}..."
@@ -157,7 +157,7 @@ networks ()
 		--filter "label=com.docker.compose.service=web" \
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{.Label "com.docker.compose.project"}}')
-	for project_name in $project_names; do
+	for project_name in "$project_names"; do
 		local network="${project_name}_default"
 		# Making sure the network exists
 		docker network create "$network" >/dev/null 2>&1
@@ -192,12 +192,12 @@ cleanup ()
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}:{{ .Label "io.docksal.permanent" }}')
 
-	for project in $projects; do
+	for project in "$projects"; do
 		IFS=':' read container_id project_name project_root permanent <<< "$project"
 		# Skip permenent projects
 		[[ "$permanent" == "true" ]] && continue
 		# Skip active/not dangling projects
-		! is_container_dangling $container_id && continue
+		! is_container_dangling "$container_id" && continue
 
 		# Remove dangling project containers
 		log "Removing dangling project: ${project_name}..."
@@ -209,8 +209,8 @@ cleanup ()
 		docker network rm "$network"
 		# Remove project directory
 		# This assumes all projects are kept in the same directory, which is mounted at /projects
-		local mounted_project_root="/projects/$(basename $project_root)"
-		[[ -d $mounted_project_root ]] && rm -rf $mounted_project_root
+		local mounted_project_root="/projects/$(basename ${project_root})"
+		[[ -d "$mounted_project_root" ]] && rm -rf "$mounted_project_root"
 	done
 
 	echo "Removing dangling images..."
@@ -263,7 +263,7 @@ stats ()
 	local sum_dangling=0
 	
 	IFS=$'\n';  # Split projects by newline only (otherwise spaces in the output also trigger a split)
-	for project in $projects; do
+	for project in "$projects"; do
 		IFS=':' read container_id project_name created status permanent <<< "$project"
 		
 		let "sum_total += 1"
@@ -275,7 +275,7 @@ stats ()
 			running=0
 		fi
 		
-		if is_container_active $container_id; then
+		if is_container_active "$container_id"; then
 			let "sum_active += 1"
 			active=1
 		else
@@ -289,7 +289,7 @@ stats ()
 			permanent=1
 		fi
 		
-		if is_container_dangling $container_id; then
+		if is_container_dangling "$container_id"; then
 			let "sum_dangling += 1"
 			dangling=1
 		else
