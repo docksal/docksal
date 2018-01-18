@@ -1,0 +1,16 @@
+# Node.js stack
+
+version: "2.1"
+
+services:
+  cli:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: cli
+    labels:
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
+      - io.docksal.project-root=${PROJECT_ROOT}
+    expose:
+      - 3000
+    environment:
+      - VIRTUAL_PORT=3000
