@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.45.0
+FIN_VERSION=1.46.0
 
 # Console colors
 red='\033[0;91m'
@@ -151,6 +151,7 @@ URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
 URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
 URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
 URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
+URL_REPO_HUGO="https://github.com/docksal/example-hugo.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 # Remove URL_REPO_ADDONS in Nov 2018
@@ -2465,6 +2466,7 @@ project_create ()
 	echo -e "${green}   [6]${NC} Grav CMS"
 	echo -e "${green}   [7]${NC} Gatsby JS"
 	echo -e "${green}   [8]${NC} Laravel"
+	echo -e "${green}   [9]${NC} Hugo"
 	echo -e ""
 	while true; do
 		read -p "Enter your choice (1-8): " choice
@@ -2513,8 +2515,13 @@ project_create ()
 				target_host_name_search_string=""
 				target_repo="$URL_REPO_LARAVEL"
 				;;
+			9)
+				target_cms="Hugo"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_HUGO"
+				;;
 			* )
-				echo 'Enter a number between 1 and 8.'
+				echo 'Enter a number between 1 and 9.'
 				continue
 		esac
 		break
