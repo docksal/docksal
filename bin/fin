@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.46.1
+FIN_VERSION=1.47.0
 
 # Console colors
 red='\033[0;91m'
@@ -4498,26 +4498,18 @@ config_show ()
 
 config_generate ()
 {
-	local stack_file="$(get_config_dir_dc)/stacks/stack-default-static.yml"
-
-	if [[ ! -f ${stack_file} ]]; then
-		echo-error "Stack file does not exist: $stack_file" "Try running ${yellow}fin update${NC}"
-		exit 1
+	if [[ -f ".docksal/docksal.yml" ]] || [[ -f ".docksal/docksal.env" ]]; then
+		echo-yellow ".docksal/docksal.yml or .docksal/docksal.env already exists"
+		_confirm "Do you want to proceed and overwrite?"
 	fi
 
-	if [[ -f ".docksal/docksal.yml" ]]; then
-		echo-yellow ".docksal/docksal.yml already exists"
-		_confirm "Do you want to proceed and overwrite it?"
-	fi
-
+	rm -f ".docksal/docksal.env" >/dev/null
+	rm -f ".docksal/docksal.yml" >/dev/null
 	# Create .docksal directory if it does not exist
 	mkdir -p ".docksal"
 	# Create docksal.env if it does not exist
 	touch ".docksal/docksal.env" && \
-	# remove DOCKSAL_STACK from env file if present
-	(cat ".docksal/docksal.env" | sed "s/^DOCKSAL_STACK=.*//" | tee ".docksal/docksal.env" >/dev/null) && \
-	# Override docksal.yml with the default stack file
-	cp -f "$stack_file" ".docksal/docksal.yml"
+	echo "DOCKSAL_STACK=default" > ".docksal/docksal.env"
 
 	local DOCROOT="${DOCROOT:-docroot}"
 	# Create a basic docroot and index.php if not present
