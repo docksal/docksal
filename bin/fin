@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.47.0
+FIN_VERSION=1.47.1
 
 # Console colors
 red='\033[0;91m'
@@ -853,9 +853,15 @@ _stop_containers ()
 {
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]]; then
 		check_docker_running
-		echo-green "Stopping all running services from all projects..."
 		# stop all but system containers (--label "io.docksal.group=system")
-		docker ps --format '{{.Names}} {{.Label "io.docksal.group"}}' | grep -v 'system' | xargs docker stop
+		local containers
+		containers=$(docker ps --format '{{.Names}} {{.Label "io.docksal.group"}}' | grep -v 'system')
+		if [[ $? == 0 ]]; then
+			echo-green "Stopping all running services from all projects..."
+			echo "$containers" | xargs docker stop
+		else
+			echo "No Docksal projects are running"
+		fi
 		return
 	fi
 
