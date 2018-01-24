@@ -2449,7 +2449,8 @@ project_create ()
 	while true; do
 		echo -en "${yellow}1. Enter the name of your project${NC} (lowercase alphanumeric and dashes): "
 		read -p "" project_name
-		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9-][a-z0-9]$ ]]; then
+		# This will not accept project name of 1 symbol long. Not sure if this need to be fixed
+		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9-]*[a-z0-9]$ ]]; then
 			echo-error "Unacceptable project name" \
 				"Use only lowercase letters, numbers and dashes. Do not use underscores." \
 				"Project name defines host name. Hostname has limitations." \
