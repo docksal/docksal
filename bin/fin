@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.46.0
+FIN_VERSION=1.46.1
 
 # Console colors
 red='\033[0;91m'
@@ -2447,10 +2447,13 @@ project_create ()
 	echo-green "             -= Docksal project wizard =-"
 	echo
 	while true; do
-		echo -en "${yellow}1. Enter the name of your project${NC} (no spaces or slashes): "
+		echo -en "${yellow}1. Enter the name of your project${NC} (lowercase alphanumeric and dashes): "
 		read -p "" project_name
-		if [[ "$project_name" =~ [^a-zA-Z0-9_-] ]]; then
-			echo-red "Please provide a valid project name (only letters, numbers, dashes, and underscores are permitted)."
+		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9-][a-z0-9]$ ]]; then
+			echo-error "Unacceptable project name" \
+				"Use only lowercase letters, numbers and dashes. Do not use underscores." \
+				"Project name defines host name. Hostname has limitations." \
+				""
 			continue
 		fi
 		break
