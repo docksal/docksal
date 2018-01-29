@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.47.1
+FIN_VERSION=1.47.2
 
 # Console colors
 red='\033[0;91m'
@@ -4437,7 +4437,7 @@ load_configuration ()
 
 		# Enable osxfs:cached for cli on Docker for Mac
 		overrides_osxfs_file="$(get_config_dir_dc)/stacks/overrides-osxfs.yml"
-		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]]; then
+		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]] && [[ "$DOCKSAL_VOLUMES" != "unison" ]]; then
 			COMPOSE_FILE="${overrides_osxfs_file}${SEPARATOR}${COMPOSE_FILE}"
 		fi
 	fi
