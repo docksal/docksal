@@ -168,25 +168,18 @@ services:
 	run fin config env
 	[[ $status == 0 ]] && \
 	[[ $output =~ "volumes-bind.yml" ]] && \
-	[[ ! $output =~ "stack-default.yml" ]] && \
-	[[ $output =~ "docksal.yml" ]] && \
+	[[ $output =~ "stack-default.yml" ]] && \
 	[[ $output =~ "docksal.env" ]]
 }
 
 @test "fin config generate: existing project" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Define which stack we want to use. This is supposed to be eventually removed by the "fin config generate" run below
-	echo 'DOCKSAL_STACK=acquia' > .docksal/docksal.env
-	# TODO: need a --force option to be able to use this in a non-interactive environment like CI/bats tests
-	# Run this non-interactively to avoid confirmation messages and thus getting stuck
 	echo "fin config generate" | bash
 
 	run fin config env
 	[[ $status == 0 ]] && \
 	[[ $output =~ "volumes-bind.yml" ]] && \
-	[[ ! $output =~ "stack-default.yml" ]] && \
-	[[ ! $output =~ "stack-acquia.yml" ]] && \
-	[[ $output =~ "docksal.yml" ]] && \
+	[[ $output =~ "stack-default.yml" ]] && \
 	[[ $output =~ "docksal.env" ]]
 }
