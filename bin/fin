@@ -4984,7 +4984,9 @@ fi
 wsl_mount_drives
 
 # Export environment variables to properly reach Docker server
-if is_docker_native; then
+if [[ "$DOCKSAL_HOST" != "" ]]; then
+	export DOCKER_HOST="$DOCKSAL_HOST"
+elif is_docker_native; then
 	# no vm used
 	export DOCKER_HOST=""
 elif is_wsl; then
