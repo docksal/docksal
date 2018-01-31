@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.48.0
+FIN_VERSION=1.48.1
 
 # Console colors
 red='\033[0;91m'
@@ -4440,13 +4440,14 @@ load_configuration ()
 		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]] && [[ "$DOCKSAL_VOLUMES" != "unison" ]]; then
 			COMPOSE_FILE="${overrides_osxfs_file}${SEPARATOR}${COMPOSE_FILE}"
 		fi
+
+		# This is special hack to make docker-compose work in the context of the project root
+		# https://github.com/docksal/docksal/issues/459
+		path_anchor_yml_file="$(get_project_path_dc)/.project-root"
+		path_anchor_yml_version=$(head "$volumes_yml_file" | grep "version")
+		echo "$path_anchor_yml_version" > "$path_anchor_yml_file"
+		COMPOSE_FILE="${path_anchor_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 	fi
-	# This is special hack to make docker-compose work in the context of the project root
-	# https://github.com/docksal/docksal/issues/459
-	path_anchor_yml_file="$(get_project_path_dc)/.project-root"
-	path_anchor_yml_version=$(head "$volumes_yml_file" | grep "version")
-	echo "$path_anchor_yml_version" > "$path_anchor_yml_file"
-	COMPOSE_FILE="${path_anchor_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 
 	export COMPOSE_FILE
 	export DOCKSAL_ENVIRONMENT
