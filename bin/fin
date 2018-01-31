@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.48.4
+FIN_VERSION=1.48.5
 
 # Console colors
 red='\033[0;91m'
@@ -5039,12 +5039,6 @@ else
 		fi
 	fi
 
-	if is_docker_running; then
-		export DOCKER_RUNNING="true"
-	else
-		export DOCKER_RUNNING="false"
-	fi
-
 	# current active machine folder
 	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
 	mkdir -p "$DOCKER_MACHINE_FOLDER"
@@ -5055,6 +5049,12 @@ else
 	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
 	#fi
 	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
+fi
+
+if is_docker_running; then
+	export DOCKER_RUNNING="true"
+else
+	export DOCKER_RUNNING="false"
 fi
 
 # Handle Alias
