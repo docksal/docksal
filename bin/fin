@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.48.3
+FIN_VERSION=1.48.4
 
 # Console colors
 red='\033[0;91m'
@@ -266,22 +266,6 @@ docker-compose ()
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	docksal_yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
-	docksal_env_file="$(get_project_path_dc)/.docksal/docksal.env"
-	docksal_yml_version=$(head "$(get_config_dir_dc)/stacks/services.yml" | grep "version")
-
-	# TODO: move this to runtime at some point
-	# Create default docksal.yml and docksal.env files if there is no configuration yet
-	if [[ ! -f "$docksal_yml_file" ]]; then
-		(echo "$docksal_yml_version" > "$docksal_yml_file") 2>/dev/null
-		if [[ ! -f "$docksal_env_file" ]]; then
-			(echo "DOCKSAL_STACK=default" > "$docksal_env_file") 2>/dev/null
-		fi
-	else
-		# Create empty docksal.env it does not exist
-		if [[ ! -f "$docksal_env_file" ]]; then
-			touch "$docksal_env_file" 2>/dev/null
-		fi
-	fi
 
 	# Double check that file really exists here
 	if [[ -f "$docksal_yml_file" ]]; then
@@ -4991,6 +4975,24 @@ if [[ "$DOCKSAL_UUID" == "" ]]; then
 	# Make sure the is a new line at the end of the config file, then write to it
 	sed -i~ '$ a\' "$CONFIG_ENV"
 	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
+fi
+
+# Automatically create docksal.yml and docksal.env if they do not exist
+# Relate to https://github.com/docksal/docksal/issues/459
+docksal_yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+docksal_env_file="$(get_project_path_dc)/.docksal/docksal.env"
+docksal_yml_version=$(head "$(get_config_dir_dc)/stacks/services.yml" | grep "version")
+# Create default docksal.yml and docksal.env files if there is no configuration yet
+if [[ ! -f "$docksal_yml_file" ]]; then
+	(echo "$docksal_yml_version" > "$docksal_yml_file") 2>/dev/null
+	if [[ ! -f "$docksal_env_file" ]]; then
+		(echo "DOCKSAL_STACK=default" > "$docksal_env_file") 2>/dev/null
+	fi
+else
+	# Create empty docksal.env it does not exist
+	if [[ ! -f "$docksal_env_file" ]]; then
+		touch "$docksal_env_file" 2>/dev/null
+	fi
 fi
 
 # Network settings
