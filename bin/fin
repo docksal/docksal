@@ -4538,6 +4538,7 @@ config_show ()
 	echo "---------------------"
 }
 
+# TODO: consider deprecating this, since now fin automatically creates docksal.yml and docksal.env (with default stack)
 config_generate ()
 {
 	if [[ -f ".docksal/docksal.yml" ]] || [[ -f ".docksal/docksal.env" ]]; then
