@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.48.7
+FIN_VERSION=1.48.8
 
 # Console colors
 red='\033[0;91m'
@@ -250,19 +250,19 @@ if_failed_error ()
 	fi
 }
 
-_PWD=$(which pwd)
 # Override default pwd function on windows and remove /cygdrive part from the path
 pwd ()
 {
 	# -L option should be used at all times because running pwd via absolute path /bin/pwd
 	# on Linux and Windows forces it to resolve current logical dir to physical dir
-	# (resolves symlink into target dir). -L forces using logical dir just like running pwd alone
+	# (resolves symlink into target dir). -L forces using logical dir just like running pwd alone.
+	# We can use `which` here, since it does not care about functions (but `type` does).
 	if is_windows; then
-		"$_PWD" "-L" | sed 's/^\/cygdrive//'
+		$(which pwd) -L | sed 's/^\/cygdrive//'
 	elif is_wsl; then
-		"$_PWD" "-L" | sed 's/^\/mnt//'
+		$(which pwd) -L | sed 's/^\/mnt//'
 	else
-		"$_PWD" "-L"
+		$(which pwd) -L
 	fi
 }
 
