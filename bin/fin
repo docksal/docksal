@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.48.6
+FIN_VERSION=1.48.7
 
 # Console colors
 red='\033[0;91m'
@@ -141,6 +141,12 @@ DOCKSAL_STATS_TID='UA-93724315-1'
 DOCKSAL_STATS_URL='http://www.google-analytics.com/collect'
 DOCKSAL_STATS_OPTOUT=${DOCKSAL_STATS_OPTOUT:-0}
 
+# Override PATH to use our utilities
+PATH="$CONFIG_BIN_DIR:$PATH"
+
+# Set global variable in case native Docker app is used/not-used
+DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
+
 #---------------------------- URL references --------------------------------
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
@@ -260,7 +266,6 @@ pwd ()
 	fi
 }
 
-docker_compose=$(which docker-compose)
 docker-compose ()
 {
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
@@ -274,8 +279,9 @@ docker-compose ()
 		COMPOSE_FILE="${docksal_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 	fi
 
-	# Call regular docker-compose we stored outside of the function
-	"$docker_compose" "$@"
+	# Call regular docker-compose.
+	# We can use `which` here, since it does not care about functions (but `type` does).
+	"$(which docker-compose)" "$@"
 }
 
 # Returns absolute path to a file/folder in a Unix notation under cygwin on Windows.
@@ -4953,15 +4959,6 @@ unison_logs () {
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
-
-# Override PATH to use our utilities
-PATH="$CONFIG_BIN_DIR:$PATH"
-
-# Set global variable in case native Docker app is used/not-used
-DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
-
-# UID of user to use in cli container. Only override if you know what you're doing
-FIN_SET_UID=""
 
 # Load environment variables overrides, use to permanently override some variables
 [[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV" || touch "$CONFIG_ENV"
