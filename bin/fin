@@ -5286,7 +5286,7 @@ case "$1" in
 			echo "Downloading $URL_FIN"
 			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
 			[[ "$2" == "--diff" ]] && diff "$FIN_PATH" "$FIN_PATH_UPDATED"
-			cp "$FIN_PATH_UPDATED" "$FIN_PATH"
+			sudo cp "$FIN_PATH_UPDATED" "$FIN_PATH"
 			[ $? -eq 0 ] && echo "Done"
 			exit
 		elif [[ "$1" == "--tools" ]]; then
