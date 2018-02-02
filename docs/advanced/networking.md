@@ -24,10 +24,11 @@ This will instruct Docker to export port `22` of the `cli` service as port `2222
 
 ```yaml
 version: "2"
-  services:
-    cli:
-      ports:
-        - "2222:22"
+
+services:
+  cli:
+    ports:
+      - "2222:22"
 ```
 
 **Note the quotes.** Yaml interprets some numbers with a colon as base64 numbers, so you need quotes here.
