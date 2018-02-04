@@ -4,25 +4,33 @@
 	{{ if .Address }}
 		{{/* If we got the containers from swarm and this container's port is published to host, use host IP:PORT */}}
 		{{ if and .Container.Node.ID .Address.HostPort }}
-			# {{ .Container.Node.Name }}/{{ .Container.Name }}
-			server {{ .Container.Node.Address.IP }}:{{ .Address.HostPort }};
+
+		# {{ .Container.Node.Name }}/{{ .Container.Name }}
+		server {{ .Container.Node.Address.IP }}:{{ .Address.HostPort }};
+
 		{{/* If there is no swarm node or the port is not published on host, use container's IP:PORT */}}
 		{{ else if .Network }}
-			# {{ .Container.Name }}
-			server {{ .Network.IP }}:{{ .Address.Port }};
+
+		# {{ .Container.Name }}
+		server {{ .Network.IP }}:{{ .Address.Port }};
+
 		{{ end }}
 	{{ else if .Network }}
+
 		# {{ .Container.Name }}
 		server {{ .Network.IP }} down;
+
 	{{ end }}
 {{ end }}
 
 {{ define "http" }}
-	# HTTP
+	## HTTP
 	server {
 		listen 80;
 		{{ range $host := split .Hosts "," }}
-			server_name {{ $host }};
+
+		server_name {{ $host }};
+
 		{{ end }}
 
 		location / {
@@ -32,12 +40,14 @@
 {{ end }}
 
 {{ define "https" }}
-	# HTTPS
+	## HTTPS
 	server {
 
 		listen 443;
 		{{ range $host := split .Hosts "," }}
-			server_name {{ $host }};
+
+		server_name {{ $host }};
+
 		{{ end }}
 
 		ssl_certificate           /etc/nginx/server.crt;
@@ -55,17 +65,18 @@
 	}
 {{ end }}
 
-{{ $pr_containers := whereLabelExists $ "com.docker.compose.service" }}
+{{ $dc_containers := whereLabelExists $ "com.docker.compose.service" }}
 
-{{ range $hosts, $containers_vhost := groupByLabel $pr_containers "io.docksal.virtual-host" }}
+{{ range $hosts, $containers_vhost := groupByLabel $dc_containers "io.docksal.virtual-host" }}
 
 	{{ range $service, $containers := groupByLabel $containers_vhost "com.docker.compose.service" }}
-
 		{{ $pr_container := $containers | first }}
 		{{ $project := index $pr_container.Labels "com.docker.compose.project" }}
 		{{ $upstream := (print $project "-" $service) }}
-		## Reachable via "{{ $project }}_default" network
-		upstream {{ $upstream }} {
+
+	# -------------------------------------------------- #
+	# Reachable via "{{ $project }}_default" network
+	upstream {{ $upstream }} {
 		{{ range $container := $containers }}
 			{{ $addrLen := len $container.Addresses }}
 
@@ -86,7 +97,7 @@
 				{{ end }}
 			{{ end }}
 		{{ end }}
-		}
+	}
 
 		{{ template "http" (dict "Hosts" $hosts "Upstream" $upstream) }}
 
@@ -95,6 +106,7 @@
 		{{ end }}
 
 	{{ end }}
+	# -------------------------------------------------- #
 
 {{ end }}
 
