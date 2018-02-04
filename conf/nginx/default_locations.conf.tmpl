@@ -4,7 +4,7 @@ location / {
   rewrite_by_lua_block {
 
     function dpr(message)
-      if (tonumber(os.getenv("PROXY_DEBUG")) > 0) then
+      if (tonumber(os.getenv("DEBUG_LOG")) > 0) then
         ngx.log(ngx.STDERR, "DEBUG: " .. message)
       end
     end

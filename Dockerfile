@@ -47,14 +47,18 @@ COPY www /var/www/proxy
 # Fix permissions
 RUN chmod 0440 /etc/sudoers
 
-# Disable INACTIVITY_TIMEOUT by default
-ENV PROJECT_INACTIVITY_TIMEOUT 0
-# Disable DANGLING_TIMEOUT by default
-ENV PROJECT_DANGLING_TIMEOUT 0
-# Disable debug output by default
-ENV PROXY_DEBUG 0
-# Disable access log by default
-ENV PROXY_ACCESS_LOG 0
+
+ENV \
+	# Disable INACTIVITY_TIMEOUT by default
+	PROJECT_INACTIVITY_TIMEOUT=0 \
+	# Disable DANGLING_TIMEOUT by default
+	PROJECT_DANGLING_TIMEOUT=0 \
+	# Disable access log by default
+	ACCESS_LOG=0 \
+	# Disable debug output by default
+	DEBUG_LOG=0 \
+	# Disable stats log by default
+	STATS_LOG=0
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
