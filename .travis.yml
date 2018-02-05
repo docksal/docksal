@@ -3,11 +3,10 @@ sudo: required
 language: generic
 
 env:
-  IMAGE_NAME: vhost-proxy:test
+  IMAGE_VHOST_PROXY: docksal/vhost-proxy:dev
   # Only use seconds here, so that these can be used with "sleep" as well
   PROJECT_INACTIVITY_TIMEOUT: 30s
   PROJECT_DANGLING_TIMEOUT: 60s
-  PROXY_DEBUG: 1
   DOCKSAL_VERSION: develop
 
 services:
@@ -17,12 +16,12 @@ install:
   - sudo sudo curl -L https://raw.githubusercontent.com/docksal/docksal/${DOCKSAL_VERSION}/bin/fin -o /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
   - fin version
   - fin update
-  - fin docker build -t ${IMAGE_NAME} .
-  - PROJECTS_ROOT=$TRAVIS_BUILD_DIR IMAGE_VHOST_PROXY=$IMAGE_NAME fin system reset vhost-proxy
   - fin sysinfo
 
 before_script:
+  - make
+  - PROJECTS_ROOT=$TRAVIS_BUILD_DIR fin system reset vhost-proxy
   - .travis/before_script.sh
 
 script:
-  - bats tests/smoke-test.bats
+  - make test
