@@ -3852,8 +3852,10 @@ _exec ()
 	fi
 
 	if [[ "$CONTAINER_NAME" == "cli" ]]; then
+		# TODO: this should be handled by cli itself and not by fin.
 		# Source $HOME/.docksalrc in cli.
 		# Commands in this file will be sourced for both interactive and non-interactive sessions.
+		# Note: the comma at the end of the command has to be here and not below in docker exec.
 		local DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1;'
 		# Commands in cli should be run using the docker user, not root.
 		local container_user='-u docker'
