@@ -2798,6 +2798,7 @@ install_proxy_service ()
 
 	# Create a bind mount volume to the projects directory if defined and exists. Otherwise, create an empty volume.
 	if [[ -d "$PROJECTS_ROOT" ]]; then
+		# No quotes around ${PROJECTS_ROOT} below or the volume will not work correctly!!!
 		docker volume create --name docksal_projects --opt type=none --opt device=${PROJECTS_ROOT} --opt o=bind >/dev/null 2>&1
 	else
 		docker volume create --name docksal_projects >/dev/null 2>&1
