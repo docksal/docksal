@@ -7,7 +7,7 @@ env:
   # Only use seconds here, so that these can be used with "sleep" as well
   PROJECT_INACTIVITY_TIMEOUT: 30s
   PROJECT_DANGLING_TIMEOUT: 60s
-  DOCKSAL_VERSION: develop
+  DOCKSAL_VERSION: feature/docksal-projects-volume
   PROJECTS_ROOT: ${TRAVIS_BUILD_DIR}/projects
 
 services:
