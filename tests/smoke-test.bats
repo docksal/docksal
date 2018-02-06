@@ -72,7 +72,7 @@ teardown() {
 	[[ "$PROJECT_INACTIVITY_TIMEOUT" == "0" ]] &&
 		skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
 
-	sleep ${PROJECT_INACTIVITY_TIMEOUT} && sleep 5
+	sleep ${PROJECT_INACTIVITY_TIMEOUT} && sleep 10s
 	# Trigger proxyctl stop manually to skip the cron job wait.
 	fin docker exec docksal-vhost-proxy proxyctl stop
 
@@ -133,7 +133,7 @@ teardown() {
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] &&
 		skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
 
-	sleep ${PROJECT_DANGLING_TIMEOUT} && sleep 5
+	sleep ${PROJECT_DANGLING_TIMEOUT} && sleep 10s
 	# Trigger proxyctl cleanup manually to skip the cron job wait.
 	fin docker exec docksal-vhost-proxy proxyctl cleanup
 

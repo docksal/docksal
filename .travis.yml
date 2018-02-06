@@ -4,11 +4,14 @@ language: generic
 
 env:
   IMAGE_VHOST_PROXY: docksal/vhost-proxy:dev
+  DOCKSAL_VHOST_PROXY_ACCESS_LOG: 1
+  DOCKSAL_VHOST_PROXY_DEBUG_LOG: 1
+  DOCKSAL_VHOST_PROXY_STATS_LOG: 1
   # Only use seconds here, so that these can be used with "sleep" as well
   PROJECT_INACTIVITY_TIMEOUT: 30s
   PROJECT_DANGLING_TIMEOUT: 60s
-  DOCKSAL_VERSION: feature/docksal-projects-volume
   PROJECTS_ROOT: ${TRAVIS_BUILD_DIR}/projects
+  DOCKSAL_VERSION: feature/docksal-projects-volume
 
 services:
   - docker
@@ -26,6 +29,8 @@ before_script:
 script:
   - make
   - make start
+  - make CMD="env" exec  # Views env variables picked up by proxy
+  - make CMD="ls -la /projects" exec  # View the contents of the /projects folder
   - make test
 
 after_failure:
