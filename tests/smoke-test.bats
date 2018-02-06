@@ -38,6 +38,14 @@ teardown() {
 	[[ "$output" =~ "project2" ]]
 }
 
+@test "Projects directory mounted correctly" {
+	[[ ${SKIP} == 1 ]] && skip
+
+	run fin docker exec docksal-vhost-proxy ls -la /projects
+	[[ "$output" =~ "project1" ]]
+	[[ "$output" =~ "project2" ]]
+}
+
 @test "Proxy returns 404 for a non-existing virtual-host" {
 	[[ ${SKIP} == 1 ]] && skip
 
