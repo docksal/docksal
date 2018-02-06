@@ -52,30 +52,31 @@ start ()
 			--filter "label=io.docksal.virtual-host=$vhost" \
 			--format '{{.ID }}')
 		if [[ "$container_id" == "" ]]; then
-			# Get a list of all (running and stopped) web containers and their virtual host label values
-			local webs=$(docker ps -a \
+			# Get a list of all (running and stopped) projects and their virtual host label values
+			local all_projects=$(docker ps -a \
+				--filter "label=io.docksal.project-root" \
 				--filter "label=io.docksal.virtual-host" \
 				--format '{{ .ID }}:{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.virtual-host"}}')
 
-			# Look for a matching label among all webs
-			for web in "$webs"; do
+			# Look for a matching label among all projects
+			while read _project; do
 				# Read variables
-				IFS=':' read web_container_id web_project_name web_project_vhost <<< "$web";
-				# Split web_project_vhost
-				IFS=',' read -a web_project_vhost_arr <<< "$web_project_vhost"
-				for i in "${web_project_vhost_arr[@]}"; do
+				IFS=':' read _container_id _project_name _project_vhosts <<< "$_project";
+				# Split _project_vhosts
+				# Cannot get "while IFS=',' read" work together, so using and array and 'for' instead here.
+				IFS=',' read -a _project_vhost_arr <<< "$_project_vhosts"
+				for i in "${_project_vhost_arr[@]}"; do
 					# Turn domain name into a regular expression (e.g. *.example.com => .*\.example\.com)
 					i_reg=$(echo "$i" | sed "s/\./\\\\./g" | sed "s/\*/\.\*/g")
 					# Match vhost using the regular expression we created
-					echo "$vhost" | grep "^$i_reg$" >/dev/null
-					# Store match and break
-					[[ $? -eq 0 ]] && project_name="$web_project_name" && container_id="$web_container_id" && break
+					if (echo "$vhost" | grep "^$i_reg$" >/dev/null); then
+						project_name="$_project_name"
+						container_id="$_container_id"
+						# Break two levels up if match was found
+						break 2
+					fi
 				done
-				# Break if match was found
-				if [[ "$project_name" != "" ]] || [[ "$container_id" != "" ]]; then
-					break
-				fi
-			done
+			done <<< "$all_projects"
 		fi
 	fi
 
@@ -94,7 +95,7 @@ start ()
 				&& return 0
 		fi
 	else
-		# Connecting/re-connecting vhost-ptoxy to the project network
+		# Connecting/re-connecting vhost-proxy to the project network
 		local network="${project_name}_default"
 		# Making sure the network exists
 		docker network create "$network" >/dev/null 2>&1
@@ -131,7 +132,7 @@ stop ()
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}')
 
-	for running_project in "$running_projects"; do
+	while read running_project; do
 		# Read variables
 		IFS=':' read container_id project_name <<< "$running_project";
 		# Skip containers with empty values
@@ -147,7 +148,7 @@ stop ()
 		local network="${project_name}_default"
 		docker network disconnect "$network" docksal-vhost-proxy
 		docker network rm "$network"
-	done
+	done <<< "$running_projects"
 }
 
 # (Re)connect proxy to project networks.
@@ -159,7 +160,8 @@ networks ()
 		--filter "label=io.docksal.project-root" \
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{.Label "com.docker.compose.project"}}')
-	for project_name in "$project_names"; do
+
+	while read project_name; do
 		local network="${project_name}_default"
 		# Making sure the network exists
 		docker network create "$network" >/dev/null 2>&1
@@ -168,7 +170,7 @@ networks ()
 		if [[ $? == 0 ]]; then
 			log "Connected proxy to network: ${network}."
 		fi
-	done
+	done <<< "$project_names"
 }
 
 cron ()
@@ -193,7 +195,7 @@ cleanup ()
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}:{{ .Label "io.docksal.permanent" }}')
 
-	for project in "$projects"; do
+	while read project; do
 		IFS=':' read container_id project_name project_root permanent <<< "$project"
 		# Skip permenent projects
 		[[ "$permanent" == "true" ]] && continue
@@ -211,8 +213,11 @@ cleanup ()
 		# Remove project directory
 		# This assumes all projects are kept in the same directory, which is mounted at /projects
 		local mounted_project_root="/projects/$(basename ${project_root})"
-		[[ -d "$mounted_project_root" ]] && rm -rf "$mounted_project_root"
-	done
+		if [[ -d "$mounted_project_root" ]]; then
+			log "Removing directory: $mounted_project_root..."
+			rm -rf "$mounted_project_root"
+		fi
+	done <<< "$projects"
 
 	echo "Removing dangling images..."
 	docker image prune -f
@@ -269,9 +274,8 @@ stats ()
 	local sum_permanent=0
 	local sum_active=0
 	local sum_dangling=0
-	
-	IFS=$'\n';  # Split projects by newline only (otherwise spaces in the output also trigger a split)
-	for project in "$projects"; do
+
+	while read project; do
 		IFS=':' read container_id project_name created status permanent <<< "$project"
 		
 		let "sum_total += 1"
@@ -305,8 +309,7 @@ stats ()
 		fi
 		
 		log "Project: ${project_name} | Created: ${created} | Status: ${status} | Running: ${running} | Active: ${active} | Permanent: ${permanent} | Dangling: ${dangling}"
-	done
-	unset IFS
+	done <<< "$projects"
 
 	# Aggregated stats
 	log "[summary] Total: ${sum_total} | Running: ${sum_running} | Active: ${sum_active} | Permanent: ${sum_permanent} | Dangling: ${sum_dangling}"

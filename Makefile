@@ -16,8 +16,11 @@ test:
 push:
 	fin docker push $(REPO):$(VERSION)
 
+exec:
+	fin docker exec -it $(NAME) $(CMD)
+
 shell:
-	fin docker exec -it $(NAME) bash
+	make exec -e CMD=bash
 
 start:
 	fin system reset vhost-proxy
