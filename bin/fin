@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.48.8
+FIN_VERSION=1.48.9
 
 # Console colors
 red='\033[0;91m'
@@ -132,6 +132,7 @@ DOCKSAL_VHOST_PROXY_STATS_LOG="${DOCKSAL_VHOST_PROXY_STATS_LOG}"
 DOCKSAL_VHOST_PROXY_DEBUG_LOG="${DOCKSAL_VHOST_PROXY_DEBUG_LOG}"
 PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT}"
 PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT}"
+PROJECTS_ROOT="${PROJECTS_ROOT}"
 
 DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
@@ -2795,12 +2796,14 @@ install_proxy_service ()
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
 
-	# Create a bind mount volume to the projects directory if defined. If not - create an empty volume.
-	local volume_options=""
-	[[ "$PROJECTS_ROOT" != "" ]] && [[ -d "$PROJECTS_ROOT" ]] && \
-		# Don't use quotes with the device option or the bind mount will not work
-		volume_options="--opt type=none --opt device=$PROJECTS_ROOT --opt o=bind"
-	docker volume create --name docksal_projects $volume_options >/dev/null 2>&1
+	# Create a bind mount volume to the projects directory if defined and exists. Otherwise, create an empty volume.
+	if [[ -d "$PROJECTS_ROOT" ]]; then
+		docker volume create --name docksal_projects --opt type=none --opt device=${PROJECTS_ROOT} --opt o=bind >/dev/null 2>&1
+	else
+		docker volume create --name docksal_projects >/dev/null 2>&1
+		# Warn if PROJECTS_ROOT was set but is not a valid directory
+		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
+	fi
 
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
 	# and are inactive unless configured.
