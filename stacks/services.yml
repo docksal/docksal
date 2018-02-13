@@ -61,6 +61,8 @@ services:
   varnish:
     hostname: varnish
     image: ${VARNISH_IMAGE:-docksal/varnish:1.0-varnish4}
+    volumes:
+      - project_root:/var/www:ro,nocopy  # Project root volume
     labels:
       - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
     environment:
@@ -82,6 +84,8 @@ services:
   solr:
     hostname: solr
     image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}
+    volumes:
+      - project_root:/var/www:ro,nocopy  # Project root volume
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
