@@ -60,7 +60,7 @@ services:
   # Varnish
   varnish:
     hostname: varnish
-    image: ${VARNISH_IMAGE:-docksal/varnish:1.0-varnish4}
+    image: ${VARNISH_IMAGE:-docksal/varnish:1.1-varnish5}
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume
     labels:
