@@ -1,3 +1,5 @@
+# Using Drupal Console
+
 Drupal Console is a tool to generate boilerplate code, interact with and debug Drupal.
 
 Please refer to the official [Drupal Console docs](https://docs.drupalconsole.com/en/index.html) for usage details.

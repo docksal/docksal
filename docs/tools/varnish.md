@@ -1,8 +1,6 @@
-# Enabling Varnish support
+# Enabling Varnish service
 
-Add the `varnish` service under the `services` section in `.docksal/docksal.yml`.
-
-If using the default stack:
+Add the `varnish` service under the `services` section in `.docksal/docksal.yml`:
 
 ```yaml
   # Varnish
@@ -12,24 +10,6 @@ If using the default stack:
       service: varnish
     depends_on:
       - web
-```
-
-If using a custom stack:
-
-```yaml
-  # Varnish
-  varnish:
-    hostname: varnish
-    image: ${VARNISH_IMAGE:-docksal/varnish:1.1-varnish5}
-    volumes:
-      - project_root:/var/www:ro,nocopy
-    labels:
-      - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
-    environment:
-      - VARNISH_BACKEND_HOST=web
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
 ```
 
 Apply new configuration with `fin project start` (`fin p start`).

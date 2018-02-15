@@ -1,4 +1,5 @@
-# Sass with compass
+# Using Sass with Compass
+
 Cli container already contains `ruby`, `bundler`.
 
 ## Create Gemfile in theme folder

@@ -1,3 +1,5 @@
+# Using Drush
+
 Drush is a command line shell and Unix scripting interface for Drupal.
 
 Please refer to the official [Drush docs](http://www.drush.org/en/master/) for usage details.
