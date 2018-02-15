@@ -85,7 +85,14 @@ services:
     hostname: solr
     image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume
+      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    labels:
+      - io.docksal.virtual-host=solr.${VIRTUAL_HOST}
+      - io.docksal.virtual-port=8983
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}

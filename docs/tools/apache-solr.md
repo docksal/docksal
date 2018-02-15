@@ -1,18 +1,20 @@
 # Enabling Apache Solr service
 
-
 ## Docksal configuration
 
-Add the Apache Solr service to `.docksal/docksal.yml` under `services`.
+Add the `solr` service under the `services` section in `.docksal/docksal.yml`:
 
 ```yaml
-# Solr
-solr:
-  hostname: solr
-  image: docksal/solr:1.0-solr4
+  # Solr
+  solr:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: solr
 ```
 
 Apply new configuration with `fin project start` (`fin p start`).
+
+Use `http://sorl.<VIRTUAL_HOST>/solr` to access the Sorl web UI.
 
 
 ## Drupal configuration
