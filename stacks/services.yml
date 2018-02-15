@@ -93,6 +93,15 @@ services:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
 
+  # MailHog
+  mail:
+    hostname: mail
+    image: ${MAILHOG_IMAGE:-mailhog/mailhog}
+    volumes:
+      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    labels:
+      - io.docksal.virtual-host=mail.${VIRTUAL_HOST}
+      - io.docksal.virtual-port=8025
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
