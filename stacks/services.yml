@@ -10,7 +10,7 @@ services:
     hostname: web
     image: ${WEB_IMAGE:-docksal/web:2.1-apache2.4}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume
+      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
       - io.docksal.project-root=${PROJECT_ROOT}
@@ -29,7 +29,7 @@ services:
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume
+      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-user}
@@ -62,7 +62,7 @@ services:
     hostname: varnish
     image: ${VARNISH_IMAGE:-docksal/varnish:1.1-varnish5}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume
+      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
     environment:
