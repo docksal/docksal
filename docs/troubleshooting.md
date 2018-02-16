@@ -1,5 +1,9 @@
-# Troubleshooting. Some common problems using Docksal and ways to resolve them.
+# Troubleshooting
 
+Some common problems using Docksal and ways to resolve them.
+
+
+<a name="issue-01"></a>
 ## Issue 1. Failed creating Docksal virtual machine on Windows
 
 ```
@@ -24,6 +28,8 @@ Sometimes Virtual Box fails to initialize it's network interfaces properly.
 1. Reply yes to remove malfunctioned virtual machine.
 2. Reboot your local host and try again.
 
+
+<a name="issue-02"></a>
 ## Issue 2. Error checking TLS connection (vm is not accessible)
 
 ```
@@ -53,7 +59,8 @@ fin vm start
 ```
 
 
-## Issue 3. Lack of memory
+<a name="issue-03"></a>
+## Issue 3. Out-of-memory issues
 
 Composer on Drupal 8 projects might spawn this error:
 
@@ -77,6 +84,8 @@ stacks/projects at the same time.
 fin vm ram 4096
 ```
 
+
+<a name="issue-04"></a>
 ## Issue 4. Conflicting NFS exports (files are not accessible)
 
 ```
@@ -95,6 +104,8 @@ With NFS a single directory can only be exported once. It can not be exported se
 
 Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin vm start` again.
 
+
+<a name="issue-05"></a>
 ## Issue 5. Conflicting ports
 
 ```
@@ -114,6 +125,8 @@ This prevents Docksal from running properly.
 2. Reconfigure Apache to listen on different ports (e.g. `8080` and `4433`) or
 different/specific IPs (e.g. `127.0.0.1:80` and `127.0.0.1:443`).
 
+
+<a name="issue-06"></a>
 ## Issue 6. Config permissions issue (vm does not start)
 
 ```
@@ -132,6 +145,8 @@ sudo fin vm remove
 fin vm start
 ```
 
+
+<a name="issue-07"></a>
 ## Issue 7. Multiple host-only adapters (vm is not created)
 
 ```
@@ -145,6 +160,8 @@ Error with pre-create check: "VirtualBox is configured with multiple host-only a
 3. Click "Host-only Networks" tab
 4. Click through adapters in list and delete the ones with the `192.168.64.1` IP
 
+
+<a name="issue-08"></a>
 ## Issue 8. DNS server misbehaving
 
 ```
@@ -169,6 +186,8 @@ macOS DNS settings example:
 
 ![macOS DNS settings](_img/troubleshooting-network-dns.png)
 
+
+<a name="issue-09"></a>
 ## Issue 9. FastCGI: incomplete headers
 
 ```
@@ -183,10 +202,14 @@ Errors like this appear when your Apache is misconfigured. Most often it happens
 
 Check `docksal.yml` and `.htaccess` files for configuration errors, fix them and run `fin project start` (`fin start` for short).
 
+
+<a name="issue-10"></a>
 ## Issue 10. SMB share creation, share mounting and related issues on Windows
 
 Please see a separate [troubleshooting document on share creation, share mounting and related issues](troubleshooting-smb.md).
 
+
+<a name="issue-11"></a>
 ## Issue 11. Common MySQL related issues
 
 ```
@@ -222,3 +245,19 @@ to run the project.
 ### How to resolve
 
 See Issue 3. Lack of memory for resolution.
+
+<a name="issue-12"></a>
+## Issue 12. VirtualBox installation fails on macOS High Sierra 10.13
+
+New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced 
+around third-party kernel extensions.
+
+### How to resolve
+
+- Open System Preferences > Security & Privacy and click the `Allow` button for `Oracle America, Inc.`
+- Restart the VirtualBox installation manually
+
+In certain cases you may have to reboot your Mac and then reinstall VirtualBox manually.
+
+[This video](https://www.youtube.com/watch?v=0vmQOYRCdZM) covers the manual steps necessary to install VirtualBox 
+successfully. More details [here](https://github.com/docksal/docksal/issues/417).
