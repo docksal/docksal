@@ -66,6 +66,18 @@ teardown() {
 	unset output
 }
 
+@test "Proxy uses HTTP/2 for HTTPS connections" {
+	[[ ${SKIP} == 1 ]] && skip
+
+	run curl -kI https://project1.docksal
+	[[ "$output" =~ "HTTP/2 200" ]]
+	unset output
+
+	run curl -kI https://project2.docksal
+	[[ "$output" =~ "HTTP/2 200" ]]
+	unset output
+}
+
 @test "Proxy stops project containers after \"${PROJECT_INACTIVITY_TIMEOUT}\" of inactivity" {
 	[[ ${SKIP} == 1 ]] && skip
 
