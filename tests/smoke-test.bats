@@ -49,7 +49,7 @@ teardown() {
 @test "Proxy returns 404 for a non-existing virtual-host" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	run curl -I http://test.docksal
+	run curl -I http://nonsense.docksal
 	[[ "$output" =~ "HTTP/1.1 404 Not Found" ]]
 	unset output
 }
