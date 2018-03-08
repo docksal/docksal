@@ -27,6 +27,7 @@ before_script:
   - docker pull badouralix/curl-http2
   - .travis/before_script.sh
   - ls -la "$PROJECTS_ROOT"
+  - fin pl -a
 
 script:
   - make

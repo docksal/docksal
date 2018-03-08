@@ -41,18 +41,22 @@ teardown() {
 	run make logs
 	echo "$output" | grep "[proxyctl] [cron]"
 	unset output
+
+	# Kill crontab once this test completes, so that cron does not interfere with the rest of the tests
+	make exec -e CMD="crontab -r"
 }
 
 @test "Test projects are up and running" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	# TODO: figure out why fin aliases do not work on Travis
 	fin @project1 restart
 	fin @project2 restart
+	fin @project3 restart
 
 	run fin pl
 	[[ "$output" =~ "project1" ]]
 	[[ "$output" =~ "project2" ]]
+	[[ "$output" =~ "project3" ]]
 }
 
 @test "Proxy returns 404 for a non-existing virtual-host" {
@@ -157,17 +161,15 @@ teardown() {
 	unset output
 }
 
-@test "Proxy cleans up projects after \"${PROJECT_DANGLING_TIMEOUT}\" of inactivity" {
+@test "Proxy cleans up non-permanent projects after \"${PROJECT_DANGLING_TIMEOUT}\" of inactivity" {
 	[[ ${SKIP} == 1 ]] && skip
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] &&
 		skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
 
-	# Make sure projects are stopped
-	# Note: This is necessary to avoid log entries resulting from the cron job stopping projects, which would reset
-	# the log timing, thus container may be considered active/not-dangling
-	fin @project1 stop
-	fin @project2 stop
+	# Restart projects to reset timing
+	fin @project1 restart
+	fin @project2 restart
 
 	# Wait
 	date
@@ -189,13 +191,6 @@ teardown() {
 	# Check project1 folder was removed
 	fin docker exec docksal-vhost-proxy ls -la /projects
 	echo "$output" | grep -v project1
-}
-
-@test "Proxy does not clean up permanent projects" {
-	[[ ${SKIP} == 1 ]] && skip
-
-	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] &&
-		skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
 
 	# Check that project2 still exist
 	run fin pl -a
@@ -204,5 +199,24 @@ teardown() {
 	# Check that project2 folder was NOT removed
 	run fin docker exec docksal-vhost-proxy ls -la /projects
 	echo "$output" | grep project2
+	unset output
+}
+
+@test "Proxy can route request to a non-default port (project)" {
+	[[ ${SKIP} == 1 ]] && skip
+
+	# Restart projects to reset timing
+	fin @project3 restart
+
+	run curl http://example-nodejs.docksal
+	[[ "$output" =~ "Hello World!" ]]
+	unset output
+}
+
+@test "Proxy can route request to a non-default port (standalone container)" {
+	[[ ${SKIP} == 1 ]] && skip
+
+	run curl -k http://nodejs.docksal
+	[[ "$output" =~ "Hello World!" ]]
 	unset output
 }
