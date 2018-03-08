@@ -18,7 +18,6 @@ Start the proxy container:
 ```
 docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
     -p "${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
-    -e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
     -v /var/run/docker.sock:/var/run/docker.sock \
     docksal/vhost-proxy
 ```
@@ -32,13 +31,12 @@ This option is inactive by default (set to `0`).
 
 `PROJECT_DANGLING_TIMEOUT`
 
-!!!warning "WARNING"
-    This is a destructive option. Use at your own risk!
+**WARNING: This is a destructive option. Use at your own risk!**
 
 Defines the timeout (e.g. 168h) of inactivity after which the project stack and code base will be entirely wiped out from the host.  
 This option is inactive by default (set to `0`).
 
-For the cleanup job to work, proxy needs access to the directory, where project code bases are located on the host.  
+For the cleanup job to work, proxy needs access to the projects directory on the host.  
 Create a Docker bind volume pointing to the directory where projects are stored:
 
 ```
@@ -46,13 +44,16 @@ docker volume create --name docksal_projects --opt type=none --opt device=$PROJE
 
 ```
 
-Start the proxy container with two additional options (in the middle): 
+then pass it using `-v docksal_projects:/projects` in `docker run` command.
+
+Example (extra configuration in the middle): 
 
 ```
 docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
     -p "${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
     -e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 
+    -e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
     -e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
     -v docksal_projects:/projects \
     
@@ -60,10 +61,12 @@ docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --res
     docksal/vhost-proxy
 ```
 
-`PROXY_DEBUG`
+## Logging and debugging
 
-Set to `1` to enable debug logging. Check logs with `docker logs docksal-vhost-proxy`.
+The following container environment variables can be used to enabled various logging options (disabled by default). 
 
-`PROXY_ACCESS_LOG`
+`ACCESS_LOG` - Set to `1` to enable access logging.
+`DEBUG_LOG` - Set to `1` to enable debug logging.
+`STATS_LOG` - Set to `1` to enable project stats logging.
 
-Set to `1` to enable access log. Check logs with `docker logs docksal-vhost-proxy`.
+Check logs with `docker logs docksal-vhost-proxy`.
