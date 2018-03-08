@@ -33,6 +33,8 @@ logs:
 
 clean:
 	fin docker rm -f $(NAME)
+	rm -rf projects
+	fin cleanup
 
 debug: build start
 	fin docker logs -f $(NAME)
