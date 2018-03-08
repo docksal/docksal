@@ -66,14 +66,21 @@ teardown() {
 	unset output
 }
 
+# We have to use a different version of curl here built with http2 support
 @test "Proxy uses HTTP/2 for HTTPS connections" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	run curl -kI https://project1.docksal
+	# Non-existing project
+	run make curl -e ARGS='-kI https://nonsense.docksal'
+	[[ "$output" =~ "HTTP/2 404" ]]
+	unset output
+
+	# Existing projects
+	run make curl -e ARGS='-kI https://project1.docksal'
 	[[ "$output" =~ "HTTP/2 200" ]]
 	unset output
 
-	run curl -kI https://project2.docksal
+	run make curl -e ARGS='-kI https://project2.docksal'
 	[[ "$output" =~ "HTTP/2 200" ]]
 	unset output
 }

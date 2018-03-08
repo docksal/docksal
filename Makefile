@@ -40,4 +40,9 @@ debug: build start
 release: build
 	make push -e VERSION=$(VERSION)
 
+# Curl command with http2 support via a docker container
+# Usage: make curl -e ARGS='-kI https://docksal.io'
+curl:
+	docker run -t --rm badouralix/curl-http2 $(ARGS)
+
 default: build

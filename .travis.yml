@@ -23,6 +23,8 @@ install:
   - fin sysinfo
 
 before_script:
+  # Pull curl image with http2 support (used in tests)
+  - docker pull badouralix/curl-http2
   - .travis/before_script.sh
   - ls -la "$PROJECTS_ROOT"
 
