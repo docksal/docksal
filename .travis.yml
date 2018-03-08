@@ -31,8 +31,8 @@ before_script:
 script:
   - make
   - make start
-  - make CMD="env" exec  # Views env variables picked up by proxy
-  - make CMD="ls -la /projects" exec  # View the contents of the /projects folder
+  - make exec -e CMD="env"  # Views env variables picked up by proxy
+  - make exec -e CMD="ls -la /projects" # View the contents of the /projects folder
   - make test
 
 after_failure:

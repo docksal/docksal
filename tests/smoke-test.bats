@@ -24,24 +24,33 @@ teardown() {
 	unset output
 }
 
-@test "Test projects are up and running" {
+@test "Projects directory is mounted" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	# TODO: figure out why fin aliases do not work on Travis
-	#fin @project1 start
-	#fin @project2 start
-	cd projects/project1 && fin start && cd ..
-	cd projects/project2 && fin start && cd ..
-
-	run fin pl
+	run fin docker exec docksal-vhost-proxy ls -la /projects
 	[[ "$output" =~ "project1" ]]
 	[[ "$output" =~ "project2" ]]
 }
 
-@test "Projects directory mounted correctly" {
+@test "Cron is working" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	run fin docker exec docksal-vhost-proxy ls -la /projects
+	# 'proxyctl cron' should be invoked every minute
+	sleep 60s
+
+	run make logs
+	echo "$output" | grep "[proxyctl] [cron]"
+	unset output
+}
+
+@test "Test projects are up and running" {
+	[[ ${SKIP} == 1 ]] && skip
+
+	# TODO: figure out why fin aliases do not work on Travis
+	fin @project1 restart
+	fin @project2 restart
+
+	run fin pl
 	[[ "$output" =~ "project1" ]]
 	[[ "$output" =~ "project2" ]]
 }
@@ -91,8 +100,18 @@ teardown() {
 	[[ "$PROJECT_INACTIVITY_TIMEOUT" == "0" ]] &&
 		skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
 
-	sleep ${PROJECT_INACTIVITY_TIMEOUT} && sleep 10s
+	# Restart projects to reset timing
+	fin @project1 restart
+	fin @project2 restart
+
+	# Wait
+	date
+	sleep ${PROJECT_INACTIVITY_TIMEOUT}
+	date
+
+	fin docker exec docksal-vhost-proxy proxyctl stats
 	# Trigger proxyctl stop manually to skip the cron job wait.
+	# Note: cron job may still have already happened here and stopped the inactive projects
 	fin docker exec docksal-vhost-proxy proxyctl stop
 
 	# Check projects were stopped, but not removed
@@ -112,15 +131,11 @@ teardown() {
 	[[ ${SKIP} == 1 ]] && skip
 
 	# Make sure the project is stopped
-	#fin @project1 stop
-	cd projects/project1 && fin stop && cd ..
+	fin @project1 stop
 
 	run curl http://project1.docksal
 	[[ "$output" =~ "Waking up the daemons..." ]]
 	unset output
-
-	# Wait for project start
-	sleep 15
 
 	run curl http://project1.docksal
 	[[ "$output" =~ "Project 1" ]]
@@ -131,15 +146,11 @@ teardown() {
 	[[ ${SKIP} == 1 ]] && skip
 
 	# Make sure the project is stopped
-	#fin @project1 stop
-	cd projects/project1 && fin stop && cd ..
+	fin @project1 stop
 
 	run curl -k https://project1.docksal
 	[[ "$output" =~ "Waking up the daemons..." ]]
 	unset output
-
-	# Wait for project start
-	sleep 15
 
 	run curl -k https://project1.docksal
 	[[ "$output" =~ "Project 1" ]]
@@ -152,7 +163,18 @@ teardown() {
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] &&
 		skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
 
-	sleep ${PROJECT_DANGLING_TIMEOUT} && sleep 10s
+	# Make sure projects are stopped
+	# Note: This is necessary to avoid log entries resulting from the cron job stopping projects, which would reset
+	# the log timing, thus container may be considered active/not-dangling
+	fin @project1 stop
+	fin @project2 stop
+
+	# Wait
+	date
+	sleep ${PROJECT_DANGLING_TIMEOUT}
+	date
+
+	fin docker exec docksal-vhost-proxy proxyctl stats
 	# Trigger proxyctl cleanup manually to skip the cron job wait.
 	fin docker exec docksal-vhost-proxy proxyctl cleanup
 
