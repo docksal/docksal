@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.48.9
+FIN_VERSION=1.48.10
 
 # Console colors
 red='\033[0;91m'
@@ -5083,10 +5083,10 @@ if [[ "$1" == "@"* ]]; then
 		# alias not found. search project names
 		_alias_projects=$(docker ps --all \
 			--filter 'label=io.docksal.project-root' \
-			--format '{{.Label "com.docker.compose.project"}}\t{{.Label "io.docksal.project-root"}}')
-		if (echo "$_alias_projects" | grep "^$USED_ALIAS\t" >/dev/null 2>/dev/null); then
+			--format '{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.project-root"}}')
+		if (echo "$_alias_projects" | grep "^$USED_ALIAS:" >/dev/null 2>/dev/null); then
 			# project found
-			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS\t" | cut -d$'\t' -f 2)
+			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS:" | cut -d$':' -f 2)
 		else
 			# nothing was found. error out
 			echo-error "No such fin alias: @$USED_ALIAS"
