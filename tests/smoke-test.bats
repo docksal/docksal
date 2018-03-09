@@ -208,6 +208,10 @@ teardown() {
 	# Restart projects to reset timing
 	fin @project3 restart
 
+	# TODO: WTF is it stopped here?
+	fin docker exec docksal-vhost-proxy proxyctl stats
+	curl -I http://example-nodejs.docksal
+
 	run curl http://example-nodejs.docksal
 	[[ "$output" =~ "Hello World!" ]]
 	unset output
