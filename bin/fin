@@ -2672,8 +2672,10 @@ system_stop ()
 {
 	if ! is_linux && ! is_docker_native && ! is_wsl; then
 		echo-green "Stopping Docksal VM..."
+		# VM stop will perform configure_resolver off
 		vm stop
 	else
+		_stop_containers -a
 		configure_resolver off
 		echo-green "Stopping Docksal system services..."
 		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
