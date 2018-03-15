@@ -693,7 +693,7 @@ check_docker_running ()
 		if is_docker_native; then
 			echo-error "Your Docker client is unable to talk to the Docker server." \
 				"WHAT TO DO?" \
-				"Check that you Docker for Mac/Win app is running."
+				"Check that your Docker for Mac/Win app is running."
 			exit 1
 		else
 			echo-error "Your Docker client is unable to talk to the Docker server." \
