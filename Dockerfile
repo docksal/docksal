@@ -9,8 +9,8 @@ RUN apk add --no-cache \
 	nginx-lua \
 	&& rm -rf /var/cache/apk/*
 
-ARG DOCKER_VERSION=17.06.0-ce
-ARG DOCKER_GEN_VERSION=0.7.3
+ARG DOCKER_VERSION=17.09.1-ce
+ARG DOCKER_GEN_VERSION=0.7.4
 ARG GOTPL_VERSION=0.1.5
 
 # Install docker client binary (if not mounting binary from host)
