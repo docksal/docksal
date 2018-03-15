@@ -1,209 +1,321 @@
 #!/usr/bin/env bash
 
+### Configuration variables ###
+
+DEBUG_LOG=${DEBUG_LOG:-0}
+STATS_LOG=${STATS_LOG:-0}
+
+### Helper functions ###
+
+# Checks if there was any recent container activity (entries in the container logs)
+# `docker log` does honor stdout vs stderr outputs. We route everything to stdout to do the comparison (2>&1)
+is_container_active ()
+{
+	container_id="$1"
+	[[ "$(docker logs --tail 1 --since "$PROJECT_INACTIVITY_TIMEOUT" "$container_id" 2>&1)" != "" ]]
+}
+is_container_dangling ()
+{
+	container_id="$1"
+	[[ "$(docker logs --tail 1 --since "$PROJECT_DANGLING_TIMEOUT" "$container_id" 2>&1)" == "" ]]
+}
+
+### Functions ###
+
 # Start containers for a project identified with a virtual host
 # @param $1 virtual host name
-_start ()
+start ()
 {
+	# Set logging prefix for the function and trigger a log entry
+	export LOG_PREFIX='[start]' && log
+	
 	local vhost="$1"
-	[[ "$vhost" == "" ]] && echo "ERROR: Empty virtual host." && return 1
+	[[ "$vhost" == "" ]] && log "ERROR: Empty virtual host." && return 1
 
-	echo "Stoping docker-gen..."
-	/usr/bin/supervisorctl stop docker-gen
+	log "Stoping docker-gen..."
+	supervisorctl stop docker-gen
 
-	# Match vhost to a web container (exact match only)
+	# Match vhost to the primary project container (exact match only)
 	local project_name
 	local container_id
-	project_name=$(/usr/local/bin/docker ps -a \
+	
+	# Filter: primary containers with a defined virtual host
+	project_name=$(docker ps -a \
+		--filter "label=io.docksal.project-root" \
 		--filter "label=io.docksal.virtual-host=$vhost" \
-		--filter "label=com.docker.compose.project" \
 		--format '{{.Label "com.docker.compose.project"}}')
 
 	# If exact match was not found, then we have multiple domains/wildcards (e.g. example.com,*.example.com,example2.com)
 	# More complex processing goes below.
 	if [[ "$project_name" == "" ]]; then
-		container_id=$(/usr/local/bin/docker ps -a \
+		container_id=$(docker ps -a \
 			--filter "label=io.docksal.virtual-host=$vhost" \
 			--format '{{.ID }}')
 		if [[ "$container_id" == "" ]]; then
-			# Get a list of all (running and stopped) web containers and their virtual host label values
-			local webs=$(/usr/local/bin/docker ps -a \
+			# Get a list of all (running and stopped) projects and their virtual host label values
+			local all_projects=$(docker ps -a \
+				--filter "label=io.docksal.project-root" \
 				--filter "label=io.docksal.virtual-host" \
 				--format '{{ .ID }}:{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.virtual-host"}}')
 
-			# Look for a matching label among all webs
-			for web in $webs; do
+			# Look for a matching label among all projects
+			while read _project; do
 				# Read variables
-				IFS=':' read web_container_id web_project_name web_project_vhost <<< "$web";
-				# Split web_project_vhost
-				IFS=',' read -a web_project_vhost_arr <<< "$web_project_vhost"
-				for i in "${web_project_vhost_arr[@]}"; do
+				IFS=':' read _container_id _project_name _project_vhosts <<< "$_project";
+				# Split _project_vhosts
+				# Cannot get "while IFS=',' read" work together, so using and array and 'for' instead here.
+				IFS=',' read -a _project_vhost_arr <<< "$_project_vhosts"
+				for i in "${_project_vhost_arr[@]}"; do
 					# Turn domain name into a regular expression (e.g. *.example.com => .*\.example\.com)
-					i_reg=$(echo $i | sed "s/\./\\\\./g" | sed "s/\*/\.\*/g")
+					i_reg=$(echo "$i" | sed "s/\./\\\\./g" | sed "s/\*/\.\*/g")
 					# Match vhost using the regular expression we created
-					echo "$vhost" | grep "^$i_reg$" >/dev/null
-					# Store match and break
-					[[ $? -eq 0 ]] && project_name="$web_project_name" && container_id="$web_container_id" && break
+					if (echo "$vhost" | grep "^$i_reg$" >/dev/null); then
+						project_name="$_project_name"
+						container_id="$_container_id"
+						# Break two levels up if match was found
+						break 2
+					fi
 				done
-				# Break if match was found
-				if [[ "$project_name" != "" ]] || [[ "$container_id" != "" ]]; then
-					break
-				fi
-			done
+			done <<< "$all_projects"
 		fi
 	fi
 
 	# No match if project_name is empty here.
 	if [[ "$project_name" == "" ]]; then
 		if [[ "$container_id" == "" ]]; then
-			echo "ERROR: No matching projects or containers found for virtual host ${vhost}." \
-				&& echo "Starting docker-gen..." \
-				&& /usr/bin/supervisorctl start docker-gen \
+			log "ERROR: No matching projects or containers found for virtual host ${vhost}." \
+				&& log "Starting docker-gen..." \
+				&& supervisorctl start docker-gen \
 				&& return 1
 		else
-			echo "Starting single container $container_id..." \
-				&& /usr/local/bin/docker start "$container_id" \
-				&& echo "Starting docker-gen..." \
-				&& /usr/bin/supervisorctl start docker-gen \
+			log "Starting single container $container_id..." \
+				&& docker start "$container_id" \
+				&& log "Starting docker-gen..." \
+				&& supervisorctl start docker-gen \
 				&& return 0
 		fi
 	else
-
-		# Connecting/re-connecting vhost-ptoxy to the project network
+		# Connecting/re-connecting vhost-proxy to the project network
 		local network="${project_name}_default"
 		# Making sure the network exists
-		/usr/local/bin/docker network create "$network" >/dev/null 2>&1
+		docker network create "$network" >/dev/null 2>&1
 		# Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
-		/usr/local/bin/docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
+		docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
 		if [[ $? == 0 ]]; then
-			echo "Connected proxy to network: ${network}."
+			log "Connected proxy to network: ${network}."
 		fi
 
-		echo "Starting containers for $project_name..."
+		log "Starting containers for $project_name..."
 		# Dirty hack to avoid using docker-compose and still be able to launch containers with dependencies up to 3 levels deep.
 		for i in `seq 1 3`; do
-			echo "Pass #$i..."
-			/usr/local/bin/docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs /usr/local/bin/docker start
+			log "Pass #$i..."
+			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker start
 		done
 
-		echo "Starting docker-gen..."
-		/usr/bin/supervisorctl start docker-gen
+		log "Starting docker-gen..."
+		supervisorctl start docker-gen
 	fi
 }
 
 # Stop containers for projects after a timeout set via PROJECT_INACTIVITY_TIMEOUT
-_stop ()
+stop ()
 {
+	# Set logging prefix for the function and trigger a log entry
+	export LOG_PREFIX='[stop]' && log
+
 	# Allow disabling PROJECT_INACTIVITY_TIMEOUT (0 = disabled)
 	[[ "$PROJECT_INACTIVITY_TIMEOUT" == 0 ]] && exit
 
-	# Get a list of running web containers
-	local running_webs=$(/usr/local/bin/docker ps \
-		--filter "label=com.docker.compose.service=web" \
-		--format '{{.ID}}:{{.Label "com.docker.compose.project"}}')
+	# Filter: primary containers with a defined virtual host
+	local running_projects=$(docker ps \
+		--filter "label=io.docksal.project-root" \
+		--filter "label=io.docksal.virtual-host" \
+		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}')
 
-	for running_web in $running_webs; do
+	while read running_project; do
 		# Read variables
-		IFS=':' read container_id project_name <<< "$running_web";
+		IFS=':' read container_id project_name <<< "$running_project";
 		# Skip containers with empty values
 		[[ "$project_name" == "" ]] && continue
+		# Skip active projects
+		is_container_active "$container_id" && continue
 
-		# See if there was any recent container activity (entries in the container logs)
-		# docker log does honor stdout vs stderr outputs. We route everything to stdout to do the comparison (2>&1)
-		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $PROJECT_INACTIVITY_TIMEOUT $container_id 2>&1)" != "" ]]; then
-			# Active
-			echo "Project: $project_name is active. Skipping."
-		else
-			# Not active
-			echo "Project: $project_name is NOT active. Stopping..."
-			# Stop
-			/usr/local/bin/docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs /usr/local/bin/docker stop
-			# Disconnect vhost-proxy from the project network and remove the network.
-			# See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
-			local network="${project_name}_default"
-			/usr/local/bin/docker network disconnect "$network" docksal-vhost-proxy
-			/usr/local/bin/docker network rm "$network"
-		fi
-	done
+		# Stop inactive project containers
+		log "Stopping inactive project: ${project_name}..."
+		docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker stop
+		# Disconnect vhost-proxy from the project network and remove the network.
+		# See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
+		local network="${project_name}_default"
+		docker network disconnect "$network" docksal-vhost-proxy
+		docker network rm "$network"
+	done <<< "$running_projects"
 }
 
 # (Re)connect proxy to project networks.
 # Useful when proxy has been just re-provisioned and should be re-connected to existing project networks.
-_networks ()
+networks ()
 {
-	project_names=$(/usr/local/bin/docker ps \
+	# Filter: primary containers with a defined virtual host
+	project_names=$(docker ps \
+		--filter "label=io.docksal.project-root" \
 		--filter "label=io.docksal.virtual-host" \
 		--format '{{.Label "com.docker.compose.project"}}')
-	for project_name in $project_names; do
+
+	while read project_name; do
 		local network="${project_name}_default"
 		# Making sure the network exists
-		/usr/local/bin/docker network create "$network" >/dev/null 2>&1
+		docker network create "$network" >/dev/null 2>&1
 		# Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
-		/usr/local/bin/docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
+		docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
 		if [[ $? == 0 ]]; then
-			echo "Connected proxy to network: ${network}."
+			log "Connected proxy to network: ${network}."
 		fi
-	done
+	done <<< "$project_names"
 }
 
-_cron ()
+cron ()
 {
-	_stop
+	# Set logging prefix for the function and trigger a log entry
+	export LOG_PREFIX='[cron]' && log
+
+	stop
+	stats
 }
 
 # Removed projects (containers and sources) after a timeout set via PROJECT_DANGLING_TIMEOUT.
 # Projects with the label "io.docksal.permanent=true" are considered permanent and skipped.
-_cleanup ()
+cleanup ()
 {
+	# Set logging prefix for the function and trigger a log entry
+	export LOG_PREFIX='[cleanup]' && log
+
 	# Allow disabling PROJECT_DANGLING_TIMEOUT (0 = disabled)
 	[[ "$PROJECT_DANGLING_TIMEOUT" == 0 ]] && exit
 
+	# Filter: primary containers with a defined virtual host
 	projects=$(docker ps -a \
-		--filter "label=com.docker.compose.project" \
-		--filter "label=com.docker.compose.service=web" \
 		--filter "label=io.docksal.project-root" \
+		--filter "label=io.docksal.virtual-host" \
 		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}:{{ .Label "io.docksal.permanent" }}')
 
-	for project in $projects; do
+	while read project; do
 		IFS=':' read container_id project_name project_root permanent <<< "$project"
-		if [[ "$(/usr/local/bin/docker logs --tail 1 --since $PROJECT_DANGLING_TIMEOUT $container_id)" != "" ]]; then
-			# Active
-			echo "Project: $project_name is not dangling. Skipping."
-		else
-			if [[ "$permanent" == "true" ]]; then
-				# Not active but keep alive
-				echo "Project: $project_name is dangling, but marked as permanent. Skipping."
-			else
-				# Not active
-				echo "Project: $project_name is dangling. Removing..."
-				# Stop and remove containers
-				docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -vf
-				# Disconnect vhost-proxy from the project network and remove the network.
-				# See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
-				local network="${project_name}_default"
-				docker network disconnect "$network" docksal-vhost-proxy
-				docker network rm "$network"
-				echo "Removing project directory..."
-				# This assumes all projects are kept in the same directory, which is mounted at /projects
-				local mounted_project_root="/projects/$(basename $project_root)"
-				[[ -d $mounted_project_root ]] && rm -rf $mounted_project_root
-				# Remove dangling images
-				echo "Removing dangling images..."
-				docker images -qf dangling=true | xargs docker rmi 2>/dev/null
-				# Remove dangling images
-				echo "Removing dangling volumes..."
-				docker volume ls -qf dangling=true | xargs docker volume rm 2>/dev/null
-			fi
+		# Skip permenent projects
+		[[ "$permanent" == "true" ]] && continue
+		# Skip active/not dangling projects
+		! is_container_dangling "$container_id" && continue
+
+		# Remove dangling project containers
+		log "Removing dangling project: ${project_name}..."
+		docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+		# Disconnect vhost-proxy from the project network and remove the network.
+		# See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
+		local network="${project_name}_default"
+		docker network disconnect "$network" docksal-vhost-proxy
+		docker network rm "$network"
+		# Remove project directory
+		# This assumes all projects are kept in the same directory, which is mounted at /projects
+		local mounted_project_root="/projects/$(basename ${project_root})"
+		if [[ -d "$mounted_project_root" ]]; then
+			log "Removing directory: $mounted_project_root..."
+			rm -rf "$mounted_project_root"
 		fi
-	done
+	done <<< "$projects"
+
+	echo "Removing dangling images..."
+	docker image prune -f
+	echo "Removing dangling volumes..."
+	docker volume prune -f
+	echo "Removing dangling networks..."
+	docker network prune -f
 }
 
 # Trigger nginx config reload
-_notify ()
+notify ()
 {
-	if [[ "$PROXY_DEBUG" == 1 ]]; then
-		cat /etc/nginx/conf.d/default.conf
+	# Dump vhosts config into logs in debug mode
+	if [[ "$DEBUG_LOG" != 0 ]]; then
+		echo "DEBUG: /etc/nginx/conf.d/vhosts.conf"
+		echo "--------------------------------------------------"
+		cat /etc/nginx/conf.d/vhosts.conf
+		echo "--------------------------------------------------"
 	fi
+
 	nginx -t && nginx -s reload
+}
+
+# Helper for writing log messages
+# @param $@ Log message
+log ()
+{
+	echo "$(date +"%F %H:%M:%S") [proxyctl] ${LOG_PREFIX} $@"
+}
+
+# Print stats for projects
+stats ()
+{
+	# Return if stats logging is disabled
+	[[ "$STATS_LOG" == 0 ]] && return
+
+	# Set logging prefix for the function and trigger a log entry
+	export LOG_PREFIX='[stats]' && log
+	
+	# Filter: primary containers with a defined virtual host
+	projects=$(docker ps -a \
+		--filter "label=io.docksal.project-root" \
+		--filter "label=io.docksal.virtual-host" \
+		--format '{{ .ID }}:{{ .Label "com.docker.compose.project" }}:{{ .RunningFor }}:{{ .Status }}:{{ .Label "io.docksal.permanent" }}')
+
+	# Stats
+	local runing
+	local active
+	local permanent
+	local dangling
+	# Aggregated stats
+	local sum_total=0
+	local sum_running=0
+	local sum_permanent=0
+	local sum_active=0
+	local sum_dangling=0
+
+	while read project; do
+		IFS=':' read container_id project_name created status permanent <<< "$project"
+		
+		let "sum_total += 1"
+		
+		if [[ "$status" =~ "Up" ]]; then
+			let "sum_running += 1"
+			running=1
+		else
+			running=0
+		fi
+		
+		if is_container_active "$container_id"; then
+			let "sum_active += 1"
+			active=1
+		else
+			active=0
+		fi
+
+		if [[ "$permanent" != "true" ]]; then
+			permanent=0
+		else
+			let "sum_permanent += 1"
+			permanent=1
+		fi
+		
+		if is_container_dangling "$container_id"; then
+			let "sum_dangling += 1"
+			dangling=1
+		else
+			dangling=0
+		fi
+		
+		log "Project: ${project_name} | Created: ${created} | Status: ${status} | Running: ${running} | Active: ${active} | Permanent: ${permanent} | Dangling: ${dangling}"
+	done <<< "$projects"
+
+	# Aggregated stats
+	log "[summary] Total: ${sum_total} | Running: ${sum_running} | Active: ${sum_active} | Permanent: ${sum_permanent} | Dangling: ${sum_dangling}"
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
@@ -212,23 +324,26 @@ _notify ()
 case "$1" in
 	start)
 		shift
-		_start "$@"
+		start "$@"
 		;;
 	stop)
-		_stop
+		stop
 		;;
 	cron)
-		_cron
+		cron
 		;;
 	notify)
-		_notify
+		notify
 		;;
 	networks)
-		_networks
+		networks
 		;;
 	cleanup)
-		_cleanup
+		cleanup
+		;;
+	stats)
+		stats
 		;;
 	*)
-		echo "Usage: $0 start <vhost>|stop"
+		echo "Usage: $0 start <vhost>|stop|cron|notify|networks|cleanup|stats"
 esac

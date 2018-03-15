@@ -4,7 +4,7 @@ location / {
   rewrite_by_lua_block {
 
     function dpr(message)
-      if (tonumber(os.getenv("PROXY_DEBUG")) > 0) then
+      if (tonumber(os.getenv("DEBUG_LOG")) > 0) then
         ngx.log(ngx.STDERR, "DEBUG: " .. message)
       end
     end
@@ -14,7 +14,7 @@ location / {
       hosts:set(ngx.var.host, 1)
       dpr("Locked " .. ngx.var.host)
       -- Lanch project start script
-      local exit_code = os.execute("sudo /usr/local/bin/proxyctl start \"" .. ngx.var.host .. "\"")
+      local exit_code = os.execute("PATH=/usr/local/bin:$PATH sudo proxyctl start \"" .. ngx.var.host .. "\"")
       -- If all went well, reload the page
       if (exit_code == 0) then
         ngx.header.content_type = 'text/html';

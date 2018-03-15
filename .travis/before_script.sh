@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 
-# Regular project
-git clone https://github.com/docksal/drupal7.git ../drupal7
-cwd=$(pwd) && cd ../drupal7
-fin start
-cd $cwd
+# Store build directory
+cwd=$(pwd)
 
-# Project with the "io.docksal.permanent" flag set to true
-# This project will not be automatically cleaned even after DANGLING_TIMEOUT period.
-git clone https://github.com/docksal/drupal8.git ../drupal8
-cwd=$(pwd) && cd ../drupal8
+rm -rf ${cwd}/projects
+mkdir -p ${cwd}/projects/project1
+mkdir -p ${cwd}/projects/project2
+mkdir -p ${cwd}/projects/project3
+
+# Regular project
+cd ${cwd}/projects/project1
+mkdir .docksal && mkdir docroot
+echo "Hello world: Project 1" > docroot/index.html
+fin reset -f
+
+# Permanent project
+# "io.docksal.permanent=true" (will not be automatically cleaned even after DANGLING_TIMEOUT period)
+cd ${cwd}/projects/project2
+mkdir .docksal && mkdir docroot
+echo "Hello world: Project 2" > docroot/index.html
 local_yml="
 version: '2.1'
 
@@ -19,6 +28,31 @@ services:
       - io.docksal.permanent=true
 "
 echo "$local_yml" > .docksal/docksal-local.yml
+fin reset -f
 
-fin start
-cd $cwd
+# Nodejs app project
+# "io.docksal.virtual-port=3000" (proxy forwards HTTP requests to a custom port 3000 instead of the default 80)
+cd ${cwd}/projects/project3
+git clone https://github.com/docksal/example-nodejs.git .
+# Make this project permanent too, otherwise it will be killed before tests run
+local_yml="
+version: '2.1'
+
+services:
+  cli:
+    labels:
+      - io.docksal.permanent=true
+"
+echo "$local_yml" > .docksal/docksal-local.yml
+fin reset -f
+
+# Nodejs app (standalone container)
+# Node need to make this one permanent ("io.docksal.permanent=true") since it is a standalone container and not a project
+fin docker rm -vf nodejs || true
+fin docker run -d --name=nodejs \
+	-v $(pwd):/app \
+	--label=io.docksal.virtual-host=nodejs.docksal \
+	--label=io.docksal.virtual-port=3000 \
+	--expose 3000 \
+	node:alpine \
+	node /app/index.js
