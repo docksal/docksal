@@ -23,6 +23,7 @@ teardown() {
 	fin start
 	run fin projects
 	echo "$output" | grep 'project1'
+	unset output
 }
 
 # create project name conflict
@@ -33,6 +34,7 @@ teardown() {
 	cd 'duplicate/project1'
 	run fin start
 	[ ! $status -eq 0 ]
+	unset output
 }
 
 # create VIRTUAL_HOST conflict
@@ -44,4 +46,5 @@ teardown() {
 	cd 'project2'
 	run fin start
 	[ ! $status -eq 0 ]
+	unset output
 }

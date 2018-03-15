@@ -39,22 +39,27 @@ teardown() {
 	#echo "$output" | grep "Restarting php daemon"
 
 	echo "$output" | egrep "Connected vhost-proxy to \".*_default\" network"
+	unset output
 
 	# Check that containers are running
 	run fin ps
 	echo "$output" | grep "web_1" | grep "Up"
 	echo "$output" | grep "db_1" | grep "Up"
 	echo "$output" | grep "cli_1" | grep "Up"
+	unset output
 }
 
 @test "fin init" {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin init
+	# Do not do unset output to preserve logs from this command
+	#unset output
 
 	# Check if site is available and its name is correct
 	run curl -sL http://drupal8.docksal
 	echo "$output" | grep "My Drupal 8 Site"
+	unset output
 }
 
 
@@ -65,6 +70,7 @@ teardown() {
 	echo "$output" | egrep "Stopping .*_web_1"
 	echo "$output" | egrep "Stopping .*_db_1"
 	echo "$output" | egrep "Stopping .*_cli_1"
+	unset output
 
 	# Check that containers are stopped
 	run fin ps
@@ -72,6 +78,7 @@ teardown() {
 	echo "$output" | egrep ".*_web_1 .* (Exit 0|Exit 137)"
 	echo "$output" | egrep ".*_db_1 .* (Exit 0|Exit 137)"
 	echo "$output" | egrep ".*_cli_1 .* (Exit 0|Exit 137)"
+	unset output
 	
 	# Start containers back
 	fin start
@@ -88,12 +95,14 @@ teardown() {
 	echo "$output" | egrep "Starting .*_web_1"
 	echo "$output" | egrep "Starting .*_db_1"
 	echo "$output" | egrep "Starting .*_cli_1"
+	unset output
 
 	# Check that containers are running
 	run fin ps
 	echo "$output" | grep "web_1" | grep "Up"
 	echo "$output" | grep "db_1" | grep "Up"
 	echo "$output" | grep "cli_1" | grep "Up"
+	unset output
 }
 
 @test "fin reset -f" {
@@ -115,12 +124,14 @@ teardown() {
 	echo "$output" | egrep "Creating .*_web_1"
 	echo "$output" | egrep "Creating .*_db_1"
 	echo "$output" | egrep "Creating .*_cli_1"
+	unset output
 
 	# Check that containers are running
 	run fin ps
 	echo "$output" | grep "web_1" | grep "Up"
 	echo "$output" | grep "db_1" | grep "Up"
 	echo "$output" | grep "cli_1" | grep "Up"
+	unset output
 }
 
 @test "fin exec" {
@@ -128,6 +139,7 @@ teardown() {
 	
 	run fin exec uname -a
 	[[ "$output" =~ "Linux cli" ]]
+	unset output
 	
 	# Test output in TTY vs no-TTY mode.
 	[[ "$(fin exec echo)" != "$(fin exec -T echo)" ]]
@@ -135,19 +147,23 @@ teardown() {
 	# Test the no-TTY output is a "clean" string (does not have extra control characters and can be compared)
 	run fin exec -T pwd
 	[[ "$output" == "/var/www" ]]
+	unset output
 
 	# Test that switching directories on host carries over into cli
 	cd docroot
 	run fin exec -T pwd
 	[[ "$output" == "/var/www/docroot" ]]
+	unset output
 
 	# fin exec uses the docker user
 	run fin exec -T id -un
 	[[ "$output" == "docker" ]]
+	unset output
 
 	# docker user uid/gid in cli matches the host user uid/gid
 	run fin exec -T 'echo $(id -u):$(id -g)'
 	[[ "$output" == "$(id -u):$(id -g)" ]]
+	unset output
 }
 
 @test "fin run-cli" {
@@ -162,10 +178,12 @@ teardown() {
 	# fin rc uses the docker user
 	run fin rc -T id -un
 	[[ "$output" == "docker" ]]
+	unset output
 
 	# docker user uid/gid in cli matches the host user uid/gid
 	run fin rc -T 'echo $(id -u):$(id -g)'
 	[[ "$output" == "$(id -u):$(id -g)" ]]
+	unset output
 }
 
 @test "fin rm -f" {
@@ -184,10 +202,12 @@ teardown() {
 	echo "$output" | egrep "Removing network .*_default"
 	echo "$output" | egrep "Removing volume .*_project_root"
 	echo "$output" | grep "Volume docksal_ssh_agent is external, skipping"
+	unset output
 
 	# Check that there are no containers
 	run fin ps
 	[[ "$(echo "$output" | tail -n +3)" == "" ]]
+	unset output
 }
 
 @test "fin config" {
@@ -197,6 +217,7 @@ teardown() {
 	run fin config
 	echo "$output" | egrep "VIRTUAL_HOST: drupal8.docksal"
 	echo "$output" | egrep "MYSQL_DATABASE: default"
+	unset output
 }
 
 @test "fin config local env file" {
@@ -208,6 +229,7 @@ teardown() {
 	# Check config (check if local environment variables are used in docksal.yml)
 	run fin config
 	echo "$output" | egrep "VIRTUAL_HOST: testenv.docksal"
+	unset output
 }
 
 @test "fin config local yml file" {
@@ -230,6 +252,7 @@ services:
 	echo "$output" | egrep "MYSQL_ROOT_PASSWORD: testpass"
 	echo "$output" | egrep "VIRTUAL_HOST: testenv.docksal"
 	echo "$output" | egrep "MYSQL_DATABASE: default"
+	unset output
 }
 
 @test "fin config local yml and local env files" {
@@ -252,4 +275,5 @@ services:
 	run fin config
 	echo "$output" | egrep "VIRTUAL_HOST: newvariable.docksal"
 	echo "$output" | egrep "io.docksal.virtual-host: drupal8.docksal"
+	unset output
 }

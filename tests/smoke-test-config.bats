@@ -44,6 +44,7 @@ teardown() {
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]] &&
 	[[ $output =~ "docksal.env" ]]
+	unset output
 }
 
 @test "fin config: zero configuration + stack option" {
@@ -59,6 +60,7 @@ teardown() {
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]] &&
 	[[ $output =~ "docksal.env" ]]
+	unset output
 }
 
 @test "fin config: zero configuration + stack option + docksal.yml" {
@@ -83,6 +85,7 @@ services:
 	[[ $output =~ "docksal.yml" ]] &&
 	[[ $output =~ "docksal.env" ]] && 
 	[[ $output =~ "TEST_VAR: test_val" ]]
+	unset output
 }
 
 @test "fin config: docksal.yml" {
@@ -112,6 +115,7 @@ services:
 	[[ $output =~ "docksal.yml" ]] &&
 	[[ $output =~ "docksal.env" ]] &&
 	[[ $output =~ "TEST_VAR: test_val_default" ]]
+	unset output
 }
 
 @test "fin config: docksal.yml + docksal.env" {
@@ -127,6 +131,7 @@ services:
 	[[ $output =~ "docksal.env" ]] &&
 	# Test our override is in place
 	[[ $output =~ "TEST_VAR: my_val" ]]
+	unset output
 }
 
 @test "fin config: docksal-local.yml" {
@@ -152,6 +157,7 @@ services:
 	[[ $output =~ "docksal-local.yml" ]] &&
 	[[ ! $output =~ "docksal-local.env" ]] && 
 	[[ $output =~ "TEST_VAR_LOCAL: test_val_default" ]]
+	unset output
 }
 
 @test "fin config: docksal-local.yml + docksal-local.env" {
@@ -169,6 +175,7 @@ services:
 	[[ $output =~ "docksal-local.env" ]] && 
 	# Test our override is in place
 	[[ $output =~ "TEST_VAR_LOCAL: my_val" ]]
+	unset output
 }
 
 @test "fin config generate: empty project" {
@@ -185,6 +192,7 @@ services:
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]] &&
 	[[ $output =~ "docksal.env" ]]
+	unset output
 }
 
 @test "fin config generate: existing project" {
@@ -199,4 +207,5 @@ services:
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]] &&
 	[[ $output =~ "docksal.env" ]]
+	unset output
 }
