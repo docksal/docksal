@@ -15,14 +15,50 @@ This image(s) is part of the [Docksal](http://docksal.io) image library.
 
 Start the proxy container:
 
-```
+```bash
 docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
     -p "${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
     -v /var/run/docker.sock:/var/run/docker.sock \
     docksal/vhost-proxy
 ```
 
-## Configuration
+## Container configuration 
+
+Proxy reads routing settings from container labels. The following labels are supported:
+
+`io.docksal.virtual-host`
+
+Virtual host mapping. Supports any domain (but does not handle DNS), multiple values separated by commas, wildcard 
+sub-domains.
+
+Example: `io.docksal.virtual-host=example1.com,*.example2.com`
+
+
+`io.docksal.virtual-port`
+
+Virtual port mapping. Useful when a container exposes an non-default HTTP port (other than port `80`).
+Only supports HTTP, single value.  
+
+Example: `io.docksal.virtual-port=3000`
+
+### Example
+
+Launching a nodejs app container using port `3000` and host `myapp.example.com`
+
+```bash
+docker run -d --name=nodejs \
+	-v $(pwd):/app \
+	--label=io.docksal.virtual-host=myapp.example.com \
+	--label=io.docksal.virtual-port=3000 \
+	--expose 3000 \
+	node:alpine \
+	node /app/index.js
+``` 
+
+## Advanced proxy configuration
+
+These advanced settings can be used in CI sandbox environments and help keep the resource usage down by stopping 
+Docksal project containers after a period of inactivity. Projects are automatically restarting upon a new HTTP request.
 
 `PROJECT_INACTIVITY_TIMEOUT`
 
@@ -48,7 +84,7 @@ then pass it using `-v docksal_projects:/projects` in `docker run` command.
 
 Example (extra configuration in the middle): 
 
-```
+```bash
 docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always --privileged --userns=host \
     -p "${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
     -e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
