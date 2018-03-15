@@ -2399,13 +2399,6 @@ up ()
 	# See https://github.com/docksal/docksal/issues/265
 	is_mac && find . -type d > /dev/null 2>&1
 
-	# Warn about php.ini deprecation
-	if [[ "$CLI_IMAGE" =~ "docksal/cli:2." ]] && [[ -f "$PROJECT_ROOT/.docksal/etc/php/php.ini" ]]; then
-		echo-alert "Usage of php.ini with cli:2.x images is deprecated" \
-			"Use php-fpm.conf instead" \
-			"Example: https://github.com/docksal/service-cli/blob/develop/tests/.docksal/etc/php/php-fpm.conf"
-	fi
-
 	_start_containers
 	unison_sync_wait
 	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
