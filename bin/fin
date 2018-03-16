@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.49.0
+FIN_VERSION=1.50.0
 
 # Console colors
 red='\033[0;91m'
@@ -1523,16 +1523,22 @@ show_help_alias ()
 show_help_share ()
 {
 	echo-green "Share project to the internet via ngrok"
-	printh "fin share" "" "yellow"
+	printh "fin share [params]" "" "yellow"
 	echo
 	echo-green "Purpose:"
-	echo "	In certain cases you may need to share or expose you local web server on the internet."
-	echo "	E.g. share access with a teammate or customer to demonstrate the work or discuss the progress."
-	echo "	ngrok creates a tunnel from the public internet to a port on your local machine even if you are behind NAT."
+	printh "In certain cases you may need to share or expose you local web server on the internet."
+	printh "E.g. share access with a teammate or customer to demonstrate the work or discuss the progress."
+	printh "ngrok creates a tunnel from the public internet to a port on your local machine even if you are behind NAT."
+	echo
+	echo-green "Params:"
+	printh "--host" "Override a hostname for ngrok to route to (default is VIRTUAL_HOST)"
 	echo
 	echo-green "Usage:"
-	echo "	You will get public web address in command line UI."
-	echo -e "	Press ${yellow}Ctrl+C${NC} to stop sharing and quit command line UI"
+	printh "You will get public web address in command line UI."
+	printh "Press Ctrl+C to stop sharing and quit command line UI"
+	echo
+	echo-green "Examples:"
+	printh "fin share --host=subdomain.mysite.docksal  -  Easy was to expose certain subdomain"
 	echo
 }
 
@@ -4217,6 +4223,7 @@ ngrok_share ()
 {
 	check_docksal_environment
 	check_winpty_found
+	eval $(parse_params "$@")
 
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 	local container_name=$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)
@@ -4238,7 +4245,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		ngrok http -host-header ${VIRTUAL_HOST} ${container_name}.${network}:80
+		ngrok http -host-header "${host:-$VIRTUAL_HOST}" ${container_name}.${network}:80
 }
 
 diagnose ()
@@ -5472,7 +5479,8 @@ case "$1" in
 		;;
 	share)
 		load_configuration
-		ngrok_share
+		shift
+		ngrok_share "$@"
 		;;
 	cleanup)
 		# no load_configuration
