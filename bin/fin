@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.50.1
+FIN_VERSION=1.50.2
 
 # Console colors
 red='\033[0;91m'
@@ -52,7 +52,7 @@ is_mac ()
 
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
-REQUIREMENTS_DOCKER='17.09.1-ce'
+REQUIREMENTS_DOCKER='17.09.0-ce'
 REQUIREMENTS_DOCKER_COMPOSE='1.19.0'
 REQUIREMENTS_DOCKER_MACHINE='0.14.0'
 REQUIREMENTS_VBOX='5.1.28'  # Remember to update the download URLs below
