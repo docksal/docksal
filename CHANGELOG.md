@@ -1,5 +1,77 @@
 # Changelog
 
+# 1.7.0 (2018-03-19)
+
+## New software versions
+
+- fin 1.50.3
+- Docker Compose 1.19.0
+- Docker Machine 1.14.0
+- System services
+  - `vhost-proxy` upgraded to [v1.2.0](https://github.com/docksal/service-vhost-proxy/releases/tag/v1.2.0)
+    - Increased proxy buffers to `256k` - fixes 500 errors for some Drupal 8 sites sending huge HTTP headers
+    - routing to a non-standard port
+    - HTTP/2 support
+- Stacks
+  - PHP stacks now use `docksal/cli:2.0-php7.1` (PHP 7.1) by default
+    - [v2 cli images](https://blog.docksal.io/new-docksal-cli-images-2-0-fd88243d79b9), built from official Docker PHP-FPM images
+  - Acquia stack now uses `1.1-varnish5` (Varnish 5) image
+
+
+## New Features
+
+- `fin system` subset of commands (#387)
+  - `fin system stop` - removes Docksal system services and stops all Docksal projects (`fin stop --all`)
+- New `default-nodb` stack - when you don't need MySQL (#427)
+- New `node` stack and [sample project](https://github.com/docksal/example-nodejs)
+- New project wizards (Grav CMS, Gatsby JS, Laravel, Hugo)
+
+## Changes and improvements
+
+- `fin cleanup` refactoring
+  - Use Docker's `prune` commands where it makes sense
+- Revised short aliases for miscellaneous commands
+  - Only leaving aliases that feel common and would make sense for most people right away
+- `fin db create` now uses `utf8mb4`/`utf8mb4_unicode_ci` charset/collation by default (#437)
+- Disallowing underscores or uppercase letters in project name (#438)
+- `fin config generate` now uses `DOCKSAL_STACK=default` (instead of a full blown `stack-default-static.yml` definition) (#433)
+- Removed static stacks (`stack-acquia-static.yml` and `stack-default-static.yml`)
+- Fix warning with `fin stop -a` when no projects are running (#450)
+- Fix the bug that `fin` was not able to use Unison volumes with Docker for Mac
+- Allow using paths relative to the project root in `docksal.yml` (#459)
+  - Use `docksal.yml` path to detect docker-compose context directory
+  - `docksal.yml` now becomes required, so we create it automatically if it does not exist
+  - `docksal.env` is also created automatically (if not present) to have both configs around for users to use
+- Fixed error when `DOCKER_RUNNING` was not always exported
+- Always use `winpty` on windows (since the experimental Docksal bash shell is deprecated) (#457)
+- Removed old `FIN_SET_UID` variables
+- Added support for vhost-proxy v1.2  logging options via global `docksal.env`
+- Mounting `project_root` in `varnish` and `solr` services  to give access to the project codebase and load custom configuration overrides (see respective docs for details)
+- Updated `solr` service
+  - Using the new `io.docksal.virtual-port` label supported introduced in `docksal/vhost-proxy:1.2`
+  - Solr can now be accessed via vhost-proxy at `http://sorl.<VIRTUAL_HOST>/solr`
+- Updated `mailhog` service
+  - Using the new `io.docksal.virtual-port` label supported introduced in `docksal/vhost-proxy:1.2`
+  - MailHog web UI can now be accessed via vhost-proxy at `http://mail.<VIRTUAL_HOST>`
+  - Removed binding to port `80` and thus the `user: root` override (necessary to bind to privileged ports). This is no longer necessary with vhost-proxy v1.2+ supporting custom port routing.
+- When `CI=true` is set in in `$HOME/.docksal/docksal.env`, vhost-proxy will be open to the world (bind to `0.0.0.0`). This should be used in CI/Sandbox environments.
+- Fixed fin aliases not working on Linux
+- Passing `VIRTUAL_HOST` variable to `cli` by default, so that it can be used in scripts that run inside `cli`
+- `DOCKER_HOST` can now be overridden via `$HOME/.docksal/docksal.env` (#452)
+- Added ability to override the default host value for `fin share` (`fin share --host=example.com`) (#363)
+- Removed old tests and updated existing ones
+
+## Documentation
+
+- Document installation issues on a fresh macOS High Sierra (#417)
+- Update [PHP settings overrides](https://docs.docksal.io/en/master/advanced/stack-settings) (changed in cli v2.0 images)
+- Updated [fin docs](https://docs.docksal.io/en/master/fin/fin)
+  - `fin system` subset of commands
+- Updated [Varnish](https://docs.docksal.io/en/master/tools/varnish), [Solr](https://docs.docksal.io/en/master/tools/apache-solr), [MailHog](https://docs.docksal.io/en/master/tools/mailhog), [Memcached](https://docs.docksal.io/en/master/tools/memcached) docs
+  - Removed advanced usage (custom stack) examples for `memcached` and `varnish` to keep instructions simpler. Using the `extends` approach in yml should be the mainstream.
+- Updated [ngrok docs](https://docs.docksal.io/en/master/tools/ngrok)
+
+
 # 1.6.1 (2017-12-12)
 
 **IMPORTANT NOTE:** if you use VirtualBox you may have to run `fin update` **twice** for this release.
