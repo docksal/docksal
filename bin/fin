@@ -2652,7 +2652,7 @@ system_reset ()
 	fi
 }
 
-# Disaplys Docksal system status
+# Displays Docksal system status
 system_status ()
 {
 	# TODO: replace with a custom view showing services, networks, vm, etc. status
