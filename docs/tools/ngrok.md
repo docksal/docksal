@@ -40,3 +40,13 @@ project_web_1_ngrok 0.0.0.0:32769->4040/tcp
 ``` 
 
 Access ngrok web UI at `http://192.168.64.100:32769`
+
+
+## Overriding default host value
+
+The default `HOST` header value (passed to the web container) can be overridden using `--host` option.   
+This can be useful to share a specific site in a Drupal multi-site project.
+
+```bash
+fin share --host=example.com
+``` 
