@@ -38,10 +38,13 @@ teardown() {
 	mkdir .docksal
 
 	run fin config env
-	[[ $status == 0 ]] && \
-	[[ $output =~ "volumes-bind.yml" ]] && \
-	[[ $output =~ "stack-default.yml" ]] && \
-	[[ ! $output =~ "docksal.yml" ]]
+	[[ $status == 0 ]] && 
+	[[ $output =~ "volumes-bind.yml" ]] &&
+	[[ $output =~ "stack-default.yml" ]] &&
+	# fin will automatically create docksal.yml and docksal.env if they do not exist
+	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.env" ]]
+	unset output
 }
 
 @test "fin config: zero configuration + stack option" {
@@ -51,11 +54,13 @@ teardown() {
 	echo 'DOCKSAL_STACK=acquia' > .docksal/docksal.env
 
 	run fin config env
-	[[ $status == 0 ]] && \
-	[[ $output =~ "volumes-bind.yml" ]] && \
-	[[ $output =~ "stack-acquia.yml" ]] && \
-	[[ ! $output =~ "docksal.yml" ]] && \
+	[[ $status == 0 ]] && 
+	[[ $output =~ "volumes-bind.yml" ]] && 
+	[[ $output =~ "stack-acquia.yml" ]] && 
+	# fin will automatically create docksal.yml and docksal.env if they do not exist
+	[[ $output =~ "docksal.yml" ]] &&
 	[[ $output =~ "docksal.env" ]]
+	unset output
 }
 
 @test "fin config: zero configuration + stack option + docksal.yml" {
@@ -73,12 +78,14 @@ services:
 	echo "$yml" > .docksal/docksal.yml
 
 	run fin config
-	[[ $status == 0 ]] && \
-	[[ $output =~ "volumes-bind.yml" ]] && \
-	[[ $output =~ "stack-acquia.yml" ]] && \
-	[[ $output =~ "docksal.yml" ]] && \
-	[[ $output =~ "docksal.env" ]] && \
+	[[ $status == 0 ]] && 
+	[[ $output =~ "volumes-bind.yml" ]] && 
+	[[ $output =~ "stack-acquia.yml" ]] && 
+	# fin will automatically create docksal.yml and docksal.env if they do not exist
+	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.env" ]] && 
 	[[ $output =~ "TEST_VAR: test_val" ]]
+	unset output
 }
 
 @test "fin config: docksal.yml" {
@@ -101,12 +108,14 @@ services:
 	echo "$yml" > .docksal/docksal.yml
 
 	run fin config
-	[[ $status == 0 ]] && \
-	[[ $output =~ "volumes-bind.yml" ]] && \
-	[[ ! $output =~ "stack-default.yml" ]] && \
-	[[ $output =~ "docksal.yml" ]] && \
-	[[ ! $output =~ "docksal.env" ]] && \
+	[[ $status == 0 ]] && 
+	[[ $output =~ "volumes-bind.yml" ]] && 
+	[[ ! $output =~ "stack-default.yml" ]] && 
+	# fin will automatically create docksal.yml and docksal.env if they do not exist
+	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.env" ]] &&
 	[[ $output =~ "TEST_VAR: test_val_default" ]]
+	unset output
 }
 
 @test "fin config: docksal.yml + docksal.env" {
@@ -116,10 +125,13 @@ services:
 	echo 'TEST_VAR=my_val' > .docksal/docksal.env
 
 	run fin config
-	[[ $status == 0 ]] && \
-	[[ $output =~ "docksal.env" ]] && \
+	[[ $status == 0 ]] && 
+	# fin will automatically create docksal.yml and docksal.env if they do not exist
+	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.env" ]] &&
 	# Test our override is in place
 	[[ $output =~ "TEST_VAR: my_val" ]]
+	unset output
 }
 
 @test "fin config: docksal-local.yml" {
@@ -138,10 +150,14 @@ services:
 	echo "$yml" > .docksal/docksal-local.yml
 
 	run fin config
-	[[ $status == 0 ]] && \
-	[[ $output =~ "docksal-local.yml" ]] && \
-	[[ ! $output =~ "docksal-local.env" ]] && \
+	[[ $status == 0 ]] && 
+	# fin will automatically create docksal.yml and docksal.env if they do not exist
+	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.env" ]] &&
+	[[ $output =~ "docksal-local.yml" ]] &&
+	[[ ! $output =~ "docksal-local.env" ]] && 
 	[[ $output =~ "TEST_VAR_LOCAL: test_val_default" ]]
+	unset output
 }
 
 @test "fin config: docksal-local.yml + docksal-local.env" {
@@ -151,11 +167,15 @@ services:
 	echo 'TEST_VAR_LOCAL=my_val_local' > .docksal/docksal-local.env
 
 	run fin config
-	[[ $status == 0 ]] && \
-	[[ $output =~ "docksal-local.yml" ]] && \
-	[[ $output =~ "docksal-local.env" ]] && \
+	[[ $status == 0 ]] && 
+	# fin will automatically create docksal.yml and docksal.env if they do not exist
+	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.env" ]] &&
+	[[ $output =~ "docksal-local.yml" ]] &&
+	[[ $output =~ "docksal-local.env" ]] && 
 	# Test our override is in place
 	[[ $output =~ "TEST_VAR_LOCAL: my_val" ]]
+	unset output
 }
 
 @test "fin config generate: empty project" {
@@ -166,27 +186,26 @@ services:
 	fin config generate
 
 	run fin config env
-	[[ $status == 0 ]] && \
-	[[ $output =~ "volumes-bind.yml" ]] && \
-	[[ ! $output =~ "stack-default.yml" ]] && \
-	[[ $output =~ "docksal.yml" ]] && \
+	[[ $status == 0 ]] && 
+	[[ $output =~ "volumes-bind.yml" ]] && 
+	[[ $output =~ "stack-default.yml" ]] && 
+	# fin will automatically create docksal.yml and docksal.env if they do not exist
+	[[ $output =~ "docksal.yml" ]] &&
 	[[ $output =~ "docksal.env" ]]
+	unset output
 }
 
 @test "fin config generate: existing project" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Define which stack we want to use. This is supposed to be eventually removed by the "fin config generate" run below
-	echo 'DOCKSAL_STACK=acquia' > .docksal/docksal.env
-	# TODO: need a --force option to be able to use this in a non-interactive environment like CI/bats tests
-	# Run this non-interactively to avoid confirmation messages and thus getting stuck
 	echo "fin config generate" | bash
 
 	run fin config env
-	[[ $status == 0 ]] && \
-	[[ $output =~ "volumes-bind.yml" ]] && \
-	[[ ! $output =~ "stack-default.yml" ]] && \
-	[[ ! $output =~ "stack-acquia.yml" ]] && \
-	[[ $output =~ "docksal.yml" ]] && \
+	[[ $status == 0 ]] && 
+	[[ $output =~ "volumes-bind.yml" ]] && 
+	[[ $output =~ "stack-default.yml" ]] && 
+	# fin will automatically create docksal.yml and docksal.env if they do not exist
+	[[ $output =~ "docksal.yml" ]] &&
 	[[ $output =~ "docksal.env" ]]
+	unset output
 }

@@ -1,4 +1,4 @@
-# Using Blackfire profiler
+# Enabling Blackfire Profiler service
 
 ## Setup
 

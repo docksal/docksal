@@ -1,4 +1,4 @@
-# MailHog
+# Enabling MailHog service
 
 Sending/capturing email is available via [MailHog](https://github.com/mailhog/MailHog).
 
@@ -7,27 +7,22 @@ Sending/capturing email is available via [MailHog](https://github.com/mailhog/Ma
 
 ## Setup
 
-### Mail service
-
-Add the `mail` service in `.docksal/docksal.yml` under `services`.
+Add the `mail` service under the `services` section in `.docksal/docksal.yml`:
 
 ```yaml
-mail:
-  hostname: mail
-  image: mailhog/mailhog
-  expose:
-    - "80"
-  environment:
-    - MH_API_BIND_ADDR=0.0.0.0:80
-    - MH_UI_BIND_ADDR=0.0.0.0:80
-  labels:
-    - io.docksal.virtual-host=webmail.${VIRTUAL_HOST}
-  user: root
+  # MailHog
+  mail:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: mail
 ```
 
 Apply new configuration with `fin project start` (`fin p start`).
 
-### PHP settings
+Use `http://mail.<VIRTUAL_HOST>` to access the MailHog web UI.
+
+
+## PHP configuration (for docksal/cli images prior to v2.0)
 
 In `.docksal/etc/php/php.ini` in the project repo add the following:
 
@@ -36,4 +31,4 @@ In `.docksal/etc/php/php.ini` in the project repo add the following:
 sendmail_path = '/usr/local/bin/mhsendmail --smtp-addr=mail:1025'
 ```
 
-MailHog web UI will be available at `http://webmail.<project_name>.docksal`.
+These settings are included in `docksal/cli` v2.0+, so there is no need to manually add them.

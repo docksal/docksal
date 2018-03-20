@@ -20,6 +20,7 @@ SKIP=1
 
 	run fin db list
 	echo "$output" | grep "default"
+	unset output
 }
 
 @test "fin db drop and recreate default" {
@@ -28,12 +29,15 @@ SKIP=1
 	dbname="default"
 	run fin db drop "$dbname"
 	echo "$output" | grep "Database '${dbname}' dropped"
+	unset output
 
 	run fin db create "$dbname"
 	echo "$output" | grep "Database '${dbname}' created"
+	unset output
 
 	run fin db list
 	echo "$output" | grep "$dbname"
+	unset output
 }
 
 @test "fin db drop and create nondefault" {
@@ -44,12 +48,15 @@ SKIP=1
 	run fin db drop "$dbname"
 	echo "$output" | grep "Can't drop database '${dbname}'; database doesn't exist"
 	echo "$output" | grep "Dropping '${dbname}' database failed"
+	unset output
 
 	run fin db create "$dbname"
 	echo "$output" | grep "Database '${dbname}' created"
+	unset output
 
 	run fin db list
 	echo "$output" | grep "$dbname"
+	unset output
 }
 
 # Cannot do cleanup outside of a test case as bats will evaluate/run that code before every single test case.
@@ -67,6 +74,7 @@ SKIP=1
 	rm -f dump.sql
 	run fin db dump dump.sql
 	echo "$output" | grep "Exporting..."
+	unset output
 
 	# Check that we've got a valid dump
 	grep "Database: default" dump.sql
@@ -79,10 +87,12 @@ SKIP=1
 	run fin db import dump.sql --force
 	echo "$output" | grep "Truncating"
 	echo "$output" | grep "Importing"
+	unset output
 
 	# Check that the site is available
 	run curl -sL http://drupal8.docksal
 	echo "$output" | grep "My Drupal 8 Site"
+	unset output
 }
 
 @test "fin db import with user and password" {
@@ -92,10 +102,12 @@ SKIP=1
 	run fin db import dump.sql --db-user="user" --db-password="user" --force
 	echo "$output" | grep "Truncating"
 	echo "$output" | grep "Importing"
+	unset output
 
 	# Check that the site is available
 	run curl -sL http://drupal8.docksal
 	echo "$output" | grep "My Drupal 8 Site"
+	unset output
 }
 
 @test "fin db import with the wrong user and password" {
@@ -106,6 +118,7 @@ SKIP=1
 	echo "$output" | grep "Truncating"
 	echo "$output" | grep "Importing"
 	echo "$output" | grep "Import failed"
+	unset output
 }
 
 @test "fin db import from stdin" {
@@ -115,10 +128,12 @@ SKIP=1
 	run cat dump.sql | fin db import
 	echo "$output" | grep "Truncating"
 	echo "$output" | grep "Importing from stdin"
+	unset output
 
 	# Check that the site is available
 	run curl -sL http://drupal8.docksal
 	echo "$output" | grep "My Drupal 8 Site"
+	unset output
 }
 
 @test "fin db import into nonexisting db" {
@@ -130,6 +145,7 @@ SKIP=1
 	echo "$output" | grep "Truncating" | grep "$dbname"
 	echo "$output" | grep "Importing"
 	echo "$output" | grep "Import failed"
+	unset output
 }
 
 @test "fin db create 'nondefault' db" {
@@ -139,9 +155,11 @@ SKIP=1
 	fin db drop "$dbname" || true  # cleanup just in case
 	run fin db create "$dbname"
 	echo "$output" | grep "Database '${dbname}' created"
+	unset output
 
 	run fin db list
 	echo "$output" | grep "$dbname"
+	unset output
 }
 
 @test "fin db import into 'nondefault' db" {
@@ -153,4 +171,5 @@ SKIP=1
 	echo "$output" | grep "Truncating" | grep "$dbname"
 	echo "$output" | grep "Importing"
 	echo "$output" | grep "Done"
+	unset output
 }

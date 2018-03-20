@@ -50,6 +50,11 @@ You are done with the one time environment installation. Now you can [configure 
 curl -fsSL https://get.docksal.io | sh
 ```
 
+!!! warning "VirtualBox installation fails on macOS High Sierra 10.13"
+    New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple 
+    introduced around third-party kernel extensions. See the [Troubleshooting](../troubleshooting.md#issue-12) section 
+    if you run into this issue. 
+
 ### 2. Create and start the vm
 
 ```bash

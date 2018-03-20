@@ -3,11 +3,19 @@
 <a name="configuration"></a>
 ## PHP and MySQL configuration
 
-When the following settings files are added to the project, they can be used to override the defaults.
+When the following settings files are added to a project, they can be used to override the defaults.
+
+- `.docksal/etc/php/php.ini` - global PHP (web and cli) settings overrides
+- `.docksal/etc/php/php-fpm.conf` - PHP-FPM (web) only settings overrides
+- `.docksal/etc/mysql/my.cnf` - MySQL settings overrides
+
+Note: for `docksal/cli` images prior to version 2.0 the following files are used to override PHP settings:
 
 - `.docksal/etc/php/php.ini` - PHP settings overrides
 - `.docksal/etc/php/php-cli.ini` - command line PHP settings overrides
-- `.docksal/etc/mysql/my.cnf` - MySQL settings overrides
+
+`docksal/cli:2.0` images are used in the default stacks starting with the [1.7.0](https://github.com/docksal/docksal/releases/tag/v1.7.0) 
+release of Docksal.
 
 Copy `examples/.docksal/etc` from the [Docksal](https://github.com/docksal/docksal) project repo into the `.docksal` 
 folder in your project repo and modify as necessary.
@@ -23,15 +31,17 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 
 ```bash
-CLI_IMAGE='docksal/cli:1.3-php7'
+CLI_IMAGE='docksal/cli:2.0-php7.1'
 ```
 
 Remember to run `fin project start` (`fin p start`) to apply the configuration.
 
 Available images:
 
-- PHP 5 - `docksal/cli:1.3-php5`
-- PHP 7 - `docksal/cli:1.3-php7`
+- PHP 5.6 - `docksal/cli:2.0-php5.6`
+- PHP 7.0 - `docksal/cli:2.0-php7.0`
+- PHP 7.1 - `docksal/cli:2.0-php7.1`
+- PHP 7.2 - `docksal/cli:2.0-php7.2`
 
 For projects using a custom stack configuration check [here](../advanced/stack-config.md#php-version).
 

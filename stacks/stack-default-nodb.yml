@@ -1,0 +1,18 @@
+# Default stack sans DB
+
+version: "2.1"
+
+services:
+  # Web
+  web:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: web
+    depends_on:
+      - cli
+
+  # CLI
+  cli:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: cli
