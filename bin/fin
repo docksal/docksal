@@ -3912,7 +3912,7 @@ run_cli ()
 	DEBUG=${DEBUG:-0}
 
 	# Fail for images from v1, these are executing the commands directly and are not supported anymore.
-	if [[ "$IMAGE" == docksal/cli:1* ]]; then
+	if [[ "$IMAGE" == docksal/cli:1.* ]]; then
 		echo-error "run-cli command does not support the defined image. Please use docksal/cli:2.0 and above." && exit 1
 	fi
 
