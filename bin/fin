@@ -5425,6 +5425,10 @@ case "$1" in
 		shift
 		_exec drupal "$@"
 		;;
+	terminus)
+		load_configuration
+		shift
+		_exec terminus "$@"
 		;;
 	wp)
 		load_configuration
