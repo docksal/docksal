@@ -4438,6 +4438,7 @@ load_configuration ()
 			# Source and allexport variables in the .env file
 			set -a; source "$local_env_file"; set +a
 	fi
+	# This is used to print the list of included env files in `fin config`
 	export ENV_FILE
 
 	# Set COMPOSE_FILE unless it has been already set by user
@@ -4526,6 +4527,11 @@ load_configuration ()
 config_show ()
 {
 	check_docksal_environment
+
+	# Mask secrets prior to printing anything
+	# TODO: add support for "--show-secrets" to force printing secrets in plain text
+	# Any env variable, that starts with the "SECRET_" prefix, is overwritten with "[*****]" as its value
+	eval $(env | grep -E -o 'SECRET_.*=' | xargs -I % bash -c "echo export %[*****]")
 
 	echo "---------------------"
 	# echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
@@ -4989,7 +4995,8 @@ unison_logs () {
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Load environment variables overrides, use to permanently override some variables
-[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV" || touch "$CONFIG_ENV"
+# Source and allexport variables in the .env file
+[[ -f "$CONFIG_ENV" ]] && set -a; source "$CONFIG_ENV"; set +a || touch "$CONFIG_ENV"
 
 # Generate Docksal instance uuid if not available
 if [[ "$DOCKSAL_UUID" == "" ]]; then
