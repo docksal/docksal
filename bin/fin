@@ -5470,6 +5470,11 @@ case "$1" in
 	debug)
 		# no load_configuration
 		shift
+		# Support debug with project configuration loading
+		if [[ "$1" == "-c" ]] || [[ "$1" == "--load-configuration" ]]; then
+			shift
+			load_configuration
+		fi
 		eval "$@"
 		;;
 	exec-url)
