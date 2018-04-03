@@ -1120,7 +1120,7 @@ show_help ()
 	echo
 	printh "drush [command]" "Drush command (requires Drupal)"
 	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
-	printh "terminus [command]" "Pantheon's Terminus"
+	printh "terminus [command]" "Pantheon's Terminus (requires docksal/cli 2.1+)"
 	printh "wp [command]" "WordPress CLI command (requires WordPress)"
 
 	echo
