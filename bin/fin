@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.51.1
+FIN_VERSION=1.51.2
 
 # Console colors
 red='\033[0;91m'
@@ -1118,9 +1118,10 @@ show_help ()
 	printh "config [command]" "Show or generate configuration (${yellow}fin help config${NC})"
 
 	echo
-	printh "drush [command]" "Execute Drush command (Drupal)"
-	printh "drupal [command]" "Execute Drupal Console command (Drupal 8)"
-	printh "wp [command]" "Execute WP-CLI command (WordPress)"
+	printh "drush [command]" "Drush command (requires Drupal)"
+	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
+	printh "terminus [command]" "Pantheon's Terminus"
+	printh "wp [command]" "WordPress CLI command (requires WordPress)"
 
 	echo
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
