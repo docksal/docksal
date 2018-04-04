@@ -27,6 +27,7 @@ pages:
     - Folder aliases: fin/aliases.md
   - Tools and integrations:
     - Apache Solr: tools/apache-solr.md
+    - Acquia Drush Commands: tools/acquia-drush.md
     - Behat: tools/behat.md
     - Blackfire: tools/blackfire.md
     - Drupal Console: tools/drupal-console.md
@@ -36,6 +37,7 @@ pages:
     - ngrok: tools/ngrok.md
     - PHP Code Sniffer: tools/phpcs.md
     - SASS and Compass: tools/sass.md
+    - Terminus: tools/terminus.md
     - Varnish: tools/varnish.md
     - Xdebug: tools/xdebug.md
   - Advanced configuration:
