@@ -1511,10 +1511,10 @@ show_help_alias ()
 	echo
 	echo-green "Usage:"
 	printh "fin alias [list]" "Show aliases list"
-	printh "fin alias <path> <alias_name>" "Create an alias that links to target path"
+	printh "fin alias <path> <alias_name>" "Create or update an alias that links to target path"
 	printh "fin alias remove <alias_name>" "Remove alias"
 	echo-green "Examples:"
-	printh "fin alias ~/site1/docroot dev" "Create alias ${yellow}dev${NC} that is linked to ${yellow}~/site1/docroot${NC}"
+	printh "fin alias ~/site1/docroot dev" "Create or update an alias ${yellow}dev${NC} that is linked to ${yellow}~/site1/docroot${NC}"
 	printh "fin @dev drush st" "Execute 'drush st' command in directory linked by ${yellow}dev${NC} alias"
 	printh "" "Hint: create alias to Drupal sub-site folder to launch subsite targeted commands"
 	printh "fin alias remove dev" "Delete ${yellow}dev${NC} alias"
@@ -4390,7 +4390,7 @@ alias_create ()
 	[[ ! -d "$1" ]] && echo 'Path should be a valid dir' && exit 1
 
 	! is_windows && \
-		ln -s $(get_abs_path "$1") "$CONFIG_ALIASES/$2"
+		ln -fs $(get_abs_path "$1") "$CONFIG_ALIASES/$2"
 
 	[[ $? -eq 0 ]] && \
 		echo "$2 -> $(get_abs_path $1)"
