@@ -1,0 +1,74 @@
+# Pantheon alike stack
+#
+# - Nginx 1.12 (Pantheon uses 1.8.1)
+# - MariaDB 10.1 (Pantheon uses 10.0)
+# - PHP 7.1
+# - Varnish 4 (Pantheon uses 4 ?)
+# - Redis 3.2 (Pantheon uses 2.8)
+# - ApacheSolr 3.x (Pantheon uses 3.6)
+
+version: "2.1"
+
+services:
+  # Web
+  # http(s)://VIRTUAL_HOST
+  web:
+    # TODO: have our own nginx image (?)
+    image: ${WEB_IMAGE:-wodby/drupal-nginx:8-1.12-4.0.4}
+    volumes:
+      - ${PROJECT_ROOT}:/var/www:ro
+      # Suppress the permissions fixer script in wodby/drupal-nginx
+      - ${PROJECT_ROOT}/.docksal/services/web/init_volumes:/usr/local/bin/init_volumes
+    labels:
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
+      - io.docksal.project-root=${PROJECT_ROOT}
+    environment:
+      - NGINX_BACKEND_HOST=cli
+      - NGINX_SERVER_ROOT=/var/www/${DOCROOT}
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+    working_dir: /var/www/${DOCROOT}
+    depends_on:
+        - cli
+
+  # DB
+  db:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: db
+    # TODO: have our own mariadb image (?)
+    image: ${DB_IMAGE:-wodby/mariadb:10.1-3.1.3}
+
+  # CLI
+  cli:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: cli
+
+  # Varnish
+  # http(s)://varnish.VIRTUAL_HOST
+  varnish:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: varnish
+    image: ${VARNISH_IMAGE:-docksal/varnish:1.1-varnish4}
+    depends_on:
+      - web
+
+  # Redis
+  redis:
+    hostname: redis
+    # TODO: have our own redis image (?)
+    image: ${REDIS_IMAGE:-wodby/redis:3.2-2.1.5}
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+
+  # Solr
+  # http(s)://solr.VIRTUAL_HOST/solr
+  solr:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: solr
+    image: ${SOLR_IMAGE:-docksal/solr:1.0-solr3}
