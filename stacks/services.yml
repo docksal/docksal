@@ -22,8 +22,26 @@ services:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
 
-  # DB
+  # DB (legacy)
+  # TODO: Deprecated and to be removed in October 2018
   db:
+    hostname: db
+    image: ${DB_IMAGE:-docksal/db:1.2-mysql-5.6}
+    ports:
+      - "${MYSQL_PORT_MAPPING:-3306}"
+    volumes:
+      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_USER=${MYSQL_USER:-user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+
+  # DB: MySQL
+  mysql:
     hostname: db
     image: ${DB_IMAGE:-docksal/db:1.2-mysql-5.6}
     ports:
