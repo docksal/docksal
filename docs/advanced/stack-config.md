@@ -271,7 +271,7 @@ volumes:
 <a name="php-version"></a>
 ## Switching PHP versions
 
-The PHP version is defined by the `cli` service. The default image used is `docksal/cli:2.0-php7.1` which uses PHP 7.1.
+The PHP version is defined by the `cli` service. The default image used is `docksal/cli:2.1-php7.1` which uses PHP 7.1.
 
 A service image name consists of two parts: a docker image name and a tag.
 `docksal/cli` is the name of the docker image, while `2.0-php7.1` is the image tag.
