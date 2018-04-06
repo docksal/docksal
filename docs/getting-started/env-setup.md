@@ -46,7 +46,7 @@ You are done with the one time environment installation. Now you can [configure 
 
 ### 1. Install VirtualBox and allow kernel extension (macOS High Sierra only)
 
-![This step is for macOS Higth Sierra only](../_img/macos-high-sierra-only.png)
+![This step is for macOS High Sierra only](../_img/macos-high-sierra-only.jpg)
 
 1. [Install VirtualBox 5.1.28](http://download.virtualbox.org/virtualbox/5.1.28/VirtualBox-5.1.28-117968-OSX.dmg) manually
 
