@@ -284,7 +284,7 @@ To switch PHP versions you have to change the image used for the `cli` service t
 
 When using zero-configuration (or any other) the service image can be overridden in `docksal-local.yml`.
 
-The same technique is **applicable to `dosksal.yml` if `DOCKSAL_STACK` is set in `docksal.env`**. In this case,
+The same technique is **applicable to `docksal.yml` if `DOCKSAL_STACK` is set in `docksal.env`**. In this case,
 `docksal.yml` will extend/modify the stack configuration defined in `DOCKSAL_STACK` instead of overriding it.
 
 To switch the PHP version override the `image` value for the `cli` service.

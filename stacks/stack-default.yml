@@ -15,7 +15,7 @@ services:
   db:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
-      service: db
+      service: mysql
 
   # CLI
   cli:

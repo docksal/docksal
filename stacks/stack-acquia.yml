@@ -2,8 +2,8 @@
 #
 # - Apache 2.4
 # - MySQL 5.6
-# - PHP 5.6 / PHP 7.0
-# - Varnish 4
+# - PHP 5.6 / PHP 7.1
+# - Varnish 5
 # - Memcached 1.4
 # - ApacheSolr 4.x
 
@@ -22,7 +22,7 @@ services:
   db:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
-      service: db
+      service: mysql
 
   # CLI
   cli:

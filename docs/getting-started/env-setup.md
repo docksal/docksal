@@ -44,18 +44,23 @@ You are done with the one time environment installation. Now you can [configure 
 <a name="macos"></a>
 ## Installing Docksal on macOS
 
-### 1. Install Docksal
+### 1. Install VirtualBox and allow kernel extension (macOS High Sierra only)
+
+![This step is for macOS High Sierra only](../_img/macos-high-sierra-only.jpg)
+
+1.1. [Install VirtualBox 5.1.28](http://download.virtualbox.org/virtualbox/5.1.28/VirtualBox-5.1.28-117968-OSX.dmg) manually
+
+1.2. Approve VirtualBox'es kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
+
+![System Preferences > Security & Privacy > Allow kernel extension](../_img/virtualbox-kernel-extension-allow.png)
+
+### 2. Install Docksal
 
 ```bash
 curl -fsSL https://get.docksal.io | sh
 ```
 
-!!! warning "VirtualBox installation fails on macOS High Sierra 10.13"
-    New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple 
-    introduced around third-party kernel extensions. See the [Troubleshooting](../troubleshooting.md#issue-12) section 
-    if you run into this issue. 
-
-### 2. Create and start the vm
+### 3. Create and start the vm
 
 ```bash
 fin vm start

@@ -1,5 +1,49 @@
 # Changelog
 
+# 1.8.0 (2018-04-05)
+
+## New software versions
+
+- fin 1.52.0
+- Stack updates
+  - Switched `cli` to [docksal/cli:2.1-php7.1](https://github.com/docksal/service-cli/releases/tag/v2.1.0)
+  - Switched `db` to [docksal/db:1.2-mysql-5.6](https://github.com/docksal/service-db/releases/tag/v1.2.0)
+
+## New Features
+
+- Secrets - a way to pass keys/tokens to `cli`
+  - Currently supported: `SECRET_SSH_PRIVATE_KEY`, `SECRET_ACAPI_EMAIL`, `SECRET_ACAPI_KEY`, `SECRET_TERMINUS_TOKEN`
+  - All secrets should be prefixed with `SECRET_`
+  - Secrets are masked in `fin config` output to protect sensitive data
+  - Secrets can be set in the global `docksal.env` file (`$HOME/.docksal.env`) or the project one(s)
+  - Requires `docksal/cli` [v2.1.0+](https://github.com/docksal/service-cli/releases)
+- Terminus integration (#485)
+  - Shortcut command for Terminus - `fin terminus`
+  - Requires `docksal/cli` [v2.1.0+](https://github.com/docksal/service-cli/releases)
+- Added PostgreSQL service definition in `services.yml` (#193)
+
+## Changes and improvements
+
+- Added support to run `fin debug` with project configuration loading
+  - `fin debug -c ...`, `fin debug --load-configuration ...`
+- Removed an old workaround in `fin drush` and `fin drupal` when run with empty arguments
+  - drush used to choke on empty arguments (e.g. drush "")
+  - drupal console never needed this workaround
+- Allow `fin alias` creation command to also update aliases
+  - Added the "-f" option when creating an new alias link. This allow one to use the same command to update aliases vs. the current workflow of first removing the alias then adding it back in with the new path. (#496)
+- Updated `fin run-cli` (`fin rc`) to use `docksal/cli:2.1-php7.1` (#483)
+- Stacks: renamed `db` to `mysql` in `services.yml`
+  - Keeping the old `db` service definition for backward compatibility
+
+## Documentation
+
+- Updated [Drush docs](https://docs.docksal.io/en/v1.8.0/tools/drush)
+  - Drush Launcher
+  - Site aliases with Drush 9
+- New docs for [Acquia Drush Commands](https://docs.docksal.io/en/v1.8.0/tools/acquia-drush) and [Terminus](https://docs.docksal.io/en/v1.8.0/tools/terminus)
+- Changed [macOS installation instructions](https://docs.docksal.io/en/v1.8.0/getting-started/env-setup/#macos) to account for VirtualBox installation issues on macOS High Sierra
+
+
 # 1.7.0 (2018-03-19)
 
 ## New software versions
@@ -16,7 +60,6 @@
   - PHP stacks now use `docksal/cli:2.0-php7.1` (PHP 7.1) by default
     - [v2 cli images](https://blog.docksal.io/new-docksal-cli-images-2-0-fd88243d79b9), built from official Docker PHP-FPM images
   - Acquia stack now uses `1.1-varnish5` (Varnish 5) image
-
 
 ## New Features
 

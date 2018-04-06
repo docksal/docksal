@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.50.3
+FIN_VERSION=1.52.0
 
 # Console colors
 red='\033[0;91m'
@@ -8,7 +8,8 @@ red_bg='\033[101m'
 yellow_bg='\033[43;90m'
 green='\033[0;32m'
 green_bg='\033[42m'
-yellow='\033[1;33m'
+yellow='\033[0;33m'
+yellow_bold='\033[1;33m'
 NC='\033[0m'
 
 #-------------------------------- OS Checks ------------------------------------
@@ -1117,9 +1118,10 @@ show_help ()
 	printh "config [command]" "Show or generate configuration (${yellow}fin help config${NC})"
 
 	echo
-	printh "drush [command]" "Execute Drush command (Drupal)"
-	printh "drupal [command]" "Execute Drupal Console command (Drupal 8)"
-	printh "wp [command]" "Execute WP-CLI command (WordPress)"
+	printh "drush [command]" "Drush command (requires Drupal)"
+	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
+	printh "terminus [command]" "Pantheon's Terminus (requires docksal/cli 2.1+)"
+	printh "wp [command]" "WordPress CLI command (requires WordPress)"
 
 	echo
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
@@ -1509,10 +1511,10 @@ show_help_alias ()
 	echo
 	echo-green "Usage:"
 	printh "fin alias [list]" "Show aliases list"
-	printh "fin alias <path> <alias_name>" "Create an alias that links to target path"
+	printh "fin alias <path> <alias_name>" "Create or update an alias that links to target path"
 	printh "fin alias remove <alias_name>" "Remove alias"
 	echo-green "Examples:"
-	printh "fin alias ~/site1/docroot dev" "Create alias ${yellow}dev${NC} that is linked to ${yellow}~/site1/docroot${NC}"
+	printh "fin alias ~/site1/docroot dev" "Create or update an alias ${yellow}dev${NC} that is linked to ${yellow}~/site1/docroot${NC}"
 	printh "fin @dev drush st" "Execute 'drush st' command in directory linked by ${yellow}dev${NC} alias"
 	printh "" "Hint: create alias to Drupal sub-site folder to launch subsite targeted commands"
 	printh "fin alias remove dev" "Delete ${yellow}dev${NC} alias"
@@ -3902,28 +3904,27 @@ run_cli ()
 	[[ $1 == "-T" ]] && \
 		local no_tty=true && shift
 	# Set default image
-	# Have to stick with docksal/1.3-php7 for now.
-	# TODO: Fix compatibility with docksal/cli:2.0 images.
-	local IMAGE="${IMAGE:-docksal/cli:1.3-php7}"
+	local IMAGE="${IMAGE:-docksal/cli:2.1-php7.1}"
 	local cmd="$@"
 
 	# Assume bash if no command was given
 	[[ "$cmd" == "" ]] && cmd="bash"
 
-	# Source $HOME/.docksalrc in cli.
-	# Commands in this file will be sourced for both interactive and non-interactive sessions.
-	DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1'
-
 	# Debug mode off by default
 	DEBUG=${DEBUG:-0}
+
+	# Fail for images from v1, these are executing the commands directly and are not supported anymore.
+	if [[ "$IMAGE" == docksal/cli:1.* ]]; then
+		echo-error "run-cli command does not support the defined image. Please use docksal/cli:2.0 and above." && exit 1
+	fi
 
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} bash -ic "$DOCKSALRC; $cmd; (exit \$?)"
+		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} "$cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} bash -c "$DOCKSALRC; $cmd"
+		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} "$cmd"
 	fi
 }
 
@@ -4388,7 +4389,7 @@ alias_create ()
 	[[ ! -d "$1" ]] && echo 'Path should be a valid dir' && exit 1
 
 	! is_windows && \
-		ln -s $(get_abs_path "$1") "$CONFIG_ALIASES/$2"
+		ln -fs $(get_abs_path "$1") "$CONFIG_ALIASES/$2"
 
 	[[ $? -eq 0 ]] && \
 		echo "$2 -> $(get_abs_path $1)"
@@ -4438,6 +4439,7 @@ load_configuration ()
 			# Source and allexport variables in the .env file
 			set -a; source "$local_env_file"; set +a
 	fi
+	# This is used to print the list of included env files in `fin config`
 	export ENV_FILE
 
 	# Set COMPOSE_FILE unless it has been already set by user
@@ -4526,6 +4528,11 @@ load_configuration ()
 config_show ()
 {
 	check_docksal_environment
+
+	# Mask secrets prior to printing anything
+	# TODO: add support for "--show-secrets" to force printing secrets in plain text
+	# Any env variable, that starts with the "SECRET_" prefix, is overwritten with "[*****]" as its value
+	eval $(env | grep -E -o 'SECRET_.*=' | xargs -I % bash -c "echo export %[*****]")
 
 	echo "---------------------"
 	# echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
@@ -4989,7 +4996,8 @@ unison_logs () {
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Load environment variables overrides, use to permanently override some variables
-[[ -f "$CONFIG_ENV" ]] && source "$CONFIG_ENV" || touch "$CONFIG_ENV"
+# Source and allexport variables in the .env file
+[[ -f "$CONFIG_ENV" ]] && set -a; source "$CONFIG_ENV"; set +a || touch "$CONFIG_ENV"
 
 # Generate Docksal instance uuid if not available
 if [[ "$DOCKSAL_UUID" == "" ]]; then
@@ -5418,20 +5426,17 @@ case "$1" in
 		[[ "$USED_ALIAS" != "" ]] &&
 			[[ "$(pwd)" == "$PROJECT_ROOT" ]] &&
 			cd "$DOCROOT"
-		if [[ $1 == "" ]]; then
-			_exec drush
-		else
-			_exec drush "$@"
-		fi
+		_exec drush "$@"
 		;;
 	drupal)
 		load_configuration
 		shift
-		if [[ "$1" == "" ]]; then
-			_exec drupal
-		else
-			_exec drupal "$@"
-		fi
+		_exec drupal "$@"
+		;;
+	terminus)
+		load_configuration
+		shift
+		_exec terminus "$@"
 		;;
 	wp)
 		load_configuration
@@ -5470,6 +5475,11 @@ case "$1" in
 	debug)
 		# no load_configuration
 		shift
+		# Support debug with project configuration loading
+		if [[ "$1" == "-c" ]] || [[ "$1" == "--load-configuration" ]]; then
+			shift
+			load_configuration
+		fi
 		eval "$@"
 		;;
 	exec-url)
