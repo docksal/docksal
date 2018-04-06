@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.51.2
+FIN_VERSION=1.52.0
 
 # Console colors
 red='\033[0;91m'
@@ -3904,7 +3904,7 @@ run_cli ()
 	[[ $1 == "-T" ]] && \
 		local no_tty=true && shift
 	# Set default image
-	local IMAGE="${IMAGE:-docksal/cli:2.0-php7.1}"
+	local IMAGE="${IMAGE:-docksal/cli:2.1-php7.1}"
 	local cmd="$@"
 
 	# Assume bash if no command was given
