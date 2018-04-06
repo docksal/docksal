@@ -18,8 +18,8 @@ SECRET_ACAPI_KEY="rSxVZN35bo4jTuncGS+CiKdmhxLPL0BaPuyOvf510sKb6c4ycxZsfFpC/vjJga
 ...
 ```
 
-Refresh `cli` service configuration with `fin project start`. This will inject the token into `cli` and authenticate 
-the container with Pantheon.
+Refresh `cli` service configuration with `fin project start`. This will inject the values into `cli` and generate 
+the credentials file (`/home/docker/.acquia/cloudapi.conf`) inside cli.
 
 Use `fin drush <ac-command>` from the host or `drush <ac-command>` inside `cli`.
 
