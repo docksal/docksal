@@ -23,15 +23,15 @@ fin vm stop
 
 **2.** Install Docker for [Mac](https://docs.docker.com/docker-for-mac) or [Windows](https://docs.docker.com/docker-for-windows).
 
-**3.** Enable "native" apps mode.
-
-Set `DOCKER_NATIVE=1` in `$HOME/.docksal/docksal.env`
-
-**4.** Install Docksal (unless already installed).
+**3.** Install Docksal (unless already installed).
 
 ```bash
-curl -fsSL https://get.docksal.io | sh
+curl -fsSL https://get.docksal.io | DOCKER_NATIVE=1 sh
 ```
+
+**4.** Enable "native" apps mode (if Docksal was already installed).
+
+Set `DOCKER_NATIVE=1` in `$HOME/.docksal/docksal.env`
 
 **5.** Reset Docksal system services.
 
