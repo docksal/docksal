@@ -14,7 +14,7 @@ Note: for `docksal/cli` images prior to version 2.0 the following files are used
 - `.docksal/etc/php/php.ini` - PHP settings overrides
 - `.docksal/etc/php/php-cli.ini` - command line PHP settings overrides
 
-`docksal/cli:2.0` images are used in the default stacks starting with the [1.7.0](https://github.com/docksal/docksal/releases/tag/v1.7.0) 
+`docksal/cli:2.1` images are used in the default stacks starting with the [1.8.0](https://github.com/docksal/docksal/releases/tag/v1.8.0) 
 release of Docksal.
 
 Copy `examples/.docksal/etc` from the [Docksal](https://github.com/docksal/docksal) project repo into the `.docksal` 
@@ -31,17 +31,17 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 
 ```bash
-CLI_IMAGE='docksal/cli:2.0-php7.1'
+CLI_IMAGE='docksal/cli:2.1-php7.1'
 ```
 
 Remember to run `fin project start` (`fin p start`) to apply the configuration.
 
 Available images:
 
-- PHP 5.6 - `docksal/cli:2.0-php5.6`
-- PHP 7.0 - `docksal/cli:2.0-php7.0`
-- PHP 7.1 - `docksal/cli:2.0-php7.1`
-- PHP 7.2 - `docksal/cli:2.0-php7.2`
+- PHP 5.6 - `docksal/cli:2.1-php5.6`
+- PHP 7.0 - `docksal/cli:2.1-php7.0`
+- PHP 7.1 - `docksal/cli:2.1-php7.1`
+- PHP 7.2 - `docksal/cli:2.1-php7.2`
 
 For projects using a custom stack configuration check [here](../advanced/stack-config.md#php-version).
 
