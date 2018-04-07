@@ -145,7 +145,6 @@ The benefits of this setup:
 The downsides:
 
 - Initial sync can take time especially on large codebases
-- There is no easy way to know when the initial sync is done (other than watching the host CPU usage drop)
 - Higher disk space usage (double the size of the codebase)
 - Additional load from the unison daemon, but nothing compared to the load `osxfs` produces. 
 
