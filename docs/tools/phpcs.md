@@ -17,7 +17,7 @@ chmod +x .docksal/commands/phpcs
 Run `fin phpcs docroot/sites/all/modules/custom` or any path you want to run sniffer against.  
 See `fin help phpcs` for options.
 
-Modify `.docksal/commands/phpcs` script as ou see fit.
+Modify `.docksal/commands/phpcs` script as you see fit.
 
 A command for `phpcbf` can be created in a similar fashion.
 
