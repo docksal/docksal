@@ -160,4 +160,4 @@ configure Docksal for use with Docker for Mac. Make sure you have the most recen
 
 Docksal automatically enables the `osxfs:cached` mode on Docker for Mac.
 
-See [stacks/volumes-unison.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-osxfs.yml)
+See [stacks/overrides-osxfs.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-osxfs.yml)
