@@ -32,4 +32,4 @@ Involves removing current VM. Your files will not be deleted but databases will 
 
 There is no good way to automate this.
 
-Follow this instruction to perform it manually: https://www.jeffgeerling.com/blogs/jeff-geerling/resizing-virtualbox-disk-image
+[Follow this instruction to perform it manually](https://www.jeffgeerling.com/blogs/jeff-geerling/resizing-virtualbox-disk-image).
