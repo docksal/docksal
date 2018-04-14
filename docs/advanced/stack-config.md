@@ -91,7 +91,7 @@ These files are a good reference, when you begin creating a custom project confi
 <a name="loading-order"></a>
 ## Configuration files loading order
 
-With this swarm of configuration files Docksal lets you configure a project in a way that works for you and your team. 
+With this swarm of configuration files, Docksal lets you configure a project in a way that works for you and your team. 
 Just like Bash configuration files (/etc/profile, bashrc, bash_profile, bash_logout), they give the flexibility to 
 configure a Docksal project in dozens of ways.
 
