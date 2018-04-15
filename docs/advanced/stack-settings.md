@@ -43,7 +43,7 @@ Available images:
 - PHP 7.1 - `docksal/cli:2.1-php7.1`
 - PHP 7.2 - `docksal/cli:2.1-php7.2`
 
-For projects using a custom stack configuration check [here](../advanced/stack-config.md#php-version).
+For projects using a custom stack configuration, [check here](../advanced/stack-config.md#php-version).
 
 <a name="mysql-versions"></a>
 ## Using different MySQL versions
@@ -69,4 +69,4 @@ Available images:
 - MySQL 5.7 - `docksal/db:1.1-mysql-5.7`
 - MySQL 8.0 - `docksal/db:1.1-mysql-8.0`
 
-For projects using a custom stack configuration check [here](../advanced/stack-config.md#mysql-version).
+For projects using a custom stack configuration, [check here](../advanced/stack-config.md#mysql-version).
