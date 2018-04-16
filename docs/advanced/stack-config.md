@@ -91,7 +91,7 @@ These files are a good reference, when you begin creating a custom project confi
 <a name="loading-order"></a>
 ## Configuration files loading order
 
-With this swarm of configuration files Docksal lets you configure a project in a way that works for you and your team. 
+With this swarm of configuration files, Docksal lets you configure a project in a way that works for you and your team. 
 Just like Bash configuration files (/etc/profile, bashrc, bash_profile, bash_logout), they give the flexibility to 
 configure a Docksal project in dozens of ways.
 
@@ -229,7 +229,7 @@ networks: {}
 services:
   cli:
     hostname: cli
-    image: docksal/cli:2.0-php7.1
+    image: docksal/cli:2.1-php7.1
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
@@ -274,7 +274,7 @@ volumes:
 The PHP version is defined by the `cli` service. The default image used is `docksal/cli:2.1-php7.1` which uses PHP 7.1.
 
 A service image name consists of two parts: a docker image name and a tag.
-`docksal/cli` is the name of the docker image, while `2.0-php7.1` is the image tag.
+`docksal/cli` is the name of the docker image, while `2.1-php7.1` is the image tag.
 
 To switch PHP versions you have to change the image used for the `cli` service to your desired one.
 
@@ -296,7 +296,7 @@ version: "2.1"
 
 services:
   cli:
-    image: docksal/cli:2.0-php7.2
+    image: docksal/cli:2.1-php7.2
 ```
 
 `docksal-local.yml` will append or modify the configuration that was loaded before it, regardless of whether it was 
@@ -316,7 +316,7 @@ An example section of a `docksal.yml` file that describes the `cli` service and 
 services:
   cli:
     hostname: cli
-    image: docksal/cli:2.0-php7.2
+    image: docksal/cli:2.1-php7.2
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
