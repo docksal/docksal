@@ -36,7 +36,7 @@ You can also use the `fin project create` command and a wizard will take you thr
 <a name="updates"></a>
 ## Updates
 
-All Docksal components can be updates with a single command:
+All Docksal components can be updated with a single command:
 
 ```bash
 fin update
