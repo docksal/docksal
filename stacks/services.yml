@@ -86,6 +86,7 @@ services:
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
       - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}  # Point xdebug to the host IP
+      - DRUSH_ALLOW_XDEBUG=1 # Allow debugging through drush-launcher
       - SECRET_SSH_PRIVATE_KEY
       - SECRET_ACAPI_EMAIL
       - SECRET_ACAPI_KEY
