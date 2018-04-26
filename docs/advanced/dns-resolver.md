@@ -45,7 +45,7 @@ default upstream DNS settings.
 
 2. Run `fin system reset dns`
 
-Inspect you LAN or WiFi interface settings and connection status to figure out the DNS server your network is using.
+Inspect your LAN or WiFi interface settings and connection status to figure out the DNS server your network is using.
 
 
 ## Enable DNS query logging (for debugging) 
