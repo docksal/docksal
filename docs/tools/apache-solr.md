@@ -14,7 +14,7 @@ Add the `solr` service under the `services` section in `.docksal/docksal.yml`:
 
 Apply new configuration with `fin project start` (`fin p start`).
 
-Use `http://sorl.<VIRTUAL_HOST>/solr` to access the Sorl web UI.
+Use `http://solr.<VIRTUAL_HOST>/solr` to access the Solr web UI.
 
 
 ## Drupal configuration
