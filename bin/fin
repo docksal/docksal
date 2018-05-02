@@ -2516,25 +2516,25 @@ project_create ()
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
-				target_host_name_search_string="drupal7"
+				target_host_name_search_string="drupal7.docksal"
 				target_repo="$URL_REPO_DRUPAL7"
 				break
 				;;
 			2)
 				target_cms="Drupal 8"
-				target_host_name_search_string="drupal8"
+				target_host_name_search_string="drupal8.docksal"
 				target_repo="$URL_REPO_DRUPAL8"
 				break
 				;;
 			3)
 				target_cms="Wordpress"
-				target_host_name_search_string="wordpress"
+				target_host_name_search_string="wordpress.docksal"
 				target_repo="$URL_REPO_WORDPRESS"
 				break
 				;;
 			4)
 				target_cms="Magento"
-				target_host_name_search_string="magento"
+				target_host_name_search_string="magento.docksal"
 				target_repo="$URL_REPO_MAGENTO"
 				break
 				;;
@@ -2573,7 +2573,7 @@ project_create ()
 
 	echo -e "Your site will be created at ${yellow}$(pwd)/$project_name${NC}"
 	echo -e "Your site will run ${yellow}${target_cms}${NC}"
-	echo -e "The URL of your site will be ${yellow}http://$project_name.docksal${NC}"
+	echo -e "The URL of your site will be ${yellow}http://$project_name.${DOCKSAL_DNS_DOMAIN}${NC}"
 	echo ''
 
 	_confirm "Do you wish to proceed?"
@@ -2586,7 +2586,7 @@ project_create ()
 		echo 'DOCKSAL_STACK="default-nodb"' >> ".docksal/docksal.env"
 		echo "VIRTUAL_HOST=\"${project_name}.docksal\"" >>  ".docksal/docksal.env"
 		fin up
-		echo -e "Done! Visit ${yellow}http://$project_name.docksal${NC}"
+		echo -e "Done! Visit ${yellow}http://$project_name.${DOCKSAL_DNS_DOMAIN}${NC}"
 		exit
 	fi
 
@@ -2599,7 +2599,7 @@ project_create ()
 	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
 		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}.${DOCKSAL_DNS_DOMAIN}/g" docksal.env
 		rm -f docksal.env.bak > /dev/null 2>&1
 	)
 
