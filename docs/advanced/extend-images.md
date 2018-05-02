@@ -55,7 +55,7 @@ RUN \
 	# Install node packages
 	npm install -g node-sass
 
-# IMPORTANTN! Switching back to the root user as the last instruction.
+# IMPORTANT! Switching back to the root user as the last instruction.
 USER root
 ```
 
