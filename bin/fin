@@ -2481,6 +2481,66 @@ project_list ()
 		--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
 }
 
+project_ask_repo ()
+{
+	local __repo=$1
+	while true; do
+		echo -en "${yellow}What is the repository url: (example: git@github.com:docksal/drupal8.git)${NC} "
+		read -p "" repo
+
+		git ls-remote "$repo" &>-
+		if [ "$?" -ne 0 ]; then
+			echo-error "Not a valid repository. Please Try Again"\
+				""
+			continue
+		fi
+		break
+	done
+	eval $__repo="'$repo'"
+}
+
+project_get_pantheon_info ()
+{
+	local __repo=$1
+	local __framwork=$2
+
+	[[ -f "$CONFIG_ENV" ]] && set -a; source "$CONFIG_ENV";
+
+	if [ -z "${SECRET_TERMINUS_TOKEN}" ]; then
+		echo-error "SECRET_TERMINUS_TOKEN is not defined within ${CONFIG_ENV}"\
+		""
+	fi
+
+	while true; do
+		if [ ! -z ${SECRET_TERMINUS_TOKEN} ]; then
+			WHOAMI=$(run_cli -T -e SECRET_TERMINUS_TOKEN=${SECRET_TERMINUS_TOKEN} 'terminus auth:whoami' 2> /dev/null)
+			if [ -z ${WHOAMI} ]; then
+				echo-error "Error logging in with provided token. Try different token."\
+				""
+				SECRET_TERMINUS_TOKEN=""
+			else
+				break;
+			fi
+		fi
+
+		echo -e "${yellow}More info on Pantheon Machine Token:${NC} https://pantheon.io/docs/machine-tokens/"
+		echo -en "${yellow}Enter valid Pantheon Machine Token:${NC} "
+		read -p "" SECRET_TERMINUS_TOKEN
+
+		if [ -z "${SECRET_TERMINUS_TOKEN}" ]; then
+			echo-error "A Machine Token is required to continue"\
+			""
+		fi
+	done
+
+	## Ask for Client Name
+	## Get Repo
+	## Get Framework
+
+	eval $__repo="'$repo'"
+  eval $__framework="'$framework'"
+}
+
 project_create ()
 {
 	echo-green "             -= Docksal project wizard =-"
@@ -2510,31 +2570,33 @@ project_create ()
 	echo -e "${green}   [7]${NC} Gatsby JS"
 	echo -e "${green}   [8]${NC} Laravel"
 	echo -e "${green}   [9]${NC} Hugo"
+	echo -e "${green}   [10]${NC} Pantheon"
+	echo -e "${green}   [11]${NC} Git Repository"
 	echo -e ""
 	while true; do
-		read -p "Enter your choice (1-8): " choice
+		read -p "Enter your choice (1-11): " choice
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
-				target_host_name_search_string="drupal7.docksal"
+				target_host_name_search_string="drupal7"
 				target_repo="$URL_REPO_DRUPAL7"
 				break
 				;;
 			2)
 				target_cms="Drupal 8"
-				target_host_name_search_string="drupal8.docksal"
+				target_host_name_search_string="drupal8"
 				target_repo="$URL_REPO_DRUPAL8"
 				break
 				;;
 			3)
 				target_cms="Wordpress"
-				target_host_name_search_string="wordpress.docksal"
+				target_host_name_search_string="wordpress"
 				target_repo="$URL_REPO_WORDPRESS"
 				break
 				;;
 			4)
 				target_cms="Magento"
-				target_host_name_search_string="magento.docksal"
+				target_host_name_search_string="magento"
 				target_repo="$URL_REPO_MAGENTO"
 				break
 				;;
@@ -2563,6 +2625,21 @@ project_create ()
 				target_host_name_search_string=""
 				target_repo="$URL_REPO_HUGO"
 				;;
+			10)
+				REPO=""
+				FRAMEWORK=""
+				project_get_pantheon_info REPO FRAMEWORK
+				target_cms="${FRAMEWORK}"
+				target_host_name_search_string=""
+				target_repo=${REPO}
+				;;
+			11)
+				REPO=""
+				project_ask_repo REPO
+				target_cms="Custom"
+				target_host_name_search_string=""
+				target_repo=${REPO}
+				;;
 			* )
 				echo 'Enter a number between 1 and 9.'
 				continue
@@ -2573,7 +2650,7 @@ project_create ()
 
 	echo -e "Your site will be created at ${yellow}$(pwd)/$project_name${NC}"
 	echo -e "Your site will run ${yellow}${target_cms}${NC}"
-	echo -e "The URL of your site will be ${yellow}http://$project_name.${DOCKSAL_DNS_DOMAIN}${NC}"
+	echo -e "The URL of your site will be ${yellow}http://$project_name.docksal${NC}"
 	echo ''
 
 	_confirm "Do you wish to proceed?"
@@ -2586,7 +2663,7 @@ project_create ()
 		echo 'DOCKSAL_STACK="default-nodb"' >> ".docksal/docksal.env"
 		echo "VIRTUAL_HOST=\"${project_name}.docksal\"" >>  ".docksal/docksal.env"
 		fin up
-		echo -e "Done! Visit ${yellow}http://$project_name.${DOCKSAL_DNS_DOMAIN}${NC}"
+		echo -e "Done! Visit ${yellow}http://$project_name.docksal${NC}"
 		exit
 	fi
 
@@ -2599,7 +2676,7 @@ project_create ()
 	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
 		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}.${DOCKSAL_DNS_DOMAIN}/g" docksal.env
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env
 		rm -f docksal.env.bak > /dev/null 2>&1
 	)
 
@@ -3898,11 +3975,27 @@ _exec ()
 # @param $* command with its params to run.
 run_cli ()
 {
-	# Allow disabling TTY mode.
-	# Useful for non-interactive commands when output is saved into a variable for further comparison.
-	# In a TTY mode the output may contain unexpected control symbols/etc.
-	[[ $1 == "-T" ]] && \
-		local no_tty=true && shift
+	local env_vars=()
+	local env_str=""
+
+	while [ $# -gt 0 ]
+	do
+	    case $1 in
+				# Allow disabling TTY mode.
+				# Useful for non-interactive commands when output is saved into a variable for further comparison.
+				# In a TTY mode the output may contain unexpected control symbols/etc.
+		    -T) local no_tty=true; shift; ;;
+				# Throw all environment variables into an array so that they can be spit into the docker run command.
+		    -e) env_vars+=("${2}"); shift 2; ;;
+				*) break;;
+	    esac
+	done
+
+	# If env_vars array has anything in it let's put it into a string.
+	if [ ${#env_vars[@]} -gt 0 ]; then
+		local env_str=$(printf " -e %s " "${env_vars[@]}")
+	fi
+
 	# Set default image
 	local IMAGE="${IMAGE:-docksal/cli:2.1-php7.1}"
 	local cmd="$@"
@@ -3921,10 +4014,10 @@ run_cli ()
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} "$cmd; (exit \$?)"
+		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" $env_str ${IMAGE} "$cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} "$cmd"
+		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" $env_str ${IMAGE} "$cmd"
 	fi
 }
 
@@ -4120,7 +4213,7 @@ mysql_import ()
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	__mysql_command=$(echo "${__mysql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
-	${pipe_cmd} "${__input}" | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
+	${pipe_cmd} ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
 	# Check if import succeeded or not and print results.
 	if [ $? -eq 0 ]; then
