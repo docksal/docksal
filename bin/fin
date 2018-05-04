@@ -3928,7 +3928,10 @@ run_cli ()
 				env_str="${env_str} -e ${key}='${value}'"
 			fi
 		else
-			eval ${key}=`echo -ne \""${value}"\"`
+			if [[ ! -z "${value}" ]]; then
+				eval ${key}=`echo -ne \""${value}"\"`
+			fi
+			env_str="${env_str} -e ${key}"
 		fi
 		shift 2
 		;;
