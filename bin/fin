@@ -3898,11 +3898,27 @@ _exec ()
 # @param $* command with its params to run.
 run_cli ()
 {
-	# Allow disabling TTY mode.
-	# Useful for non-interactive commands when output is saved into a variable for further comparison.
-	# In a TTY mode the output may contain unexpected control symbols/etc.
-	[[ $1 == "-T" ]] && \
-		local no_tty=true && shift
+	local env_vars=()
+	local env_str=""
+
+	while [ $# -gt 0 ]
+	do
+		case $1 in
+			# Allow disabling TTY mode.
+			# Useful for non-interactive commands when output is saved into a variable for further comparison.
+			# In a TTY mode the output may contain unexpected control symbols/etc.
+			-T) local no_tty=true; shift; ;;
+			# Throw all environment variables into an array so that they can be spit into the docker run command.
+			-e) env_vars+=("${2}"); shift 2; ;;
+			*) break;;
+		esac
+	done
+
+	# If env_vars array has anything in it let's put it into a string.
+	if [ ${#env_vars[@]} -gt 0 ]; then
+		local env_str=$(printf " -e %s " "${env_vars[@]}")
+	fi
+
 	# Set default image
 	local IMAGE="${IMAGE:-docksal/cli:2.1-php7.1}"
 	local cmd="$@"
@@ -3921,10 +3937,10 @@ run_cli ()
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} "$cmd; (exit \$?)"
+		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" $env_str ${IMAGE} "$cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} "$cmd"
+		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" $env_str ${IMAGE} "$cmd"
 	fi
 }
 
