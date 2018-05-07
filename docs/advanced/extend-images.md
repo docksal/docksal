@@ -2,7 +2,7 @@
 
 !!! warning "Think contributing first and only then forking"
     If you find something is missing or can be improved in the stock Docksal Docker images and you believe others would 
-    benefit from it too, then go ahead and submit an feature request or a PR for the respective repo.
+    benefit from it too, then go ahead and submit a feature request or a PR for the respective repo.
     By using customized images you do not break any warranties, however this will make it more difficult to maintain, 
     including seeking support from the community and Docksal maintainers if you run into issues.
 
@@ -29,7 +29,7 @@ Below is an example of extending the `cli` image with additional configs, apt an
 
 ```Dockerfile
 # Use a stock Docksal image as the base
-FROM docksal/cli:2.0-php7.1
+FROM docksal/cli:2.1-php7.1
 
 # Install addtional apt packages
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -55,7 +55,7 @@ RUN \
 	# Install node packages
 	npm install -g node-sass
 
-# IMPORTANTN! Switching back to the root user as the last instruction.
+# IMPORTANT! Switching back to the root user as the last instruction.
 USER root
 ```
 

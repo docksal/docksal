@@ -97,7 +97,7 @@ volumes:
     external: true
 ```
 
-See [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-nfs.yml).
+See [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-bind.yml).
 
 This is what the file sharing chain looks like with a NFS volume. 
 
