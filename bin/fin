@@ -53,8 +53,8 @@ is_mac ()
 
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
-REQUIREMENTS_DOCKER='17.09.0-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.19.0'
+REQUIREMENTS_DOCKER='18.03.1-ce'
+REQUIREMENTS_DOCKER_COMPOSE='1.21.1'
 REQUIREMENTS_DOCKER_MACHINE='0.14.0'
 REQUIREMENTS_VBOX='5.1.28'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
@@ -2496,6 +2496,7 @@ project_create ()
 				""
 			continue
 		fi
+		local project_virtual_host_name=$(echo ${project_name} | sed 's/[^-a-z0-9]//g')
 		break
 	done
 	echo ''
@@ -2584,7 +2585,7 @@ project_create ()
 		mkdir "docroot"
 		echo "<html><body>Hello, Docksal!</body></html>" > "docroot/index.html"
 		echo 'DOCKSAL_STACK="default-nodb"' >> ".docksal/docksal.env"
-		echo "VIRTUAL_HOST=\"${project_name}.docksal\"" >>  ".docksal/docksal.env"
+		echo "VIRTUAL_HOST=\"${project_virtual_host_name}.docksal\"" >>  ".docksal/docksal.env"
 		fin up
 		echo -e "Done! Visit ${yellow}http://$project_name.${DOCKSAL_DNS_DOMAIN}${NC}"
 		exit
@@ -2599,7 +2600,7 @@ project_create ()
 	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
 		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}.${DOCKSAL_DNS_DOMAIN}/g" docksal.env
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}.${DOCKSAL_DNS_DOMAIN}/g" docksal.env
 		rm -f docksal.env.bak > /dev/null 2>&1
 	)
 
@@ -4500,13 +4501,15 @@ load_configuration ()
 	if [[ -d $(get_project_path) ]]; then
 		local project_name=$(basename $(get_project_path) | tr '[:upper:]' '[:lower:]')
 		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
-		COMPOSE_PROJECT_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^a-z0-9]//g')
+		COMPOSE_PROJECT_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^-_a-z0-9]//g')
+		COMPOSE_PROJECT_VHOST_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^-a-z0-9]//g')
 		export COMPOSE_PROJECT_NAME
 		export COMPOSE_PROJECT_NAME_SAFE
+		export COMPOSE_PROJECT_VHOST_NAME_SAFE
 	fi
 
 	# Set defaults
-	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
+	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	export DOCROOT=${DOCROOT:-docroot}
 
 	# Make project root globally available
