@@ -2486,17 +2486,17 @@ project_create ()
 	echo-green "             -= Docksal project wizard =-"
 	echo
 	while true; do
-		echo -en "${yellow}1. Enter the name of your project${NC} (lowercase alphanumeric and dashes): "
+		echo -en "${yellow}1. Enter the name of your project${NC} (lowercase alphanumeric, underscore and hyphen): "
 		read -p "" project_name
-		# This will not accept project name of 1 symbol long. Not sure if this need to be fixed
-		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9-]*[a-z0-9]$ ]]; then
+		# This will not accept project name of 1 symbol long. Not sure if this needs to be fixed
+		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9_-]*[a-z0-9]$ ]]; then
 			echo-error "Unacceptable project name" \
-				"Use only lowercase letters, numbers and dashes. Do not use underscores." \
-				"Project name defines host name. Hostname has limitations." \
+				"Use only lowercase letters, numbers, underscores and hyphens." \
+				"Project name defines host name, where underscores will be replaced with hyphens." \
 				""
 			continue
 		fi
-		local project_virtual_host_name=$(echo ${project_name} | sed 's/[^-a-z0-9]//g')
+		local project_virtual_host_name="$(echo ${project_name} | sed 's/_/-/g' | sed 's/[^-a-z0-9]//g').${DOCKSAL_DNS_DOMAIN}"
 		break
 	done
 	echo ''
@@ -2574,7 +2574,7 @@ project_create ()
 
 	echo -e "Your site will be created at ${yellow}$(pwd)/$project_name${NC}"
 	echo -e "Your site will run ${yellow}${target_cms}${NC}"
-	echo -e "The URL of your site will be ${yellow}http://$project_name.${DOCKSAL_DNS_DOMAIN}${NC}"
+	echo -e "The URL of your site will be ${yellow}http://${project_virtual_host_name}${NC}"
 	echo ''
 
 	_confirm "Do you wish to proceed?"
@@ -2585,9 +2585,9 @@ project_create ()
 		mkdir "docroot"
 		echo "<html><body>Hello, Docksal!</body></html>" > "docroot/index.html"
 		echo 'DOCKSAL_STACK="default-nodb"' >> ".docksal/docksal.env"
-		echo "VIRTUAL_HOST=\"${project_virtual_host_name}.docksal\"" >>  ".docksal/docksal.env"
+		echo "VIRTUAL_HOST=\"${project_virtual_host_name}\"" >>  ".docksal/docksal.env"
 		fin up
-		echo -e "Done! Visit ${yellow}http://$project_name.${DOCKSAL_DNS_DOMAIN}${NC}"
+		echo -e "Done! Visit ${yellow}http://${project_virtual_host_name}${NC}"
 		exit
 	fi
 
@@ -2600,7 +2600,7 @@ project_create ()
 	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
 		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}.${DOCKSAL_DNS_DOMAIN}/g" docksal.env
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" docksal.env
 		rm -f docksal.env.bak > /dev/null 2>&1
 	)
 
@@ -4502,7 +4502,7 @@ load_configuration ()
 		local project_name=$(basename $(get_project_path) | tr '[:upper:]' '[:lower:]')
 		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
 		COMPOSE_PROJECT_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^-_a-z0-9]//g')
-		COMPOSE_PROJECT_VHOST_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^-a-z0-9]//g')
+		COMPOSE_PROJECT_VHOST_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/_/-/g' | sed 's/[^-a-z0-9]//g')
 		export COMPOSE_PROJECT_NAME
 		export COMPOSE_PROJECT_NAME_SAFE
 		export COMPOSE_PROJECT_VHOST_NAME_SAFE
