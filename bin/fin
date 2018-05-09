@@ -1464,6 +1464,7 @@ show_help_db ()
 	printh "fin db import ~/partial.sql --no-truncate" "Import partial.sql without truncating DB"
 	echo
 	printh "cat dump.sql | fin db import" "		Import dump from stdin into default database"
+	printh "zcat < dump.sql.gz | fin db import" "	Import archived dump from stdin into default database"
 	printh "fin db dump ~/dump.sql" "		Export default database into dump.sql"
 	printh "fin db dump --db=drupal" "		Export database 'drupal' dump into stdout"
 	printh "fin db dump --db=mysql --db-user=root --db-password=root mysql.sql    Export mysql database as root into mysql.sql"
