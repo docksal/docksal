@@ -2410,7 +2410,7 @@ up ()
 
 	_start_containers
 	unison_sync_wait
-	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
+	echo-green "Virtual Host: ${yellow}http://$VIRTUAL_HOST${NC}"
 }
 
 # Stop containers
