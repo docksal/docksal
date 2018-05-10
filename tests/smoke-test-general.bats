@@ -184,6 +184,29 @@ teardown() {
 	run fin rc -T 'echo $(id -u):$(id -g)'
 	[[ "$output" == "$(id -u):$(id -g)" ]]
 	unset output
+
+	# check to make sure custom variables are passed into container
+	run fin rc -T -e TEST_VAR="TEST VARIABLES" "echo \$TEST_VAR"
+	[[ "$output" == "TEST VARIABLES" ]]
+	unset output
+
+	# check to make sure a global default variable (from $HOME/.docksal/docksal.env) is passed automatically.
+	# These are SECRET_ and some other variables passed by default.
+	echo "SECRET_SSH_PRIVATE_KEY=xyz" >> $HOME/.docksal/docksal.env
+	run fin rc -T "echo \$SECRET_SSH_PRIVATE_KEY"
+	[[ "$output" == "xyz" ]]
+	unset output
+
+	# Check to make sure a global default variable can be overridden
+	run fin rc -T -e SECRET_SSH_PRIVATE_KEY="abc" "echo \$SECRET_SSH_PRIVATE_KEY"
+	[[ "$output" == "abc" ]]
+	unset output
+
+	# check to make sure a global (non-default) variable can be passed if included in command
+	echo "TEST=1234" >> $HOME/.docksal/docksal.env
+	run fin rc -T -e TEST "echo \$TEST"
+	[[ "$output" == "1234" ]]
+	unset output
 }
 
 @test "fin rm -f" {

@@ -3900,11 +3900,34 @@ _exec ()
 # @param $* command with its params to run.
 run_cli ()
 {
-	# Allow disabling TTY mode.
-	# Useful for non-interactive commands when output is saved into a variable for further comparison.
-	# In a TTY mode the output may contain unexpected control symbols/etc.
-	[[ $1 == "-T" ]] && \
-		local no_tty=true && shift
+	local env_str=""
+
+	while [ $# -gt 0 ]
+	do
+	    case $1 in
+		# Allow disabling TTY mode.
+		# Useful for non-interactive commands when output is saved into a variable for further comparison.
+		# In a TTY mode the output may contain unexpected control symbols/etc.
+		-T) local no_tty=true; shift; ;;
+		# Throw all environment variables into an array so that they can be spit into the docker run command.
+		-e)
+		IFS='=' read -r key value <<< "${2}"
+
+		# If value is empty set the value to whatever the variable name in $key is
+		# If key does not exist then sets it to empty variable
+		if [[ -z $value ]]; then
+			value="${!key}"
+		fi
+		# Set the $key back to whatever $value is
+		eval ${key}=`echo -ne \""${value}"\"`
+		# Add only key to $env_str to be used at runtime.
+		env_str="${env_str}-e ${key} "
+		shift 2
+		;;
+		*) break;;
+	    esac
+	done
+
 	# Set default image
 	local IMAGE="${IMAGE:-docksal/cli:2.1-php7.1}"
 	local cmd="$@"
@@ -3923,10 +3946,28 @@ run_cli ()
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} "$cmd; (exit \$?)"
+		eval "${winpty} docker run --rm -it \
+			-v $(pwd):/var/www \
+			-e SECRET_SSH_PRIVATE_KEY \
+			-e SECRET_ACAPI_EMAIL \
+			-e SECRET_ACAPI_KEY \
+			-e SECRET_TERMINUS_TOKEN \
+			-e HOST_UID \
+			-e HOST_GID \
+			-e DEBUG" \
+			${env_str} ${IMAGE} "$cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" ${IMAGE} "$cmd"
+		eval "docker run --rm \
+			-v $(pwd):/var/www \
+			-e SECRET_SSH_PRIVATE_KEY \
+			-e SECRET_ACAPI_EMAIL \
+			-e SECRET_ACAPI_KEY \
+			-e SECRET_TERMINUS_TOKEN \
+			-e HOST_UID \
+			-e HOST_GID \
+			-e DEBUG" \
+			${env_str} ${IMAGE} "$cmd"
 	fi
 }
 
@@ -4519,14 +4560,6 @@ load_configuration ()
 	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
 	# https://docs.docker.com/compose/reference/envvars/#compose_convert_windows_paths
 	export COMPOSE_CONVERT_WINDOWS_PATHS=1
-
-	# Export host user uid/gid
-	# The startup script in the cli container picks these up and updates the docker user inside of the container
-	# On Windows this is not necessary, as Linux permissions and ownership do not matter over SMB
-	if ! is_windows; then
-		export HOST_UID=$(id -u)
-		export HOST_GID=$(id -g)
-	fi
 }
 
 config_show ()
@@ -5031,6 +5064,14 @@ else
 	if [[ ! -f "$docksal_env_file" ]]; then
 		touch "$docksal_env_file" 2>/dev/null
 	fi
+fi
+
+# Host user uid/gid
+# The startup script in the cli container picks these up and updates the docker user inside of the container
+# On Windows this is not necessary, as Linux permissions and ownership do not matter over SMB
+if ! is_windows; then
+	export HOST_UID=$(id -u)
+	export HOST_GID=$(id -g)
 fi
 
 # Network settings
