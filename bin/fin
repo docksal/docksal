@@ -869,9 +869,9 @@ _start_containers ()
 {
 	check_docker_running
 	echo-green "Starting services..."
-	docker-compose up -d --remove-orphans --build &&
-		_healthcheck_wait
-		_vhost_proxy_connect
+	docker-compose up -d --remove-orphans --build || return 1
+	_healthcheck_wait
+	_vhost_proxy_connect
 }
 
 # @param $1 "-a" || "--all"
@@ -2408,7 +2408,7 @@ up ()
 	# See https://github.com/docksal/docksal/issues/265
 	is_mac && find . -type d > /dev/null 2>&1
 
-	_start_containers
+	_start_containers || return 1
 	unison_sync_wait
 	echo-green "Virtual Host: ${yellow}http://$VIRTUAL_HOST${NC}"
 }
@@ -4250,7 +4250,7 @@ reset ()
 
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
-	_start_containers
+	_start_containers || return 1
 	unison_sync_wait
 }
 
@@ -4978,7 +4978,7 @@ unison_sync_wait () {
 	RESPONSE_TIMER=5 # default check frequency in seconds
 
 	while [[ 1 == 1 ]]; do
-		local LOG_TAIL=$(docker-compose logs unison)
+		local LOG_TAIL=$(docker-compose logs --tail=5 unison)
 		if (echo "$LOG_TAIL" | grep -q "Synchronization complete"); then
 			break
 		elif (echo "$LOG_TAIL" | grep -q "Nothing to do"); then
