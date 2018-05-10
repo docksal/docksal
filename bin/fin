@@ -3909,25 +3909,17 @@ run_cli ()
 		-T) local no_tty=true; shift; ;;
 		# Throw all environment variables into an array so that they can be spit into the docker run command.
 		-e)
-		local vars=($(echo $2 | tr "=" " "))
-		local key=${vars[0]}
-		vars=("${vars[@]:1}")
-		local value=${vars[@]}
+		IFS='=' read -r key value <<< "${2}"
 
-		# Test if $key is already a defined variable if not add 
-		# to $env_str which will be passed to the docker run command.
-		if [[ -z ${!key+x} ]]; then
-			if [[ -z "${value}" ]]; then
-				env_str="${env_str} -e ${key}"
-			else
-				env_str="${env_str} -e ${key}='${value}'"
-			fi
-		else
-			if [[ ! -z "${value}" ]]; then
-				eval ${key}=`echo -ne \""${value}"\"`
-			fi
-			env_str="${env_str} -e ${key}"
+		# If value is empty set the value to whatever the variable name in $key is
+		# If key does not exist then sets it to empty variable
+		if [[ -z $value ]]; then
+			value="${!key}"
 		fi
+		# Set the $key back to whatever $value is
+		eval ${key}=`echo -ne \""${value}"\"`
+		# Add only key to $env_str to be used at runtime.
+		env_str="${env_str}-e ${key} "
 		shift 2
 		;;
 		*) break;;
