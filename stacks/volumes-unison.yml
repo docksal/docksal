@@ -13,8 +13,8 @@ volumes:
 
 services:
   # Sync project_root volume from host with unison 
-  bg-sync:
-    image: cweagans/bg-sync
+  unison:
+    image: docksal/unison
     volumes:
       - "${PROJECT_ROOT}:/source"
       - project_root:/destination
@@ -22,4 +22,8 @@ services:
       - SYNC_DESTINATION=/destination
       - SYNC_MAX_INOTIFY_WATCHES=40000
       - SYNC_VERBOSE=1
+      - UNISON_USER=docker
+      - UNISON_UID=${HOST_UID:-0}
+      - UNISON_GROUP=dialout
+      - UNISON_GID=${HOST_GID:-0}
     privileged: true

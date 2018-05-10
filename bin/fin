@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.54.1
+FIN_VERSION=1.54.2
 
 # Console colors
 red='\033[0;91m'
@@ -4978,7 +4978,7 @@ unison_sync_wait () {
 	RESPONSE_TIMER=5 # default check frequency in seconds
 
 	while [[ 1 == 1 ]]; do
-		local LOG_TAIL=$(docker-compose logs bg-sync)
+		local LOG_TAIL=$(docker-compose logs unison)
 		if (echo "$LOG_TAIL" | grep -q "Synchronization complete"); then
 			break
 		elif (echo "$LOG_TAIL" | grep -q "Nothing to do"); then
@@ -4988,13 +4988,6 @@ unison_sync_wait () {
 			sleep ${RESPONSE_TIMER}
 		fi
 	done
-}
-
-unison_logs () {
-	# If not unison volumes exit
-	[[ "$DOCKSAL_VOLUMES" != "unison" ]] && echo "No unison volumes enabled" && return
-
-	docker-compose logs bg-sync
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
@@ -5523,12 +5516,7 @@ case "$1" in
 	logs)
 		load_configuration
 		shift
-		if [[ "$1" == "unison" ]]; then
-			shift
-			unison_logs "$@"
-		else
-			logs "$@"
-		fi
+		logs "$@"
 		;;
 	"")
 		# no load_configuration
