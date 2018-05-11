@@ -1179,13 +1179,14 @@ show_help_list_commands_in_help ()
 		addons_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	fi
 
-	local addons_list=$(ls "$addons_path" 2>/dev/null | tr "\n" " ")
+	local addons_list=$(find "$addons_path" -type f 2>/dev/null)
 	if [ ! -z "$addons_list" ]; then
 		local scope
-		for cmd_name in $(ls "$addons_path")
+		for cmd_name in $(find "$addons_path" -type f)
 		do
 			local g
 			[[ "$1" == 'global' ]] && g=' [g]'
+			cmd_name=${cmd_name/${addons_path}\//}
 			# command description is lines that start with ##
 			local filename="$addons_path/$cmd_name"
 			local cmd_desc
