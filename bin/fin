@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.54.3
+FIN_VERSION=1.54.4
 
 # Console colors
 red='\033[0;91m'
@@ -2504,18 +2504,16 @@ remove ()
 {
 	check_project_environment
 	check_project_unique
+	eval $(parse_params "$@")
 
-	if [[ $1 == "" ]]; then
-		echo -e "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
+	# Alert when no containers specified and no force passed
+	if [[ "${ARGV[0]}" == "" ]] && [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
+		echo-alert "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
 		_confirm "Continue?";
 	fi
 
-	# support quiet removal
-	if [[ $1 == "-f" ]]; then
-		shift
-	fi
-
-	_remove_containers "$@"
+	# Removes containers
+	_remove_containers $(echo "${ARGV[*]}")
 }
 
 # List project containers
