@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.52.0
+FIN_VERSION=1.54.4
 
 # Console colors
 red='\033[0;91m'
@@ -53,15 +53,15 @@ is_mac ()
 
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
-REQUIREMENTS_DOCKER='17.09.0-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.19.0'
+REQUIREMENTS_DOCKER='18.03.1-ce'
+REQUIREMENTS_DOCKER_COMPOSE='1.21.1'
 REQUIREMENTS_DOCKER_MACHINE='0.14.0'
-REQUIREMENTS_VBOX='5.1.28'  # Remember to update the download URLs below
+REQUIREMENTS_VBOX='5.2.2'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.1.28/VirtualBox-5.1.28-117968-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.1.28/VirtualBox-5.1.28-117968-Win.exe"
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
@@ -869,9 +869,9 @@ _start_containers ()
 {
 	check_docker_running
 	echo-green "Starting services..."
-	docker-compose up -d --remove-orphans --build && \
-		_healthcheck_wait && \
-		_vhost_proxy_connect
+	docker-compose up -d --remove-orphans --build || return 1
+	_healthcheck_wait
+	_vhost_proxy_connect
 }
 
 # @param $1 "-a" || "--all"
@@ -1229,59 +1229,69 @@ show_help_list_addons_in_help ()
 
 show_help_ssh-add ()
 {
-	echo-green "fin ssh-add - Add private key identities to the ssh-agent."
+	echo
 	echo "Usage: fin ssh-add [-lD] [key]"
+
 	echo
-	echo "When run without arguments, picks up the default key files (~/.ssh/id_rsa, ~/.ssh/id_dsa, ~/.ssh/id_ecdsa)."
-	echo "A custom key name can be given as an argument: fin ssh-add <keyname>."
+	echo "Add private key identities to the docksal/ssh-agent."
+	echo "When run without arguments, automatically picks up the default key files (~/.ssh/id_rsa, ~/.ssh/id_dsa, ~/.ssh/id_ecdsa)."
+	echo "A custom key name can be given as an argument: fin ssh-add [keyname]."
 	echo
-	echo -e "${yellow}NOTE${NC}: <keyname> is the file name within ${yellow}~/.ssh${NC} (not full path to file)."
-	echo "Example: fin ssh-add my_custom_key_rsa"
+	echo "NOTE: [keyname] is the file name within ~/.ssh (not a full path to file)."
+	echo "Example: fin ssh-add my_custom_rsa_key"
+
 	echo
-	echo "The options are as follows:"
-	printh "-D" "Deletes all identities from the agent."
-	printh "-l" "Lists fingerprints of all identities currently represented by the agent."
-	echo
+	echo "Options:"
+	printh "-D" "Deletes all keys from the agent."
+	printh "-l" "Lists all keys currently loaded by the agent."
 }
 
 show_help_exec ()
 {
-	echo-green "fin exec [options] <command|file> - Execute command or file in ${yellow}cli${green} service container."
 	echo
-	echo "Command or file is a required parameter."
-	echo "It will be executed in the path that matches your local current path."
+	echo "Usage: fin exec [options] <command | file>"
+
+	echo
+	echo "Execute command or file in \`cli\` service container."
+	echo "fin exec will automatically cd into the same folder inside cli."
+
 	echo
 	echo "Options:"
 	printh "-T" "Disable pseudo-tty allocation."
 	printh "" "Useful for non-interactive commands when output is saved into a variable for further comparison."
-	printh "" "In a TTY mode the output may contain unexpected control symbols/etc."
+	printh "" "In a TTY mode the output may contain unexpected control symbols (garbage)."
+
 	echo
-	echo-green "Examples:"
+	echo "Examples:"
 	printh "fin exec ls -la" "Current directory listing"
 	printh "fin exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or stdout redirects happening inside cli"
 	printh "res=\$(fin exec -T drush st)" "Use -T switch to assign exec output to a variable"
 	printh "fin exec .docksal/script.sh" "Execute file inside cli container"
-	echo
 }
 
 show_help_reset ()
 {
-	printh "fin project reset" "" "yellow"
 	echo
-	echo-green "Recreate project services/containers. Equal to 'fin project remove' followed by 'fin project start'"
-	echo "Resets all file system changes that were made to the containers."
+	echo "Usage: fin project reset"
+
 	echo
-	printh "fin project reset" "Recreate project containers"
-	echo
+	echo "Re-create all project containers without deleting named volumes."
+	echo "Changes to home directory in \`cli\` are preserved."
 }
 
 show_help_rm ()
 {
-	echo-green "Remove services"
-	printh "fin project remove" "" "yellow"
 	echo
-	echo "Removes project containers and frees up space consumed by them."
+	echo "Usage: fin project remove [service] [params]"
+
 	echo
+	echo "Removes project service instances."
+	echo "Without params removes all project containers, project volumes and associated network."
+
+	echo
+	echo "Options:"
+	printh "[service]" "Service name(s) to remove. When provided only removed that service(s)"
+	printh "--force (-f)" "Do not ask confirmation when deleting all project services"
 }
 show_help_remove ()
 {
@@ -1289,60 +1299,69 @@ show_help_remove ()
 }
 
 show_help_image() {
-	echo-green "Image management"
-	printh "fin image <command>" "" "yellow"
 	echo
-	echo-green "Commands:"
+	echo "Usage: fin image <command>"
+
+	echo
+	echo "Commands:"
 	printh "registry" "Show all Docksal images on Docker Hub"
 	printh "registry [image name]" "Show all tags for a certain image"
-	echo
-	printh "save [--system|--project|--all]" "Save docker images into a tar archive."
+	printh "save --system,--project,--all" "Save docker images into a tar archive."
 	printh "load <file>" "Load docker images from a tar archive."
+
 	echo
-	echo-green "Examples:"
+	echo "Examples:"
 	printh "fin image registry" "Show all available Docksal images on Docker Hub"
 	printh "fin image registry docksal/db" "Show all tags for docksal/db image"
 	printh "fin image save --system" "Save Docksal system images."
 	printh "fin image save --project" "Save current project's images."
 	printh "fin image save --all" "Save all images available on the host."
-	echo
 }
 
 show_help_project() {
-	echo-green "Project management"
-	printh "fin project <command> [params]" "" "yellow"
 	echo
-	echo-green "Commands:"
+	echo "Usage: fin project <command> [params]"
+
+	echo
+	echo "Project management"
+
+	echo
+	echo "Commands:"
 	printh "start" "Start project services (alias: fin start)"
 	printh "up" "Forces re-read of configuration and start project services (alias: fin up)"
 	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects) (alias: fin stop)"
 	printh "status" "List project services (alias: fin ps)"
 	printh "restart" "Restart project services (alias: fin restart)"
 	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC}) (alias: fin reset)"
-	printh "remove or rm" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
+	printh "remove | rm" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
 	printh "config" "Show project configuration"
 	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
 	printh "list [-a (--all)]" "List running Docksal projects (-a to show stopped as well) (alias: fin pl)"
 	printh "create" "Project wizard to create new Drupal, Wordpress, Magento or empty static project."
+
 	echo
-	echo-green "Examples:"
+	echo "Examples:"
 	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
 	printh "fin project reset db" "Reset only DB service to start with DB from scratch"
 	printh "fin project create" "Start a new project wizard"
-	echo
 }
 
 show_help_system() {
-	echo-green "Manage Docksal"
-	printh "fin system <command> [params]" "" "yellow"
 	echo
-	echo-green "Commands:"
+	echo "Usage: fin system <command> [params]"
+
+	echo
+	echo "Manage Docksal system status"
+
+	echo
+	echo "Commands:"
 	printh "reset" "Reset Docksal"
 	printh "start" "Start Docksal"
 	printh "stop" "Stop Docksal"
 	printh "status" "Check Docksal status"
+
 	echo
-	echo-green "Examples:"
+	echo "Examples:"
 	printh "fin system reset" "Reset all Docksal system services and settings"
 	printh "fin system reset dns" "Reset Docksal DNS service"
 	printh "fin system reset vhost-proxy" "Reset Docksal HTTP/HTTPS reverse proxy service (resolves ${yellow}*.docksal${NC} domain names into container IPs)"
@@ -1351,27 +1370,39 @@ show_help_system() {
 
 show_help_update ()
 {
-	echo-green "fin update - Automated update of Docksal system components"
 	echo
+	echo "Usage: fin update"
+
+	echo
+	echo "Update Docksal system components to the latest stable version"
+
+	echo
+	echo "Options:"
+	printh "DOCKSAL_VERSION=develop fin update" "Update Docksal to the latest development version"
 }
 
 show_help_exec-url ()
 {
-	echo-green "fin exec-url <url> - Fetch script and evaluate locally"
 	echo
-	echo -e "URL is required parameter. Useful for demos or installations."
+	echo "Usage: fin exec-url <url>"
+
 	echo
+	echo "Fetch script from the public URL and evaluate locally"
 }
 
 show_help_sqlc ()
 {
-	echo-green "Open mysql console to current db server (alias: mysql)"
-	printh "fin sqlc" "" "yellow"
 	echo
-	echo-green "Parameters:"
+	echo "Usage: fin sqlc [options]"
+	echo "       fin mysql [options]"
+
+	echo
+	echo "Open MySql command line to the current db server"
+
+	echo
+	echo "Options:"
 	printh "--db-user=admin" "Use another mysql username (default is 'root')"
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
-	echo
 }
 show_help_mysql ()
 {
@@ -1380,13 +1411,17 @@ show_help_mysql ()
 
 show_help_sqls ()
 {
-	echo-green "Show list of available databases (alias: mysql-list)"
-	printh "fin sqls" "" "yellow"
 	echo
-	echo-green "Parameters:"
+	echo "Usage: fin sqls [options]"
+	echo "       fin mysql-list [options]"
+
+	echo
+	echo-green "Show list of available databases (alias: )"
+
+	echo
+	echo-green "Options:"
 	printh "--db-user=admin" "Use another mysql username (default is 'root')"
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
-	echo
 }
 show_help_mysql_list ()
 {
@@ -1395,21 +1430,24 @@ show_help_mysql_list ()
 
 show_help_sqli ()
 {
-	echo-green "Truncate database and import dump from file or stdin (alias: mysql-import)"
-	printh "fin sqli [dump_file.sql]" "" "yellow"
 	echo
-	echo -e "DB dump file should be plain ${yellow}.sql${NC} file."
+	echo "Usage: fin sqli [dump_file.sql] [options]"
+	echo "       fin mysql-import [dump_file.sql] [options]"
+
 	echo
-	echo-green "Parameters:"
+	echo "Truncate database and import SQL dump from a file or stdin"
+
+	echo
+	echo "Options:"
 	printh "--force" "Do not ask questions. The only time when question is asked is when truncation fails."
 	printh "--db=drupal" "Use another database (default is the one set with 'MYSQL_DATABASE')"
 	printh "--db-user=admin" "Use another mysql username (default is 'root')"
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
+
 	echo
-	echo-green "Examples:"
-	printh "fin sqli ~/dump.sql --db=drupal" "	Import plaintext sql dump into database named 'drupal' (DB should exist)"
+	echo "Examples:"
+	printh "fin sqli ~/dump.sql --db=drupal" "Import plaintext sql dump into database named 'drupal' (DB should exist)"
 	printh "cat ~/dump.sql | fin sqli" "	Import dump from stdin into default database"
-	echo
 }
 show_help_mysql-import ()
 {
@@ -1418,18 +1456,22 @@ show_help_mysql-import ()
 
 show_help_sqld ()
 {
-	echo-green "Export database from db container into file or stdout (alias: mysql-dump)"
-	printh "fin sqld [dump_file]" "" "yellow"
 	echo
-	echo-green "Parameters:"
+	echo "Usage: fin sqld [dump_file] [options]"
+
+	echo
+	echo "Export database from db container into file or stdout (alias: mysql-dump)"
+
+	echo
+	echo "Options:"
 	printh "--db=drupal" "Use another database (default is the one set with 'MYSQL_DATABASE')"
 	printh "--db-user=admin" "Use another mysql username (default is 'root')"
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
+
 	echo
-	echo-green "Examples:"
+	echo "Examples:"
 	printh "fin sqld ~/dump.sql" "Export default database dump"
 	printh "fin sqld --db=drupal" "Export database 'drupal' dump into stdout"
-	echo
 }
 show_help_mysql-dump ()
 {
@@ -1438,10 +1480,14 @@ show_help_mysql-dump ()
 
 show_help_db ()
 {
-	echo-green "Database related commands"
-	printh "fin db <command> [file] [options]" "" "yellow"
 	echo
-	echo-green "Commands:"
+	echo "Usage: fin db <command> [file] [options]"
+
+	echo
+	echo "Database related commands"
+
+	echo
+	echo "Commands:"
 	printh "import [file] [options]" "Truncate the database and import from SQL dump file or stdin."
 	printh "         --progress" "Show import progess (requires pv)."
 	printh "         --no-truncate" "Do no truncate database before import."
@@ -1450,35 +1496,41 @@ show_help_db ()
 	printh "cli [query]" "Open command line interface to the DB server (and execute query if provided)."
 	printh "create <name>" "Create a database."
 	printh "drop <name>" "Delete a database."
+
 	echo
-	echo-green "Parameters:"
+	echo "Options:"
 	printh "--db=drupal" "Use another database (default is the one set with 'MYSQL_DATABASE')"
 	printh "--db-user=admin" "Use another mysql username (default is 'root')"
 	printh "--db-password=p4\$\$" "Use another database password (default is the one set with 'MYSQL_ROOT_PASSWORD', see ${yellow}fin config${NC})"
 	printh "--db-charset=utf8" "Override charset when creating a database (default is utf8)"
 	printh "--db-collation=utf8mb4" "Override collation when creating a database (default is utf8_general_ci)"
+
 	echo
-	echo-green "Examples:"
+	echo "Examples:"
 	printh "fin db import ~/dump.sql" "		Import from dump.sql file"
 	printh "fin db import ~/dump.sql --progress" "	Import from dump.sql file showing import progress"
 	printh "fin db import ~/partial.sql --no-truncate" "Import partial.sql without truncating DB"
 	echo
 	printh "cat dump.sql | fin db import" "		Import dump from stdin into default database"
+	printh "zcat < dump.sql.gz | fin db import" "	Import archived dump from stdin into default database"
 	printh "fin db dump ~/dump.sql" "		Export default database into dump.sql"
 	printh "fin db dump --db=drupal" "		Export database 'drupal' dump into stdout"
 	printh "fin db dump --db=mysql --db-user=root --db-password=root mysql.sql    Export mysql database as root into mysql.sql"
 	echo
 	printh "fin db cli --db=nondefault 'select * from users'    Execute query on database other than MYSQL_DATABASE"
 	printh "fin db create project2 --db-charset=utf8mb4    Create database project2 with utf8mb4 charset"
-	echo
 }
 
 show_help_vm ()
 {
-	echo-green "Control docker machine directly"
-	printh "fin vm <command>" "" "yellow"
 	echo
-	echo-green "Commands:"
+	echo "Usage: fin vm <command>"
+
+	echo
+	echo "Control Docksal virtual machine"
+
+	echo
+	echo "Commands:"
 	printh "start" "Start the machine (create if needed)"
 	printh "stop" "Stop the machine"
 	printh "kill" "Forcibely stop the machine"
@@ -1498,133 +1550,141 @@ show_help_vm ()
 	printh "stats" "Show CPU and network usage"
 	echo
 	printh "regenerate-certs" "Regenerate TLS certificates and restart the VM"
-	echo
 }
 
 show_help_alias ()
 {
-	echo-green "fin alias - Create/delete aliases"
 	echo
+	echo "Usage: fin alias <command or path> [alias_name]"
+
+	echo
+	echo "Create/delete project alias"
 	echo "Aliases provide functionality that is similar to drush aliases."
-	echo "Using alias you are able to execute a command for a project without navigating to the project folder."
+	echo "Using alias you are able to execute a command in a project without navigating to the project folder."
 	echo "You can precede any command with an alias."
+	echo "Aliases are effectively symlinks stored in \$HOME/.docksal/alias"
 	echo
-	echo-green "Usage:"
+	echo "Usage:"
 	printh "fin alias [list]" "Show aliases list"
 	printh "fin alias <path> <alias_name>" "Create or update an alias that links to target path"
 	printh "fin alias remove <alias_name>" "Remove alias"
-	echo-green "Examples:"
-	printh "fin alias ~/site1/docroot dev" "Create or update an alias ${yellow}dev${NC} that is linked to ${yellow}~/site1/docroot${NC}"
-	printh "fin @dev drush st" "Execute 'drush st' command in directory linked by ${yellow}dev${NC} alias"
-	printh "" "Hint: create alias to Drupal sub-site folder to launch subsite targeted commands"
-	printh "fin alias remove dev" "Delete ${yellow}dev${NC} alias"
+
 	echo
-	echo "Aliases are effectively symlinks stored in $CONFIG_ALIASES"
+	echo "Examples:"
+	printh "fin alias ~/site1/docroot dev" "	Create or update an alias ${yellow}dev${NC} that is linked to ${yellow}~/site1/docroot${NC}"
+	printh "fin @dev drush st" "	Execute \`drush st\` command in directory linked by ${yellow}dev${NC} alias"
+	printh "" "	Hint: create alias linking to Drupal sub-site to launch targeted commands"
+	printh "fin alias remove dev" "	Delete ${yellow}dev${NC} alias"
 }
 
 show_help_share ()
 {
-	echo-green "Share project to the internet via ngrok"
-	printh "fin share [params]" "" "yellow"
 	echo
-	echo-green "Purpose:"
-	printh "In certain cases you may need to share or expose you local web server on the internet."
-	printh "E.g. share access with a teammate or customer to demonstrate the work or discuss the progress."
-	printh "ngrok creates a tunnel from the public internet to a port on your local machine even if you are behind NAT."
+	echo "Usage: fin share [options]"
+
 	echo
-	echo-green "Params:"
-	printh "--host" "Override a hostname for ngrok to route to (default is VIRTUAL_HOST)"
+	echo "Share the project via public url generated with ngrok"
+
 	echo
-	echo-green "Usage:"
-	printh "You will get public web address in command line UI."
+	echo "Options:"
+	printh "--host" "Override a hostname for ngrok to route to (default is \$VIRTUAL_HOST)"
+
+	echo
+	echo "Usage:"
+	printh "You will get public web address in the ngrok command line UI."
 	printh "Press Ctrl+C to stop sharing and quit command line UI"
+
 	echo
-	echo-green "Examples:"
-	printh "fin share --host=subdomain.mysite.docksal  -  Easy was to expose certain subdomain"
-	echo
+	echo "Examples:"
+	printh "fin share --host=subdomain.mysite.docksal" "Expose certain subdomain"
 }
 
 show_help_config ()
 {
-	echo-green "Display/generate project configuration"
-	printh "fin config [command]" "" "yellow"
 	echo
-	echo-green "Config commands:"
+	echo "Usage: fin config [command]"
+
+	echo
+	echo "Display/generate project configuration"
+
+	echo
+	echo "Commands:"
 	printh "show" "Display configuration for the current project"
 	printh "env" "Display only environment variables section"
-	printh "generate" "Generate Docksal configuration for the project"
-	echo
+	printh "generate" "Generate empty Docksal configuration for the project"
 }
 
 show_help_cleanup ()
 {
-	echo-green "Perform a cleanup"
-	printh "fin cleanup [--hard]" "" "yellow"
 	echo
-	printh "Removes unused docker images to save disk space on VM."
-	printh "Removes orphaned containers. Orphaned are those, which folders were deleted on filesystem"
-	printh "without removing their containers with 'fin project remove' first."
-	echo-green "Parameters:"
-	printh "--hard" "Also remove all stopped containers (potentially destructive operation)"
+	echo "Usage: fin cleanup [options]"
+
 	echo
+	echo "Remove unused docker images and orphaned containers to save disk space."
+	echo "Orphaned are containers which folders were deleted from the filesystem,"
+	echo "but their containers still linger in the Docker."
+
+	echo
+	echo "Options:"
+	printh "--hard" "Also remove ALL stopped containers (potentially destructive operation)"
 }
 
 show_help_hosts ()
 {
-	echo-green "Can add or remove lines to/from OS-dependent hosts file"
 	echo
-	printh "fin hosts [command]" "" "yellow"
+	echo "Usage: fin hosts [command]"
+
 	echo
-	printh "Uses $DOCKSAL_DEFAULT_IP for IP when VirtualBox is used."
-	printh "Uses $DOCKSAL_NATIVE_IP for IP when DOCKER_NATIVE is set."
+	echo "Add or remove lines to/from OS-dependent hosts file (e.g. /etc/hosts)"
+
 	echo
-	echo-green "Commands:"
-	printh "add [hostname]" "Add hostname to hosts file. If no provided uses ${yellow}VIRTUAL_HOST${NC}"
-	printh "remove [hostname]" "Remove all lines containing hostname from hosts file. Uses ${yellow}VIRTUAL_HOST${NC} if none provided"
+	echo "Commands:"
+	printh "add [hostname]" "Add hostname to hosts file. If none provided uses VIRTUAL_HOST"
+	printh "remove [hostname]" "Remove lines containing hostname from hosts file. If none provided uses VIRTUAL_HOST"
 	printh "list" "Output hosts file"
-	printh "<no command>" "Output hosts file"
-	printh "help" "Show this help"
+
 	echo
-	echo-green "Examples:"
+	echo "Examples:"
 	printh "fin hosts add" "Append current project's VIRTUAL_HOST to hosts file"
 	printh "fin hosts add demo.docksal" "Append a line '$DOCKSAL_IP demo.docksal' to hosts file"
 	printh "fin hosts remove" "Remove current project's VIRTUAL_HOST from hosts file"
 	printh "fin hosts remove demo.docksal" "Remove *all* lines containing demo.docksal from hosts file"
 	printh "fin hosts" "Output hosts file"
-	echo
 }
 
 show_help_addon ()
 {
-	echo-green "Addons management commands."
-	echo -e "See available addons in the Addons Repository ${yellow}https://github.com/docksal/addons${NC}"
 	echo
-	printh "fin addon <command> <name>" "" "yellow"
+	echo "Usage: fin addon <command> <name>"
+
+	echo
+	echo "Docksal Addons management commands."
+	echo -e "See available addons in the Addons Repository ${yellow}https://github.com/docksal/addons${NC}"
+
 	echo
 	echo-green "Commands:"
 	printh "install <name>" "Install addon"
 	printh "remove <name>" "Remove addon"
+
 	echo
 	echo-green "Examples:"
 	printh "fin addon install solr" "Install solr addon to the current project"
 	printh "fin addon remove solr" "Uninstall solr addon from the current project"
-	echo
 }
 
 show_help_logs ()
 {
 	echo
-	echo-green "Show Docker container logs for a service"
+	echo "Usage: fin logs [service]"
+
 	echo
-	printh "fin logs [service]" "" "yellow"
+	echo "Show Docker container logs for a service"
+
 	echo
-	echo -e "Also shows Unison logs if ${yellow}DOCKSAL_VOLUMES=unison${NC} is enabled (${yellow}fin logs unison${NC})"
-	echo
-	echo-green "Examples:"
+	echo "Examples:"
 	printh "fin logs web" "Show web server logs"
 	printh "fin logs unison" "Show unison logs"
 	printh "fin logs unison --tail" "Show unison logs and follow it"
-	echo
 }
 #---------- END HELP FUNCTIONS
 
@@ -2407,9 +2467,9 @@ up ()
 	# See https://github.com/docksal/docksal/issues/265
 	is_mac && find . -type d > /dev/null 2>&1
 
-	_start_containers
+	_start_containers || return 1
 	unison_sync_wait
-	echo-green "Virtual Host: ${yellow}$VIRTUAL_HOST${NC}"
+	echo-green "Virtual Host: ${yellow}http://$VIRTUAL_HOST${NC}"
 }
 
 # Stop containers
@@ -2444,18 +2504,16 @@ remove ()
 {
 	check_project_environment
 	check_project_unique
+	eval $(parse_params "$@")
 
-	if [[ $1 == "" ]]; then
-		echo -e "${red}WARNING:${NC} ${yellow}All containers and volumes for the current project will be removed!${NC}"
+	# Alert when no containers specified and no force passed
+	if [[ "${ARGV[0]}" == "" ]] && [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
+		echo-alert "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
 		_confirm "Continue?";
 	fi
 
-	# support quiet removal
-	if [[ $1 == "-f" ]]; then
-		shift
-	fi
-
-	_remove_containers "$@"
+	# Removes containers
+	_remove_containers $(echo "${ARGV[*]}")
 }
 
 # List project containers
@@ -2546,16 +2604,17 @@ project_create ()
 	echo-green "             -= Docksal project wizard =-"
 	echo
 	while true; do
-		echo -en "${yellow}1. Enter the name of your project${NC} (lowercase alphanumeric and dashes): "
+		echo -en "${yellow}1. Enter the name of your project${NC} (lowercase alphanumeric, underscore and hyphen): "
 		read -p "" project_name
-		# This will not accept project name of 1 symbol long. Not sure if this need to be fixed
-		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9-]*[a-z0-9]$ ]]; then
+		# This will not accept project name of 1 symbol long. Not sure if this needs to be fixed
+		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9_-]*[a-z0-9]$ ]]; then
 			echo-error "Unacceptable project name" \
-				"Use only lowercase letters, numbers and dashes. Do not use underscores." \
-				"Project name defines host name. Hostname has limitations." \
+				"Use only lowercase letters, numbers, underscores and hyphens." \
+				"Project name defines host name, where underscores will be replaced with hyphens." \
 				""
 			continue
 		fi
+		local project_virtual_host_name="$(echo ${project_name} | sed 's/_/-/g' | sed 's/[^-a-z0-9]//g').${DOCKSAL_DNS_DOMAIN}"
 		break
 	done
 	echo ''
@@ -2650,7 +2709,7 @@ project_create ()
 
 	echo -e "Your site will be created at ${yellow}$(pwd)/$project_name${NC}"
 	echo -e "Your site will run ${yellow}${target_cms}${NC}"
-	echo -e "The URL of your site will be ${yellow}http://$project_name.docksal${NC}"
+	echo -e "The URL of your site will be ${yellow}http://${project_virtual_host_name}${NC}"
 	echo ''
 
 	_confirm "Do you wish to proceed?"
@@ -2661,9 +2720,9 @@ project_create ()
 		mkdir "docroot"
 		echo "<html><body>Hello, Docksal!</body></html>" > "docroot/index.html"
 		echo 'DOCKSAL_STACK="default-nodb"' >> ".docksal/docksal.env"
-		echo "VIRTUAL_HOST=\"${project_name}.docksal\"" >>  ".docksal/docksal.env"
+		echo "VIRTUAL_HOST=\"${project_virtual_host_name}\"" >>  ".docksal/docksal.env"
 		fin up
-		echo -e "Done! Visit ${yellow}http://$project_name.docksal${NC}"
+		echo -e "Done! Visit ${yellow}http://${project_virtual_host_name}${NC}"
 		exit
 	fi
 
@@ -2676,7 +2735,7 @@ project_create ()
 	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
 		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_name}/g" docksal.env
+		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" docksal.env
 		rm -f docksal.env.bak > /dev/null 2>&1
 	)
 
@@ -3975,26 +4034,33 @@ _exec ()
 # @param $* command with its params to run.
 run_cli ()
 {
-	local env_vars=()
 	local env_str=""
 
 	while [ $# -gt 0 ]
 	do
 	    case $1 in
-				# Allow disabling TTY mode.
-				# Useful for non-interactive commands when output is saved into a variable for further comparison.
-				# In a TTY mode the output may contain unexpected control symbols/etc.
-		    -T) local no_tty=true; shift; ;;
-				# Throw all environment variables into an array so that they can be spit into the docker run command.
-		    -e) env_vars+=("${2}"); shift 2; ;;
-				*) break;;
+		# Allow disabling TTY mode.
+		# Useful for non-interactive commands when output is saved into a variable for further comparison.
+		# In a TTY mode the output may contain unexpected control symbols/etc.
+		-T) local no_tty=true; shift; ;;
+		# Throw all environment variables into an array so that they can be spit into the docker run command.
+		-e)
+		IFS='=' read -r key value <<< "${2}"
+
+		# If value is empty set the value to whatever the variable name in $key is
+		# If key does not exist then sets it to empty variable
+		if [[ -z $value ]]; then
+			value="${!key}"
+		fi
+		# Set the $key back to whatever $value is
+		eval ${key}=`echo -ne \""${value}"\"`
+		# Add only key to $env_str to be used at runtime.
+		env_str="${env_str}-e ${key} "
+		shift 2
+		;;
+		*) break;;
 	    esac
 	done
-
-	# If env_vars array has anything in it let's put it into a string.
-	if [ ${#env_vars[@]} -gt 0 ]; then
-		local env_str=$(printf " -e %s " "${env_vars[@]}")
-	fi
 
 	# Set default image
 	local IMAGE="${IMAGE:-docksal/cli:2.1-php7.1}"
@@ -4014,10 +4080,28 @@ run_cli ()
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker run --rm -it -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" $env_str ${IMAGE} "$cmd; (exit \$?)"
+		eval "${winpty} docker run --rm -it \
+			-v $(pwd):/var/www \
+			-e SECRET_SSH_PRIVATE_KEY \
+			-e SECRET_ACAPI_EMAIL \
+			-e SECRET_ACAPI_KEY \
+			-e SECRET_TERMINUS_TOKEN \
+			-e HOST_UID \
+			-e HOST_GID \
+			-e DEBUG" \
+			${env_str} ${IMAGE} "$cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker run --rm -v $(pwd):/var/www -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -e DEBUG="$DEBUG" $env_str ${IMAGE} "$cmd"
+		eval "docker run --rm \
+			-v $(pwd):/var/www \
+			-e SECRET_SSH_PRIVATE_KEY \
+			-e SECRET_ACAPI_EMAIL \
+			-e SECRET_ACAPI_KEY \
+			-e SECRET_TERMINUS_TOKEN \
+			-e HOST_UID \
+			-e HOST_GID \
+			-e DEBUG" \
+			${env_str} ${IMAGE} "$cmd"
 	fi
 }
 
@@ -4300,7 +4384,7 @@ reset ()
 
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
-	_start_containers
+	_start_containers || return 1
 	unison_sync_wait
 }
 
@@ -4593,13 +4677,15 @@ load_configuration ()
 	if [[ -d $(get_project_path) ]]; then
 		local project_name=$(basename $(get_project_path) | tr '[:upper:]' '[:lower:]')
 		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
-		COMPOSE_PROJECT_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^a-z0-9]//g')
+		COMPOSE_PROJECT_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^-_a-z0-9]//g')
+		COMPOSE_PROJECT_VHOST_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/_/-/g' | sed 's/[^-a-z0-9]//g')
 		export COMPOSE_PROJECT_NAME
 		export COMPOSE_PROJECT_NAME_SAFE
+		export COMPOSE_PROJECT_VHOST_NAME_SAFE
 	fi
 
 	# Set defaults
-	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
+	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	export DOCROOT=${DOCROOT:-docroot}
 
 	# Make project root globally available
@@ -4608,14 +4694,6 @@ load_configuration ()
 	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
 	# https://docs.docker.com/compose/reference/envvars/#compose_convert_windows_paths
 	export COMPOSE_CONVERT_WINDOWS_PATHS=1
-
-	# Export host user uid/gid
-	# The startup script in the cli container picks these up and updates the docker user inside of the container
-	# On Windows this is not necessary, as Linux permissions and ownership do not matter over SMB
-	if ! is_windows; then
-		export HOST_UID=$(id -u)
-		export HOST_GID=$(id -g)
-	fi
 }
 
 config_show ()
@@ -5030,60 +5108,20 @@ unison_sync_wait () {
 	# If not unison volumes exit
 	[[ "$DOCKSAL_VOLUMES" != "unison" ]] && return
 
-	# Tail /root/unison.log in bg-sync container waiting for Synchronization to complete
 	echo-green "Waiting for Unison to perform initial sync..."
-	FIRST_PASS=1
 	RESPONSE_TIMER=5 # default check frequency in seconds
 
-	until [[ "$SYNC_COMPLETE" == "1" ]]; do
-		LOG_TAIL=$(docker exec -i ${COMPOSE_PROJECT_NAME_SAFE}_bg-sync_1 tail /root/unison.log 2>/dev/null)
-
-		# If non-zero code was returned, then the log file does not exist yet
-		if [[ "$?" != "0" ]]; then
-			# On the first pass estimate time to finish
-			if [[ "$FIRST_PASS" == "1" ]]; then
-				FIRST_PASS=0
-				# Show current time at the beginning of each line
-				echo $(date +"%T") "Estimating time for initial sync"
-				# Get estimate by dividing project size in Mb by 10
-				# 10 MB/sec is guesstimate for copy speed
-				cd "$PROJECT_ROOT"
-				PROJECT_SIZE=$(du -d 1 -m -c | grep total | awk '{print $1}')
-				ESTIMATE=$(echo ${PROJECT_SIZE} | awk '{ sum=$1/10; printf "%.0f", sum }')
-				echo "         Project size: ${PROJECT_SIZE}M"
-				echo "         Estimated time to sync: $ESTIMATE seconds"
-				# Preferrably notify user 10 times
-				RESPONSE_TIMER=$((ESTIMATE/10))
-				# But not less often than every 10 seconds
-				[[ ${RESPONSE_TIMER} > 10 ]] && RESPONSE_TIMER=10
-				# Not more often than every 3 seconds
-				[[ ${RESPONSE_TIMER} < 3 ]] && RESPONSE_TIMER=3
-			else
-				# Show current time at the beginning of each line
-				echo $(date +"%T") "Waiting for Unison response..."
-				sleep ${RESPONSE_TIMER}
-			fi
-			continue
-		fi
-
-		if (echo "$LOG_TAIL" | grep "Synchronization complete"); then
+	while [[ 1 == 1 ]]; do
+		local LOG_TAIL=$(docker-compose logs --tail=5 unison)
+		if (echo "$LOG_TAIL" | grep -q "Synchronization complete"); then
+			break
+		elif (echo "$LOG_TAIL" | grep -q "Nothing to do"); then
 			break
 		else
 			echo $(date +"%T") $(echo "$LOG_TAIL" | tail -1)
 			sleep ${RESPONSE_TIMER}
 		fi
 	done
-}
-
-unison_logs () {
-	# If not unison volumes exit
-	[[ "$DOCKSAL_VOLUMES" != "unison" ]] && echo "No unison volumes enabled" && return
-
-	if [[ "$1" == "--tail"  ]]; then
-		docker exec -i ${COMPOSE_PROJECT_NAME_SAFE}_bg-sync_1 tail -f /root/unison.log
-	else
-		docker exec -i ${COMPOSE_PROJECT_NAME_SAFE}_bg-sync_1 cat /root/unison.log
-	fi
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
@@ -5120,6 +5158,14 @@ else
 	if [[ ! -f "$docksal_env_file" ]]; then
 		touch "$docksal_env_file" 2>/dev/null
 	fi
+fi
+
+# Host user uid/gid
+# The startup script in the cli container picks these up and updates the docker user inside of the container
+# On Windows this is not necessary, as Linux permissions and ownership do not matter over SMB
+if ! is_windows; then
+	export HOST_UID=$(id -u)
+	export HOST_GID=$(id -g)
 fi
 
 # Network settings
@@ -5604,12 +5650,7 @@ case "$1" in
 	logs)
 		load_configuration
 		shift
-		if [[ "$1" == "unison" ]]; then
-			shift
-			unison_logs "$@"
-		else
-			logs "$@"
-		fi
+		logs "$@"
 		;;
 	"")
 		# no load_configuration

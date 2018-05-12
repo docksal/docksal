@@ -74,6 +74,7 @@ Some more complex management commands have their own help sections.
       fin db import ~/partial.sql --no-truncate	Import partial.sql without truncating DB
 
       cat dump.sql | fin db import			Import dump from stdin into default database
+      zcat < dump.sql.gz | fin db import	        Import archived dump from stdin into default database
       fin db dump ~/dump.sql   			Export default database into dump.sql
       fin db dump --db=drupal  			Export database 'drupal' dump into stdout
       fin db dump --db=mysql --db-user=root --db-password=root mysql.sql    Export mysql database as root into mysql.sql	
