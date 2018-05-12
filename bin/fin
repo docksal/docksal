@@ -2540,66 +2540,6 @@ project_list ()
 		--format 'table {{.Label "com.docker.compose.project"}}\t{{.Status}}\t{{.Label "io.docksal.virtual-host"}}\t{{.Label "io.docksal.project-root"}}'
 }
 
-project_ask_repo ()
-{
-	local __repo=$1
-	while true; do
-		echo -en "${yellow}What is the repository url: (example: git@github.com:docksal/drupal8.git)${NC} "
-		read -p "" repo
-
-		git ls-remote "$repo" &>-
-		if [ "$?" -ne 0 ]; then
-			echo-error "Not a valid repository. Please Try Again"\
-				""
-			continue
-		fi
-		break
-	done
-	eval $__repo="'$repo'"
-}
-
-project_get_pantheon_info ()
-{
-	local __repo=$1
-	local __framwork=$2
-
-	[[ -f "$CONFIG_ENV" ]] && set -a; source "$CONFIG_ENV";
-
-	if [ -z "${SECRET_TERMINUS_TOKEN}" ]; then
-		echo-error "SECRET_TERMINUS_TOKEN is not defined within ${CONFIG_ENV}"\
-		""
-	fi
-
-	while true; do
-		if [ ! -z ${SECRET_TERMINUS_TOKEN} ]; then
-			WHOAMI=$(run_cli -T -e SECRET_TERMINUS_TOKEN=${SECRET_TERMINUS_TOKEN} 'terminus auth:whoami' 2> /dev/null)
-			if [ -z ${WHOAMI} ]; then
-				echo-error "Error logging in with provided token. Try different token."\
-				""
-				SECRET_TERMINUS_TOKEN=""
-			else
-				break;
-			fi
-		fi
-
-		echo -e "${yellow}More info on Pantheon Machine Token:${NC} https://pantheon.io/docs/machine-tokens/"
-		echo -en "${yellow}Enter valid Pantheon Machine Token:${NC} "
-		read -p "" SECRET_TERMINUS_TOKEN
-
-		if [ -z "${SECRET_TERMINUS_TOKEN}" ]; then
-			echo-error "A Machine Token is required to continue"\
-			""
-		fi
-	done
-
-	## Ask for Client Name
-	## Get Repo
-	## Get Framework
-
-	eval $__repo="'$repo'"
-  eval $__framework="'$framework'"
-}
-
 project_create ()
 {
 	echo-green "             -= Docksal project wizard =-"
@@ -2630,33 +2570,31 @@ project_create ()
 	echo -e "${green}   [7]${NC} Gatsby JS"
 	echo -e "${green}   [8]${NC} Laravel"
 	echo -e "${green}   [9]${NC} Hugo"
-	echo -e "${green}   [10]${NC} Pantheon"
-	echo -e "${green}   [11]${NC} Git Repository"
 	echo -e ""
 	while true; do
-		read -p "Enter your choice (1-11): " choice
+		read -p "Enter your choice (1-9): " choice
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
-				target_host_name_search_string="drupal7"
+				target_host_name_search_string="drupal7.docksal"
 				target_repo="$URL_REPO_DRUPAL7"
 				break
 				;;
 			2)
 				target_cms="Drupal 8"
-				target_host_name_search_string="drupal8"
+				target_host_name_search_string="drupal8.docksal"
 				target_repo="$URL_REPO_DRUPAL8"
 				break
 				;;
 			3)
 				target_cms="Wordpress"
-				target_host_name_search_string="wordpress"
+				target_host_name_search_string="wordpress.docksal"
 				target_repo="$URL_REPO_WORDPRESS"
 				break
 				;;
 			4)
 				target_cms="Magento"
-				target_host_name_search_string="magento"
+				target_host_name_search_string="magento.docksal"
 				target_repo="$URL_REPO_MAGENTO"
 				break
 				;;
@@ -2684,21 +2622,6 @@ project_create ()
 				target_cms="Hugo"
 				target_host_name_search_string=""
 				target_repo="$URL_REPO_HUGO"
-				;;
-			10)
-				REPO=""
-				FRAMEWORK=""
-				project_get_pantheon_info REPO FRAMEWORK
-				target_cms="${FRAMEWORK}"
-				target_host_name_search_string=""
-				target_repo=${REPO}
-				;;
-			11)
-				REPO=""
-				project_ask_repo REPO
-				target_cms="Custom"
-				target_host_name_search_string=""
-				target_repo=${REPO}
 				;;
 			* )
 				echo 'Enter a number between 1 and 9.'
@@ -4298,7 +4221,7 @@ mysql_import ()
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	__mysql_command=$(echo "${__mysql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
-	${pipe_cmd} ${__input} | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
+        ${pipe_cmd} "${__input}" | docker exec -i ${container_id} mysql ${__mysql_command} ${__database}
 
 	# Check if import succeeded or not and print results.
 	if [ $? -eq 0 ]; then
