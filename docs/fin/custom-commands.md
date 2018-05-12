@@ -2,7 +2,7 @@
 
 It is possible to extend fin with custom commands per project or per host.
 
-## Project-level custom commands 
+## Project-level custom commands
 
 Create a file at this location `.docksal/commands/updb` (Notice **no extension**. Script name should match command name) with the following contents:
 
@@ -22,9 +22,9 @@ Make the file executable
 chmod +x .docksal/commands/updb
 ```
 
-Now you can use it as if it was a regular fin command: `fin updb`. 
-Passing parameters also works: `fin updb -y`. 
-The command description will be visible in `fin help` and the full command help will be available via `fin help updb`. 
+Now you can use it as if it was a regular fin command: `fin updb`.
+Passing parameters also works: `fin updb -y`.
+The command description will be visible in `fin help` and the full command help will be available via `fin help updb`.
 
 Note: `drush updb` this is a Drupal-specific example.
 
@@ -48,13 +48,13 @@ fin up
 # Install site
 fin drush site-install -y --site-name="My Drupal site"
 # Get login link
-cd docroot 2>dev/null 
+cd docroot 2>dev/null
 fin drush uli
 ```
 
 ## Documenting custom command
 
-Fin looks for lines starting with `##` for command documentation. 
+Fin looks for lines starting with `##` for command documentation.
 
 ```bash
 ## Custom command description
@@ -93,7 +93,7 @@ print "Custom python command!"
 console.log("Custom NodeJS command!")
 ```
 
-Note in the above example for node, that custom command meta information lines are wrapped in a comment block 
+Note in the above example for node, that custom command meta information lines are wrapped in a comment block
 relevant to this interpreter.
 
 ## Executing commands inside cli
@@ -134,7 +134,7 @@ pwd
 console.log("Custom NodeJS command!")
 ```
 
-Note in the above example for node, that custom command meta information lines are wrapped in a comment block 
+Note in the above example for node, that custom command meta information lines are wrapped in a comment block
 relevant to this interpreter.
 
 When using `#: exec_target = cli` for commands you have to consider the following:
@@ -161,6 +161,61 @@ services:
       # These variables are passed from the host (including values in `docksal.env`/`docksal-local.env`)
       - SOURCE_ALIAS
       - VIRTUAL_HOST
+```
+
+## Grouping Commands
+
+In certain cases you may want to group your commands so that you can commit them to a repository and easily share them with others, similar to a toolkit of commands that
+can be shared across a team of developers. Docksal allows for the ability to group these commands within a folder and are usable.
+
+When running `fin help` there should be similar output like below. This will show you the available commands.
+
+```
+Docksal control cli utility v1.54.4
+
+Usage: fin <command>
+
+Management Commands:
+  db <command>             	Manage databases (fin help db)
+  project <command>        	Manage project(s) (fin help project)
+  system <command>         	Manage Docksal (fin help system)
+  vm <command>             	Manage Docksal VM (fin help vm)
+
+Commands:
+  bash [service]           	Open shell into service's container. Defaults to cli
+  logs [service]           	Show service logs (e.g. Apache logs, MySQL logs) and Unison logs (fin help logs)
+  exec <command|file>      	Execute a command or a script in cli
+  config [command]         	Show or generate configuration (fin help config)
+
+  drush [command]          	Drush command (requires Drupal)
+  drupal [command]         	Drupal Console command (requires Drupal 8)
+  terminus [command]       	Pantheon's Terminus (requires docksal/cli 2.1+)
+  wp [command]             	WordPress CLI command (requires WordPress)
+
+  addon <command>          	Addons management commands: install, remove (fin help addon)
+  ssh-add [-lD] [key]      	Adds ssh private key to the authentication agent (fin help ssh-add)
+  alias                    	Manage aliases that allow fin @alias execution (fin help alias)
+  cleanup [--hard]         	Remove unused Docker images and projects (saves disk space)
+  share                    	Create temporary public url for current project using ngrok
+  exec-url <url>           	Download script from URL and run it on host (URL should be public)
+  run-cli (rc) <command>   	Run a command in a standalone cli container in the current directory
+  image <command>          	Image management commands: registry, save, load (fin help image)
+  hosts <command>          	Hosts file commands: add, remove, list (fin help hosts)
+  vhosts                   	List all virtual *.docksal hosts registered in docksal proxy
+  sysinfo                  	Show system information for bug reporting
+  diagnose                 	Show statistics for troubleshooting and bug reporting
+  version (v, -v)          	Print fin version. [v, -v] prints short version
+  update                   	Update Docksal
+
+Custom commands:
+  site/init                 Initialize stack and site (full reset)
+  drupal/updb [g]     	    Opens SequelPro
+```
+
+Commands are ran in the same exact way as normal except include the folder they are part of.
+
+```
+fin drupal/updb
 ```
 
 ## More examples
