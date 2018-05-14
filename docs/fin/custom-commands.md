@@ -165,48 +165,11 @@ services:
 
 ## Grouping Commands
 
-In certain cases you may want to group your commands so that you can commit them to a repository and easily share them with others, similar to a toolkit of commands that
-can be shared across a team of developers. Docksal allows for the ability to group these commands within a folder and are usable.
+Docksal allows for commands to be grouped together within folders. This is particulary useful when creating a toolkit to share with other developers. Commands can be grouped within the Global Scope `~/.docksal/commands` and on a per project basis.
 
-When running `fin help` there should be similar output like below. This will show you the available commands.
+To view commands, run `fin help` and there should be similar output. This will show the available commands and prefix them within the folder they are located in.
 
 ```
-Docksal control cli utility v1.54.4
-
-Usage: fin <command>
-
-Management Commands:
-  db <command>             	Manage databases (fin help db)
-  project <command>        	Manage project(s) (fin help project)
-  system <command>         	Manage Docksal (fin help system)
-  vm <command>             	Manage Docksal VM (fin help vm)
-
-Commands:
-  bash [service]           	Open shell into service's container. Defaults to cli
-  logs [service]           	Show service logs (e.g. Apache logs, MySQL logs) and Unison logs (fin help logs)
-  exec <command|file>      	Execute a command or a script in cli
-  config [command]         	Show or generate configuration (fin help config)
-
-  drush [command]          	Drush command (requires Drupal)
-  drupal [command]         	Drupal Console command (requires Drupal 8)
-  terminus [command]       	Pantheon's Terminus (requires docksal/cli 2.1+)
-  wp [command]             	WordPress CLI command (requires WordPress)
-
-  addon <command>          	Addons management commands: install, remove (fin help addon)
-  ssh-add [-lD] [key]      	Adds ssh private key to the authentication agent (fin help ssh-add)
-  alias                    	Manage aliases that allow fin @alias execution (fin help alias)
-  cleanup [--hard]         	Remove unused Docker images and projects (saves disk space)
-  share                    	Create temporary public url for current project using ngrok
-  exec-url <url>           	Download script from URL and run it on host (URL should be public)
-  run-cli (rc) <command>   	Run a command in a standalone cli container in the current directory
-  image <command>          	Image management commands: registry, save, load (fin help image)
-  hosts <command>          	Hosts file commands: add, remove, list (fin help hosts)
-  vhosts                   	List all virtual *.docksal hosts registered in docksal proxy
-  sysinfo                  	Show system information for bug reporting
-  diagnose                 	Show statistics for troubleshooting and bug reporting
-  version (v, -v)          	Print fin version. [v, -v] prints short version
-  update                   	Update Docksal
-
 Custom commands:
   site/init                 Initialize stack and site (full reset)
   drupal/updb [g]     	    Opens SequelPro
