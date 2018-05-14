@@ -4687,6 +4687,49 @@ config_generate ()
 	fi
 }
 
+config_set ()
+{
+	while [ $# -gt 0 ]
+	do
+		# Parse variable to set
+		IFS='=' read -r key value <<< "${1}"
+		if [[ -z "$value" ]]; then
+			echo-red "Provide a value to set for $key."
+			return 1
+		fi
+
+		if grep -q "$key\=" ${docksal_env_file}; then
+			# Replace the value if it exists
+			sed -i.bak "s/$key\=.*$/$key=\"$value\"/g" ${docksal_env_file}
+			# Remove backup
+			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
+		else
+			# Make sure the is a new line at the end of the config file
+			sed -i~ '$ a\' "$CONFIG_ENV"
+			# Append new value
+			echo "$key=\"$value\"" | tee -a ${docksal_env_file} >/dev/null
+		fi
+		shift
+	done
+}
+
+config_remove ()
+{
+	while [ $# -gt 0 ]
+	do
+		if grep -q "$1" ${docksal_env_file}; then
+			# Remove the value if it exists
+			echo "Removing $1 from project's docksal.env"
+			sed -i.bak "/^$1\=.*$/d" ${docksal_env_file}
+			# Remove backup
+			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
+		else
+			echo "Could not find $1 in ${docksal_env_file}"
+		fi
+		shift
+	done
+}
+
 # Can add or remove a host to/from hosts file
 hosts ()
 {
@@ -5604,6 +5647,16 @@ case "$1" in
 				# no load_configuration
 				shift
 				config_generate
+				;;
+			set)
+				load_configuration
+				shift
+				config_set "$@"
+				;;
+			remove|rm)
+				load_configuration
+				shift
+				config_remove "$@"
 				;;
 			*)
 				load_configuration
