@@ -112,3 +112,15 @@ The built image will be stored locally and used as the service image from there 
 
 Additionally, `fin build` command is a proxy command to [docker-compose build](https://docs.docker.com/compose/reference/build/) 
 and can be used for more advanced building scenarios. 
+
+Note: it might seems like image is being rebuilt every time project starts, but it really isn't.
+
+There is no way for Docksal to know if your built image is the latest. Even if we checked for `Dockerfile` 
+changes that would not be enough, because `Dockerfile` can use some other files that can change. Therefore 
+the best Docksal option is to run `docker-compose build` every time.
+
+`docker-compose build` launches `docker` which knows what files changed and can compare things. If `docker`
+sees no changes then it does not **actually** rebuild image. You see output in the console, but there are 
+no real changes made to images (and output in the console actually says exactly that). That output is 
+basically just a check if nothing has changed. There is no good way to silence that output as in case there 
+was some error the output would render very useful.
