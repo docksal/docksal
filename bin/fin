@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.54.5
+FIN_VERSION=1.55.0
 
 # Console colors
 red='\033[0;91m'
@@ -448,20 +448,28 @@ sudowin ()
 }
 
 # Universal Bash parameter parsing
-# Parse equals separated params into named local variables
-# Standalone named parameter value will equal param name (--force creates variable $force=="force")
-# Parses multi-valued named params into array (--path=path1 --path=path2 creates ${path[*]} array)
+# Parse equal sign separated params into named local variables
+# Standalone named parameter value will equal it's param name (--force creates variable $force=="force")
+# Parses multi-valued named params into an array (--path=path1 --path=path2 creates ${path[*]} array)
 # Parses un-named params into ${ARGV[*]} array
+# Additionally puts all named params into ${ARGN[*]} array
+# Additionally puts all standalone "option" params into ${ARGO[*]} array
 # @author Oleksii Chekulaiev
-# @version v1.2 (Aug-24-2017)
+# @version v1.3 (May-14-2018)
 parse_params ()
 {
 	local existing_named
-	local ARGV=()
-	echo "local ARGV=(); "
+	local ARGV=() # un-named params
+	local ARGN=() # named params
+	local ARGO=() # options (--params)
+	echo "local ARGV=(); local ARGN=(); local ARGO=();"
 	while [[ "$1" != "" ]]; do
+		# Escape asterisk to prevent bash asterisk expansion
+		_escaped=${1/\*/\'\"*\"\'}
 		# If equals delimited named parameter
 		if [[ "$1" =~ ^..*=..* ]]; then
+			# Add to named parameters array
+			echo "ARGN+=('$_escaped');"
 			# key is part before first =
 			local _key=$(echo "$1" | cut -d = -f 1)
 			# val is everything after key and = (protect from param==value error)
@@ -484,12 +492,14 @@ parse_params ()
 			fi
 		# If standalone named parameter
 		elif [[ "$1" =~ ^\-. ]]; then
+			# Add to options array
+			echo "ARGO+=('$_escaped');"
 			# remove dashes
 			local _key=${1//\-}
 			echo "local $_key=\"$_key\";"
 		# non-named parameter
 		else
-			# escape asterisk to prevent bash asterisk expansion
+			# Escape asterisk to prevent bash asterisk expansion
 			_escaped=${1/\*/\'\"*\"\'}
 			echo "ARGV+=('$_escaped');"
 		fi
@@ -1115,7 +1125,7 @@ show_help ()
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
 	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
 	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
-	printh "config [command]" "Show or generate configuration (${yellow}fin help config${NC})"
+	printh "config [command]" "Show or change configuration (${yellow}fin help config${NC})"
 
 	echo
 	printh "drush [command]" "Drush command (requires Drupal)"
@@ -1606,13 +1616,27 @@ show_help_config ()
 	echo "Usage: fin config [command]"
 
 	echo
-	echo "Display/generate project configuration"
+	echo "Display, generate or change project configuration"
 
 	echo
 	echo "Commands:"
 	printh "show" "Display configuration for the current project"
 	printh "env" "Display only environment variables section"
 	printh "generate" "Generate empty Docksal configuration for the project"
+	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
+	printh "    --global" "Set for global ENV file"
+	echo
+	printh "remove [options] [VAR]" "Remove variable(s) from project ENV file"
+	printh "rm [options] [VAR]" ""
+	printh "    --global" "Remove from global ENV file"
+	echo
+	printh "get [options] [VAR]" "Get the value of the single variable from project ENV file"
+	printh "    --global" "Get value from global ENV file"
+
+	echo
+	echo "Examples:"
+	printh "fin config set DOCKER_NATIVE=1 --global" "Adds DOCKER_NATIVE=1 into \$HOME/.docksal/docksal.env"
+	printh "fin config rm DOCKER_NATIVE --global" "	Removes DOCKER_NATIVE value from \$HOME/.docksal/docksal.env"
 }
 
 show_help_cleanup ()
@@ -4687,44 +4711,91 @@ config_generate ()
 	fi
 }
 
+config_get ()
+{
+	eval $(parse_params "$@")
+
+	# If --global is passed set in global docksal.env
+	local target_env_file
+	if [[ "$global" == "global" ]]; then
+		target_env_file="$CONFIG_ENV"
+	else
+		load_configuration
+		target_env_file="$docksal_env_file"
+	fi
+
+	grep "^$1\=" "$target_env_file" | sed "s/^$1=\(.*\)$/\1/"
+}
+
 config_set ()
 {
-	while [ $# -gt 0 ]
-	do
-		# Parse variable to set
-		IFS='=' read -r key value <<< "${1}"
-		if [[ -z "$value" ]]; then
-			echo-red "Provide a value to set for $key."
-			return 1
-		fi
+	eval $(parse_params "$@")
 
-		if grep -q "$key\=" ${docksal_env_file}; then
+	# If --global is passed set in global docksal.env
+	local target_env_file
+	if [[ "$global" == "global" ]]; then
+		target_env_file="$CONFIG_ENV"
+	else
+		load_configuration
+		target_env_file="$docksal_env_file"
+	fi
+
+	# Warn if no values were found
+	if [[ "${#ARGN[@]}" == 0 ]]; then
+		echo "No values to set"
+		return 1
+	fi
+
+	# Loop named params array
+	for param in "${ARGN[@]}"
+	do
+		shift
+		# Parse variable to set
+		IFS='=' read -r key value <<< "${param}"
+
+		if grep -q "^$key\=" "$target_env_file"; then
 			# Replace the value if it exists
-			sed -i.bak "s/$key\=.*$/$key=\"$value\"/g" ${docksal_env_file}
+			sed -i.bak "s/^$key\=.*$/$key=\"$value\"/g" "$target_env_file"
 			# Remove backup
 			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
+			echo "Replaced value for $key into $target_env_file"
 		else
 			# Make sure the is a new line at the end of the config file
 			sed -i~ '$ a\' "$CONFIG_ENV"
 			# Append new value
-			echo "$key=\"$value\"" | tee -a ${docksal_env_file} >/dev/null
+			echo "$key=\"$value\"" | tee -a "$target_env_file" >/dev/null
+			echo "Added value for $key into $target_env_file"
 		fi
-		shift
 	done
 }
 
 config_remove ()
 {
+	eval $(parse_params "$@")
+
+	# If --global is passed set in global docksal.env
+	local target_env_file
+	if [[ "$global" == "global" ]]; then
+		target_env_file="$CONFIG_ENV"
+	else
+		load_configuration
+		target_env_file="$docksal_env_file"
+	fi
+
 	while [ $# -gt 0 ]
 	do
-		if grep -q "$1" ${docksal_env_file}; then
+		if [[ "$1" == "--global" ]]; then
+			shift
+			continue
+		fi
+		if grep -q "$1" "${target_env_file}"; then
 			# Remove the value if it exists
-			echo "Removing $1 from project's docksal.env"
-			sed -i.bak "/^$1\=.*$/d" ${docksal_env_file}
+			echo "Removing $1 from $target_env_file"
+			sed -i.bak "/^$1\=.*$/d" "$target_env_file"
 			# Remove backup
 			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
 		else
-			echo "Could not find $1 in ${docksal_env_file}"
+			echo "Could not find $1 in ${target_env_file}"
 		fi
 		shift
 	done
@@ -5649,12 +5720,17 @@ case "$1" in
 				config_generate
 				;;
 			set)
-				load_configuration
+				# load_configuration is conditional in function
 				shift
 				config_set "$@"
 				;;
+			get)
+				# load_configuration is conditional in function
+				shift
+				config_get "$@"
+				;;
 			remove|rm)
-				load_configuration
+				# load_configuration is conditional in function
 				shift
 				config_remove "$@"
 				;;
