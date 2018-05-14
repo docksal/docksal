@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.55.1
+FIN_VERSION=1.55.2
 
 # Console colors
 red='\033[0;91m'
@@ -5215,6 +5215,9 @@ fi
 if ! is_windows; then
 	export HOST_UID=$(id -u)
 	export HOST_GID=$(id -g)
+	if [[ "$HOST_UID" == "0" ]] && [[ "$CI" == "" ]]; then
+		echo-alert "Running as root is not recommended"
+	fi
 fi
 
 # Network settings
