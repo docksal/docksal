@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.54.4
+FIN_VERSION=1.54.5
 
 # Console colors
 red='\033[0;91m'
@@ -4390,8 +4390,9 @@ sysinfo ()
 	uname -a
 	# Docker Mode
 	echo -n "Mode: "
-	is_linux && echo "Linux Kernel"
-	if is_docker_native; then
+	if is_linux; then
+		echo "Linux Kernel"
+	elif is_docker_native; then
 		is_mac && echo "Docker for Mac"
 		is_windows && echo "Docker for Windows"
 	else
