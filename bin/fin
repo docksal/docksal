@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.55.0
+FIN_VERSION=1.55.1
 
 # Console colors
 red='\033[0;91m'
@@ -893,8 +893,18 @@ _stop_containers ()
 		local containers
 		containers=$(docker ps --format '{{.Names}} {{.Label "io.docksal.group"}}' | grep -v 'system')
 		if [[ $? == 0 ]]; then
-			echo-green "Stopping all running services from all projects..."
-			echo "$containers" | xargs docker stop
+			echo-green "Stopping all running Docksal projects..."
+			local running_projects=$(docker ps \
+				--filter 'label=io.docksal.project-root' \
+				--format '{{.Label "io.docksal.project-root"}}'
+			)
+			local i=1
+			for project in ${running_projects}; do
+				echo "$i. $project"
+				# use updated version when updated
+				(cd "$project" && fin stop)
+				((i=$i+1))
+			done
 		else
 			echo "No Docksal projects are running"
 		fi
@@ -2767,7 +2777,7 @@ system_stop ()
 		# VM stop will perform configure_resolver off
 		vm stop
 	else
-		_stop_containers -a
+		_stop_containers --all
 		configure_resolver off
 		echo-green "Stopping Docksal system services..."
 		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
