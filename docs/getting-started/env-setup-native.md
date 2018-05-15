@@ -30,7 +30,7 @@ Configure file sharing as necessary (see below).
 
 ## Switching to Docker for Mac/Windows (existing users)
 
-Follow instructions in this section, If you've been previously using Docksal with VirtualBox.
+Follow instructions in this section if you've been previously using Docksal with VirtualBox.
 
 **1.** Install Docker for [Mac](https://docs.docker.com/docker-for-mac) or [Windows](https://docs.docker.com/docker-for-windows).
 
@@ -50,7 +50,7 @@ Configure file sharing as necessary (see below).
 ### File sharing Mac
 
 Docker for Mac automatically shares most commonly used volumes/directories. 
-See [here](https://docs.docker.com/docker-for-mac/#file-sharing) for details.  
+See [Docker documentation](https://docs.docker.com/docker-for-mac/#file-sharing) for details.  
 It is usually not necessary to adjust these settings.
 
 Docksal automatically enables the `osxfs:cached` mode on Docker for Mac, which improves the file system read performance 
