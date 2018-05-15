@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.55.4
+FIN_VERSION=1.55.5
 
 # Console colors
 red='\033[0;91m'
@@ -4040,6 +4040,7 @@ run_cli ()
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
 		eval "${winpty} docker run --rm -it \
 			--mount type=bind,src=$(pwd),dst=/var/www \
+			--mount dst=/home/docker \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
@@ -4052,6 +4053,7 @@ run_cli ()
 		# non-interactive
 		eval "docker run --rm \
 			--mount type=bind,src=$(pwd),dst=/var/www \
+			--mount dst=/home/docker \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
