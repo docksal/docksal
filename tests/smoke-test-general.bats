@@ -207,6 +207,24 @@ teardown() {
 	run fin rc -T -e TEST "echo \$TEST"
 	[[ "$output" == "1234" ]]
 	unset output
+
+	# Check persistent volume
+	fin rc touch /home/docker/test
+	run fin rc -T ls /home/docker/test
+	[[ "$output" == "/home/docker/test" ]]
+	unset output
+
+	# Check one-off volume --clean
+	fin rc touch /home/docker/test
+	run fin rc --clean -T ls /home/docker/test
+	[[ "$output" =~ "cannot access /home/docker/test" ]]
+	unset output
+
+	# Check --cleanup persistent volume
+	fin rc touch /home/docker/test
+	run fin rc --cleanup -T ls /home/docker/test
+	[[ "$output" =~ "cannot access /home/docker/test" ]]
+	unset output
 }
 
 @test "fin rm -f" {
