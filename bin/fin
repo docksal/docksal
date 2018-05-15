@@ -4377,7 +4377,7 @@ ngrok_share ()
 	# Remove possible VIRTUAL_HOST user extensions like "my.docksal,*.my.docksal"
 	local NGROK_VIRTUAL_HOST=$(echo "$VIRTUAL_HOST" | sed "s/\(,.*\)//")
 
-	echo -e "Exposing domain ${yellow}$NGROK_VIRTUAL_HOST${NC} via ngrok..."
+	echo -e "Exposing domain ${yellow}${host:-$NGROK_VIRTUAL_HOST}${NC} via ngrok..."
 	sleep 1
 	# Based on https://github.com/wernight/docker-ngrok
 	${winpty} docker run --rm -it \
