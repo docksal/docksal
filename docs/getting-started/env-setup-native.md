@@ -13,34 +13,39 @@ On Windows, Windows 10 Fall Creators Update 1709 disables SMBv1, which is necess
 VirtualBox/boo2docker. See [docksal/docksal#382](https://github.com/docksal/docksal/issues/382) for more details.
 
 
-## Switching to Docker for Mac/Windows
+## Using Docksal with Docker for Mac/Windows (new users)
 
-**1.** Stop the Docksal VM (if applicable)
+Follow instructions in this section, if this is the first time you are installing Docksal.
 
-```bash
-fin vm stop
-```
+**1.** Install Docker for [Mac](https://docs.docker.com/docker-for-mac) or [Windows](https://docs.docker.com/docker-for-windows).
 
-**2.** Install Docker for [Mac](https://docs.docker.com/docker-for-mac) or [Windows](https://docs.docker.com/docker-for-windows).
-
-**3.** Install Docksal (unless already installed).
+**2.** Install Docksal (native mode enabled automatically).
 
 ```bash
 curl -fsSL https://get.docksal.io | DOCKER_NATIVE=1 sh
 ```
 
-**4.** Enable "native" apps mode (if Docksal was already installed).
+Configure file sharing as necessary (see below).
 
-Set `DOCKER_NATIVE=1` in `$HOME/.docksal/docksal.env`
 
-**5.** Reset Docksal system services.
+## Switching to Docker for Mac/Windows (existing users)
+
+Follow instructions in this section, If you've been previously using Docksal with VirtualBox.
+
+**1.** Install Docker for [Mac](https://docs.docker.com/docker-for-mac) or [Windows](https://docs.docker.com/docker-for-windows).
+
+**2.** Stop Docksal VM, enable "native" apps mode and reset Docksal system services
 
 ```bash
+fin vm stop
+fin config set --global DOCKSAL_NATIVE=1
 fin system reset
 ```
 
-**6.** Configure file sharing as necessary (see below).
+Configure file sharing as necessary (see below).
 
+
+## File sharing with Docker for Mac/Windows
 
 ### File sharing Mac
 
@@ -58,7 +63,7 @@ See [here](https://docs.docker.com/docker-for-windows/#shared-drives) for detail
 Configure sharing for the drive where your "Projects" folder is (`C:` in most cases).
 
 
-## Switching back to VirtualBox
+## Switching to VirtualBox (existing users)
 
 **1.** Close the "native" Docker app
 
@@ -67,13 +72,10 @@ You won't be able to use VirtualBox (or any other hypervisor) while Hyper-V is i
 Hyper-V locks the VT-x extension to itself, so other hypervisors are not able to use the hardware virtualization 
 support and cannot run 64bit VMs because of that.
 
-**2.** Disable the "native" apps mode
-
-Remove `DOCKER_NATIVE=1` from `$HOME/.docksal/docksal.env`
-
-**3.** Reset networks settings, start Docksal VM and reset Docksal system services
+**2.** Disable the "native" apps mode, reset networks settings, start Docksal VM and reset Docksal system services
 
 ```bash
+fin config set --global DOCKSAL_NATIVE=0
 fin system reset network
 fin vm start
 fin system reset
