@@ -223,7 +223,7 @@ teardown() {
 	# Check --cleanup persistent volume
 	fin rc touch /home/docker/test
 	run fin rc --cleanup -T ls /home/docker/test
-	[[ "$output" == "cannot access /home/docker/test" ]]
+	[[ "$output" =~ "cannot access /home/docker/test" ]]
 	unset output
 }
 
