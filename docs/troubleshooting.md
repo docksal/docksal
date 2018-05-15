@@ -261,3 +261,18 @@ In certain cases you may have to reboot your Mac and then reinstall VirtualBox m
 
 [This video](https://www.youtube.com/watch?v=0vmQOYRCdZM) covers the manual steps necessary to install VirtualBox 
 successfully. More details [here](https://github.com/docksal/docksal/issues/417).
+
+## Issue 13. Docker unauthorized
+
+```text
+docker: Error response from daemon: Get https://registry-1.docker.io/v2/docksal/ssh-agent/manifests/1.0: 
+unauthorized: incorrect username or password.
+See 'docker run --help'.
+```
+
+This means that you have docker credentials stored in docker config file, and those credentials are incorrect.
+
+### How to resolve
+
+See [docker login documentation](https://docs.docker.com/engine/reference/commandline/login/#logging-out) and
+to use docker client to either log out or relogin.
