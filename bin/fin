@@ -2927,8 +2927,8 @@ install_proxy_service ()
 		-e STATS_LOG="${DOCKSAL_VHOST_PROXY_STATS_LOG:-0}" \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
-		-v docksal_projects:/projects \
-		-v /var/run/docker.sock:/var/run/docker.sock \
+		--mount type=volume,src=docksal_projects,dst=/projects \
+		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 }
 
@@ -2943,7 +2943,7 @@ install_dns_service ()
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
 		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="8.8.4.4" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
-		-v /var/run/docker.sock:/var/run/docker.sock \
+		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
 }
 
@@ -3107,7 +3107,7 @@ install_sshagent_service ()
 
 	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always \
-		-v docksal_ssh_agent:/.ssh-agent \
+		--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent \
 		"${IMAGE_SSH_AGENT}" >/dev/null
 	# Add default keys. Using || true here to suppress errors if there are no keys on the host.
 	ssh_add || true
@@ -4039,7 +4039,7 @@ run_cli ()
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
 		eval "${winpty} docker run --rm -it \
-			-v $(pwd):/var/www \
+			--mount type=bind,src=$(pwd),dst=/var/www \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
@@ -4051,7 +4051,7 @@ run_cli ()
 	else
 		# non-interactive
 		eval "docker run --rm \
-			-v $(pwd):/var/www \
+			--mount type=bind,src=$(pwd),dst=/var/www \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
