@@ -449,7 +449,7 @@ sudowin ()
 
 # Universal Bash parameter parsing
 # Parse equal sign separated params into named local variables
-# Standalone named parameter value will equal it's param name (--force creates variable $force=="force")
+# Standalone named parameter value will equal its param name (--force creates variable $force=="force")
 # Parses multi-valued named params into an array (--path=path1 --path=path2 creates ${path[*]} array)
 # Parses un-named params into ${ARGV[*]} array
 # Additionally puts all named params into ${ARGN[*]} array
@@ -1626,7 +1626,7 @@ show_help_config ()
 	echo "Usage: fin config [command]"
 
 	echo
-	echo "Display, generate or change project configuration"
+	echo "Display, generate, or change project configuration"
 
 	echo
 	echo "Commands:"
@@ -4198,7 +4198,7 @@ mysql_import ()
 	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 	local __database="${db:-${MYSQL_DATABASE:-default}}"
 	# /dev/fd/0 is the stdin stream for current script
-	# IMPORTANT: don't run "docker exec" with "-i" until value of /dev/fd/0 is used or it's value will be lost
+	# IMPORTANT: don't run "docker exec" with "-i" until value of /dev/fd/0 is used or its value will be lost
 	local __input="${ARGV[0]:-/dev/fd/0}"
 
 	[[ "${__input}" != "/dev/fd/0" ]] && [[ ! -r "${__input}" ]] &&
@@ -5254,7 +5254,7 @@ elif is_wsl; then
 	# no vm used
 	export DOCKER_HOST="0.0.0.0:2375"
 else
-	# get active machine and it's status
+	# get active machine and its status
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
 	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
 	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
