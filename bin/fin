@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.55.2
+FIN_VERSION=1.55.3
 
 # Console colors
 red='\033[0;91m'
@@ -4374,6 +4374,11 @@ ngrok_share ()
 		docker rm ${ngrok_container_name} >/dev/null 2>/dev/null
 	fi
 
+	# Remove possible VIRTUAL_HOST user extensions like "my.docksal,*.my.docksal"
+	local NGROK_VIRTUAL_HOST=$(echo "$VIRTUAL_HOST" | sed "s/\(,.*\)//")
+
+	echo -e "Exposing domain ${yellow}$NGROK_VIRTUAL_HOST${NC} via ngrok..."
+	sleep 1
 	# Based on https://github.com/wernight/docker-ngrok
 	${winpty} docker run --rm -it \
 		--publish 4040 \
@@ -4381,7 +4386,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		ngrok http -host-header "${host:-$VIRTUAL_HOST}" ${container_name}.${network}:80
+		ngrok http -host-header "${host:-$NGROK_VIRTUAL_HOST}" ${container_name}.${network}:80
 }
 
 diagnose ()
