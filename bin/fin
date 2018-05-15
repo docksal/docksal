@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.55.5
+FIN_VERSION=1.56.0
 
 # Console colors
 red='\033[0;91m'
@@ -1289,6 +1289,34 @@ show_help_exec ()
 	printh "res=\$(fin exec -T drush st)" "Use -T switch to assign exec output to a variable"
 	printh "fin exec .docksal/script.sh" "Execute file inside cli container"
 }
+
+show_help_run-cli ()
+{
+	echo
+	echo "Usage: fin run-cli [options] <command>"
+	echo "       fin rc [options] <command>"
+
+	echo
+	echo "Run command in a standalone \`cli\` container in the current directory"
+	echo "with a persistent \$HOME directory"
+
+	echo
+	echo "Options:"
+	printh "--clean" "Run command with a non-persistent \$HOME directory"
+	printh "--cleanup" "Clean the persistent \$HOME directory and run command"
+	printh "--debug" "Print container debug output"
+	printh "--image=IMAGE" "Override default container image"
+	printh "-e VAR=VALUE" "Pass environment variable(s) to the container"
+	printh "-T" "Disable pseudo-tty allocation"
+
+	echo
+	echo "Examples:"
+	printh "fin rc ls -la" "			Current directory listing"
+	printh "fin rc \"ls -la > /tmp/list\"" "			Execute advanced shell command with pipes or stdout redirects happening inside cli"
+	printh "fin rc -e VAR1=hello -e VAR2=world 'echo \$VAR1 \$VAR2'" "Print hello world using ENV variables"
+
+}
+
 
 show_help_reset ()
 {
@@ -3996,43 +4024,78 @@ run_cli ()
 
 	while [ $# -gt 0 ]
 	do
-	    case $1 in
+		case $1 in
 		# Allow disabling TTY mode.
 		# Useful for non-interactive commands when output is saved into a variable for further comparison.
 		# In a TTY mode the output may contain unexpected control symbols/etc.
-		-T) local no_tty=true; shift; ;;
+		-T)
+			local no_tty=true;
+			shift;
+			;;
 		# Throw all environment variables into an array so that they can be spit into the docker run command.
 		-e)
-		IFS='=' read -r key value <<< "${2}"
+			IFS='=' read -r key value <<< "${2}"
 
-		# If value is empty set the value to whatever the variable name in $key is
-		# If key does not exist then sets it to empty variable
-		if [[ -z $value ]]; then
-			value="${!key}"
-		fi
-		# Set the $key back to whatever $value is
-		eval ${key}=`echo -ne \""${value}"\"`
-		# Add only key to $env_str to be used at runtime.
-		env_str="${env_str}-e ${key} "
-		shift 2
-		;;
-		*) break;;
+			# If value is empty set the value to whatever the variable name in $key is
+			# If key does not exist then sets it to empty variable
+			if [[ -z $value ]]; then
+				value="${!key}"
+			fi
+			# Set the $key back to whatever $value is
+			eval ${key}=`echo -ne \""${value}"\"`
+			# Add only key to $env_str to be used at runtime.
+			env_str="${env_str}-e ${key} "
+			shift 2
+			;;
+		--image=*)
+			IFS='=' read -r key image <<< "${1}"
+			shift
+			;;
+		--clean)
+			# Run without a persistent named volume
+			RUN_CLEAN=1
+			shift
+			;;
+		--cleanup)
+			# Re-create persistent named volume
+			RUN_CLEANUP=1
+			shift
+			;;
+		--debug)
+			export DEBUG=1
+			shift
+			;;
+		*)
+			break
+			;;
 	    esac
 	done
 
 	# Set default image
-	local IMAGE="${IMAGE:-docksal/cli:2.1-php7.1}"
+	local RUN_IMAGE="${image:-docksal/cli:2.1-php7.1}"
+	local HOME_VOLUME_NAME="docksal_run_cli_home"
 	local cmd="$@"
 
 	# Assume bash if no command was given
 	[[ "$cmd" == "" ]] && cmd="bash"
 
-	# Debug mode off by default
-	DEBUG=${DEBUG:-0}
-
 	# Fail for images from v1, these are executing the commands directly and are not supported anymore.
-	if [[ "$IMAGE" == docksal/cli:1.* ]]; then
+	if [[ "$RUN_IMAGE" == docksal/cli:1.* ]]; then
 		echo-error "run-cli command does not support the defined image. Please use docksal/cli:2.0 and above." && exit 1
+	fi
+
+	# Remove old persistent volume to re-create it
+	if [[ "$RUN_CLEANUP" == "1" ]]; then
+		docker volume rm -f ${HOME_VOLUME_NAME} >/dev/null 2>&1
+	fi
+
+	local MOUNT_HOME
+	if [[ "$RUN_CLEAN" != "1" ]]; then
+		docker volume create ${HOME_VOLUME_NAME} >/dev/null 2>&1
+		# By default mount as a *persistent* named volume
+		MOUNT_HOME="dst=/home/docker,src=$HOME_VOLUME_NAME"
+	else
+		MOUNT_HOME="dst=/home/docker"
 	fi
 
 	if is_tty && [[ "$no_tty" != true ]]; then
@@ -4040,7 +4103,7 @@ run_cli ()
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
 		eval "${winpty} docker run --rm -it \
 			--mount type=bind,src=$(pwd),dst=/var/www \
-			--mount dst=/home/docker \
+			--mount ${MOUNT_HOME} \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
@@ -4048,12 +4111,12 @@ run_cli ()
 			-e HOST_UID \
 			-e HOST_GID \
 			-e DEBUG" \
-			${env_str} ${IMAGE} "$cmd; (exit \$?)"
+			${env_str} ${RUN_IMAGE} "$cmd; (exit \$?)"
 	else
 		# non-interactive
 		eval "docker run --rm \
 			--mount type=bind,src=$(pwd),dst=/var/www \
-			--mount dst=/home/docker \
+			--mount ${MOUNT_HOME} \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
@@ -4061,7 +4124,7 @@ run_cli ()
 			-e HOST_UID \
 			-e HOST_GID \
 			-e DEBUG" \
-			${env_str} ${IMAGE} "$cmd"
+			${env_str} ${RUN_IMAGE} "$cmd"
 	fi
 }
 
