@@ -4445,6 +4445,8 @@ ngrok_share ()
 	echo -e "Exposing domain ${yellow}${host:-$NGROK_VIRTUAL_HOST}${NC} via ngrok..."
 	sleep 1
 	# Based on https://github.com/wernight/docker-ngrok
+	# Using pending PR https://github.com/wernight/docker-ngrok/pull/17 can refactor
+	# and use -e variables on the docker container
 	# Modifying entrypoint.sh file to gain more variables.
 
 	ARGS="ngrok"
