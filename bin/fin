@@ -4449,44 +4449,43 @@ ngrok_share ()
 	# and use -e variables on the docker container
 	# Modifying entrypoint.sh file to gain more variables.
 
-	ARGS="ngrok"
+	local ARGS="ngrok"
 	# Set the protocol.
-	if [ "$NGROK_PROTOCOL" = "TCP" ]; then
+	if [[ "$NGROK_PROTOCOL" = "TCP" ]]; then
 	  ARGS="$ARGS tcp"
 	else
 	  ARGS="$ARGS http"
 	  NGROK_PORT="${NGROK_PORT:-80}"
 	fi
+	
+	NGROK_PORT=$(echo ${NGROK_PORT} | sed 's|^tcp://||')
 
 	# Set the authorization token.
-	if [ -n "$NGROK_AUTH" ]; then
+	if [[ -n "$NGROK_AUTH" ]]; then
 	  ARGS="$ARGS -authtoken=$NGROK_AUTH "
 	fi
 
 	# Set the subdomain or hostname, depending on which is set
 	if [ -n "$NGROK_HOSTNAME" ] && [ -n "$NGROK_AUTH" ]; then
 	  ARGS="$ARGS -hostname=$NGROK_HOSTNAME "
-	elif [ -n "$NGROK_SUBDOMAIN" ] && [ -n "$NGROK_AUTH" ]; then
+	elif [[ -n "$NGROK_SUBDOMAIN" ]] && [[ -n "$NGROK_AUTH" ]]; then
 	  ARGS="$ARGS -subdomain=$NGROK_SUBDOMAIN "
-	elif [ -n "$NGROK_HOSTNAME" ] || [ -n "$NGROK_SUBDOMAIN" ]; then
-	  if [ -z "$NGROK_AUTH" ]; then
-	    echo "You must specify an authentication token after registering at https://ngrok.com to use custom domains."
-	    exit 1
-	  fi
 	fi
 
 	# Set a custom region
-	if [ -n "$NGROK_REGION" ]; then
+	if [[ -n "$NGROK_REGION" ]]; then
 	  ARGS="$ARGS -region=$NGROK_REGION "
 	fi
 
-	if [ -n "$NGROK_HEADER" ]; then
+	if [[ -n "$NGROK_HEADER" ]]; then
 	  ARGS="$ARGS -host-header=$NGROK_HEADER "
 	fi
 
-	if [ -n "$NGROK_USERNAME" ] && [ -n "$NGROK_PASSWORD" ] && [ -n "$NGROK_AUTH" ]; then
+	if [[ -n "$NGROK_USERNAME" ]] && [[ -n "$NGROK_PASSWORD" ]]; then
 	  ARGS="$ARGS -auth=\"$NGROK_USERNAME:$NGROK_PASSWORD\" "
-	elif [ -n "$NGROK_USERNAME" ] || [ -n "$NGROK_PASSWORD" ]; then
+	fi
+	
+	if [[ -n "$NGROK_USERNAME" ]] || [[ -n "$NGROK_PASSWORD" ]] || [[ -n "$NGROK_HOSTNAME" ]] || [[ -n "$NGROK_SUBDOMAIN" ]]; then
 	  if [ -z "$NGROK_AUTH" ]; then
 	    echo-yellow "You must specify a username, password, and Ngrok authentication token to use the custom HTTP authentication."
 	    echo-yellow "Sign up for an authentication token at https://ngrok.com"
@@ -4494,11 +4493,11 @@ ngrok_share ()
 	  fi
 	fi
 
-	if [ ! -n ${NGROK_DEBUG} ]; then
+	if [[ -n "$NGROK_DEBUG" ]]; then
 		ARGS="$ARGS -log stdout"
 	fi
 
-	ARGS="$ARGS `echo ${container_name}.${network}:${NGROK_PORT} | sed 's|^tcp://||'`"
+	ARGS="$ARGS ${container_name}.${network}:${NGROK_PORT}"
 
 	${winpty} docker run --rm -it \
 		--publish 4040 \
@@ -4506,7 +4505,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		$ARGS
+		"$ARGS"
 }
 
 diagnose ()
