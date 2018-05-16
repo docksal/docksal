@@ -50,3 +50,18 @@ This can be useful to share a specific site in a Drupal multi-site project.
 ```bash
 fin share --host=example.com
 ``` 
+
+## Additional NGROK Configuration
+
+Additionally, you can specify one of several environment variables to configure your Ngrok tunnel. These can be configured either in `$HOME/.dockal/docksal.env` or at the project level within `.docksal/docksal.env` although due to the nature and sensitivity of these variables they should be configured within `.docksal/docksal-local.env` and not committed to the repository.
+
+Variable | Purpose
+---------|--------
+NGROK_AUTH | Authentication key for your Ngrok account. This is needed for custom subdomains, custom domains, and HTTP authentication.
+NGROK_SUBDOMAIN | Name of the custom subdomain to use for your tunnel. You must also provide the authentication token.
+NGROK_HOSTNAME | Paying Ngrok customers can specify a custom domain. Only one subdomain or domain can be specified, with the domain taking priority.
+NGROK_USERNAME | Username to use for HTTP authentication on the tunnel. You must also specify an authentication token.
+NGROK_PASSWORD | Password to use for HTTP authentication on the tunnel. You must also specify an authentication token.
+NGROK_PROTOCOL | Can either be `HTTP` or `TCP`, and it defaults to `HTTP` if not specified. If set to `TCP`, Ngrok will allocate a port instead of a subdomain and proxy TCP requests directly to your application.
+NGROK_PORT | Port to expose (defaults to `80` for `HTTP` protocol).
+NGROK_REGION | Location of the ngrok tunnel server; can be `us` (United States, default), `eu` (Europe), `ap` (Asia/Pacific) or `au` (Australia)
