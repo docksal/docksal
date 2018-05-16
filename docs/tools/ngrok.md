@@ -65,3 +65,4 @@ NGROK_PASSWORD | Password to use for HTTP authentication on the tunnel. You must
 NGROK_PROTOCOL | Can either be `HTTP` or `TCP`, and it defaults to `HTTP` if not specified. If set to `TCP`, Ngrok will allocate a port instead of a subdomain and proxy TCP requests directly to your application.
 NGROK_PORT | Port to expose (defaults to `80` for `HTTP` protocol).
 NGROK_REGION | Location of the ngrok tunnel server; can be `us` (United States, default), `eu` (Europe), `ap` (Asia/Pacific) or `au` (Australia)
+NGROK_DEBUG | To debug the connection and see a more detailed log set this to 1
