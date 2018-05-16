@@ -4450,6 +4450,14 @@ ngrok_share ()
 		--net ${network} \
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
+		-e NGROK_AUTH \
+		-e NGROK_SUBDOMAIN \
+		-e NGROK_HOSTNAME \
+		-e NGROK_USERNAME \
+		-e NGROK_PASSWORD \
+		-e NGROK_PROTOCOL \
+		-e NGROK_PORT \
+		-e NGROK_REGION \
 		wernight/ngrok \
 		ngrok http -host-header "${host:-$NGROK_VIRTUAL_HOST}" ${container_name}.${network}:80
 }
