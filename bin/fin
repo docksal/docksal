@@ -1728,11 +1728,13 @@ show_help_addon ()
 	echo-green "Commands:"
 	printh "install <name>" "Install addon"
 	printh "remove <name>" "Remove addon"
+	printh "add-repo REPO=<repo-url> BRANCH=<repo-branch> AUTH=<repo-auth>" "Add Addon Repository"
 
 	echo
 	echo-green "Examples:"
 	printh "fin addon install solr" "Install solr addon to the current project"
 	printh "fin addon remove solr" "Uninstall solr addon from the current project"
+	printh "fin addon add-repo REPO=\"https://raw.githubusercontent.com/test-user/docksal-toolkit\" BRANCH=develop AUTH=\"github_user:github_token\"" "Add Repository for test-user/docksal-toolkit using only the develop branch and using the specific credentials"
 }
 
 show_help_logs ()
@@ -5006,7 +5008,7 @@ addon () {
 
 	case "$1" in
 		install|in)
-				addon_install "$addon_name" ${is_global}
+			addon_install "$addon_name" ${is_global}
 			;;
 		remove|rm)
 			addon_remove "$addon_name" ${is_global}
@@ -5019,6 +5021,9 @@ addon () {
 			addon_version="${addon_version:-0}"
 			echo "$addon_version"
 			;;
+		add-repo|ar)
+			addon_addrepo
+			;;
 		help)
 			show_help_addon
 			;;
@@ -5026,6 +5031,70 @@ addon () {
 			echo-yellow "Unknown sub-command. See ${NC}fin addon help${yellow} for details."
 			;;
 	esac
+}
+
+addon_addrepo () {
+	if [[ -z "$REPO" ]]; then
+		echo-red "REPO variable is required when adding a new addon repository"
+	fi
+
+	local repo_string="URL='${REPO}'"
+
+	if [[ -n "$AUTH" ]]; then
+		MOD_AUTH=" -u ${AUTH} "
+		repo_string="${repo_string};AUTH='${AUTH}'"
+	fi
+
+	BRANCH=${BRANCH:-master}
+	repo_string="${repo_string};BRANCH='${BRANCH}'"
+	local http_code=$(curl -sL -w "%{http_code}\\n" ${MOD_AUTH} "${REPO}/${BRANCH}/.docksal-repo" -o /dev/null)
+	if [[ "${http_code}" -ge "200" ]] && [[ "${http_code}" -lt "400" ]]; then
+		local NAME=$(date | md5)
+		echo "DOCKSAL_ADDON_REPO_${NAME}=\"${repo_string}\"" >> $CONFIG_ENV
+		echo-green "Respository Saved Successfully..."
+		exit 0
+	else
+		echo-red "Error: Repository is not accesible with provided information."
+		echo-red "Info: ${repo_string}"
+		exit 1
+	fi
+}
+
+#Helper function to add to addon REPOS
+_addon_repo_parse () {
+	eval 'repos=(${!'"DOCKSAL_ADDON_REPO_"'@})'
+
+	local addon=$1
+	local repo_url=$2
+	local repo_branch=$3
+	local repo_auth=$4
+
+	for key in "${repos[@]}"
+	do
+		unset AUTH
+		unset BRANCH
+		unset URL
+
+		local config=${!key}
+		eval $config
+		# Check to see if Auth is set
+		if [[ -n "${AUTH}" ]]; then
+			MOD_AUTH=" -u ${AUTH} "
+		fi
+
+		local http_code=$(curl -sL -w "%{http_code}\\n" ${MOD_AUTH} "${URL}/${BRANCH}/${addon}/${addon}" -o /dev/null)
+		if [[ "${http_code}" -ge "200" ]] && [[ "${http_code}" -lt "400" ]]; then
+			eval "${repo_url}=${URL}"
+			eval "${repo_branch}=${BRANCH}"
+			eval "${repo_auth}=${AUTH}"
+			break;
+		fi
+	done
+
+	if [[ -z "${!repo_url}" ]]; then
+		echo-red "Addon Could not be found in repo list."
+		exit 1
+	fi
 }
 
 # Download addon
@@ -5055,11 +5124,25 @@ addon_install ()
 	fi
 	mkdir -p "$addon_path"
 	if_failed_error "Could not create $addon_path" "Check file permissions and try again"
-	local URL_ADDON="$URL_ADDONS_REPO/master/$addon_name"
+
+	# Add Docksal Repo As the Last Repo To Install
+	DOCKSAL_ADDON_REPO_ZDOCKSAL="URL=\"${URL_REPO_ADDONS}\";BRANCH=master"
+
+	local URL_ADDONS_REPO
+	local URL_ADDONS_BRANCH
+	local URL_ADDONS_AUTH
+	_addon_repo_parse $addon_name URL_ADDONS_REPO URL_ADDONS_BRANCH URL_ADDONS_AUTH
+
+	local URL_ADDON
+	URL_ADDON="$URL_ADDONS_REPO/${URL_ADDONS_BRANCH}/$addon_name"
+
+	if [[ -n "${URL_ADDONS_AUTH}" ]]; then
+		URL_ADDONS_AUTH="-u ${URL_ADDONS_AUTH}"
+	fi
 
 	# Get files list
 	local file_list
-	file_list=$(curl -fsL "$URL_ADDON/$addon_name.filelist")
+	file_list=$(curl -fsL ${URL_ADDONS_AUTH} "$URL_ADDON/$addon_name.filelist")
 
 	# Download only hook files first
 	local hooks_regex="$addon_name.pre-install\|$addon_name.post-install\|$addon_name.pre-uninstall\|$addon_name.post-uninstall"
@@ -5076,7 +5159,7 @@ addon_install ()
 				for f in ${hooks_file_list}; do
 					echo "  $f"
 					# Exit subshell with error if download failed
-					curl -fsSL "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
+					curl -fsSL ${URL_ADDONS_AUTH} "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
 				done
 			)
 			if_failed_error "Download has failed" "Check log above for messages"
@@ -5097,7 +5180,7 @@ addon_install ()
 	# Download main script
 	echo-green "Downloading addon main script"
 	echo "  $addon_name/$addon_name"
-	curl -fsL "$URL_ADDON/$addon_name?$RANDOM" -o "$addon_path/$addon_name"
+	curl -fsL ${URL_ADDONS_AUTH} "$URL_ADDON/$addon_name?$RANDOM" -o "$addon_path/$addon_name"
 	chmod +x "$addon_path/$addon_name"
 	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
 
@@ -5117,7 +5200,7 @@ addon_install ()
 						mkdir -p "$subdir" || exit 1
 					fi
 					# Exit subshell with error if download failed
-					curl -fsSL "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
+					curl -fsSL ${URL_ADDONS_AUTH} "$URL_ADDON/$f?$RANDOM" -o "$f" || exit 1
 				done
 			)
 			if_failed_error "Download has failed" "Check log above for messages"

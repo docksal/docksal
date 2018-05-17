@@ -40,7 +40,7 @@ Here is a list of already created addons that can help extend functionality for 
 |   solr | [Apache Solr](http://lucene.apache.org/solr/) search service for current project |  |
 |   uli | Generate one time login url for current site | Drupal |
 
-__NOTE:__ This list may not be up to date. To see a more comprehensive list consult the [Docksal Addons Repository](https://github.com/docksal/addons). 
+__NOTE:__ This list may not be up to date. To see a more comprehensive list consult the [Docksal Addons Repository](https://github.com/docksal/addons).
 
 ## Creating Addons
 
@@ -111,3 +111,27 @@ Before | Install | `.pre-install`
 After | Install | `.post-install`
 Before | Uninstall | `.pre-uninstall`
 After | Uninstall | `.post-install`
+
+## Searching Other Repositories
+
+In addition to the [Docksal Addons Repository](https://github.com/docksal/addons) other repositories can be used for installing addons.
+
+Addon Respositories are stored within the `.docksal/docksal.env` file. The format is as follows:
+
+```
+DOCKSAL_ADDON_REPO_<UNIQUE_ID>="URL='<URL>';BRANCH='<BRANCH>';AUTH='<USERNAME>:<PASSWORD>'"
+```
+
+To use the command line for adding repositories
+
+```
+fin addon add-repo REPO="https://raw.githubusercontent.com/test-user/docksal-toolkit" AUTH="github_user:github_token" BRANCH="develop"
+```
+
+The following variables are there for setting when using the `addon add-repo` command.
+
+Variable | Purpose
+----------|---------
+URL | The base url of the raw files.
+BRANCH | The branch that should be searched when looking for addons. **defaults: master**
+AUTH | The authentication used for accessing the files. In the format "username:password".
