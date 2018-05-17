@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.56.1
+FIN_VERSION=1.56.2
 
 # Console colors
 red='\033[0;91m'
@@ -557,7 +557,7 @@ fix_crlf_warning ()
 # checks if binary exists and fails is it isn't
 check_binary_found ()
 {
-	if ( which "$1" 2>/dev/null >/dev/null ); then
+	if ( which "$1" >/dev/null 2>&1 ); then
 		return 0
 	else
 		echo-red "$1 executable was not found. (Try running 'fin update')"
@@ -4004,14 +4004,14 @@ _exec ()
 
 	# Enter project containers
 	# Use the docker user in cli (-u docker) instead of root (default user).
-	COLUMNS=${COLUMNS:-$(which tput >/dev/null 2>&1 && tput cols || echo 80)}
+	# COLUMNS and LINES have to be passed to workaround a bug in Docker. See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker exec -e COLUMNS=$COLUMNS -it $container_user "$container_id" bash -ic "$DOCKSALRC $cmd; (exit \$?)"
+		${winpty} docker exec -e COLUMNS -e LINES -it ${container_user} ${container_id} bash -ic "$DOCKSALRC $cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec -e COLUMNS=$COLUMNS $container_user "$container_id" bash -c "$DOCKSALRC $cmd"
+		docker exec -e COLUMNS -e LINES ${container_user} ${container_id} bash -c "$DOCKSALRC $cmd"
 	fi
 	# ------------------------------------------------ #
 }
@@ -4102,6 +4102,7 @@ run_cli ()
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
+		# COLUMNS and LINES have to be passed to workaround a bug in Docker. See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 		eval "${winpty} docker run --rm -it \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
@@ -4111,6 +4112,8 @@ run_cli ()
 			-e SECRET_TERMINUS_TOKEN \
 			-e HOST_UID \
 			-e HOST_GID \
+			-e COLUMNS \
+			-e LINES \
 			-e DEBUG" \
 			${env_str} ${RUN_IMAGE} "$cmd; (exit \$?)"
 	else
@@ -4124,6 +4127,8 @@ run_cli ()
 			-e SECRET_TERMINUS_TOKEN \
 			-e HOST_UID \
 			-e HOST_GID \
+			-e COLUMNS \
+			-e LINES \
 			-e DEBUG" \
 			${env_str} ${RUN_IMAGE} "$cmd"
 	fi
@@ -5299,6 +5304,17 @@ unison_sync_wait () {
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
+
+# Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
+# See https://github.com/moby/moby/issues/35407#issuecomment-355753176
+if ( which tput >/dev/null 2>&1 ); then
+	COLUMNS=$(tput cols)
+	LINES=$(tput lines)
+# If tput is not available, try ssty. See https://stackoverflow.com/a/48016366/4550880
+elif ( which stty >/dev/null 2>&1 ); then
+	read LINES COLUMNS < <(stty size)
+fi
+export LINES COLUMNS
 
 # Load environment variables overrides, use to permanently override some variables
 # Source and allexport variables in the .env file
