@@ -743,59 +743,37 @@ is_vbox_version ()
 is_docker_version ()
 {
 	! which docker >/dev/null 2>&1 && return 1
-
-	local version=$(docker -v | sed "s/.*version \(.*\),.*/\1/")
-
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -gt $(ver_to_int "$version") ]] && \
-		return 1;
-
-	return 0;
+	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null)
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
 }
 
 is_docker_server_version ()
 {
 	! which docker >/dev/null 2>&1 && return 1
-
 	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
-
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -gt $(ver_to_int "$version") ]] && \
-		return 1;
-
-	return 0;
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
 }
 
 is_docker_compose_version ()
 {
 	! which docker-compose >/dev/null 2>&1 && return 1
-
 	# Trim any control characters from docker-compose output (necessary on Windows)
 	local version=$(docker-compose version --short | tr -d '[:cntrl:]')
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") > $(ver_to_int "$version") ]] && \
-		return 1;
-
-	return 0;
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") -le $(ver_to_int "$version") ]]
 }
 
 is_docker_machine_version ()
 {
 	! which docker-machine >/dev/null 2>&1 && return 1
-
 	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") > $(ver_to_int "$version") ]] && \
-		return 1;
-
-	return 0;
+	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") -le $(ver_to_int "$version") ]]
 }
 
 is_winpty_version ()
 {
 	! which "$WINPTY_BIN" >/dev/null 2>&1 && return 2
-
 	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/")
-	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") > $(ver_to_int "$version") ]] && \
-		return 1;
-
-	return 0;
+	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") -le $(ver_to_int "$version") ]]
 }
 
 check_vbox_version ()
