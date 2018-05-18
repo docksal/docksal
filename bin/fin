@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.56.2
+FIN_VERSION=1.56.3
 
 # Console colors
 red='\033[0;91m'
@@ -5339,12 +5339,12 @@ if [[ ! -f "$docksal_yml_file" ]]; then
 	if [[ ! -f "$docksal_env_file" ]]; then
 		(echo "DOCKSAL_STACK=default" > "$docksal_env_file") 2>/dev/null
 	else
-		if [[ "$DOCKSAL_STACK" == "" ]]; then
+		if (source "$docksal_env_file" && [[ "$DOCKSAL_STACK" == "" ]]); then
 			(echo -e "DOCKSAL_STACK=default\n$(cat $docksal_env_file)" > "$docksal_env_file") 2>/dev/null
 		fi
 	fi
 else
-	# Create empty docksal.env it does not exist
+	# Create empty docksal.env if it does not exist
 	if [[ ! -f "$docksal_env_file" ]]; then
 		touch "$docksal_env_file" 2>/dev/null
 	fi
