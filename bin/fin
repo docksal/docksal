@@ -3433,7 +3433,40 @@ install_tools_ubuntu ()
 	#	fi
 }
 
-# Install everything required on Ubuntu 14.04+
+# Install Alpine dependencies
+install_tools_alpine ()
+{
+	if ! is_tty; then
+	 	echo "WARNING: Installation is running not in a tty mode"
+	fi
+
+#	if ! is_alpine; then
+#		echo-red "Prerequisites installation is currently supported on Alpine 3.7+"
+#		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Alpine 3.7+"
+#		_confirm "Are you sure you want to continue?"
+#	fi
+
+	# Install Docker
+	# TODO: automate this
+	if ! is_docker_version || ! is_docker_server_version; then
+		echo-yellow "Automated Docker installation is not supported on this platform." \
+					"Please install Docker ${REQUIREMENTS_DOCKER} manually, then try again."
+		exit 1
+	fi
+
+	# Install Docker Compose
+	if ! is_docker_compose_version; then
+		echo-green "Installing Docker Compose..."
+		# docker-compose has to be install via pip on Alpine
+		# See https://github.com/docker/compose/issues/3465
+		apk add --no-cache python3 >/dev/null && \
+			pip3 install docker-compose >/dev/null && \
+			docker-compose --version
+		if_failed "Docker Compose installation/upgrade has failed."
+	fi
+}
+
+# Install WSL dependencies
 install_tools_wsl ()
 {
 	# Install Docker client
@@ -3540,6 +3573,10 @@ update_tools ()
 
 	is_ubuntu && \
 		install_tools_ubuntu && \
+		return $?
+
+	is_alpine && \
+		install_tools_alpine && \
 		return $?
 
 	is_mac && \
