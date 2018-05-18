@@ -21,17 +21,17 @@ is_linux ()
 is_ubuntu ()
 {
 	OS_RELEASE="/etc/os-release"
-	[[ -r ${OS_RELEASE} ]] && source ${OS_RELEASE} || return 1
+	[[ -r ${OS_RELEASE} ]] && source ${OS_RELEASE}
 
-	[[ "$ID" == "ubuntu" && $(ver_to_int "$VERSION_ID") >= $(ver_to_int "14.04") ]]
+	[[ "$ID" == "ubuntu" ]] && [[ $(ver_to_int "$VERSION_ID") -eq $(ver_to_int "14.04") ]]
 }
 
 is_alpine ()
 {
 	OS_RELEASE="/etc/os-release"
-	[[ -r ${OS_RELEASE} ]] && source ${OS_RELEASE} || return 1
+	[[ -r ${OS_RELEASE} ]] && source ${OS_RELEASE}
 
-	[[ "$ID" == "alpine" && $(ver_to_int "$VERSION_ID") >= $(ver_to_int "3.7") ]]
+	[[ "$ID" == "alpine" ]] && [[ $(ver_to_int "$VERSION_ID") -eq $(ver_to_int "3.7.0") ]]
 }
 
 is_windows ()
@@ -2926,10 +2926,6 @@ configure_network ()
 		cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_HOST_IP}" mask="255.255.255.0"
 		# Wait 5s for network configuration to apply
 		sleep 5
-	fi
-
-	if is_ubuntu; then
-
 	fi
 }
 
