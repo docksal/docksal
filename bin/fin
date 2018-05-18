@@ -62,6 +62,10 @@ REQUIREMENTS_VBOX='5.2.2'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
+# Override Docker version requirement for Alpine
+# TODO: revise this
+is_alpine && REQUIREMENTS_DOCKER='17.12.0-ce'
+
 URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-OSX.dmg"
 URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-Win.exe"
 
@@ -3423,8 +3427,9 @@ install_tools_alpine ()
 	# Install Docker
 	# TODO: automate this
 	if ! is_docker_version || ! is_docker_server_version; then
-		echo-yellow "Automated Docker installation is not supported on this platform." \
-					"Please install Docker ${REQUIREMENTS_DOCKER} manually, then try again."
+		echo-error "Docker version should be ${REQUIREMENTS_DOCKER} or greater." \
+					"Automated Docker installation is not supported on this platform." \
+					"Please install Docker ${REQUIREMENTS_DOCKER} (or greater) manually, then try again."
 		exit 1
 	fi
 
