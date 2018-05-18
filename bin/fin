@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.56.3
+FIN_VERSION=1.56.4
 
 # Console colors
 red='\033[0;91m'
@@ -5307,14 +5307,16 @@ unison_sync_wait () {
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
-if ( which tput >/dev/null 2>&1 ); then
-	COLUMNS=$(tput cols)
-	LINES=$(tput lines)
-# If tput is not available, try ssty. See https://stackoverflow.com/a/48016366/4550880
-elif ( which stty >/dev/null 2>&1 ); then
-	read LINES COLUMNS < <(stty size)
+if is_tty; then
+	if ( which tput >/dev/null 2>&1 ); then
+		COLUMNS=$(tput cols)
+		LINES=$(tput lines)
+	# If tput is not available, try ssty. See https://stackoverflow.com/a/48016366/4550880
+	elif ( which stty >/dev/null 2>&1 ); then
+		read LINES COLUMNS < <(stty size)
+	fi
+	export LINES COLUMNS
 fi
-export LINES COLUMNS
 
 # Load environment variables overrides, use to permanently override some variables
 # Source and allexport variables in the .env file
