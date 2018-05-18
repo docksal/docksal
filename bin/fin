@@ -20,16 +20,18 @@ is_linux ()
 
 is_ubuntu ()
 {
-	if [ -r /etc/lsb-release ]; then
-		lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
-		lsb_release="$(. /etc/lsb-release && echo "$DISTRIB_RELEASE")"
-	fi
+	OS_RELEASE="/etc/os-release"
+	[[ -r ${OS_RELEASE} ]] && source ${OS_RELEASE} || return 1
 
-	if [[ "$lsb_dist" != 'Ubuntu' || $(ver_to_int "$lsb_release") < $(ver_to_int '14.04') ]]; then
-		return 1
-	fi
+	[[ "$ID" == "ubuntu" && $(ver_to_int "$VERSION_ID") >= $(ver_to_int "14.04") ]]
+}
 
-	return 0
+is_alpine ()
+{
+	OS_RELEASE="/etc/os-release"
+	[[ -r ${OS_RELEASE} ]] && source ${OS_RELEASE} || return 1
+
+	[[ "$ID" == "alpine" && $(ver_to_int "$VERSION_ID") >= $(ver_to_int "3.7") ]]
 }
 
 is_windows ()
@@ -2925,6 +2927,10 @@ configure_network ()
 		# Wait 5s for network configuration to apply
 		sleep 5
 	fi
+
+	if is_ubuntu; then
+
+	fi
 }
 
 # Start system-wide vhost-proxy service
@@ -3003,7 +3009,7 @@ configure_resolver_mac () {
 }
 
 # Configure system-wide *.docksal resolver using custom subnet and dns-nameservers instruction
-configure_resolver_linux () {
+configure_resolver_ubuntu () {
 	local mode="$1"
 
 	# TODO: implement the off/disabled mode on Linux
@@ -3126,7 +3132,7 @@ configure_resolver ()
 	fi
 
 	is_mac && configure_resolver_mac "$mode" && return $?
-	is_linux && configure_resolver_linux "$mode" && return $?
+	is_ubuntu && configure_resolver_ubuntu "$mode" && return $?
 	is_windows && configure_resolver_windows "$mode" && return $?
 	is_wsl && configure_resolver_wsl "$mode" && return $?
 }
@@ -3144,7 +3150,7 @@ install_sshagent_service ()
 	ssh_add || true
 }
 
-# Install tools on Mac
+# Install Mac dependencies
 install_tools_mac ()
 {
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
@@ -3232,6 +3238,7 @@ install_tools_mac ()
 	fi
 }
 
+# Install Windows dependencies
 install_tools_windows ()
 {
 	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
@@ -3363,7 +3370,7 @@ install_tools_windows ()
 	fi
 }
 
-# Install everything required on Ubuntu 14.04+
+# Install Ubuntu dependencies
 install_tools_ubuntu ()
 {
 	if ! is_tty; then
@@ -3531,7 +3538,7 @@ update_tools ()
 		install_tools_windows && \
 		return $?
 
-	is_linux && \
+	is_ubuntu && \
 		install_tools_ubuntu && \
 		return $?
 
@@ -3780,10 +3787,10 @@ update ()
 		# Run cleanup to get rid of outdated images
 		cleanup
 	else
-		# [4.2] On Linux update during install, but use sudo as user will not be in docker group yet.
-		if is_linux; then
+		# [4.2] On Ubuntu update during install, but use sudo as user will not be in docker group yet.
+		if is_ubuntu; then
 			# On Linux a subnet needs to be created first
-			configure_resolver_linux
+			configure_resolver_ubuntu
 			# Override docker to run it via sudo
 			docker () {
 				sudo "$(which docker)" "$@"
