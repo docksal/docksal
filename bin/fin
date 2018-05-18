@@ -13,41 +13,57 @@ yellow_bold='\033[1;33m'
 NC='\033[0m'
 
 #-------------------------------- OS Checks ------------------------------------
+# OS version detection
+if  [[ -f "/etc/os-release" ]]; then
+	(uname -a | grep -v 'Microsoft' >/dev/null) && OS_TYPE="Linux" || OS_TYPE="WSL"
+	read OS_NAME OS_VERSION < <(source "/etc/os-release"; echo "$NAME  $VERSION_ID")
+	export OS_TYPE OS_NAME OS_VERSION
+fi
+
+if (uname | grep 'Darwin' >/dev/null); then
+	export OS_TYPE="Darwin"
+	export OS_NAME="$(sw_vers -productName)"
+	export OS_VERSION="$(sw_vers -productVersion)"
+
+fi
+
+if (uname | grep 'CYGWIN_NT' >/dev/null); then
+	export OS_TYPE="Cygwin"
+	export OS_NAME="Windows"
+	export OS_VERSION="$(echo $(cmd /c ver) | sed 's/.*Version \(.*\)\..*]/\1/')"
+fi
+
 is_linux ()
 {
-	uname -a | grep -v 'Microsoft' | grep 'Linux' >/dev/null
+	[[ "$OS_TYPE" == "Linux" ]]
 }
 
 is_ubuntu ()
 {
-	OS_RELEASE="/etc/os-release"
-	[[ -r ${OS_RELEASE} ]] && source ${OS_RELEASE}
-
-	[[ "$ID" == "ubuntu" ]] && [[ $(ver_to_int "$VERSION_ID") -eq $(ver_to_int "14.04") ]]
+	# TODO: Does the version check belong here?
+	[[ "$OS_NAME" == "Ubuntu" ]] && [[ $(ver_to_int "$OS_VERSION") -eq $(ver_to_int "14.04") ]]
 }
 
 is_alpine ()
 {
-	OS_RELEASE="/etc/os-release"
-	[[ -r ${OS_RELEASE} ]] && source ${OS_RELEASE}
-
-	[[ "$ID" == "alpine" ]] && [[ $(ver_to_int "$VERSION_ID") -eq $(ver_to_int "3.7.0") ]]
+	[[ "$OS_NAME" == "Alpine" ]]
 }
 
 is_windows ()
 {
-	uname | grep 'CYGWIN_NT' >/dev/null
+	[[ "$OS_TYPE" == "Cygwin" ]]
 }
 
 is_wsl ()
 {
-	uname -a | grep 'Microsoft' | grep 'Linux' >/dev/null
+	[[ "$OS_TYPE" == "WSL" ]]
 }
 
 is_mac ()
 {
-	uname | grep 'Darwin' >/dev/null
+	[[ "$OS_TYPE" == "Darwin" ]]
 }
+
 #------------------------------------------------------------------------------
 
 
@@ -683,7 +699,7 @@ check_docker_running ()
 		docker_status=$?
 	fi
 
-	if is_linux; then
+	if is_ubuntu; then
 		# Remind the user about running 'newgrp docker' after install.
 		if ! (id -nG | grep docker >/dev/null 2>&1) && [[ "$(id -u)" != "0" ]] ; then
 			echo-error "Current user is not part of the docker group." \
@@ -2854,9 +2870,9 @@ stats_ping ()
 
 	# We are passing OS version via a custom User-Agent request header, which GA can parse
 	local user_agent
-	is_linux && user_agent="fin/${FIN_VERSION} (Linux $(lsb_release -si)-$(lsb_release -sr))"
-	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X $(sw_vers -productVersion))"
-	is_windows && user_agent="fin/${FIN_VERSION} (Windows NT $(echo $(cmd /c ver) | sed 's/.*Version \(.*\)\..*]/\1/'))"
+	is_linux && user_agent="fin/${FIN_VERSION} (Linux ${OS_NAME}-${OS_VERSION})"
+	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X ${OS_VERSION})"
+	is_windows && user_agent="fin/${FIN_VERSION} (Windows NT ${OS_VERSION})"
 
 	local source='Local'
 	[[ "$CI" != "" ]] && source='CI'
@@ -3418,12 +3434,6 @@ install_tools_alpine ()
 	 	echo "WARNING: Installation is running not in a tty mode"
 	fi
 
-#	if ! is_alpine; then
-#		echo-red "Prerequisites installation is currently supported on Alpine 3.7+"
-#		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Alpine 3.7+"
-#		_confirm "Are you sure you want to continue?"
-#	fi
-
 	# Install Docker
 	# TODO: automate this
 	if ! is_docker_version || ! is_docker_server_version; then
@@ -3716,8 +3726,8 @@ update ()
 			# If docksal services present, then we are doing an upgrade.
 			is_docksal_running && UPGRADE_IN_PROGRESS=1
 		else
-			# Check out the case when current user on linux does not have access to docker daemon
-			if is_linux && ! is_wsl; then
+			# Check out the case when current user on Ubuntu does not have access to docker daemon
+			if is_ubuntu; then
 				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
 				[ ! $? -eq 0 ] && LINUX_DAEMON_RUNNING="exit 1"
 				# if daemon is running but docker info does not return 0 then this is the case
@@ -3846,7 +3856,7 @@ update ()
 	# [STEP - POST UPDATE]
 	[ $? -eq 0 ] && echo-green "Update finished"
 
-	if is_linux && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+	if is_ubuntu && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo -e "${yellow}IMPORTANT NOTE FOR LINUX USERS:${NC}"
 		echo -e "  Current user was added to the 'docker' group."
 		echo -e "  Re-login or run ${yellow}newgrp docker${NC} now to apply that change and use Docksal."
@@ -4574,9 +4584,7 @@ sysinfo ()
 {
 	echo "███  OS"
 	# OS version
-	is_linux && echo $(lsb_release -si) $(lsb_release -sr)
-	is_mac && echo $(sw_vers -productName) $(sw_vers -productVersion)
-	is_windows && echo $(cmd /c ver)
+	echo "${OS_TYPE} ${OS_NAME} ${OS_VERSION}"
 	uname -a
 	# Docker Mode
 	echo -n "Mode: "
