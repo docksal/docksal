@@ -5415,9 +5415,13 @@ fi
 # The startup script in the cli container picks these up and updates the docker user inside of the container
 # On Windows this is not necessary, as Linux permissions and ownership do not matter over SMB
 if ! is_windows; then
-	export HOST_UID=$(id -u)
-	export HOST_GID=$(id -g)
-	if [[ "$HOST_UID" == "0" ]] && [[ "$CI" == "" ]]; then
+	# Only do this for non-root users
+	if [[ "$(id -u)" != "0" ]]; then
+		export HOST_UID=$(id -u)
+		export HOST_GID=$(id -g)
+	else
+		# Note: php-fpm inside cli will fail to start as uid=0
+		# TODO: handle this case better
 		echo-alert "Running as root is not recommended"
 	fi
 fi
