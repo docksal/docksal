@@ -2886,6 +2886,12 @@ stats_ping ()
 
 configure_network ()
 {
+	if is_alpine; then
+		# This will not persist a reboot or interface change
+		# TODO: make this permanent(?)
+		ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	fi
+
 	if is_ubuntu; then
 		# Adding a subnet for Docksal. Make sure we don't do this twice
 		if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
