@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.57.0
+FIN_VERSION=1.57.1
 
 # Console colors
 red='\033[0;91m'
@@ -5349,23 +5349,25 @@ fi
 
 # Automatically create docksal.yml and docksal.env if they do not exist
 # Relate to https://github.com/docksal/docksal/issues/459
-docksal_yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
-docksal_env_file="$(get_project_path_dc)/.docksal/docksal.env"
-docksal_yml_version=$(head "$(get_config_dir_dc)/stacks/services.yml" | grep "version")
-# Create default docksal.yml and docksal.env files if there is no configuration yet
-if [[ ! -f "$docksal_yml_file" ]]; then
-	(echo "$docksal_yml_version" > "$docksal_yml_file") 2>/dev/null
-	if [[ ! -f "$docksal_env_file" ]]; then
-		(echo "DOCKSAL_STACK=default" > "$docksal_env_file") 2>/dev/null
-	else
-		if (source "$docksal_env_file" && [[ "$DOCKSAL_STACK" == "" ]]); then
-			(echo -e "DOCKSAL_STACK=default\n$(cat $docksal_env_file)" > "$docksal_env_file") 2>/dev/null
+if [[ "$(get_project_path)" != "" ]] ; then
+	docksal_yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+	docksal_env_file="$(get_project_path_dc)/.docksal/docksal.env"
+	docksal_yml_version=$(head "$(get_config_dir_dc)/stacks/services.yml" | grep "version")
+	# Create default docksal.yml and docksal.env files if there is no configuration yet
+	if [[ ! -f "$docksal_yml_file" ]]; then
+		(echo "$docksal_yml_version" > "$docksal_yml_file") 2>/dev/null
+		if [[ ! -f "$docksal_env_file" ]]; then
+			(echo "DOCKSAL_STACK=default" > "$docksal_env_file") 2>/dev/null
+		else
+			if (source "$docksal_env_file" && [[ "$DOCKSAL_STACK" == "" ]]); then
+				(echo -e "DOCKSAL_STACK=default\n$(cat $docksal_env_file)" > "$docksal_env_file") 2>/dev/null
+			fi
 		fi
-	fi
-else
-	# Create empty docksal.env if it does not exist
-	if [[ ! -f "$docksal_env_file" ]]; then
-		touch "$docksal_env_file" 2>/dev/null
+	else
+		# Create empty docksal.env if it does not exist
+		if [[ ! -f "$docksal_env_file" ]]; then
+			touch "$docksal_env_file" 2>/dev/null
+		fi
 	fi
 fi
 
