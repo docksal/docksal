@@ -2887,6 +2887,23 @@ stats_ping ()
 
 configure_network ()
 {
+	if is_ubuntu; then
+		# Adding a subnet for Docksal. Make sure we don't do this twice
+		if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
+			echo-green "Adding a subnet for Docksal..."
+			cat > /tmp/docksal.ip <<EOF
+	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+EOF
+			sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip' /etc/network/interfaces
+			rm -f /tmp/docksal.ip
+			sudo ifdown --force lo 2>/dev/null
+			sudo ifup lo
+		fi
+		# Wait 5s for network configuration to apply
+		sleep 5
+	fi
+
 	if is_mac; then
 	 	# Docker for Mac
 	 	if is_docker_native; then
@@ -3006,22 +3023,22 @@ configure_resolver_mac () {
 configure_resolver_ubuntu () {
 	local mode="$1"
 
-	# TODO: implement the off/disabled mode on Linux
-	[[ "$mode" == "off" ]] && return
-
-	# TODO: split resolver and network configuration into different functions
-	# Adding a subnet for Docksal. Make sure we don't do this twice
-	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
-		echo-green "Adding a subnet for Docksal..."
-		cat > /tmp/docksal.ip.addr <<EOF
-	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	if [[ "$mode" != "off" ]]; then
+		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
+		local dns_settings="dns-nameservers ${DOCKSAL_DEFAULT_IP}"
+		# Make sure we don't do this twice
+		if ! grep -q "${dns_settings}" /etc/network/interfaces; then
+			# TODO: figure out how to insert a tab with sed (instead of using a temporary file)
+			cat > /tmp/docksal.dns <<EOF
 	dns-nameservers ${DOCKSAL_DEFAULT_IP}
 EOF
-		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip.addr' /etc/network/interfaces
-		rm -f /tmp/docksal.ip.addr
-		sudo ifdown --force lo 2>/dev/null
-		sudo ifup lo
+			sudo sed -i '/down .* lo:docksal/r /tmp/docksal.dns' /etc/network/interfaces
+			rm -f /tmp/docksal.dns
+			sudo resolvconf -u
+		fi
+	else
+		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
+		sudo sed -i "/${dns_settings}/d" /etc/network/interfaces
 		sudo resolvconf -u
 	fi
 }
@@ -3816,7 +3833,7 @@ update ()
 		# [4.2] On Ubuntu update during install, but use sudo as user will not be in docker group yet.
 		if is_ubuntu; then
 			# On Linux a subnet needs to be created first
-			configure_resolver_ubuntu
+			configure_network
 			# Override docker to run it via sudo
 			docker () {
 				sudo "$(which docker)" "$@"
