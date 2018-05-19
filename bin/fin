@@ -2899,8 +2899,6 @@ EOF
 			sudo ifdown --force lo 2>/dev/null
 			sudo ifup lo
 		fi
-		# Wait 5s for network configuration to apply
-		sleep 5
 	fi
 
 	if is_mac; then
@@ -3021,10 +3019,10 @@ configure_resolver_mac () {
 # Configure system-wide *.docksal resolver using custom subnet and dns-nameservers instruction
 configure_resolver_ubuntu () {
 	local mode="$1"
+	local dns_settings="dns-nameservers ${DOCKSAL_DEFAULT_IP}"
 
 	if [[ "$mode" != "off" ]]; then
 		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
-		local dns_settings="dns-nameservers ${DOCKSAL_DEFAULT_IP}"
 		# Make sure we don't do this twice
 		if ! grep -q "${dns_settings}" /etc/network/interfaces; then
 			# TODO: figure out how to insert a tab with sed (instead of using a temporary file)
@@ -3033,13 +3031,15 @@ configure_resolver_ubuntu () {
 EOF
 			sudo sed -i '/down .* lo:docksal/r /tmp/docksal.dns' /etc/network/interfaces
 			rm -f /tmp/docksal.dns
-			sudo resolvconf -u
 		fi
 	else
 		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
 		sudo sed -i "/${dns_settings}/d" /etc/network/interfaces
-		sudo resolvconf -u
 	fi
+
+	# Up/down interface to update settings
+	sudo ifdown --force lo 2>/dev/null
+	sudo ifup lo
 }
 
 # Configure system-wide *.docksal resolver
