@@ -40,8 +40,7 @@ is_linux ()
 
 is_ubuntu ()
 {
-	# TODO: Does the version check belong here?
-	[[ "$OS_NAME" == "Ubuntu" ]] && [[ $(ver_to_int "$OS_VERSION") -eq $(ver_to_int "14.04") ]]
+	[[ "$OS_NAME" == "Ubuntu" ]]
 }
 
 is_alpine ()
@@ -3389,8 +3388,8 @@ install_tools_ubuntu ()
 	fi
 
 	if ! is_ubuntu; then
-		echo-red "Prerequisites installation is currently supported only on Ubuntu 14.04+"
-		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu 14.04+"
+		echo-red "Prerequisites installation is currently supported only on Ubuntu"
+		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu"
 		_confirm "Are you sure you want to continue?"
 	fi
 
