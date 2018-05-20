@@ -1662,8 +1662,8 @@ show_help_config ()
 	printh "    --show-secrets" "Do not truncate value of SECRET_* environment vars"
 	printh "env" "Display only environment variables section"
 	printh "generate [options]" "Generate empty Docksal configuration for the project"
-	printh "    --stack=acquia" "Set different Docksal Stack during generate"
-	printh "    --docroot=mydir" "Set different DOCROOT during generate"
+	printh "    --stack=acquia" "Set non-default DOCKSAL_STACK during config generate"
+	printh "    --docroot=mydir" "Set non-default DOCROOT during config generate"
 	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
 	printh "    --global" "Set for global ENV file"
 	echo
