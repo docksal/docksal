@@ -4854,13 +4854,13 @@ config_generate ()
 	mkdir -p ".docksal"
 	
 	# Set Stack at Config Run Time
-	local STACK=${STACK:-default}
+	local STACK=${stack:-default}
 	
 	# Create docksal.env if it does not exist
 	touch ".docksal/docksal.env" && \
 	echo "DOCKSAL_STACK=${STACK}" > ".docksal/docksal.env"
 	
-	local DOCROOT="${DOCROOT:-docroot}"
+	local DOCROOT="${docroot:-docroot}"
 	# Add DOCROOT to docksal.env file
 	echo "DOCROOT=${DOCROOT}" >> ".docksal/docksal.env"
 	# Create a basic docroot and index.php if not present
