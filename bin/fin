@@ -4852,8 +4852,10 @@ config_generate ()
 	# Create docksal.env if it does not exist
 	touch ".docksal/docksal.env" && \
 	echo "DOCKSAL_STACK=default" > ".docksal/docksal.env"
-
+	
 	local DOCROOT="${DOCROOT:-docroot}"
+	# Add DOCROOT to docksal.env file
+	echo "DOCROOT=${DOCROOT}" >> ".docksal/docksal.env"
 	# Create a basic docroot and index.php if not present
 	if [[ ! -d "$DOCROOT" ]] || [[ ! -f "$DOCROOT/index.php" ]]; then
 		# Setup docroot and a basic index.php
