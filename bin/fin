@@ -1661,7 +1661,7 @@ show_help_config ()
 	printh "show [options]" "Display configuration for the current project"
 	printh "    --show-secrets" "Do not truncate value of SECRET_* environment vars"
 	printh "env" "Display only environment variables section"
-	printh "generate" "Generate empty Docksal configuration for the project"
+	printh "generate [STACK=VAL] [DOCROOT=VAL]" "Generate empty Docksal configuration for the project"
 	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
 	printh "    --global" "Set for global ENV file"
 	echo
@@ -4840,6 +4840,7 @@ config_show ()
 # TODO: consider deprecating this, since now fin automatically creates docksal.yml and docksal.env (with default stack)
 config_generate ()
 {
+	eval $(parse_params "$@")
 	if [[ -f ".docksal/docksal.yml" ]] || [[ -f ".docksal/docksal.env" ]]; then
 		echo-yellow ".docksal/docksal.yml or .docksal/docksal.env already exists"
 		_confirm "Do you want to proceed and overwrite?"
@@ -4849,9 +4850,13 @@ config_generate ()
 	rm -f ".docksal/docksal.yml" >/dev/null
 	# Create .docksal directory if it does not exist
 	mkdir -p ".docksal"
+	
+	# Set Stack at Config Run Time
+	local STACK=${STACK:-default}
+	
 	# Create docksal.env if it does not exist
 	touch ".docksal/docksal.env" && \
-	echo "DOCKSAL_STACK=default" > ".docksal/docksal.env"
+	echo "DOCKSAL_STACK=${STACK}" > ".docksal/docksal.env"
 	
 	local DOCROOT="${DOCROOT:-docroot}"
 	# Add DOCROOT to docksal.env file
@@ -5894,7 +5899,7 @@ case "$1" in
 			generate)
 				# no load_configuration
 				shift
-				config_generate
+				config_generate "$@"
 				;;
 			set)
 				# load_configuration is conditional in function
