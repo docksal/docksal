@@ -8,15 +8,14 @@ services:
 install:
   - sudo cp ./bin/fin /usr/local/bin/fin
   - fin version
-  - |
-  USE_BRANCH=${TRAVIS_BRANCH}
-  if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
-    if [[ $TRAVIS_PULL_REQUEST_SLUG == $TRAVIS_REPO_SLUG ]]; then 
-      USE_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH}
-    else
-      USE_BRANCH='develop'
+  - USE_BRANCH=${TRAVIS_BRANCH}
+    if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
+      if [[ $TRAVIS_PULL_REQUEST_SLUG == $TRAVIS_REPO_SLUG ]]; then 
+        USE_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH}
+      else
+        USE_BRANCH='develop'
+      fi
     fi
-  fi
   - export DOCKSAL_VERSION=${USE_BRANCH}
   - fin update
   - fin sysinfo
