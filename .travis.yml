@@ -8,7 +8,6 @@ services:
 install:
   - sudo cp ./bin/fin /usr/local/bin/fin
   - fin version
-  - [[ $TRAVIS_PULL_REQUEST_SLUG == echo $TRAVIS_REPO_SLUG
   - |
   USE_BRANCH=${TRAVIS_BRANCH}
   if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
