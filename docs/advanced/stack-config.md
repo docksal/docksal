@@ -425,9 +425,13 @@ Password to use for basic authentication.
 
 User ID for the Container User. On MacOS & Linux defaults to current user account `id -u`.
 
+**WARNING: do not override this variable unless you know what you are doing.**
+
 ### HOST_GID
 
 Group ID for the Container User. On MacOS & Linux defaults to current group account `id -g`.
+
+**WARNING: do not override this variable unless you know what you are doing.**
 
 ### XDEBUG_ENABLED
 
@@ -437,7 +441,7 @@ Enables PHP XDebug Service for debugging. See [XDebug](../tools/xdebug.md)
 
 ### SECRET_SSH_PRIVATE_KEY
 
-Use to pass a private SSH key. The key is stored in `/home/docker/.ssh/id_rsa` inside `cli` and will be considered by the SSH client in addition to the keys loaded in `docksal-ssh-agent` when establishing a SSH connection from within `cli`.
+Use to pass an additional private SSH key. The key is stored in `/home/docker/.ssh/id_rsa` inside `cli` and will be considered by the SSH client in addition to the keys loaded in `docksal-ssh-agent` when establishing a SSH connection from within `cli`.
 
 ### SECRET_ACAPI_EMAIL
 
@@ -461,7 +465,9 @@ Defines the timeout of inactivity after which the project stack will be stopped 
 
 ### PROJECT_DANGLING_TIMEOUT
 
-Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host (e.g. 168h). **WARNING: use at your own risk!**
+Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host (e.g. 168h). This requires PROJECTS_ROOT to be set.
+
+**WARNING: use at your own risk!**
 
 ### PROJECTS_ROOT
 
