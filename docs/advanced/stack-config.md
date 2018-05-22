@@ -276,7 +276,7 @@ All variables changed below will require at the minimum a project restart `fin r
 
 ### DOCKSAL_NFS_PATH
 
-The location of the folder on the host machine to mount to virtual box. More info](../file-sharing.md)
+The location of the folder on the host machine to mount to virtual box. [More info](../file-sharing.md)
 
 ### IMAGE_SSH_AGENT
 
@@ -298,13 +298,13 @@ Docker image to use for DNS Routing.
 
 ### DOCKSAL_LOCK_UPDATES 
 
-When set, this will allow for Docksal to no longer accept updates. This is usually good in combination of `CI=true`.
+When set, this will allow for Docksal to no longer accept updates. This is usually good in combination with `CI=true`.
 
 ### DOCKSAL_ENVIRONMENT 
 
 `Default: local`
 
-Allow for environment specific dockal.yml and docksal.env files. Files will be same format `docksal-${DOCKSAL_ENVIRONMENT}.yml` or `docksal-${DOCKSAL_ENVIRONMENT}.env`. These files should not be committed.
+Allow for environment specific YML and ENV files. `fin` will load additional configuration from `docksal-${DOCKSAL_ENVIRONMENT}.yml` and/or `docksal-${DOCKSAL_ENVIRONMENT}.env`. Default usage is creating `docksal-local.yml` and `docksal-local.env` for local overrides that are not intended to be committed.
 
 ### DOCKSAL_STATS_OPTOUT 
 
@@ -318,13 +318,16 @@ Allow for collecting of statistical usage of docksal. When set to `1` this will 
 
 Designates whether to use Docker through VirtualBox or Native Docker. On Linux this is always set to `1`. Otherwise it is set to `0`.
 
+For VirtualBox set to `0`
+For Docker Native set to `1`
+
 ### DOCKSAL_DNS_UPSTREAM
 
-For environments, where access to external DNS servers is blocked, should be set to the LAN DNS server.
+Override the default DNS server that Docksal uses. For environments, where access to Google DNS server (`8.8.8.8`) is blocked it should be set to the LAN DNS server. This is often true for VPN users.
 
 ### DOCKSAL_VHOST_PROXY_IP
 
-Used to set the IP address for the VHOST Proxy to listen on. When `CI` variable is set to `true` this will be set to `0.0.0.0`.
+Used to set the IP address for the Docksal reverse proxy to listen on. When `CI` variable is set to `true` this will be set to `0.0.0.0`.
 
 ### DOCKSAL_DNS_DOMAIN
 
@@ -380,7 +383,7 @@ This is used to set the newly created user's password.
 
 `Default:  3306`
 
-The port to use when setting up MySQL.
+The port mapping to use for MySQL container. E.g. `33061:3306` will expose `3306` port as `33061` on the host. 
 
 ### POSTGRES_DB
 
