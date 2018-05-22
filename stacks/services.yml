@@ -18,6 +18,7 @@ services:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
       - APACHE_BASIC_AUTH_USER
       - APACHE_BASIC_AUTH_PASS
+      - APACHE_SERVERNAME
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
@@ -53,6 +54,10 @@ services:
       - MYSQL_USER=${MYSQL_USER:-user}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+      - MYSQL_ALLOW_EMPTY_PASSWORD
+      - MYSQL_RANDOM_ROOT_PASSWORD
+      - MYSQL_ONETIME_PASSWORD
+      - MYSQL_INITDB_SKIP_TZINFO
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
@@ -64,9 +69,9 @@ services:
     ports:
       - "${PGSQL_PORT_MAPPING:-5432}"
     environment:
-      - POSTGRES_DB=default
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=user
+      - POSTGRES_DB=${POSTGRES_DB:-default}
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-user}
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
