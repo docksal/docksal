@@ -65,15 +65,9 @@ Here's another example for `web`:
 # Use a stock Docksal image as the base
 FROM docksal/web:2.1-apache2.4
 
-# Install addtional apt packages
-RUN apt-get update && apt-get -y --no-install-recommends install \
-    libapache2-mod-proxy-html \
-    # Cleanup
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN \
-	# Enable additional Apache modules
-	a2enmod proxy_html proxy_http proxy_balancer
+RUN set -x \
+	# Enabled extra modules
+	&& sed -i '/^#.* expires_module /s/^#//' /usr/local/apache2/conf/httpd.conf
 ```
 
 ## Configuration: docksal.yml
