@@ -272,6 +272,8 @@ volumes:
 <a name="configuration-variables"></a>
 ## Configuration Variables
 
+All variables changed below will require at the minimum a project restart `fin restart` so that they can take effect. Additional steps may be required.
+
 Variable | Default | Description
 ---------|---------|------------
 IMAGE_SSH_AGENT | docksal/ssh-agent:1.0 | The Docker image to use for SSH Agent. This contains the keys that are shared amongst the projects.
