@@ -1,6 +1,6 @@
 # Stack configuration
 
-It is recommended that you familiarize yourself with the [Docksal stack](../advanced/stack.md) documentation before reading
+It is recommended that you familiarize yourself with the [Docksal stack](../advanced/stack.md) documentation before reading 
 this manual. You should understand what project containers are and which project containers exist by default.
 
 **Understanding stack configurations**
@@ -28,11 +28,11 @@ this manual. You should understand what project containers are and which project
 ## Basics
 
 Docksal relies on [Docker Compose](https://docs.docker.com/compose/) to launch groups of related containers.
-The yml files you use are [Compose Files](https://docs.docker.com/compose/compose-file/).
+The yml files you use are [Compose Files](https://docs.docker.com/compose/compose-file/). 
 Please read the documentation to understand their main sections.
 
 !!! danger "REMEMBER DOCKSAL REQUIREMENTS"
-    Some containers and their parameters are required for Docksal to work properly.
+    Some containers and their parameters are required for Docksal to work properly. 
     **Please see [Don't break your Docksal setup!](#warning) section.**
 
 You have to run `fin project start` (`fin p start` for short) to apply configuration changes.
@@ -46,7 +46,7 @@ If you remove services or volumes you have to remove them with `fin project rm [
 It's the main configuration file for a project and controls its the settings for each service. Use it to
 modify settings that are needed for anyone that uses your project.
 
-If you don't have this file in your project folder, fin will load the [default stack](#default-configurations),
+If you don't have this file in your project folder, fin will load the [default stack](#default-configurations), 
 this way providing a zero-configuration setup.
 
 For more details on its role check [loading order](#loading-order).
@@ -64,11 +64,11 @@ variables for your automation scripts (see [custom commands](../fin/custom-comma
 ### docksal-local.yml, docksal-local.env
 
 `docksal-local.yml` and `docksal-local.env` are used for additional customizations that happen after the main files
-are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom port](../advanced/networking.md#expose-port)
+are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom port](../advanced/networking.md#expose-port) 
 or switching PHP versions.
 
-These files are intended for local overrides. They should be added to `.gitignore` and never committed into a project
-repo. You can always include an example file in the repo, e.g. `example.docksal-local.env` and instruct users to copy
+These files are intended for local overrides. They should be added to `.gitignore` and never committed into a project 
+repo. You can always include an example file in the repo, e.g. `example.docksal-local.env` and instruct users to copy 
 it and adjust as necessary.
 
 <a name="default-configurations"></a>
@@ -92,11 +92,11 @@ These files are a good reference, when you begin creating a custom project confi
 <a name="loading-order"></a>
 ## Configuration files loading order
 
-With this swarm of configuration files, Docksal lets you configure a project in a way that works for you and your team.
-Just like Bash configuration files (/etc/profile, bashrc, bash_profile, bash_logout), they give the flexibility to
+With this swarm of configuration files, Docksal lets you configure a project in a way that works for you and your team. 
+Just like Bash configuration files (/etc/profile, bashrc, bash_profile, bash_logout), they give the flexibility to 
 configure a Docksal project in dozens of ways.
 
-`fin` loads files in a certain order. Files loaded later override settings from the files loaded earlier.
+`fin` loads files in a certain order. Files loaded later override settings from the files loaded earlier. 
 The list below goes from the earliest to the latest in this queue.
 
 Loading order:
@@ -116,13 +116,13 @@ To see the files loaded for a particular project run `fin config show`.
 You can simply create a `.docksal` folder in your project root and run `fin project start` (`fin start` for short).
 The default stack (`$HOME/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case.
 
-This is a great way to start developing a new project. This approach can also be used on a permanent basis,
+This is a great way to start developing a new project. This approach can also be used on a permanent basis, 
 if your needs are simple. `stack-default.yml` extends the configuration from `services.yml`,
 so you'll be getting the latest stack versions with every Docksal update.
 
 ### Zero-configuration stacks
 
-You can switch between pre-created zero-configuration stacks by adding the following line to your `docksal.env` file
+You can switch between pre-created zero-configuration stacks by adding the following line to your `docksal.env` file 
 and running `fin project reset`.
 
 ```
@@ -137,8 +137,8 @@ The following stacks are available:
 <a name="custom-configuration"></a>
 ## Custom configuration
 
-Custom configurations are useful when you have a larger or more complex project. One where a CI server is involved
-or many people are on a project team, and you have to be careful about maintaining software versions.
+Custom configurations are useful when you have a larger or more complex project. One where a CI server is involved 
+or many people are on a project team, and you have to be careful about maintaining software versions. 
 Having a custom configuration will protect your project from the updates in `services.yml` when you update Docksal.
 
 ```bash
@@ -146,9 +146,9 @@ fin config generate
 ```
 
 This command will create `docksal.yml` by copying `stack-default-static.yml` into the project directory.
-This file has a fully independent description of services, so future changes to the default stack(s) will no longer
-affect the project configuration. This also means that future Docksal updates, bringing new features and changes,
-will not automatically apply. You might need to re-generate your static configuration or append those changes manually
+This file has a fully independent description of services, so future changes to the default stack(s) will no longer 
+affect the project configuration. This also means that future Docksal updates, bringing new features and changes, 
+will not automatically apply. You might need to re-generate your static configuration or append those changes manually 
 in `docksal.yml`.
 
 <a name="warning"></a>
@@ -161,7 +161,7 @@ There are some values that are not required for docker-compose to work but are r
 
 #### web
 
-In the `web` service there are settings defined in the `volumes`, `labels`, `environment` and `depends_on` sections.
+In the `web` service there are settings defined in the `volumes`, `labels`, `environment` and `depends_on` sections. 
 You should not remove or change these values.
 
 ```yaml
@@ -201,10 +201,10 @@ To review the configuration applied to your project run:
 fin config show
 ```
 
-It does not show the contents or the configuration files directly. Instead, it compiles them together and outputs
+It does not show the contents or the configuration files directly. Instead, it compiles them together and outputs 
 the resulting configuration. Some important environment variables are listed at the top.  
 
-The `COMPOSE_FILE` section displays files that were used to produce this configuration.
+The `COMPOSE_FILE` section displays files that were used to produce this configuration. 
 See [configuration files load order](#loading-order) for more information on how config files are loaded and merged.
 
 A sample output from `fin config show`:
@@ -495,14 +495,14 @@ services:
     image: docksal/cli:2.1-php7.2
 ```
 
-`docksal-local.yml` will append or modify the configuration that was loaded before it, regardless of whether it was
+`docksal-local.yml` will append or modify the configuration that was loaded before it, regardless of whether it was 
 `stack-default.yml` or `docksal.yml`.
 
 `docksal.yml` will append or modify the configuration only if `DOCKSAL_STACK` is set in `docksal.env`.
 
 ### Override config with `docksal.yml`
 
-When not using a predefined stack (`docksal.yml` is present and `DOCKSAL_STACK` is not set in `docksal.env`),
+When not using a predefined stack (`docksal.yml` is present and `DOCKSAL_STACK` is not set in `docksal.env`), 
 you are in control of everything. In this case the stack configuration is not inherited from
 `services.yml` (`$HOME/.docksal/services.yml`), so you must fully describe the `cli` service in the project's `docksal.yml`.
 
@@ -523,7 +523,7 @@ Note, that when not using a predefined stack, you must fully describe all other 
 <a name="mysql-version"></a>
 ## Switching MySQL versions
 
-Switching MySQL versions is performed in the same way as the PHP version switch.
+Switching MySQL versions is performed in the same way as the PHP version switch. 
 Instead of the `cli` service image you will be modifying the `db` service image.
 
 <a name="docksal-images"></a>
