@@ -5225,8 +5225,8 @@ addon_install ()
 		rm -rf $addons_repo_copy/.git 2>/dev/null
 		cp -R $addons_repo_copy/$addon_name $addon_path
 	else
-		echo-red "Unknown error"
-		rm -rf $addons_repo_copy
+		echo-error "Addon main file does not exist, is invalid or is not set to be executable"
+		rm -rf "$tmp_addon"
 		return 1
 	fi
 
@@ -5264,11 +5264,6 @@ addon_update () {
 	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
 	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
 
-	local URL_ADDONS_REPO
-	local URL_ADDONS_BRANCH
-	local ADDON_UUID
-	_addon_search_repo $addon_name URL_ADDONS_REPO URL_ADDONS_BRANCH ADDON_UUID
-
 	# Create target addon dir
 	local addon_path
 	if [[ "$2" != "global" ]]; then
@@ -5282,24 +5277,29 @@ addon_update () {
 		exit 1
 	fi
 
-	local tmp_addon="/tmp/${ADDON_UUID}"
+	local URL_ADDONS_REPO
+	local URL_ADDONS_BRANCH
+	local ADDON_UUID
+	_addon_search_repo $addon_name URL_ADDONS_REPO URL_ADDONS_BRANCH ADDON_UUID
+
+	local addons_repo_copy="/tmp/${ADDON_UUID}"
 
 	# If repo contains only 1 addon let's download the full repo.
-	if [[ -f $tmp_addon/$addon_name ]] && [[ -x $tmp_addon/$addon_name ]]; then
-		cd $tmp_addon/
+	if [[ -f $addons_repo_copy/$addon_name ]] && [[ -x $addons_repo_copy/$addon_name ]]; then
+		cd $addons_repo_copy/
 		git pull --depth=1 origin/${URL_ADDONS_BRANCH}
 		# Remove Git Repo that was cloned from.
-		rm -rf $tmp_addon/.git 2>/dev/null
-		mv -R $tmp_addon $addon_path
+		rm -rf $addons_repo_copy/.git 2>/dev/null
+		mv -R $addons_repo_copy $addon_path
 	# If repo contains multiple addon let's only download the repo we need.
-	elif [[ -d $tmp_addon/$addon_name ]] && [[ -f $tmp_addon/$addon_name/$addon_name ]] && [[ -x $tmp_addon/$addon_name/$addon_name ]]; then
+	elif [[ -d $addons_repo_copy/$addon_name ]] && [[ -f $addons_repo_copy/$addon_name/$addon_name ]] && [[ -x $addons_repo_copy/$addon_name/$addon_name ]]; then
 		# Remove Git Repo that was cloned from.
-		rm -rf $tmp_addon/.git 2>/dev/null
-		mv -R $tmp_addon/$addon_name $addon_path
+		rm -rf $addons_repo_copy/.git 2>/dev/null
+		mv -R $addons_repo_copy/$addon_name $addon_path
 	else
-		echo-red "Unknown error"
-		rm -rf $tmp_addon
-		exit 1
+		echo-error "Addon main file does not exist, is invalid or is not set to be executable"
+		rm -rf "$tmp_addon"
+		return 1
 	fi
 
 	# Pre-install hook
