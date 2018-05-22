@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.56.2
+FIN_VERSION=1.57.1
 
 # Console colors
 red='\033[0;91m'
@@ -1659,7 +1659,8 @@ show_help_config ()
 
 	echo
 	echo "Commands:"
-	printh "show" "Display configuration for the current project"
+	printh "show [options]" "Display configuration for the current project"
+	printh "    --show-secrets" "Do not truncate value of SECRET_* environment vars"
 	printh "env" "Display only environment variables section"
 	printh "generate" "Generate empty Docksal configuration for the project"
 	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
@@ -4791,11 +4792,27 @@ load_configuration ()
 config_show ()
 {
 	check_docksal_environment
+	eval $(parse_params "$@")
 
 	# Mask secrets prior to printing anything
-	# TODO: add support for "--show-secrets" to force printing secrets in plain text
-	# Any env variable, that starts with the "SECRET_" prefix, is overwritten with "[*****]" as its value
-	eval $(env | grep -E -o 'SECRET_.*=' | xargs -I % bash -c "echo export %[*****]")
+	if [[ "$showsecrets" != "showsecrets" ]]; then
+		# Any env variable, that starts with the "SECRET_" prefix, is rewritten to only show beginning and end
+		eval 'secrets=(${!SECRET_@})'
+		for secret in "${secrets[@]}"
+		do
+			local secret_value=${!secret}
+			# Define how many characters to show on the beginning and the ned
+			local cut_length;
+			if [[ ${#secret_value} < 10 ]]; then
+				cut_length=3;
+			elif [[ ${#secret_value} < 15 ]]; then
+				cut_length=4;
+			else
+				cut_length=5;
+			fi
+			eval ${secret}="${secret_value:0:${cut_length}}*****${secret_value: -${cut_length}}"
+		done
+	fi
 
 	echo "---------------------"
 	# echo "COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}"
@@ -5426,14 +5443,16 @@ unison_sync_wait () {
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
-if ( which tput >/dev/null 2>&1 ); then
-	COLUMNS=$(tput cols)
-	LINES=$(tput lines)
-# If tput is not available, try ssty. See https://stackoverflow.com/a/48016366/4550880
-elif ( which stty >/dev/null 2>&1 ); then
-	read LINES COLUMNS < <(stty size)
+if is_tty; then
+	if ( which tput >/dev/null 2>&1 ); then
+		COLUMNS=$(tput cols)
+		LINES=$(tput lines)
+	# If tput is not available, try ssty. See https://stackoverflow.com/a/48016366/4550880
+	elif ( which stty >/dev/null 2>&1 ); then
+		read LINES COLUMNS < <(stty size)
+	fi
+	export LINES COLUMNS
 fi
-export LINES COLUMNS
 
 # Load environment variables overrides, use to permanently override some variables
 # Source and allexport variables in the .env file
@@ -5449,23 +5468,25 @@ fi
 
 # Automatically create docksal.yml and docksal.env if they do not exist
 # Relate to https://github.com/docksal/docksal/issues/459
-docksal_yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
-docksal_env_file="$(get_project_path_dc)/.docksal/docksal.env"
-docksal_yml_version=$(head "$(get_config_dir_dc)/stacks/services.yml" | grep "version")
-# Create default docksal.yml and docksal.env files if there is no configuration yet
-if [[ ! -f "$docksal_yml_file" ]]; then
-	(echo "$docksal_yml_version" > "$docksal_yml_file") 2>/dev/null
-	if [[ ! -f "$docksal_env_file" ]]; then
-		(echo "DOCKSAL_STACK=default" > "$docksal_env_file") 2>/dev/null
-	else
-		if [[ "$DOCKSAL_STACK" == "" ]]; then
-			(echo -e "DOCKSAL_STACK=default\n$(cat $docksal_env_file)" > "$docksal_env_file") 2>/dev/null
+if [[ "$(get_project_path)" != "" ]] ; then
+	docksal_yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+	docksal_env_file="$(get_project_path_dc)/.docksal/docksal.env"
+	docksal_yml_version=$(head "$(get_config_dir_dc)/stacks/services.yml" | grep "version")
+	# Create default docksal.yml and docksal.env files if there is no configuration yet
+	if [[ ! -f "$docksal_yml_file" ]]; then
+		(echo "$docksal_yml_version" > "$docksal_yml_file") 2>/dev/null
+		if [[ ! -f "$docksal_env_file" ]]; then
+			(echo "DOCKSAL_STACK=default" > "$docksal_env_file") 2>/dev/null
+		else
+			if (source "$docksal_env_file" && [[ "$DOCKSAL_STACK" == "" ]]); then
+				(echo -e "DOCKSAL_STACK=default\n$(cat $docksal_env_file)" > "$docksal_env_file") 2>/dev/null
+			fi
 		fi
-	fi
-else
-	# Create empty docksal.env it does not exist
-	if [[ ! -f "$docksal_env_file" ]]; then
-		touch "$docksal_env_file" 2>/dev/null
+	else
+		# Create empty docksal.env if it does not exist
+		if [[ ! -f "$docksal_env_file" ]]; then
+			touch "$docksal_env_file" 2>/dev/null
+		fi
 	fi
 fi
 
