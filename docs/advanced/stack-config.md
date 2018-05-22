@@ -63,7 +63,7 @@ variables for your automation scripts (see [custom commands](../fin/custom-comma
 <a name="docksal-local"></a>
 ### docksal-local.yml, docksal-local.env
 
-`docksal-local.yml` and `docksal-local.env` are used for additional customizations that happen after the main files
+`docksal-local.yml` and `docksal-local.env` are used for additional customizations that happen after the main files 
 are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom port](../advanced/networking.md#expose-port) 
 or switching PHP versions.
 
@@ -117,7 +117,7 @@ You can simply create a `.docksal` folder in your project root and run `fin proj
 The default stack (`$HOME/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case.
 
 This is a great way to start developing a new project. This approach can also be used on a permanent basis, 
-if your needs are simple. `stack-default.yml` extends the configuration from `services.yml`,
+if your needs are simple. `stack-default.yml` extends the configuration from `services.yml`, 
 so you'll be getting the latest stack versions with every Docksal update.
 
 ### Zero-configuration stacks
@@ -503,7 +503,7 @@ services:
 ### Override config with `docksal.yml`
 
 When not using a predefined stack (`docksal.yml` is present and `DOCKSAL_STACK` is not set in `docksal.env`), 
-you are in control of everything. In this case the stack configuration is not inherited from
+you are in control of everything. In this case the stack configuration is not inherited from 
 `services.yml` (`$HOME/.docksal/services.yml`), so you must fully describe the `cli` service in the project's `docksal.yml`.
 
 An example section of a `docksal.yml` file that describes the `cli` service and overrides the PHP version:
