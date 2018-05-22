@@ -5218,12 +5218,12 @@ addon_install ()
 		git pull --depth=1 origin/${URL_ADDONS_BRANCH}
 		# Remove Git Repo that was cloned from.
 		rm -rf $addons_repo_copy/.git 2>/dev/null
-		mv -R $addons_repo_copy $addon_path
+		cp -R $addons_repo_copy $addon_path
 	# If repo contains multiple addon let's only download the repo we need.
 	elif [[ -d $addons_repo_copy/$addon_name ]] && [[ -f $addons_repo_copy/$addon_name/$addon_name ]] && [[ -x $addons_repo_copy/$addon_name/$addon_name ]]; then
 		# Remove Git Repo that was cloned from.
 		rm -rf $addons_repo_copy/.git 2>/dev/null
-		mv -R $addons_repo_copy/$addon_name $addon_path
+		cp -R $addons_repo_copy/$addon_name $addon_path
 	else
 		echo-red "Unknown error"
 		rm -rf $addons_repo_copy
