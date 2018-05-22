@@ -283,7 +283,7 @@ IMAGE_DNS | docksal/dns:1.0 | Docker image to use for DNS Routing.
 Variable | Default | Description
 ---------|---------|------------
 DOCKSAL_LOCK_UPDATES | | When set this will allow for Docksal to no longer accept updates. This is usually good in conjunction of `CI=true`.
-DOCKSAL_ENVIRONMENT | local | **Variable is currently not in use**
+DOCKSAL_ENVIRONMENT | local | Allow for environment specific dockal.yml and docksal.env files. Files will be same format `docksal-${DOCKSAL_ENVIRONMENT}.yml` or `docksal-${DOCKSAL_ENVIRONMENT}.env`. These files should not be committed.
 DOCKSAL_STATS_OPTOUT | 0 | Allow for collecting of statistical usage of docksal. When set to `1` this will no longer send statistics.
 DOCKER_NATIVE | 0 | Designates whether to use Docker through VirtualBox or Native Docker. On Linux this is always set to `1`. Otherwise it is set to `0`.
 
