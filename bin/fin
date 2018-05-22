@@ -165,8 +165,6 @@ URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
 URL_REPO_HUGO="https://github.com/docksal/example-hugo.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
-# Remove URL_REPO_ADDONS in Nov 2018
-URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
 DOCKSAL_ADDONS_REPO="https://github.com/docksal/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
@@ -1729,7 +1727,7 @@ show_help_addon ()
 	echo
 	echo-green "Commands:"
 	printh "install <name>" "Install addon"
-    printh "update <name>" "Update addon"
+	printh "update <name>" "Update addon"
 	printh "remove <name>" "Remove addon"
 
 	echo
@@ -5084,31 +5082,31 @@ addon () {
 		addon_name=${BASH_REMATCH[2]}
 	fi
 
-    case "$1" in
-        install|in)
-            addon_install "$addon_name" ${is_global}
-            ;;
-        remove|rm)
-            addon_remove "$addon_name" ${is_global}
-            ;;
-        update|up)
-            addon_update "$addon_name" ${is_global}
-            ;;
-        version|v)
-            # special case for addon version command
-            addon_script=$(get_addon_script "$addon_name")
-            [ ! -f "$addon_script" ] && echo "-1" && exit
-            addon_version=$(cat "$addon_script" | grep ^VERSION | cut -d = -f 2 | tr -d \" | tr -d \')
-            addon_version="${addon_version:-0}"
-            echo "$addon_version"
-            ;;
-        help)
-            show_help_addon
-            ;;
-        *)
-            echo-yellow "Unknown sub-command. See ${NC}fin addon help${yellow} for details."
-            ;;
-    esac
+	case "$1" in
+		install|in)
+			addon_install "$addon_name" ${is_global}
+		;;
+		remove|rm)
+			addon_remove "$addon_name" ${is_global}
+		;;
+		update|up)
+			addon_update "$addon_name" ${is_global}
+		;;
+		version|v)
+		# special case for addon version command
+			addon_script=$(get_addon_script "$addon_name")
+			[ ! -f "$addon_script" ] && echo "-1" && exit
+			addon_version=$(cat "$addon_script" | grep ^VERSION | cut -d = -f 2 | tr -d \" | tr -d \')
+			addon_version="${addon_version:-0}"
+			echo "$addon_version"
+		;;
+		help)
+			show_help_addon
+		;;
+		*)
+			echo-yellow "Unknown sub-command. See ${NC}fin addon help${yellow} for details."
+		;;
+	esac
 }
 
 # Check to see if addon exists within remote repo
@@ -5117,20 +5115,20 @@ addon () {
 # $3 - repo_url the repository url to check
 # $4 - repo_branch the branch to check against
 _addon_temp_install () {
-    local uuid=${1}
-    local addon_name=${2}
-    local repo_url=${3}
-    local repo_branch=${4}
-    local tmp_random="/tmp/${uuid}"
-    mkdir $tmp_random && cd $tmp_random
+	local uuid=${1}
+	local addon_name=${2}
+	local repo_url=${3}
+	local repo_branch=${4}
+	local tmp_random="/tmp/${uuid}"
+	mkdir $tmp_random && cd $tmp_random
 
-    # Initialize empty repo; suppress output
-    git init > /dev/null
-    git remote add origin $repo_url > /dev/null
-    git fetch -q origin $repo_branch > /dev/null
-    git checkout origin/${repo_branch} ${addon_name} 2> /dev/null
-    git checkout origin/${repo_branch} ${addon_name}.pre-install 2> /dev/null
-    git cat-file -s origin/${repo_branch}:${addon_name} 2> /dev/null
+	# Initialize empty repo; suppress output
+	git init > /dev/null
+	git remote add origin $repo_url > /dev/null
+	git fetch -q origin $repo_branch > /dev/null
+	git checkout origin/${repo_branch} ${addon_name} 2> /dev/null
+	git checkout origin/${repo_branch} ${addon_name}.pre-install 2> /dev/null
+	git cat-file -s origin/${repo_branch}:${addon_name} 2> /dev/null
 }
 
 # Search all of the provided repositories for the requested plugin.
@@ -5149,33 +5147,33 @@ _addon_search_repo () {
 		config="${config}|master"
 		local REPO_URL=$(echo $config | cut -d'|' -f1)
 		local REPO_BRANCH=$(echo $config | cut -d'|' -f2)
-        local uuid=$(uuidgen)
+		local uuid=$(uuidgen)
 
-        # Check to make sure the provided Repo URL is valid and the Branch Exists
-        local valid=$(git ls-remote -h $REPO_URL --refs $REPO_BRANCH | wc -l)
+		# Check to make sure the provided Repo URL is valid and the Branch Exists
+		local valid=$(git ls-remote -h $REPO_URL --refs $REPO_BRANCH | wc -l)
 		if [ "${valid}" -eq 0 ]; then
 			echo-error "${key} URL:${REPO_URL} BRANCH:${REPO_BRANCH} is not a valid repository or the branch provided "\
 				""
 			continue
 		else
-          local exists=$(_addon_temp_install $uuid $addon $REPO_URL $REPO_BRANCH)
-          if [[ -n "${exists}" ]] && [[ $exists -ge 0 ]]; then
-              if _confirm "Install addon: ${NC}${key}/${addon}?" "--no-exit" -eq 0; then
-                  eval "${repo_url}=${REPO_URL}"
-                  eval "${repo_branch}=${REPO_BRANCH}"
-                  eval "${repo_uuid}=${uuid}"
-                  break;
-              fi
+			local exists=$(_addon_temp_install $uuid $addon $REPO_URL $REPO_BRANCH)
+			if [[ -n "${exists}" ]] && [[ $exists -ge 0 ]]; then
+				if _confirm "Install addon: ${NC}${key}/${addon}?" "--no-exit" -eq 0; then
+					eval "${repo_url}=${REPO_URL}"
+					eval "${repo_branch}=${REPO_BRANCH}"
+					eval "${repo_uuid}=${uuid}"
+					break;
+				fi
 			fi
 		fi
 
-        rm -rf "/tmp/${uuid}"
+		rm -rf "/tmp/${uuid}"
 		unset REPO_URL REPO_BRANCH
 	done
 
 	if [[ -z "${REPO_URL}" ]]; then
-	    echo-red "Addon not found to install."
-	    exit 1;
+		echo-red "Addon not found to install."
+		exit 1;
 	fi
 }
 
@@ -5215,51 +5213,51 @@ addon_install ()
 
 	local tmp_addon="/tmp/${ADDON_UUID}"
 
-    # If repo contains only 1 addon let's download the full repo.
-    if [[ -f $tmp_addon/$addon_name ]] && [[ -x $tmp_addon/$addon_name ]]; then
-        cd $tmp_addon/
-        git pull --depth=1 origin/${URL_ADDONS_BRANCH}
-        # Remove Git Repo that was cloned from.
-        rm -rf $tmp_addon/.git 2>/dev/null
-        mv -R $tmp_addon $addon_path
-    # If repo contains multiple addon let's only download the repo we need.
-    elif [[ -d $tmp_addon/$addon_name ]] && [[ -f $tmp_addon/$addon_name/$addon_name ]] && [[ -x $tmp_addon/$addon_name/$addon_name ]]; then
-        # Remove Git Repo that was cloned from.
-        rm -rf $tmp_addon/.git 2>/dev/null
-        mv -R $tmp_addon/$addon_name $addon_path
-    else
-        echo-red "Unknown error"
-        rm -rf $tmp_addon
-        exit 1
-    fi
+	# If repo contains only 1 addon let's download the full repo.
+	if [[ -f $tmp_addon/$addon_name ]] && [[ -x $tmp_addon/$addon_name ]]; then
+		cd $tmp_addon/
+		git pull --depth=1 origin/${URL_ADDONS_BRANCH}
+		# Remove Git Repo that was cloned from.
+		rm -rf $tmp_addon/.git 2>/dev/null
+		mv -R $tmp_addon $addon_path
+	# If repo contains multiple addon let's only download the repo we need.
+	elif [[ -d $tmp_addon/$addon_name ]] && [[ -f $tmp_addon/$addon_name/$addon_name ]] && [[ -x $tmp_addon/$addon_name/$addon_name ]]; then
+		# Remove Git Repo that was cloned from.
+		rm -rf $tmp_addon/.git 2>/dev/null
+		mv -R $tmp_addon/$addon_name $addon_path
+	else
+		echo-red "Unknown error"
+		rm -rf $tmp_addon
+		exit 1
+	fi
 
-    # Pre-install hook
-    [[ "$2" == "global" ]] && addon_global="global"
-    addon_hook "$addon_path" "$addon_name" "pre-install" "$addon_global"
-    if [ ! $? -eq 0 ]; then
-        echo-red "Pre-install hook has failed and aborted the installation."
-        # Delete downloaded files if pre-install hook fails
-        [[ -d "$addon_path" ]] && [[ "$addon_path" =~ ".docksal" ]] &&
-            rm -r "$addon_path"
-        return 1
-    fi
+	# Pre-install hook
+	[[ "$2" == "global" ]] && addon_global="global"
+	addon_hook "$addon_path" "$addon_name" "pre-install" "$addon_global"
+	if [ ! $? -eq 0 ]; then
+		echo-red "Pre-install hook has failed and aborted the installation."
+		# Delete downloaded files if pre-install hook fails
+		[[ -d "$addon_path" ]] && [[ "$addon_path" =~ ".docksal" ]] &&
+		rm -r "$addon_path"
+		return 1
+	fi
 
-    # Execute Main Script
+	# Execute Main Script
 	chmod +x "$addon_path/$addon_name"
 	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
 
-    # Post-install hook
-    addon_hook "$addon_path" "$addon_name" "post-install" "$addon_global"
-    [[ $? != 0 ]] && _with_errors="${yellow}with errors${NC}"
-    [[ "$2" == "global" ]] && _globally="globally"
-    echo-green "Addon ${NC}$addon_name${green} was installed ${_globally} ${_with_errors}"
+	# Post-install hook
+	addon_hook "$addon_path" "$addon_name" "post-install" "$addon_global"
+	[[ $? != 0 ]] && _with_errors="${yellow}with errors${NC}"
+	[[ "$2" == "global" ]] && _globally="globally"
+	echo-green "Addon ${NC}$addon_name${green} was installed ${_globally} ${_with_errors}"
 }
 
 # Update addon
 # $1 - addon name
 # $2 - optional flag to install globally
 addon_update () {
-    [[ "$2" != "global" ]] && check_project_environment && load_configuration
+	[[ "$2" != "global" ]] && check_project_environment && load_configuration
 
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
@@ -5267,7 +5265,7 @@ addon_update () {
 	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
 	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
 
-    local URL_ADDONS_REPO
+	local URL_ADDONS_REPO
 	local URL_ADDONS_BRANCH
 	local ADDON_UUID
 	_addon_search_repo $addon_name URL_ADDONS_REPO URL_ADDONS_BRANCH ADDON_UUID
@@ -5280,51 +5278,51 @@ addon_update () {
 		addon_path="$HOME/$DOCKSAL_ADDONS_PATH/$addon_name"
 	fi
 
-    if [ ! -d "$addon_path" ] && [ ! -f "$addon_path" ]; then
-	    echo-red "Addon ${NC}$addon_name${red} is currently not installed. Run ${NC}fin addon install ${addon_name}"
-	    exit 1
+	if [ ! -d "$addon_path" ] && [ ! -f "$addon_path" ]; then
+		echo-red "Addon ${NC}$addon_name${red} is currently not installed. Run ${NC}fin addon install ${addon_name}"
+		exit 1
 	fi
 
 	local tmp_addon="/tmp/${ADDON_UUID}"
 
-    # If repo contains only 1 addon let's download the full repo.
-    if [[ -f $tmp_addon/$addon_name ]] && [[ -x $tmp_addon/$addon_name ]]; then
-        cd $tmp_addon/
-        git pull --depth=1 origin/${URL_ADDONS_BRANCH}
-        # Remove Git Repo that was cloned from.
-        rm -rf $tmp_addon/.git 2>/dev/null
-        mv -R $tmp_addon $addon_path
-    # If repo contains multiple addon let's only download the repo we need.
-    elif [[ -d $tmp_addon/$addon_name ]] && [[ -f $tmp_addon/$addon_name/$addon_name ]] && [[ -x $tmp_addon/$addon_name/$addon_name ]]; then
-        # Remove Git Repo that was cloned from.
-        rm -rf $tmp_addon/.git 2>/dev/null
-        mv -R $tmp_addon/$addon_name $addon_path
-    else
-        echo-red "Unknown error"
-        rm -rf $tmp_addon
-        exit 1
-    fi
+	# If repo contains only 1 addon let's download the full repo.
+	if [[ -f $tmp_addon/$addon_name ]] && [[ -x $tmp_addon/$addon_name ]]; then
+		cd $tmp_addon/
+		git pull --depth=1 origin/${URL_ADDONS_BRANCH}
+		# Remove Git Repo that was cloned from.
+		rm -rf $tmp_addon/.git 2>/dev/null
+		mv -R $tmp_addon $addon_path
+	# If repo contains multiple addon let's only download the repo we need.
+	elif [[ -d $tmp_addon/$addon_name ]] && [[ -f $tmp_addon/$addon_name/$addon_name ]] && [[ -x $tmp_addon/$addon_name/$addon_name ]]; then
+		# Remove Git Repo that was cloned from.
+		rm -rf $tmp_addon/.git 2>/dev/null
+		mv -R $tmp_addon/$addon_name $addon_path
+	else
+		echo-red "Unknown error"
+		rm -rf $tmp_addon
+		exit 1
+	fi
 
-    # Pre-install hook
-    [[ "$2" == "global" ]] && addon_global="global"
-    addon_hook "$addon_path" "$addon_name" "pre-update" "$addon_global"
-    if [ ! $? -eq 0 ]; then
-        echo-red "Pre-update hook has failed and aborted the installation."
-        # Delete downloaded files if pre-update hook fails
-        [[ -d "$addon_path" ]] && [[ "$addon_path" =~ ".docksal" ]] &&
-            rm -r "$addon_path"
-        return 1
-    fi
+	# Pre-install hook
+	[[ "$2" == "global" ]] && addon_global="global"
+	addon_hook "$addon_path" "$addon_name" "pre-update" "$addon_global"
+	if [ ! $? -eq 0 ]; then
+		echo-red "Pre-update hook has failed and aborted the installation."
+		# Delete downloaded files if pre-update hook fails
+		[[ -d "$addon_path" ]] && [[ "$addon_path" =~ ".docksal" ]] &&
+		rm -r "$addon_path"
+		return 1
+	fi
 
-    # Execute Main Script
+	# Execute Main Script
 	chmod +x "$addon_path/$addon_name"
 	if_failed_error "Could not get $addon_name" "Check your internet connection and try again"
 
-    # Post-install hook
-    addon_hook "$addon_path" "$addon_name" "post-update" "$addon_global"
-    [[ $? != 0 ]] && _with_errors="${yellow}with errors${NC}"
-    [[ "$2" == "global" ]] && _globally="globally"
-    echo-green "Addon ${NC}$addon_name${green} was updated ${_globally} ${_with_errors}"
+	# Post-install hook
+	addon_hook "$addon_path" "$addon_name" "post-update" "$addon_global"
+	[[ $? != 0 ]] && _with_errors="${yellow}with errors${NC}"
+	[[ "$2" == "global" ]] && _globally="globally"
+	echo-green "Addon ${NC}$addon_name${green} was updated ${_globally} ${_with_errors}"
 }
 
 # Remove addon
