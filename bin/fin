@@ -5140,9 +5140,9 @@ _addon_search_repo () {
 	local repo_uuid=$4
 
 	echo-green "Searching for ${addon} in predefined repositories..."
-	for key in "${repos[@]}"
+	for repo in "${repos[@]}"
 	do
-		local config=${!key}
+		local config=${!repo}
 		# Append master just incase there is no branch defined
 		config="${config}|master"
 		local REPO_URL=$(echo $config | cut -d'|' -f1)
@@ -5152,8 +5152,7 @@ _addon_search_repo () {
 		# Check to make sure the provided Repo URL is valid and the Branch Exists
 		git ls-remote -h "$REPO_URL" --refs "$REPO_BRANCH" 2>/dev/null | grep -q "$REPO_BRANCH"
 		if [[ "$?" != "0" ]]; then
-			echo "$key defines an invalid repository/branch reference. Skipping..."
-			continue
+			echo "$repo defines an invalid repository/branch reference. Skipping..."
 		else
 			local exists=$(_addon_temp_install $uuid $addon $REPO_URL $REPO_BRANCH)
 			if [[ -n "${exists}" ]] && [[ $exists -ge 0 ]]; then
@@ -5171,8 +5170,9 @@ _addon_search_repo () {
 	done
 
 	if [[ -z "${REPO_URL}" ]]; then
-		echo-red "Addon not found to install."
-		exit 1;
+		echo-error "Could not find addon ${addon_name} in any of the pre-defined repositories." \
+  			"Check repositories and branches spelling"
+		return 1
 	fi
 }
 
@@ -5209,6 +5209,7 @@ addon_install ()
 	local URL_ADDONS_BRANCH
 	local ADDON_UUID
 	_addon_search_repo $addon_name URL_ADDONS_REPO URL_ADDONS_BRANCH ADDON_UUID
+	[[ "$?" != "0" ]] && return 1
 
 	local addons_repo_copy="/tmp/${ADDON_UUID}"
 
@@ -5226,7 +5227,7 @@ addon_install ()
 		cp -R $addons_repo_copy/$addon_name $addon_path
 	else
 		echo-error "Addon main file does not exist, is invalid or is not set to be executable"
-		rm -rf "$tmp_addon"
+		rm -rf "$addons_repo_copy"
 		return 1
 	fi
 
@@ -5281,6 +5282,7 @@ addon_update () {
 	local URL_ADDONS_BRANCH
 	local ADDON_UUID
 	_addon_search_repo $addon_name URL_ADDONS_REPO URL_ADDONS_BRANCH ADDON_UUID
+	[[ "$?" != "0" ]] && return 1
 
 	local addons_repo_copy="/tmp/${ADDON_UUID}"
 
