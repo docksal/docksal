@@ -5189,11 +5189,6 @@ addon_install ()
 	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
 	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
 
-    local URL_ADDONS_REPO
-	local URL_ADDONS_BRANCH
-	local ADDON_UUID
-	_addon_search_repo $addon_name URL_ADDONS_REPO URL_ADDONS_BRANCH ADDON_UUID
-
 	# Create target addon dir
 	local addon_path
 	if [[ "$2" != "global" ]]; then
@@ -5209,6 +5204,11 @@ addon_install ()
 		mkdir -p "$addon_path"
 		if_failed_error "Could not create $addon_path" "Check file permissions and try again"
 	fi
+
+	local URL_ADDONS_REPO
+	local URL_ADDONS_BRANCH
+	local ADDON_UUID
+	_addon_search_repo $addon_name URL_ADDONS_REPO URL_ADDONS_BRANCH ADDON_UUID
 
 	local addons_repo_copy="/tmp/${ADDON_UUID}"
 
