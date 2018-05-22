@@ -5126,9 +5126,8 @@ _addon_temp_install () {
 	git init > /dev/null
 	git remote add origin $repo_url > /dev/null
 	git fetch -q origin $repo_branch > /dev/null
-	git checkout origin/${repo_branch} ${addon_name} 2> /dev/null
-	git checkout origin/${repo_branch} ${addon_name}.pre-install 2> /dev/null
 	git cat-file -s origin/${repo_branch}:${addon_name} 2> /dev/null
+	git checkout origin/${repo_branch} ${addon_name} 2> /dev/null
 }
 
 # Search all of the provided repositories for the requested plugin.
@@ -5140,6 +5139,7 @@ _addon_search_repo () {
 	local repo_branch=$3
 	local repo_uuid=$4
 
+	echo-green "Searching for ${addon} in predefined repositories..."
 	for key in "${repos[@]}"
 	do
 		local config=${!key}
@@ -5150,15 +5150,14 @@ _addon_search_repo () {
 		local uuid=$(uuidgen)
 
 		# Check to make sure the provided Repo URL is valid and the Branch Exists
-		local valid=$(git ls-remote -h $REPO_URL --refs $REPO_BRANCH | wc -l)
-		if [ "${valid}" -eq 0 ]; then
-			echo-error "${key} URL:${REPO_URL} BRANCH:${REPO_BRANCH} is not a valid repository or the branch provided "\
-				""
+		git ls-remote -h "$REPO_URL" --refs "$REPO_BRANCH" 2>/dev/null | grep -q "$REPO_BRANCH"
+		if [[ "$?" != "0" ]]; then
+			echo "$key defines an invalid repository/branch reference. Skipping..."
 			continue
 		else
 			local exists=$(_addon_temp_install $uuid $addon $REPO_URL $REPO_BRANCH)
 			if [[ -n "${exists}" ]] && [[ $exists -ge 0 ]]; then
-				if _confirm "Install addon: ${NC}${key}/${addon}?" "--no-exit" -eq 0; then
+				if _confirm "Addon Found: Install ${NC}${key}/${addon}" "--no-exit" -eq 0; then
 					eval "${repo_url}=${REPO_URL}"
 					eval "${repo_branch}=${REPO_BRANCH}"
 					eval "${repo_uuid}=${uuid}"
