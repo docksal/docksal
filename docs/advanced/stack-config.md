@@ -274,68 +274,195 @@ volumes:
 
 All variables changed below will require at the minimum a project restart `fin restart` so that they can take effect. Additional steps may be required.
 
-Variable | Default | Description
----------|---------|------------
-IMAGE_SSH_AGENT | docksal/ssh-agent:1.0 | The Docker image to use for SSH Agent. This contains the keys that are shared amongst the projects.
-IMAGE_VHOST_PROXY | docksal/vhost-proxy:1.2 | Docker image to use as the VHOST Proxy. This forwards all requests to the appropriate container based upon the hostname that is being requested.
-IMAGE_DNS | docksal/dns:1.0 | Docker image to use for DNS Routing.
+### DOCKSAL_NFS_PATH
 
-Variable | Default | Description
----------|---------|------------
-DOCKSAL_LOCK_UPDATES | | When set this will allow for Docksal to no longer accept updates. This is usually good in conjunction of `CI=true`.
-DOCKSAL_ENVIRONMENT | local | Allow for environment specific dockal.yml and docksal.env files. Files will be same format `docksal-${DOCKSAL_ENVIRONMENT}.yml` or `docksal-${DOCKSAL_ENVIRONMENT}.env`. These files should not be committed.
-DOCKSAL_STATS_OPTOUT | 0 | Allow for collecting of statistical usage of docksal. When set to `1` this will no longer send statistics.
-DOCKER_NATIVE | 0 | Designates whether to use Docker through VirtualBox or Native Docker. On Linux this is always set to `1`. Otherwise it is set to `0`.
+The location of the folder on the host machine to mount to virtual box. More info](../file-sharing.md)
 
-### VHost Proxy
-Variable | Default | Description
----------|---------|------------
-DOCKSAL_DNS_UPSTREAM | | For environments, where access to external DNS servers is blocked, should be set to the LAN DNS server.
-DOCKSAL_VHOST_PROXY_IP | | Used to set the IP address for the VHOST Proxy to listen on. When `CI` variable is set to `true` this will be set to `0.0.0.0`.
-DOCKSAL_DNS_DOMAIN | docksal | This is the domain to use which is tacked on to the end of the projects url.
-DOCKSAL_NO_DNS_RESOLVER | | Allow disabling the DNS resolver configuration (in case there are issues with it). Set to `true` to activate
+### IMAGE_SSH_AGENT
 
+`Default: docksal/ssh-agent:1.0`
 
-### DB
-Variable | Default | Description
----------|---------|------------
-MYSQL_ROOT_PASSWORD | root | This variable specifies a password that is set for the MySQL root account
-MYSQL_ALLOW_EMPTY_PASSWORD | | Set it to true to allow the container to be started with a blank password for the root user
-MYSQL_RANDOM_ROOT_PASSWORD | |
-MYSQL_ONETIME_PASSWORD | | When the variable is true (which is its default state, unless MYSQL_ROOT_PASSWORD is set or MYSQL_ALLOW_EMPTY_PASSWORD is set to true), the root user's password is set as expired and must be changed before MySQL can be used normally. This variable is only supported for MySQL 5.6 and later.
-MYSQL_INITDB_SKIP_TZINFO | |
-MYSQL_DATABASE | default | This variable allows you to specify the name of a database to be created on image startup. If a user name and a password are supplied with MYSQL_USER and MYSQL_PASSWORD, the user is created and granted superuser access to this database (corresponding to GRANT ALL). The specified database is created by a CREATE DATABASE IF NOT EXIST statement, so that the variable has no effect if the database already exists.
-MYSQL_USER | user | This is used to create a user, and the user is granted superuser permissions for the database specified by the `MYSQL_DATABASE` variable. Both `MYSQL_USER` and `MYSQL_PASSWORD` are required for a user to be created; if any of the two variables is not set, the other is ignored.
-MYSQL_PASSWORD | user | This is used to set the newly created user's password.
-MYSQL_PORT_MAPPING | 3306 | The port to use when setting up MySQL.
-PGSQL_PORT_MAPPING | 5432 | The port to use when setting up PostgreSQL.
+The Docker image to use for SSH Agent. This contains the keys that are shared amongst the projects.
 
-### Web
-Variable | Default | Description
----------|---------|------------
-APACHE_SERVERNAME | | Name of server to use for `web` container.
-APACHE_BASIC_AUTH_USER | | Username to use for basic authentication.
-APACHE_BASIC_AUTH_PASS | | Password to use for basic authentication.
+### IMAGE_VHOST_PROXY 
 
-### CLI
-Variable | Default | Description
----------|---------|------------
-HOST_UID | N/A | User ID for the Container User. On MacOS & Linux defaults to current user account `id -u`.
-HOST_GID | N/A | Group ID for the Container User. On MacOS & Linux defaults to current group account `id -g`.
-XDEBUG_ENABLED | 0 | Enables PHP XDebug Service for debugging. See [XDebug](../tools/xdebug.md)
-SECRET_SSH_PRIVATE_KEY | N/A | Use to pass a private SSH key. The key is stored in `/home/docker/.ssh/id_rsa` inside `cli` and will be considered by the SSH client in addition to the keys loaded in `docksal-ssh-agent` when establishing a SSH connection from within `cli`.
-SECRET_ACAPI_EMAIL | N/A | Acquia Cloud API Email Address. See [Acquia Drush Commands](../tools/acquia-drush.md)
-SECRET_ACAPI_KEY | N/A | Acquia Cloud API Key. See [Acquia Drush Commands](../tools/acquia-drush.md)
-SECRET_TERMINUS_TOKEN | N/A | Token used for logging in to Pantheon's CLI Tool [Terminus](../tools/terminus.md).
+`Default: docksal/vhost-proxy:1.2` 
 
-### CI
+Docker image to use as the VHOST Proxy. This forwards all requests to the appropriate container based upon the hostname that is being requested.
+
+### IMAGE_DNS
+
+`Default: docksal/dns:1.0`
+
+Docker image to use for DNS Routing.
+
+### DOCKSAL_LOCK_UPDATES 
+
+When set, this will allow for Docksal to no longer accept updates. This is usually good in combination of `CI=true`.
+
+### DOCKSAL_ENVIRONMENT 
+
+`Default: local`
+
+Allow for environment specific dockal.yml and docksal.env files. Files will be same format `docksal-${DOCKSAL_ENVIRONMENT}.yml` or `docksal-${DOCKSAL_ENVIRONMENT}.env`. These files should not be committed.
+
+### DOCKSAL_STATS_OPTOUT 
+
+`Default: 0` 
+
+Allow for collecting of statistical usage of docksal. When set to `1` this will no longer send statistics.
+
+### DOCKER_NATIVE
+
+`Default: 0`
+
+Designates whether to use Docker through VirtualBox or Native Docker. On Linux this is always set to `1`. Otherwise it is set to `0`.
+
+### DOCKSAL_DNS_UPSTREAM
+
+For environments, where access to external DNS servers is blocked, should be set to the LAN DNS server.
+
+### DOCKSAL_VHOST_PROXY_IP
+
+Used to set the IP address for the VHOST Proxy to listen on. When `CI` variable is set to `true` this will be set to `0.0.0.0`.
+
+### DOCKSAL_DNS_DOMAIN
+
+`Default: docksal`
+
+This is the domain to use which is tacked on to the end of the projects url.
+
+### DOCKSAL_NO_DNS_RESOLVER
+
+Allow disabling the DNS resolver configuration (in case there are issues with it). Set to `true` to activate
+
+### MYSQL_ROOT_PASSWORD
+
+`Default: root`
+
+This variable is mandatory and specifies the password that will be set for the MySQL root superuser account.
+
+### MYSQL_ALLOW_EMPTY_PASSWORD
+
+This is an optional variable. Set to yes to allow the container to be started with a blank password for the root user. NOTE: Setting this variable to yes is not recommended unless you really know what you are doing, since this will leave your MySQL instance completely unprotected, allowing anyone to gain complete superuser access.
+
+### MYSQL_RANDOM_ROOT_PASSWORD
+
+This is an optional variable. Set to yes to generate a random initial password for the root user (using pwgen). The generated root password will be printed to stdout (GENERATED ROOT PASSWORD: .....).
+
+### MYSQL_ONETIME_PASSWORD
+
+When the variable is true (which is its default state, unless MYSQL_ROOT_PASSWORD is set or MYSQL_ALLOW_EMPTY_PASSWORD is set to true), the root user's password is set as expired and must be changed before MySQL can be used normally. This variable is only supported for MySQL 5.6 and later.
+
+### MYSQL_INITDB_SKIP_TZINFO
+
+Skip Timezone Checking when initializing the the DB engine.
+
+### MYSQL_DATABASE
+
+`Default:  default`
+
+This variable allows you to specify the name of a database to be created on image startup. If a user name and a password are supplied with MYSQL_USER and MYSQL_PASSWORD, the user is created and granted superuser access to this database (corresponding to GRANT ALL). The specified database is created by a CREATE DATABASE IF NOT EXIST statement, so that the variable has no effect if the database already exists.
+
+### MYSQL_USER
+
+`Default:  user`
+
+This is used to create a user, and the user is granted superuser permissions for the database specified by the `MYSQL_DATABASE` variable. Both `MYSQL_USER` and `MYSQL_PASSWORD` are required for a user to be created; if any of the two variables is not set, the other is ignored.
+
+### MYSQL_PASSWORD
+
+`Default:  user`
+
+This is used to set the newly created user's password.
+
+### MYSQL_PORT_MAPPING
+
+`Default:  3306`
+
+The port to use when setting up MySQL.
+
+### POSTGRES_DB
+
+`Default:  user`
+
+This variable allows you to specify the name of a database to be created on image startup
+
+### POSTGRES_USER
+
+`Default:  user`
+
+This is used to create a user, and the user is granted superuser permissions for the database specified by the `POSTGRES_DB` variable.
+
+### POSTGRES_PASSWORD
+
+`Default:  user`
+
+This is used to set the newly created user's password.
+
+### PGSQL_PORT_MAPPING
+
+`Default:  5432`
+
+The port to use when setting up PostgreSQL.
+
+### APACHE_SERVERNAME
+
+Name of server to use for `web` container.
+
+### APACHE_BASIC_AUTH_USER
+
+Username to use for basic authentication.
+
+### APACHE_BASIC_AUTH_PASS
+
+Password to use for basic authentication.
+
+### HOST_UID
+
+User ID for the Container User. On MacOS & Linux defaults to current user account `id -u`.
+
+### HOST_GID
+
+Group ID for the Container User. On MacOS & Linux defaults to current group account `id -g`.
+
+### XDEBUG_ENABLED
+
+`Default:  0`
+
+Enables PHP XDebug Service for debugging. See [XDebug](../tools/xdebug.md)
+
+### SECRET_SSH_PRIVATE_KEY
+
+Use to pass a private SSH key. The key is stored in `/home/docker/.ssh/id_rsa` inside `cli` and will be considered by the SSH client in addition to the keys loaded in `docksal-ssh-agent` when establishing a SSH connection from within `cli`.
+
+### SECRET_ACAPI_EMAIL
+
+Acquia Cloud API Email Address. See [Acquia Drush Commands](../tools/acquia-drush.md)
+
+### SECRET_ACAPI_KEY
+
+Acquia Cloud API Key. See [Acquia Drush Commands](../tools/acquia-drush.md)
+
+### SECRET_TERMINUS_TOKEN
+
+Token used for logging in to Pantheon's CLI Tool [Terminus](../tools/terminus.md).
+
+## CI Variables
+
 The following variables should only be used within a CI system. They are primarily used for setting up the ability for Docksal to turn off and conserve resources.
 
-Variable | Default | Description
----------|---------|------------
-PROJECT_INACTIVITY_TIMEOUT | | Defines the timeout of inactivity after which the project stack will be stopped (e.g. 0.5h)
-PROJECT_DANGLING_TIMEOUT | | Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host (e.g. 168h). **WARNING: use at your own risk!**
-PROJECTS_ROOT | |
+### PROJECT_INACTIVITY_TIMEOUT
+
+Defines the timeout of inactivity after which the project stack will be stopped (e.g. 0.5h)
+
+### PROJECT_DANGLING_TIMEOUT
+
+Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host (e.g. 168h). **WARNING: use at your own risk!**
+
+### PROJECTS_ROOT
+
+Used to specify the project directory root.
 
 <a name="php-version"></a>
 ## Switching PHP versions
