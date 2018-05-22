@@ -5204,30 +5204,30 @@ addon_install ()
 
 	if [ -d "$addon_path" ] || [ -f "$addon_path" ]; then
 		echo-red "Addon already exists in $addon_path. Run ${NC}fin addon update ${addon_name}"
-		exit 1
+		return 1
 	else
 		mkdir -p "$addon_path"
 		if_failed_error "Could not create $addon_path" "Check file permissions and try again"
 	fi
 
-	local tmp_addon="/tmp/${ADDON_UUID}"
+	local addons_repo_copy="/tmp/${ADDON_UUID}"
 
 	# If repo contains only 1 addon let's download the full repo.
-	if [[ -f $tmp_addon/$addon_name ]] && [[ -x $tmp_addon/$addon_name ]]; then
-		cd $tmp_addon/
+	if [[ -f $addons_repo_copy/$addon_name ]] && [[ -x $addons_repo_copy/$addon_name ]]; then
+		cd $addons_repo_copy/
 		git pull --depth=1 origin/${URL_ADDONS_BRANCH}
 		# Remove Git Repo that was cloned from.
-		rm -rf $tmp_addon/.git 2>/dev/null
-		mv -R $tmp_addon $addon_path
+		rm -rf $addons_repo_copy/.git 2>/dev/null
+		mv -R $addons_repo_copy $addon_path
 	# If repo contains multiple addon let's only download the repo we need.
-	elif [[ -d $tmp_addon/$addon_name ]] && [[ -f $tmp_addon/$addon_name/$addon_name ]] && [[ -x $tmp_addon/$addon_name/$addon_name ]]; then
+	elif [[ -d $addons_repo_copy/$addon_name ]] && [[ -f $addons_repo_copy/$addon_name/$addon_name ]] && [[ -x $addons_repo_copy/$addon_name/$addon_name ]]; then
 		# Remove Git Repo that was cloned from.
-		rm -rf $tmp_addon/.git 2>/dev/null
-		mv -R $tmp_addon/$addon_name $addon_path
+		rm -rf $addons_repo_copy/.git 2>/dev/null
+		mv -R $addons_repo_copy/$addon_name $addon_path
 	else
 		echo-red "Unknown error"
-		rm -rf $tmp_addon
-		exit 1
+		rm -rf $addons_repo_copy
+		return 1
 	fi
 
 	# Pre-install hook
