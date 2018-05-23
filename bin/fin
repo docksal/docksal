@@ -2884,67 +2884,84 @@ stats_ping ()
 	return 0
 }
 
+# Configure Docksal network settings on Ubuntu via /etc/network/interfaces
+configure_network_ubuntu ()
+{
+	# Adding a subnet for Docksal. Make sure we don't do this twice
+	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
+		echo-green "Adding a subnet for Docksal..."
+		cat > /tmp/docksal.ip <<EOF
+up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+EOF
+		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip' /etc/network/interfaces
+		rm -f /tmp/docksal.ip
+		sudo ifdown --force lo 2>/dev/null
+		sudo ifup lo
+	fi
+}
+
+# Configure Docksal network settings on Alpine via ip addr
+configure_network_alpine ()
+{
+	# This will not persist a reboot or interface change
+	# TODO: make this permanent like with Ubuntu (?)
+	ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+}
+
+# Configure Docksal network settings on Mac
+configure_network_mac ()
+{
+	# Docker for Mac
+	if is_docker_native; then
+		# Add Docksal IP aliases on the local loopback adapter
+		sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
+		sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_HOST_IP} 255.255.255.0
+	else
+		# Remove Docksal IP alias from the local loopback adapter
+		sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP} >/dev/null 2>&1
+		sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_HOST_IP} >/dev/null 2>&1
+	fi
+	# Wait 5s for network configuration to apply
+	sleep 5
+}
+
+# Configure Docksal network settings on Windows
+configure_network_windows ()
+{
+	# Docker for Win
+	if is_docker_native; then
+		# Add Docksal IP aliases on the DockerNAT adapter
+		local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
+		local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP} mask=255.255.255.0"
+		winsudo "$command1 && $command2"
+	else
+		# Remove Docksal IP aliases on the DockerNAT adapter
+		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
+		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP}"
+		winsudo "$command1 && $command2"
+	fi
+	# Wait 5s for network configuration to apply
+	sleep 5
+}
+
+# Configure Docksal network settings on WSL
+configure_network_wsl ()
+{
+	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_IP}" mask="255.255.255.0"
+	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_HOST_IP}" mask="255.255.255.0"
+	# Wait 5s for network configuration to apply
+	sleep 5
+}
+
+# Configure Docksal network settings
 configure_network ()
 {
-	if is_alpine; then
-		# This will not persist a reboot or interface change
-		# TODO: make this permanent(?)
-		ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	fi
-
-	if is_ubuntu; then
-		# Adding a subnet for Docksal. Make sure we don't do this twice
-		if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
-			echo-green "Adding a subnet for Docksal..."
-			cat > /tmp/docksal.ip <<EOF
-	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-EOF
-			sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip' /etc/network/interfaces
-			rm -f /tmp/docksal.ip
-			sudo ifdown --force lo 2>/dev/null
-			sudo ifup lo
-		fi
-	fi
-
-	if is_mac; then
-	 	# Docker for Mac
-	 	if is_docker_native; then
-			# Add Docksal IP aliases on the local loopback adapter
-			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
-			sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_HOST_IP} 255.255.255.0
-		else
-			# Remove Docksal IP alias from the local loopback adapter
-			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP} >/dev/null 2>&1
-			sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_HOST_IP} >/dev/null 2>&1
-		fi
-		# Wait 5s for network configuration to apply
-		sleep 5
-	fi
-
-	if is_windows; then
-		# Docker for Win
-		if is_docker_native; then
-			# Add Docksal IP aliases on the DockerNAT adapter
-			local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
-			local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP} mask=255.255.255.0"
-			winsudo "$command1 && $command2"
-		else
-			# Remove Docksal IP aliases on the DockerNAT adapter
-			local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
-			local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP}"
-			winsudo "$command1 && $command2"
-		fi
-		# Wait 5s for network configuration to apply
-		sleep 5
-	fi
-
-	if is_wsl; then
-		cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_IP}" mask="255.255.255.0"
-		cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_HOST_IP}" mask="255.255.255.0"
-		# Wait 5s for network configuration to apply
-		sleep 5
-	fi
+	is_ubuntu && configure_network_ubuntu
+	is_alpine && configure_network_alpine
+	is_mac && configure_network_mac
+	is_windows && configure_network_windows
+	is_wsl && configure_network_wsl
 }
 
 # Start system-wide vhost-proxy service
