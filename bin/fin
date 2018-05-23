@@ -2911,7 +2911,7 @@ configure_network_alpine ()
 	local mode="${1:-on}"
 	# Determine current status
 	local status
-	(echo "$(ip addr show dev lo)"| grep -q "lo:docksal") && status="enabled" || status="disabled"
+	(grep -q "lo:docksal" <<< "$(ip addr show dev lo)") && status="enabled" || status="disabled"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
@@ -2932,7 +2932,7 @@ configure_network_mac ()
 	local mode="${1:-on}"
 	# Determine current status
 	local status
-	(echo "$(ifconfig lo0)" | grep -q "$DOCKSAL_NATIVE_IP") && status="enabled" || status="disabled"
+	(grep -q "$DOCKSAL_NATIVE_IP" <<< "$(ifconfig lo0)") && status="enabled" || status="disabled"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add Docksal IP aliases on the local loopback adapter
@@ -5044,7 +5044,7 @@ config_set ()
 
 		if grep -q "^$key\=" "$target_env_file"; then
 			# See https://stackoverflow.com/a/29613573 on why is it escaped so
-			replaceEscaped=$(sed 's/[&/\]/\\&/g' <<<"$value") # escape it
+			replaceEscaped=$(sed 's/[&/\]/\\&/g' <<< "$value") # escape it
 			# Replace the value if it exists
 			sed -i.bak "s/^$key\=.*$/$key=\"$replaceEscaped\"/g" "$target_env_file"
 			# Remove backup
