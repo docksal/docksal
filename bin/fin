@@ -1661,7 +1661,9 @@ show_help_config ()
 	printh "show [options]" "Display configuration for the current project"
 	printh "    --show-secrets" "Do not truncate value of SECRET_* environment vars"
 	printh "env" "Display only environment variables section"
-	printh "generate" "Generate empty Docksal configuration for the project"
+	printh "generate [options]" "Generate empty Docksal configuration for the project"
+	printh "    --stack=acquia" "Set non-default DOCKSAL_STACK during config generate"
+	printh "    --docroot=mydir" "Set non-default DOCROOT during config generate"
 	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
 	printh "    --global" "Set for global ENV file"
 	echo
@@ -4840,6 +4842,7 @@ config_show ()
 # TODO: consider deprecating this, since now fin automatically creates docksal.yml and docksal.env (with default stack)
 config_generate ()
 {
+	eval $(parse_params "$@")
 	if [[ -f ".docksal/docksal.yml" ]] || [[ -f ".docksal/docksal.env" ]]; then
 		echo-yellow ".docksal/docksal.yml or .docksal/docksal.env already exists"
 		_confirm "Do you want to proceed and overwrite?"
@@ -4849,11 +4852,15 @@ config_generate ()
 	rm -f ".docksal/docksal.yml" >/dev/null
 	# Create .docksal directory if it does not exist
 	mkdir -p ".docksal"
+	
 	# Create docksal.env if it does not exist
 	touch ".docksal/docksal.env" && \
-	echo "DOCKSAL_STACK=default" > ".docksal/docksal.env"
-
-	local DOCROOT="${DOCROOT:-docroot}"
+	echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
+	
+	# Get docroot option value or use default
+	local DOCROOT="${docroot:-docroot}"
+	# Add DOCROOT to docksal.env file
+	echo "DOCROOT=${DOCROOT}" >> ".docksal/docksal.env"
 	# Create a basic docroot and index.php if not present
 	if [[ ! -d "$DOCROOT" ]] || [[ ! -f "$DOCROOT/index.php" ]]; then
 		# Setup docroot and a basic index.php
@@ -5892,7 +5899,7 @@ case "$1" in
 			generate)
 				# no load_configuration
 				shift
-				config_generate
+				config_generate "$@"
 				;;
 			set)
 				# load_configuration is conditional in function
