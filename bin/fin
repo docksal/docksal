@@ -4918,8 +4918,10 @@ config_set ()
 		IFS='=' read -r key value <<< "${param}"
 
 		if grep -q "^$key\=" "$target_env_file"; then
+			# See https://stackoverflow.com/a/29613573 on why is it escaped so
+			replaceEscaped=$(sed 's/[&/\]/\\&/g' <<<"$value") # escape it
 			# Replace the value if it exists
-			sed -i.bak "s/^$key\=.*$/$key=\"$value\"/g" "$target_env_file"
+			sed -i.bak "s/^$key\=.*$/$key=\"$replaceEscaped\"/g" "$target_env_file"
 			# Remove backup
 			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
 			echo "Replaced value for $key into $target_env_file"
