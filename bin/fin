@@ -18,16 +18,11 @@ if  [[ -f "/etc/os-release" ]]; then
 	(uname -a | grep -v 'Microsoft' >/dev/null) && OS_TYPE="Linux" || OS_TYPE="WSL"
 	read OS_NAME OS_VERSION < <(source "/etc/os-release"; echo "$NAME  $VERSION_ID")
 	export OS_TYPE OS_NAME OS_VERSION
-fi
-
-if (uname | grep 'Darwin' >/dev/null); then
+elif (uname | grep 'Darwin' >/dev/null); then
 	export OS_TYPE="Darwin"
 	export OS_NAME="$(sw_vers -productName)"
 	export OS_VERSION="$(sw_vers -productVersion)"
-
-fi
-
-if (uname | grep 'CYGWIN_NT' >/dev/null); then
+elif (uname | grep 'CYGWIN_NT' >/dev/null); then
 	export OS_TYPE="Cygwin"
 	export OS_NAME="Windows"
 	export OS_VERSION="$(echo $(cmd /c ver) | sed 's/.*Version \(.*\)\..*]/\1/')"
@@ -3473,12 +3468,6 @@ install_tools_ubuntu ()
 	 	echo "WARNING: Installation is running not in a tty mode"
 	fi
 
-	if ! is_ubuntu; then
-		echo-red "Prerequisites installation is currently supported only on Ubuntu"
-		echo-yellow "You can continue at your own risk, if you know your Linux distribution is compatible with Ubuntu"
-		_confirm "Are you sure you want to continue?"
-	fi
-
 	# Install Docker client
 	sudo service docker start 2>/dev/null
 	if ! is_docker_version || ! is_docker_server_version; then
@@ -3654,20 +3643,25 @@ update_virtualbox () {
 
 update_tools ()
 {
+	if is_linux; then
+		is_ubuntu && \
+			install_tools_ubuntu && \
+			return $?
+
+		is_alpine && \
+			install_tools_alpine && \
+			return $?
+
+		# Display a warning for unsupported Linux distros
+		echo-warning "Automatic prerequisites installation not supported on your system"
+	fi
+
 	is_wsl && \
 		install_tools_wsl && \
 		return $?
 
 	is_windows && \
 		install_tools_windows && \
-		return $?
-
-	is_ubuntu && \
-		install_tools_ubuntu && \
-		return $?
-
-	is_alpine && \
-		install_tools_alpine && \
 		return $?
 
 	is_mac && \
