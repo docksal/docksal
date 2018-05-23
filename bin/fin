@@ -2885,13 +2885,13 @@ configure_network_ubuntu ()
 	local conf_file="/etc/network/interfaces"
 	# Determine current status
 	local status
-	(grep -q "$DOCKSAL_DEFAULT_SUBNET" ${conf_file}) && status="enabled" || status=="disabled"
+	(grep -q "lo:docksal" ${conf_file}) && status="enabled" || status="disabled"
 
 	# Adding a subnet for Docksal. Make sure we don't do this twice
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		cat > /tmp/docksal.ip <<EOF
 	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
+	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
 EOF
 		# Add our settings to the loopback interface
 		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip' ${conf_file}
@@ -2901,7 +2901,7 @@ EOF
 		sudo ifup lo
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove our settings from the loopback interface
-		sed "/${DOCKSAL_DEFAULT_SUBNET}/d" ${conf_file}
+		sudo sed -i "/lo:docksal/d" ${conf_file}
 	fi
 }
 
@@ -2911,7 +2911,7 @@ configure_network_alpine ()
 	local mode="${1:-on}"
 	# Determine current status
 	local status
-	(echo "$(ip addr show dev lo)"| grep -q "$DOCKSAL_DEFAULT_SUBNET") && status="enabled" || status="disabled"
+	(echo "$(ip addr show dev lo)"| grep -q "lo:docksal") && status="enabled" || status="disabled"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
