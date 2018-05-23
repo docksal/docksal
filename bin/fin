@@ -2844,6 +2844,9 @@ ssh_add ()
 	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
 	[[ "${1#-}" == "$1" ]] && docker cp "$ssh_path" docksal-ssh-agent:/
 
+	# Add defined SSH Keys
+	_add_ssh_keys_defined
+
 	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
 	if is_tty; then
 		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
@@ -2859,6 +2862,41 @@ ssh_add ()
 	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
 	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
 	return "$ret"
+}
+
+# Loop through and add defined ssh keys
+_add_ssh_keys_defined () {
+	check_winpty_found
+
+	eval 'ssh_keys=(${!'"SECRET_SSH_KEY_"'@})'
+
+	local ssh_path="$HOME/.ssh"
+	# On Windows docker and docker-compose expect a Windows style path
+	is_windows && ssh_path=$(cygpath -w "$ssh_path")
+
+	for ssh_key in "${ssh_keys[@]}"
+	do
+		local ssh_key_name=${!ssh_key}
+		echo-green "Adding SSH Key Stored in ${ssh_key_name}..."
+
+		local new_ssh_key="${ssh_path}/${ssh_key_name}"
+		docker cp "${new_ssh_key}" docksal-ssh-agent:/
+
+		# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
+		if is_tty; then
+			# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
+			${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
+		else
+			# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
+			echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
+			docker exec docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
+		fi
+		local ret=$?
+
+		[[ ! $? -eq 0 ]] && return $ret
+	done
+
+	return 0
 }
 
 #----- Installations and updates -----

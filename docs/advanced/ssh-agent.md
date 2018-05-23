@@ -44,3 +44,16 @@ The options are as follows:
   -D                            Deletes all identities from the agent.
   -l                            Lists fingerprints of all identities currently represented by the agent.
 ```
+
+## Automatically Add Keys
+
+To add SSH keys automatically whenever the SSH Agent is started can be done by defining a variable within
+the `$HOME/.docksal/docksal.env` file. All variables should be prefixed with `SECRET_SSH_KEY_` and then a small
+description of the key. After that has been done, run the `fin ssh-add` command and the keys will be added.
+
+```
+SECRET_SSH_KEY_ACQUIA='acquia_key'
+```
+
+When creating the variable use the files name within `~/.ssh/` as the variable value. The private key should be
+referenced which usually has no `.pub` file extension.
