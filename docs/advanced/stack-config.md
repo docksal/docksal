@@ -467,7 +467,7 @@ Defines the timeout of inactivity after which the project stack and code base wi
 
 ### PROJECTS_ROOT
 
-Used to specify the project directory root.
+Contains path to the project root directory.
 
 <a name="php-version"></a>
 ## Switching PHP versions
