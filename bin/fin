@@ -2733,12 +2733,11 @@ system_reset ()
 
 	# Configure network has to happen before any communications with the docker daemon happen (before check_docker_running)
 	if [[ "$1" == "" ]] ; then
-		echo-green 'Resetting network settings...'
 		configure_network
 		echo-green 'Resetting Docksal services...'
 		echo ' * proxy'
 		install_proxy_service
-		echo ' * dns and resolver for .docksal domain'
+		echo ' * dns'
 		install_dns_service
 		configure_resolver
 		echo ' * ssh-agent'
@@ -2748,7 +2747,6 @@ system_reset ()
 
 	# Configure network has to happen before any communications with the docker daemon happen (before check_docker_running)
 	if [[ "$1" == "network" ]] ; then
-		echo-green 'Resetting network settings...'
 		configure_network
 		return
 	fi
