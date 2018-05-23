@@ -2845,34 +2845,7 @@ ssh_add ()
 	[[ "${1#-}" == "$1" ]] && docker cp "$ssh_path" docksal-ssh-agent:/
 
 	# Add defined SSH Keys
-	_add_ssh_keys_defined
-
-	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
-	if is_tty; then
-		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "$@"
-	else
-		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
-		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
-		docker exec docksal-ssh-agent /run.sh ssh-add "$@"
-	fi
-	local ret=$?
-
-	# Remove copied keys from the ssh-agent container after loading into the ssh-agent
-	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
-	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
-	return "$ret"
-}
-
-# Loop through and add defined ssh keys
-_add_ssh_keys_defined () {
-	check_winpty_found
-
 	eval 'ssh_keys=(${!'"SECRET_SSH_KEY_"'@})'
-
-	local ssh_path="$HOME/.ssh"
-	# On Windows docker and docker-compose expect a Windows style path
-	is_windows && ssh_path=$(cygpath -w "$ssh_path")
 
 	for ssh_key in "${ssh_keys[@]}"
 	do
@@ -2896,7 +2869,21 @@ _add_ssh_keys_defined () {
 		[[ ! $? -eq 0 ]] && return $ret
 	done
 
-	return 0
+	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
+	if is_tty; then
+		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
+		${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "$@"
+	else
+		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
+		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
+		docker exec docksal-ssh-agent /run.sh ssh-add "$@"
+	fi
+	local ret=$?
+
+	# Remove copied keys from the ssh-agent container after loading into the ssh-agent
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
+	return "$ret"
 }
 
 #----- Installations and updates -----
