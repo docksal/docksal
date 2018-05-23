@@ -409,10 +409,6 @@ This is used to set the newly created user's password.
 
 The port to use when setting up PostgreSQL.
 
-### APACHE_SERVERNAME
-
-Name of server to use for `web` container.
-
 ### APACHE_BASIC_AUTH_USER
 
 Username to use for basic authentication.
