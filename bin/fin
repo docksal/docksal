@@ -2896,13 +2896,16 @@ EOF
 		# Add our settings to the loopback interface
 		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip' ${conf_file}
 		rm -f /tmp/docksal.ip
-		# ifupdown the interface to apply settings
-		sudo ifdown --force lo 2>/dev/null
-		sudo ifup lo
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
-		# Remove our settings from the loopback interface
+		# Reset network settings
+		sudo ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
+		# Remove configuration from the loopback interface
 		sudo sed -i "/lo:docksal/d" ${conf_file}
 	fi
+
+	# Up/down interface to update settings
+	sudo ifdown --force lo 2>/dev/null
+	sudo ifup lo
 }
 
 # Configure Docksal network settings on Alpine via ip addr
