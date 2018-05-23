@@ -2799,7 +2799,7 @@ system_start ()
 }
 
 # Stops/disables all Docksal things
-# TODO: add projects, network, /etc/exports, etc. here for a complete shutdown of Docksal
+# TODO: add projects, /etc/exports, etc. here for a complete shutdown of Docksal
 system_stop ()
 {
 	if ! is_linux && ! is_docker_native && ! is_wsl; then
@@ -2808,9 +2808,10 @@ system_stop ()
 		vm stop
 	else
 		_stop_containers --all
-		configure_resolver off
 		echo-green "Stopping Docksal system services..."
 		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
+		configure_resolver off
+		configure_network off
 	fi
 }
 
@@ -2887,55 +2888,85 @@ stats_ping ()
 # Configure Docksal network settings on Ubuntu via /etc/network/interfaces
 configure_network_ubuntu ()
 {
+	local mode="${1:-on}"
+	local conf_file="/etc/network/interfaces"
+	# Determine current status
+	local status
+	(grep -q "$DOCKSAL_DEFAULT_SUBNET" ${conf_file}) && status="enabled" || status=="disabled"
+
 	# Adding a subnet for Docksal. Make sure we don't do this twice
-	if ! grep -q "$DOCKSAL_DEFAULT_SUBNET" /etc/network/interfaces; then
-		echo-green "Adding a subnet for Docksal..."
+	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		cat > /tmp/docksal.ip <<EOF
-up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
 EOF
-		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip' /etc/network/interfaces
+		# Add our settings to the loopback interface
+		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip' ${conf_file}
 		rm -f /tmp/docksal.ip
+		# ifupdown the interface to apply settings
 		sudo ifdown --force lo 2>/dev/null
 		sudo ifup lo
+	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
+		# Remove our settings from the loopback interface
+		sed "/${DOCKSAL_DEFAULT_SUBNET}/d" ${conf_file}
 	fi
 }
 
 # Configure Docksal network settings on Alpine via ip addr
 configure_network_alpine ()
 {
-	# This will not persist a reboot or interface change
-	# TODO: make this permanent like with Ubuntu (?)
-	ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	local mode="${1:-on}"
+	# Determine current status
+	local status
+	(echo "$(ip addr show dev lo)"| grep -q "$DOCKSAL_DEFAULT_SUBNET") && status="enabled" || status="disabled"
+
+	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
+		# Add an IP address alias to the loopback interface
+		# This will not persist a reboot or interface change
+		ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
+		# Remove the IP address alias
+		ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
+	fi
 }
 
 # Configure Docksal network settings on Mac
 configure_network_mac ()
 {
-	# Docker for Mac
-	if is_docker_native; then
+	# Only applicable for the "native" Docker mode
+	! is_docker_native && return
+
+	local mode="${1:-on}"
+	# Determine current status
+	local status
+	(echo "$(ifconfig lo0)" | grep -q "$DOCKSAL_NATIVE_IP") && status="enabled" || status="disabled"
+
+	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add Docksal IP aliases on the local loopback adapter
 		sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
 		sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_HOST_IP} 255.255.255.0
-	else
+	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove Docksal IP alias from the local loopback adapter
 		sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP} >/dev/null 2>&1
 		sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_HOST_IP} >/dev/null 2>&1
 	fi
-	# Wait 5s for network configuration to apply
-	sleep 5
 }
 
 # Configure Docksal network settings on Windows
 configure_network_windows ()
 {
+	# Only applicable for the "native" Docker mode
+	! is_docker_native && return
+
+	local mode="${1:-on}"
+
 	# Docker for Win
-	if is_docker_native; then
+	if [[ "$mode" == "on" ]]; then
 		# Add Docksal IP aliases on the DockerNAT adapter
 		local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
 		local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP} mask=255.255.255.0"
 		winsudo "$command1 && $command2"
-	else
+	elif [[ "$mode" == "off" ]]; then
 		# Remove Docksal IP aliases on the DockerNAT adapter
 		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
 		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP}"
@@ -2948,6 +2979,9 @@ configure_network_windows ()
 # Configure Docksal network settings on WSL
 configure_network_wsl ()
 {
+	# TODO: implement on/off modes
+	local mode="${1:-on}"
+
 	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_IP}" mask="255.255.255.0"
 	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_HOST_IP}" mask="255.255.255.0"
 	# Wait 5s for network configuration to apply
@@ -2957,11 +2991,19 @@ configure_network_wsl ()
 # Configure Docksal network settings
 configure_network ()
 {
-	is_ubuntu && configure_network_ubuntu
-	is_alpine && configure_network_alpine
-	is_mac && configure_network_mac
-	is_windows && configure_network_windows
-	is_wsl && configure_network_wsl
+	local mode="${1:-on}"
+
+	if [[ "$mode" == "on" ]]; then
+		echo-green "Configuring network settings..."
+	else
+		echo-green "Restoring network settings..."
+	fi
+
+	is_ubuntu && configure_network_ubuntu "$mode" && return $?
+	is_alpine && configure_network_alpine "$mode" && return $?
+	is_mac && configure_network_mac "$mode" && return $?
+	is_windows && configure_network_windows "$mode" && return $?
+	is_wsl && configure_network_wsl "$mode" && return $?
 }
 
 # Start system-wide vhost-proxy service
