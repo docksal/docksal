@@ -2844,30 +2844,29 @@ ssh_add ()
 	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
 	[[ "${1#-}" == "$1" ]] && docker cp "$ssh_path" docksal-ssh-agent:/
 
-	# Add defined SSH Keys
-	eval 'ssh_keys=(${!'"SECRET_SSH_KEY_"'@})'
+	if [[ "${1#-}" == "$1" ]]; then
+		# Add defined SSH Keys
+		eval 'ssh_keys=(${!'"SECRET_SSH_KEY_"'@})'
+		for ssh_key in "${ssh_keys[@]}"
+		do
+			local ssh_key_name=${!ssh_key}
+			echo-green "Adding SSH Key Stored in ${ssh_key_name}..."
+			local new_ssh_key="${ssh_path}/${ssh_key_name}"
+			docker cp "${new_ssh_key}" docksal-ssh-agent:/
 
-	for ssh_key in "${ssh_keys[@]}"
-	do
-		local ssh_key_name=${!ssh_key}
-		echo-green "Adding SSH Key Stored in ${ssh_key_name}..."
-
-		local new_ssh_key="${ssh_path}/${ssh_key_name}"
-		docker cp "${new_ssh_key}" docksal-ssh-agent:/
-
-		# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
-		if is_tty; then
-			# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-			${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
-		else
-			# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
-			echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
-			docker exec docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
-		fi
-		local ret=$?
-
-		[[ ! $? -eq 0 ]] && return $ret
-	done
+			# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
+			if is_tty; then
+				# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
+				${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
+			else
+				# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
+				echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
+				docker exec docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
+			fi
+			local ret=$?
+			[[ ! $? -eq 0 ]] && return $ret
+		done
+	fi
 
 	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
 	if is_tty; then
