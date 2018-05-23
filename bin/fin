@@ -3000,9 +3000,9 @@ install_dns_service ()
 
 # Configure system-wide *.docksal resolver using /etc/resolver
 configure_resolver_mac () {
-	local mode="$1"
+	local mode="${1:-on}"
 
-	if [[ "$mode" != "off" ]]; then
+	if [[ "$mode" == "on" ]]; then
 		# Check whether resolver is already configured
 		if ! (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
 			sudo mkdir -p /etc/resolver
@@ -3012,7 +3012,7 @@ configure_resolver_mac () {
 			echo -e "# .$DOCKSAL_DNS_DOMAIN domain resolution\nnameserver $DOCKSAL_IP" | \
 				sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 		fi
-	else
+	elif [[ "$mode" == "off" ]]; then
 		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
 	fi
 
@@ -3022,13 +3022,12 @@ configure_resolver_mac () {
 	# to check: scutil --dns
 }
 
-# Configure system-wide *.docksal resolver using custom subnet and dns-nameservers instruction
+# Configure system-wide *.docksal resolver via /etc/network/interfaces on Ubuntu
 configure_resolver_ubuntu () {
-	local mode="$1"
+	local mode="${1:-on}"
 	local dns_settings="dns-nameservers ${DOCKSAL_DEFAULT_IP}"
 
-	if [[ "$mode" != "off" ]]; then
-		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
+	if [[ "$mode" == "on" ]]; then
 		# Make sure we don't do this twice
 		if ! grep -q "${dns_settings}" /etc/network/interfaces; then
 			# TODO: figure out how to insert a tab with sed (instead of using a temporary file)
@@ -3038,8 +3037,7 @@ EOF
 			sudo sed -i '/down .* lo:docksal/r /tmp/docksal.dns' /etc/network/interfaces
 			rm -f /tmp/docksal.dns
 		fi
-	else
-		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
+	elif [[ "$mode" == "off" ]]; then
 		sudo sed -i "/${dns_settings}/d" /etc/network/interfaces
 	fi
 
@@ -3048,10 +3046,32 @@ EOF
 	sudo ifup lo
 }
 
+# Configure system-wide *.docksal resolver via /etc/resolv.conf on Alpine
+configure_resolver_alpine () {
+	local mode="${1:-on}"
+	local dns_settings="nameserver ${DOCKSAL_DEFAULT_IP}"
+	local conf_file="/etc/resolv.conf"
+
+	# Enabling and settings are not present
+	if [[ "$mode" == "on" ]] && (! grep -q "$dns_settings" ${conf_file}); then
+		# Inline sed (sed -i) does not work with PWD/DnD. It it deletes the destination file first.
+		# /etc/resolv.conf cannot be deleted in a docker container, so it fails.
+		# We have to write into the file directly.
+		#echo -e "${dns_settings}\n$(cat /etc/resolv.conf)" | sudo tee /etc/resolv.conf
+		# Append dns_settings at the beginning
+		local dns_conf_text=$(sed "1i $dns_settings" ${conf_file})
+		echo "$dns_conf_text" | sudo tee ${conf_file} >/dev/null
+	# Disabling and settings are present
+	elif [[ "$mode" == "off" ]] && (grep -q "$dns_settings" ${conf_file}); then
+		local dns_conf_text=$(sed "/${dns_settings}/d" ${conf_file})
+		echo "$dns_conf_text" | sudo tee ${conf_file} >/dev/null
+	fi
+}
+
 # Configure system-wide *.docksal resolver
 # @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
 configure_resolver_windows () {
-	local mode="$1"
+	local mode="${1:-on}"
 
 	local dns_ip="$DOCKSAL_IP"
 	# 10 is used increase the adapter's priority. 75 to - deprioritize it
@@ -3090,7 +3110,7 @@ configure_resolver_windows () {
 # Configure system-wide *.docksal resolver
 # @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
 configure_resolver_wsl () {
-	local mode="$1"
+	local mode="${1:-on}"
 
 	local dns_ip="$DOCKSAL_IP"
 	# 10 is used increase the adapter's priority. 75 to - deprioritize it
@@ -3120,9 +3140,9 @@ configure_resolver ()
 	# Do not configure the resolver if asked so
 	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "" ]] && return
 
-	local mode="$1"
+	local mode="${1:-on}"
 
-	if [[ "$mode" != "off" ]]; then
+	if [[ "$mode" == "on" ]]; then
 		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
 
 		# The following check requires nslookup. Skip it if the binary is not present.
@@ -3143,12 +3163,13 @@ configure_resolver ()
 				_confirm "Continue?"
 			fi
 		fi
-	else
+	elif [[ "$mode" == "off" ]]; then
 		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
 	fi
 
 	is_mac && configure_resolver_mac "$mode" && return $?
 	is_ubuntu && configure_resolver_ubuntu "$mode" && return $?
+	is_alpine && configure_resolver_alpine "$mode" && return $?
 	is_windows && configure_resolver_windows "$mode" && return $?
 	is_wsl && configure_resolver_wsl "$mode" && return $?
 }
