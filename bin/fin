@@ -2926,9 +2926,6 @@ configure_network_alpine ()
 # Configure Docksal network settings on Mac
 configure_network_mac ()
 {
-	# Only applicable for the "native" Docker mode
-	! is_docker_native && return
-
 	local mode="${1:-on}"
 	# Determine current status
 	local status
@@ -2948,9 +2945,6 @@ configure_network_mac ()
 # Configure Docksal network settings on Windows
 configure_network_windows ()
 {
-	# Only applicable for the "native" Docker mode
-	! is_docker_native && return
-
 	local mode="${1:-on}"
 
 	# Docker for Win
@@ -2985,6 +2979,11 @@ configure_network_wsl ()
 configure_network ()
 {
 	local mode="${1:-on}"
+
+	# Set mode to off for Mac and Windows when not running in "native" mode
+	if ! is_docker_native && (is_mac || is_windows); then
+		mode="off"
+	fi
 
 	if [[ "$mode" == "on" ]]; then
 		echo-green "Configuring network settings..."
