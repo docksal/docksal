@@ -4374,7 +4374,7 @@ mysql_db_drop ()
 	[[ "${__db}" == "" ]] && echo-error "Provide the name of the database to drop." && exit 1
 
 	_mysql --db=" " --db-user="${__dump_user}" --db-password="${__dump_password}" \
-		"DROP DATABASE \`${__db}\`"
+		"DROP DATABASE IF EXISTS \`${__db}\`"
 
 	if_failed_error "Dropping '${__db}' database failed"
 	echo "Database '${__db}' dropped"
