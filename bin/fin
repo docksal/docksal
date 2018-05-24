@@ -58,6 +58,12 @@ is_mac ()
 	[[ "$OS_TYPE" == "Darwin" ]]
 }
 
+# Play with Docker
+is_pwd ()
+{
+	[[ "$(cat /etc/motd 2>/dev/null)" =~ "The PWD team" ]]
+}
+
 #------------------------------------------------------------------------------
 
 
@@ -2526,6 +2532,11 @@ up ()
 	# Temporary workaround for NFS issues on Mac
 	# See https://github.com/docksal/docksal/issues/265
 	is_mac && find . -type d > /dev/null 2>&1
+
+	# Fix permissions on Play with Docker platform
+	# PWD does not support non-privileged users,
+	# so we just set permissions on project root to match the default user:group in cli.
+	is_pwd && chmod -R 1000:1000 "$PROJECT_ROOT"
 
 	_start_containers || return 1
 	unison_sync_wait
