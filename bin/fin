@@ -179,6 +179,8 @@ URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
 URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
 URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
 URL_REPO_HUGO="https://github.com/docksal/example-hugo.git"
+URL_REPO_SYMFONY_SKELETON="https://github.com/docksal/example-symfony-skeleton.git"
+URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 # Remove URL_REPO_ADDONS in Nov 2018
@@ -2629,6 +2631,8 @@ project_create ()
 	echo -e "${green}   [7]${NC} Gatsby JS"
 	echo -e "${green}   [8]${NC} Laravel"
 	echo -e "${green}   [9]${NC} Hugo"
+	echo -e "${green}   [10]${NC} Symfony Skeleton"
+	echo -e "${green}   [11]${NC} Symfony WebApp"
 	echo -e ""
 	while true; do
 		read -p "Enter your choice (1-9): " choice
@@ -2682,8 +2686,18 @@ project_create ()
 				target_host_name_search_string=""
 				target_repo="$URL_REPO_HUGO"
 				;;
+			10)
+				target_cms="Symfony Skeleton"
+				target_host_name_search_string="symfony.docksal"
+				target_repo="$URL_REPO_SYMFONY_SKELETON"
+			;;
+			11)
+				target_cms="Symfony WebApp"
+				target_host_name_search_string="symfony.docksal"
+				target_repo="$URL_REPO_SYMFONY_WEBAPP"
+			;;
 			* )
-				echo 'Enter a number between 1 and 9.'
+				echo 'Enter a number between 1 and 11.'
 				continue
 		esac
 		break
