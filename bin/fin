@@ -2815,7 +2815,8 @@ ssh_add ()
 	check_winpty_found
 
 	# Check if ssh-agent container is running
-	local running=$(docker inspect --format="{{ .State.Running }}" docksal-ssh-agent 2>/dev/null)
+	# Note: no spaces in format. PWD trips over this when docker is run with sudo (during Docksal install/update).
+	local running=$(docker inspect --format="{{.State.Running}}" docksal-ssh-agent 2>/dev/null)
 	# Start the ssh-agent if not running
 	if [[ "$running" != "true" ]]; then
 		echo-error "docksal-ssh-agent is not running" \
