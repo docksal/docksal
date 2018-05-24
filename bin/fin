@@ -2588,6 +2588,32 @@ remove ()
 	_remove_containers $(echo "${ARGV[*]}")
 }
 
+# Reset container(s) (stop, remove, up)
+# @param $1 $2... containers names
+reset ()
+{
+	check_project_root
+	# support quiet removal
+	if [[ $1 == "-f" ]]; then
+		shift
+		remove -f "$@"
+	else
+		remove "$@"
+	fi
+	# Return here if there are errors with remove
+	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
+	local ret=$?
+	[[ "$ret" != 0 ]] && return ${ret}
+
+	# Fix permissions on Play with Docker platform
+	fix_pwd_permissions
+
+	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
+	_start_containers || return 1
+	unison_sync_wait
+}
+
 # List project containers
 project_status ()
 {
@@ -4538,32 +4564,6 @@ exec_url ()
 	else
 		show_help_exec-url
 	fi
-}
-
-# Reset container(s) (stop, remove, up)
-# @param $1 $2... containers names
-reset ()
-{
-	check_project_root
-	# support quiet removal
-	if [[ $1 == "-f" ]]; then
-		shift
-		remove -f "$@"
-	else
-		remove "$@"
-	fi
-	# Return here if there are errors with remove
-	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
-	local ret=$?
-	[[ "$ret" != 0 ]] && return ${ret}
-
-	# Fix permissions on Play with Docker platform
-	fix_pwd_permissions
-
-	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
-	_start_containers || return 1
-	unison_sync_wait
 }
 
 # Show logs
