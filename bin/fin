@@ -2534,9 +2534,7 @@ up ()
 	is_mac && find . -type d > /dev/null 2>&1
 
 	# Fix permissions on Play with Docker platform
-	# PWD does not support non-privileged users,
-	# so we just set permissions on project root to match the default user:group in cli.
-	is_pwd && chmod -R 1000:1000 "$PROJECT_ROOT"
+	fix_pwd_permissions
 
 	_start_containers || return 1
 	unison_sync_wait
@@ -2564,6 +2562,9 @@ restart ()
 	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
 	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
+
+	# Fix permissions on Play with Docker platform
+	fix_pwd_permissions
 
 	_restart_containers "$@"
 	unison_sync_wait
@@ -4553,7 +4554,11 @@ reset ()
 	fi
 	# Return here if there are errors with remove
 	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
-	[[ "$?" != 0 ]] && return $?
+	local ret=$?
+	[[ "$ret" != 0 ]] && return ${ret}
+
+	# Fix permissions on Play with Docker platform
+	fix_pwd_permissions
 
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
@@ -5466,6 +5471,14 @@ unison_sync_wait () {
 			sleep ${RESPONSE_TIMER}
 		fi
 	done
+}
+
+# Fix permissions on Play with Docker platform
+fix_pwd_permissions ()
+{
+	# PWD does not support non-privileged users,
+	# so we just set permissions on project root to match the default user:group in cli.
+	is_pwd && chown -R 1000:1000 "$PROJECT_ROOT"
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
