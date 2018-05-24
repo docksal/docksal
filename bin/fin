@@ -4643,7 +4643,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		"$ARGS"
+		$ARGS
 }
 
 diagnose ()
