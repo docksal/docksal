@@ -66,3 +66,4 @@ NGROK_PROTOCOL | Can either be `HTTP` or `TCP`, and it defaults to `HTTP` if not
 NGROK_PORT | Port to expose (defaults to `80` for `HTTP` protocol).
 NGROK_REGION | Location of the ngrok tunnel server; can be `us` (United States, default), `eu` (Europe), `ap` (Asia/Pacific) or `au` (Australia)
 NGROK_DEBUG | To debug the connection and see a more detailed log set this to 1
+NGROK_HEADER | Set Host Header. Set to the domain that should be passed through to the host.
