@@ -2863,8 +2863,6 @@ ssh_add ()
 				echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 				docker exec docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
 			fi
-			local ret=$?
-			[[ ! $? -eq 0 ]] && return $ret
 		done
 	fi
 
