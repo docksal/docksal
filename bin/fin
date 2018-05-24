@@ -181,6 +181,7 @@ URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
 URL_REPO_HUGO="https://github.com/docksal/example-hugo.git"
 URL_REPO_SYMFONY_SKELETON="https://github.com/docksal/example-symfony-skeleton.git"
 URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
+URL_REPO_BACKDROP="https://github.com/docksal/example-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 # Remove URL_REPO_ADDONS in Nov 2018
@@ -2622,20 +2623,21 @@ project_create ()
 	echo ''
 
 	echo -e "${yellow}2. What would you like to install?${NC}"
-	echo -e "${green}   [1]${NC} Drupal 7"
-	echo -e "${green}   [2]${NC} Drupal 8"
-	echo -e "${green}   [3]${NC} Wordpress"
-	echo -e "${green}   [4]${NC} Magento"
-	echo -e "${green}   [5]${NC} Static HTML site"
-	echo -e "${green}   [6]${NC} Grav CMS"
-	echo -e "${green}   [7]${NC} Gatsby JS"
-	echo -e "${green}   [8]${NC} Laravel"
-	echo -e "${green}   [9]${NC} Hugo"
+	echo -e "${green}   [ 1]${NC} Drupal 7"
+	echo -e "${green}   [ 2]${NC} Drupal 8"
+	echo -e "${green}   [ 3]${NC} Wordpress"
+	echo -e "${green}   [ 4]${NC} Magento"
+	echo -e "${green}   [ 5]${NC} Static HTML site"
+	echo -e "${green}   [ 6]${NC} Grav CMS"
+	echo -e "${green}   [ 7]${NC} Gatsby JS"
+	echo -e "${green}   [ 8]${NC} Laravel"
+	echo -e "${green}   [ 9]${NC} Hugo"
 	echo -e "${green}   [10]${NC} Symfony Skeleton"
 	echo -e "${green}   [11]${NC} Symfony WebApp"
+	echo -e "${green}   [12]${NC} Backdrop CMS"
 	echo -e ""
 	while true; do
-		read -p "Enter your choice (1-11): " choice
+		read -p "Enter your choice (1-12): " choice
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
@@ -2696,8 +2698,13 @@ project_create ()
 				target_host_name_search_string="symfony.docksal"
 				target_repo="$URL_REPO_SYMFONY_WEBAPP"
 			;;
+			12)
+				target_cms="Backdrop CMS"
+				target_host_name_search_string="backdrop.docksal"
+				target_repo="${URL_REPO_BACKDROP}"
+			;;
 			* )
-				echo 'Enter a number between 1 and 11.'
+				echo 'Enter a number between 1 and 12.'
 				continue
 		esac
 		break
