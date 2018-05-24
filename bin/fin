@@ -2635,7 +2635,7 @@ project_create ()
 	echo -e "${green}   [11]${NC} Symfony WebApp"
 	echo -e ""
 	while true; do
-		read -p "Enter your choice (1-9): " choice
+		read -p "Enter your choice (1-11): " choice
 		case ${choice} in
 			1)
 				target_cms="Drupal 7"
