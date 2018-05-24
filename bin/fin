@@ -3909,19 +3909,19 @@ update ()
 		# Run cleanup to get rid of outdated images
 		cleanup
 	else
-		# [4.2] On Ubuntu update during install, but use sudo as user will not be in docker group yet.
-		if is_ubuntu; then
-			# On Linux a subnet needs to be created first
-			configure_network
+		# [4.2] On Linux update during install, but use sudo as user will not be in docker group yet.
+		if is_linux; then
 			# Override docker to run it via sudo
 			docker () {
 				sudo "$(which docker)" "$@"
 			}
+			# Install/update Docksal system services
 			update_system_images
 		fi
 
 		# [4.3] With native mode update during install, but no cleanup
 		if is_docker_native; then
+			# Install/update Docksal system services
 			update_system_images
 		fi
 	fi
