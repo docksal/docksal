@@ -1,12 +1,11 @@
 # Using Redis
 
 Docksal does not have any self maintained images as there are other integrations that are available at this time.
-There are two different ways to accomplish this.
+There are multiple different ways to accomplish this.
 
 ## Custom Redis Config File
 
-This can be done by adding a line to reference the custom config file (`.docksal/etc/redis/redis.conf`). This will
-be added within the `docksal.yml` file. The following is an example.
+This can be done by adding a line to reference the custom config file (`.docksal/etc/redis/redis.conf`) in the `docksal.yml` file. The following is an example.
 
 ```yml
 version: "2.1"
@@ -24,7 +23,7 @@ services:
 
 This would require using the [wodby/redis](https://github.com/wodby/redis) image.
 
-In `docksal.yml` the following would be added.
+Add the following to the `docksal.yml` file.
 
 ```yml
 version: "2.1"
@@ -70,5 +69,5 @@ The following is listed on the [wodby/redis](https://github.com/wodby/redis) ima
 
 ## Extending the Stock Image
 
-Additionally another way that redis can be configured is by extending the stock image within a Dockerfile. For more
+Redis can also be configured by extending the stock image within a Dockerfile. For more
 information consult the [Extending stock Docksal Images](../advanced/extend-images.md)
