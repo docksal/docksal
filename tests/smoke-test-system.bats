@@ -143,6 +143,13 @@ DOCKSAL_IP=192.168.64.100
 		echo "$output" | egrep "SHA256:.+ id_.+"
 		echo "$output" | egrep "4096 SHA256:.+ bats_rsa \(RSA\)"
 		unset output
+
+		# Checking fin ssh-add with custom keys
+		echo "SECRET_SSH_KEY_TEST=\"test_rsa\"" >> $HOME/.docksal/docksal.env
+		run fin ssh-add
+		echo "$output" | egrep "Identity added: test_rsa"
+		unset output
+
 	else
 		run fin ssh-add
 		# On a real host assuming there is at least one default key
@@ -152,6 +159,12 @@ DOCKSAL_IP=192.168.64.100
 		# Checking fin ssh-add -l
 		run fin ssh-add -l
 		echo "$output" | egrep "SHA256:.+ id_.+"
+		unset output
+
+		# Checking fin ssh-add with custom keys
+		echo "SECRET_SSH_KEY_TEST=\"test_rsa\"" >> $HOME/.docksal/docksal.env
+		run fin ssh-add
+		echo "$output" | egrep "Identity added: test_rsa"
 		unset output
 	fi
 
