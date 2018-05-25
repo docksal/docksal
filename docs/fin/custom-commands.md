@@ -15,9 +15,9 @@ Create a file at this location `.docksal/commands/updb` with the following conte
 
 fin drush updb $1
 ```
-Note the file name should match the command name with **no extension**.
+Note: the file name should match the command name with **no extension**.
 
-Make the file executable
+Make the file executable:
 
 ```bash
 chmod +x .docksal/commands/updb
@@ -33,10 +33,10 @@ Note: `drush updb` this is a Drupal-specific example.
 
 These variables, provided by fin, are available for use inside you custom command scripts:
 
-* `PROJECT_ROOT` - absolute path to the project folder.  
-* `DOCROOT` - name of the docroot folder.
-* `VIRTUAL_HOST` - the virtual host name for the project. For example, `projectname.docksal`.
-* `DOCKER_RUNNING` - (string) "true" or "false".
+* `PROJECT_ROOT` - absolute path to the project folder
+* `DOCROOT` - name of the docroot folder
+* `VIRTUAL_HOST` - the virtual host name for the project (e.g., `projectname.docksal`)
+* `DOCKER_RUNNING` - (string) "true" or "false"
 
 
 Here is an example `init` command for a Drupal website using drush to automate the install:  
