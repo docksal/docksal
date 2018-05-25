@@ -32,8 +32,7 @@ fin project stop
 fin docker commit $(fin docker-compose ps -q db) <tag>
 ```
 
-Replace `<tag>` with any meaningful tag you'd like to use for the image.  
-E.g. `db_backup` or `dbdata/myproject:snapshot1`.
+Replace `<tag>` with any meaningful tag you'd like to use for the image, e.g., `db_backup` or `dbdata/myproject:snapshot1`.
 
 6) Update the `db` service in `docksal.yml` as follows:
 

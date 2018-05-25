@@ -20,7 +20,7 @@ To list available commands, either run `fin` with no parameters or execute `fin 
 
     Commands:
       bash [service]           	Open shell into service's container. Defaults to cli
-      logs [service]           	Show service logs (e.g. Apache logs, MySQL logs) and Unison logs (fin help logs)
+      logs [service]           	Show service logs (e.g., Apache logs, MySQL logs) and Unison logs (fin help logs)
       exec <command|file>      	Execute a command or a script in cli
       config [command]         	Show or generate configuration (fin help config)
 

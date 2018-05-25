@@ -1,6 +1,6 @@
 # Using Xdebug debugger
 
-Xdebug can be used to debug both web requests as well as cli scripts (e.g. Drush commands).
+Xdebug can be used to debug both web requests as well as cli scripts (e.g., Drush commands).
 
 ## Setup
 

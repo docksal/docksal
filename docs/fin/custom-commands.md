@@ -4,7 +4,7 @@ It is possible to extend fin with custom commands per project or per host.
 
 ## Project-level custom commands
 
-Create a file at this location `.docksal/commands/updb` (Notice **no extension**. Script name should match command name) with the following contents:
+Create a file at this location `.docksal/commands/updb` with the following contents:
 
 ```bash
 #!/bin/bash
@@ -15,6 +15,7 @@ Create a file at this location `.docksal/commands/updb` (Notice **no extension**
 
 fin drush updb $1
 ```
+Note the file name should match the command name with **no extension**.
 
 Make the file executable
 
@@ -98,13 +99,13 @@ relevant to this interpreter.
 
 ## Executing commands inside cli
 
-In some cases you'd want a command to be executed inside `cli` instead of the host (e.g. when you do not want to rely on
+In some cases you'd want a command to be executed inside `cli` instead of the host (e.g., when you do not want to rely on
 any dependencies installed on the host and use the tools available in `cli`).
 
 One way to achieve this is to write two commands:
 
-- one with the actual code, that you want to execute (e.g. `mycommand-cli`)
-- one that does `fin exec '/var/www/.docksal/commands/mycommand-cli'` (e.g. `mycommand`)
+- one with the actual code, that you want to execute (e.g., `mycommand-cli`)
+- one that does `fin exec '/var/www/.docksal/commands/mycommand-cli'` (e.g., `mycommand`)
 
 Users can then run the command as `fin mycommand` to get the `mycommand-cli` executed in cli.
 

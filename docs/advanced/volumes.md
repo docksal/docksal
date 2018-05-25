@@ -24,7 +24,7 @@ The host machine is a macOS and the codebase root directory (the "Projects" fold
 This directory is mounted with the same path inside the VM: `/Users/username/Projects`. Any path within that directory 
 is exactly the same on the host and inside the VM.
 
-When a project stack is started, the project root directory (e.g. `/Users/username/Projects/myproject`) is bind mounted 
+When a project stack is started, the project root directory (e.g., `/Users/username/Projects/myproject`) is bind mounted 
 into `/var/www` inside the containers. A corresponding line in `docksal.yml` for this would be:
 
 ```yml

@@ -77,7 +77,7 @@ Drupal 8 project and composer.
 1. If the VM keeps running out of memory or you are getting weird issue with the `db` (or other) services failing, then
 try stopping all active projects (`fin stop --all`) and only start the one you need.
 
-2. Alternatively give the VM more RAM (e.g. 4096 MB). This may only be necessary when running several very heavy
+2. Alternatively give the VM more RAM (e.g., 4096 MB). This may only be necessary when running several very heavy
 stacks/projects at the same time.
 
 ```bash
@@ -122,8 +122,8 @@ This prevents Docksal from running properly.
 ### How to resolve
 
 1. Stop Apache or
-2. Reconfigure Apache to listen on different ports (e.g. `8080` and `4433`) or
-different/specific IPs (e.g. `127.0.0.1:80` and `127.0.0.1:443`).
+2. Reconfigure Apache to listen on different ports (e.g., `8080` and `4433`) or
+different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`).
 
 
 <a name="issue-06"></a>

@@ -102,8 +102,7 @@ Use `memcached:11211` as the memcached endpoint.
 **Drupal 7**
 
 Edit `settings.php` and add the following lines to point Drupal to the memcached service.  
-Replace `</path/to/memcache-module>` with the path to [memcache module](https://www.drupal.org/project/memcache) in your project. 
-E.g. `sites/all/modules/contrib/memcache`
+Replace `</path/to/memcache-module>` with the path to [memcache module](https://www.drupal.org/project/memcache) in your project, e.g., `sites/all/modules/contrib/memcache`.
 
 ```php
 // Memcache module settings

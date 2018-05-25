@@ -68,7 +68,7 @@ are loaded. See [loading order](#loading-order). A good example of their use is 
 or switching PHP versions.
 
 These files are intended for local overrides. They should be added to `.gitignore` and never committed into a project 
-repo. You can always include an example file in the repo, e.g. `example.docksal-local.env` and instruct users to copy 
+repo. You can always include an example file in the repo, e.g., `example.docksal-local.env`, and instruct users to copy 
 it and adjust as necessary.
 
 <a name="default-configurations"></a>
@@ -276,13 +276,13 @@ All variables changed below will require at the minimum a project restart `fin r
 
 ### DOCKSAL_NFS_PATH
 
-The location of the folder on the host machine to mount to virtual box. [More info](../file-sharing.md)
+The location of the folder on the host machine to mount to VirtualBox. [More info](file-sharing.md)
 
 ### IMAGE_SSH_AGENT
 
 `Default: docksal/ssh-agent:1.0`
 
-The Docker image to use for SSH Agent. This contains the keys that are shared amongst the projects.
+The Docker image to use for SSH Agent. This contains the keys that are shared among the projects.
 
 ### IMAGE_VHOST_PROXY 
 
@@ -323,7 +323,7 @@ For Docker Native set to `1`
 
 ### DOCKSAL_DNS_UPSTREAM
 
-Override the default DNS server that Docksal uses. For environments, where access to Google DNS server (`8.8.8.8`) is blocked it should be set to the LAN DNS server. This is often true for VPN users.
+Override the default DNS server that Docksal uses. For environments where access to Google DNS server (`8.8.8.8`) is blocked, it should be set to the LAN DNS server. This is often true for VPN users or users behind a corporate firewall.
 
 ### DOCKSAL_VHOST_PROXY_IP
 
@@ -337,7 +337,7 @@ This is the domain to use which is tacked on to the end of the projects url.
 
 ### DOCKSAL_NO_DNS_RESOLVER
 
-Allow disabling the DNS resolver configuration (in case there are issues with it). Set to `true` to activate
+Allow disabling the DNS resolver configuration (in case there are issues with it). Set to `true` to activate.
 
 ### MYSQL_ROOT_PASSWORD
 
@@ -347,7 +347,7 @@ This variable is mandatory and specifies the password that will be set for the M
 
 ### MYSQL_ALLOW_EMPTY_PASSWORD
 
-This is an optional variable. Set to yes to allow the container to be started with a blank password for the root user. NOTE: Setting this variable to yes is not recommended unless you really know what you are doing, since this will leave your MySQL instance completely unprotected, allowing anyone to gain complete superuser access.
+This is an optional variable. Set to `yes` to allow the container to be started with a blank password for the root user. NOTE: Setting this variable to `yes` is not recommended unless you really know what you are doing, since this will leave your MySQL instance completely unprotected, allowing anyone to gain complete superuser access.
 
 ### MYSQL_RANDOM_ROOT_PASSWORD
 
@@ -355,7 +355,9 @@ This is an optional variable. Set to yes to generate a random initial password f
 
 ### MYSQL_ONETIME_PASSWORD
 
-When the variable is true (which is its default state, unless MYSQL_ROOT_PASSWORD is set or MYSQL_ALLOW_EMPTY_PASSWORD is set to true), the root user's password is set as expired and must be changed before MySQL can be used normally. This variable is only supported for MySQL 5.6 and later.
+`Default: true`
+
+When the variable is true (unless MYSQL_ROOT_PASSWORD is set or MYSQL_ALLOW_EMPTY_PASSWORD is set to true), the root user's password is set as expired and must be changed before MySQL can be used normally. This variable is only supported for MySQL 5.6 and later.
 
 ### MYSQL_INITDB_SKIP_TZINFO
 
@@ -383,13 +385,13 @@ This is used to set the newly created user's password.
 
 `Default:  3306`
 
-The port mapping to use for MySQL container. E.g. `33061:3306` will expose `3306` port as `33061` on the host. 
+The port mapping to use for MySQL container, e.g., `33061:3306` will expose `3306` port as `33061` on the host. 
 
 ### POSTGRES_DB
 
 `Default:  user`
 
-This variable allows you to specify the name of a database to be created on image startup
+This variable allows you to specify the name of a database to be created on image startup.
 
 ### POSTGRES_USER
 
@@ -433,7 +435,7 @@ Group ID for the Container User. On MacOS & Linux defaults to current group acco
 
 `Default:  0`
 
-Enables PHP XDebug Service for debugging. See [XDebug](../tools/xdebug.md)
+Enables PHP XDebug Service for debugging. See [XDebug](../tools/xdebug.md).
 
 ### SECRET_SSH_PRIVATE_KEY
 
@@ -441,11 +443,11 @@ Use to pass an additional private SSH key. The key is stored in `/home/docker/.s
 
 ### SECRET_ACAPI_EMAIL
 
-Acquia Cloud API Email Address. See [Acquia Drush Commands](../tools/acquia-drush.md)
+Acquia Cloud API Email Address. See [Acquia Drush Commands](../tools/acquia-drush.md).
 
 ### SECRET_ACAPI_KEY
 
-Acquia Cloud API Key. See [Acquia Drush Commands](../tools/acquia-drush.md)
+Acquia Cloud API Key. See [Acquia Drush Commands](../tools/acquia-drush.md).
 
 ### SECRET_TERMINUS_TOKEN
 
@@ -457,11 +459,11 @@ The following variables should only be used within a CI system. They are primari
 
 ### PROJECT_INACTIVITY_TIMEOUT
 
-Defines the timeout of inactivity after which the project stack will be stopped (e.g. 0.5h)
+Defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h).
 
 ### PROJECT_DANGLING_TIMEOUT
 
-Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host (e.g. 168h). This requires PROJECTS_ROOT to be set.
+Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host (e.g., 168h). This requires PROJECTS_ROOT to be set.
 
 **WARNING: use at your own risk!**
 
@@ -540,7 +542,7 @@ To see all Docker Hub images produced and supported by Docksal team run:
 fin image registry
 ```
 
-To get all tags of a certain image provide its name with the same command. E.g.:
+To get all tags of a certain image provide its name with the same command. For example:
 
 ```bash
 fin image registry docksal/db
@@ -550,14 +552,13 @@ fin image registry docksal/db
 
 This is optional, but highly recommended.
 
-Site provisioning can be automated via a [custom command](../fin/custom-commands.md).
-E.g. `fin init`, which will call `.docksal/commands/init`. Put project specific initialization tasks there, like:
+Site provisioning can be automated via a [custom command](../fin/custom-commands.md) (e.g., `fin init`, which will call `.docksal/commands/init`). Put project specific initialization tasks there, like:
 
-- initialize the Docksal configuration.
-- import databases or perform a site install.
-- compile SASS.
+- initialize the Docksal configuration
+- import databases or perform a site install
+- compile SASS
 - run DB updates, special commands, etc.
-- run Behat tests.
+- run Behat tests
 
 For a working example of a Docksal powered project with `fin init` take a look at:
 
