@@ -147,7 +147,7 @@ DOCKSAL_IP=192.168.64.100
 		# Checking fin ssh-add with custom keys
 		echo "SECRET_SSH_KEY_TEST=\"test_rsa\"" >> $HOME/.docksal/docksal.env
 		run fin ssh-add
-		echo "$output" | egrep "Adding SSH Key Stored in test_rsa"
+		echo "$output" | egrep "Identity added: test_rsa"
 		unset output
 
 	else
@@ -164,7 +164,7 @@ DOCKSAL_IP=192.168.64.100
 		# Checking fin ssh-add with custom keys
 		echo "SECRET_SSH_KEY_TEST=\"test_rsa\"" >> $HOME/.docksal/docksal.env
 		run fin ssh-add
-		echo "$output" | egrep "Adding SSH Key Stored in test_rsa"
+		echo "$output" | egrep "Identity added: test_rsa"
 		unset output
 	fi
 
