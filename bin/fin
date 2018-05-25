@@ -1359,7 +1359,7 @@ show_help_project() {
 	printh "restart" "Restart project services (alias: fin restart)"
 	printh "reset [service]" "Recreate all or specified project services and containers without deleting named volumes"
 	printh "" "Changes to home directory in \`cli\` are preserved."
-	printh "remove [option] [service]" "Remove all project services, networks and their volumes or specified services only"
+	printh "remove [option] [service]" "Remove all project services, networks and their volumes, or specified services only"
 	printh "    rm [option] [service]" ""
 	printh "  --force (-f)" "Do not ask for confirmation when deleting all project services"
 	echo
@@ -1367,7 +1367,7 @@ show_help_project() {
 	printh "  --all (-a)" "List all Docksal projects (stopped as well)"
 	echo
 	printh "create" "Create a new project with a pre-configured boilerplate:"
-	printh "" "Drupal, Wordpress, Magento, Laravel, Backdrop, Hugo, Gatsby and others"
+	printh "" "Drupal, Wordpress, Magento, Laravel, Backdrop, Hugo, Gatsby, and others"
 	echo
 	printh "config" "Show project configuration"
 	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
