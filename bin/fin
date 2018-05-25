@@ -2840,6 +2840,11 @@ ssh_add ()
 	# Ensure ssh_path exists
 	mkdir -p "$ssh_path"
 
+	if is_tty; then
+		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
+		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
+	fi
+
 	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
 	if [[ ! "${1}" =~ ^- ]]; then
 		# Copy all keys from the host to the ssh-agent container
@@ -2857,8 +2862,6 @@ ssh_add ()
 				# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
 				${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
 			else
-				# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
-				echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 				docker exec docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
 			fi
 		done
@@ -2869,8 +2872,6 @@ ssh_add ()
 		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
 		${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "$@"
 	else
-		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
-		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 		docker exec docksal-ssh-agent /run.sh ssh-add "$@"
 	fi
 	local ret=$?
