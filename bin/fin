@@ -3077,8 +3077,8 @@ install_proxy_service ()
 		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
 	fi
 
-	# Open up vhost-proxy to the world in CI/Sandbox environments
-	[[ "$CI" != "" ]] && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
+	( [[ "$CI" != "" ]] || is_pwd ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
 	# and are inactive unless configured.
