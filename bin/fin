@@ -10,6 +10,9 @@ green='\033[0;32m'
 green_bg='\033[42m'
 yellow='\033[0;33m'
 yellow_bold='\033[1;33m'
+blue='\033[0;34m'
+lime='\033[0;92m'
+acqua='\033[0;96m'
 NC='\033[0m'
 
 #-------------------------------- OS Checks ------------------------------------
@@ -2645,7 +2648,7 @@ project_create ()
 	echo-green "             -= Docksal project wizard =-"
 	echo
 	while true; do
-		echo -en "${yellow}1. Enter the name of your project${NC} (lowercase alphanumeric, underscore and hyphen): "
+		echo -en "${yellow}1. Name your project${NC} (lowercase alphanumeric, underscore and hyphen): "
 		read -p "" project_name
 		# This will not accept project name of 1 symbol long. Not sure if this needs to be fixed
 		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9_-]*[a-z0-9]$ ]]; then
@@ -2661,32 +2664,37 @@ project_create ()
 	echo ''
 
 	echo -e "${yellow}2. What would you like to install?${NC}"
-	echo -e "${green}   [ 1]${NC} Drupal 7"
-	echo -e "${green}   [ 2]${NC} Drupal 8"
-	echo -e "${green}   [ 3]${NC} Wordpress"
-	echo -e "${green}   [ 4]${NC} Magento"
-	echo -e "${green}   [ 5]${NC} Static HTML site"
-	echo -e "${green}   [ 6]${NC} Grav CMS"
-	echo -e "${green}   [ 7]${NC} Gatsby JS"
-	echo -e "${green}   [ 8]${NC} Laravel"
-	echo -e "${green}   [ 9]${NC} Hugo"
-	echo -e "${green}   [10]${NC} Symfony Skeleton"
-	echo -e "${green}   [11]${NC} Symfony WebApp"
-	echo -e "${green}   [12]${NC} Backdrop CMS"
+	echo -e "${blue}  PHP based${NC}"
+	echo -e "${green}    1.${NC}  Drupal 8"
+	echo -e "${green}    2.${NC}  Drupal 7"
+	echo -e "${green}    3.${NC}  Wordpress"
+	echo -e "${green}    4.${NC}  Magento"
+	echo -e "${green}    5.${NC}  Laravel"
+	echo -e "${green}    6.${NC}  Symfony Skeleton"
+	echo -e "${green}    7.${NC}  Symfony WebApp"
+	echo -e "${green}    8.${NC}  Grav CMS"
+	echo -e "${green}    9.${NC}  Backdrop CMS"
+	echo
+	echo -e "${lime}  JS based${NC}"
+	echo -e "${green}    10.${NC} Hugo"
+	echo -e "${green}    11.${NC} Gatsby JS"
+	echo
+	echo -e "${acqua}  HTML${NC}"
+	echo -e "${green}    12.${NC} Static HTML site"
 	echo -e ""
 	while true; do
 		read -p "Enter your choice (1-12): " choice
 		case ${choice} in
 			1)
-				target_cms="Drupal 7"
-				target_host_name_search_string="drupal7.docksal"
-				target_repo="$URL_REPO_DRUPAL7"
-				break
-				;;
-			2)
 				target_cms="Drupal 8"
 				target_host_name_search_string="drupal8.docksal"
 				target_repo="$URL_REPO_DRUPAL8"
+				break
+				;;
+			2)
+				target_cms="Drupal 7"
+				target_host_name_search_string="drupal7.docksal"
+				target_repo="$URL_REPO_DRUPAL7"
 				break
 				;;
 			3)
@@ -2702,45 +2710,45 @@ project_create ()
 				break
 				;;
 			5)
-				target_cms="Plain HTML"
-				target_host_name_search_string=""
-				target_repo=""
-				;;
-			6)
-				target_cms="Grav CMS"
-				target_host_name_search_string=""
-				target_repo="$URL_REPO_GRAV"
-				;;
-			7)
-				target_cms="Gatsby JS"
-				target_host_name_search_string=""
-				target_repo="$URL_REPO_GATSBY"
-				;;
-			8)
 				target_cms="Laravel"
 				target_host_name_search_string=""
 				target_repo="$URL_REPO_LARAVEL"
 				;;
-			9)
-				target_cms="Hugo"
-				target_host_name_search_string=""
-				target_repo="$URL_REPO_HUGO"
-				;;
-			10)
+			6)
 				target_cms="Symfony Skeleton"
 				target_host_name_search_string="symfony.docksal"
 				target_repo="$URL_REPO_SYMFONY_SKELETON"
 			;;
-			11)
+			7)
 				target_cms="Symfony WebApp"
 				target_host_name_search_string="symfony.docksal"
 				target_repo="$URL_REPO_SYMFONY_WEBAPP"
 			;;
-			12)
+			8)
+				target_cms="Grav CMS"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_GRAV"
+				;;
+			9)
 				target_cms="Backdrop CMS"
 				target_host_name_search_string="backdrop.docksal"
 				target_repo="${URL_REPO_BACKDROP}"
 			;;
+			10)
+				target_cms="Hugo"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_HUGO"
+				;;
+			11)
+				target_cms="Gatsby JS"
+				target_host_name_search_string=""
+				target_repo="$URL_REPO_GATSBY"
+				;;
+			12)
+				target_cms="Plain HTML"
+				target_host_name_search_string=""
+				target_repo=""
+				;;
 			* )
 				echo 'Enter a number between 1 and 12.'
 				continue
