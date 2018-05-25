@@ -2850,7 +2850,6 @@ ssh_add ()
 		for ssh_key in "${ssh_keys[@]}"
 		do
 			local ssh_key_name=${!ssh_key}
-			echo-green "Adding SSH Key Stored in ${ssh_key_name}..."
 			local new_ssh_key="${ssh_path}/${ssh_key_name}"
 
 			# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
