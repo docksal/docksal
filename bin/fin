@@ -2899,7 +2899,7 @@ ssh_add ()
 		docker cp "$ssh_path" docksal-ssh-agent:/
 
 		# Add SSH Keys defined in environment variables
-		eval 'ssh_keys=(${!'"SECRET_SSH_KEY_"'@})'
+		eval 'ssh_keys=(${!SECRET_SSH_KEY_@})'
 		for ssh_key in "${ssh_keys[@]}"
 		do
 			local ssh_key_name=${!ssh_key}
