@@ -5314,10 +5314,14 @@ _addon_search_repo () {
 
 # Download addon
 # $1 - addon name
-# $2 - optional flag to install globally
-addon_install ()
-{
-	[[ "$2" != "global" ]] && check_project_environment && load_configuration
+# $2 - optional flag for globally
+# $3 - variable to store addon path
+# $4 - action
+_addon_download() {
+	local global=${2:-'project'}
+	local ADDON_PATH=$3
+	local action=${4:-'install'}
+	[[ "${global}" != "global" ]] && check_project_environment && load_configuration
 
 	local addon_name="$1"
 	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
@@ -5327,18 +5331,27 @@ addon_install ()
 
 	# Create target addon dir
 	local addon_path
-	if [[ "$2" != "global" ]]; then
+	if [[ "${global}" != "global" ]]; then
 		addon_path="$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH/$addon_name"
 	else
 		addon_path="$HOME/$DOCKSAL_ADDONS_PATH/$addon_name"
 	fi
 
-	if [ -d "$addon_path" ] || [ -f "$addon_path" ]; then
-		echo-red "Addon already exists in $addon_path. Run ${NC}fin addon update ${addon_name}"
-		return 1
-	else
-		mkdir -p "$addon_path"
-		if_failed_error "Could not create $addon_path" "Check file permissions and try again"
+	eval "${ADDON_PATH}=${addon_path}"
+
+	if [[ "${action}" == "install" ]]; then
+		if [ -d "$addon_path" ] || [ -f "$addon_path" ]; then
+			echo-red "Addon already exists in $addon_path. Run ${NC}fin addon update ${addon_name}"
+			return 1
+		else
+			mkdir -p "$addon_path"
+			if_failed_error "Could not create $addon_path" "Check file permissions and try again"
+		fi
+	elif [[ "${action}" == "update" ]]; then
+		if [ ! -d "$addon_path" ] && [ ! -f "$addon_path" ]; then
+			echo-red "Addon ${NC}$addon_name${red} is currently not installed. Run ${NC}fin addon install ${addon_name}"
+			return 1
+		fi
 	fi
 
 	local URL_ADDONS_REPO
@@ -5366,9 +5379,21 @@ addon_install ()
 		rm -rf "$addons_repo_copy"
 		return 1
 	fi
+}
+
+# Install addon
+# $1 - addon name
+# $2 - optional flag to install globally
+addon_install ()
+{
+	local addon_name="$1"
+	local global=${2:-'project'}
+	local addon_path
+
+	_addon_download "${addon_name}" "${global}" addon_path "install"
 
 	# Pre-install hook
-	[[ "$2" == "global" ]] && addon_global="global"
+	[[ "${global}" == "global" ]] && addon_global="global"
 	addon_hook "$addon_path" "$addon_name" "pre-install" "$addon_global"
 	if [ ! $? -eq 0 ]; then
 		echo-red "Pre-install hook has failed and aborted the installation."
@@ -5392,56 +5417,16 @@ addon_install ()
 # Update addon
 # $1 - addon name
 # $2 - optional flag to install globally
-addon_update () {
-	[[ "$2" != "global" ]] && check_project_environment && load_configuration
-
+addon_update ()
+{
 	local addon_name="$1"
-	[[ "$addon_name" == "" ]] && echo-error "No addon name was provided" && exit 1
-	[[ "$addon_name" =~ / ]] && echo-error "No slashes in addon name" && exit 1
-	[[ "$addon_name" =~ \\ ]] && echo-error "No slashes in addon name" && exit 1
-	([[ "$addon_name" == ".." ]] || [[ "$addon_name" == "." ]]) && echo-error "Invalid addon name" && exit 1
-
-	# Create target addon dir
+	local global=${2:-'project'}
 	local addon_path
-	if [[ "$2" != "global" ]]; then
-		addon_path="$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH/$addon_name"
-	else
-		addon_path="$HOME/$DOCKSAL_ADDONS_PATH/$addon_name"
-	fi
 
-	if [ ! -d "$addon_path" ] && [ ! -f "$addon_path" ]; then
-		echo-red "Addon ${NC}$addon_name${red} is currently not installed. Run ${NC}fin addon install ${addon_name}"
-		exit 1
-	fi
-
-	local URL_ADDONS_REPO
-	local URL_ADDONS_BRANCH
-	local ADDON_UUID
-	_addon_search_repo $addon_name URL_ADDONS_REPO URL_ADDONS_BRANCH ADDON_UUID
-	[[ "$?" != "0" ]] && return 1
-
-	local addons_repo_copy="/tmp/${ADDON_UUID}"
-
-	# If repo contains only 1 addon let's download the full repo.
-	if [[ -f $addons_repo_copy/$addon_name ]] && [[ -x $addons_repo_copy/$addon_name ]]; then
-		cd $addons_repo_copy/
-		git pull --depth=1 origin/${URL_ADDONS_BRANCH}
-		# Remove Git Repo that was cloned from.
-		rm -rf $addons_repo_copy/.git 2>/dev/null
-		mv -R $addons_repo_copy $addon_path
-	# If repo contains multiple addon let's only download the repo we need.
-	elif [[ -d $addons_repo_copy/$addon_name ]] && [[ -f $addons_repo_copy/$addon_name/$addon_name ]] && [[ -x $addons_repo_copy/$addon_name/$addon_name ]]; then
-		# Remove Git Repo that was cloned from.
-		rm -rf $addons_repo_copy/.git 2>/dev/null
-		mv -R $addons_repo_copy/$addon_name $addon_path
-	else
-		echo-error "Addon main file does not exist, is invalid or is not set to be executable"
-		rm -rf "$tmp_addon"
-		return 1
-	fi
+	_addon_download "${addon_name}" "${global}" addon_path "update"
 
 	# Pre-install hook
-	[[ "$2" == "global" ]] && addon_global="global"
+	[[ "${global}" == "global" ]] && addon_global="global"
 	addon_hook "$addon_path" "$addon_name" "pre-update" "$addon_global"
 	if [ ! $? -eq 0 ]; then
 		echo-red "Pre-update hook has failed and aborted the installation."
