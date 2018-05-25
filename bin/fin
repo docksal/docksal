@@ -1321,35 +1321,6 @@ show_help_run-cli ()
 }
 
 
-show_help_reset ()
-{
-	echo
-	echo "Usage: fin project reset"
-
-	echo
-	echo "Re-create all project containers without deleting named volumes."
-	echo "Changes to home directory in \`cli\` are preserved."
-}
-
-show_help_rm ()
-{
-	echo
-	echo "Usage: fin project remove [service] [params]"
-
-	echo
-	echo "Removes project service instances."
-	echo "Without params removes all project containers, project volumes and associated network."
-
-	echo
-	echo "Options:"
-	printh "[service]" "Service name(s) to remove. When provided only removed that service(s)"
-	printh "--force (-f)" "Do not ask confirmation when deleting all project services"
-}
-show_help_remove ()
-{
-	show_help_rm
-}
-
 show_help_image() {
 	echo
 	echo "Usage: fin image <command>"
@@ -1380,22 +1351,46 @@ show_help_project() {
 	echo
 	echo "Commands:"
 	printh "start" "Start project services (alias: fin start)"
-	printh "up" "Forces re-read of configuration and start project services (alias: fin up)"
-	printh "stop [-a (--all)]" "Stop project services (-a stops all services on all projects) (alias: fin stop)"
+	printh "up" "Configuration re-read and start project services (alias: fin up)"
+	printh "stop [option] [service]" "Stop all or specified project services (alias: fin stop)"
+	printh "  --all (-a)" "Stop all services on all Docksal projects"
+	echo
 	printh "status" "List project services (alias: fin ps)"
 	printh "restart" "Restart project services (alias: fin restart)"
-	printh "reset" "Recreate project services and containers (${yellow}fin help reset${NC}) (alias: fin reset)"
-	printh "remove | rm" "Stop project services and remove their containers (${yellow}fin help remove${NC})"
+	printh "reset [service]" "Recreate all or specified project services and containers without deleting named volumes"
+	printh "" "Changes to home directory in \`cli\` are preserved."
+	printh "remove [option] [service]" "Remove all project services, networks and their volumes or specified services only"
+	printh "    rm [option] [service]" ""
+	printh "  --force (-f)" "Do not ask for confirmation when deleting all project services"
+	echo
+	printh "list [option]" "List running Docksal projects (alias: fin pl)"
+	printh "  --all (-a)" "List all Docksal projects (stopped as well)"
+	echo
+	printh "create" "Create a new project with a pre-configured boilerplate:"
+	printh "" "Drupal, Wordpress, Magento, Laravel, Backdrop, Hugo, Gatsby and others"
+	echo
 	printh "config" "Show project configuration"
 	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
-	printh "list [-a (--all)]" "List running Docksal projects (-a to show stopped as well) (alias: fin pl)"
-	printh "create" "Project wizard to create new Drupal, Wordpress, Magento or empty static project."
 
 	echo
 	echo "Examples:"
 	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
 	printh "fin project reset db" "Reset only DB service to start with DB from scratch"
 	printh "fin project create" "Start a new project wizard"
+}
+
+show_help_reset ()
+{
+	show_help_project
+}
+
+show_help_rm ()
+{
+	show_help_project
+}
+show_help_remove ()
+{
+	show_help_project
 }
 
 show_help_system() {
