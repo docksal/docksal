@@ -5410,7 +5410,7 @@ addon_install ()
 	# Post-install hook
 	addon_hook "$addon_path" "$addon_name" "post-install" "$addon_global"
 	[[ $? != 0 ]] && _with_errors="${yellow}with errors${NC}"
-	[[ "$2" == "global" ]] && _globally="globally"
+	[[ "${global}" == "global" ]] && _globally="globally"
 	echo-green "Addon ${NC}$addon_name${green} was installed ${_globally} ${_with_errors}"
 }
 
@@ -5443,7 +5443,7 @@ addon_update ()
 	# Post-install hook
 	addon_hook "$addon_path" "$addon_name" "post-update" "$addon_global"
 	[[ $? != 0 ]] && _with_errors="${yellow}with errors${NC}"
-	[[ "$2" == "global" ]] && _globally="globally"
+	[[ "${global}" == "global" ]] && _globally="globally"
 	echo-green "Addon ${NC}$addon_name${green} was updated ${_globally} ${_with_errors}"
 }
 
