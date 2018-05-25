@@ -2927,8 +2927,12 @@ stats_ping ()
 	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X ${OS_VERSION})"
 	is_windows && user_agent="fin/${FIN_VERSION} (Windows NT ${OS_VERSION})"
 
+	# Local instances
 	local source='Local'
+	# CI instances
 	[[ "$CI" != "" ]] && source='CI'
+	# Play with Docker instances
+	is_pwd && source='PWD'
 
 	curl -kfsL \
 		--user-agent "$user_agent" \
