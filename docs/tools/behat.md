@@ -92,7 +92,7 @@ docker:
 ## Behat selenium2 driver and VNC
 
 If you use Selenium with a browser in a container, you can obtain the test screenshots, however you cannot see the browser itself.  
-Sometimes it is very useful to watch the tests running in the browser (e.g. when you are creating a new test and want to see how it performs).  
+Sometimes it is very useful to watch the tests running in the browser (e.g., when you are creating a new test and want to see how it performs).  
 In such cases, a [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) client can be used.
 
 1) Install a VNC client on your computer (there are many versions for all platforms).  
@@ -114,7 +114,7 @@ Use `192.168.64.100:5900` as the host and `secret` as the password in your VNC c
 
 Now if you connect with the VNC client and run behat tests, you will be able to see tests running in a browser inside the `browser` container.
 
-Note: If you are working with several projects concurrently, it is a good idea to have a separate VNC port assigned per project (e.g. `5901:5900`, `5902:5900`, etc.)
+Note: If you are working with several projects concurrently, it is a good idea to have a separate VNC port assigned per project (e.g., `5901:5900`, `5902:5900`, etc.).
 
 
 ## Integration with PhpStorm
@@ -139,7 +139,7 @@ cli:
 ssh docker@192.168.64.100 -p 2223
 ```
 
-Note: If you are working with several projects concurrently, it is a good idea to have a separate SSH port assigned per project (e.g. `2222:22`, `2223:22`, etc.)
+Note: If you are working with several projects concurrently, it is a good idea to have a separate SSH port assigned per project (e.g., `2222:22`, `2223:22`, etc.).
 
 ### Add a new deployment server
 

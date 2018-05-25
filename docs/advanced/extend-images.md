@@ -8,7 +8,7 @@
 
 There are several way to extend a stock Docksal image:
 
-- use a [custom command](../fin/custom-commands.md) and script the adjustments there (e.g. as part of the `init` command)
+- use a [custom command](../fin/custom-commands.md) and script the adjustments there (e.g., as part of the `init` command)
 - [maintain your own image](https://github.com/docksal/service-cli/issues/9#issuecomment-308774963) on Docker Hub 
 based on a stock Docksal image
 - use [docker-compose build](https://docs.docker.com/compose/reference/build/)
@@ -18,8 +18,8 @@ The latter is the recommended way of extending Docksal images and is covered bel
 
 ## Configuration: Dockerfile
 
-- Create a `Dockerfile` in `.docksal/services/<service-name>/Dockerfile`.
-- If you have additional local files (e.g. configs) used during the build, put them in the same folder
+- Create a `Dockerfile` in `.docksal/services/<service-name>/Dockerfile`
+- If you have additional local files (e.g., configs) used during the build, put them in the same folder
 - Use an official Docksal image as a starting point in `FROM`
 - Add customizations (read official Docker docs on [working with Dockerfiles](https://docs.docker.com/engine/reference/builder/) and [best practices](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/) )
 
@@ -84,7 +84,7 @@ services:
     build: ${PROJECT_ROOT}/.docksal/services/<service-name>
 ```
 
-Replace `<service-name>` with the actual service name you are extending, e.g. `cli`.
+Replace `<service-name>` with the actual service name you are extending, e.g., `cli`.
 
 If there is already a custom `docksal.yml` file in the project repo, then make the corresponding changes in it as shown 
 above. Note: The existing `image` attribute should be replaced.

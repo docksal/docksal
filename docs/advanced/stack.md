@@ -49,7 +49,7 @@ The [db](https://github.com/docksal/service-db) service runs MySQL 5.5, 5.6, 5.7
 
 The [cli](https://github.com/docksal/service-cli) service runs `php-fpm` (used by `web` service) and also provides 
 a Linux console with all necessary command line tools installed and pre-configured 
-(e.g. drush, drupal console, wp-cli, phpcs, behat, mysql client and many more).
+(e.g., drush, drupal console, wp-cli, phpcs, behat, mysql client, and many more).
 
 The console can be access from the host machine via `fin bash`. Individual tools/binaries can be executed via `fin exec`.
 

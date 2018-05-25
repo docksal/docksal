@@ -61,6 +61,6 @@ services:
 
 Apply configuration changes with `fin project start` (`fin p start` for short).
 
-Please note, that non `.docksal` domains (e.g. `example.com`) will not be resolved automatically.
+Please note, that non `.docksal` domains (e.g., `example.com`) will not be resolved automatically.
 You can use [fin hosts](advanced/fin.md#fin-help-hosts) command to add and manage additional domain names via the system's `hosts` file. 
 See `fin help hosts`.

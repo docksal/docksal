@@ -17,7 +17,7 @@ Fin will first look for the addon in the `~/.docksal/addons` directory. If it is
 
 ## Removing From Project
 
-To remove an addon run
+To remove an addon run:
 
 ```
 fin addon remove <name>
