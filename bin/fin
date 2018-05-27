@@ -1015,7 +1015,7 @@ _vhost_proxy_connect ()
 }
 
 # Checks container health status (if available)
-# Relies on healchecks introduced in docksal/cli v1.3.0+, uses `sleep` as a fallback
+# Relies on healthcheck introduced in docksal/cli v1.3.0+, uses `sleep` as a fallback
 # @param $1 container id/name
 _healthcheck ()
 {
