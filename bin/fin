@@ -2888,7 +2888,7 @@ ssh_add ()
 	# Ensure ssh_path exists
 	mkdir -p "$ssh_path"
 
-	if is_tty; then
+	if ! is_tty; then
 		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 	fi
