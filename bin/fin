@@ -3284,13 +3284,13 @@ configure_resolver ()
 			# Probing the upstream DNS server
 			# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
 			# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
-			# nslookup returns 0 exit code regardless of the results, so have to pipe it ot grep
+			# nslookup returns 0 exit code regardless of the results, so have to pipe it to grep
 			nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
 			local ret=$?
 
 			if [[ "$ret" != "0" ]]; then
 				echo-error "The upstream DNS server ($DOCKSAL_DNS_UPSTREAM) is not reachable." \
-					"You are either offline, $DOCKSAL_DNS_UPSTREAM is not a valid DNS server or DNS requests to $DOCKSAL_DNS_UPSTREAM are blocked." \
+					"You are either offline, $DOCKSAL_DNS_UPSTREAM is not a valid DNS server, or DNS requests to $DOCKSAL_DNS_UPSTREAM are blocked." \
 					"Once the current operation completes, follow the steps below:" \
 					"  1. Open ${yellow}~/.docksal/docksal.env${NC} and set ${yellow}DOCKSAL_DNS_UPSTREAM${NC} to your local network DNS server" \
 					"  2. Run ${yellow}fin system reset dns${NC} to see if it works"
