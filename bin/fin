@@ -5156,7 +5156,7 @@ config_remove ()
 # Can add or remove a host to/from hosts file
 hosts ()
 {
-	is_windows && HOSTS_FILE="/c/windows/system32/drivers/etc/hosts"
+	is_windows || is_wsl && HOSTS_FILE="/c/windows/system32/drivers/etc/hosts"
 	is_mac && HOSTS_FILE="/etc/hosts"
 	is_linux && HOSTS_FILE="/etc/hosts"
 	case "$1" in
