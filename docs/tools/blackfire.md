@@ -4,7 +4,7 @@
 
 Register with [blackfire.io](https://blackfire.io/signup).
 
-Open [Blackfire Accoutn Credentials](https://blackfire.io/my/settings/credentials) to find your API keys.
+Open [Blackfire Account Credentials](https://blackfire.io/my/settings/credentials) to find your API keys.
 
 ---
 
@@ -85,4 +85,4 @@ Network         n/a     n/a     n/a
 SQL             n/a     n/a
 ```
  
-For additional information and examples see Blackfire's official documentation: [Profiling CLI Commands](https://blackfire.io/docs/cookbooks/profiling-cli)
+For additional information and examples see Blackfire's official documentation: [Profiling CLI Commands](https://blackfire.io/docs/cookbooks/profiling-cli).
