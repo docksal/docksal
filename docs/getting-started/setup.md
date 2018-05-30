@@ -24,14 +24,23 @@ fin init
 
 Try one of the example projects:
 
-- [Drupal 7 sample project](https://github.com/docksal/drupal7)  
+### PHP Based
 - [Drupal 8 sample project](https://github.com/docksal/drupal8)  
+- [Drupal 7 sample project](https://github.com/docksal/drupal7)  
+- [Backdrop CMS](https://github.com/docksal/example-backdrop)
 - [WordPress sample project](https://github.com/docksal/wordpress)
+- [Symfony Skeleton](https://github.com/docksal/example-symfony-skeleton)
+- [Symfony WebApp](https://github.com/docksal/example-symfony-webapp)
 - [Magento sample project](https://github.com/docksal/magento)
+- [Laravel sample project](https://github.com/docksal/example-laravel)
+- [GRAV CMS](https://github.com/docksal/example-grav)
 
+### JS Based
+- [NodeJS sample project](https://github.com/docksal/example-nodejs)
+- [Gatsby](https://github.com/docksal/example-gatsby)
+- [Hugo sample project](https://github.com/docksal/example-hugo)
 
 You can also use the `fin project create` command and a wizard will take you through the steps.
-
 
 <a name="updates"></a>
 ## Updates
