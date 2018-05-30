@@ -101,12 +101,12 @@ The list below goes from the earliest to the latest in this queue.
 
 Loading order:
 
-1. `$HOME/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md).)
+1. `$HOME/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md))
 2. `$HOME/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`.
-3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise.
-4. `docksal.env` - sets or modifies environment variables.
-5. `docksal-local.yml` - extends the loaded stack or `docksal.yml`.
-6. `docksal-local.env` - sets or modifies environment variables set previously.
+3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise
+4. `docksal.env` - sets or modifies environment variables
+5. `docksal-local.yml` - extends the loaded stack or `docksal.yml`
+6. `docksal-local.env` - sets or modifies environment variables set previously
 
 To see the files loaded for a particular project run `fin config show`.
 
@@ -131,8 +131,8 @@ DOCKSAL_STACK="acquia"
 
 The following stacks are available:
 
-- `default` - web, db, cli (assumed, when none specified.)
-- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects.)
+- `default` - web, db, cli (assumed, when none specified)
+- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects)
 
 <a name="custom-configuration"></a>
 ## Custom configuration

@@ -32,8 +32,7 @@ Without the automatic resolver, you can use `fin hosts` command to manage name r
 ## Override the default upstream DNS settings
 
 Some restricted network environments (e.g., corporate networks) may be blocking direct access to external DNS services, 
-this making `8.8.8.8` inaccessible. In such cases Docksal will output a warning with the instructions to override the
-default upstream DNS settings.
+making `8.8.8.8` inaccessible. In such cases, Docksal will output a warning on `fin project start` with the instructions to override the default upstream DNS settings.
 
 1. Open `$HOME/.docksal/docksal.env` and set `DOCKSAL_DNS_UPSTREAM` to your local network DNS server
 
