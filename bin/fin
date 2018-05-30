@@ -362,7 +362,7 @@ get_project_path ()
 }
 
 # Get path to project folder
-# Outputs a Windows compatible path on Windows, e.g. "c:/path/subpath", not "/c/path/subpath".
+# Outputs a Windows compatible path on Windows, e.g., "c:/path/subpath", not "/c/path/subpath".
 get_project_path_dc ()
 {
 	if is_windows ; then
@@ -374,7 +374,7 @@ get_project_path_dc ()
 }
 
 # Get path to global .docksal folder (~/.docksal directory).
-# Outputs a Windows compatible path on Windows, e.g. "c:/path/subpath", not "/c/path/subpath".
+# Outputs a Windows compatible path on Windows, e.g., "c:/path/subpath", not "/c/path/subpath".
 get_config_dir_dc ()
 {
 	if is_windows ; then
@@ -455,7 +455,7 @@ get_mysql_connect ()
 }
 
 # Get container id by service name
-# @param $1 docker compose service name (e.g. cli)
+# @param $1 docker compose service name (e.g., cli)
 # @return docker container id
 # TODO: deprecate in favor of ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 get_container_id ()
@@ -628,7 +628,7 @@ is_docksal_running ()
 }
 
 # Check whether we have a working tty.
-# Otherwise we are running in a non-tty environment ( e.g. Babun on Windows).
+# Otherwise we are running in a non-tty environment ( e.g., Babun on Windows).
 # We assume the environment is interactive if there is a tty.
 # All other direct checks don't work well in and every environment and scripts.
 is_tty ()
@@ -650,7 +650,7 @@ testing_warn ()
 }
 
 # Convert version string like 1.2.3 to integer for comparison
-# param $1 version string of 3 components max (e.g. 1.10.3)
+# param $1 version string of 3 components max (e.g., 1.10.3)
 ver_to_int ()
 {
 	echo "$@" | awk -F. '{ printf("%d%03d%03d", $1,$2,$3); }'
@@ -1140,7 +1140,7 @@ show_help ()
 
 	echo-green "Commands:"
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "logs [service]" "Show service logs (e.g. Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
+	printh "logs [service]" "Show service logs (e.g., Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
 	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "config [command]" "Show or change configuration (${yellow}fin help config${NC})"
 
@@ -1703,7 +1703,7 @@ show_help_hosts ()
 	echo "Usage: fin hosts [command]"
 
 	echo
-	echo "Add or remove lines to/from OS-dependent hosts file (e.g. /etc/hosts)"
+	echo "Add or remove lines to/from OS-dependent hosts file (e.g., /etc/hosts)"
 
 	echo
 	echo "Commands:"
@@ -2268,7 +2268,7 @@ smb_share_mount()
 	# User ntlmssp by default. For some Windows machines ntlm should be used instead
 	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
 	SMB_SEC="${SMB_SEC:-ntlmssp}"
-	# Doing unmount first to make it possible to rerun this command without restarting the VM (e.g. when debugging)
+	# Doing unmount first to make it possible to rerun this command without restarting the VM (e.g., when debugging)
 	# Specifying domain when mounting. May help when a Windows machine is in a domain environment.
 	command_mount="
 		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
@@ -2898,11 +2898,11 @@ ssh_add ()
 	mkdir -p "$ssh_path"
 
 	if ! is_tty; then
-		# In a non-interactive environment (e.g. CI) run non-interactively. Keys with passphrases cannot be used!
+		# In a non-interactive environment (e.g., CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 	fi
 
-	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g., -l)
 	if [[ ! "${1}" =~ ^- ]]; then
 		# Copy all keys from the host to the ssh-agent container
 		docker cp "$ssh_path" docksal-ssh-agent:/
@@ -2934,7 +2934,7 @@ ssh_add ()
 	local ret=$?
 
 	# Remove copied keys from the ssh-agent container after loading into the ssh-agent
-	# Only do this when given an argument (key name) or nothing, but not for options (e.g. -l)
+	# Only do this when given an argument (key name) or nothing, but not for options (e.g., -l)
 	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
 	return "$ret"
 }
@@ -3111,9 +3111,9 @@ install_proxy_service ()
 
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
 	# and are inactive unless configured.
-	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g. 0.5h)
+	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h)
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
-	# entirely wiped out from the host (e.g. 168h). WARNING: use at your own risk!
+	# entirely wiped out from the host (e.g., 168h). WARNING: use at your own risk!
 	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=always \
 		-p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
 		-e ACCESS_LOG="${DOCKSAL_VHOST_PROXY_ACCESS_LOG:-0}" \
@@ -4199,7 +4199,7 @@ _exec ()
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
-	# Do not escape spaces if there is only one parameter (e.g. fin run "ls -la | grep txt")
+	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
 	else
 		cmd="$cmd $@"
 	fi
@@ -4207,7 +4207,7 @@ _exec ()
 
 	# ------------------------------------------------ #
 	# 3) execute
-	# Allow entering arbitrary containers by name (e.g. system containers like vhost-proxy).
+	# Allow entering arbitrary containers by name (e.g., system containers like vhost-proxy).
 	if [[ "$container_id" == "" ]]; then
 		${winpty} docker exec -it "$CONTAINER_NAME" sh -i
 		return

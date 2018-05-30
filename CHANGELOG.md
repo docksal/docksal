@@ -27,7 +27,7 @@
 - Added support to run `fin debug` with project configuration loading
   - `fin debug -c ...`, `fin debug --load-configuration ...`
 - Removed an old workaround in `fin drush` and `fin drupal` when run with empty arguments
-  - drush used to choke on empty arguments (e.g. drush "")
+  - drush used to choke on empty arguments (e.g., drush "")
   - drupal console never needed this workaround
 - Allow `fin alias` creation command to also update aliases
   - Added the "-f" option when creating an new alias link. This allow one to use the same command to update aliases vs. the current workflow of first removing the alias then adding it back in with the new path. (#496)
@@ -166,7 +166,7 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
 
 - Docker for Mac: osxfs caching is automatically enabled to improve read performance. (#249, #397)
 - Docker for Mac: [Unison file sync](http://docs.docksal.io/en/v1.6.0/advanced/volumes/#unison-volumes) support
-- You can add environment dependent ENV and YML files based on `$DOCKSAL_ENVIRONMENT` variable, e.g. `docksal-myenv.yml`,
+- You can add environment dependent ENV and YML files based on `$DOCKSAL_ENVIRONMENT` variable, e.g., `docksal-myenv.yml`,
  that would only apply, if `DOCKSAL_ENVIRONMENT=myenv` (#383, #354). Official documentation is pending.
 - New sample project repos and wizards: [Grav](https://github.com/docksal/example-grav), 
 [Gatsby JS](https://github.com/docksal/example-gatsby) and [Laravel](https://github.com/docksal/example-laravel)
@@ -315,7 +315,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - `host_home` volume is deprecated and removed from stack files
   - **This is a breaking change!**
   - See instructions above on the necessary adjustments to `docksal.yml`. 
-- Ability to stop at restart certain service container, e.g. `fin restart db`
+- Ability to stop at restart certain service container, e.g., `fin restart db`
 - Fix mysql import for large database (#279)
   - Database truncation was rewritten. Now database will be dropped and re-created. Should work faster and more reliable.
 - Mysql import and dump functions will properly read `MYSQL_DATABASE` environment variable (#276)
@@ -369,13 +369,13 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
     - Prefix Docksal SMB shares with `docksal-` to avoid conflicts with existing shares. Docksal share names on Windows will now look like `\\computer\docksal-c` instead of `\\computer\c` before. Should address file permissions issues some Windows users had had.
     - Domain name is now properly passed during shares mount. Should address share mount issues for domain users.
     - Mount SMB shares with `ntlmssp` or `ntlm` security options. Perform two attempts: use `ntlmssp` by default, use `ntlm` as a fallback. Should address issues for many users of corporate Windows laptops (#117)
-    - Perform umount before mount in `smb_share_mount` to simplify debugging (e.g. `fin vm mount` to remount the share)
+    - Perform umount before mount in `smb_share_mount` to simplify debugging (e.g., `fin vm mount` to remount the share)
     - Allow overriding CIFS `sec` option by setting `SEC_SMB` environment variable. Useful for debugging or for edge cases when neither of existing options work. `SMB_SEC=ntlmv2 fin vm mount`. Also see [unix.stackexchange.com/questions/124342](https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352)
 * Improve messaging to show when database dump is being imported from stdin 
 * Fix automatic VirtualBox installation on Windows
 * Docksal console desktop icon is deprecated. With the winpty improvements there is no need in this experimental console approach anymore.
 * Import SSH keys during containers reset on Linux (#180)
-* `vhost-proxy` and `dns` are now binding to `192.168.64.100` on all platforms. This should help to avoid conflicts with local web server instances (assuming they also don't bind to `0.0.0.0`, but use a specific IP instead (e.g. Apache on Linux can now run on `127.0.0.1` in parallel with Docksal)
+* `vhost-proxy` and `dns` are now binding to `192.168.64.100` on all platforms. This should help to avoid conflicts with local web server instances (assuming they also don't bind to `0.0.0.0`, but use a specific IP instead (e.g., Apache on Linux can now run on `127.0.0.1` in parallel with Docksal)
 
 ## Documentation
 
@@ -393,13 +393,13 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - New one-line installer: `curl -fsSL get.docksal.io | sh`
 - Docksal usage stats. Minimal OS/version and fin version tracking via Google Analytics.
 - `fin debug` - a new hidden command for debugging purposes
-- `fin exec` can now take a file as an argument and will execute it inside cli (e.g. `fin exec script.sh`)
+- `fin exec` can now take a file as an argument and will execute it inside cli (e.g., `fin exec script.sh`)
 - `fin vm mount` - a new hidden command to attempt re-mounting of shares on Mac and Windows.
 - `fin project create` - replaces `fin create-site`
 - `fin run-cli` - run a standalone, one-off cli container in the current directory. This allows using any tool inside cli without an already created/running Docksal project/stack.
 - `fin image` command to manage images (save, load, view Docksal images on Docker Hub).
-  - Adds support for saving and loading Docksal system and project images (e.g. from a local drive).
-- Portable installation mode support (e.g. from a USB drive or a local folder)
+  - Adds support for saving and loading Docksal system and project images (e.g., from a local drive).
+- Portable installation mode support (e.g., from a USB drive or a local folder)
   - Useful for conferences/trainings/etc. where internet bandwidth is an issue
   - `fin update` - supports VirtualBox, boot2docker.iso and tools (Mac and Windows)
   - `fin vm start` - load system images from a local `docksal-system-images.tar` file
@@ -424,7 +424,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Windows
   - Support for pipes (`|`), stream redirects (`< >`) and variable substitution from a sub-shell ( `$()` ) via `winpty -Xallow-non-tty`
   - Fixed directory switch in `fin exec`
-- Allowing non-tty installation on Mac and Linux (e.g. when used in CI/scripts)
+- Allowing non-tty installation on Mac and Linux (e.g., when used in CI/scripts)
 - Miscellaneous other small fixes and improvements
 
 ### Documentation
