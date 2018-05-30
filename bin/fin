@@ -4286,7 +4286,7 @@ run_cli ()
 	done
 
 	# Set default image
-	local RUN_IMAGE="${image:-docksal/cli:2.1-php7.1}"
+	local RUN_IMAGE="${image:-docksal/cli:2.2-php7.1}"
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
 	local cmd="$@"
 
