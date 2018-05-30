@@ -2644,12 +2644,12 @@ project_create ()
 	echo-green "             -= Docksal project wizard =-"
 	echo
 	while true; do
-		echo -en "${yellow}1. Name your project${NC} (lowercase alphanumeric, underscore and hyphen): "
+		echo -en "${yellow}1. Name your project${NC} (lowercase alphanumeric, underscore, and hyphen): "
 		read -p "" project_name
 		# This will not accept project name of 1 symbol long. Not sure if this needs to be fixed
 		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9_-]*[a-z0-9]$ ]]; then
 			echo-error "Unacceptable project name" \
-				"Use only lowercase letters, numbers, underscores and hyphens." \
+				"Use only lowercase letters, numbers, underscores, and hyphens." \
 				"Project name defines host name, where underscores will be replaced with hyphens." \
 				""
 			continue
