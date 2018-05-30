@@ -4425,7 +4425,7 @@ mysql_db_create ()
 
 	# Set db to space since the db does not exist here yet
 	(_mysql --db=" " --db-user="${__dump_user}" --db-password="${__dump_password}" \
-		"CREATE DATABASE \`${__db}\` CHARACTER SET ${__db_charset} COLLATE ${__db_collation};") &&
+		"CREATE DATABASE IF NOT EXISTS \`${__db}\` CHARACTER SET ${__db_charset} COLLATE ${__db_collation};") &&
 		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
 		(_mysql --db="${__db}" --db-user="${__dump_user}" --db-password="${__dump_password}" \
 		"GRANT ALL PRIVILEGES ON \`${__db}.*\` TO \`${MYSQL_USER}\`; FLUSH PRIVILEGES;")
