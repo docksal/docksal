@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.59.1
+FIN_VERSION=1.59.2
 
 # Console colors
 red='\033[0;91m'
@@ -4247,6 +4247,8 @@ _exec ()
 # @param $* command with its params to run.
 run_cli ()
 {
+	check_winpty_found
+
 	local env_str=""
 
 	while [ $# -gt 0 ]
