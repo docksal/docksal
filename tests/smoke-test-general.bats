@@ -13,7 +13,7 @@ teardown() {
 
 # Global skip
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-#SKIP=1
+SKIP=1
 
 # Cannot do cleanup outside of a test case as bats will evaluate/run that code before every single test case.
 @test "uber cleanup" {
@@ -167,7 +167,7 @@ teardown() {
 }
 
 @test "fin run-cli" {
-	[[ $SKIP == 1 ]] && skip
+	#[[ $SKIP == 1 ]] && skip
 
 	# Dummy command to pre-pull the image run-cli is using.
 	fin rc uname
@@ -217,13 +217,13 @@ teardown() {
 	# Check one-off volume --clean
 	fin rc touch /home/docker/test
 	run fin rc --clean -T ls /home/docker/test
-	[[ "$output" =~ "cannot access /home/docker/test" ]]
+	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
 	unset output
 
 	# Check --cleanup persistent volume
 	fin rc touch /home/docker/test
 	run fin rc --cleanup -T ls /home/docker/test
-	[[ "$output" =~ "cannot access /home/docker/test" ]]
+	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
 	unset output
 }
 
