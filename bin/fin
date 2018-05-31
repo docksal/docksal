@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.59.2
+FIN_VERSION=1.59.3
 
-# Console colors
-red='\033[0;91m'
-red_bg='\033[101m'
-yellow_bg='\033[43;90m'
-green='\033[0;32m'
-green_bg='\033[42m'
-yellow='\033[0;33m'
-yellow_bold='\033[1;33m'
-blue='\033[0;34m'
-lime='\033[0;92m'
-acqua='\033[0;96m'
-NC='\033[0m'
+if [[ "$TERM" != "dumb" ]]; then
+	# Console colors
+	red='\033[0;91m'
+	red_bg='\033[101m'
+	yellow_bg='\033[43;90m'
+	green='\033[0;32m'
+	green_bg='\033[42m'
+	yellow='\033[0;33m'
+	yellow_bold='\033[1;33m'
+	blue='\033[0;34m'
+	lime='\033[0;92m'
+	acqua='\033[0;96m'
+	NC='\033[0m'
+fi
 
 #-------------------------------- OS Checks ------------------------------------
 # OS version detection
