@@ -761,6 +761,15 @@ check_docksal_running ()
 	fi
 }
 
+check_macos_path ()
+{
+	if is_mac && [[ ! "$(pwd)" =~ "$HOME" ]]; then
+		echo-alert "Current project is outside of your home folder!" \
+			"Move your project into $HOME/Projects folder"
+		sleep 2
+	fi
+}
+
 is_vbox_version ()
 {
 	! which "$vboxmanage" >/dev/null 2>&1 && return 1
@@ -2536,6 +2545,7 @@ up ()
 	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
 	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
+	check_macos_path
 
 	# Temporary workaround for NFS issues on Mac
 	# See https://github.com/docksal/docksal/issues/265
