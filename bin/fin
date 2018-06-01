@@ -1310,7 +1310,8 @@ show_help_run-cli ()
 
 	echo
 	echo "Run command in a standalone \`cli\` container in the current directory"
-	echo "with a persistent \$HOME directory"
+	echo "with a persistent \$HOME directory."
+	echo "NOTE: \`fin cleanup\` will clean the persistent \$HOME directory"
 
 	echo
 	echo "Options:"
@@ -1319,7 +1320,7 @@ show_help_run-cli ()
 	printh "--debug" "Print container debug output"
 	printh "--image=IMAGE" "Override default container image"
 	printh "-e VAR=VALUE" "Pass environment variable(s) to the container"
-	printh "-T" "Disable pseudo-tty allocation"
+	printh "-T" "Disable pseudo-tty allocation (useful to get clean stdout)"
 
 	echo
 	echo "Examples:"
