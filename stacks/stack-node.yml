@@ -9,5 +9,5 @@ services:
       service: cli
     labels:
       - io.docksal.project-root=${PROJECT_ROOT}
-      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=3000
