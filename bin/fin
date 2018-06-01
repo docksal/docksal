@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.59.3
+FIN_VERSION=1.60.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -199,6 +199,7 @@ URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 # Remove URL_REPO_ADDONS in Nov 2018
 URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
+URL_STACKS_OVERRIDES_IDE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-ide.yml"
 URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
 URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
@@ -3777,6 +3778,7 @@ update_tools ()
 update_config_files ()
 {
 	files_to_download="
+			$URL_STACKS_OVERRIDES_IDE
 			$URL_STACKS_OVERRIDES_OSXFS
 			$URL_STACKS_SERVICES
 			$URL_STACKS_STACK_ACQUIA
@@ -4971,6 +4973,12 @@ load_configuration ()
 		overrides_osxfs_file="$(get_config_dir_dc)/stacks/overrides-osxfs.yml"
 		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]] && [[ "$DOCKSAL_VOLUMES" != "unison" ]]; then
 			COMPOSE_FILE="${overrides_osxfs_file}${SEPARATOR}${COMPOSE_FILE}"
+		fi
+
+		# Enable Cloud9 IDE
+		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
+		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
+			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
 		fi
 	fi
 
