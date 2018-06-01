@@ -120,4 +120,4 @@ For example you can run drush command: `fin drush fra -y` and debug this drush c
     - Click `Settings` button below plugin
     - `Server` can be set to `*`
     - `Server Listen Port` should be set to `9000`
-    - Make sure `Continue to listen for debug sessions even if the debugger windows are all closed` is checked. This will make open the debugger window automatically.
+    - Make sure `Continue to listen for debug sessions even if the debugger windows are all closed` is checked. This will make the debugger window open automatically.
