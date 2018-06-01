@@ -5555,7 +5555,13 @@ fi
 
 # Load environment variables overrides, use to permanently override some variables
 # Source and allexport variables in the .env file
-[[ -f "$CONFIG_ENV" ]] && set -a; source "$CONFIG_ENV"; set +a || touch "$CONFIG_ENV"
+if [[ -f "$CONFIG_ENV" ]]; then
+	set -a
+	source "$CONFIG_ENV"
+	set +a
+else
+	touch "$CONFIG_ENV"
+fi
 
 # Generate Docksal instance uuid if not available
 if [[ "$DOCKSAL_UUID" == "" ]]; then
