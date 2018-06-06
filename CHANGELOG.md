@@ -1,5 +1,88 @@
 # Changelog
 
+# 1.9.0 (2018-06-05)
+
+# New software versions
+
+- fin 1.60.0
+- Stack updates
+  * Switched `cli` to [docksal/cli:2.2-php-7.1](https://github.com/docksal/service-cli/releases/tag/v2.2.0).
+- Docker 18.03.1
+- Docker Compose 1.21.1
+- VirtualBox 5.2.2
+
+# New Features
+
+- Alpine Linux support.
+- [Play-with-Docker](https://labs.play-with-docker.com/) support
+  - You can now try and play with Docksal online, free of charge, and within minutes!
+- **Experimental**: Cloud9 IDE integration
+  - Cloud9 provides an in-browser IDE and terminal for your project and stack.
+  - Run `fin config set IDE_ENABLED=1 && fin project start` in your project folder to enable Cloud9 IDE.
+  - Open `http://ide.<VIRTUAL_HOST>` 
+- `fin config [get|set|remove]`
+  - New commands to manage project level (`.docksal/docksal.env`) and global (`$HOME/docksal/docksal.env`) Docksal variables.
+  - See `fin help config` for details.
+- New boilerplate frameworks:
+  - [Symfony Skeleton](https://github.com/docksal/example-symfony-skeleton)
+  - [Symfony WebApp](https://github.com/docksal/example-symfony-webapp)
+  - [Backdrop CMS](https://github.com/docksal/example-backdrop)
+
+# Changes and improvements
+
+- Improved `fin share` to allow for custom ngrok configuration.
+- Extended `fin config generate` to allow for `DOCKSAL_STACK` and `DOCROOT` to be set at runtime.
+  - See `fin help config` for details.
+- `fin run-cli`:
+  - Switched default image for `fin run-cli` to use `docksal/cli:2.2-php7.1`.
+  - Allow passing environment variables to the `run-cli` container at run time or through `$HOME/.docksal/docksal.env` file.
+  - Fixed Windows support.
+  - Standard secrets (`SECRET_*` variables) are now passed to the `run-cli` container.
+  - Substantially improved startup container time by declaring `/home/docker` as a volume (same as in the default stack).
+  - See `fin help run-cli` for more details
+  - **[BREAKING]** Persistent `$HOME` directory in the `run-cli` container by default.
+  - **[BREAKING]** Image and debug are now options (`--image=...`, `--debug`) 
+- Reworked `fin project create` command screen to separate out different frameworks and languages.
+- Refactored `fin ssh-add` command to allow for non-standard ssh keys to be add automatically.
+- Refactored OS detection.
+- Fixed `fin help` to reference commands within folders.
+- Refactored container remove function.
+- Refactored unison volumes integration.
+  - Forked our own `docksal/unison` image.
+  - **[BREAKING]** renamed `bg-sync` to `unison` in `fin` and in `stacks/volumes-unison.yml`. 
+- Fixed `fin stop --all` to stop all containers not just single project.
+- Fixed Travis CI to run correctly with external pull requests.
+- Improved testing across functionality.
+- Fixed issue with `fin db create` not failing if database did not exist.
+- Fixed missing host file on WSL.
+- Added `blackfire` service configuration to `services.yml` and updated Blackfire documentation.
+- Refactored network configuration on Ubuntu
+  - During `fin system stop` network settings introduced by Docksal will now be reverted.
+- Fixed (workaround) a Docker bug with long commands overlapping on single terminal line (`fin exec` and `fin run-cli`).
+- Add a warning when running as root.
+- Updated automated test.
+
+# Documentation
+
+- New: [fin run-cli](https://docs.docksal.io/en/v1.9.0/fin/run-cli) command docs.
+- New: [Addons](https://docs.docksal.io/en/v1.9.0/fin/addons) - extending projects with extra commands and integrations.
+- New: [phpMyAdmin](https://docs.docksal.io/en/v1.9.0/tools/phpmyadmin) integration docs.
+- New: [Redis](https://docs.docksal.io/en/v1.9.0/tools/redis) integration docs.
+- New: [fin help](https://docs.docksal.io/en/v1.9.0/fin/fin-help) - content from all `fin help` topics.
+- New: [fin run-cli](https://docs.docksal.io/en/v1.9.0/fin/fin-run-cli) - content from all `fin help` topics.
+- Updated [Using native Docker applications](https://docs.docksal.io/en/v1.9.0/getting-started/env-setup-native) docs to use the new `fin config set` command.
+- Updated [SSH agent](https://docs.docksal.io/en/v1.9.0/advanced/ssh-agent) with a section on how to automatically local non-default keys.
+- Updated [Custom commands](https://docs.docksal.io/en/v1.9.0/fin/custom-commands) with a section on grouping custom commands.
+- Updated [Setup instructions](https://docs.docksal.io/en/v1.9.0/getting-started/setup) with new boilerplate repos.
+- Updated [Blackfire](https://docs.docksal.io/en/v1.9.0/tools/blackfire) integration instructions.
+- Updated [ngrok](https://docs.docksal.io/en/v1.9.0/tools/ngrok) (`fin share`) integration instructions with the new configuration options.
+- Updated [Xdebug](https://docs.docksal.io/en/v1.9.0/tools/xdebug) docs with instructions on using Xdebug with the Atom editor.
+- Updated [Extending stock images](https://docs.docksal.io/en/v1.9.0/advanced/extend-images) 
+- Updated [Stack configuration](https://docs.docksal.io/en/v1.9.0/advanced/stack-config) docs with all available variables in Docksal.
+- Updated [Troubleshooting](https://docs.docksal.io/en/v1.9.0/troubleshooting) with instructions on "Docker unauthorized" issues.
+- Fixed typos and grammar found within documentation.
+
+
 # 1.8.0 (2018-04-05)
 
 ## New software versions
