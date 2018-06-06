@@ -246,7 +246,7 @@
 	                           		Hint: create alias linking to Drupal sub-site to launch targeted commands
 	  fin alias remove dev     		Delete dev alias
 
-## ssh-Add
+## ssh-add
 
 <a name="fin-help-ssh-add"></a>
 	

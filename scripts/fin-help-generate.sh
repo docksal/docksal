@@ -63,7 +63,7 @@ headergen "alias"
 helpgen alias
 
 echo " - ssh-add"
-headergen "ssh-Add"
+headergen "ssh-add"
 helpgen ssh-add
 
 echo " - logs"
