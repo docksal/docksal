@@ -23,7 +23,10 @@ pages:
     - Windows SMB shares: troubleshooting-smb.md
   - Docksal Fin:
     - fin: fin/fin.md
+    - fin help: fin/fin-help.md
+    - fin run-cli: fin/fin-run-cli.md
     - Custom commands: fin/custom-commands.md
+    - Addons: fin/addons.md
     - Folder aliases: fin/aliases.md
   - Tools and integrations:
     - Apache Solr: tools/apache-solr.md
@@ -36,6 +39,7 @@ pages:
     - Memcached: tools/memcached.md
     - ngrok: tools/ngrok.md
     - PHP Code Sniffer: tools/phpcs.md
+    - Redis: tools/redis.md
     - SASS and Compass: tools/sass.md
     - Terminus: tools/terminus.md
     - Varnish: tools/varnish.md

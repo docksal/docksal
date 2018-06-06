@@ -2,13 +2,13 @@
 
 !!! warning "Think contributing first and only then forking"
     If you find something is missing or can be improved in the stock Docksal Docker images and you believe others would 
-    benefit from it too, then go ahead and submit an feature request or a PR for the respective repo.
+    benefit from it too, then go ahead and submit a feature request or a PR for the respective repo.
     By using customized images you do not break any warranties, however this will make it more difficult to maintain, 
     including seeking support from the community and Docksal maintainers if you run into issues.
 
 There are several way to extend a stock Docksal image:
 
-- use a [custom command](../fin/custom-commands.md) and script the adjustments there (e.g. as part of the `init` command)
+- use a [custom command](../fin/custom-commands.md) and script the adjustments there (e.g., as part of the `init` command)
 - [maintain your own image](https://github.com/docksal/service-cli/issues/9#issuecomment-308774963) on Docker Hub 
 based on a stock Docksal image
 - use [docker-compose build](https://docs.docker.com/compose/reference/build/)
@@ -18,8 +18,8 @@ The latter is the recommended way of extending Docksal images and is covered bel
 
 ## Configuration: Dockerfile
 
-- Create a `Dockerfile` in `.docksal/services/<service-name>/Dockerfile`.
-- If you have additional local files (e.g. configs) used during the build, put them in the same folder
+- Create a `Dockerfile` in `.docksal/services/<service-name>/Dockerfile`
+- If you have additional local files (e.g., configs) used during the build, put them in the same folder
 - Use an official Docksal image as a starting point in `FROM`
 - Add customizations (read official Docker docs on [working with Dockerfiles](https://docs.docker.com/engine/reference/builder/) and [best practices](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/) )
 
@@ -29,7 +29,7 @@ Below is an example of extending the `cli` image with additional configs, apt an
 
 ```Dockerfile
 # Use a stock Docksal image as the base
-FROM docksal/cli:2.0-php7.1
+FROM docksal/cli:2.2-php7.1
 
 # Install addtional apt packages
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -55,7 +55,7 @@ RUN \
 	# Install node packages
 	npm install -g node-sass
 
-# IMPORTANTN! Switching back to the root user as the last instruction.
+# IMPORTANT! Switching back to the root user as the last instruction.
 USER root
 ```
 
@@ -65,15 +65,9 @@ Here's another example for `web`:
 # Use a stock Docksal image as the base
 FROM docksal/web:2.1-apache2.4
 
-# Install addtional apt packages
-RUN apt-get update && apt-get -y --no-install-recommends install \
-    libapache2-mod-proxy-html \
-    # Cleanup
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN \
-	# Enable additional Apache modules
-	a2enmod proxy_html proxy_http proxy_balancer
+RUN set -x \
+	# Enabled extra modules
+	&& sed -i '/^#.* expires_module /s/^#//' /usr/local/apache2/conf/httpd.conf
 ```
 
 ## Configuration: docksal.yml
@@ -90,7 +84,7 @@ services:
     build: ${PROJECT_ROOT}/.docksal/services/<service-name>
 ```
 
-Replace `<service-name>` with the actual service name you are extending, e.g. `cli`.
+Replace `<service-name>` with the actual service name you are extending, e.g., `cli`.
 
 If there is already a custom `docksal.yml` file in the project repo, then make the corresponding changes in it as shown 
 above. Note: The existing `image` attribute should be replaced.
@@ -112,3 +106,15 @@ The built image will be stored locally and used as the service image from there 
 
 Additionally, `fin build` command is a proxy command to [docker-compose build](https://docs.docker.com/compose/reference/build/) 
 and can be used for more advanced building scenarios. 
+
+Note: it might seems like image is being rebuilt every time project starts, but it really isn't.
+
+There is no way for Docksal to know if your built image is the latest. Even if we checked for `Dockerfile` 
+changes that would not be enough, because `Dockerfile` can use some other files that can change. Therefore 
+the best Docksal option is to run `docker-compose build` every time.
+
+`docker-compose build` launches `docker` which knows what files changed and can compare things. If `docker`
+sees no changes then it does not **actually** rebuild image. You see output in the console, but there are 
+no real changes made to images (and output in the console actually says exactly that). That output is 
+basically just a check if nothing has changed. There is no good way to silence that output as in case there 
+was some error the output would render very useful.

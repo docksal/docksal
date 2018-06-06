@@ -2,9 +2,9 @@
 
 It is possible to extend fin with custom commands per project or per host.
 
-## Project-level custom commands 
+## Project-level custom commands
 
-Create a file at this location `.docksal/commands/updb` (Notice **no extension**. Script name should match command name) with the following contents:
+Create a file at this location `.docksal/commands/updb` with the following contents:
 
 ```bash
 #!/bin/bash
@@ -15,16 +15,17 @@ Create a file at this location `.docksal/commands/updb` (Notice **no extension**
 
 fin drush updb $1
 ```
+Note: the file name should match the command name with **no extension**.
 
-Make the file executable
+Make the file executable:
 
 ```bash
 chmod +x .docksal/commands/updb
 ```
 
-Now you can use it as if it was a regular fin command: `fin updb`. 
-Passing parameters also works: `fin updb -y`. 
-The command description will be visible in `fin help` and the full command help will be available via `fin help updb`. 
+Now you can use it as if it was a regular fin command: `fin updb`.
+Passing parameters also works: `fin updb -y`.
+The command description will be visible in `fin help` and the full command help will be available via `fin help updb`.
 
 Note: `drush updb` this is a Drupal-specific example.
 
@@ -32,10 +33,10 @@ Note: `drush updb` this is a Drupal-specific example.
 
 These variables, provided by fin, are available for use inside you custom command scripts:
 
-* `PROJECT_ROOT` - absolute path to the project folder.  
-* `DOCROOT` - name of the docroot folder.
-* `VIRTUAL_HOST` - the virtual host name for the project. For example, `projectname.docksal`.
-* `DOCKER_RUNNING` - (string) "true" or "false".
+* `PROJECT_ROOT` - absolute path to the project folder
+* `DOCROOT` - name of the docroot folder
+* `VIRTUAL_HOST` - the virtual host name for the project (e.g., `projectname.docksal`)
+* `DOCKER_RUNNING` - (string) "true" or "false"
 
 
 Here is an example `init` command for a Drupal website using drush to automate the install:  
@@ -48,13 +49,13 @@ fin up
 # Install site
 fin drush site-install -y --site-name="My Drupal site"
 # Get login link
-cd docroot 2>dev/null 
+cd docroot 2>dev/null
 fin drush uli
 ```
 
 ## Documenting custom command
 
-Fin looks for lines starting with `##` for command documentation. 
+Fin looks for lines starting with `##` for command documentation.
 
 ```bash
 ## Custom command description
@@ -93,18 +94,18 @@ print "Custom python command!"
 console.log("Custom NodeJS command!")
 ```
 
-Note in the above example for node, that custom command meta information lines are wrapped in a comment block 
+Note in the above example for node, that custom command meta information lines are wrapped in a comment block
 relevant to this interpreter.
 
 ## Executing commands inside cli
 
-In some cases you'd want a command to be executed inside `cli` instead of the host (e.g. when you do not want to rely on
+In some cases you'd want a command to be executed inside `cli` instead of the host (e.g., when you do not want to rely on
 any dependencies installed on the host and use the tools available in `cli`).
 
 One way to achieve this is to write two commands:
 
-- one with the actual code, that you want to execute (e.g. `mycommand-cli`)
-- one that does `fin exec '/var/www/.docksal/commands/mycommand-cli'` (e.g. `mycommand`)
+- one with the actual code, that you want to execute (e.g., `mycommand-cli`)
+- one that does `fin exec '/var/www/.docksal/commands/mycommand-cli'` (e.g., `mycommand`)
 
 Users can then run the command as `fin mycommand` to get the `mycommand-cli` executed in cli.
 
@@ -134,7 +135,7 @@ pwd
 console.log("Custom NodeJS command!")
 ```
 
-Note in the above example for node, that custom command meta information lines are wrapped in a comment block 
+Note in the above example for node, that custom command meta information lines are wrapped in a comment block
 relevant to this interpreter.
 
 When using `#: exec_target = cli` for commands you have to consider the following:
@@ -161,6 +162,24 @@ services:
       # These variables are passed from the host (including values in `docksal.env`/`docksal-local.env`)
       - SOURCE_ALIAS
       - VIRTUAL_HOST
+```
+
+## Grouping Commands
+
+Docksal allows for commands to be grouped together within folders. This is particulary useful when creating a toolkit to share with other developers. Commands can be grouped within the Global Scope `~/.docksal/commands` and on a per project basis.
+
+To view commands, run `fin help` and there should be similar output. This will show the available commands and prefix them within the folder they are located in.
+
+```
+Custom commands:
+  site/init                 Initialize stack and site (full reset)
+  drupal/updb [g]     	    Opens SequelPro
+```
+
+Commands are ran in the same exact way as normal except include the folder they are part of.
+
+```
+fin drupal/updb
 ```
 
 ## More examples

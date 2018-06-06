@@ -13,7 +13,7 @@ teardown() {
 
 # Global skip
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-#SKIP=1
+SKIP=1
 
 # Cannot do cleanup outside of a test case as bats will evaluate/run that code before every single test case.
 @test "uber cleanup" {
@@ -167,7 +167,7 @@ teardown() {
 }
 
 @test "fin run-cli" {
-	[[ $SKIP == 1 ]] && skip
+	#[[ $SKIP == 1 ]] && skip
 
 	# Dummy command to pre-pull the image run-cli is using.
 	fin rc uname
@@ -183,6 +183,47 @@ teardown() {
 	# docker user uid/gid in cli matches the host user uid/gid
 	run fin rc -T 'echo $(id -u):$(id -g)'
 	[[ "$output" == "$(id -u):$(id -g)" ]]
+	unset output
+
+	# check to make sure custom variables are passed into container
+	run fin rc -T -e TEST_VAR="TEST VARIABLES" "echo \$TEST_VAR"
+	[[ "$output" == "TEST VARIABLES" ]]
+	unset output
+
+	# check to make sure a global default variable (from $HOME/.docksal/docksal.env) is passed automatically.
+	# These are SECRET_ and some other variables passed by default.
+	echo "SECRET_SSH_PRIVATE_KEY=xyz" >> $HOME/.docksal/docksal.env
+	run fin rc -T "echo \$SECRET_SSH_PRIVATE_KEY"
+	[[ "$output" == "xyz" ]]
+	unset output
+
+	# Check to make sure a global default variable can be overridden
+	run fin rc -T -e SECRET_SSH_PRIVATE_KEY="abc" "echo \$SECRET_SSH_PRIVATE_KEY"
+	[[ "$output" == "abc" ]]
+	unset output
+
+	# check to make sure a global (non-default) variable can be passed if included in command
+	echo "TEST=1234" >> $HOME/.docksal/docksal.env
+	run fin rc -T -e TEST "echo \$TEST"
+	[[ "$output" == "1234" ]]
+	unset output
+
+	# Check persistent volume
+	fin rc touch /home/docker/test
+	run fin rc -T ls /home/docker/test
+	[[ "$output" == "/home/docker/test" ]]
+	unset output
+
+	# Check one-off volume --clean
+	fin rc touch /home/docker/test
+	run fin rc --clean -T ls /home/docker/test
+	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
+	unset output
+
+	# Check --cleanup persistent volume
+	fin rc touch /home/docker/test
+	run fin rc --cleanup -T ls /home/docker/test
+	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
 	unset output
 }
 

@@ -6,7 +6,7 @@ Docksal is a tool for defining and managing development environments. It uses Do
 along with VirtualBox to support macOS and Windows. Its main feature is the inclusion of a command-line tool called `fin` that 
 simplifies the management of all components.
 
-Docksal comes preloaded with common development tools, e.g. Composer, PHP Code Sniffer, php-cli, node, npm, ruby, bundler, and python.
+Docksal comes preloaded with common development tools, e.g., Composer, PHP Code Sniffer, php-cli, node, npm, ruby, bundler, and python.
 For Drupal and WordPress development it comes with drush, Drupal Console, and WP-CLI. 
 
 There is built-in support for Apache Solr, Varnish, Memcache, Selenium, and Behat. And since services are containerized with Docker, 

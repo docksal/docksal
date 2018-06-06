@@ -81,7 +81,7 @@ You are done with the one time environment installation. Now you can [configure 
 
 By default Apache listens on `0.0.0.0:80` and `0.0.0.0:443`. This will prevent Docksal from running properly.
 
-You either need to stop Apache or reconfigure it to listen on different ports (e.g. `8080` and `4433`) or different host (e.g. `127.0.0.1:80` and `127.0.0.1:443`).
+You either need to stop Apache or reconfigure it to listen on different ports (e.g., `8080` and `4433`) or different host (e.g., `127.0.0.1:80` and `127.0.0.1:443`).
 
 ### 2. Install Docksal
 

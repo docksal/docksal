@@ -1,6 +1,6 @@
 # Using Xdebug debugger
 
-Xdebug can be used to debug both web requests as well as cli scripts (e.g. Drush commands).
+Xdebug can be used to debug both web requests as well as cli scripts (e.g., Drush commands).
 
 ## Setup
 
@@ -110,3 +110,14 @@ For example you can run drush command: `fin drush fra -y` and debug this drush c
 
 5) Set a breakpoint wherever you like  
 6) In NetBeans, with the whole project selected or one of the project files opened and active, press `<CTRL> + <F5>` on your keyboard to start the debugger.
+
+## Debugging with Atom
+
+1. Follow the Setup instructions to enable Xdebug in cli.
+2. Install [PHP-Debug Plugin](https://atom.io/packages/php-debug)
+3. Configure PHP Debug Settings (Preferences > Packages)
+    - Search for `php-debug`
+    - Click `Settings` button below plugin
+    - `Server` can be set to `*`
+    - `Server Listen Port` should be set to `9000`
+    - Make sure `Continue to listen for debug sessions even if the debugger windows are all closed` is checked. This will make the debugger window open automatically.

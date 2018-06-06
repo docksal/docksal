@@ -77,7 +77,7 @@ Drupal 8 project and composer.
 1. If the VM keeps running out of memory or you are getting weird issue with the `db` (or other) services failing, then
 try stopping all active projects (`fin stop --all`) and only start the one you need.
 
-2. Alternatively give the VM more RAM (e.g. 4096 MB). This may only be necessary when running several very heavy
+2. Alternatively give the VM more RAM (e.g., 4096 MB). This may only be necessary when running several very heavy
 stacks/projects at the same time.
 
 ```bash
@@ -122,8 +122,8 @@ This prevents Docksal from running properly.
 ### How to resolve
 
 1. Stop Apache or
-2. Reconfigure Apache to listen on different ports (e.g. `8080` and `4433`) or
-different/specific IPs (e.g. `127.0.0.1:80` and `127.0.0.1:443`).
+2. Reconfigure Apache to listen on different ports (e.g., `8080` and `4433`) or
+different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`).
 
 
 <a name="issue-06"></a>
@@ -261,3 +261,18 @@ In certain cases you may have to reboot your Mac and then reinstall VirtualBox m
 
 [This video](https://www.youtube.com/watch?v=0vmQOYRCdZM) covers the manual steps necessary to install VirtualBox 
 successfully. More details [here](https://github.com/docksal/docksal/issues/417).
+
+## Issue 13. Docker unauthorized
+
+```text
+docker: Error response from daemon: Get https://registry-1.docker.io/v2/docksal/ssh-agent/manifests/1.0: 
+unauthorized: incorrect username or password.
+See 'docker run --help'.
+```
+
+This means that you have docker credentials stored in docker config file, and those credentials are incorrect.
+
+### How to resolve
+
+See [docker login documentation](https://docs.docker.com/engine/reference/commandline/login/#logging-out) and
+to use docker client to either log out or relogin.

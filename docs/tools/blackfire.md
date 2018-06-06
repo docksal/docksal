@@ -4,80 +4,54 @@
 
 Register with [blackfire.io](https://blackfire.io/signup).
 
-**Option 1**
-
-With this option the API keys are stored on the host and never exposed in the code.
+Open [Blackfire Account Credentials](https://blackfire.io/my/settings/credentials) to find your API keys.
 
 ---
 
-Use [Blackfire Docker instructions](https://blackfire.io/docs/integrations/docker) to get a `~/.bashrc` snippet. 
-This will set the API keys globally.
+**Option 1**
 
-Add the `blackfire` service to `.docksal/docksal.yml` under `services`:
+With this option, the API keys are stored on your host and not exposed in the project's codebase.
 
-```yaml
-blackfire:
-  image: blackfire/blackfire
-  environment:
-    # Uses host's BLACKFIRE_SERVER_ID and BLACKFIRE_SERVER_TOKEN environment variables.
-    - BLACKFIRE_SERVER_ID
-    - BLACKFIRE_SERVER_TOKEN
-    # Log verbosity level (4: debug, 3: info, 2: warning, 1: error).
-    #- BLACKFIRE_LOG_LEVEL=4
+```bash
+fin config set --global BLACKFIRE_CLIENT_ID=<blackfire-client-id>
+fin config set --global BLACKFIRE_CLIENT_TOKEN=<blackfire-client-token>
+fin config set --global BLACKFIRE_SERVER_ID=<blackfire-server-id>
+fin config set --global BLACKFIRE_SERVER_TOKEN=<blackfire-server-token>
 ```
 
-If you also want to be able to debug PHP cli tools, update `cli` service as follows:
-
-```yaml
-cli:
-  ...
-  environment:
-    ...
-    # Exposes host's BLACKFIRE_CLIENT_ID and BLACKFIRE_CLIENT_TOKEN environment variables.
-    - BLACKFIRE_CLIENT_ID
-    - BLACKFIRE_CLIENT_TOKEN
-    ...
-```
+Note: The values will be stored in `$HOME/.docksal/docksal.env` on your host.
 
 ---
 
 **Option 2**
 
-With this option the API keys are backed into the project configuration. 
+With this option, the API keys are stored in the project's codebase. 
+
+```bash
+fin config set BLACKFIRE_CLIENT_ID=<blackfire-client-id>
+fin config set BLACKFIRE_CLIENT_TOKEN=<blackfire-client-token>
+fin config set BLACKFIRE_SERVER_ID=<blackfire-server-id>
+fin config set BLACKFIRE_SERVER_TOKEN=<blackfire-server-token>
+```
+
+Note: The values will be stored in `.docksal/docksal.env` in the project's codebase.
 
 ---
 
-Add the `blackfire` service to `.docksal/docksal.yml` under `services`:
+Add the `blackfire` service under the `services` section in `.docksal/docksal.yml`:
 
 ```yaml
-blackfire:
-  image: blackfire/blackfire
-  environment:
-    # Use global environment credentials.
-    - BLACKFIRE_SERVER_ID=<Server ID>
-    - BLACKFIRE_SERVER_TOKEN=<Server Token>
-    # Log verbosity level (4: debug, 3: info, 2: warning, 1: error).
-    #- BLACKFIRE_LOG_LEVEL=4
+services:
+...
+  # Blackfire
+  blackfire:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: blackfire
+...
 ```
 
-If you also want to be able to debug PHP cli tools, update `cli` service as follows:
-
-```yaml
-cli:
-  ...
-  environment:
-    ...
-    # Exposes host's BLACKFIRE_CLIENT_ID and BLACKFIRE_CLIENT_TOKEN environment variables.
-    - BLACKFIRE_CLIENT_ID=<Client ID>
-    - BLACKFIRE_CLIENT_TOKEN=<Client Token>
-    ...
-```
-
-Replace `<Server ID>`, `<Server Token>` (`<Client ID>`, `<Client Token>`) with the API keys from your blackfire.io [profile page](https://blackfire.io/account).
-
----
-
-Apply the new configuration with `fin project start` (`fin p start`).
+Apply new configuration with `fin project start` (`fin p start`).
 
 
 ## Usage
@@ -111,4 +85,4 @@ Network         n/a     n/a     n/a
 SQL             n/a     n/a
 ```
  
-For additional information and examples see Blackfire's official documentation: [Profiling CLI Commands](https://blackfire.io/docs/cookbooks/profiling-cli)
+For additional information and examples see Blackfire's official documentation: [Profiling CLI Commands](https://blackfire.io/docs/cookbooks/profiling-cli).
