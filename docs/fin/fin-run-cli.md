@@ -11,7 +11,7 @@ This also eliminates the need of having any of the console tools installed local
 
 ### Run a script in a disposable environment
 
-You can run any scrips (PHP, Python, Ruby, Nodejs, Bash, etc.) in a safe, disposable environment:
+You can run any scripts (PHP, Python, Ruby, Nodejs, Bash, etc.) in a safe, disposable environment:
 
 ```bash
 fin run-cli <script-file-name>
@@ -42,7 +42,7 @@ fin project start
 
 Generally, anything you do inside of a `fun run-cli` environment is gone once the container is stopped.
 You can install new packages, run scripts, break things, etc., without the risk of damaging your host system.
-The next time you do `fin run-cli`, the `run-cli` environment is started fresh and clean
+The next time you do `fin run-cli`, the `run-cli` environment is started fresh and clean.
 
 The only exceptions are:
 
@@ -59,7 +59,7 @@ fin run-cli --clean
 
 Note: this does not drop the shared `$HOME` volume used for regular `fun run-cli` executions.
 
-You can wipe the shared `$HOME` volume with
+You can wipe the shared `$HOME` volume with:
 
 ```bash
 fin run-cli --cleanup
