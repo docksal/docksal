@@ -2,7 +2,7 @@
 
 # Generates $OUTFILE as a result
 
-OUTFILE="fin.help.md"
+OUTFILE="../docs/fin/fin-help.md"
 
 # Tell fin to remove colors
 export TERM="dumb"
@@ -27,49 +27,49 @@ helpgen ()
 
 echo "Generating help..."
 echo "Output: $(pwd)/$OUTFILE"
-headergen "Fin"
+headergen "fin"
 helpgen
 
 echo " - project"
-headergen "Project"
+headergen "project"
 helpgen project
 
 echo " - db"
-headergen "Database"
+headergen "db"
 helpgen db
 
 echo " - system"
-headergen "System"
+headergen "system"
 helpgen system
 
 echo " - config"
-headergen "Config"
+headergen "config"
 helpgen config
 
 echo " - addon"
-headergen "Addons"
-helpgen config
+headergen "addon"
+helpgen addon
 
 echo " - run-cli"
-headergen "Run-cli"
+headergen "run-cli"
 helpgen run-cli
 
 echo " - hosts"
-headergen "Hosts"
+headergen "hosts"
 helpgen hosts
 
 echo " - alias"
-headergen "Alias"
+headergen "alias"
 helpgen alias
 
 echo " - ssh-add"
-headergen "Ssh-Add"
+headergen "ssh-Add"
 helpgen ssh-add
 
 echo " - logs"
-headergen "Logs"
+headergen "logs"
 helpgen logs
 
 echo " - image"
-headergen "Image"
+headergen "image"
 helpgen image
