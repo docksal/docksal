@@ -24,6 +24,7 @@ pages:
   - Docksal Fin:
     - fin: fin/fin.md
     - fin help: fin/fin-help.md
+    - fin run-cli: fin/fin-run-cli.md
     - Custom commands: fin/custom-commands.md
     - Addons: fin/addons.md
     - Folder aliases: fin/aliases.md
