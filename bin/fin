@@ -1377,9 +1377,9 @@ show_help_project() {
 	echo
 	printh "status" "List project services (alias: fin ps)"
 	printh "restart" "Restart project services (alias: fin restart)"
-	printh "reset [service]" "Recreate all or specified project services and containers without deleting named volumes"
+	printh "reset [service]" "Recreate all or specified project services, their containers and named volumes"
 	printh "" "Changes to home directory in \`cli\` are preserved."
-	printh "remove [option] [service]" "Remove all project services, networks and their volumes, or specified services only"
+	printh "remove [option] [service]" "Remove all project services, networks and all their volumes, or specified services only"
 	printh "    rm [option] [service]" ""
 	printh "  --force (-f)" "Do not ask for confirmation when deleting all project services"
 	echo
