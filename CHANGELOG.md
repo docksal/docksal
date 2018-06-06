@@ -64,12 +64,11 @@
 
 # Documentation
 
-- New: [fin run-cli](https://docs.docksal.io/en/v1.9.0/fin/run-cli) command docs.
 - New: [Addons](https://docs.docksal.io/en/v1.9.0/fin/addons) - extending projects with extra commands and integrations.
 - New: [phpMyAdmin](https://docs.docksal.io/en/v1.9.0/tools/phpmyadmin) integration docs.
 - New: [Redis](https://docs.docksal.io/en/v1.9.0/tools/redis) integration docs.
 - New: [fin help](https://docs.docksal.io/en/v1.9.0/fin/fin-help) - content from all `fin help` topics.
-- New: [fin run-cli](https://docs.docksal.io/en/v1.9.0/fin/fin-run-cli) - content from all `fin help` topics.
+- New: [fin run-cli](https://docs.docksal.io/en/v1.9.0/fin/fin-run-cli) command docs.
 - Updated [Using native Docker applications](https://docs.docksal.io/en/v1.9.0/getting-started/env-setup-native) docs to use the new `fin config set` command.
 - Updated [SSH agent](https://docs.docksal.io/en/v1.9.0/advanced/ssh-agent) with a section on how to automatically local non-default keys.
 - Updated [Custom commands](https://docs.docksal.io/en/v1.9.0/fin/custom-commands) with a section on grouping custom commands.
