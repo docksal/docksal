@@ -18,7 +18,7 @@
   - You can now try and play with Docksal online, free of charge, and within minutes!
 - **Experimental**: Cloud9 IDE integration
   - Cloud9 provides an in-browser IDE and terminal for your project and stack.
-  - Run `fin config set IDE_ENABLED=1 && fin project start` in your project folder to enable Cloud9 IDE.
+  - Run `fin config set IDE_ENABLED=1 && fin project reset cli` in your project folder to enable Cloud9 IDE.
   - Open `http://ide.<VIRTUAL_HOST>` 
 - `fin config [get|set|remove]`
   - New commands to manage project level (`.docksal/docksal.env`) and global (`$HOME/docksal/docksal.env`) Docksal variables.
