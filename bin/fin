@@ -5144,7 +5144,7 @@ config_set ()
 			sed -i.bak "s/^$key\=.*$/$key=\"$replaceEscaped\"/g" "$target_env_file"
 			# Remove backup
 			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
-			echo "Replaced value for $key into $target_env_file"
+			echo "Replaced value for $key in $target_env_file"
 		else
 			# Make sure the is a new line at the end of the config file
 			sed -i~ '$ a\' "$CONFIG_ENV"
