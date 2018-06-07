@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.60.2
+FIN_VERSION=1.61.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -1564,6 +1564,7 @@ show_help_db ()
 	printh "cli [query]" "Open command line interface to the DB server (and execute query if provided)."
 	printh "create <name>" "Create a database."
 	printh "drop <name>" "Delete a database."
+	printh "truncate [name]" "Truncate a database (defaults to the \`default\`)"
 
 	echo
 	echo "Options:"
@@ -4485,6 +4486,49 @@ mysql_db_drop ()
 	echo "Database '${__db}' dropped"
 }
 
+# Truncate db
+# @params
+# $1 - database name
+# --db-user="admin" to override mysql username
+# --db-password="otherpass" to override mysql password
+mysql_db_truncate ()
+{
+	check_project_environment
+	eval $(parse_params "$@")
+
+	# Bring in MYSQL env variables from the db container, so that we can use them here
+	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
+	eval ${container_mysql_vars}
+
+	local __dump_user="${dbuser:-root}"
+	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
+	local __database="${1:-${MYSQL_DATABASE:-default}}"
+
+	echo -e "Truncating ${yellow}${__database}${NC} database..."
+	read -r -d '' DBCREATE_COMMAND <<-EOF
+		SELECT
+			DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
+			INTO
+				@_charset, @_collation FROM information_schema.schemata
+			WHERE
+				schema_name = '${__database}';
+		SET @CREATE_TEMPLATE = 'CREATE DATABASE \\\`{DBNAME}\\\` CHARACTER SET {DBCHARSET} COLLATE {DBCOLLATION};';
+		SET @SQL_SCRIPT = REPLACE(@CREATE_TEMPLATE, '{DBNAME}', '${__database}');
+		SET @SQL_SCRIPT = REPLACE(@SQL_SCRIPT, '{DBCHARSET}', @_charset);
+		SET @SQL_SCRIPT = REPLACE(@SQL_SCRIPT, '{DBCOLLATION}', @_collation);
+		PREPARE DBCREATE FROM @SQL_SCRIPT;
+		DROP DATABASE \\\`${__database}\\\`;
+		EXECUTE DBCREATE;
+	EOF
+	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
+		_exec "echo -e \"$DBCREATE_COMMAND\"| mysql -u${__dump_user} -p${__dump_password} ${__database} "
+
+	if [[ ! $? -eq 0 ]] && (exit ${confirm}); then
+		_confirm "There were errors during truncation. Continue anyways?"
+	fi
+}
+
 # Truncate db and import from sql dump
 # @params
 # $1 - file name
@@ -6008,6 +6052,10 @@ case "$1" in
 			drop)
 				shift
 				mysql_db_drop "$@"
+				;;
+			truncate)
+				shift
+				mysql_db_truncate "$@"
 				;;
 			*)
 				show_help_db
