@@ -70,4 +70,4 @@ The following is listed on the [wodby/redis](https://github.com/wodby/redis) ima
 ## Extending the Stock Image
 
 Redis can also be configured by extending the stock image within a Dockerfile. For more
-information consult the [Extending stock Docksal Images](../advanced/extend-images.md)
+information consult the [Extending stock Docksal Images](../advanced/extend-images.md) documentation.
