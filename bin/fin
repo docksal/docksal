@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.60.0
+FIN_VERSION=1.60.2
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -1015,9 +1015,10 @@ cleanup ()
 	docker image prune -f 2>/dev/null
 	echo-green "Removing dangling volumes..."
 	docker volume prune -f 2>/dev/null
-	echo-green "Removing dangling networks..."
-	install_proxy_service  # Reset project to disconnect it from abandoned networks
-	docker network prune -f 2>/dev/null
+	# TODO: this is temporary disabled as it causes issues. See https://github.com/docksal/docksal/issues/582
+#	echo-green "Removing dangling networks..."
+#	install_proxy_service  # Reset vhost-proxy to disconnect it from abandoned networks
+#	docker network prune -f 2>/dev/null
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -1377,9 +1378,9 @@ show_help_project() {
 	echo
 	printh "status" "List project services (alias: fin ps)"
 	printh "restart" "Restart project services (alias: fin restart)"
-	printh "reset [service]" "Recreate all or specified project services and containers without deleting named volumes"
+	printh "reset [service]" "Recreate all or specified project services, their containers and named volumes"
 	printh "" "Changes to home directory in \`cli\` are preserved."
-	printh "remove [option] [service]" "Remove all project services, networks and their volumes, or specified services only"
+	printh "remove [option] [service]" "Remove all project services, networks and all their volumes, or specified services only"
 	printh "    rm [option] [service]" ""
 	printh "  --force (-f)" "Do not ask for confirmation when deleting all project services"
 	echo
@@ -4395,13 +4396,8 @@ _mysql ()
 	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 	local __database="${db:-$MYSQL_DATABASE}"
 
-	local _query=""
-	for _arg in "${ARGV[@]}"; do
-		_query="$_query $_arg"
-	done
-
-	if [[ "$_query" != "" ]]; then
-		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${_query}"
+	if [[ "${ARGV[*]}" != "" ]]; then
+		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${ARGV[*]}"
 	else
 		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password}
 	fi
@@ -4456,7 +4452,7 @@ mysql_db_create ()
 		"CREATE DATABASE IF NOT EXISTS \`${__db}\` CHARACTER SET ${__db_charset} COLLATE ${__db_collation};") &&
 		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
 		(_mysql --db="${__db}" --db-user="${__dump_user}" --db-password="${__dump_password}" \
-		"GRANT ALL PRIVILEGES ON \`${__db}.*\` TO \`${MYSQL_USER}\`; FLUSH PRIVILEGES;")
+		"GRANT ALL PRIVILEGES ON \`${__db}\`.* TO \`${MYSQL_USER}\`;")
 
 	if_failed_error "Database '${__db}' creation failed"
 
@@ -5144,7 +5140,7 @@ config_set ()
 			sed -i.bak "s/^$key\=.*$/$key=\"$replaceEscaped\"/g" "$target_env_file"
 			# Remove backup
 			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
-			echo "Replaced value for $key into $target_env_file"
+			echo "Replaced value for $key in $target_env_file"
 		else
 			# Make sure the is a new line at the end of the config file
 			sed -i~ '$ a\' "$CONFIG_ENV"

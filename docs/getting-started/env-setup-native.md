@@ -38,7 +38,7 @@ Follow instructions in this section if you've been previously using Docksal with
 
 ```bash
 fin vm stop
-fin config set --global DOCKSAL_NATIVE=1
+fin config set --global DOCKER_NATIVE=1
 fin system reset
 ```
 
@@ -75,7 +75,7 @@ support and cannot run 64bit VMs because of that.
 **2.** Disable the "native" apps mode, reset networks settings, start Docksal VM and reset Docksal system services
 
 ```bash
-fin config set --global DOCKSAL_NATIVE=0
+fin config set --global DOCKER_NATIVE=0
 fin system reset network
 fin vm start
 fin system reset

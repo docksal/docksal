@@ -1,5 +1,19 @@
 # Changelog
 
+# 1.9.1 (2018-06-07)
+
+# Changes and improvements
+
+- Fixed an error with setting DB privileges during `fin db create`
+- Disabled network cleanup in `fin cleanup` (triggered during updates) (#582)
+  - Check [this fix](https://github.com/docksal/docksal/issues/582#issuecomment-395537109) if you updated to Docksal 1.9.0 and had your stopped project(s) broken
+
+# Documentation
+
+- Updated 1.9.0 release notes to mention a breaking change in docker-compose 1.21.1
+- Fixed typos here and there
+
+
 # 1.9.0 (2018-06-05)
 
 # New software versions
@@ -9,6 +23,7 @@
   * Switched `cli` to [docksal/cli:2.2-php-7.1](https://github.com/docksal/service-cli/releases/tag/v2.2.0).
 - Docker 18.03.1
 - Docker Compose 1.21.1
+    * **[BREAKING]** Projects with dashes in names need `fin reset` ([Read more](https://blog.docksal.io/breaking-change-in-docker-compose-1-21-1-c00fda7e1b75))
 - VirtualBox 5.2.2
 
 # New Features
@@ -18,7 +33,7 @@
   - You can now try and play with Docksal online, free of charge, and within minutes!
 - **Experimental**: Cloud9 IDE integration
   - Cloud9 provides an in-browser IDE and terminal for your project and stack.
-  - Run `fin config set IDE_ENABLED=1 && fin project start` in your project folder to enable Cloud9 IDE.
+  - Run `fin config set IDE_ENABLED=1 && fin project reset cli` in your project folder to enable Cloud9 IDE.
   - Open `http://ide.<VIRTUAL_HOST>` 
 - `fin config [get|set|remove]`
   - New commands to manage project level (`.docksal/docksal.env`) and global (`$HOME/docksal/docksal.env`) Docksal variables.
@@ -30,7 +45,7 @@
 
 # Changes and improvements
 
-- Improved `fin share` to allow for custom ngrok configuration.
+- Improved `fin share` to allow for custom ngrok configuration (see [Additional ngrok configuration](https://docs.docksal.io/en/master/tools/ngrok/#additional-ngrok-configuration)).
 - Extended `fin config generate` to allow for `DOCKSAL_STACK` and `DOCROOT` to be set at runtime.
   - See `fin help config` for details.
 - `fin run-cli`:
@@ -43,24 +58,23 @@
   - **[BREAKING]** Persistent `$HOME` directory in the `run-cli` container by default.
   - **[BREAKING]** Image and debug are now options (`--image=...`, `--debug`) 
 - Reworked `fin project create` command screen to separate out different frameworks and languages.
-- Refactored `fin ssh-add` command to allow for non-standard ssh keys to be add automatically.
+- Refactored `fin ssh-add` command to allow for non-standard ssh keys to be add automatically (see [Automatically add keys](https://docs.docksal.io/en/master/advanced/ssh-agent/#automatically-add-keys)).
 - Refactored OS detection.
 - Fixed `fin help` to reference commands within folders.
 - Refactored container remove function.
 - Refactored unison volumes integration.
   - Forked our own `docksal/unison` image.
   - **[BREAKING]** renamed `bg-sync` to `unison` in `fin` and in `stacks/volumes-unison.yml`. 
-- Fixed `fin stop --all` to stop all containers not just single project.
+- Fixed `fin stop --all` to stop all Docksal projects not all existing Docker containers.
 - Fixed Travis CI to run correctly with external pull requests.
 - Improved testing across functionality.
-- Fixed issue with `fin db create` not failing if database did not exist.
+- Fixed issue with `fin db create` failing if database exists and `fin db drop` failing if database did not exist.
 - Fixed missing host file on WSL.
 - Added `blackfire` service configuration to `services.yml` and updated Blackfire documentation.
 - Refactored network configuration on Ubuntu
   - During `fin system stop` network settings introduced by Docksal will now be reverted.
 - Fixed (workaround) a Docker bug with long commands overlapping on single terminal line (`fin exec` and `fin run-cli`).
-- Add a warning when running as root.
-- Updated automated test.
+- Add a warning when running `fin` as root.
 
 # Documentation
 
@@ -71,7 +85,7 @@
 - New: [fin run-cli](https://docs.docksal.io/en/v1.9.0/fin/fin-run-cli) command docs.
 - Updated [Using native Docker applications](https://docs.docksal.io/en/v1.9.0/getting-started/env-setup-native) docs to use the new `fin config set` command.
 - Updated [SSH agent](https://docs.docksal.io/en/v1.9.0/advanced/ssh-agent) with a section on how to automatically local non-default keys.
-- Updated [Custom commands](https://docs.docksal.io/en/v1.9.0/fin/custom-commands) with a section on grouping custom commands.
+- Updated [Custom commands](https://docs.docksal.io/en/v1.9.0/fin/custom-commands/#grouping-commands) with a section on grouping custom commands.
 - Updated [Setup instructions](https://docs.docksal.io/en/v1.9.0/getting-started/setup) with new boilerplate repos.
 - Updated [Blackfire](https://docs.docksal.io/en/v1.9.0/tools/blackfire) integration instructions.
 - Updated [ngrok](https://docs.docksal.io/en/v1.9.0/tools/ngrok) (`fin share`) integration instructions with the new configuration options.
