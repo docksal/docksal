@@ -1,5 +1,19 @@
 # Changelog
 
+# 1.9.1 (2018-06-07)
+
+# Changes and improvements
+
+- Fixed an error with setting DB privileges during `fin db create`
+- Disabled network cleanup in `fin cleanup` (triggered during updates) (#582)
+  - Check [this fix](https://github.com/docksal/docksal/issues/582#issuecomment-395537109) if you updated to Docksal 1.9.0 and had your stopped project(s) broken
+
+# Documentation
+
+- Updated 1.9.0 release notes to mention a breaking change in docker-compose 1.21.1
+- Fixed typos here and there
+
+
 # 1.9.0 (2018-06-05)
 
 # New software versions
