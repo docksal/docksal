@@ -24,7 +24,7 @@ fin exec bundle install
 ```
 
 There are two folder (`.bundle`, `.bundler`) and a file (`Gemfile.lock`) will be created.
-Please add this directories (`.bundle`/`.bundler`) to `.gitignore`
+Please add these directories (`.bundle`/`.bundler`) to your `.gitignore` file.
 
 ## Compile SASS
 

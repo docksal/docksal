@@ -6,7 +6,7 @@
 
 It's recommended to see how to [extend fin with custom commands](../fin/custom-commands.md) first.
 
-From your project's root folder (where the `.docksal` folder is) download the sample `phpcs` command
+From your project's root folder (where the `.docksal` folder is) download the sample `phpcs` command:
 
 ```bash
 mkdir -p .docksal/commands
