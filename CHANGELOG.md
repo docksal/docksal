@@ -9,7 +9,7 @@
   * Switched `cli` to [docksal/cli:2.2-php-7.1](https://github.com/docksal/service-cli/releases/tag/v2.2.0).
 - Docker 18.03.1
 - Docker Compose 1.21.1
-    * **[BREAKING]** Projects with dashes in names need `fin reset` ([Read more](https://medium.com/docksal/breaking-change-in-docker-compose-1-2-1-6e6fd4640d6f))
+    * **[BREAKING]** Projects with dashes in names need `fin reset` ([Read more](https://blog.docksal.io/breaking-change-in-docker-compose-1-21-1-c00fda7e1b75))
 - VirtualBox 5.2.2
 
 # New Features
