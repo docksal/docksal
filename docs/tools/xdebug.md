@@ -88,8 +88,7 @@ Note: If `PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}` is set before web request d
 (1) Set **Name** and **Hostname** to project's virtual host (`VIRTUAL_HOST`)  
 (2) Map the project root to `/var/www`. Additionally map the project level Drush binary to `/usr/local/bin/drush`.
 
-You can run your scripts in console and debug them in the same way as browser requests.  
-For example you can run drush command: `fin drush fra -y` and debug this drush command from the Features module.
+You can run your scripts in console and debug them in the same way as browser requests. For example, you can run drush command: `fin drush fra -y` and debug this drush command from the Features module.
 
 ### Resources
 
