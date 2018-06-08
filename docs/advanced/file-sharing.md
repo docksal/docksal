@@ -18,7 +18,7 @@ On macOS `/Users` is configured as an NFS export by default and mounted into `/U
 be accessed by the Docksal VM and the host itself.
 
 When you have other software, like Vagrant, defining NFS exports, there may be conflicts, as NFS exports cannot overlap. 
-In such cases the default NFS export can be overridden via the `DOCKSAL_NFS_PATH` variable in `$HOME/.docksal/docksal.env`.
+In such cases the default NFS export can be overridden via the `DOCKSAL_NFS_PATH` variable in `$HOME/.docksal/docksal.env`. It is also necessary to set this variable if your user directory resides in a location other than `/Users`, e.g., on a separate hard drive.
 
 When the VM is started fin will detect NFS export conflicts and suggest an automatic fix.
 
