@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.61.0
+FIN_VERSION=1.61.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -5008,6 +5008,7 @@ load_configuration ()
 				exit 1
 			fi
 		fi
+		export DOCKSAL_VOLUMES
 
 		# Enable osxfs:cached for cli on Docker for Mac
 		overrides_osxfs_file="$(get_config_dir_dc)/stacks/overrides-osxfs.yml"
