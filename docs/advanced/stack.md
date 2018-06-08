@@ -51,7 +51,7 @@ The [cli](https://github.com/docksal/service-cli) service runs `php-fpm` (used b
 a Linux console with all necessary command line tools installed and pre-configured 
 (e.g., drush, drupal console, wp-cli, phpcs, behat, mysql client, and many more).
 
-The console can be access from the host machine via `fin bash`. Individual tools/binaries can be executed via `fin exec`.
+The console can be accessed from the host machine via `fin bash`. Individual tools/binaries can be executed via `fin exec`.
 
 <a name="project-customization"></a>
 ## Customizing project configurations
