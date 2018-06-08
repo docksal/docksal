@@ -56,7 +56,7 @@ Make sure you have the server and directory mapping already configured following
 
 Keep in mind, that the script you are trying to debug must reside within the project folder or PHPStorm won't be 
 able to access its code (and thus debug it). Specifically, this means that you can only debug Drush and Drupal
-Console instances local to the project (installed with Composer into as project level dependencies).
+Console instances local to the project (installed with Composer as project level dependencies).
 
 1) Create `.docksal/docksal-local.yml` file (or update an existing one) in your project with the following:
 
