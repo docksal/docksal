@@ -150,7 +150,7 @@ The downsides:
 
 ### Using Unison volumes
 
-- Follow instructions [here](http://docs.docksal.io/en/master/getting-started/env-setup-native/) to properly 
+- [Follow instructions](http://docs.docksal.io/en/master/getting-started/env-setup-native/) to properly 
 configure Docksal for use with Docker for Mac. Make sure you have the most recent fin version installed.
 - Add `DOCKSAL_VOLUMES=unison` in `.docksal/docksal.env` in a project
 - `fin project reset`
