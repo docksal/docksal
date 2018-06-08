@@ -113,11 +113,12 @@ For example you can run drush command: `fin drush fra -y` and debug this drush c
 
 ## Debugging with Atom
 
-1. Follow the Setup instructions to enable Xdebug in cli.
-2. Install [PHP-Debug Plugin](https://atom.io/packages/php-debug)
-3. Configure PHP Debug Settings (Preferences > Packages)
-    - Search for `php-debug`
-    - Click `Settings` button below plugin
-    - `Server` can be set to `*`
-    - `Server Listen Port` should be set to `9000`
-    - Make sure `Continue to listen for debug sessions even if the debugger windows are all closed` is checked. This will make the debugger window open automatically.
+1) Follow the Setup instructions to enable Xdebug in cli
+2) Install [PHP-Debug Plugin](https://atom.io/packages/php-debug)
+3) Configure PHP Debug Settings (Preferences > Packages)
+
+- Search for "php-debug"
+- Click "Settings" button below plugin
+- "Server" can be set to `*`
+- "Server Listen Port" should be set to 9000
+- Make sure "Continue to listen for debug sessions even if the debugger windows are all closed" is checked. This will make the debugger window open automatically.
