@@ -21,9 +21,9 @@ The latter is the recommended way of extending Docksal images and is covered bel
 - Create a `Dockerfile` in `.docksal/services/<service-name>/Dockerfile`
 - If you have additional local files (e.g., configs) used during the build, put them in the same folder
 - Use an official Docksal image as a starting point in `FROM`
-- Add customizations (read official Docker docs on [working with Dockerfiles](https://docs.docker.com/engine/reference/builder/) and [best practices](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/) )
+- Add customizations (read official Docker docs on [working with Dockerfiles](https://docs.docker.com/engine/reference/builder/) and [best practices](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/))
 
-Below is an example of extending the `cli` image with additional configs, apt and npm packages:
+Below is an example of extending the `cli` image with additional configs, apt, and npm packages:
 
 `.docksal/services/cli/Dockerfile`
 
@@ -107,7 +107,7 @@ The built image will be stored locally and used as the service image from there 
 Additionally, `fin build` command is a proxy command to [docker-compose build](https://docs.docker.com/compose/reference/build/) 
 and can be used for more advanced building scenarios. 
 
-Note: it might seems like image is being rebuilt every time project starts, but it really isn't.
+Note: it might seems like the image is being rebuilt every time project starts, but it really isn't.
 
 There is no way for Docksal to know if your built image is the latest. Even if we checked for `Dockerfile` 
 changes that would not be enough, because `Dockerfile` can use some other files that can change. Therefore 

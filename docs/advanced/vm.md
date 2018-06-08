@@ -21,7 +21,7 @@ Use `fin stop --all` to stop all projects, then `fin project start` to restart t
 
 ### With losing current containers and their data
 
-Involves removing current VM. Your files will not be deleted but databases will need to be re-imported, containers' images will be re-downloaded.
+Involves removing current VM. Your files will not be deleted, but databases will need to be re-imported, containers' images will be re-downloaded.
 
 1. `fin vm remove`
 2. `VBOX_HDD=80000 fin vm start`

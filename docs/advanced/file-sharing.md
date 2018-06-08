@@ -7,7 +7,7 @@ See [Mount a host directory as a data volume](https://docs.docker.com/engine/tut
 in the official Docker docs for a better understanding of how this works.
 
 Docksal uses the bind-mount approach as well. From the perspective of a container a local Linux path 
-is mounted regardless of the host OS. That's because on macOS and Windows there's always a Linux VM and inside of the VM 
+is mounted regardless of the host OS. That's because on macOS and Windows there's always a Linux VM and inside of the VM, 
 the host's (macOS/Win) filesystem is mounted.
 
 On macOS the host filesystem is mounted using NFS, on Windows - using SMB.
@@ -26,4 +26,4 @@ We recommend using `DOCKSAL_NFS_PATH=~/Projects`.
 
 ## Windows
 
-On Windows Docksal sets up shares for all logical drives. These shares can be only accessed by the current Windows user.
+On Windows, Docksal sets up shares for all logical drives. These shares can be only accessed by the current Windows user.

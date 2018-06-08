@@ -6,11 +6,11 @@ This page explains how Docksal works under the hood.
 ## System services
 
 When you run `fin update` for the first time, Docksal installs several system containers.  
-To see the list, run `fin docker ps --filter "label=io.docksal.group=system"`
+To see the list, run `fin docker ps --filter "label=io.docksal.group=system"`.
 
 ### SSH agent
 
-[docksal-ssh-agent](https://github.com/docksal/service-ssh-agent) service stores SSH keys and makes them available 
+The [docksal-ssh-agent](https://github.com/docksal/service-ssh-agent) service stores SSH keys and makes them available 
 to other projects and containers.
 
 SSH agent can handle passphrase protected ssh keys, so you don't have to enter the passphrase every time the key is used. 
@@ -35,7 +35,7 @@ This allows for a seamless work with multiple project stacks at the same time.
 <a name="docksal-project-services"></a>
 ## Project services
 
-Each project usually consists of at least 3 services: `web`, `db` and `cli`.
+Each project usually consists of at least 3 services: `web`, `db`, and `cli`.
 
 ### web
 
@@ -43,7 +43,7 @@ The [web](https://github.com/docksal/service-web) service runs Apache server 2.2
 
 ### db
 
-The [db](https://github.com/docksal/service-db) service runs MySQL 5.5, 5.6, 5.7 or 8.0
+The [db](https://github.com/docksal/service-db) service runs MySQL 5.5, 5.6, 5.7, or 8.0.
 
 ### cli
 
