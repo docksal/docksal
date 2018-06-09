@@ -83,7 +83,7 @@ Note: If `PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}` is set before web request d
 
 2) Set path mappings for the Drush binary in PHPStorm:
 
-![Screenshot](../_img/xdebug-phpstorm-drush-mapping.png)
+![Screenshot](../_img/xdebug-mapping.png)
 
 (1) Set **Name** and **Hostname** to project's virtual host (`VIRTUAL_HOST`)  
 (2) Map the project root to `/var/www`. Additionally map the project level Drush binary to `/usr/local/bin/drush`.
