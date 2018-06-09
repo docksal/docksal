@@ -57,7 +57,7 @@ solr:
     - ${PROJECT_ROOT}/.docksal/etc/solr/conf:/var/lib/solr/conf:ro
 ```
 
-Apply configuration changes with `fin project start` (`fin p start`)
+Apply configuration changes with `fin project start` (`fin p start`).
 
 
 ## Versions

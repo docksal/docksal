@@ -14,7 +14,7 @@ netscout_web_1   /opt/startup.sh apache2 -D ...   Up      443/tcp, 80/tcp
 
 The container ports in the right column are exposed to Docker. Follow the steps below to expose any of these ports to the host.
 
-**1.** Create `docksal-local.yml`
+**1.** Create `docksal-local.yml`.
 
 This is recommended for creating local overrides instead of modifying `docksal.yml` directly.
 
@@ -37,7 +37,7 @@ services:
 
 **4.** Now you can see that your port is exposed.
 
-Note `0.0.0.0:2222` is pointing to `22`.
+Note: `0.0.0.0:2222` is pointing to `22`.
 
 ```
 $ fin ps
