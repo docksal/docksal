@@ -217,12 +217,12 @@ services:
 
 	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.bak"
 	# Test command can run with --global
-	run fin config set --global TEST=12345
+	run fin config set --global TEST_VAR=12345
 	[[ $status == 0 ]] &&
-	[[ $output =~ "Added value for TEST into ${HOME}/.docksal/docksal.env" ]]
+	[[ $output =~ "Added value for TEST_VAR into ${HOME}/.docksal/docksal.env" ]]
 	source "${HOME}/.docksal/docksal.env"
 	# Testing what value is
-	[[ "$TEST" == "12345" ]]
+	[[ "$TEST_VAR" == "12345" ]]
 	unset output
 
 	mv "${HOME}/.docksal/docksal.env.bak" "${HOME}/.docksal/docksal.env"
@@ -232,12 +232,12 @@ services:
 	[[ $SKIP == 1 ]] && skip
 
 	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.bak"
-	echo "TEST=1" >> "${HOME}/.docksal/docksal.env"
-	run fin config set --global TEST=54321
-	[[ $status == 0 ]] && [[ "$output" =~ "Replaced value for TEST in ${HOME}/.docksal/docksal.env" ]]
+	echo "TEST_VAR=1" >> "${HOME}/.docksal/docksal.env"
+	run fin config set --global TEST_VAR=54321
+	[[ $status == 0 ]] && [[ "$output" =~ "Replaced value for TEST_VAR in ${HOME}/.docksal/docksal.env" ]]
 
 	source "${HOME}/.docksal/docksal.env"
-	[[ "$TEST" == "54321" ]]
+	[[ "$TEST_VAR" == "54321" ]]
 	unset output
 
 	mv "${HOME}/.docksal/docksal.env.bak" "${HOME}/.docksal/docksal.env"
@@ -248,17 +248,12 @@ services:
 
 	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.bak"
 
-	echo "TEST=123456" >> ${HOME}/.docksal/docksal.env
+	echo "TEST_VAR=123456" >> ${HOME}/.docksal/docksal.env
+	run fin config remove --global TEST_VAR
+	[[ $status == 0 ]] && [[ "$output" =~ "Removing TEST_VAR from ${HOME}/.docksal/docksal.env" ]]
 
 	source "${HOME}/.docksal/docksal.env"
-	[[ "$TEST" == "123456" ]]
-	unset TEST
-
-	run fin config remove --global TEST
-	[[ $status == 0 ]] && [[ "$output" =~ "Removing TEST from ${HOME}/.docksal/docksal.env" ]]
-
-	source "${HOME}/.docksal/docksal.env"
-	[[ -z "$TEST" ]]
+	[[ -z "$TEST_VAR" ]]
 	unset output
 
 	mv "${HOME}/.docksal/docksal.env.bak" "${HOME}/.docksal/docksal.env"
@@ -267,9 +262,9 @@ services:
 @test "fin config remove: global file variable does not exist" {
 	[[ $SKIP == 1 ]] && skip
 
-	run fin config remove --global TEST
+	run fin config remove --global TEST_VAR
 	[[ $status == 0 ]] &&
-	[[ $output =~ "Could not find TEST in ${HOME}/.docksal/docksal.env" ]]
+	[[ $output =~ "Could not find TEST_VAR in ${HOME}/.docksal/docksal.env" ]]
 
 	unset output
 }
