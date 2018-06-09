@@ -20,12 +20,12 @@ Error creating machine: Error in driver during machine creation: read tcp 127.0.
 Remove docksal? [y/n]:
 ```
 
-If you see this error then most likely you had just installed Virtual Box.
-Sometimes Virtual Box fails to initialize it's network interfaces properly.
+If you see this error, most likely you had just installed Virtual Box.
+Sometimes Virtual Box fails to initialize its network interfaces properly.
 
 ### How to resolve
 
-1. Reply yes to remove malfunctioned virtual machine.
+1. Reply `yes` to remove malfunctioned virtual machine.
 2. Reboot your local host and try again.
 
 
@@ -42,8 +42,8 @@ Sometimes docker-machine certificates re-generation fails.
 
 ### How to resolve
 
-1. Perform `fin vm restart`.
-2. If above did not help, then reboot your local host.
+1. Perform `fin vm restart`
+2. If above did not help, then reboot your local host
 3. If above did not help, perform commands below and then reboot your host:
 
 ```bash
@@ -123,7 +123,7 @@ This prevents Docksal from running properly.
 
 1. Stop Apache or
 2. Reconfigure Apache to listen on different ports (e.g., `8080` and `4433`) or
-different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`).
+different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`)
 
 
 <a name="issue-06"></a>
@@ -206,7 +206,7 @@ Check `docksal.yml` and `.htaccess` files for configuration errors, fix them and
 <a name="issue-10"></a>
 ## Issue 10. SMB share creation, share mounting and related issues on Windows
 
-Please see a separate [troubleshooting document on share creation, share mounting and related issues](troubleshooting-smb.md).
+Please see a separate [troubleshooting document on share creation, share mounting, and related issues](troubleshooting-smb.md).
 
 
 <a name="issue-11"></a>
@@ -219,7 +219,7 @@ ERROR 2003 (HY000): Can't connect to MySQL server on 'db' (111)
 There may be many different errors. Check Mysql logs with `fin logs db` for details.
 Here we will just look at the most common case.
 
-If you see error like:
+If you see an error like:
 
 ```
 db_1   | 170614 14:26:54 [Note] Plugin 'FEDERATED' is disabled.
@@ -260,7 +260,7 @@ around third-party kernel extensions.
 In certain cases you may have to reboot your Mac and then reinstall VirtualBox manually.
 
 [This video](https://www.youtube.com/watch?v=0vmQOYRCdZM) covers the manual steps necessary to install VirtualBox 
-successfully. More details [here](https://github.com/docksal/docksal/issues/417).
+successfully. [See detailed issue resolution](https://github.com/docksal/docksal/issues/417).
 
 ## Issue 13. Docker unauthorized
 
