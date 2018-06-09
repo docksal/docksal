@@ -72,8 +72,8 @@ version: '2.1'
 
 services:
   web:
-    environment:
-      - TEST_VAR=test_val"
+	environment:
+	  - TEST_VAR=test_val"
 
 	echo "$yml" > .docksal/docksal.yml
 
@@ -101,9 +101,9 @@ version: '2.1'
 
 services:
   web:
-    image: nginx
-    environment:
-      - TEST_VAR="'${TEST_VAR:-test_val_default}'
+	image: nginx
+	environment:
+	  - TEST_VAR="'${TEST_VAR:-test_val_default}'
 
 	echo "$yml" > .docksal/docksal.yml
 
@@ -143,9 +143,9 @@ version: '2.1'
 
 services:
   web:
-    image: nginx
-    environment:
-      - TEST_VAR_LOCAL="'${TEST_VAR_LOCAL:-test_val_default}'
+	image: nginx
+	environment:
+	  - TEST_VAR_LOCAL="'${TEST_VAR_LOCAL:-test_val_default}'
 
 	echo "$yml" > .docksal/docksal-local.yml
 
@@ -274,7 +274,8 @@ services:
 @test "fin config set: project docksal.env file" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Create .docksal
+	# cleanup
+	rm -rf .docksal
 	mkdir .docksal
 
 	run fin config set TEST=23456
@@ -287,14 +288,15 @@ services:
 	unset output
 
 	# cleanup
-	rm -rf .docksal
 }
 
 @test "fin config replace: project docksal.env file" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Create .docksal
+	# cleanup
+	rm -rf .docksal
 	mkdir .docksal
+
 
 	local project=$(pwd)
 	echo "TEST=1" >> "${project}/.docksal/docksal.env"
@@ -304,16 +306,13 @@ services:
 	source "${project}/.docksal/docksal.env"
 	[[ "$TEST" == "65432" ]]
 	unset output
-
-
-	# cleanup
-	rm -rf .docksal
 }
 
 @test "fin config remove: project docksal.env file" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Create .docksal
+	# cleanup
+	rm -rf .docksal
 	mkdir .docksal
 
 	echo "TEST=126534" >> .docksal/docksal.env
@@ -328,15 +327,13 @@ services:
 	source "${project}/.docksal/docksal.env"
 	[[ -z "$TEST" ]]
 	unset output
-
-	# cleanup
-	rm -rf .docksal
 }
 
 @test "fin config remove: project file variable does not exist" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Create .docksal
+	# cleanup
+	rm -rf .docksal
 	mkdir .docksal
 
 	local project=$(pwd)
@@ -344,9 +341,6 @@ services:
 	[[ $status == 0 ]] &&
 	[[ $output =~ "Could not find TEST in ${project}/.docksal/docksal.env" ]]
 	unset output
-
-	# cleanup
-	rm -rf .docksal
 }
 
 # Project Local
@@ -354,7 +348,8 @@ services:
 @test "fin config set: project docksal-ENV.env file" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Create .docksal
+	# cleanup
+	rm -rf .docksal
 	mkdir .docksal
 
 	run fin config set --env=local TEST=34567
@@ -365,16 +360,14 @@ services:
 	source "${project}/.docksal/docksal-local.env"
 	[[ "$TEST" == "34567" ]]
 	unset output
-
-	# cleanup
-	rm -rf .docksal
 }
 
 
 @test "fin config replace: project docksal-ENV.env file" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Create .docksal
+	# cleanup
+	rm -rf .docksal
 	mkdir .docksal
 
 	local project=$(pwd)
@@ -386,15 +379,13 @@ services:
 	source "${project}/.docksal/docksal-local.env"
 	[[ "$TEST" == "76543" ]]
 	unset output
-
-	# cleanup
-	rm -rf .docksal
 }
 
 @test "fin config remove: project docksal-ENV.env file" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Create .docksal
+	# cleanup
+	rm -rf .docksal
 	mkdir .docksal
 
 	echo "TEST=126534" >> .docksal/docksal-local.env
@@ -410,14 +401,13 @@ services:
 	source "${project}/.docksal/docksal-local.env"
 	[[ -z "$TEST" ]]
 	unset output
-
-	# cleanup
-	rm -rf .docksal
 }
 
 @test "fin config remove: project env file variable does not exist" {
 	[[ $SKIP == 1 ]] && skip
 
+	# cleanup
+	rm -rf .docksal
 	mkdir .docksal
 
 	local project=$(pwd)
@@ -425,7 +415,4 @@ services:
 	[[ $status == 0 ]] &&
 	[[ $output =~ "Could not find TEST in ${project}/.docksal/docksal-local.env" ]]
 	unset output
-
-	# cleanup
-	rm -rf .docksal
 }
