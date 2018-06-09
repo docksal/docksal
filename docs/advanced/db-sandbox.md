@@ -62,6 +62,6 @@ Now the `db` service container is using a persistent storage volume for the data
 
 ## Precaution
 
-With large databases, it is not recommended to snapshot a container, that is already running off of a snapshot image.  
+With large databases, it is not recommended to snapshot a container that is already running off of a snapshot image.  
 Every docker image holds all parent images plus in-memory changes inside it. 
 With every commit the size of the resulting image will increase by the full size of the DB, not just the delta.
