@@ -215,7 +215,7 @@ services:
 @test "fin config set: global file" {
 	[[ $SKIP == 1 ]] && skip
 
-	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.bak"
+	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.orig"
 	# Test command can run with --global
 	run fin config set --global TEST_VAR=12345
 	[[ $status == 0 ]] &&
@@ -225,13 +225,13 @@ services:
 	[[ "$TEST_VAR" == "12345" ]]
 	unset output
 
-	mv "${HOME}/.docksal/docksal.env.bak" "${HOME}/.docksal/docksal.env"
+	mv "${HOME}/.docksal/docksal.env.orig" "${HOME}/.docksal/docksal.env"
 }
 
 @test "fin config replace: global file" {
 	[[ $SKIP == 1 ]] && skip
 
-	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.bak"
+	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.orig"
 	echo "TEST_VAR=1" >> "${HOME}/.docksal/docksal.env"
 	run fin config set --global TEST_VAR=54321
 	[[ $status == 0 ]] && [[ "$output" =~ "Replaced value for TEST_VAR in ${HOME}/.docksal/docksal.env" ]]
@@ -240,13 +240,13 @@ services:
 	[[ "$TEST_VAR" == "54321" ]]
 	unset output
 
-	mv "${HOME}/.docksal/docksal.env.bak" "${HOME}/.docksal/docksal.env"
+	mv "${HOME}/.docksal/docksal.env.orig" "${HOME}/.docksal/docksal.env"
 }
 
 @test "fin config remove: global file" {
 	[[ $SKIP == 1 ]] && skip
 
-	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.bak"
+	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.orig"
 
 	echo "TEST_VAR=123456" >> ${HOME}/.docksal/docksal.env
 	run fin config remove --global TEST_VAR
@@ -256,7 +256,7 @@ services:
 	[[ -z "$TEST_VAR" ]]
 	unset output
 
-	mv "${HOME}/.docksal/docksal.env.bak" "${HOME}/.docksal/docksal.env"
+	mv "${HOME}/.docksal/docksal.env.orig" "${HOME}/.docksal/docksal.env"
 }
 
 @test "fin config remove: global file variable does not exist" {
