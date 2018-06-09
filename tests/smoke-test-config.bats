@@ -297,7 +297,6 @@ services:
 	rm -rf .docksal
 	mkdir .docksal
 
-
 	local project=$(pwd)
 	echo "TEST=1" >> "${project}/.docksal/docksal.env"
 	run fin config set TEST=65432
@@ -316,9 +315,6 @@ services:
 	mkdir .docksal
 
 	echo "TEST=126534" >> .docksal/docksal.env
-	source ".docksal/docksal.env"
-	[[ "$TEST" == "126534" ]]
-	unset TEST
 
 	run fin config remove TEST
 	local project=$(pwd)
@@ -362,7 +358,6 @@ services:
 	unset output
 }
 
-
 @test "fin config replace: project docksal-ENV.env file" {
 	[[ $SKIP == 1 ]] && skip
 
@@ -389,9 +384,6 @@ services:
 	mkdir .docksal
 
 	echo "TEST=126534" >> .docksal/docksal-local.env
-	source ".docksal/docksal.env"
-	[[ "$TEST" == "126534" ]]
-	unset TEST
 
 	run fin config remove --env=local TEST
 	local project=$(pwd)
