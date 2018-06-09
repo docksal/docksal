@@ -97,10 +97,10 @@ You can run your scripts in console and debug them in the same way as browser re
 
 ## Debugging with NetBeans
 
-1) Follow the Setup instructions to enable Xdebug in cli
+1) Follow the Setup instructions to enable Xdebug in cli  
 2) Open NetBeans Debugging configuration ("Tools> Options > PHP > Debugging") and set "DebuggerPort" to 9000  
-3) Open your project in NetBeans
-4) Configure project properties:
+3) Open your project in NetBeans  
+4) Configure project properties:  
 
 - Right mouse click on project name, then "Properties" from the dropdown menu
 - Under "Sources", set correct Web Root folder by clicking "Browse" button (usually it's `docroot`)
@@ -112,8 +112,8 @@ You can run your scripts in console and debug them in the same way as browser re
 
 ## Debugging with Atom
 
-1) Follow the Setup instructions to enable Xdebug in cli
-2) Install [PHP-Debug Plugin](https://atom.io/packages/php-debug)
+1) Follow the Setup instructions to enable Xdebug in cli  
+2) Install [PHP-Debug Plugin](https://atom.io/packages/php-debug)  
 3) Configure PHP Debug Settings (Preferences > Packages)
 
 - Search for "php-debug"
