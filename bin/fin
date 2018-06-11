@@ -2554,8 +2554,8 @@ up ()
 	# See https://github.com/docksal/docksal/issues/265
 	is_mac && find . -type d > /dev/null 2>&1
 
-	# Fix permissions on Play with Docker platform
-	fix_pwd_permissions
+	# Fix project root permissions if necessary
+	set_project_root_permissions
 
 	_start_containers || return 1
 	unison_sync_wait
@@ -2584,8 +2584,8 @@ restart ()
 	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
 
-	# Fix permissions on Play with Docker platform
-	fix_pwd_permissions
+	# Fix project root permissions if necessary
+	set_project_root_permissions
 
 	_restart_containers "$@"
 	unison_sync_wait
@@ -2626,8 +2626,8 @@ reset ()
 	local ret=$?
 	[[ "$ret" != 0 ]] && return ${ret}
 
-	# Fix permissions on Play with Docker platform
-	fix_pwd_permissions
+	# Fix project root permissions if necessary
+	set_project_root_permissions
 
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
@@ -5590,12 +5590,11 @@ unison_sync_wait () {
 	done
 }
 
-# Fix permissions on Play with Docker platform
-fix_pwd_permissions ()
+# Fix permissions when running as root ( e.g. on Play with Docker, Katacoda, etc.)
+set_project_root_permissions ()
 {
-	# PWD does not support non-privileged users,
-	# so we just set permissions on project root to match the default user:group in cli.
-	is_pwd && chown -R 1000:1000 "$PROJECT_ROOT"
+	# Set permissions on project root to match the default user:group in cli.
+	[[ "$(id -u)" != "0" ]] && chown -R 1000:1000 "$PROJECT_ROOT"
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
