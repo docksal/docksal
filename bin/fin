@@ -4742,8 +4742,8 @@ ngrok_share ()
 	  ARGS="$ARGS -region=$NGROK_REGION "
 	fi
 
-	if [[ -n "$NGROK_HEADER" ]]; then
-	  ARGS="$ARGS -host-header=$NGROK_HEADER "
+	if [[ -n "$NGROK_HEADER" ]] || [[ -n "$host" ]]; then
+	  ARGS="$ARGS -host-header=${host:-$NGROK_HEADER} "
 	fi
 
 	if [[ -n "$NGROK_USERNAME" ]] && [[ -n "$NGROK_PASSWORD" ]]; then
