@@ -4,7 +4,7 @@
 [![Docs](https://readthedocs.org/projects/docksal/badge?version=master&style=flat-square)](http://docksal.readthedocs.io/en/master)
 [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
 
-Docker powered environments for web development on macOS, Windows and Linux.
+Docker powered environments for web development on macOS, Windows, and Linux.
 
 Running a complete LAMP stack for your project can be two steps away!<sup>*</sup>
 
@@ -19,7 +19,7 @@ fin init
 
 "I love my Vagrant box. Why would I want to switch to a Docker based solution?"  
 Containers are just [better than VMs](https://github.com/docker/docker#better-than-vms): 
-smaller, faster, portable and more efficient across the board.
+smaller, faster, portable, and more efficient across the board.
 
 <a name="setup"></a>
 <a name="updates"></a>

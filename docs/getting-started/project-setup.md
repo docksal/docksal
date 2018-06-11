@@ -24,7 +24,7 @@ The `.docksal` directory is where all Docksal configurations and commands for th
     Git does not commit empty directories. To commit the `.docksal` directory into your Git repo create an empty `.gitkeep` file inside it ( or some other file of your choosing.)
 
 !!! tip "Document Root"
-    Is your Project Root the same as your Document Root? If so then you can accomplish this by setting the `DOCROOT=.` within the `.docksal/docksal.env`.
+    Is your Project Root the same as your Document Root? If so, you can accomplish this by setting the `DOCROOT=.` within the `.docksal/docksal.env` file.
 
 ## Start containers
 
