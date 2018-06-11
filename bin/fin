@@ -5240,11 +5240,6 @@ config_remove ()
 	# Loop named params array
 	for param in "${ARGV[@]}"
 	do
-		if [[ "${param}" =~ ^- ]]; then
-			shift
-			continue;
-		fi
-
 		if grep -q "^${param}\=" "${target_env_file}"; then
 			# Remove the value if it exists
 			echo "Removing ${param} from $target_env_file"
