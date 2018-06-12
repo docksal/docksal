@@ -5690,8 +5690,11 @@ if ! is_windows; then
 		export HOST_GID=$(id -g)
 	else
 		# Note: php-fpm inside cli will fail to start as uid=0
+		# Don't display this in PWD and Katacoda since users do not control those environments anyway.
 		# TODO: handle this case better
-		echo-alert "Running as root is not recommended"
+		if ! (is_pwd || is_katacoda); then
+			echo-alert "Running as root is not recommended"
+		fi
 	fi
 fi
 
