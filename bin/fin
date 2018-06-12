@@ -4720,10 +4720,10 @@ ngrok_share ()
 	port=${port:-${NGROK_PORT:-80}}
 
 	# Set the protocol.
-	if [[ "$protocol" = "TCP" ]]; then
-	  ARGS="$ARGS tcp"
+	if [[ "$protocol" == "TCP" ]]; then
+		ARGS="$ARGS tcp"
 	else
-	  ARGS="$ARGS http"
+		ARGS="$ARGS http"
 	fi
 
 	NGROK_PORT=${port#tcp://}
@@ -4731,7 +4731,7 @@ ngrok_share ()
 	auth=${auth:-$NGROK_AUTH}
 	# Set the authorization token.
 	if [[ -n "$auth" ]]; then
-	  ARGS="$ARGS -authtoken=${auth} "
+		ARGS="$ARGS -authtoken=${auth} "
 	fi
 
 	hostname=${hostname:-$NGROK_HOSTNAME}
@@ -4747,26 +4747,26 @@ ngrok_share ()
 	region=${region:-$NGROK_REGION}
 	# Set a custom region
 	if [[ -n "$region" ]]; then
-	  ARGS="$ARGS -region=${region} "
+		ARGS="$ARGS -region=${region} "
 	fi
 
 	hostheader=${hostheader:-$NGROK_HEADER}
 	if [[ -n "$hostheader" ]]; then
-	  ARGS="$ARGS -host-header=${hostheader} "
+		ARGS="$ARGS -host-header=${hostheader} "
 	fi
 
 	username=${username:-$NGROK_USERNAME}
 	password=${password:-$NGROK_PASSWORD}
 	if [[ -n "$username" && -n "$password" ]]; then
-	  ARGS="$ARGS -auth=\"${username}:${password}\" "
+		ARGS="$ARGS -auth=\"${username}:${password}\" "
 	fi
 	
 	if [[ -n "$username" ]] || [[ -n "$password" ]] || [[ -n "$hostname" ]] || [[ -n "$subdomain" ]]; then
-	  if [[ -z "$auth" ]]; then
-		echo-yellow "You must specify a username, password, and Ngrok authentication token to use the custom HTTP authentication."
-		echo-yellow "Sign up for an authentication token at https://ngrok.com"
-		exit 1
-	  fi
+		if [[ -z "$auth" ]]; then
+			echo-yellow "You must specify a username, password, and Ngrok authentication token to use the custom HTTP authentication."
+			echo-yellow "Sign up for an authentication token at https://ngrok.com"
+			exit 1
+		fi
 	fi
 
 	debug=${debug:-$NGROK_DEBUG}
