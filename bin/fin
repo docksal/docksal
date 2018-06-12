@@ -4713,7 +4713,7 @@ ngrok_share ()
 	eval $(parse_params "$@")
 
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-	local container_name=$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)
+	local container_name=${container:-$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)}
 	if [[ "$container_name" == "" ]]; then
 		echo-error "Could not find running web container in this project"
 		exit 1
@@ -4736,50 +4736,62 @@ ngrok_share ()
 	# Modifying entrypoint.sh file to gain more variables.
 
 	local ARGS="ngrok"
-	# Set the protocol.
-	if [[ "$NGROK_PROTOCOL" = "TCP" ]]; then
-	  ARGS="$ARGS tcp"
-	else
-	  ARGS="$ARGS http"
-	  NGROK_PORT="${NGROK_PORT:-80}"
-	fi
-	
-	NGROK_PORT=$(echo ${NGROK_PORT} | sed 's|^tcp://||')
 
-	# Set the authorization token.
-	if [[ -n "$NGROK_AUTH" ]]; then
-	  ARGS="$ARGS -authtoken=$NGROK_AUTH "
+	protocol=${protocol:-$NGROK_PROTOCOL}
+	port=${port:-${NGROK_PORT:-80}}
+
+	# Set the protocol.
+	if [[ "$protocol" == "TCP" ]]; then
+		ARGS="$ARGS tcp"
+	else
+		ARGS="$ARGS http"
 	fi
+
+	NGROK_PORT=${port#tcp://}
+
+	auth=${auth:-$NGROK_AUTH}
+	# Set the authorization token.
+	if [[ -n "$auth" ]]; then
+		ARGS="$ARGS -authtoken=${auth} "
+	fi
+
+	hostname=${hostname:-$NGROK_HOSTNAME}
+	subdomain=${subdomain:-$NGROK_SUBDOMAIN}
 
 	# Set the subdomain or hostname, depending on which is set
-	if [ -n "$NGROK_HOSTNAME" ] && [ -n "$NGROK_AUTH" ]; then
-	  ARGS="$ARGS -hostname=$NGROK_HOSTNAME "
-	elif [[ -n "$NGROK_SUBDOMAIN" ]] && [[ -n "$NGROK_AUTH" ]]; then
-	  ARGS="$ARGS -subdomain=$NGROK_SUBDOMAIN "
+	if [[ -n "$hostname" && -n "$auth" ]]; then
+		ARGS="$ARGS -hostname=${hostname} "
+	elif [[ -n "$subdomain" && -n "$auth" ]]; then
+		ARGS="$ARGS -subdomain=${subdomain} "
 	fi
 
+	region=${region:-$NGROK_REGION}
 	# Set a custom region
-	if [[ -n "$NGROK_REGION" ]]; then
-	  ARGS="$ARGS -region=$NGROK_REGION "
+	if [[ -n "$region" ]]; then
+		ARGS="$ARGS -region=${region} "
 	fi
 
-	if [[ -n "$NGROK_HEADER" ]]; then
-	  ARGS="$ARGS -host-header=$NGROK_HEADER "
+	hostheader=${hostheader:-$NGROK_HEADER}
+	if [[ -n "$hostheader" ]]; then
+		ARGS="$ARGS -host-header=${hostheader} "
 	fi
 
-	if [[ -n "$NGROK_USERNAME" ]] && [[ -n "$NGROK_PASSWORD" ]]; then
-	  ARGS="$ARGS -auth=\"$NGROK_USERNAME:$NGROK_PASSWORD\" "
+	username=${username:-$NGROK_USERNAME}
+	password=${password:-$NGROK_PASSWORD}
+	if [[ -n "$username" && -n "$password" ]]; then
+		ARGS="$ARGS -auth=\"${username}:${password}\" "
 	fi
 	
-	if [[ -n "$NGROK_USERNAME" ]] || [[ -n "$NGROK_PASSWORD" ]] || [[ -n "$NGROK_HOSTNAME" ]] || [[ -n "$NGROK_SUBDOMAIN" ]]; then
-	  if [ -z "$NGROK_AUTH" ]; then
-	    echo-yellow "You must specify a username, password, and Ngrok authentication token to use the custom HTTP authentication."
-	    echo-yellow "Sign up for an authentication token at https://ngrok.com"
-	    exit 1
-	  fi
+	if [[ -n "$username" ]] || [[ -n "$password" ]] || [[ -n "$hostname" ]] || [[ -n "$subdomain" ]]; then
+		if [[ -z "$auth" ]]; then
+			echo-yellow "You must specify a username, password, and Ngrok authentication token to use the custom HTTP authentication."
+			echo-yellow "Sign up for an authentication token at https://ngrok.com"
+			exit 1
+		fi
 	fi
 
-	if [[ -n "$NGROK_DEBUG" ]]; then
+	debug=${debug:-$NGROK_DEBUG}
+	if [[ -n "$debug" ]]; then
 		ARGS="$ARGS -log stdout"
 	fi
 
