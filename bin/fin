@@ -63,10 +63,23 @@ is_mac ()
 	[[ "$OS_TYPE" == "Darwin" ]]
 }
 
+# CI
+is_ci ()
+{
+	[[ "$CI" != "" ]]
+}
+
 # Play with Docker
 is_pwd ()
 {
 	[[ "$(cat /etc/motd 2>/dev/null)" =~ "The PWD team" ]]
+}
+
+# Katacoda
+is_katacoda ()
+{
+	# There is no standard way to detect a Katacoda environment, so we have to rely on on a variable
+	[[ "$KATACODA" != "" ]]
 }
 
 #------------------------------------------------------------------------------
@@ -647,6 +660,12 @@ is_tty ()
 	# [ -t 0 -a -t 1 ]
 }
 
+# Checks whether fin is run under root privileges
+is_root ()
+{
+	[[ "$(id -u)" == "0" ]]
+}
+
 #---------------------------- Other helper functions -------------------------------
 
 testing_warn ()
@@ -714,7 +733,7 @@ check_docker_running ()
 
 	if is_ubuntu; then
 		# Remind the user about running 'newgrp docker' after install.
-		if ! (id -nG | grep docker >/dev/null 2>&1) && [[ "$(id -u)" != "0" ]] ; then
+		if ! (id -nG | grep docker >/dev/null 2>&1) && ! is_root ; then
 			echo-error "Current user is not part of the docker group." \
 				"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin update${NC}?"
 			exit 1
@@ -2554,8 +2573,8 @@ up ()
 	# See https://github.com/docksal/docksal/issues/265
 	is_mac && find . -type d > /dev/null 2>&1
 
-	# Fix permissions on Play with Docker platform
-	fix_pwd_permissions
+	# Fix project root permissions if necessary
+	set_project_root_permissions
 
 	_start_containers || return 1
 	unison_sync_wait
@@ -2584,8 +2603,8 @@ restart ()
 	( is_linux || is_docker_native ) && ssh_add
 	check_project_unique
 
-	# Fix permissions on Play with Docker platform
-	fix_pwd_permissions
+	# Fix project root permissions if necessary
+	set_project_root_permissions
 
 	_restart_containers "$@"
 	unison_sync_wait
@@ -2626,8 +2645,8 @@ reset ()
 	local ret=$?
 	[[ "$ret" != 0 ]] && return ${ret}
 
-	# Fix permissions on Play with Docker platform
-	fix_pwd_permissions
+	# Fix project root permissions if necessary
+	set_project_root_permissions
 
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
@@ -2974,9 +2993,11 @@ stats_ping ()
 	# Local instances
 	local source='Local'
 	# CI instances
-	[[ "$CI" != "" ]] && source='CI'
+	is_ci && source='CI'
 	# Play with Docker instances
 	is_pwd && source='PWD'
+	# Katacoda instances
+	is_katacoda && source='Katacoda'
 
 	curl -kfsL \
 		--user-agent "$user_agent" \
@@ -3126,7 +3147,7 @@ install_proxy_service ()
 	fi
 
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
-	( [[ "$CI" != "" ]] || is_pwd ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
 	# and are inactive unless configured.
@@ -5038,7 +5059,12 @@ load_configuration ()
 	fi
 
 	# Set defaults
-	export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
+	if is_pwd || is_katacoda; then
+		# Don't include .$DOCKSAL_DNS_DOMAIN in Play-with-Docker or Katacoda to keep the URL shorter.
+		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE}
+	else
+		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
+	fi
 	export DOCROOT=${DOCROOT:-docroot}
 
 	# Make project root globally available
@@ -5590,12 +5616,11 @@ unison_sync_wait () {
 	done
 }
 
-# Fix permissions on Play with Docker platform
-fix_pwd_permissions ()
+# Fix permissions when running as root ( e.g. on Play with Docker, Katacoda, etc.)
+set_project_root_permissions ()
 {
-	# PWD does not support non-privileged users,
-	# so we just set permissions on project root to match the default user:group in cli.
-	is_pwd && chown -R 1000:1000 "$PROJECT_ROOT"
+	# Set permissions on project root to match the default user:group in cli.
+	is_root && chown -R 1000:1000 "$PROJECT_ROOT"
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
@@ -5660,13 +5685,16 @@ fi
 # On Windows this is not necessary, as Linux permissions and ownership do not matter over SMB
 if ! is_windows; then
 	# Only do this for non-root users
-	if [[ "$(id -u)" != "0" ]]; then
+	if ! is_root; then
 		export HOST_UID=$(id -u)
 		export HOST_GID=$(id -g)
 	else
 		# Note: php-fpm inside cli will fail to start as uid=0
+		# Don't display this in PWD and Katacoda since users do not control those environments anyway.
 		# TODO: handle this case better
-		echo-alert "Running as root is not recommended"
+		if ! (is_pwd || is_katacoda); then
+			echo-alert "Running as root is not recommended"
+		fi
 	fi
 fi
 
