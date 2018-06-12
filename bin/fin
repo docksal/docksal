@@ -2991,6 +2991,8 @@ stats_ping ()
 	is_ci && source='CI'
 	# Play with Docker instances
 	is_pwd && source='PWD'
+	# Katacoda instances
+	is_katacoda && source='Katacoda'
 
 	curl -kfsL \
 		--user-agent "$user_agent" \
