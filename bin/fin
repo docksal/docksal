@@ -4720,13 +4720,13 @@ ngrok_share ()
 	port=${port:-${NGROK_PORT:-80}}
 
 	# Set the protocol.
-	if [[ "$protocol" = "TCP" ]]; then
+	if [[ "$protocol" == "TCP" ]]; then
 	  ARGS="$ARGS tcp"
 	else
 	  ARGS="$ARGS http"
 	fi
 
-	NGROK_PORT=$(echo ${port} | sed 's|^tcp://||')
+	NGROK_PORT=$(port#tcp://)
 
 	auth=${auth:-$NGROK_AUTH}
 	# Set the authorization token.
@@ -5158,10 +5158,13 @@ config_get ()
 		target_env_file="$CONFIG_ENV"
 	else
 		load_configuration
+		if [[ -n $env ]]; then
+			local docksal_env_file="$(get_project_path_dc)/.docksal/docksal-${env}.env"
+		fi
 		target_env_file="$docksal_env_file"
 	fi
 
-	grep "^$1\=" "$target_env_file" | sed "s/^$1=\(.*\)$/\1/"
+	grep "^${ARGV[0]}\=" "$target_env_file" | sed "s/^${ARGV[0]}=\(.*\)$/\1/"
 }
 
 config_set ()
@@ -5174,7 +5177,15 @@ config_set ()
 		target_env_file="$CONFIG_ENV"
 	else
 		load_configuration
+		if [[ -n $env ]]; then
+			local docksal_env_file="$(get_project_path_dc)/.docksal/docksal-${env}.env"
+		fi
 		target_env_file="$docksal_env_file"
+
+		if [[ ! -f $dockal_env_file ]]; then
+			touch "$docksal_env_file"
+			if_failed_error "Could not create $docksal_env_file"
+		fi
 	fi
 
 	# Warn if no values were found
@@ -5187,6 +5198,11 @@ config_set ()
 	for param in "${ARGN[@]}"
 	do
 		shift
+
+		if [[ "${param}" =~ ^- ]]; then
+			continue;
+		fi
+
 		# Parse variable to set
 		IFS='=' read -r key value <<< "${param}"
 
@@ -5218,23 +5234,30 @@ config_remove ()
 		target_env_file="$CONFIG_ENV"
 	else
 		load_configuration
+		if [[ -n $env ]]; then
+			local docksal_env_file="$(get_project_path_dc)/.docksal/docksal-${env}.env"
+		fi
 		target_env_file="$docksal_env_file"
 	fi
 
-	while [ $# -gt 0 ]
+	# Warn if no values were found
+	if [[ "${#ARGV[@]}" == 0 ]]; then
+		echo "No values to remove"
+		return 1
+	fi
+
+	# Loop named params array
+	for param in "${ARGV[@]}"
 	do
-		if [[ "$1" == "--global" ]]; then
-			shift
-			continue
-		fi
-		if grep -q "$1" "${target_env_file}"; then
+
+		if grep -q "^${param}\=" "${target_env_file}"; then
 			# Remove the value if it exists
-			echo "Removing $1 from $target_env_file"
-			sed -i.bak "/^$1\=.*$/d" "$target_env_file"
+			echo "Removing ${param} from $target_env_file"
+			sed -i.bak "/^${param}\=.*$/d" "$target_env_file"
 			# Remove backup
 			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
 		else
-			echo "Could not find $1 in ${target_env_file}"
+			echo "Could not find ${param} in ${target_env_file}"
 		fi
 		shift
 	done
