@@ -76,6 +76,13 @@ is_pwd ()
 	[[ "$(cat /etc/motd 2>/dev/null)" =~ "The PWD team" ]]
 }
 
+# Katacoda
+is_katacoda ()
+{
+	# There is no standard way to detect a Katacoda environment, so we have to rely on on a variable
+	[[ "$KATACODA" != "" ]]
+}
+
 #------------------------------------------------------------------------------
 
 
@@ -3133,7 +3140,7 @@ install_proxy_service ()
 	fi
 
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
-	( is_ci || is_pwd ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
 	# and are inactive unless configured.
