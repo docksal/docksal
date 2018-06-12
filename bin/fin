@@ -4726,7 +4726,7 @@ ngrok_share ()
 	  ARGS="$ARGS http"
 	fi
 
-	NGROK_PORT=$(port#tcp://)
+	NGROK_PORT=${port#tcp://}
 
 	auth=${auth:-$NGROK_AUTH}
 	# Set the authorization token.
