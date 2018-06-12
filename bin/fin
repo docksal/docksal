@@ -66,7 +66,6 @@ is_mac ()
 # CI
 is_ci ()
 {
-	# There is no standard way to detect a Katacoda environment, so we have to rely on on a variable
 	[[ "$CI" != "" ]]
 }
 
@@ -661,6 +660,12 @@ is_tty ()
 	# [ -t 0 -a -t 1 ]
 }
 
+# Checks whether fin is run under root privileges
+is_root ()
+{
+	[[ "$(id -u)" == "0" ]]
+}
+
 #---------------------------- Other helper functions -------------------------------
 
 testing_warn ()
@@ -728,7 +733,7 @@ check_docker_running ()
 
 	if is_ubuntu; then
 		# Remind the user about running 'newgrp docker' after install.
-		if ! (id -nG | grep docker >/dev/null 2>&1) && [[ "$(id -u)" != "0" ]] ; then
+		if ! (id -nG | grep docker >/dev/null 2>&1) && ! is_root ; then
 			echo-error "Current user is not part of the docker group." \
 				"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin update${NC}?"
 			exit 1
@@ -5615,7 +5620,7 @@ unison_sync_wait () {
 set_project_root_permissions ()
 {
 	# Set permissions on project root to match the default user:group in cli.
-	[[ "$(id -u)" != "0" ]] && chown -R 1000:1000 "$PROJECT_ROOT"
+	is_root && chown -R 1000:1000 "$PROJECT_ROOT"
 }
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
@@ -5680,7 +5685,7 @@ fi
 # On Windows this is not necessary, as Linux permissions and ownership do not matter over SMB
 if ! is_windows; then
 	# Only do this for non-root users
-	if [[ "$(id -u)" != "0" ]]; then
+	if ! is_root; then
 		export HOST_UID=$(id -u)
 		export HOST_GID=$(id -g)
 	else
