@@ -1316,7 +1316,7 @@ show_help_exec ()
 
 	echo
 	echo "Execute command or file in \`cli\` service container."
-	echo "fin exec will automatically cd into the same folder inside cli."
+	echo "fin exec will automatically cd into the same folder inside \`cli\`."
 
 	echo
 	echo "Options:"
@@ -1325,11 +1325,16 @@ show_help_exec ()
 	printh "" "In a TTY mode the output may contain unexpected control symbols (garbage)."
 
 	echo
+	echo "Advanced:"
+	printh "CONTAINER_NAME=[name]" "Environment variable. Defines container to run in (default is \`cli\`)"
+
+	echo
 	echo "Examples:"
-	printh "fin exec ls -la" "Current directory listing"
-	printh "fin exec \"ls -la > /tmp/list\"" "Execute advanced shell command with pipes or stdout redirects happening inside cli"
-	printh "res=\$(fin exec -T drush st)" "Use -T switch to assign exec output to a variable"
-	printh "fin exec .docksal/script.sh" "Execute file inside cli container"
+	printh "fin exec ls -la" "		Current directory listing"
+	printh "fin exec \"ls -la > /tmp/list\"" "		Execute advanced shell command with pipes or stdout redirects happening inside cli"
+	printh "res=\$(fin exec -T drush st)" "		Use -T switch when using exec output"
+	printh "fin exec .docksal/script.sh" "		Execute a whole file inside \`cli\` container"
+	printh "CONTAINER_NAME=db fin exec mysql -uroot -p" "Execute command in \`db\` container"
 }
 
 show_help_run-cli ()
