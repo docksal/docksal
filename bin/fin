@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.1
+FIN_VERSION=1.62.2
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3131,7 +3131,7 @@ configure_network ()
 		echo-green "Restoring network settings..."
 	fi
 
-	is_ubuntu && configure_network_ubuntu "$mode" && return $?
+	is_ubuntu && configure_network_alpine "$mode" && return $?
 	is_alpine && configure_network_alpine "$mode" && return $?
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
@@ -3359,7 +3359,7 @@ configure_resolver ()
 	fi
 
 	is_mac && configure_resolver_mac "$mode" && return $?
-	is_ubuntu && configure_resolver_ubuntu "$mode" && return $?
+	is_ubuntu && configure_resolver_alpine "$mode" && return $?
 	is_alpine && configure_resolver_alpine "$mode" && return $?
 	is_windows && configure_resolver_windows "$mode" && return $?
 	is_wsl && configure_resolver_wsl "$mode" && return $?
