@@ -4805,13 +4805,26 @@ ngrok_share ()
 
 	ARGS="$ARGS ${container_name}.${network}:${NGROK_PORT}"
 
-	${winpty} docker run --rm -it \
-		--publish 4040 \
-		--net ${network} \
-		--link ${container_name} \
-		--name ${ngrok_container_name} \
-		wernight/ngrok \
-		$ARGS
+    # Load a configuration if its available
+    ngrok_conf="$(get_project_path_dc)/.docksal/ngrok.local.yml"
+    if [[ -f "$ngrok_conf" ]]; then
+        ${winpty} docker run --rm -v $(get_project_path_dc):/var/www -it \
+            --publish 4040 \
+            --net ${network} \
+            --link ${container_name} \
+            --name ${ngrok_container_name} \
+            wernight/ngrok \
+            sh -c "ngrok start -config /var/www/.docksal/ngrok.yml -all"
+    else
+        ${winpty} docker run --rm -it \
+            --publish 4040 \
+            --net ${network} \
+            --link ${container_name} \
+            --name ${ngrok_container_name} \
+            wernight/ngrok \
+            $ARGS
+    fi
+
 }
 
 diagnose ()
