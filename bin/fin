@@ -3057,10 +3057,10 @@ configure_network_alpine ()
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
 		# This will not persist a reboot or interface change
-		ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+		sudo ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove the IP address alias
-		ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
+		sudo ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
 	fi
 }
 
