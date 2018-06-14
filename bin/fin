@@ -2909,7 +2909,8 @@ system_stop ()
 		# VM stop will perform configure_resolver off
 		vm stop
 	else
-		_stop_containers --all
+		# keep in a subshell so that exit during that command would not stop other command in system stop
+		(_stop_containers --all)
 		echo-green "Stopping Docksal system services..."
 		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
 		configure_resolver off
