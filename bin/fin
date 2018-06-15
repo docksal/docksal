@@ -1787,17 +1787,14 @@ show_help_addon ()
 
 show_help_logs ()
 {
+	# Display docker-compose logs --help then examples using fin
 	echo
-	echo "Usage: fin logs [service]"
-
-	echo
-	echo "Show Docker container logs for a service"
+	docker-compose logs --help
 
 	echo
 	echo "Examples:"
-	printh "fin logs web" "Show web server logs"
-	printh "fin logs unison" "Show unison logs"
-	printh "fin logs unison --tail" "Show unison logs and follow it"
+	printh "fin logs web" "Show web container logs"
+	printh "fin logs -f web" "Show web container logs and follow it"
 }
 #---------- END HELP FUNCTIONS
 
