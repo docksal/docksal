@@ -2410,7 +2410,12 @@ wsl_mount_drives ()
 vm ()
 {
 	if is_docker_native; then
-		return
+		echo "Docksal VM cannot be used with Docker for Mac/Docker for Windows"
+		return 1
+	fi
+	if is_linux; then
+		echo "Docksal VM should not be used on Linux"
+		return 1
 	fi
 
 	check_binary_found 'docker-machine'
