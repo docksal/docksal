@@ -62,6 +62,22 @@ SKIP=1
 	unset output
 }
 
+@test "fin team/test" {
+	[[ $SKIP == 1 ]] && skip
+
+	cmd='#!/bin/bash
+
+echo "Test Command"
+'
+
+	mkdir .docksal/commands/team
+	echo "$cmd" > .docksal/commands/team/test
+	chmod +x .docksal/commands/team/test
+
+	run fin team/test
+	[[ "${output}" == "Test Command" ]]
+	unset output
+}
 
 @test "fin stop" {
 	[[ $SKIP == 1 ]] && skip
