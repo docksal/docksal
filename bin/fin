@@ -5217,7 +5217,7 @@ config_set ()
 		fi
 		target_env_file="$docksal_env_file"
 
-		if [[ ! -f $dockal_env_file ]]; then
+		if [[ ! -f "$dockal_env_file" ]]; then
 			touch "$docksal_env_file"
 			if_failed_error "Could not create $docksal_env_file"
 		fi
