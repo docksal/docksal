@@ -1240,11 +1240,14 @@ show_help_list_commands_in_help ()
 	else
 		addons_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	fi
-
-	local addons_list=$(find "$addons_path" -type f -perm +100 2>/dev/null)
-	if [ ! -z "$addons_list" ]; then
+	
+	local executable="-executable"
+	[[ is_mac ]] && executable="-perm +100"
+	
+	local addons_list=$(find "$addons_path" -type f ${executable} 2>/dev/null)
+	if [[ "$addons_list" != "" ]]; then
 		local scope
-		for cmd_name in $(find "$addons_path" -type f -perm +100)
+		for cmd_name in ${addons_list}
 		do
 			local g
 			[[ "$1" == 'global' ]] && g=' [g]'
@@ -1784,17 +1787,14 @@ show_help_addon ()
 
 show_help_logs ()
 {
+	# Display docker-compose logs --help then examples using fin
 	echo
-	echo "Usage: fin logs [service]"
-
-	echo
-	echo "Show Docker container logs for a service"
+	docker-compose logs --help
 
 	echo
 	echo "Examples:"
-	printh "fin logs web" "Show web server logs"
-	printh "fin logs unison" "Show unison logs"
-	printh "fin logs unison --tail" "Show unison logs and follow it"
+	printh "fin logs web" "Show web container logs"
+	printh "fin logs -f web" "Show web container logs and follow it"
 }
 #---------- END HELP FUNCTIONS
 
@@ -2407,7 +2407,12 @@ wsl_mount_drives ()
 vm ()
 {
 	if is_docker_native; then
-		return
+		echo "Docksal VM cannot be used with Docker for Mac/Docker for Windows"
+		return 1
+	fi
+	if is_linux; then
+		echo "Docksal VM should not be used on Linux"
+		return 1
 	fi
 
 	check_binary_found 'docker-machine'
@@ -3054,10 +3059,10 @@ configure_network_alpine ()
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
 		# This will not persist a reboot or interface change
-		ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+		sudo ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove the IP address alias
-		ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
+		sudo ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
 	fi
 }
 
@@ -5221,7 +5226,7 @@ config_set ()
 		fi
 		target_env_file="$docksal_env_file"
 
-		if [[ ! -f $dockal_env_file ]]; then
+		if [[ ! -f "$dockal_env_file" ]]; then
 			touch "$docksal_env_file"
 			if_failed_error "Could not create $docksal_env_file"
 		fi
