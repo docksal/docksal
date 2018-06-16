@@ -178,6 +178,11 @@ EOF
 	run fin exec -T 'echo $(id -u):$(id -g)'
 	[[ "$output" == "$(id -u):$(id -g)" ]]
 	unset output
+
+	# setting target container with --in
+	run fin exec --in=web -T cat /etc/hostname
+	[[ "$output" == "web" ]]
+	unset output
 }
 
 @test "fin run-cli" {

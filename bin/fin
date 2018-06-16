@@ -1325,19 +1325,16 @@ show_help_exec ()
 	echo "Options:"
 	printh "-T" "Disable pseudo-tty allocation."
 	printh "" "Useful for non-interactive commands when output is saved into a variable for further comparison."
-	printh "" "In a TTY mode the output may contain unexpected control symbols (garbage)."
-
-	echo
-	echo "Advanced:"
-	printh "CONTAINER_NAME=[name]" "Environment variable. Defines container to run in (default is \`cli\`)"
+	printh "" "In a TTY mode the output may contain unexpected invisible control symbols."
+	printh "--in=[name]" "Name of the container to execute the command in."
 
 	echo
 	echo "Examples:"
 	printh "fin exec ls -la" "		Current directory listing"
-	printh "fin exec \"ls -la > /tmp/list\"" "		Execute advanced shell command with pipes or stdout redirects happening inside cli"
+	printh "fin exec \"ls -la > /tmp/list\"" "		Execute advanced shell command with pipes or stdout redirects happening inside \`cli\`"
 	printh "res=\$(fin exec -T drush st)" "		Use -T switch when using exec output"
 	printh "fin exec .docksal/script.sh" "		Execute a whole file inside \`cli\` container"
-	printh "CONTAINER_NAME=db fin exec mysql -uroot -p" "Execute command in \`db\` container"
+	printh "fin exec --in=db mysql -uroot -p" "	Execute command in \`db\` container"
 }
 
 show_help_run-cli ()
@@ -4215,19 +4212,26 @@ _bash ()
 # @param $* command with its params to run
 _exec ()
 {
-	[[ $1 == "" ]] && \
+	[[ $1 == "" ]] &&
 		show_help_exec && exit
 	check_project_environment
 	check_winpty_found
+	eval $(parse_params "$@")
 
 	# Allow disabling TTY mode.
 	# Useful for non-interactive commands when output is saved into a variable for further comparison.
 	# In a TTY mode the output may contain unexpected control symbols/etc.
-	[[ $1 == "-T" ]] && \
-		local no_tty=true && shift
+	[[ $T == "T" ]] &&
+		local no_tty=true &&
+		shift
 
 	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	# CONTAINER_NAME can be used to override where to run. Used in _bash()
+
+	[[ -n "$in" ]] &&
+		CONTAINER_NAME=${in} &&
+		shift
+
 	CONTAINER_NAME=${CONTAINER_NAME:-cli}
 	container_id=$(get_container_id "$CONTAINER_NAME")
 
@@ -4306,7 +4310,7 @@ run_cli ()
 		case $1 in
 		# Allow disabling TTY mode.
 		# Useful for non-interactive commands when output is saved into a variable for further comparison.
-		# In a TTY mode the output may contain unexpected control symbols/etc.
+		# In a TTY mode the output may contain unexpected invisible control symbols/etc.
 		-T)
 			local no_tty=true;
 			shift;
