@@ -62,6 +62,20 @@ SKIP=1
 	unset output
 }
 
+@test "fin namespace/custom-command" {
+	[[ $SKIP == 1 ]] && skip
+
+	mkdir .docksal/commands/team
+	cat <<EOF > .docksal/commands/team/test
+'#!/bin/bash
+echo "Test Command"
+EOF
+	chmod +x .docksal/commands/team/test
+
+	run fin team/test
+	[[ "${output}" == "Test Command" ]]
+	unset output
+}
 
 @test "fin stop" {
 	[[ $SKIP == 1 ]] && skip
