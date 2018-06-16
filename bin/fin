@@ -1326,7 +1326,7 @@ show_help_exec ()
 	printh "-T" "Disable pseudo-tty allocation."
 	printh "" "Useful for non-interactive commands when output is saved into a variable for further comparison."
 	printh "" "In a TTY mode the output may contain unexpected invisible control symbols."
-	printh "--in=[name]" "Name of the container to execute the command in."
+	printh "--in=[name]" "Name of the service to execute the command in."
 
 	echo
 	echo "Examples:"
