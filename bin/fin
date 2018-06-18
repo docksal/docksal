@@ -4803,14 +4803,22 @@ ngrok_share ()
 		ARGS="$ARGS -log stdout"
 	fi
 
-	ARGS="$ARGS ${container_name}.${network}:${NGROK_PORT}"
+	# Overwrite settings with a configuration if its available
+    NGROK_VOLUME="-v $(get_project_path_dc)/.docksal:/var/www/.docksal"
 
-	# Load a configuration if its available
-	ngrok_conf="$(get_project_path_dc)/.docksal/etc/ngrok/ngrok.yml"
+	local ngrok_conf="$(get_project_path_dc)/.docksal/etc/ngrok/ngrok.yml"
+	local local_ngrok_conf="$(get_project_path_dc)/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
 	if [[ -f "$ngrok_conf" ]]; then
-		ARGS='sh -c "ngrok start -config /var/www/.docksal/etc/ngrok/ngrok.yml -all"'
-		NGROK_VOLUME="-v $(get_project_path_dc)/.docksal:/var/www/.docksal"
+    	CONF_ARGS="-config /var/www/.docksal/etc/ngrok/ngrok.yml"
+  	fi
+	if [[ -f "$local_ngrok_conf" ]]; then
+    	CONF_ARGS="$CONF_ARGS -config /var/www/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
+  	fi
+  	if [[ -f "$ngrok_conf" ]] || [[ -f "$local_ngrok_conf" ]]; then
+	  	ARGS="ngrok start ${CONF_ARGS} -all"
 	fi
+
+	echo $ARGS
 
 	${winpty} docker run --rm ${NGROK_VOLUME} -it \
 		--publish 4040 \
@@ -4818,7 +4826,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		$ARGS
+		sh -c "${ARGS}" ${container_name}.${network}:${NGROK_PORT}
 }
 
 diagnose ()
