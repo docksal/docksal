@@ -11,7 +11,7 @@ RUN apk add --no-cache \
 
 ARG DOCKER_VERSION=18.03.1-ce
 ARG DOCKER_GEN_VERSION=0.7.4
-ARG GOTPL_VERSION=0.1.5
+ARG GOMPLATE_VERSION=2.6.0
 
 # Install docker client binary (if not mounting binary from host)
 RUN curl -sSL -O "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
@@ -22,10 +22,10 @@ ARG DOCKER_GEN_TARFILE=docker-gen-alpine-linux-amd64-$DOCKER_GEN_VERSION.tar.gz
 RUN curl -sSL -O "https://github.com/jwilder/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_TARFILE}" \
 	&& tar -C /usr/local/bin -xvzf $DOCKER_GEN_TARFILE && rm $DOCKER_GEN_TARFILE
 
-# Install gotpl
-ARG GOTPL_TARFILE=gotpl-alpine-linux-amd64-${GOTPL_VERSION}.tar.gz
-RUN curl -sSL -O "https://github.com/wodby/gotpl/releases/download/${GOTPL_VERSION}/${GOTPL_TARFILE}" \
-	&& tar -C /usr/local/bin -xvzf $GOTPL_TARFILE && rm $GOTPL_TARFILE
+# Install gomplate
+RUN set -xe; \
+	curl -sSL https://github.com/hairyhenderson/gomplate/releases/download/v${GOMPLATE_VERSION}/gomplate_linux-amd64-slim -o /usr/local/bin/gomplate; \
+	chmod +x /usr/local/bin/gomplate
 
 RUN chown -R nginx:nginx /var/lib/nginx
 
