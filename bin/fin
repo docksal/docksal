@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.2
+FIN_VERSION=1.62.6
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3059,9 +3059,11 @@ configure_network_alpine ()
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
 		# This will not persist a reboot or interface change
+		echo "Adding Docksal IP..."
 		sudo ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove the IP address alias
+		echo "Removing Docksal IP..."
 		sudo ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
 	fi
 }
@@ -3134,8 +3136,7 @@ configure_network ()
 		echo-green "Restoring network settings..."
 	fi
 
-	is_ubuntu && configure_network_alpine "$mode" && return $?
-	is_alpine && configure_network_alpine "$mode" && return $?
+	is_linux && configure_network_alpine "$mode" && return $?
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
 	is_wsl && configure_network_wsl "$mode" && return $?
@@ -3362,8 +3363,7 @@ configure_resolver ()
 	fi
 
 	is_mac && configure_resolver_mac "$mode" && return $?
-	is_ubuntu && configure_resolver_alpine "$mode" && return $?
-	is_alpine && configure_resolver_alpine "$mode" && return $?
+	is_linux && configure_resolver_alpine "$mode" && return $?
 	is_windows && configure_resolver_windows "$mode" && return $?
 	is_wsl && configure_resolver_wsl "$mode" && return $?
 }
