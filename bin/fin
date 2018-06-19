@@ -3137,7 +3137,6 @@ configure_network ()
 		echo-green "Restoring network settings..."
 	fi
 
-	echo "[configure_network] Mode: $mode"
 	is_linux && configure_network_alpine "$mode" && return $?
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
@@ -3256,12 +3255,10 @@ configure_resolver_alpine () {
 		# We have to write into the file directly.
 		#echo -e "${dns_settings}\n$(cat /etc/resolv.conf)" | sudo tee /etc/resolv.conf
 		# Append dns_settings at the beginning
-		echo "Enabling DNS resolver..."
 		local dns_conf_text=$(sed "1i $dns_settings" ${conf_file})
 		echo "$dns_conf_text" | sudo tee ${conf_file} >/dev/null
 	# Disabling and settings are present
 	elif [[ "$mode" == "off" ]] && (grep -q "$dns_settings" ${conf_file}); then
-		echo "Disabling DNS resolver..."
 		local dns_conf_text=$(sed "/${dns_settings}/d" ${conf_file})
 		echo "$dns_conf_text" | sudo tee ${conf_file} >/dev/null
 	fi
