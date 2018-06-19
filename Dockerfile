@@ -1,11 +1,13 @@
 FROM openresty/openresty:alpine
 
-RUN apk add --update --no-cache \
-	bash \
-	curl \
-	sudo \
-	supervisor \
-	&& rm -rf /var/cache/apk/*
+RUN set -xe; \
+	apk add --update --no-cache \
+		bash \
+		curl \
+		sudo \
+		supervisor \
+	; \
+	rm -rf /var/cache/apk/*
 
 RUN set -xe; \
 	addgroup -S nginx; \
@@ -16,13 +18,18 @@ ARG DOCKER_GEN_VERSION=0.7.4
 ARG GOMPLATE_VERSION=2.6.0
 
 # Install docker client binary (if not mounting binary from host)
-RUN curl -sSL -O "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
-	&& tar zxf docker-$DOCKER_VERSION.tgz && mv docker/docker /usr/local/bin && rm -rf docker-$DOCKER_VERSION*
+RUN set -xe; \
+	curl -sSL -O "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz"; \
+	tar zxf docker-$DOCKER_VERSION.tgz; \
+	mv docker/docker /usr/local/bin ; \
+	rm -rf docker*
 
 # Install docker-gen
 ARG DOCKER_GEN_TARFILE=docker-gen-alpine-linux-amd64-$DOCKER_GEN_VERSION.tar.gz
-RUN curl -sSL -O "https://github.com/jwilder/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_TARFILE}" \
-	&& tar -C /usr/local/bin -xvzf $DOCKER_GEN_TARFILE && rm $DOCKER_GEN_TARFILE
+RUN set -xe; \
+	curl -sSL -O "https://github.com/jwilder/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_TARFILE}"; \
+	tar -C /usr/local/bin -xvzf $DOCKER_GEN_TARFILE; \
+	rm $DOCKER_GEN_TARFILE
 
 # Install gomplate
 RUN set -xe; \
@@ -35,10 +42,13 @@ RUN set -xe; \
 	mkdir -p /etc/nginx/conf.d
 
 # Generate a self-signed cert
-RUN apk add --no-cache openssl \
-	&& openssl req -batch -x509 -newkey rsa:4086 -days 3650 -nodes -sha256 -subj "/" \
-		-keyout /etc/nginx/server.key -out /etc/nginx/server.crt \
-	&& apk del openssl
+RUN set -xe; \
+	apk add --update --no-cache \
+		openssl \
+	; \
+	openssl req -batch -x509 -newkey rsa:4086 -days 3650 -nodes -sha256 -subj "/" \
+		-keyout /etc/nginx/server.key -out /etc/nginx/server.crt; \
+	apk del openssl && rm -rf /var/cache/apk/*
 
 COPY conf/nginx/ /etc/nginx/
 COPY conf/sudoers /etc/sudoers
