@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.2
+FIN_VERSION=1.62.3
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3055,13 +3055,16 @@ configure_network_alpine ()
 	# Determine current status
 	local status
 	(grep -q "lo:docksal" <<< "$(ip addr show dev lo)") && status="enabled" || status="disabled"
+	echo "Mode: ${mode}, Status: ${status}"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
 		# This will not persist a reboot or interface change
+		echo "Adding Docksal IP..."
 		sudo ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove the IP address alias
+		echo "Removing Docksal IP..."
 		sudo ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
 	fi
 }
