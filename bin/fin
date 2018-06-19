@@ -3055,7 +3055,6 @@ configure_network_alpine ()
 	# Determine current status
 	local status
 	(grep -q "lo:docksal" <<< "$(ip addr show dev lo)") && status="enabled" || status="disabled"
-	echo "Mode: ${mode}, Status: ${status}"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
