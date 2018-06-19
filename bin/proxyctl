@@ -105,9 +105,21 @@ start ()
 			log "Connected proxy to network: ${network}."
 		fi
 
+		# Reconnect project containers to the re-created network
+		local project_containers=$(docker ps -a \
+			--filter "label=com.docker.compose.project=${project_name}" \
+			--format '{{.ID}}:{{.Label "com.docker.compose.service"}}')
+		while read project_container; do
+			# Read variables
+			IFS=':' read container_id service_name <<< "$project_container";
+			# Reconnect container to the project network with the service alias
+			# (without the alias name resolution for web/db/cli/etc. service names won't work)
+			docker network connect --alias "$service_name" "$network" "$container_id" >/dev/null
+		done <<< "$project_containers"
+
 		log "Starting containers for $project_name..."
 		# Dirty hack to avoid using docker-compose and still be able to launch containers with dependencies up to 3 levels deep.
-		for i in `seq 1 3`; do
+		for i in {1..3}; do
 			log "Pass #$i..."
 			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker start
 		done
@@ -142,10 +154,13 @@ stop ()
 
 		# Stop inactive project containers
 		log "Stopping inactive project: ${project_name}..."
-		docker ps -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker stop
-		# Disconnect vhost-proxy from the project network and remove the network.
+		local project_containers=$(docker ps -q --filter "label=com.docker.compose.project=${project_name}")
+		xargs docker stop <<< "$project_containers"
+		# Disconnect project containers and vhost-proxy from the project network and remove the network.
 		# See https://github.com/docksal/service-vhost-proxy/issues/6 for more details on why this is necessary.
 		local network="${project_name}_default"
+		# '-I {}' and '{}' can be used to position the argument passed by xargs.
+		xargs -I {} docker network disconnect "$network" {} <<< "$project_containers"
 		docker network disconnect "$network" docksal-vhost-proxy
 		docker network rm "$network"
 	done <<< "$running_projects"
