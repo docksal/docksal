@@ -9,7 +9,7 @@ RUN apk add --no-cache \
 	nginx-lua \
 	&& rm -rf /var/cache/apk/*
 
-ARG DOCKER_VERSION=17.09.1-ce
+ARG DOCKER_VERSION=18.03.1-ce
 ARG DOCKER_GEN_VERSION=0.7.4
 ARG GOTPL_VERSION=0.1.5
 
