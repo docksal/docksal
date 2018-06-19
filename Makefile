@@ -23,7 +23,7 @@ shell:
 	make exec -e CMD=bash
 
 start:
-	fin system reset vhost-proxy
+	IMAGE_VHOST_PROXY=$(REPO):$(VERSION) fin system reset vhost-proxy
 
 stop:
 	fin docker stop $(NAME)
