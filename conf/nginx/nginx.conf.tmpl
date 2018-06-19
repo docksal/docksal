@@ -25,6 +25,8 @@ http {
     {{ end }}
 
     lua_shared_dict hosts 1m;
+    # For Lua debugging only
+    #lua_code_cache off;
 
     server {
       listen 80;

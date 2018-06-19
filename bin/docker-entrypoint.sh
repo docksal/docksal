@@ -1,16 +1,16 @@
 #!/bin/sh
 
-# Connect networks.
+# Connect networks
 /usr/local/bin/proxyctl networks
 
-# Service mode (run as root)
+# Service mode
 if [[ "$1" == "supervisord" ]]; then
 	# Generate config files from templates
-	gomplate --file /opt/conf/nginx/nginx.conf.tmpl --out /etc/nginx/nginx.conf
-	gomplate --file /opt/conf/nginx/proxyctl.conf.tmpl --out /etc/nginx/proxyctl.conf
+	gomplate --file /etc/nginx/nginx.conf.tmpl --out /etc/nginx/nginx.conf
+	gomplate --file /etc/nginx/proxyctl.conf.tmpl --out /etc/nginx/proxyctl.conf
 
 	exec supervisord -c /etc/supervisord.conf
-# Command mode (run as docker user)
+# Command mode
 else
 	exec "$@"
 fi
