@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.9
+FIN_VERSION=1.62.10
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3643,6 +3643,27 @@ install_tools_alpine ()
 	fi
 }
 
+# Install Alpine dependencies
+install_tools_generic_linux ()
+{
+	# Require Docker
+	if ! is_docker_version || ! is_docker_server_version; then
+		echo-error "Docker version should be ${REQUIREMENTS_DOCKER} or greater." \
+					"Automated Docker installation is not supported on this platform." \
+					"Install Docker ${REQUIREMENTS_DOCKER} or greater manually and run Docksal installation again."
+		exit 1
+	fi
+
+	# Install Docker Compose
+	if ! is_docker_compose_version; then
+		echo-green "Installing Docker Compose..."
+		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
+			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+			docker-compose --version
+		if_failed "Docker Compose installation/upgrade has failed."
+	fi
+}
+
 # Install WSL dependencies
 install_tools_wsl ()
 {
@@ -3749,10 +3770,9 @@ update_tools ()
 			install_tools_alpine &&
 			return $?
 
-		# Display a warning for unsupported Linux distros
-		is_docker_version
-		echo-alert "Automatic Docker installation not supported on your system" \
-			"Please install "
+		# All other distros
+		install_tools_generic_linux &&
+			return $?
 	fi
 
 	is_wsl &&
