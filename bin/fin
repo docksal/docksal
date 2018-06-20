@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.10
+FIN_VERSION=1.62.11
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -48,7 +48,7 @@ is_ubuntu ()
 
 is_alpine ()
 {
-	[[ "$OS_NAME" == "Alpine" ]]
+	[[ "$OS_ID" == "alpine" ]]
 }
 
 is_windows ()
