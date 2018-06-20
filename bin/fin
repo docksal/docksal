@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.11
+FIN_VERSION=1.62.12
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -686,13 +686,6 @@ ver_to_int ()
 
 #---------------------------- Control functions -------------------------------
 
-check_linux_network ()
-{
-	is_linux || return
-	configure_network_alpine "on"
-	configure_resolver_alpine "on"
-}
-
 # Check that project root exists and Docker is running.
 check_project_environment ()
 {
@@ -702,6 +695,12 @@ check_project_environment ()
 # Check that project root exists, Docker is running and Docksal system services are running
 check_docksal_environment ()
 {
+	# Since network configuration is not permanent on Linux we need to restore it when possible
+	# check_docksal_environment is a good place to do it, but we don't need to know the result
+	if is_linux; then
+		configure_network_alpine "on"
+		configure_resolver_alpine "on"
+	fi
 	check_project_root && check_docksal_running
 }
 
@@ -2583,16 +2582,11 @@ vm-hdd () {
 # Start containers
 up ()
 {
-	# Check Docksal system services
 	check_docksal_environment
 
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
 	( is_linux || is_docker_native ) && ssh_add
-
-	# On Linux check for IP address and resolver to be configured since they are non-persistent
-	# and computer restart might clear them
-	check_linux_network
 
 	# On macOS check that project is reachable to Docker
 	check_macos_path
@@ -2633,9 +2627,12 @@ stop ()
 restart ()
 {
 	check_docksal_environment
+
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
 	( is_linux || is_docker_native ) && ssh_add
+
+	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
 
 	# Fix project root permissions if necessary
@@ -2667,14 +2664,16 @@ remove ()
 # @param $1 $2... containers names
 reset ()
 {
-	check_project_root
-	# support quiet removal
+	check_docksal_environment
+
+	# Support quiet removal
 	if [[ $1 == "-f" ]]; then
 		shift
 		remove -f "$@"
 	else
 		remove "$@"
 	fi
+
 	# Return here if there are errors with remove
 	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
 	local ret=$?
@@ -3054,11 +3053,9 @@ configure_network_alpine ()
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
 		# This will not persist a reboot or interface change
-		echo "Adding Docksal IP..."
 		sudo ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove the IP address alias
-		echo "Removing Docksal IP..."
 		sudo ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
 	fi
 }
