@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.7
+FIN_VERSION=1.62.8
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -21,7 +21,7 @@ fi
 # OS version detection
 if  [[ -f "/etc/os-release" ]]; then
 	(uname -a | grep -v 'Microsoft' >/dev/null) && OS_TYPE="Linux" || OS_TYPE="WSL"
-	read OS_NAME OS_VERSION < <(source "/etc/os-release"; echo "$NAME  $VERSION_ID")
+	IFS=";" read OS_NAME OS_VERSION OS_ID_LIKE < <(source "/etc/os-release"; echo "$NAME;$VERSION_ID;$ID_LIKE")
 	export OS_TYPE OS_NAME OS_VERSION
 elif (uname | grep 'Darwin' >/dev/null); then
 	export OS_TYPE="Darwin"
@@ -36,6 +36,16 @@ fi
 is_linux ()
 {
 	[[ "$OS_TYPE" == "Linux" ]]
+}
+
+is_ubuntu ()
+{
+	[[ "$OS_NAME" == "Ubuntu" ]] || [[ "$OS_ID_LIKE" == "ubuntu" ]]
+}
+
+is_alpine ()
+{
+	[[ "$OS_NAME" == "Alpine" ]]
 }
 
 is_windows ()
@@ -672,6 +682,13 @@ ver_to_int ()
 }
 
 #---------------------------- Control functions -------------------------------
+
+check_linux_network ()
+{
+	is_linux || return
+	configure_network_alpine "on"
+	configure_resolver_alpine "on"
+}
 
 # Check that project root exists and Docker is running.
 check_project_environment ()
@@ -2563,12 +2580,22 @@ vm-hdd () {
 # Start containers
 up ()
 {
+	# Check Docksal system services
 	check_docksal_environment
+
 	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
 	( is_linux || is_docker_native ) && ssh_add
-	check_project_unique
+
+	# On Linux check for IP address and resolver to be configured since they are non-persistent
+	# and computer restart might clear them
+	check_linux_network
+
+	# On macOS check that project is reachable to Docker
 	check_macos_path
+
+	# Check that project name is unique since non-unique names will give problems with docker-compose
+	check_project_unique
 
 	# Temporary workaround for NFS issues on Mac
 	# See https://github.com/docksal/docksal/issues/265
@@ -2577,8 +2604,12 @@ up ()
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
+	# Start containers
 	_start_containers || return 1
+
+	# If Unisons is used, wait for it to sync
 	unison_sync_wait
+
 	echo-green "Virtual Host: ${yellow}http://$VIRTUAL_HOST${NC}"
 }
 
@@ -3009,36 +3040,6 @@ stats_ping ()
 	return 0
 }
 
-# Configure Docksal network settings on Ubuntu via /etc/network/interfaces
-configure_network_ubuntu ()
-{
-	local mode="${1:-on}"
-	local conf_file="/etc/network/interfaces"
-	# Determine current status
-	local status
-	(grep -q "lo:docksal" ${conf_file}) && status="enabled" || status="disabled"
-
-	# Adding a subnet for Docksal. Make sure we don't do this twice
-	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
-		cat > /tmp/docksal.ip <<EOF
-	up   ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-	down ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
-EOF
-		# Add our settings to the loopback interface
-		sudo sed -i '/iface lo inet loopback/r /tmp/docksal.ip' ${conf_file}
-		rm -f /tmp/docksal.ip
-	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
-		# Reset network settings
-		sudo ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
-		# Remove configuration from the loopback interface
-		sudo sed -i "/lo:docksal/d" ${conf_file}
-	fi
-
-	# Up/down interface to update settings
-	sudo ifdown --force lo 2>/dev/null
-	sudo ifup lo
-}
-
 # Configure Docksal network settings on Alpine via ip addr
 configure_network_alpine ()
 {
@@ -3206,30 +3207,6 @@ configure_resolver_mac () {
 	echo-green "Clearing DNS cache..."
 	sudo dscacheutil -flushcache
 	# to check: scutil --dns
-}
-
-# Configure system-wide *.docksal resolver via /etc/network/interfaces on Ubuntu
-configure_resolver_ubuntu () {
-	local mode="${1:-on}"
-	local dns_settings="dns-nameservers ${DOCKSAL_DEFAULT_IP}"
-
-	if [[ "$mode" == "on" ]]; then
-		# Make sure we don't do this twice
-		if ! grep -q "${dns_settings}" /etc/network/interfaces; then
-			# TODO: figure out how to insert a tab with sed (instead of using a temporary file)
-			cat > /tmp/docksal.dns <<EOF
-	dns-nameservers ${DOCKSAL_DEFAULT_IP}
-EOF
-			sudo sed -i '/down .* lo:docksal/r /tmp/docksal.dns' /etc/network/interfaces
-			rm -f /tmp/docksal.dns
-		fi
-	elif [[ "$mode" == "off" ]]; then
-		sudo sed -i "/${dns_settings}/d" /etc/network/interfaces
-	fi
-
-	# Up/down interface to update settings
-	sudo ifdown --force lo 2>/dev/null
-	sudo ifup lo
 }
 
 # Configure system-wide *.docksal resolver via /etc/resolv.conf on Alpine
@@ -3633,20 +3610,6 @@ install_tools_ubuntu ()
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
-
-	# Install ifup/ifdown if they are missing
-	if ! (which ifup >/dev/null 2>&1) || ! (which ifdown >/dev/null 2>&1) || ! (which resolvconf >/dev/null 2>&1); then
-		echo-green "Installing missing network utilities..."
-		sudo apt-get update -qq >/dev/null
-		sudo apt-get install -y -qq --no-install-recommends ifupdown resolvconf >/dev/null
-	fi
-
-	# Install docker-machine
-	#	if ! is_docker_machine_version; then
-	#		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-	#		sudo curl -sSL "$URL_DOCKER_MACHINE_NIX" -o "$DOCKER_MACHINE_BIN_NIX" && \
-	#			sudo chmod +x "$DOCKER_MACHINE_BIN_NIX"
-	#	fi
 }
 
 # Install Alpine dependencies
@@ -3774,9 +3737,20 @@ update_virtualbox () {
 
 update_tools ()
 {
-	is_linux &&
-		install_tools_alpine &&
-		return $?
+	if is_linux; then
+		tu &&
+			install_tools_ubuntu &&
+			return $?
+
+		is_alpine &&
+			install_tools_alpine &&
+			return $?
+
+		# Display a warning for unsupported Linux distros
+		is_docker_version
+		echo-alert "Automatic Docker installation not supported on your system" \
+			"Please install "
+	fi
 
 	is_wsl &&
 		install_tools_wsl &&
