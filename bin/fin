@@ -4069,7 +4069,7 @@ update ()
 	# [STEP - POST UPDATE]
 	[[ "$?" == "0" ]] && echo-green "Update finished"
 
-	if is_linux && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+	if is_linux && ! is_root && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
 		echo-alert "Re-login to enable permanent Docker support." \
 			"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
 	fi
