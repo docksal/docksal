@@ -3738,7 +3738,7 @@ update_virtualbox () {
 update_tools ()
 {
 	if is_linux; then
-		tu &&
+		is_ubuntu &&
 			install_tools_ubuntu &&
 			return $?
 
