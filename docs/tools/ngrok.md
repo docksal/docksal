@@ -67,3 +67,13 @@ Option | Variable | Purpose
 `--region=us` | NGROK_REGION | Location of the ngrok tunnel server; can be `us` (United States, default), `eu` (Europe), `ap` (Asia/Pacific) or `au` (Australia)
 `--debug` | NGROK_DEBUG | To debug the connection and see a more detailed log set this to 1
 `--host-header=test.example.docksal` | NGROK_HEADER | Set Host Header. Set to the domain that should be passed through to the host.
+
+## Custom ngrok configuration file
+
+If you wish to consolidate your commands into the official ngrok config, you can do so by looking at the example ngrok config file located in the examples folder.
+To see all the commands available in the configuration file, see the ngrok documentation: https://ngrok.com/docs#config-location
+
+Using a custom ngrok config requires adding .docksal/etc/ngrok/ngrok.yml to your project. At this time there is no global ngrok config available, it must be created per project.
+Additionally, you can also create .docksal/etc/ngrok/ngrok-local.yml, which can contain personal details and gets merged with the project upon loading ngrok. Its suggested the ngrok-local.yml file be git-ignored.
+
+Note: If you use the config file, all command line flags will be disregarded. 
