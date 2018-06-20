@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.6
+FIN_VERSION=1.62.7
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -36,16 +36,6 @@ fi
 is_linux ()
 {
 	[[ "$OS_TYPE" == "Linux" ]]
-}
-
-is_ubuntu ()
-{
-	[[ "$OS_NAME" == "Ubuntu" ]] || [[ "$OS_NAME" == "Linux Mint" ]]
-}
-
-is_alpine ()
-{
-	[[ "$OS_NAME" == "Alpine" ]]
 }
 
 is_windows ()
@@ -731,11 +721,12 @@ check_docker_running ()
 		docker_status=$?
 	fi
 
-	if is_ubuntu; then
+	if is_linux; then
 		# Remind the user about running 'newgrp docker' after install.
 		if ! (id -nG | grep docker >/dev/null 2>&1) && ! is_root ; then
 			echo-error "Current user is not part of the docker group." \
-				"Have you run ${yellow}newgrp docker${NC} after ${yellow}fin update${NC}?"
+				"Re-login to enable permanent Docker support."
+				"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
 			exit 1
 		fi
 		# Check if docker daemon is running and offer to start it if not.
@@ -3463,7 +3454,7 @@ install_tools_mac ()
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		local server_version=$(docker version --format '{{.Server.Version}}')
 		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-yellow "[IMPORTANT]: update Docker for Mac to the latest version manually"
+			echo-alert "Update Docker for Mac to the latest version manually"
 			sleep 2
 		fi
 	fi
@@ -3595,7 +3586,7 @@ install_tools_windows ()
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		local server_version=$(docker version --format '{{.Server.Version}}')
 		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-green-bg " [IMPORTANT]: update Docker for Windows to the latest version manually "
+			echo-alert "Update Docker for Windows to the latest version manually"
 			sleep 2
 		fi
 	fi
@@ -3783,29 +3774,20 @@ update_virtualbox () {
 
 update_tools ()
 {
-	if is_linux; then
-		is_ubuntu && \
-			install_tools_ubuntu && \
-			return $?
-
-		is_alpine && \
-			install_tools_alpine && \
-			return $?
-
-		# Display a warning for unsupported Linux distros
-		echo-warning "Automatic prerequisites installation not supported on your system"
-	fi
-
-	is_wsl && \
-		install_tools_wsl && \
+	is_linux &&
+		install_tools_alpine &&
 		return $?
 
-	is_windows && \
-		install_tools_windows && \
+	is_wsl &&
+		install_tools_wsl &&
 		return $?
 
-	is_mac && \
-		install_tools_mac && \
+	is_windows &&
+		install_tools_windows &&
+		return $?
+
+	is_mac &&
+		install_tools_mac &&
 		return $?
 }
 
@@ -3964,7 +3946,7 @@ update ()
 			is_docksal_running && UPGRADE_IN_PROGRESS=1
 		else
 			# Check out the case when current user on Ubuntu does not have access to docker daemon
-			if is_ubuntu; then
+			if is_linux; then
 				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
 				[ ! $? -eq 0 ] && LINUX_DAEMON_RUNNING="exit 1"
 				# if daemon is running but docker info does not return 0 then this is the case
@@ -4091,12 +4073,11 @@ update ()
 	fi
 
 	# [STEP - POST UPDATE]
-	[ $? -eq 0 ] && echo-green "Update finished"
+	[[ "$?" == "0" ]] && echo-green "Update finished"
 
-	if is_ubuntu && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo -e "${yellow}IMPORTANT NOTE FOR LINUX USERS:${NC}"
-		echo -e "  Current user was added to the 'docker' group."
-		echo -e "  Re-login or run ${yellow}newgrp docker${NC} now to apply that change and use Docksal."
+	if is_linux && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
+		echo-alert "Re-login to enable permanent Docker support." \
+			"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
 	fi
 }
 
