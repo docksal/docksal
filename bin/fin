@@ -3572,10 +3572,6 @@ install_tools_windows ()
 # Install Ubuntu dependencies
 install_tools_ubuntu ()
 {
-	if ! is_tty; then
-	 	echo "WARNING: Installation is running not in a tty mode"
-	fi
-
 	# Install Docker client
 	sudo service docker start 2>/dev/null
 	if ! is_docker_version || ! is_docker_server_version; then
@@ -3615,10 +3611,6 @@ install_tools_ubuntu ()
 # Install Alpine dependencies
 install_tools_alpine ()
 {
-	if ! is_tty; then
-	 	echo "WARNING: Installation is running not in a tty mode"
-	fi
-
 	# Install Docker
 	# TODO: automate this
 	if ! is_docker_version || ! is_docker_server_version; then
