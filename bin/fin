@@ -21,7 +21,7 @@ fi
 # OS version detection
 if  [[ -f "/etc/os-release" ]]; then
 	(uname -a | grep -v 'Microsoft' >/dev/null) && OS_TYPE="Linux" || OS_TYPE="WSL"
-	IFS=";" read OS_NAME OS_VERSION OS_ID_LIKE < <(source "/etc/os-release"; echo "$NAME;$VERSION_ID;$ID_LIKE")
+	IFS=";" read OS_NAME OS_VERSION OS_ID OS_ID_LIKE < <(source "/etc/os-release"; echo "$NAME;$VERSION_ID;$ID;$ID_LIKE")
 	export OS_TYPE OS_NAME OS_VERSION
 elif (uname | grep 'Darwin' >/dev/null); then
 	export OS_TYPE="Darwin"
@@ -40,7 +40,10 @@ is_linux ()
 
 is_ubuntu ()
 {
-	[[ "$OS_NAME" == "Ubuntu" ]] || [[ "$OS_ID_LIKE" == "ubuntu" ]]
+	[[ "$OS_ID" == "ubuntu" ]] ||
+		[[ "$OS_ID" == "debian" ]] ||
+		[[ "$OS_ID_LIKE" == "ubuntu" ]] ||
+		[[ "$OS_ID_LIKE" == "debian" ]]
 }
 
 is_alpine ()
