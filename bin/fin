@@ -4803,19 +4803,20 @@ ngrok_share ()
 		ARGS="$ARGS -log stdout"
 	fi
 
-	# Overwrite settings with a configuration if its available
-    NGROK_VOLUME="-v $(get_project_path_dc)/.docksal:/var/www/.docksal"
-
 	local ngrok_conf="$(get_project_path_dc)/.docksal/etc/ngrok/ngrok.yml"
-	local local_ngrok_conf="$(get_project_path_dc)/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
 	if [[ -f "$ngrok_conf" ]]; then
-    	CONF_ARGS="-config /var/www/.docksal/etc/ngrok/ngrok.yml"
+    		CONF_ARGS="-config /var/www/.docksal/etc/ngrok/ngrok.yml"
   	fi
+
+	local local_ngrok_conf="$(get_project_path_dc)/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
 	if [[ -f "$local_ngrok_conf" ]]; then
-    	CONF_ARGS="$CONF_ARGS -config /var/www/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
+    		CONF_ARGS="$CONF_ARGS -config /var/www/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
   	fi
+	
   	if [[ -f "$ngrok_conf" ]] || [[ -f "$local_ngrok_conf" ]]; then
 	  	ARGS="ngrok start ${CONF_ARGS} -all"
+		# Overwrite settings with a configuration if its available
+		NGROK_VOLUME="-v $(get_project_path_dc)/.docksal:/var/www/.docksal"
 	fi
 	
 	${winpty} docker run --rm ${NGROK_VOLUME} -it \
