@@ -4803,12 +4803,13 @@ ngrok_share ()
 		ARGS="$ARGS -log stdout"
 	fi
 
-	local ngrok_conf="$(get_project_path_dc)/.docksal/etc/ngrok/ngrok.yml"
+	local ngrok_conf_path="$(get_project_path_dc)/.docksal/etc/ngrok"
+	local ngrok_conf="${ngrok_conf_path}/ngrok.yml"
 	if [[ -f "$ngrok_conf" ]]; then
     		CONF_ARGS="-config /var/www/.docksal/etc/ngrok/ngrok.yml"
   	fi
 
-	local local_ngrok_conf="$(get_project_path_dc)/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
+	local local_ngrok_conf="${ngrok_conf_path}/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
 	if [[ -f "$local_ngrok_conf" ]]; then
     		CONF_ARGS="$CONF_ARGS -config /var/www/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
   	fi
