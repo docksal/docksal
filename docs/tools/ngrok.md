@@ -68,12 +68,11 @@ Option | Variable | Purpose
 `--debug` | NGROK_DEBUG | To debug the connection and see a more detailed log set this to 1
 `--host-header=test.example.docksal` | NGROK_HEADER | Set Host Header. Set to the domain that should be passed through to the host.
 
-## Custom ngrok configuration file
+## Configuration File
 
-If you wish to consolidate your commands into the official ngrok config, you can do so by looking at the example ngrok config file located in the examples folder.
-To see all the commands available in the configuration file, see the ngrok documentation: https://ngrok.com/docs#config-location
+If ngrok is being used often with the same settings, you can consolidate your commands into an official ngrok config file. Copy the example config file from the [Docksal project repo](https://raw.githubusercontent.com/docksal/docksal/develop/examples/.docksal/etc/ngrok/ngrok.yml) into your project repo as `.docksal/etc/ngrok/ngrok.yml`. For more details on the configuration file and configuration options, view the [ngrok documentation](https://ngrok.com/docs#config).
 
-Using a custom ngrok config requires adding .docksal/etc/ngrok/ngrok.yml to your project. At this time there is no global ngrok config available, it must be created per project.
-Additionally, you can also create .docksal/etc/ngrok/ngrok-local.yml, which can contain personal details and gets merged with the project upon loading ngrok. Its suggested the ngrok-local.yml file be git-ignored.
+Note: It is also possible to add/override these values via `.docksal/etc/ngrok/ngrok-local.yml` at the project level. Keep in mind, `.docksal/etc/ngrok/ngrok.yml` is a shared configuration file and should be committed to git. `.docksal/etc/ngrok/ngrok-local.yml`, on the other hand, can be used for local overrides and should be excluded from git. As such, it is best to use `.docksal/etc/ngrok/ngrok-local.yml` for any personal details configured at the project level.
 
-Note: If you use the config file, all command line flags will be disregarded. 
+!!! note
+    If you use the config file, all command line flags will be disregarded.
