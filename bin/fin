@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.19
+FIN_VERSION=1.62.20
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -4855,8 +4855,136 @@ ngrok_share ()
 		sh -c "${ARGS}" ${container_name}.${network}:${NGROK_PORT}
 }
 
+# Print information required for issue diagnostics
+# --all will print additional information that is hidden by default as it's not usually needed
 diagnose ()
 {
+	echo "███  PROJECT CONFIGURATION"
+	if [[ "$(get_project_path)" == "" ]] ; then
+		echo "$(pwd) : not a Docksal project folder"
+		echo
+	else
+		load_configuration
+		config_show
+	fi
+
+	sysinfo "$@"
+}
+
+# Print system debug information
+# --all will print additional information that is hidden by default as it's not usually needed
+sysinfo ()
+{
+	eval $(parse_params "$@")
+
+	echo "███  OS"
+	# OS version
+	echo "${OS_TYPE} ${OS_NAME} ${OS_VERSION}"
+	uname -a
+
+	echo
+	echo "███  ENVIRONMENT" &&
+	# Docker Mode
+	echo -n "MODE : "
+	if is_linux; then
+		echo "Linux Kernel"
+	elif is_docker_native; then
+		is_mac && echo "Docker for Mac"
+		is_windows && echo "Docker for Windows"
+	else
+		echo "VirtualBox VM"
+	fi
+
+	if ! is_docker_native; then
+		echo "DOCKER_HOST : $DOCKER_HOST"
+		is_mac && echo "DOCKSAL_NFS_PATH : $DOCKSAL_NFS_PATH"
+		if is_mac; then
+			echo "NFS EXPORTS:"
+			cat /etc/exports
+		fi
+	fi
+
+	echo
+	echo "███  FIN" &&
+	version
+
+	echo
+	echo "███  DOCKER COMPOSE"
+	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_COMPOSE"
+	docker-compose version
+
+	echo
+	echo "███  DOCKER"
+	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER"
+	echo
+	docker version
+
+	if [[ "$all" == "all" ]]; then
+		echo
+		echo "███  DOCKER INFO"
+		docker info
+	fi
+
+	if ! is_linux && ! is_docker_native; then
+		echo
+		echo "███  DOCKER MACHINE"
+		echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_MACHINE"
+		docker-machine --version
+		echo
+		docker-machine ls
+	fi
+
+	if is_docker_running; then
+		echo
+		echo "███  DOCKSAL: PROJECTS"
+		project_list
+
+		echo
+		echo "███  DOCKSAL: VIRTUAL HOSTS"
+		vhosts
+
+		echo
+		echo "███  DOCKER: RUNNING CONTAINERS"
+		docker ps
+
+		echo
+		echo "███  DOCKER: NETWORKS"
+		docker network list
+
+		if [[ "$all" == "all" ]]; then
+			echo
+			echo "███  DOCKER: IMAGES"
+			docker images
+		fi
+	else
+		echo "███  DOCKER: DOCKER IS NOT RUNNING"
+		echo
+	fi
+
+	if ! is_docker_native && (which "$vboxmanage" >/dev/null 2>&1); then
+		echo
+		echo "███  VIRTUALBOX"
+		echo "EXPECTED VERSION: $REQUIREMENTS_VBOX"
+		"$vboxmanage" --version
+
+		if [[ "$all" == "all" ]]; then
+			echo
+			echo "███  VIRTUALBOX NETWORK INTERFACES"
+			"$vboxmanage" list hostonlyifs
+		fi
+	fi
+
+	if ! is_docker_native && is_docker_machine_running; then
+		echo
+		echo "███  DOCKSAL MOUNTS"
+		vm ssh mount | grep '192.168.64'
+		if [[ $? != 0 ]]; then
+			echo-error "Mounts matching 192.168.64* were not found!"
+		fi
+	fi
+
+	# Diagnostics information
+	echo
 	echo "███  HDD Usage"
 	if is_linux; then
 		df -h # Linux
@@ -4868,114 +4996,28 @@ diagnose ()
 		wmic logicaldisk get size,freespace,caption # win native
 	fi
 
-	echo
-	echo "███  RAM Usage"
-	if is_linux; then
-		free # Linux
-	elif ! is_docker_native; then
-		vm ssh free # boot2docker
-	elif is_mac; then
-		vm_stat # mac native
-	else
-		systeminfo | find "Available Physical Memory"  # win native
-	fi
-
-	echo
-	echo "███  RAM Usage per container"
-	docker stats $(docker ps --format='{{.Names}}') --no-stream
-}
-
-sysinfo ()
-{
-	echo "███  OS"
-	# OS version
-	echo "${OS_TYPE} ${OS_NAME} ${OS_VERSION}"
-	uname -a
-	# Docker Mode
-	echo -n "Mode: "
-	if is_linux; then
-		echo "Linux Kernel"
-	elif is_docker_native; then
-		is_mac && echo "Docker for Mac"
-		is_windows && echo "Docker for Windows"
-	else
-		echo "VirtualBox VM"
-	fi
-
-	echo
-	echo "███  FIN" &&
-	version
-
-	echo
-	echo "███  ENVIRONMENT" &&
-	echo "DOCKER_HOST		| $DOCKER_HOST"
-	if [[ "$DOCKER_HOST" != "tcp://192.168.64.100:2376" ]]; then
-		echo-warning "Non-default DOCKER_HOST"
-	fi
-	is_mac &&
-		echo-repeat '-' 60 &&
-		echo "DOCKSAL_NFS_PATH	| $DOCKSAL_NFS_PATH"
-
-	echo
-	echo "███  DOCKER"
-	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER"
-	echo
-	docker version
-
-	echo
-	echo "███  DOCKER INFO"
-	docker info
-
-	echo "███  DOCKER COMPOSE"
-	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_COMPOSE"
-	docker-compose version
-
-	if ! is_linux && (which 'docker-machine' >/dev/null 2>&1); then
+	if [[ "$all" == "all" ]]; then
 		echo
-		echo "███  DOCKER MACHINE"
-		echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_MACHINE"
-		docker-machine --version
-		echo
-		docker-machine ls
-	fi
-
-	if is_docker_running; then
-		echo
-		echo "███  DOCKER: IMAGES"
-		docker images
-
-		echo
-		echo "███  DOCKER: CONTAINERS"
-		docker ps
-	fi
-
-	if which "$vboxmanage" >/dev/null 2>&1; then
-		echo
-		echo "███  VIRTUALBOX"
-		echo "EXPECTED VERSION: $REQUIREMENTS_VBOX"
-		"$vboxmanage" --version
-		echo
-		echo "███  VIRTUALBOX NETWORK INTERFACES"
-		"$vboxmanage" list hostonlyifs
-	fi
-
-	if is_mac; then
-		echo "███  NFS EXPORTS"
-		cat /etc/exports
-	fi
-
-	if is_docker_machine_running; then
-		echo
-		echo "███  DOCKSAL MOUNTS"
-		vm ssh mount | grep '192.168.64'
-		if [[ $? != 0 ]]; then
-			echo-error "Mounts matching 192.168.64* were not found!"
+		echo "███  RAM Usage"
+		if is_linux; then
+			free # Linux
+		elif ! is_docker_native; then
+			vm ssh free # boot2docker
+		elif is_mac; then
+			vm_stat # mac native
+		else
+			systeminfo | find "Available Physical Memory"  # win native
 		fi
+
+		echo
+		echo "███  Running containers stats"
+		docker stats $(docker ps --format='{{.Names}}') --no-stream
 	fi
 
-	# add diagnostics information
-	echo
-	diagnose
+	if [[ "$all" == "all" ]]; then
+		echo "███  Docksal Proxy status"
+		docker exec docksal-vhost-proxy nginx -t
+	fi
 
 	# Ping stats server
 	stats_ping
