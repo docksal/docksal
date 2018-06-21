@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.16
+FIN_VERSION=1.62.17
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3626,12 +3626,13 @@ install_tools_fedora ()
 		fi
 
 		# Install stable Docker version
-		curl -fsSL "${URL_DOCKER_NIX}" | CHANNEL=stable sh &&
-			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-			sudo usermod -aG docker "$LOGNAME"
+		curl -fsSL "${URL_DOCKER_NIX}" | CHANNEL=stable sh
+		if_failed "Docker installation/upgrade has failed."
+
+		sudo groupadd docker
+		sudo usermod -aG docker ${USER}
 		sudo service docker start 2>/dev/null
 		sudo docker version
-		if_failed "Docker installation/upgrade has failed."
 	fi
 
 	# Install Docker Compose
