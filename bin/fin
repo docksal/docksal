@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.14
+FIN_VERSION=1.62.15
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -38,10 +38,11 @@ is_linux ()
 	[[ "$OS_TYPE" == "Linux" ]]
 }
 
-is_ubuntu ()
+is_linux_supported ()
 {
 	[[ "$OS_ID" == "ubuntu" ]] ||
 		[[ "$OS_ID" == "debian" ]] ||
+		[[ "$OS_ID" == "fedora" ]] ||
 		[[ "$OS_ID_LIKE" == "ubuntu" ]] ||
 		[[ "$OS_ID_LIKE" == "debian" ]]
 }
@@ -3569,7 +3570,7 @@ install_tools_windows ()
 }
 
 # Install Ubuntu dependencies
-install_tools_ubuntu ()
+install_tools_supported_linux ()
 {
 	# Install Docker client
 	sudo service docker start 2>/dev/null
@@ -3750,8 +3751,8 @@ update_virtualbox () {
 update_tools ()
 {
 	if is_linux; then
-		is_ubuntu &&
-			install_tools_ubuntu &&
+		is_linux_supported &&
+			install_tools_supported_linux &&
 			return $?
 
 		is_alpine &&
