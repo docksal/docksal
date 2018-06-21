@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.20
+FIN_VERSION=1.62.21
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3778,7 +3778,7 @@ update_virtualbox () {
 	# Download and install Win
 	is_windows && (
 		# Using cygpath -w here to get a Windows native path to the installer, so that cmd will understand it.
-		cmd /c start "$(cygpath -w $vbox_pkg)"
+		cmd /c start "$(cygpath -w '$vbox_pkg')"
 	)
 
 	# Wait for installation to finish
