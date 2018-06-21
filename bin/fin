@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.12
+FIN_VERSION=1.62.14
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3308,7 +3308,7 @@ configure_resolver ()
 		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
 
 		# The following check requires nslookup. Skip it if the binary is not present.
-		if ! (which nslookup >/dev/null 2>&1); then
+		if (which nslookup >/dev/null 2>&1); then
 			# Probing the upstream DNS server
 			# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
 			# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
