@@ -1,9 +1,9 @@
 # Ngrok example configuration file.
-# To use, rename the items in CAPS to your docksal host, and rename this file to ngrok.local.yml.
+# To use, rename the items in CAPS to your docksal host, and rename this file to ngrok.yml or ngrok.local.yml.
 #
 # This is useful if you need to host multisite with ngrok, which is not available via the command line.
 # Replace 'authtoken' with your token from the ngrok website
-# Replace the hostname suffix with your ngrok name. Its suggested you name it something simple like:
+# Replace the hostname suffix with your ngrok name. It's suggested you name it something simple like:
 #  -- PROJECTNAME-site1.ngrok.io and PROJECTNAME-site2.ngrok.io
 #
 authtoken: XXXXXXXXXXXXXXXXXX
