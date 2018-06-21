@@ -2838,7 +2838,6 @@ project_create ()
 		mkdir "docroot"
 		echo "<html><body>Hello, Docksal!</body></html>" > "docroot/index.html"
 		echo 'DOCKSAL_STACK="default-nodb"' >> ".docksal/docksal.env"
-		echo "VIRTUAL_HOST=\"${project_virtual_host_name}\"" >>  ".docksal/docksal.env"
 		fin up
 		echo -e "Done! Visit ${yellow}http://${project_virtual_host_name}${NC}"
 		exit
