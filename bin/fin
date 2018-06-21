@@ -3629,6 +3629,7 @@ install_tools_fedora ()
 		curl -fsSL "${URL_DOCKER_NIX}" | CHANNEL=stable sh
 		if_failed "Docker installation/upgrade has failed."
 
+		# Have to create group here to add user to it
 		sudo groupadd docker
 		sudo usermod -aG docker ${USER}
 		sudo service docker start 2>/dev/null
