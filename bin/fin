@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.15
+FIN_VERSION=1.62.16
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -38,11 +38,10 @@ is_linux ()
 	[[ "$OS_TYPE" == "Linux" ]]
 }
 
-is_linux_supported ()
+is_debian ()
 {
 	[[ "$OS_ID" == "ubuntu" ]] ||
 		[[ "$OS_ID" == "debian" ]] ||
-		[[ "$OS_ID" == "fedora" ]] ||
 		[[ "$OS_ID_LIKE" == "ubuntu" ]] ||
 		[[ "$OS_ID_LIKE" == "debian" ]]
 }
@@ -50,6 +49,11 @@ is_linux_supported ()
 is_alpine ()
 {
 	[[ "$OS_ID" == "alpine" ]]
+}
+
+is_fedora ()
+{
+	[[ "$OS_ID" == "fedora" ]]
 }
 
 is_windows ()
@@ -3569,8 +3573,8 @@ install_tools_windows ()
 	fi
 }
 
-# Install Ubuntu dependencies
-install_tools_supported_linux ()
+# Install tools for Debian
+install_tools_debian ()
 {
 	# Install Docker client
 	sudo service docker start 2>/dev/null
@@ -3591,6 +3595,38 @@ install_tools_supported_linux ()
 			# Patch get.docker.com script on the fly to force installation of the pinned docker-ce version
 			sed "s/--force-yes docker-ce >/docker-ce >/" | \
 			sh && \
+			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
+			sudo usermod -aG docker "$LOGNAME"
+		sudo service docker start 2>/dev/null
+		sudo docker version
+		if_failed "Docker installation/upgrade has failed."
+	fi
+
+	# Install Docker Compose
+	if ! is_docker_compose_version; then
+		echo-green "Installing Docker Compose..."
+		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
+			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+			docker-compose --version
+		if_failed "Docker Compose installation/upgrade has failed."
+	fi
+}
+
+# Install tools for Fedora
+install_tools_fedora ()
+{
+	# Install Docker client
+	sudo service docker start 2>/dev/null
+	if ! is_docker_version || ! is_docker_server_version; then
+		echo-green "Installing Docker..."
+		# Stop docker service if it exists
+		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
+			echo "Stopping docker service..."
+			sudo service docker stop 2>/dev/null
+		fi
+
+		# Install stable Docker version
+		curl -fsSL "${URL_DOCKER_NIX}" | CHANNEL=stable sh &&
 			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 			sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
@@ -3751,8 +3787,12 @@ update_virtualbox () {
 update_tools ()
 {
 	if is_linux; then
-		is_linux_supported &&
-			install_tools_supported_linux &&
+		is_debian &&
+			install_tools_debian &&
+			return $?
+
+		is_fedora &&
+			install_tools_fedora &&
 			return $?
 
 		is_alpine &&
