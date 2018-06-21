@@ -291,6 +291,7 @@ echo-rewrite-ok ()
 {
 	echo-rewrite "$1 ${green}[OK]${NC}"
 }
+# print string in $1 for $2 times
 echo-repeat () {
     seq  -f $1 -s '' $2; echo
 }
