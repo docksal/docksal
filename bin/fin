@@ -5435,11 +5435,13 @@ hosts_backup ()
 
 vhosts ()
 {
-	NAMES=`docker exec docksal-vhost-proxy sh -c "grep server_name /etc/nginx/conf.d/* -r |sort |uniq|sed 's/;//g' |sed 's/^.*_name//g'"`
+	docker exec docksal-vhost-proxy sh -c "ls /etc/nginx/conf.d/* >/dev/null"
+	[[ "$?" != "0" ]] && echo "No virtual hosts found" && return 1
 
-	echo-yellow "\nAvailable websites are:"
-	for n in $NAMES ;do
-		echo-green "http://$n"
+	NAMES=$(docker exec docksal-vhost-proxy sh -c "grep server_name /etc/nginx/conf.d/* -r | sort | uniq | sed 's/;//g' | sed 's/^.*_name//g'")
+
+	for vhost in $NAMES ;do
+		echo-green "http://$vhost"
 	done
 }
 
