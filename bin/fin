@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.18
+FIN_VERSION=1.62.19
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -326,6 +326,11 @@ pwd ()
 	else
 		$(which pwd) -L
 	fi
+}
+
+uuid_generate ()
+{
+	od -x /dev/urandom | head -1 | awk '{OFS="-"; print $2$3,$4,$5,$6,$7$8$9}'
 }
 
 docker-compose ()
@@ -5728,7 +5733,7 @@ fi
 
 # Generate Docksal instance uuid if not available
 if [[ "$DOCKSAL_UUID" == "" ]]; then
-	export DOCKSAL_UUID=$(uuidgen)
+	export DOCKSAL_UUID=$(uuid_generate)
 	# Make sure the is a new line at the end of the config file, then write to it
 	sed -i~ '$ a\' "$CONFIG_ENV"
 	echo "DOCKSAL_UUID=$DOCKSAL_UUID" | tee -a "$CONFIG_ENV" >/dev/null
