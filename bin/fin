@@ -591,7 +591,7 @@ is_docker_native ()
 # param $1 filename
 is_crlf ()
 {
-	[[ "$(grep -c $'\r' $1)" -gt 0 ]]
+	[[ $(grep -c $'\r' "$1") -gt 0 ]]
 }
 
 # Check if file has crlf endings and fix it
