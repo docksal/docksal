@@ -6327,11 +6327,13 @@ case "$1" in
 	sysinfo)
 		# no load_configuration
 		check_for_updates
-		sysinfo
+		shift
+		sysinfo "$@"
 		;;
 	diagnose)
 		# no load_configuration
-		diagnose
+		shift
+		diagnose "$@"
 		;;
 	config)
 		# different load_configuration
