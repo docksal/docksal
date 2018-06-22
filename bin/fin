@@ -1266,7 +1266,7 @@ show_help_list_commands_in_help ()
 	local executable="-executable"
 	[[ is_mac ]] && executable="-perm +100"
 	
-	local addons_list=$(find "$addons_path" -type f ${executable} 2>/dev/null)
+	local addons_list=$(find "$addons_path" -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
 	if [[ "$addons_list" != "" ]]; then
 		local scope
 		for cmd_name in ${addons_list}
@@ -1277,7 +1277,7 @@ show_help_list_commands_in_help ()
 			# command description is lines that start with ##
 			local filename="$addons_path/$cmd_name"
 			local cmd_desc
-			[ ! -f "$filename" ] && continue
+			[[ ! -f "$filename" ]] && continue
 			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
 			cmd_desc="${cmd_desc:-No description}"
 			printh "${cmd_name}${g}" "$cmd_desc"
@@ -1297,8 +1297,8 @@ show_help_list_addons_in_help ()
 		addons_path="$HOME/$DOCKSAL_ADDONS_PATH"
 	fi
 
-	local addons_list=$(ls "$addons_path" 2>/dev/null | tr "\n" " ")
-	if [ ! -z "$addons_list" ]; then
+	local addons_list=$(ls "$addons_path" 2>/dev/null |  sort -n 2>/dev/null | tr "\n" " ")
+	if [[ ! -z "$addons_list" ]]; then
 		local scope
 		for cmd_name in $(ls "$addons_path")
 		do
@@ -1307,7 +1307,7 @@ show_help_list_addons_in_help ()
 			# command description is lines that start with ##
 			local filename="$addons_path/$cmd_name/$cmd_name"
 			local cmd_desc
-			[ ! -f "$filename" ] && continue
+			[[ ! -f "$filename" ]] && continue
 			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
 			cmd_desc="${cmd_desc:-No description}"
 			printh "${cmd_name}${g}" "$cmd_desc"
