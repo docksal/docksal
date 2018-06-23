@@ -249,7 +249,7 @@ See Issue 3. Lack of memory for resolution.
 <a name="issue-12"></a>
 ## Issue 12. VirtualBox installation fails on macOS High Sierra 10.13
 
-New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced 
+New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced
 around third-party kernel extensions.
 
 ### How to resolve
@@ -276,3 +276,24 @@ This means that you have docker credentials stored in docker config file, and th
 
 See [docker login documentation](https://docs.docker.com/engine/reference/commandline/login/#logging-out) and
 to use docker client to either log out or relogin.
+
+## Issue 14. VirtualBox installation fails on Windows (Hyper-V Enabled)
+
+Docksal / VirtualBox installations will fail on Windows if Hyper-V is enabled. This will result in a message similar to
+below:
+
+```
+Error with pre-create check: "This computer is running Hyper-V.
+VirtualBox won't boot a 64bits VM when Hyper-V is activated.
+Either use Hyper-V as a driver, or disable the Hyper-V hypervisor.
+(To skip this check, use --virtualbox-no-vtx-check)
+```
+
+To Disable Hyper-V:
+
+* Run Command Prompt as an Administrator: Click [here](https://www.howtogeek.com/194041/how-to-open-the-command-prompt-as-administrator-in-windows-8.1/) for steps on how to do this.
+* Type the following and press Enter:
+
+```
+dism.exe /Online /Disable-Feature:Microsoft-Hyper-V /All
+```
