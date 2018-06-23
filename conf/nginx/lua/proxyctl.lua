@@ -9,6 +9,7 @@ end
 function response(location, status)
     local res = ngx.location.capture(location)
     ngx.header.content_type = 'text/html';
+    ngx.status = status -- Set the status before printing anything
     ngx.print(res.body)
 
     -- Unlock host before exiting
@@ -39,10 +40,11 @@ if (lock_timestamp == 0) then
     ngx.shared.hosts:set(ngx.var.host, lock_timestamp)
 
     -- Lanch project start script
-    local exec_result = os.execute("PATH=/usr/local/bin:$PATH sudo proxyctl start \"" .. ngx.var.host .. "\"")
+    -- os.execute returs multiple values starting with Lua 5.2
+    local status, exit, exit_code = os.execute("PATH=/usr/local/bin:$PATH sudo proxyctl start \"" .. ngx.var.host .. "\"")
 
     -- If all went well, reload the page using /loading.html
-    if (exec_result == true) then
+    if (exit_code == 0) then
         dpr("Container start succeeded")
         response("/loading.html", ngx.HTTP_OK)
     -- If proxyctl start failed (non-existing environment or something went wrong), return /not-found.html
