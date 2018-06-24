@@ -26,7 +26,7 @@ Any other changes happen inside of the container only and are reset once the con
 ### Create a Drupal 8 Composer based project from scratch
 
 ```bash
-fin composer create-project drupal-composer/drupal-project:8.x-dev myproject --stability dev --no-interaction
+fin run-cli composer create-project drupal-composer/drupal-project:8.x-dev myproject --stability dev --no-interaction
 ```
 
 You can then initialize the default Docksal stack (LAMP) for the new project with just a few more steps:
@@ -34,6 +34,7 @@ You can then initialize the default Docksal stack (LAMP) for the new project wit
 ```bash
 cd myproject
 mkdir .docksal
+echo "DOCROOT=web" >>.docksal/docksal.env
 fin project start
 ``` 
 
