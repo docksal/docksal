@@ -1,7 +1,7 @@
-user    nginx;
-worker_processes    1;
-pid     /var/run/nginx.pid;
-daemon  off;
+user				nginx;
+worker_processes	1;
+pid					/var/run/nginx.pid;
+daemon				off;
 
 env DEBUG_LOG;
 
@@ -9,85 +9,92 @@ env DEBUG_LOG;
 error_log /dev/stderr warn;
 
 events {
-    worker_connections  1024;
+	worker_connections 1024;
 }
 
 http {
-    server_names_hash_bucket_size 128;
-    include       /etc/nginx/mime.types;
-    default_type  application/octet-stream;
+	server_names_hash_bucket_size	128;
+	include							/etc/nginx/mime.types;
+	default_type					application/octet-stream;
 
-    log_format simple '$remote_addr [$time_local] "$request" $status $body_bytes_sent "$http_referer"';
-    {{ if ne (getenv "ACCESS_LOG") "0" }}
-    access_log /dev/stdout simple;
-    {{ else }}
-    access_log off;
-    {{ end }}
+	log_format simple '$remote_addr [$time_local] "$request" $status $body_bytes_sent "$http_referer"';
+	{{ if ne (getenv "ACCESS_LOG") "0" }}
+	access_log /dev/stdout simple;
+	{{ else }}
+	access_log off;
+	{{ end }}
 
-    lua_shared_dict hosts 1m;
+	lua_shared_dict hosts 1m;
+	# For Lua debugging only
+	#lua_code_cache off;
 
-    server {
-      listen 80;
-      server_name _; # This is just an invalid value which will never trigger on a real hostname.
+	server {
+		listen 80;
+		server_name _; # This is just an invalid value which will never trigger on a real hostname.
 
-      include /etc/nginx/proxyctl.conf;
-    }
+		location / {
+			rewrite_by_lua_file conf/lua/proxyctl.lua;
+		}
+	}
 
-    server {
-      listen 443 ssl http2;
+	server {
+		listen 443 ssl http2;
 
-      server_name _; # This is just an invalid value which will never trigger on a real hostname.
+		server_name _; # This is just an invalid value which will never trigger on a real hostname.
 
-      ssl_certificate           /etc/nginx/server.crt;
-      ssl_certificate_key       /etc/nginx/server.key;
+		ssl_certificate				/etc/nginx/server.crt;
+		ssl_certificate_key			/etc/nginx/server.key;
 
-      ssl_session_cache  builtin:1000  shared:SSL:10m;
-      ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
-      ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
-      ssl_prefer_server_ciphers on;
+		ssl_session_cache			builtin:1000  shared:SSL:10m;
+		ssl_protocols				TLSv1 TLSv1.1 TLSv1.2;
+		ssl_ciphers					HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
+		ssl_prefer_server_ciphers	on;
 
-      include /etc/nginx/proxyctl.conf;
-    }
+		location / {
+			rewrite_by_lua_file conf/lua/proxyctl.lua;
+		}
+	}
 
-    # If we receive X-Forwarded-Proto, pass it through; otherwise, pass along the
-    # scheme used to connect to this server
-    map $http_x_forwarded_proto $proxy_x_forwarded_proto {
-      default $http_x_forwarded_proto;
-      ''      $scheme;
-    }
+	# If we receive X-Forwarded-Proto, pass it through; otherwise, pass along the
+	# scheme used to connect to this server
+	map $http_x_forwarded_proto $proxy_x_forwarded_proto {
+		default $http_x_forwarded_proto;
+		'' $scheme;
+	}
 
-    # If we receive Upgrade, set Connection to "upgrade"; otherwise, delete any
-    # Connection header that may have been passed to this server
-    map $http_upgrade $proxy_connection {
-      default upgrade;
-      '' close;
-    }
+	# If we receive Upgrade, set Connection to "upgrade"; otherwise, delete any
+	# Connection header that may have been passed to this server
+	map $http_upgrade $proxy_connection {
+		default upgrade;
+		'' close;
+	}
 
-    # HTTP 1.1 support
-    proxy_http_version  1.1;
-    proxy_set_header    Host $http_host;
-    proxy_set_header    Upgrade $http_upgrade;
-    proxy_set_header    Connection $proxy_connection;
-    proxy_set_header    X-Real-IP $remote_addr;
-    proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header    X-Forwarded-Proto $proxy_x_forwarded_proto;
+	# HTTP 1.1 support
+	proxy_http_version		1.1;
+	proxy_set_header		Host $http_host;
+	proxy_set_header		Upgrade $http_upgrade;
+	proxy_set_header		Connection $proxy_connection;
+	proxy_set_header		X-Real-IP $remote_addr;
+	proxy_set_header		X-Forwarded-For $proxy_add_x_forwarded_for;
+	proxy_set_header		X-Forwarded-Proto $proxy_x_forwarded_proto;
 
-    # Allow large POSTs
-    client_max_body_size 500M;
-    # Allow long running scripts
-    proxy_read_timeout 600s;
-    # Disable output response body bufferring
-    proxy_buffering off;
-    # Increase output response headers buffer size (this is separate from proxy_buffering, defaults to 4k)
-    proxy_buffer_size   128k;
-    proxy_buffers   4 256k;
-    proxy_busy_buffers_size   256k;
+	# Allow long running scripts
+	proxy_read_timeout		600s;
+	# Disable output response body bufferring
+	proxy_buffering			off;
+	# Increase output response headers buffer size (this is separate from proxy_buffering, defaults to 4k)
+	proxy_buffer_size		128k;
+	proxy_buffers			4 256k;
+	proxy_busy_buffers_size	256k;
 
-    # Fixes random issues with POST requests
-    # See https://github.com/dockerfile/nginx/issues/4#issuecomment-209440995
-    client_body_temp_path /tmp 1 2;
-    client_body_buffer_size 256k;
-    client_body_in_file_only off;
+	# Allow large POSTs
+	client_max_body_size	500M;
 
-    include /etc/nginx/conf.d/*.conf;
+	# Fixes random issues with POST requests
+	# See https://github.com/dockerfile/nginx/issues/4#issuecomment-209440995
+	client_body_temp_path		/tmp 1 2;
+	client_body_buffer_size		256k;
+	client_body_in_file_only	off;
+
+	include /etc/nginx/conf.d/*.conf;
 }
