@@ -47,14 +47,14 @@ local lock_timestamp = ngx.shared.hosts:get(ngx.var.host)
 if (lock_timestamp == nil) then lock_timestamp = 0 end
 local lock_age = timestamp - lock_timestamp
 
--- Break the lock if it is older than 30s
 if (lock_age > 30) then
+    -- Break the lock if it is older than 30s
     dpr("Unlocking a stale lock (" .. lock_age .. "s) for " .. ngx.var.host)
     ngx.shared.hosts:delete(ngx.var.host)
 end
 
--- No lock timestamp = can proceed with project wake up
 if (lock_timestamp == 0) then
+    -- No lock timestamp = can proceed with project wake up
 
     dpr("Locking " .. ngx.var.host)
     lock_timestamp = os.time(os.date("!*t"))
@@ -64,16 +64,16 @@ if (lock_timestamp == 0) then
     -- os.execute returs multiple values starting with Lua 5.2
     local status, exit, exit_code = os.execute("PATH=/usr/local/bin:$PATH sudo proxyctl start \"" .. ngx.var.host .. "\"")
 
-    -- If all went well, reload the page
     if (exit_code == 0) then
+        -- If all went well, reload the page
         dpr("Container start succeeded")
         response(ngx.HTTP_OK)
-    -- If proxyctl start failed (non-existing environment or something went wrong), return 404
     else
+        -- If proxyctl start failed (non-existing environment or something went wrong), return 404
         dpr("Container start failed")
         response(ngx.HTTP_NOT_FOUND)
     end
--- There is an active lock, so skip for now
 else
+    -- There is an active lock, so skip for now
     dpr(ngx.var.host .. " is locked. Skipping.")
 end
