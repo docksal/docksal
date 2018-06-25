@@ -291,7 +291,7 @@ Either use Hyper-V as a driver, or disable the Hyper-V hypervisor.
 
 To Disable Hyper-V:
 
-* Run Command Prompt as an Administrator: Click [here](https://www.howtogeek.com/194041/how-to-open-the-command-prompt-as-administrator-in-windows-8.1/) for steps on how to do this.
+* [Run Command Prompt as an Administrator](https://www.howtogeek.com/194041/how-to-open-the-command-prompt-as-administrator-in-windows-8.1/)
 * Type the following and press Enter:
 
 ```
