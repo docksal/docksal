@@ -1,6 +1,6 @@
 # Platform.sh
 
-Platform.sh offers a command line tool to help . It enables you to do almost everything in a terminal that you can do in the Dashboard, and much more.
+Platform.sh offers a tool that allows for you to manage your projects from the command line. It enables you to do almost everything in a terminal that you can do in the Dashboard, and much more.
 
 Platform.sh's CLI is pre-installed in the `cli` container. Note: required `docksal/cli` version: 2.3.0+.
 
@@ -12,9 +12,13 @@ Follow the [official docs](https://docs.platform.sh/gettingstarted/cli/api-token
 Add the token to `$HOME/docksal/docksal.env`:
 
 ```
-...
-SECRET_PLATFORMSH_CLI_TOKEN="XMAG92S9_9gf5Mlhb7-JIEjVwYYhY-MGuKcspAdL0CjkU"
-...
+fin config set --global SECRET_PLATFORMSH_CLI_TOKEN="XMAG92S9_9gf5Mlhb7-JIEjVwYYhY-MGuKcspAdL0CjkU"
+```
+
+If you'd rather not put the token in your global environment file then the token can be added to `$PROJECT/docksal/docksal-local.env` by running:
+
+```
+fin config set --env=local SECRET_PLATFORMSH_CLI_TOKEN="XMAG92S9_9gf5Mlhb7-JIEjVwYYhY-MGuKcspAdL0CjkU"
 ```
 
 Refresh `cli` service configuration with `fin project start`. This will inject the token into `cli` and authenticate
