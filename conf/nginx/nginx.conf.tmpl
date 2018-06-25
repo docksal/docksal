@@ -32,7 +32,9 @@ http {
       listen 80;
       server_name _; # This is just an invalid value which will never trigger on a real hostname.
 
-      include /etc/nginx/proxyctl.conf;
+      location / {
+        rewrite_by_lua_file conf/lua/proxyctl.lua;
+      }
     }
 
     server {
@@ -48,7 +50,9 @@ http {
       ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
       ssl_prefer_server_ciphers on;
 
-      include /etc/nginx/proxyctl.conf;
+      location / {
+        rewrite_by_lua_file conf/lua/proxyctl.lua;
+      }
     }
 
     # If we receive X-Forwarded-Proto, pass it through; otherwise, pass along the
