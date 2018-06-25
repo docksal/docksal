@@ -22,7 +22,7 @@ fin config set --env=local SECRET_PLATFORMSH_CLI_TOKEN="XMAG92S9_9gf5Mlhb7-JIEjV
 ```
 
 Refresh `cli` service configuration with `fin project start`. This will inject the token into `cli` and authenticate
-the container with Pantheon.
+in the container with Platform.sh.
 
 Use `fin platform <command>` from the host or `platform <command>` inside `cli`.
 
