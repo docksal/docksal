@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.25
+FIN_VERSION=1.62.26
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -1437,6 +1437,7 @@ show_help_project() {
 	printh "restart" "Restart project services (alias: fin restart)"
 	printh "reset [service]" "Recreate all or specified project services, their containers and named volumes"
 	printh "" "Changes to home directory in \`cli\` are preserved."
+	echo
 	printh "remove [option] [service]" "Remove all project services, networks and all their volumes, or specified services only"
 	printh "    rm [option] [service]" ""
 	printh "  --force (-f)" "Do not ask for confirmation when deleting all project services"
@@ -1444,8 +1445,11 @@ show_help_project() {
 	printh "list [option]" "List running Docksal projects (alias: fin pl)"
 	printh "  --all (-a)" "List all Docksal projects (stopped as well)"
 	echo
-	printh "create" "Create a new project with a pre-configured boilerplate:"
+	printh "create [options]" "Create a new project with a pre-configured boilerplate:"
 	printh "" "Drupal, Wordpress, Magento, Laravel, Backdrop, Hugo, Gatsby, and others"
+	printh "  --name=name" "Provide project name upfront"
+	printh "  --choice=#" "Provide software choice number upfront"
+	printh "  --yes (-y)" "Avoid confirmation"
 	echo
 	printh "config" "Show project configuration"
 	printh "build" "Build or rebuild services (alias for 'docker-compose build')"
@@ -2736,124 +2740,133 @@ project_list ()
 
 project_create ()
 {
-	echo-green "             -= Docksal project wizard =-"
-	echo
-	while true; do
-		echo -en "${yellow}1. Name your project${NC} (lowercase alphanumeric, underscore, and hyphen): "
-		read -p "" project_name
-		# This will not accept project name of 1 symbol long. Not sure if this needs to be fixed
-		if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9_-]*[a-z0-9]$ ]]; then
-			echo-error "Unacceptable project name" \
-				"Use only lowercase letters, numbers, underscores, and hyphens." \
-				"Project name defines host name, where underscores will be replaced with hyphens." \
-				""
-			continue
-		fi
-		local project_virtual_host_name="$(echo ${project_name} | sed 's/_/-/g' | sed 's/[^-a-z0-9]//g').${DOCKSAL_DNS_DOMAIN}"
-		break
-	done
-	echo ''
+	eval $(parse_params "$@")
+	# Read name from params if available
+	local project_name="$name"
 
-	echo -e "${yellow}2. What would you like to install?${NC}"
-	echo -e "${blue}  PHP based${NC}"
-	echo -e "${green}    1.${NC}  Drupal 8"
-	echo -e "${green}    2.${NC}  Drupal 7"
-	echo -e "${green}    3.${NC}  Wordpress"
-	echo -e "${green}    4.${NC}  Magento"
-	echo -e "${green}    5.${NC}  Laravel"
-	echo -e "${green}    6.${NC}  Symfony Skeleton"
-	echo -e "${green}    7.${NC}  Symfony WebApp"
-	echo -e "${green}    8.${NC}  Grav CMS"
-	echo -e "${green}    9.${NC}  Backdrop CMS"
-	echo
-	echo -e "${lime}  JS based${NC}"
-	echo -e "${green}    10.${NC} Hugo"
-	echo -e "${green}    11.${NC} Gatsby JS"
-	echo
-	echo -e "${acqua}  HTML${NC}"
-	echo -e "${green}    12.${NC} Static HTML site"
-	echo -e ""
-	while true; do
-		read -p "Enter your choice (1-12): " choice
-		case ${choice} in
-			1)
-				target_cms="Drupal 8"
-				target_host_name_search_string="drupal8.docksal"
-				target_repo="$URL_REPO_DRUPAL8"
-				break
-				;;
-			2)
-				target_cms="Drupal 7"
-				target_host_name_search_string="drupal7.docksal"
-				target_repo="$URL_REPO_DRUPAL7"
-				break
-				;;
-			3)
-				target_cms="Wordpress"
-				target_host_name_search_string="wordpress.docksal"
-				target_repo="$URL_REPO_WORDPRESS"
-				break
-				;;
-			4)
-				target_cms="Magento"
-				target_host_name_search_string="magento.docksal"
-				target_repo="$URL_REPO_MAGENTO"
-				break
-				;;
-			5)
-				target_cms="Laravel"
-				target_host_name_search_string=""
-				target_repo="$URL_REPO_LARAVEL"
-				;;
-			6)
-				target_cms="Symfony Skeleton"
-				target_host_name_search_string="symfony.docksal"
-				target_repo="$URL_REPO_SYMFONY_SKELETON"
-			;;
-			7)
-				target_cms="Symfony WebApp"
-				target_host_name_search_string="symfony.docksal"
-				target_repo="$URL_REPO_SYMFONY_WEBAPP"
-			;;
-			8)
-				target_cms="Grav CMS"
-				target_host_name_search_string=""
-				target_repo="$URL_REPO_GRAV"
-				;;
-			9)
-				target_cms="Backdrop CMS"
-				target_host_name_search_string="backdrop.docksal"
-				target_repo="${URL_REPO_BACKDROP}"
-			;;
-			10)
-				target_cms="Hugo"
-				target_host_name_search_string=""
-				target_repo="$URL_REPO_HUGO"
-				;;
-			11)
-				target_cms="Gatsby JS"
-				target_host_name_search_string=""
-				target_repo="$URL_REPO_GATSBY"
-				;;
-			12)
-				target_cms="Plain HTML"
-				target_host_name_search_string=""
-				target_repo=""
-				;;
-			* )
+	# Determine project name
+	if [[ "$project_name" == "" ]]; then
+		while [[ "$project_name" == "" ]]; do
+			echo -en "${yellow}1. Name your project${NC} (lowercase alphanumeric, underscore, and hyphen): "
+			read -p "" project_name
+			# This will not accept project name of 1 symbol long. Not sure if this needs to be fixed
+			if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9_-]*[a-z0-9]$ ]]; then
+				echo-error "Unacceptable project name" \
+					"Use only lowercase letters, numbers, underscores, and hyphens." \
+					"Project name defines host name, where underscores will be replaced with hyphens." \
+					""
+				project_name=""
+			fi
+		done
+		echo ''
+	fi
+
+	local project_virtual_host_name="$(echo ${project_name} | sed 's/_/-/g' | sed 's/[^-a-z0-9]//g').${DOCKSAL_DNS_DOMAIN}"
+
+	# Determine target installation software
+	if [[ "$choice" == "" ]]; then
+		echo -e "${yellow}2. What would you like to install?${NC}"
+		echo -e "${blue}  PHP based${NC}"
+		echo -e "${green}    1.${NC}  Drupal 8"
+		echo -e "${green}    2.${NC}  Drupal 7"
+		echo -e "${green}    3.${NC}  Wordpress"
+		echo -e "${green}    4.${NC}  Magento"
+		echo -e "${green}    5.${NC}  Laravel"
+		echo -e "${green}    6.${NC}  Symfony Skeleton"
+		echo -e "${green}    7.${NC}  Symfony WebApp"
+		echo -e "${green}    8.${NC}  Grav CMS"
+		echo -e "${green}    9.${NC}  Backdrop CMS"
+		echo
+		echo -e "${lime}  JS based${NC}"
+		echo -e "${green}    10.${NC} Hugo"
+		echo -e "${green}    11.${NC} Gatsby JS"
+		echo
+		echo -e "${acqua}  HTML${NC}"
+		echo -e "${green}    12.${NC} Static HTML site"
+		echo -e ""
+
+		while [[ "$choice" == "" ]]; do
+			read -p "Enter your choice (1-12): " choice
+			if ! (( "$choice" >= "1" && "$choice" <= 12 )); then
+				choice=""
 				echo 'Enter a number between 1 and 12.'
-				continue
-		esac
-		break
-	done
-	echo ''
+			fi
+		done
+	fi
 
-	echo -e "Your site will be created at ${yellow}$(pwd)/$project_name${NC}"
-	echo -e "Your site will run ${yellow}${target_cms}${NC}"
-	echo -e "The URL of your site will be ${yellow}http://${project_virtual_host_name}${NC}"
-	echo ''
+	# Set target repo
+	case ${choice} in
+		1)
+			target_cms="Drupal 8"
+			target_host_name_search_string="drupal8.docksal"
+			target_repo="$URL_REPO_DRUPAL8"
+			;;
+		2)
+			target_cms="Drupal 7"
+			target_host_name_search_string="drupal7.docksal"
+			target_repo="$URL_REPO_DRUPAL7"
+			;;
+		3)
+			target_cms="Wordpress"
+			target_host_name_search_string="wordpress.docksal"
+			target_repo="$URL_REPO_WORDPRESS"
+			;;
+		4)
+			target_cms="Magento"
+			target_host_name_search_string="magento.docksal"
+			target_repo="$URL_REPO_MAGENTO"
+			;;
+		5)
+			target_cms="Laravel"
+			target_host_name_search_string=""
+			target_repo="$URL_REPO_LARAVEL"
+			;;
+		6)
+			target_cms="Symfony Skeleton"
+			target_host_name_search_string="symfony.docksal"
+			target_repo="$URL_REPO_SYMFONY_SKELETON"
+		;;
+		7)
+			target_cms="Symfony WebApp"
+			target_host_name_search_string="symfony.docksal"
+			target_repo="$URL_REPO_SYMFONY_WEBAPP"
+		;;
+		8)
+			target_cms="Grav CMS"
+			target_host_name_search_string=""
+			target_repo="$URL_REPO_GRAV"
+			;;
+		9)
+			target_cms="Backdrop CMS"
+			target_host_name_search_string="backdrop.docksal"
+			target_repo="${URL_REPO_BACKDROP}"
+		;;
+		10)
+			target_cms="Hugo"
+			target_host_name_search_string=""
+			target_repo="$URL_REPO_HUGO"
+			;;
+		11)
+			target_cms="Gatsby JS"
+			target_host_name_search_string=""
+			target_repo="$URL_REPO_GATSBY"
+			;;
+		12)
+			target_cms="Plain HTML"
+			target_host_name_search_string=""
+			target_repo=""
+			;;
+	esac
 
-	_confirm "Do you wish to proceed?"
+	echo
+	echo -e "Project folder:   ${yellow}$(pwd)/$project_name${NC}"
+	echo -e "Project software: ${yellow}${target_cms}${NC}"
+	echo -e "Project URL:      ${yellow}http://${project_virtual_host_name}${NC}"
+	echo
+
+	if [[ "$y" != "y" && "$yes" != "yes" ]]; then
+		_confirm "Do you wish to proceed?"
+	fi
 
 	if [[ "$target_cms" == "Plain HTML" ]]; then
 		mkdir "${project_name}" && cd "${project_name}" || exit 1
@@ -2867,7 +2880,7 @@ project_create ()
 	fi
 
 	echo -e "${green}Cloning repository...${NC}"
-	git clone -b master ${target_repo} ${project_name}
+	run_cli git clone -b master "${target_repo}" "${project_name}"
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
 	echo -e "${yellow}3. Installing site${NC}"
@@ -6036,7 +6049,8 @@ case "$1" in
 		shift
 		case "$1" in
 			create)
-				project_create
+				shift
+				project_create "$@"
 				;;
 			list|ls)
 				shift
