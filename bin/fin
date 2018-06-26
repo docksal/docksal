@@ -4341,7 +4341,7 @@ run_cli ()
 				value="${!key}"
 			fi
 			# Set the $key back to whatever $value is
-			eval ${key}=`echo -ne \""${value}"\"`
+			eval export ${key}=`echo -ne \""${value}"\"`
 			# Add only key to $env_str to be used at runtime.
 			env_str="${env_str}-e ${key} "
 			shift 2
