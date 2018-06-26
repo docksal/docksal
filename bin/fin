@@ -14,6 +14,7 @@ if [[ "$TERM" != "dumb" ]]; then
 	blue='\033[0;34m'
 	lime='\033[0;92m'
 	acqua='\033[0;96m'
+	magenta='\033[0;35m'
 	NC='\033[0m'
 fi
 
@@ -2880,6 +2881,33 @@ project_create ()
 
 	cd "${project_name}"
 	fin init
+}
+
+# Remove containers and erase files
+project_erase ()
+{
+	check_project_environment
+	check_project_unique
+	eval $(parse_params "$@")
+
+	# Alert when force passed
+	if [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
+		echo-alert "DESTRUCTIVE OPERATION" \
+			"Removing containers of $COMPOSE_PROJECT_NAME and ${magenta}removing all files in $PROJECT_ROOT${NC}"
+		_confirm "         Continue?";
+	fi
+
+	# Remove containers
+	remove --force
+
+	# Remove files after some safety checks
+	if [[ "$PROJECT_ROOT" != "" ]] && [[ "$PROJECT_ROOT" != "." ]] && [[ "$PROJECT_ROOT" != "/c" ]] &&
+		[[ "$PROJECT_ROOT" != "/" ]] && [[ "$PROJECT_ROOT" != "$HOME" ]]; then
+		echo "Removing $PROJECT_ROOT..."
+		rm -rf "$PROJECT_ROOT/"
+		[[ "$?" != "0" ]] && _confirm "Some files were not removed. Try with sudo?"
+		sudo rm -rf "$PROJECT_ROOT/"
+	fi
 }
 
 # Resets Docksal system services
@@ -6053,6 +6081,11 @@ case "$1" in
 				load_configuration
 				shift
 				remove "$@"
+				;;
+			erase)
+				load_configuration
+				shift
+				project_erase "$@"
 				;;
 			config)
 				load_configuration
