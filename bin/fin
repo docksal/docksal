@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.24
+FIN_VERSION=1.62.25
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -4341,7 +4341,7 @@ run_cli ()
 				value="${!key}"
 			fi
 			# Set the $key back to whatever $value is
-			eval ${key}=`echo -ne \""${value}"\"`
+			eval export ${key}=`echo -ne \""${value}"\"`
 			# Add only key to $env_str to be used at runtime.
 			env_str="${env_str}-e ${key} "
 			shift 2
@@ -4401,7 +4401,7 @@ run_cli ()
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
 		# COLUMNS and LINES have to be passed to workaround a bug in Docker. See https://github.com/moby/moby/issues/35407#issuecomment-355753176
-		eval "${winpty} docker run --rm -it \
+		${winpty} docker run --rm -it \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
 			-e SECRET_SSH_PRIVATE_KEY \
@@ -4412,11 +4412,11 @@ run_cli ()
 			-e HOST_GID \
 			-e COLUMNS \
 			-e LINES \
-			-e DEBUG" \
-			${env_str} ${RUN_IMAGE} "$cmd; (exit \$?)"
+			-e DEBUG \
+			${env_str} ${RUN_IMAGE} bash -ic "\"$cmd; (exit \$?)\""
 	else
 		# non-interactive
-		eval "docker run --rm \
+		docker run --rm \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
 			-e SECRET_SSH_PRIVATE_KEY \
@@ -4427,8 +4427,8 @@ run_cli ()
 			-e HOST_GID \
 			-e COLUMNS \
 			-e LINES \
-			-e DEBUG" \
-			${env_str} ${RUN_IMAGE} "$cmd"
+			-e DEBUG \
+			${env_str} ${RUN_IMAGE} bash -c "\"$cmd\""
 	fi
 }
 
