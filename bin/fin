@@ -4413,7 +4413,7 @@ run_cli ()
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
-			${env_str} ${RUN_IMAGE} bash -ic "$cmd; (exit \$?)"
+			${env_str} ${RUN_IMAGE} bash -ic "\"$cmd; (exit \$?)\""
 	else
 		# non-interactive
 		docker run --rm \
@@ -4428,7 +4428,7 @@ run_cli ()
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
-			${env_str} ${RUN_IMAGE} bash -c "$cmd"
+			${env_str} ${RUN_IMAGE} bash -c "\"$cmd\""
 	fi
 }
 
