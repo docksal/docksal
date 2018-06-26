@@ -2905,7 +2905,10 @@ project_erase ()
 		[[ "$PROJECT_ROOT" != "/" ]] && [[ "$PROJECT_ROOT" != "$HOME" ]]; then
 		echo "Removing $PROJECT_ROOT..."
 		rm -rf "$PROJECT_ROOT/"
-		[[ "$?" != "0" ]] && _confirm "Some files were not removed. Try with sudo?"
+		if [[ "$?" != "0" ]] && [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
+			echo "..."
+			_confirm "Some files were not removed. Try with 'sudo'?"
+		fi
 		sudo rm -rf "$PROJECT_ROOT/"
 	fi
 }
