@@ -2767,8 +2767,10 @@ project_create ()
 		echo -e "${green}    8.${NC}  Grav CMS"
 		echo -e "${green}    9.${NC}  Backdrop CMS"
 		echo
-		echo -e "${lime}  JS based${NC}"
+		echo -e "${lime}  GO based${NC}"
 		echo -e "${green}    10.${NC} Hugo"
+		echo
+		echo -e "${lime}  JS based${NC}"
 		echo -e "${green}    11.${NC} Gatsby JS"
 		echo
 		echo -e "${acqua}  HTML${NC}"
