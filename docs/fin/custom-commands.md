@@ -27,7 +27,7 @@ Now you can use it as if it was a regular fin command: `fin updb`.
 Passing parameters also works: `fin updb -y`.
 The command description will be visible in `fin help` and the full command help will be available via `fin help updb`.
 
-Note: `drush updb` this is a Drupal-specific example.
+Note: `drush updb` is a Drupal-specific example.
 
 ## Available variables
 
