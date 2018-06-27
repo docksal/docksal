@@ -5193,7 +5193,7 @@ load_configuration ()
 		local project_name=$(basename $(get_project_path) | tr '[:upper:]' '[:lower:]')
 		COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$project_name}
 		COMPOSE_PROJECT_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/[^-_a-z0-9]//g')
-		COMPOSE_PROJECT_VHOST_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | sed 's/_/-/g' | sed 's/[^-a-z0-9]//g')
+		COMPOSE_PROJECT_VHOST_NAME_SAFE=$(echo ${COMPOSE_PROJECT_NAME} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g' | sed 's/[^-a-z0-9]//g')
 		export COMPOSE_PROJECT_NAME
 		export COMPOSE_PROJECT_NAME_SAFE
 		export COMPOSE_PROJECT_VHOST_NAME_SAFE
@@ -5207,6 +5207,12 @@ load_configuration ()
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	fi
 	export DOCROOT=${DOCROOT:-docroot}
+
+	if [[ $(echo "${VIRTUAL_HOST}" | grep -c -v "^[a-z0-9\-\.]*$") -gt 0 ]]; then
+		local OLD_VHOST=${VIRTUAL_HOST}
+		export VIRTUAL_HOST=$(echo ${VIRTUAL_HOST} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')
+		echo-warning "The ${yellow_bold}VIRTUAL_HOST${yellow} has been modified from ${yellow_bold}${OLD_VHOST}${yellow} to ${yellow_bold}${VIRTUAL_HOST}${NC} ${yellow}to comply with browser standards."
+	fi
 
 	# Make project root globally available
 	export DOCKSAL_PATH="$(get_project_path)"
