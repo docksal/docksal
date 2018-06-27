@@ -5210,7 +5210,7 @@ load_configuration ()
 
 	if [[ $(echo "${VIRTUAL_HOST}" | grep -c -v "^[a-z0-9\-\.]*$") -gt 0 ]]; then
 		local OLD_VHOST=${VIRTUAL_HOST}
-		export VIRTUAL_HOST=$(echo ${VIRTUAL_HOST} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')
+		export VIRTUAL_HOST=$(echo ${VIRTUAL_HOST} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g' | sed 's/[^-a-z0-9\.]//g')
 		echo-warning "The ${yellow_bold}VIRTUAL_HOST${yellow} has been modified from ${yellow_bold}${OLD_VHOST}${yellow} to ${yellow_bold}${VIRTUAL_HOST}${NC} ${yellow}to comply with browser standards."
 	fi
 
