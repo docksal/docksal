@@ -41,6 +41,7 @@ pages:
     - ngrok: tools/ngrok.md
     - PHP Code Sniffer: tools/phpcs.md
     - phpMyAdmin: tools/phpmyadmin.md
+    - Platform.sh: tools/platformsh.md
     - Redis: tools/redis.md
     - SASS and Compass: tools/sass.md
     - Terminus: tools/terminus.md
