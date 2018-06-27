@@ -19,6 +19,6 @@ composer --version
 ```
 
 !!! note "Composer must be run inside the same directory as composer.json"
-    Unless the the `--working-dir=` is used composer must be ran within the same directory or a child of that directory
-    as the projects composer.json
+    Unless the the `--working-dir=` is used, the composer command must be run within the directory or child directory containing the 
+    project's composer.json file.
 
