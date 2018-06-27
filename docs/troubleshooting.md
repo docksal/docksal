@@ -7,20 +7,18 @@
 
 First, try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
 
-- Update Docksal to the latest version. See the [updates](#updates) section.
+- Update Docksal to the latest version. See the [updates](../getting-started/setup.md#updates) section.
 - (Only if you use VirtualBox) Restart the Docksal VM: `fin vm restart`
 - Reset Docksal system services with `fin system reset` and restart project containers with `fin project restart`
 - Reboot the host (your computer or remote server)
 
-Then take a look at some common problems using Docksal and ways to resolve them below.
+Second take a look at some common problems using Docksal and ways to resolve them below.
 
-If the fixes above did not help, try:
+If above did not help, try:
 
-- checking the [troubleshooting doc](../troubleshooting.md) for rare problems that might occur
 - searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced a similar issue and already found a solution or a workaround.
 - asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
-
-Create a [new issue](https://github.com/docksal/docksal/issues/new) if your problem is still not resolved.
+- creating a [new issue](https://github.com/docksal/docksal/issues/new) if your problem is still not resolved.
 
 -----
 
