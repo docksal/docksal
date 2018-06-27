@@ -6296,11 +6296,7 @@ case "$1" in
 	composer)
 		load_configuration
 		shift
-		if [[ "$1" == "" ]]; then
-			_exec composer
-		else
-			_exec composer "$@"
-		fi
+		_exec composer "$@"
 		;;
 	ssh-add)
 		# no load_configuration
