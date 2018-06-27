@@ -12,7 +12,7 @@ First, try these quick fix steps in the order listed below. Check if the issue h
 - Reset Docksal system services with `fin system reset` and restart project containers with `fin project restart`
 - Reboot the host (your computer or remote server)
 
-Second take a look at some common problems using Docksal and ways to resolve them below.
+If that did not help, take a look at some of the common problems using Docksal and ways to resolve them below.
 
 If above did not help, try:
 
