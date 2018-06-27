@@ -17,8 +17,13 @@ fin project create
 ## Better than VMs
 
 "I love my Vagrant box. Why would I want to switch to a Docker based solution?"  
-Containers are just [better than VMs](https://github.com/docker/docker#better-than-vms): 
+
+Containers are just [better than VMs](https://www.youtube.com/watch?v=jev2EW2hzdY): 
 smaller, faster, portable, and more efficient across the board.
+
+Unified environment across the team, regardless of the OS.
+
+Unprecedented ability to automate routine tasks, slashing the time to on-board new people.
 
 <a name="setup"></a>
 <a name="updates"></a>
