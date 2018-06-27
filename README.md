@@ -1,4 +1,4 @@
-# Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases/latest) [![Setup Instructions](https://img.shields.io/badge/%E2%9A%99-%20Setup%20Instructions%20-blue.svg)](http://docksal.readthedocs.io/en/master/getting-started/env-setup)
+# Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases/latest) [![Setup Instructions](https://img.shields.io/badge/%E2%9A%99-%20Setup%20Instructions%20-blue.svg)](http://docksal.readthedocs.io/en/master/getting-started/setup)
 
 [![Build Status](https://img.shields.io/travis/docksal/docksal.svg?style=flat-square)](https://travis-ci.org/docksal/docksal)
 [![Docs](https://readthedocs.org/projects/docksal/badge?version=master&style=flat-square)](http://docksal.readthedocs.io/en/master)
@@ -6,14 +6,13 @@
 
 Docker powered environments for web development on macOS, Windows, and Linux.
 
-Running a complete LAMP stack for your project can be two steps away!<sup>*</sup>
+Running a complete LAMP stack for your project can be one step away!<sup>*</sup>
 
 ```
-git clone <sample-project-repo>
-fin init
+fin project create
 ```
 
-<sup>*</sup>Once you are done with a one-time [Docksal environment setup](http://docksal.readthedocs.io/en/master/getting-started/env-setup)
+<sup>*</sup>Once you are done with a one-time [Docksal setup](http://docksal.readthedocs.io/en/master/getting-started/setup)
 
 ## Better than VMs
 
@@ -26,7 +25,7 @@ smaller, faster, portable, and more efficient across the board.
 <a name="getting-started"></a>
 ## Getting started
 
-Follow the [Setup instructions](http://docksal.readthedocs.io/en/master/getting-started/env-setup) to get started.
+Follow the [Setup instructions](http://docksal.readthedocs.io/en/master/getting-started/setup) to get started.
 
 To get a quick taste of Docksal try one of the pre-configured example projects:
 
@@ -44,10 +43,7 @@ We have a room on Gitter where questions can be asked and answered
 [![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)  
 If you have experience with Docksal and Docker, please stick around in the room to help others.
 
-
 ## Roadmap
 
-Wondering what's coming up next? See [Docksal Roadmap](ROADMAP.md).
-
-For the list of current and past releases check the [Release](https://github.com/docksal/docksal/releases) section.  
+For the list of current and past releases check the [Projects](https://github.com/orgs/docksal/projects) section.  
 Change records are published there and in the [Changelog](CHANGELOG.md) docs. 
