@@ -2,7 +2,7 @@
 
 ## System requirements
 
-Minimum RAM requirement is 4GB, 8GB or more recommended.
+Minimum RAM requirement: 4GB. 8GB or more recommended.
 
 ### Mac
 
@@ -33,7 +33,7 @@ Click your operating system to proceed to OS-tailored docs:
 - [Windows](#install-windows)
 
 <a name="install-macos"></a>
-#### macOS Docker installation options 
+### macOS Docker installation options 
 
 Click the preferred option to proceed to option-specific docs.
 
@@ -43,7 +43,7 @@ Click the preferred option to proceed to option-specific docs.
   - Somewhat slower, but easier to use and update
 
 <a name="install-macos-virtualbox"></a>
-#### macOS with VirtualBox
+### macOS with VirtualBox
 
 With this method, Docker will run inside the VM in VirtualBox.
 
@@ -65,7 +65,7 @@ With this method, Docker will run inside the VM in VirtualBox.
     ```
 
 <a name="install-macos-docker-for-mac"></a>
-#### macOS with Docker for Mac
+### macOS with Docker for Mac
 
 1. Download and Install Docker for Mac
 
@@ -82,7 +82,7 @@ With this method, Docker will run inside the VM in VirtualBox.
     ```
 
 <a name="install-linux"></a>
-#### Linux installation options 
+### Linux installation options 
 
 Click your repo to proceed to docs.
 
@@ -94,7 +94,7 @@ Click your repo to proceed to docs.
 - [Other distribution](#install-linux-other)
 
 <a name="install-linux-debian-fedora"></a>
-#### Linux. Debian, Ubuntu, Fedora.
+### Linux. Debian, Ubuntu, Fedora.
 
 Debian with all derivatives (Ubuntu, Raspbian etc.), Ubuntu with derivatives (Mint etc.), 
 and Fedora with derivatives are supported out of the box with automatic installation. 
@@ -121,9 +121,9 @@ and Fedora with derivatives are supported out of the box with automatic installa
     ```
 
 <a name="install-linux-other"></a>
-#### Linux. Other distributions
+### Linux. Other distributions
 
-##### Compatibility
+#### Compatibility
 
 If you cannot find your distribution in the list above, it does not mean it is not supported! 
 Less known Debian, Ubuntu or Fedora derivatives are most likely supported.
@@ -132,13 +132,13 @@ This happens because Docker on Linux is being installed using official [get.dock
 If your distribution is not in the list above, but [get.docker.com](https://get.docker.com) supports it, 
 then it **is** supported too and you can [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
-##### Incompatible distributions
+#### Incompatible distributions
 
 In case your distribution in not compatible with [get.docker.com](https://get.docker.com), you will need to install 
 latest stable Docker for your distribution first, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
 <a name="install-windows"></a>
-#### Windows. Docker installation options 
+### Windows. Docker installation options 
 
 Docksal on Windows requires Linux type shell to run. Choose the options you like.
 
@@ -148,7 +148,7 @@ Docksal on Windows requires Linux type shell to run. Choose the options you like
   - **Beta.** Harder to install, can ony use Docker for Mac, but native Linux shell, real Ubuntu on Windows.
 
 <a name="install-windows-babun"></a>
-#### Windows with Babun. Docker installation options 
+### Windows with Babun. Docker installation options 
 
 Using Babun as Linux type shell supports 2 options of Docker installation.
 
@@ -158,7 +158,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
   - Somewhat slower, excludes VirtualBox, but easier to use and update
 
 <a name="install-windows-babun-virtualbox"></a>
-#### Windows with Babun and VirtualBox 
+### Windows with Babun and VirtualBox 
 
 1. Download and Install Babun
 
@@ -173,7 +173,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
     ```
 
 <a name="install-windows-babun-docker-for-windows"></a>
-#### Windows with Babun and Docker for Windows 
+### Windows with Babun and Docker for Windows 
 
 1. Download and Install Babun
 
@@ -201,7 +201,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
     ```
 
 <a name="install-windows-wsl"></a>
-#### Windows with Ubuntu App (WSL) and Docker for Windows 
+### Windows with Ubuntu App (WSL) and Docker for Windows 
 
 Warning: this way of using Docksal is not thoroughly tested. 
 It has been proven to work, but quirks may happen.
