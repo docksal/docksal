@@ -13,7 +13,7 @@ Minimum RAM requirement: 4GB. 8GB or more recommended.
 
 - CPU should support hardware **VT-x/AMD-V virtualization** and it should be [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
 - Supported distributions: 
-  - Debian with derivatives (Ubuntu, Mint etc.)
+  - Debian with derivatives (Ubuntu, Mint, etc.)
   - Fedora with derivatives (CentOS etc.)
 
 ### Windows
@@ -126,7 +126,7 @@ and Fedora with derivatives are supported out of the box with automatic installa
 #### Compatibility
 
 If you cannot find your distribution in the list above, it does not mean it is not supported! 
-Less known Debian, Ubuntu or Fedora derivatives are most likely supported.
+Lesser known Debian, Ubuntu, or Fedora derivatives are most likely supported.
 
 This happens because Docker on Linux is being installed using official [get.docker.com](https://get.docker.com) script. 
 If your distribution is not in the list above, but [get.docker.com](https://get.docker.com) supports it, 

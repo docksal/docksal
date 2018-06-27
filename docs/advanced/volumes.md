@@ -150,7 +150,7 @@ The downsides:
 
 ### Using Unison volumes
 
-Unprecedented, native-like FS speed. See https://github.com/docksal/unison for details
+Unprecedented, native-like FS speed. See [https://github.com/docksal/unison](docksal/unison) for details
 
 - [Install Docksal](http://docs.docksal.io/en/master/getting-started/setup)
 - Add `DOCKSAL_VOLUMES=unison` in `.docksal/docksal.env` in a project
