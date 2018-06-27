@@ -21,7 +21,7 @@ See [Using ssh-agent service](../advanced/ssh-agent.md) for more information.
 ### DNS
 
 [docksal-dns](https://github.com/docksal/service-dns) contains a running `dnsmasq` server that resolves `*.docksal` URI's 
-to the Docksal VM IP address (or localhost if you're running a [native Docker app](../getting-started/env-setup-native.md)).
+to the Docksal VM IP address (or localhost if you're running a [native Docker app](../getting-started/docker-modes.md)).
 
 See [DNS resolver](../advanced/dns-resolver.md) for more information.
 

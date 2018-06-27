@@ -1,7 +1,28 @@
 # Troubleshooting
 
-Some common problems using Docksal and ways to resolve them.
+!!! attention "If something is wrong" 
+    Quite often a problem may reside within the 3rd party tools, project code, local configuration, etc., and not the stack.  
+    To make sure that the Docksal stack works properly, try launching any of the [sample projects](#examples).  
+    If you believe the issue is within the Docksal stack, then read on.
 
+First, try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
+
+- Update Docksal to the latest version. See the [updates](#updates) section.
+- (Only if you use VirtualBox) Restart the Docksal VM: `fin vm restart`
+- Reset Docksal system services with `fin system reset` and restart project containers with `fin project restart`
+- Reboot the host (your computer or remote server)
+
+Then take a look at some common problems using Docksal and ways to resolve them below.
+
+If the fixes above did not help, try:
+
+- checking the [troubleshooting doc](../troubleshooting.md) for rare problems that might occur
+- searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced a similar issue and already found a solution or a workaround.
+- asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
+
+Create a [new issue](https://github.com/docksal/docksal/issues/new) if your problem is still not resolved.
+
+-----
 
 <a name="issue-01"></a>
 ## Issue 1. Failed creating Docksal virtual machine on Windows
