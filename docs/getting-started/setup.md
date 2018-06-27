@@ -96,7 +96,7 @@ Click your repo to proceed to docs.
 <a name="install-linux-debian-fedora"></a>
 ### Linux. Debian, Ubuntu, Fedora.
 
-Debian with all derivatives (Ubuntu, Raspbian etc.), Ubuntu with derivatives (Mint etc.), 
+Debian with all derivatives (Ubuntu, Raspbian etc.), Ubuntu with derivatives (Mint, etc.), 
 and Fedora with derivatives are supported out of the box with automatic installation. 
 
 1. Check pre-requisites
