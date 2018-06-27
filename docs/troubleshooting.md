@@ -7,7 +7,7 @@
 
 First, try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
 
-- Update Docksal to the latest version. See the [updates](../getting-started/setup.md#updates) section.
+- Update Docksal to the latest version. See the [updates](getting-started/setup.md#updates) section.
 - (Only if you use VirtualBox) Restart the Docksal VM: `fin vm restart`
 - Reset Docksal system services with `fin system reset` and restart project containers with `fin project restart`
 - Reboot the host (your computer or remote server)
