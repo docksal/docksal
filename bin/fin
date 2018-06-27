@@ -1207,6 +1207,7 @@ show_help ()
 	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
 	printh "terminus [command]" "Pantheon's Terminus (requires docksal/cli 2.1+)"
 	printh "wp [command]" "WordPress CLI command (requires WordPress)"
+	printh "composer [command]" "Run Composer commands"
 
 	echo
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
@@ -6290,6 +6291,15 @@ case "$1" in
 			_exec wp
 		else
 			_exec wp "$@"
+		fi
+		;;
+	composer)
+		load_configuration
+		shift
+		if [[ "$1" == "" ]]; then
+			_exec composer
+		else
+			_exec composer "$@"
 		fi
 		;;
 	ssh-add)
