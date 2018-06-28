@@ -50,7 +50,6 @@ to your local and run `fin init`.
 - [Magento](https://github.com/docksal/magento)
 - [Magento with sample content](https://github.com/docksal/magento-demo)
 - [Laravel](https://github.com/docksal/example-laravel)
-- [Laravel](https://github.com/docksal/example-laravel)
 - [Symfony Skeleton](https://github.com/docksal/example-symfony-skeleton)
 - [Symfony Web App](https://github.com/docksal/example-symfony-webapp)
 - [Grav CMS](https://github.com/docksal/example-grav)
