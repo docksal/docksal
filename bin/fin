@@ -2931,12 +2931,12 @@ system_reset ()
 	if [[ "$1" == "" ]] ; then
 		configure_network
 		echo-green 'Resetting Docksal services...'
-		echo ' * proxy'
+		echo ' ➔ proxy'
 		install_proxy_service
-		echo ' * dns'
+		echo ' ➔ dns'
 		install_dns_service
 		configure_resolver
-		echo ' * ssh-agent'
+		echo ' ➔ ssh-agent'
 		install_sshagent_service
 		return
 	fi
@@ -3236,10 +3236,7 @@ install_proxy_service ()
 detect_dns ()
 {
 	# Do not detect, if overridden in docksal.env
-	if [[ "$DOCKSAL_DNS_UPSTREAM" != "" ]]; then
-		echo "$DOCKSAL_DNS_UPSTREAM"
-		return
-	fi
+	[[ "$DOCKSAL_DNS_UPSTREAM" != "" ]] && return
 
 	if is_linux || is_mac; then
 		# Get from /etc/resolv.conf
@@ -3269,8 +3266,7 @@ detect_dns ()
 	fi
 
 	# export to variable and return (for direct usage or debug)
-	export ${DOCKSAL_DNS_UPSTREAM}
-	echo ${DOCKSAL_DNS_UPSTREAM}
+	export DOCKSAL_DNS_UPSTREAM
 }
 
 # Start system-wide dns service
@@ -3283,6 +3279,7 @@ install_dns_service ()
 	# container for DNS resolution (Windows and Linux), so we will get into a recursion.
 	# DOCKSAL_DNS_UPSTREAM can be set to the controlled network DNS server address (VPN/LAN) in the global docksal.env file.
 	# When user disconnects from that network, the backup DNS will handle name resolution (assuming it is reachable).
+	echo "   upstream $DOCKSAL_DNS_UPSTREAM"
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
 		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="9.9.9.9" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
