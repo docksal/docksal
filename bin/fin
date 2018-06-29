@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.62.26
+FIN_VERSION=1.62.27
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -4449,7 +4449,9 @@ run_cli ()
 
 	# Address an edge case when run-cli is run in the home folder (/root) on PWD/Katacoda
 	# See https://github.com/docksal/docksal/issues/661
-	(is_pwd || is_katacoda) && chown 1000:1000 $HOME
+	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda); then
+		chown 1000:1000 $HOME
+	fi
 
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
