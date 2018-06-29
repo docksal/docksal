@@ -166,9 +166,9 @@ DOCKSAL_NATIVE_HOST_IP="192.168.64.1"
 DOCKSAL_DEFAULT_IP="192.168.64.100"
 DOCKSAL_DEFAULT_HOST_IP="192.168.64.1"
 DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
-
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
-DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM:-8.8.8.8}"
+DOCKSAL_DEFAULT_DNS="8.8.8.8"
+
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
 # Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
 DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
@@ -3234,6 +3234,12 @@ install_proxy_service ()
 # Detects upstream DNS or falls back to DOCKSAL_DNS_UPSTREAM
 detect_dns ()
 {
+	# Do not detect, if overridden in docksal.env
+	if [[ "$DOCKSAL_DNS_UPSTREAM" != "" ]]; then
+		echo "$DOCKSAL_DNS_UPSTREAM"
+		return
+	fi
+
 	if is_linux || is_mac; then
 		# Get from /etc/resolv.conf
 		nameservers=$(grep "nameserver" "/etc/resolv.conf" 2>/dev/null | sed "s/nameserver //")
@@ -3248,7 +3254,7 @@ detect_dns ()
 			done
 		else
 			# In case no name servers found, fall back to the default
-			echo "$DOCKSAL_DNS_UPSTREAM"
+			echo "$DOCKSAL_DEFAULT_DNS"
 		fi
 	elif is_windows; then
 		# Look for Primary WINS server, it represents DNS whe WINS services is in use
@@ -3258,7 +3264,7 @@ detect_dns ()
 			return
 		else
 			# In case nothing was found, fall back to the default
-			echo "$DOCKSAL_DNS_UPSTREAM"
+			echo "$DOCKSAL_DEFAULT_DNS"
 			return
 		fi
 	fi
@@ -5920,12 +5926,12 @@ if is_docker_native || is_wsl; then
 	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_NATIVE_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
 else
 	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
 	export DOCKSAL_HOST_IP=${DOCKSAL_DEFAULT_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM}
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
 fi
 
 # Create drives bind mounts on wsl
