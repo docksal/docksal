@@ -3231,6 +3231,39 @@ install_proxy_service ()
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 }
 
+# Detects upstream DNS or falls back to DOCKSAL_DNS_UPSTREAM
+detect_dns ()
+{
+	if is_linux || is_mac; then
+		# On Linux and Mac get from resolv.conf
+		nameservers=$(grep "nameserver" "/etc/resolv.conf" | sed "s/nameserver //")
+		# Find first suitable
+		if [[ "$nameservers" != "" ]]; then
+			for server in "$nameservers"; do
+				# Check that it's an IP address and exclude Docksal IP
+				if [[ "$server" =~ [1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3} ]] &&
+					[[ "$server" != "192.168.64.100" ]]; then
+					echo "$server"
+				fi
+			done
+		else
+			# In case nothing found fall back to default
+			echo "$DOCKSAL_DNS_UPSTREAM"
+		fi
+	elif is_windows; then
+		# Look for Primary WINS
+		local primary_wins=$(ipconfig /all | grep "Primary WINS")
+		if [[ "$primary_wins" =~ ([1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3}) ]]; then
+			echo ${BASH_REMATCH[0]}
+			return
+		else
+			# In case nothing found fall back to default
+			echo "$DOCKSAL_DNS_UPSTREAM"
+			return
+		fi
+	fi
+}
+
 # Start system-wide dns service
 install_dns_service ()
 {
@@ -3238,9 +3271,9 @@ install_dns_service ()
 	# This container cannot use the host's resolver configuration. The host itself may be configured to use this
 	# container for DNS resolution (Windows and Linux), so we will get into a recursion.
 	# DOCKSAL_DNS_UPSTREAM can be set to the controlled network DNS server address (VPN/LAN) in the global docksal.env file.
-	# When user disconnects from that network, the backup DNS will handle name resolution (assuming 8.8.4.4 is reachable).
+	# When user disconnects from that network, the backup DNS will handle name resolution (assuming it is reachable).
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
-		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="8.8.4.4" \
+		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$(detect_dns)" --dns="9.9.9.9" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
