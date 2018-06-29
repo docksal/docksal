@@ -64,6 +64,14 @@ With this method, Docker will run inside the VM in VirtualBox.
     curl -fsSL get.docksal.io | bash
     ```
 
+1. Start the VM
+
+    In Terminal app run:
+
+    ```bash
+    fin vm start
+    ```
+
 <a name="install-macos-docker-for-mac"></a>
 ### macOS with Docker for Mac
 
@@ -164,12 +172,27 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
     [![Babun Site](https://img.shields.io/badge/↪%20-Babun%20Site-blue.svg)](http://babun.github.io/)
 
+1. Windows 10. Enable SMB1 protocol ([Why?](https://docs.docksal.io/en/master/troubleshooting-smb/#windows-10-fall-creators-update-1709))
+
+   This step will require reboot. On Windows 10 open Windows Command Prompt as  Administrator and run:
+   ```cmd
+   dism /online /enable-feature /all /featurename:SMB1Protocol-Server
+   ```
+
 1. Install Docksal
 
     Open **Babun** and run:
 
     ```bash
     curl -fsSL get.docksal.io | bash
+    ```
+
+1. Start the VM
+
+    In **Babun** run:
+
+    ```bash
+    fin vm start
     ```
 
 <a name="install-windows-babun-docker-for-windows"></a>
