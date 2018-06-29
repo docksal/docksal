@@ -4447,6 +4447,10 @@ run_cli ()
 		MOUNT_HOME="dst=/home/docker"
 	fi
 
+	# Address an edge case when run-cli is run in the home folder (/root) on PWD/Katacoda
+	# See https://github.com/docksal/docksal/issues/661
+	(is_pwd || is_katacoda) && chown 1000:1000 $HOME
+
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
