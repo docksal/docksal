@@ -3243,9 +3243,9 @@ detect_dns ()
 		nameservers=$(grep "nameserver" "/etc/resolv.conf" 2>/dev/null | sed "s/nameserver //")
 		# Find first suitable
 		if [[ "$nameservers" != "" ]]; then
-			for server in "$nameservers"; do
+			for server in $nameservers; do
 				# Check that it is an IP address and exclude Docksal IP
-				if [[ "$server" =~ [1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3} ]] &&
+				if [[ "$server" =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]] &&
 					[[ "$server" != "192.168.64.100" ]]; then
 					DOCKSAL_DNS_UPSTREAM="$server"
 				fi
@@ -3257,7 +3257,7 @@ detect_dns ()
 	elif is_windows; then
 		# Look for Primary WINS server, it represents DNS whe WINS services is in use
 		local primary_wins=$(ipconfig /all | grep "Primary WINS")
-		if [[ "$primary_wins" =~ ([1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3}) ]]; then
+		if [[ "$primary_wins" =~ ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) ]]; then
 			DOCKSAL_DNS_UPSTREAM=${BASH_REMATCH[0]}
 		else
 			# In case nothing was found, fall back to the default
