@@ -3231,7 +3231,8 @@ install_proxy_service ()
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 }
 
-# Detects upstream DNS or falls back to DOCKSAL_DNS_UPSTREAM
+# Detects upstream DNS or falls back to DOCKSAL_DEFAULT_DNS
+# If DOCKSAL_DNS_UPSTREAM is preset, then skips DNS detection
 detect_dns ()
 {
 	# Do not detect, if overridden in docksal.env
@@ -3249,37 +3250,41 @@ detect_dns ()
 				# Check that it is an IP address and exclude Docksal IP
 				if [[ "$server" =~ [1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3} ]] &&
 					[[ "$server" != "192.168.64.100" ]]; then
-					echo "$server"
+					DOCKSAL_DNS_UPSTREAM="$server"
 				fi
 			done
 		else
 			# In case no name servers found, fall back to the default
-			echo "$DOCKSAL_DEFAULT_DNS"
+			DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 		fi
 	elif is_windows; then
 		# Look for Primary WINS server, it represents DNS whe WINS services is in use
 		local primary_wins=$(ipconfig /all | grep "Primary WINS")
 		if [[ "$primary_wins" =~ ([1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3}\.[1-9]{1,3}) ]]; then
-			echo ${BASH_REMATCH[0]}
-			return
+			DOCKSAL_DNS_UPSTREAM=${BASH_REMATCH[0]}
 		else
 			# In case nothing was found, fall back to the default
-			echo "$DOCKSAL_DEFAULT_DNS"
-			return
+			DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 		fi
 	fi
+
+	# export to variable and return (for direct usage or debug)
+	export ${DOCKSAL_DNS_UPSTREAM}
+	echo ${DOCKSAL_DNS_UPSTREAM}
 }
 
 # Start system-wide dns service
 install_dns_service ()
 {
+	detect_dns
+	# Stop and remove existing container
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	# This container cannot use the host's resolver configuration. The host itself may be configured to use this
 	# container for DNS resolution (Windows and Linux), so we will get into a recursion.
 	# DOCKSAL_DNS_UPSTREAM can be set to the controlled network DNS server address (VPN/LAN) in the global docksal.env file.
 	# When user disconnects from that network, the backup DNS will handle name resolution (assuming it is reachable).
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=always \
-		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$(detect_dns)" --dns="9.9.9.9" \
+		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="9.9.9.9" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
@@ -3407,6 +3412,8 @@ configure_resolver ()
 
 	if [[ "$mode" == "on" ]]; then
 		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
+
+		detect_dns
 
 		# The following check requires nslookup. Skip it if the binary is not present.
 		if (which nslookup >/dev/null 2>&1); then
