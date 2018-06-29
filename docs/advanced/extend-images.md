@@ -25,11 +25,11 @@ The latter is the recommended way of extending Docksal images and is covered bel
 
 Below is an example of extending the `cli` image with additional configs, apt, and npm packages:
 
-`.docksal/services/cli/Dockerfile`
+**File `.docksal/services/cli/Dockerfile`**
 
 ```Dockerfile
 # Use a stock Docksal image as the base
-FROM docksal/cli:2.2-php7.1
+FROM docksal/cli:php7.1
 
 # Install addtional apt packages
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -81,7 +81,7 @@ version: "2.1"
 services:
   <service-name>:
     image: ${COMPOSE_PROJECT_NAME_SAFE}_<service-name>
-    build: ${PROJECT_ROOT}/.docksal/services/<service-name>
+    build: services/<service-name>
 ```
 
 Replace `<service-name>` with the actual service name you are extending, e.g., `cli`.
@@ -95,7 +95,7 @@ Following the previous example, here's what it would look like for `cli`:
   cli:
     ...
     image: ${COMPOSE_PROJECT_NAME_SAFE}_cli
-    build: ${PROJECT_ROOT}/.docksal/services/cli
+    build: services/cli
     ...
 ```
 
