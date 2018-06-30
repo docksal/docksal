@@ -46,7 +46,14 @@ RUN set -xe; \
 	apk add --update --no-cache \
 		openssl \
 	; \
-	openssl req -batch -x509 -newkey rsa:4086 -days 3650 -nodes -sha256 -subj "/" \
+	openssl req \
+		-batch \
+		-newkey rsa:4086 \
+		-x509 \
+		-nodes \
+		-sha256 \
+		-subj "/CN=*.docksal" \
+		-days 3650 \
 		-keyout /etc/nginx/server.key -out /etc/nginx/server.crt; \
 	apk del openssl && rm -rf /var/cache/apk/*
 
