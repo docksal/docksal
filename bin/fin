@@ -158,16 +158,14 @@ DOCKSAL_ADDONS_PATH=".docksal/addons"
 DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 
 # Network settings
-## Docker for Mac/Win
-DOCKSAL_NATIVE_IP="192.168.64.100"
-DOCKSAL_NATIVE_HOST_IP="192.168.64.1"
+export DOCKSAL_IP="192.168.64.100"
+export DOCKSAL_HOST_IP="192.168.64.1"
+export DOCKSAL_SUBNET="192.168.64.1/24"
 
-## Default (Linux, boot2docker/VirtualBox on Mac and Win)
-DOCKSAL_DEFAULT_IP="192.168.64.100"
-DOCKSAL_DEFAULT_HOST_IP="192.168.64.1"
-DOCKSAL_DEFAULT_SUBNET="192.168.64.1/24"
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
 DOCKSAL_DEFAULT_DNS="8.8.8.8"
+# For visibility on this variable
+DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
 
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
 # Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
@@ -1947,7 +1945,7 @@ docker_machine_create ()
 		--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
 		--virtualbox-disk-size "${VBOX_HDD:-$DEFAULT_MACHINE_VBOX_HDD}" \
 		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
-		--virtualbox-hostonly-cidr "$DOCKSAL_DEFAULT_SUBNET" \
+		--virtualbox-hostonly-cidr "$DOCKSAL_SUBNET" \
 		--virtualbox-no-share \
 		"$machine_name"
 
@@ -3114,10 +3112,10 @@ configure_network_alpine ()
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
 		# This will not persist a reboot or interface change
-		sudo ip addr add ${DOCKSAL_DEFAULT_SUBNET} dev lo label lo:docksal
+		sudo ip addr add ${DOCKSAL_SUBNET} dev lo label lo:docksal
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove the IP address alias
-		sudo ip addr del ${DOCKSAL_DEFAULT_SUBNET} dev lo
+		sudo ip addr del ${DOCKSAL_SUBNET} dev lo
 	fi
 }
 
@@ -3246,7 +3244,7 @@ detect_dns ()
 			for server in $nameservers; do
 				# Check that it is an IP address and exclude Docksal IP
 				if [[ "$server" =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]] &&
-					[[ "$server" != "192.168.64.100" ]]; then
+					[[ "$server" != "$DOCKSAL_IP" ]]; then
 					DOCKSAL_DNS_UPSTREAM="$server"
 				fi
 			done
@@ -3314,7 +3312,7 @@ configure_resolver_mac () {
 # Configure system-wide *.docksal resolver via /etc/resolv.conf on Alpine
 configure_resolver_alpine () {
 	local mode="${1:-on}"
-	local dns_settings="nameserver ${DOCKSAL_DEFAULT_IP}"
+	local dns_settings="nameserver ${DOCKSAL_IP}"
 	local conf_file="/etc/resolv.conf"
 
 	# Enabling and settings are not present
@@ -4047,7 +4045,7 @@ update ()
 			if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
 
 			# Check for administrative privileges if needed
-			if ! (ipconfig.exe | grep "192.168.64.100") || ! (ipconfig.exe | grep "192.168.64.1"); then
+			if ! (ipconfig.exe | grep "$DOCKSAL_IP") || ! (ipconfig.exe | grep "$DOCKSAL_HOST_IP"); then
 				cd "/mnt/c"
 				touch "file.tmp"
 				if [[ "$?" != "0" ]]; then
@@ -5927,13 +5925,9 @@ fi
 # DOCKSAL_DNS1 - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
 # DOCKSAL_DNS2 - a backup external DNS server
 if is_docker_native || is_wsl; then
-	export DOCKSAL_IP=${DOCKSAL_NATIVE_IP}
-	export DOCKSAL_HOST_IP=${DOCKSAL_NATIVE_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
 else
-	export DOCKSAL_IP=${DOCKSAL_DEFAULT_IP}
-	export DOCKSAL_HOST_IP=${DOCKSAL_DEFAULT_HOST_IP}
 	export DOCKSAL_DNS1=${DOCKSAL_IP}
 	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
 fi
@@ -5975,7 +5969,7 @@ else
 	# if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
 	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
 	#fi
-	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_DEFAULT_IP}
+	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_IP}
 fi
 
 if is_docker_running; then
