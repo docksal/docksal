@@ -58,7 +58,7 @@ You have the option to override this behavior and launch the container without t
 fin run-cli --clean
 ```
 
-Note: this does not drop the shared `$HOME` volume used for regular `fun run-cli` executions.
+Note: this does not drop the shared `$HOME` volume used for regular `fin run-cli` executions.
 
 You can wipe the shared `$HOME` volume with:
 
