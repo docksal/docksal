@@ -4547,7 +4547,7 @@ run_cli ()
 }
 
 # Reload Cron Configuration
-_cron_reload ()
+cron_reload ()
 {
 	echo-warning "Reloading Cron..."
 	# If crontab file is found within project add contents to user crontab file.
@@ -4555,7 +4555,8 @@ _cron_reload ()
 		_exec 'cat ${PROJECT_ROOT}/.docksal/services/cli/crontab | crontab -u docker -'
 		_exec 'sudo /etc/init.d/cron start 2>/dev/null'
 	else
-		echo-error "No crontab file has been found within project."
+		echo-error "No crontab file has been found in ${yellow}.docksal/services/cli/crontab${NC}."
+		return 1
 	fi
 }
 
@@ -6297,7 +6298,7 @@ case "$1" in
 		case "$1" in
 			reload)
 				shift
-				_cron_reload
+				cron_reload
 				;;
 			*)
 				_exec crontab "$@"
