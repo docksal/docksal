@@ -4557,7 +4557,6 @@ cron_reload ()
 	# If crontab file is found within project add contents to user crontab file.
 	if [[ -f "$(get_project_path_dc)/${DOCKSAL_CRONTAB_PATH}" ]]; then
 		_exec 'cat ${PROJECT_ROOT}/.docksal/services/cli/crontab | crontab -u docker -'
-		_exec 'sudo /etc/init.d/cron start 2>/dev/null'
 	else
 		echo-error "No crontab file has been found in ${yellow}${DOCKSAL_CRONTAB_PATH}${NC}."
 		return 1
