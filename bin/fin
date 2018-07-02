@@ -155,6 +155,10 @@ CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
 # Where addons live (relative path)
 DOCKSAL_ADDONS_PATH=".docksal/addons"
+# Where service commands live (relative path)
+DOCKSAL_SERVICES_PATH=".docksal/services"
+# Where crontab service lives
+DOCKSAL_CRONTAB_PATH="$DOCKSAL_SERVICES_PATH/cli/crontab"
 
 # Docksal environment
 DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
@@ -4551,11 +4555,11 @@ cron_reload ()
 {
 	echo-warning "Reloading Cron..."
 	# If crontab file is found within project add contents to user crontab file.
-	if [[ -f "$(get_project_path_dc)/.docksal/services/cli/crontab" ]]; then
+	if [[ -f "$(get_project_path_dc)/${DOCKSAL_CRONTAB_PATH}" ]]; then
 		_exec 'cat ${PROJECT_ROOT}/.docksal/services/cli/crontab | crontab -u docker -'
 		_exec 'sudo /etc/init.d/cron start 2>/dev/null'
 	else
-		echo-error "No crontab file has been found in ${yellow}.docksal/services/cli/crontab${NC}."
+		echo-error "No crontab file has been found in ${yellow}${DOCKSAL_CRONTAB_PATH}${NC}."
 		return 1
 	fi
 }
