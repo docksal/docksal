@@ -23,8 +23,8 @@ This stops Docksal VM, enables "native" mode and resets Docksal system services.
 
 **File sharing with Docker for Mac**
 
-Docker for Mac automatically shares most commonly used volumes/directories. 
-See [Docker documentation](https://docs.docker.com/docker-for-mac/#file-sharing) for details.  
+Docker for Mac automatically shares most commonly used volumes/directories.
+See [Docker documentation](https://docs.docker.com/docker-for-mac/#file-sharing) for details.
 It is usually not necessary to adjust these settings, but you want to check them if your Home folder
 is not in a usual place.
 
