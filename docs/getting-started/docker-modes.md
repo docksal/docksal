@@ -5,11 +5,11 @@ After installation you can switch to using native Docker applications instead of
 On Mac, `osxfs:cached` mode for Docker for Mac provides a decent read performance (still not as fast as NFS, but 
 getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/issues/249)
 
-## 1. macOS
+## macOS
 
-### 1.1. Switching from VirtualBox to Docker for Mac
+### Switching from VirtualBox to Docker for Mac
 
-### 1.1.1. Reconfigure Docksal
+**Reconfigure Docksal**
 
 Assuming that you have been previously using Docksal with VirtualBox, which was installed according to [setup docs](setup.md).
 
@@ -24,7 +24,7 @@ fin system reset
 
 This stops Docksal VM, enables "native" mode and resets Docksal system services.
 
-### 1.1.2. File sharing with Docker for Mac
+**File sharing with Docker for Mac**
 
 Docker for Mac automatically shares most commonly used volumes/directories. 
 See [Docker documentation](https://docs.docker.com/docker-for-mac/#file-sharing) for details.  
@@ -34,7 +34,7 @@ is not in a usual place.
 Docksal automatically enables the `osxfs:cached` mode on Docker for Mac, which improves the file system read performance 
 substantially.
 
-### 1.2. Switching from Docker for Mac to VirtualBox 
+### Switching from Docker for Mac to VirtualBox 
 
 1. Close Docker for Mac
 
@@ -48,11 +48,11 @@ fin system reset
 
 This disables the "native" apps mode, resets network settings, starts Docksal VM and resets Docksal system services.
 
-## 2. Windows
+## Windows
 
-### 2.1. Switching from VirtualBox to Docker for Windows
+### Switching from VirtualBox to Docker for Windows
 
-### 2.1.1. Reconfigure Docksal
+**Reconfigure Docksal**
 
 Assuming that you have been previously using Docksal with Babun and VirtualBox, installed according to [setup docs](setup.md).
 
@@ -67,13 +67,13 @@ fin system reset
 
 This stops Docksal VM, enables "native" mode and resets Docksal system services.
 
-### 2.1.2. File sharing on Windows for Docker for Windows
+**File sharing on Windows for Docker for Windows**
 
 Share your local drives with Docker for Windows:
 
 ![Sharing Windows drives with Docker](../_img/docker-for-win-share-drives.png)
 
-### 2.2 Switching from Docker for Windows to VirtualBox 
+### Switching from Docker for Windows to VirtualBox 
 
 1. Close Docker for Windows
 
