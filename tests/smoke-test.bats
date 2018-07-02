@@ -224,3 +224,53 @@ teardown() {
 	[[ "$output" =~ "Hello World!" ]]
 	unset output
 }
+
+@test "Certs: proxy picks up custom cert based on hostname" {
+	[[ ${SKIP} == 1 ]] && skip
+
+	# Stop all running projects to get a cleanup output of vhosts configured in nginx
+	fin stop -a
+
+	# Cleanup and restart the test project (using project2 as it is set to be permanent for testing purposes)
+	fin @project2 config rm VIRTUAL_HOST || true
+	fin @project2 config rm VIRTUAL_HOST_CERT_NAME || true
+	fin @project2 up
+
+	# Check fallback cert is used by default
+	run make conf-vhosts
+	[[ "$output" =~ "server_name project2.docksal;" ]]
+	[[ "$output" =~ "ssl_certificate /etc/certs/server.crt;" ]]
+	unset output
+
+	# Set custom domain for project2
+	fin @project2 config set VIRTUAL_HOST=project2.example.com
+	fin @project2 up
+
+	# Check custom cert was picked up
+	run make conf-vhosts
+	[[ "$output" =~ "server_name project2.example.com;" ]]
+	[[ "$output" =~ "ssl_certificate /etc/certs/custom/example.com.crt;" ]]
+	unset output
+}
+
+@test "Certs: proxy picks up custom cert based on cert name override" {
+	[[ ${SKIP} == 1 ]] && skip
+
+	# Stop all running projects to get a cleanup output of vhosts configured in nginx
+	fin stop -a
+
+	# Cleanup and restart the test project (using project2 as it is set to be permanent for testing purposes)
+	fin @project2 config rm VIRTUAL_HOST || true
+	fin @project2 config rm VIRTUAL_HOST_CERT_NAME || true
+	fin @project2 up
+
+	# Set VIRTUAL_HOST_CERT_NAME for project2
+	fin @project2 config set VIRTUAL_HOST_CERT_NAME=example.com
+	fin @project2 up
+
+	# Check server_name is intact while custom cert was picked up
+	run make conf-vhosts
+	[[ "$output" =~ "server_name project2.docksal;" ]]
+	[[ "$output" =~ "ssl_certificate /etc/certs/custom/example.com.crt;" ]]
+	unset output
+}

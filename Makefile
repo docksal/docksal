@@ -22,6 +22,9 @@ exec:
 shell:
 	make exec -e CMD=bash
 
+conf-vhosts:
+	make exec -e CMD='cat /etc/nginx/conf.d/vhosts.conf'
+
 start:
 	IMAGE_VHOST_PROXY=$(REPO):$(VERSION) fin system reset vhost-proxy
 

@@ -29,6 +29,7 @@ before_script:
   - .travis/before_script.sh
   - ls -la "$PROJECTS_ROOT"
   - fin pl -a
+  - ls -la ~/.docksal/certs/
 
 script:
   - make
