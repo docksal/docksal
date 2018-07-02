@@ -5381,11 +5381,11 @@ config_get ()
 	if [[ "$global" == "global" ]]; then
 		target_env_file="$CONFIG_ENV"
 	else
-		load_configuration
-		if [[ -n $env ]]; then
-			local docksal_env_file="$(get_project_path_dc)/.docksal/docksal-${env}.env"
+		if [[ "$env" == "" ]]; then
+			target_env_file="$(get_project_path_dc)/.docksal/docksal.env"
+		else
+			target_env_file="$(get_project_path_dc)/.docksal/docksal-${env}.env"
 		fi
-		target_env_file="$docksal_env_file"
 	fi
 
 	grep "^${ARGV[0]}\=" "$target_env_file" | sed "s/^${ARGV[0]}=\(.*\)$/\1/"
@@ -5400,15 +5400,15 @@ config_set ()
 	if [[ "$global" == "global" ]]; then
 		target_env_file="$CONFIG_ENV"
 	else
-		load_configuration
-		if [[ -n $env ]]; then
-			local docksal_env_file="$(get_project_path_dc)/.docksal/docksal-${env}.env"
+		if [[ "$env" == "" ]]; then
+			target_env_file="$(get_project_path_dc)/.docksal/docksal.env"
+		else
+			target_env_file="$(get_project_path_dc)/.docksal/docksal-${env}.env"
 		fi
-		target_env_file="$docksal_env_file"
 
-		if [[ ! -f "$dockal_env_file" ]]; then
-			touch "$docksal_env_file"
-			if_failed_error "Could not create $docksal_env_file"
+		if [[ ! -f "$target_env_file" ]]; then
+			touch "$target_env_file"
+			if_failed_error "Could not create $target_env_file"
 		fi
 	fi
 
@@ -5436,7 +5436,7 @@ config_set ()
 			# Replace the value if it exists
 			sed -i.bak "s/^$key\=.*$/$key=\"$replaceEscaped\"/g" "$target_env_file"
 			# Remove backup
-			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
+			rm -f "${target_env_file}.bak" >/dev/null 2>&1
 			echo "Replaced value for $key in $target_env_file"
 		else
 			# Make sure the is a new line at the end of the config file
@@ -5457,11 +5457,11 @@ config_remove ()
 	if [[ "$global" == "global" ]]; then
 		target_env_file="$CONFIG_ENV"
 	else
-		load_configuration
-		if [[ -n $env ]]; then
-			local docksal_env_file="$(get_project_path_dc)/.docksal/docksal-${env}.env"
+		if [[ "$env" == "" ]]; then
+			target_env_file="$(get_project_path_dc)/.docksal/docksal.env"
+		else
+			target_env_file="$(get_project_path_dc)/.docksal/docksal-${env}.env"
 		fi
-		target_env_file="$docksal_env_file"
 	fi
 
 	# Warn if no values were found
@@ -5479,7 +5479,7 @@ config_remove ()
 			echo "Removing ${param} from $target_env_file"
 			sed -i.bak "/^${param}\=.*$/d" "$target_env_file"
 			# Remove backup
-			rm -f "${docksal_env_file}.bak" >/dev/null 2>&1
+			rm -f "${target_env_file}.bak" >/dev/null 2>&1
 		else
 			echo "Could not find ${param} in ${target_env_file}"
 		fi
@@ -6007,7 +6007,7 @@ if [[ "$1" == "@"* ]]; then
 		_alias_projects=$(docker ps --all \
 			--filter 'label=io.docksal.project-root' \
 			--format '{{.Label "com.docker.compose.project"}}:{{.Label "io.docksal.project-root"}}')
-		if (echo "$_alias_projects" | grep "^$USED_ALIAS:" >/dev/null 2>/dev/null); then
+		if (echo "$_alias_projects" | grep "^$USED_ALIAS:" >/dev/null 2>&1); then
 			# project found
 			_alias_cd=$(echo "$_alias_projects" | grep "^$USED_ALIAS:" | cut -d$':' -f 2)
 		else
