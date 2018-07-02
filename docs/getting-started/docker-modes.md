@@ -2,9 +2,6 @@
 
 After installation you can switch to using native Docker applications instead of VirtualBox, or vice versa.
 
-On Mac, `osxfs:cached` mode for Docker for Mac provides a decent read performance (still not as fast as NFS, but 
-getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/issues/249)
-
 ## macOS
 
 ### Switching from VirtualBox to Docker for Mac
@@ -32,7 +29,9 @@ It is usually not necessary to adjust these settings, but you want to check them
 is not in a usual place.
 
 Docksal automatically enables the `osxfs:cached` mode on Docker for Mac, which improves the file system read performance 
-substantially.
+substantially. On Mac, `osxfs:cached` mode for Docker for Mac provides a decent read performance (still not as fast as NFS, but 
+getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/issues/249)
+
 
 ### Switching from Docker for Mac to VirtualBox 
 
