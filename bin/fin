@@ -148,6 +148,8 @@ is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage
 # Stacks folder
 CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
 mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
+# Custom certs folder for vhost-proxy (overridable)
+CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 
 # Where custom commands live (relative path)
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
@@ -3212,6 +3214,10 @@ install_proxy_service ()
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
 	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
+	# Mount custom certs folder if available
+	local mount_certs
+	[[ -d ${CONFIG_CERTS} ]] && mount_certs="--mount type=bind,src=${CONFIG_CERTS},dst=/etc/certs/custom"
+
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
 	# and are inactive unless configured.
 	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h)
@@ -3226,6 +3232,7 @@ install_proxy_service ()
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
 		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+		${mount_certs} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 }
 

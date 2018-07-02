@@ -12,3 +12,4 @@ services:
     labels:
       - io.docksal.virtual-host=ide.${VIRTUAL_HOST},ide.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=3000
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME}

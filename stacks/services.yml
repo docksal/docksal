@@ -13,6 +13,7 @@ services:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME}
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
@@ -109,6 +110,7 @@ services:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=varnish.${VIRTUAL_HOST},varnish.${VIRTUAL_HOST}.*
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME}
     environment:
       - VARNISH_BACKEND_HOST=web
     dns:
@@ -133,6 +135,7 @@ services:
     labels:
       - io.docksal.virtual-host=solr.${VIRTUAL_HOST},solr.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8983
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME}
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
@@ -146,6 +149,7 @@ services:
     labels:
       - io.docksal.virtual-host=mail.${VIRTUAL_HOST},mail.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8025
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME}
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
