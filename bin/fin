@@ -1203,6 +1203,7 @@ show_help ()
 	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "config [command]" "Show or change configuration (${yellow}fin help config${NC})"
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
+	printh "cron [command]" "Run cron commands within cli container. (requires docksal/cli 2.3+)"
 
 	echo
 	printh "drush [command]" "Drush command (requires Drupal)"
@@ -4545,6 +4546,19 @@ run_cli ()
 	fi
 }
 
+# Reload Cron Configuration
+_cron_reload ()
+{
+	echo-warning "Reloading Cron..."
+	# If crontab file is found within project add contents to user crontab file.
+	if [[ -f "$(get_project_path_dc)/.docksal/services/cli/crontab" ]]; then
+		_exec 'cat ${PROJECT_ROOT}/.docksal/services/cli/crontab | crontab -'
+		_exec 'sudo /etc/init.d/cron start 2>/dev/null'
+	else
+		echo-error "No crontab file has been found within project."
+	fi
+}
+
 # Start interactive mysql shell
 # --db-user="admin" to override mysql username
 # --db-password="otherpass" to override mysql password
@@ -6276,6 +6290,19 @@ case "$1" in
 		# no load_configuration
 		shift
 		run_cli "$@"
+		;;
+	cron)
+		shift
+		case "$1" in
+			reload)
+				shift
+				load_configuration
+				_cron_reload
+				;;
+			*)
+				_exec cron "$@"
+				;;
+		esac
 		;;
 	# TODO: Remove mysql and sql* commands in fin 2.0
 	mysql|sqlc)
