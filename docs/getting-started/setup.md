@@ -267,6 +267,8 @@ rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 
+Optionally remove VirtualBox application.
+
 ## If you used Docker for Mac / Docker for Windows
 
 The steps below will remove Docksal project containers (files untouched) 
@@ -279,10 +281,12 @@ rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 
+Optionally remove Docker for Mac / Docker for Windows application.
+
 ## If you used Linux
 
-1. Follow [Docker Uninstallation](https://docs.docker.com/engine/installation/linux/ubuntulinux/#/uninstallation) instructions
-2. Remove the Docker tools:
+The steps below will remove Docksal project containers (files untouched) 
+and stop Docksal system services.
 
 ```bash
 fin cleanup
@@ -291,3 +295,4 @@ rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 
+Optionally follow [Docker Uninstallation](https://docs.docker.com/install/linux/docker-ce/ubuntu/#uninstall-docker-ce) instructions
