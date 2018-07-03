@@ -15,7 +15,14 @@ exit status 255
 ```
 
 You will have to manually enable `SMB 1.0/CIFS Server` package in Windows Feature and reboot the host.  
-See [this issue](https://github.com/docksal/docksal/issues/382) for details.
+See [this issue](https://github.com/docksal/docksal/issues/382) for details.  
+To manually enable SMB1, run elevated Windows Command Prompt and execute:
+
+```cmd
+dism /online /enable-feature /all /featurename:SMB1Protocol-Server
+```
+
+Note: it requires reboot!
 
 ## How SMB related errors look
 
