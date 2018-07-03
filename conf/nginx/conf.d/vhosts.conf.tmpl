@@ -125,7 +125,9 @@
 		{{ template "http" (dict "Hosts" $hosts "Upstream" $upstream) }}
 
 		{{/* Get the cert name from io.docksal.cert-name container label */}}
-		{{ $certName := or (index $pr_container.Labels "io.docksal.cert-name") nil }}
+		{{ $certName := or (index $pr_container.Labels "io.docksal.cert-name") "none" }}
+		{{/* Unset certName if its value us "none" */}}
+		{{ $certName := when (ne $certName "none") $certName nil }}
 
 		{{/* Get the best matching cert by name for the vhost. */}}
 		{{ $primaryHost := (index (split $hosts ",") 0) }}
