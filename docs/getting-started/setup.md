@@ -38,9 +38,9 @@ Click your operating system to proceed to OS-tailored docs:
 Click the preferred option to proceed to option-specific docs.
 
 - [VirtualBox](#install-macos-virtualbox) 
-  - **Recommended.** Faster, somewhat less convenient.
+    - **Recommended.** Faster, somewhat less convenient.
 - [Docker for Mac](#install-macos-docker-for-mac)
-  - Somewhat slower, but easier to use and update
+    - Somewhat slower, but easier to use and update
 
 <a name="install-macos-virtualbox"></a>
 ### macOS with VirtualBox
@@ -144,9 +144,9 @@ latest stable Docker for your distribution first, and then [follow the steps for
 Docksal on Windows requires Linux type shell to run. Choose the options you like.
 
 - [Babun](#install-windows-babun) 
-  - **Recommended.** Faster install, but CYGWIN is less native.
+    - **Recommended.** Faster install, but CYGWIN is less native.
 - [Ubuntu Application (WSL)](#install-windows-wsl)
-  - **Beta.** Harder to install, can ony use Docker for Mac, but native Linux shell, real Ubuntu on Windows.
+    - **Beta.** Harder to install, can ony use Docker for Mac, but native Linux shell, real Ubuntu on Windows.
 
 <a name="install-windows-babun"></a>
 ### Windows with Babun. Docker installation options 
@@ -154,9 +154,9 @@ Docksal on Windows requires Linux type shell to run. Choose the options you like
 Using Babun as Linux type shell supports 2 options of Docker installation.
 
 - [VirtualBox](#install-windows-babun-virtualbox) 
-  - **Recommended.** Faster, somewhat less convenient to use and update.
+    - **Recommended.** Faster, somewhat less convenient to use and update.
 - [Docker for Windows](#install-windows-babun-docker-for-windows)
-  - Somewhat slower, excludes VirtualBox, but easier to use and update
+    - Somewhat slower, excludes VirtualBox, but easier to use and update
 
 <a name="install-windows-babun-virtualbox"></a>
 ### Windows with Babun and VirtualBox 
