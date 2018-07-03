@@ -366,7 +366,7 @@ services:
 	# Query API for information
 	API=$(docker exec -it "drupal8_web_1_ngrok" sh -c "wget -qO- http://localhost:4040/api/tunnels")
 	# Return Public URL for site.
-	PUBLIC_HTTP_URL=$(echo "${API}" |  python -c 'import json,sys;obj=json.load(sys.stdin);print obj["tunnels"][0]["public_url"]')
+	PUBLIC_HTTP_URL=$(echo "${API}" | jq -r '.tunnels[0].public_url')
 	# Run CURL command against $PUBLIC_HTTP_URL
 	run curl -i ${PUBLIC_HTTP_URL}
 	# Confirm site is reachable
