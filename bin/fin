@@ -1175,8 +1175,8 @@ show_help ()
 			addon="$(get_addon_script $1)"
 			# If no such addon then search for command
 			[[ ! -f "$addon" ]] && addon="$(get_command_script $1)"
-
-			if [ -f "$addon" ]; then
+			# Fetch help from the file and show it
+			if [[ -f "$addon" ]]; then
 				echo
 				echo "Addon: $1"
 				echo
@@ -1193,7 +1193,7 @@ show_help ()
 
 		# Check for help function for specific command
 		local command="$1"
-		# Remove exclamation mark if provided
+		# Remove exclamation mark if present for forcing built-in help
 		[[ "$1" =~ .+! ]] && command="${1//!}"
 		type "show_help_$command" >/dev/null 2>&1
 		if [ $? -eq 0 ]; then
@@ -1414,7 +1414,6 @@ show_help_run-cli ()
 	printh "fin rc -e VAR1=hello -e VAR2=world 'echo \$VAR1 \$VAR2'" "Print hello world using ENV variables"
 
 }
-
 
 show_help_image() {
 	echo
@@ -1785,6 +1784,23 @@ show_help_config ()
 	printh "fin config set DOCKER_NATIVE=1 --global" "Adds DOCKER_NATIVE=1 into \$HOME/.docksal/docksal.env"
 	printh "fin config rm DOCKER_NATIVE --global" "	Removes DOCKER_NATIVE value from \$HOME/.docksal/docksal.env"
 }
+
+show_help_init ()
+{
+	echo
+	echo "Creates default project configuration and starts a project."
+	echo "This built-in is meant to be overridden with custom command or addon."
+	echo "Unlike other built-ins it will not trigger a warning when this happens."
+	echo -e "See ${yellow}https://docs.docksal.io/en/master/fin/custom-commands${NC} on creating custom commands."
+
+	echo
+	echo "Usage: init"
+
+	echo
+	echo "Options: [none]"
+}
+
+
 
 show_help_cleanup ()
 {
