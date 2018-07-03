@@ -355,10 +355,14 @@ services:
 @test "fin share" {
 	#[[ $SKIP == 1 ]] && skip
 
+        # Send all mail to /bin/true
+        echo "sendmail_path=/bin/true" >> .docksal/etc/php.ini
         # Initialize the Project
-        fin init 2>/dev/null
+        fin init
 	# Run fin share in a emulated terminal
 	screen -S testNgrok -d -m fin share
+        # sleep so ngrok can load
+        sleep 10
 	# Query API for information
 	API=$(docker exec -it "drupal8_web_1_ngrok" sh -c "wget -qO- http://localhost:4040/api/tunnels")
 	# Return Public URL for site.
@@ -371,6 +375,5 @@ services:
 	unset output
 
 	# Clean up kill ngrok session
-	tmux kill-session -t testNgrok
         screen -X -S testNgrok quit
 }
