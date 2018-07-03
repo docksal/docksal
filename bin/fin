@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.64.0
+FIN_VERSION=1.64.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3134,16 +3134,16 @@ configure_network_mac ()
 	local mode="${1:-on}"
 	# Determine current status
 	local status
-	(grep -q "$DOCKSAL_NATIVE_IP" <<< "$(ifconfig lo0)") && status="enabled" || status="disabled"
+	(grep -q "$DOCKSAL_IP" <<< "$(ifconfig lo0)") && status="enabled" || status="disabled"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add Docksal IP aliases on the local loopback adapter
-		sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_IP} 255.255.255.0
-		sudo ifconfig lo0 alias ${DOCKSAL_NATIVE_HOST_IP} 255.255.255.0
+		sudo ifconfig lo0 alias ${DOCKSAL_IP} 255.255.255.0
+		sudo ifconfig lo0 alias ${DOCKSAL_HOST_IP} 255.255.255.0
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove Docksal IP alias from the local loopback adapter
-		sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_IP} >/dev/null 2>&1
-		sudo ifconfig lo0 -alias ${DOCKSAL_NATIVE_HOST_IP} >/dev/null 2>&1
+		sudo ifconfig lo0 -alias ${DOCKSAL_IP} >/dev/null 2>&1
+		sudo ifconfig lo0 -alias ${DOCKSAL_HOST_IP} >/dev/null 2>&1
 	fi
 }
 
@@ -3155,13 +3155,13 @@ configure_network_windows ()
 	# Docker for Win
 	if [[ "$mode" == "on" ]]; then
 		# Add Docksal IP aliases on the DockerNAT adapter
-		local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP} mask=255.255.255.0"
-		local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP} mask=255.255.255.0"
+		local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_IP} mask=255.255.255.0"
+		local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_HOST_IP} mask=255.255.255.0"
 		winsudo "$command1 && $command2"
 	elif [[ "$mode" == "off" ]]; then
 		# Remove Docksal IP aliases on the DockerNAT adapter
-		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_IP}"
-		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_NATIVE_HOST_IP}"
+		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_IP}"
+		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_HOST_IP}"
 		winsudo "$command1 && $command2"
 	fi
 	# Wait 5s for network configuration to apply
@@ -3174,8 +3174,8 @@ configure_network_wsl ()
 	# TODO: implement on/off modes
 	local mode="${1:-on}"
 
-	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_IP}" mask="255.255.255.0"
-	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_NATIVE_HOST_IP}" mask="255.255.255.0"
+	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_IP}" mask="255.255.255.0"
+	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
 	# Wait 5s for network configuration to apply
 	sleep 5
 }
