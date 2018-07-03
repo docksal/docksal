@@ -345,8 +345,7 @@ services:
 
 	# Check config (check if local environment variables are used in docksal.yml)
 	run fin config
-	echo "$output" | egrep "VIRTUAL_HOST: features.alpha-beta-zulu.docksal"
-	[[ $(echo "$output" | grep -c "feaTures.Alpha-beta_zulu.docksal") -eq 0 ]]
+	[[ $(echo "$output" | grep -c "VIRTUAL_HOST: feaTures.Alpha-beta_zulu.docksal") -eq 0 ]]
 	[[ "${output}" =~ "The VIRTUAL_HOST has been modified from feaTures.Alpha-beta_zulu.docksal to features.alpha-beta-zulu.docksal to comply with browser standards." ]]
 	unset output
 }
