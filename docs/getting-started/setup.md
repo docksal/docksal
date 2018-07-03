@@ -12,9 +12,7 @@ Minimum RAM requirement: 4GB. 8GB or more recommended.
 ### Linux
 
 - CPU should support hardware **VT-x/AMD-V virtualization** and it should be [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
-- Supported distributions: 
-  - Debian with derivatives (Ubuntu, Mint, etc.)
-  - Fedora with derivatives (CentOS etc.)
+- Supported distributions: Debian with derivatives (Ubuntu, Mint, etc.), Fedora with derivatives (CentOS etc.)
 
 ### Windows
 
@@ -37,8 +35,8 @@ Click your operating system to proceed to OS-tailored docs:
 
 Click the preferred option to proceed to option-specific docs.
 
-- [VirtualBox](#install-macos-virtualbox) 
-    - **Recommended.** Faster, somewhat less convenient.
+- [VirtualBox](#install-macos-virtualbox) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg)
+    - Faster, somewhat less convenient.
 - [Docker for Mac](#install-macos-docker-for-mac)
     - Somewhat slower, but easier to use and update
 
@@ -143,8 +141,8 @@ latest stable Docker for your distribution first, and then [follow the steps for
 
 Docksal on Windows requires Linux type shell to run. Choose the options you like.
 
-- [Babun](#install-windows-babun) 
-    - **Recommended.** Faster install, but CYGWIN is less native.
+- [Babun](#install-windows-babun) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg)
+    - Faster install, but CYGWIN is less native.
 - [Ubuntu Application (WSL)](#install-windows-wsl)
     - **Beta.** Harder to install, can ony use Docker for Mac, but native Linux shell, real Ubuntu on Windows.
 
@@ -153,8 +151,8 @@ Docksal on Windows requires Linux type shell to run. Choose the options you like
 
 Using Babun as Linux type shell supports 2 options of Docker installation.
 
-- [VirtualBox](#install-windows-babun-virtualbox) 
-    - **Recommended.** Faster, somewhat less convenient to use and update.
+- [VirtualBox](#install-windows-babun-virtualbox) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg)
+    - Faster, somewhat less convenient to use and update.
 - [Docker for Windows](#install-windows-babun-docker-for-windows)
     - Somewhat slower, excludes VirtualBox, but easier to use and update
 
@@ -171,13 +169,11 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
         dism /online /enable-feature /all /featurename:SMB1Protocol-Server
 
-
 1. Install Docksal
 
     Open **Babun** and run:
 
         curl -fsSL get.docksal.io | bash
-
 
 1. Start the VM
 
@@ -244,7 +240,7 @@ fin update
 <a name="uninstall"></a>
 # Uninstallation
 
-## If you used VirtualBox 
+### If you used VirtualBox 
 
 The steps below will remove the Docksal VM and cleanup all Docksal stuff.
 
@@ -257,7 +253,7 @@ rm -f /usr/local/bin/fin
 
 Optionally remove VirtualBox application.
 
-## If you used Docker for Mac / Docker for Windows
+### If you used Docker for Mac / Docker for Windows
 
 The steps below will remove Docksal project containers (files untouched) 
 and stop Docksal system services.
@@ -271,7 +267,7 @@ rm -f /usr/local/bin/fin
 
 Optionally remove Docker for Mac / Docker for Windows application.
 
-## If you used Linux
+### If you used Linux
 
 The steps below will remove Docksal project containers (files untouched) 
 and stop Docksal system services.
