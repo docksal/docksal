@@ -356,7 +356,7 @@ services:
 	#[[ $SKIP == 1 ]] && skip
 
         # Send all mail to /bin/true
-        echo "sendmail_path=/bin/true" >> .docksal/etc/php.ini
+        echo "sendmail_path=/bin/true" >> .docksal/etc/php/php.ini
         # Initialize the Project
         fin init
 	# Run fin share in a emulated terminal
@@ -374,6 +374,11 @@ services:
 	[[ "${output}" =~ "My Drupal 8 Site" ]]
 	unset output
 
+        # Clean Up
 	# Clean up kill ngrok session
         screen -X -S testNgrok quit
+        # Kill Docker Container
+        docker rm -f drupal8_web_1_ngrok
+        # Destroy Project
+        fin rm -f
 }
