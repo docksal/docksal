@@ -4955,8 +4955,6 @@ ngrok_share ()
 
 	# Add -host-header by default if no arguments are included.
 	if [[ "${ARGS}" == "ngrok http" ]]; then
-		# Remove possible VIRTUAL_HOST user extensions like "my.docksal,*.my.docksal"
-		local NGROK_VIRTUAL_HOST=$(echo "$VIRTUAL_HOST" | sed "s/\(,.*\)//")
 		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}'"
 	fi
 
@@ -4966,7 +4964,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		sh -c "${ARGS} ${container_name}.${network}:${NGROK_PORT}"
+		sh -c "${ARGS} ${container_name}.${network}:${NGROK_PORT} > /dev/null &"
 }
 
 # Print information required for issue diagnostics
