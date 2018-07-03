@@ -7,15 +7,15 @@ It also forwards all other DNS requests to the upstream DNS server, which is Goo
 
 Project containers are configured to use `docksal-dns` as their DNS server by default.
 
-Docksal configures network settings on Linux, Mac and Windows to tell the host machine to use `docksal-dns` as well.
+Docksal configures network settings on Linux, Mac, and Windows to tell the host machine to use `docksal-dns` as well.
 
 On Mac only `*.docksal` DNS queries are routed through `docksal-dns`.
 
-On Linux and Windows DNS all DNS queries are routed through `docksal-dns`, as there is no way to configure this 
+On Linux and Windows DNS, all DNS queries are routed through `docksal-dns`, as there is no way to configure this 
 selectively (like on Mac). 
 
 In cases when the Docksal VM is stopped or the `docksal-dns` service is down, the OS picks the next available DNS server 
-configured on the host (which would be you LAN/WiFi connection). This way there is always a fallback.
+configured on the host (which would be your LAN/WiFi connection). This way there is always a fallback.
 
 
 ## Disabling the resolver
@@ -31,9 +31,8 @@ Without the automatic resolver, you can use `fin hosts` command to manage name r
 
 ## Override the default upstream DNS settings
 
-Some restricted network environments (e.g. corp networks) may be blocking direct access to external DNS services, 
-this making `8.8.8.8` inaccessible. In such cases Docksal will output a warning with the instructions to override the
-default upstream DNS settings.
+Some restricted network environments (e.g., corporate networks) may be blocking direct access to external DNS services, 
+making `8.8.8.8` inaccessible. In such cases, Docksal will output a warning on `fin project start` with the instructions to override the default upstream DNS settings.
 
 1. Open `$HOME/.docksal/docksal.env` and set `DOCKSAL_DNS_UPSTREAM` to your local network DNS server
 

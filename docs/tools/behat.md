@@ -2,7 +2,7 @@
 
 ## Setup
 
-Add custom `behat` command to your project.
+Add a custom `behat` command to your project.
 
 >     .docksal/commands
 >       \_ behat
@@ -33,7 +33,7 @@ This will download Composer dependencies and run Behat using the pre-configured 
 
 The basic configuration (see [behat.common.yml](https://github.com/docksal/drupal7-advanced/blob/master/tests/behat/behat.common.yml) as an example) 
 uses goutte as the default driver. Goutte is a very basic browser emulator. It is much faster than real browsers, but also very limited. 
-It can make HTTP requests, but does not parse CSS, execute JS or do any rendering.
+It can make HTTP requests, but does not parse CSS, execute JS, or do any rendering.
 
 Goutte can be used in many cases and does not require additional configuration/installation.
 
@@ -58,7 +58,7 @@ browser:
     - ${DOCKSAL_DNS2}
 ```
 
-You can also use the Firefox image instead of Chrome: `selenium/standalone-firefox`
+You can also use the Firefox image instead of Chrome: `selenium/standalone-firefox`.
 
 After that you have to tell Behat to use Selenium.  
 Add your Selenium configuration in `tests/behat/behat.yml`.
@@ -92,7 +92,7 @@ docker:
 ## Behat selenium2 driver and VNC
 
 If you use Selenium with a browser in a container, you can obtain the test screenshots, however you cannot see the browser itself.  
-Sometimes it is very useful to watch the tests running in the browser (e.g. when you are creating a new test and want to see how it performs).  
+Sometimes it is very useful to watch the tests running in the browser (e.g., when you are creating a new test and want to see how it performs).  
 In such cases, a [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) client can be used.
 
 1) Install a VNC client on your computer (there are many versions for all platforms).  
@@ -114,7 +114,7 @@ Use `192.168.64.100:5900` as the host and `secret` as the password in your VNC c
 
 Now if you connect with the VNC client and run behat tests, you will be able to see tests running in a browser inside the `browser` container.
 
-Note: If you are working with several projects concurrently, it is a good idea to have a separate VNC port assigned per project (e.g. `5901:5900`, `5902:5900`, etc.)
+Note: If you are working with several projects concurrently, it is a good idea to have a separate VNC port assigned per project (e.g., `5901:5900`, `5902:5900`, etc.).
 
 
 ## Integration with PhpStorm
@@ -139,7 +139,7 @@ cli:
 ssh docker@192.168.64.100 -p 2223
 ```
 
-Note: If you are working with several projects concurrently, it is a good idea to have a separate SSH port assigned per project (e.g. `2222:22`, `2223:22`, etc.)
+Note: If you are working with several projects concurrently, it is a good idea to have a separate SSH port assigned per project (e.g., `2222:22`, `2223:22`, etc.).
 
 ### Add a new deployment server
 
@@ -176,7 +176,7 @@ Open settings (menu item *File->Settings...*). In the opened window on the left 
 
 Add a new PHP interpreter for Behat (it should be the interpreter from previous step).
 
-Path to Behat is the path in the `cli` container - `/var/www/tests/behat/bin/behat`
+Path to Behat is the path in the `cli` container: `/var/www/tests/behat/bin/behat`
 
 Default configuration file: `/var/www/tests/behat/behat.yml`
 

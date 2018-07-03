@@ -1,12 +1,12 @@
 # Using Xdebug debugger
 
-Xdebug can be used to debug both web requests as well as cli scripts (e.g. Drush commands).
+Xdebug can be used to debug both web requests as well as cli scripts (e.g., Drush commands).
 
 ## Setup
 
 `xdebug` extension is disabled by default since it causes about a 20% performance hit. To enable it:
 
-1) Set `XDEBUG_ENABLED=1` in `.docksal/docksal.env` in your project.  
+1) Set `XDEBUG_ENABLED=1` in `.docksal/docksal.env` or `.docksal/docksal-local.env` in your project  
 2) Apply container configuration with `fin project start` (`fin p start`)
 
 To verify that Xdebug was enabled run:
@@ -46,7 +46,7 @@ If you don't get the **Incoming Connection From Xdebug** dialogue, use the follo
 2) Set **Name** and **Hostname** to project's virtual host (`VIRTUAL_HOST`)  
 3) Configure host to server directory mappings
 
-Map the project directory on the host to `/var/www` on the server
+Map the project directory on the host to `/var/www` on the server:
 
 ![PHPStorm](../_img/xdebug-mapping-manual.png)
 
@@ -56,7 +56,7 @@ Make sure you have the server and directory mapping already configured following
 
 Keep in mind, that the script you are trying to debug must reside within the project folder or PHPStorm won't be 
 able to access its code (and thus debug it). Specifically, this means that you can only debug Drush and Drupal
-Console instances local to the project (installed with Composer into as project level dependencies).
+Console instances local to the project (installed with Composer as project level dependencies).
 
 1) Create `.docksal/docksal-local.yml` file (or update an existing one) in your project with the following:
 
@@ -74,22 +74,21 @@ This adjustment is necessary to let PHPStorm know what server configuration to u
 Note: If `PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}` is set before web request debugging is configured, PHPStorm will not automatically configure the server and directory mappings for you. You will have to do this manually (see instructions for manual configuration above).
 
 2) Apply container configuration with `fin project start` (`fin p start`)  
-3) Adjust the following settings, so that PHPStorm can handle debugging Drush commands:
+3) Adjust the following settings so that PHPStorm can handle debugging Drush commands:
 
 ![Screenshot](../_img/xdebug-phpstorm-drush.png)
 
 (1) Increase the Max. simultaneous connections to allow drush to spawn other drush instances. Otherwise the debugger may get stuck without any response.  
-(2) Disable "Force break at the first line when a script is outside the project". Since the main drush binary resides in `cli` in `/usr/local/bin/drush` the debugger will break on every drush invocation.
+(2) Disable "Force break at the first line when a script is outside the project." Since the main drush binary resides in `cli` in `/usr/local/bin/drush`, the debugger will break on every drush invocation.
 
 2) Set path mappings for the Drush binary in PHPStorm:
 
-![Screenshot](../_img/xdebug-phpstorm-drush-mapping.png)
+![Screenshot](../_img/xdebug-mapping.png)
 
 (1) Set **Name** and **Hostname** to project's virtual host (`VIRTUAL_HOST`)  
 (2) Map the project root to `/var/www`. Additionally map the project level Drush binary to `/usr/local/bin/drush`.
 
-You can run your scripts in console and debug them in the same way as browser requests.  
-For example you can run drush command: `fin drush fra -y` and debug this drush command from the Features module.
+You can run your scripts in console and debug them in the same way as browser requests. For example, you can run drush command: `fin drush fra -y` and debug this drush command from the Features module.
 
 ### Resources
 
@@ -98,15 +97,27 @@ For example you can run drush command: `fin drush fra -y` and debug this drush c
 
 ## Debugging with NetBeans
 
-1) Follow the Setup instructions to enable Xdebug in cli.  
+1) Follow the Setup instructions to enable Xdebug in cli  
 2) Open NetBeans Debugging configuration ("Tools> Options > PHP > Debugging") and set "DebuggerPort" to 9000  
-3) Open your project in NetBeans.  
-4) Configure project properties:
+3) Open your project in NetBeans  
+4) Configure project properties:  
 
 - Right mouse click on project name, then "Properties" from the dropdown menu
 - Under "Sources", set correct Web Root folder by clicking "Browse" button (usually it's `docroot`)
-- Under "Run Configuration", use project's virtual host (`VIRTUAL_HOST`) to set the Project URL.
-- Click "OK" to save project properties.
+- Under "Run Configuration", use project's virtual host (`VIRTUAL_HOST`) to set the Project URL
+- Click "OK" to save project properties
 
 5) Set a breakpoint wherever you like  
-6) In NetBeans, with the whole project selected or one of the project files opened and active, press `<CTRL> + <F5>` on your keyboard to start the debugger.
+6) In NetBeans, with the whole project selected or one of the project files opened and active, press `<CTRL> + <F5>` on your keyboard to start the debugger
+
+## Debugging with Atom
+
+1) Follow the Setup instructions to enable Xdebug in cli  
+2) Install [PHP-Debug Plugin](https://atom.io/packages/php-debug)  
+3) Configure PHP Debug Settings (Preferences > Packages)
+
+- Search for "php-debug"
+- Click "Settings" button below plugin
+- "Server" can be set to `*`
+- "Server Listen Port" should be set to 9000
+- Make sure "Continue to listen for debug sessions even if the debugger windows are all closed" is checked. This will make the debugger window open automatically.

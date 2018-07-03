@@ -13,7 +13,7 @@ teardown() {
 
 # Global skip
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-#SKIP=1
+SKIP=1
 
 # Cannot do cleanup outside of a test case as bats will evaluate/run that code before every single test case.
 @test "uber cleanup" {
@@ -62,6 +62,20 @@ teardown() {
 	unset output
 }
 
+@test "fin namespace/custom-command" {
+	[[ $SKIP == 1 ]] && skip
+
+	mkdir .docksal/commands/team
+	cat <<EOF > .docksal/commands/team/test
+'#!/bin/bash
+echo "Test Command"
+EOF
+	chmod +x .docksal/commands/team/test
+
+	run fin team/test
+	[[ "${output}" == "Test Command" ]]
+	unset output
+}
 
 @test "fin stop" {
 	[[ $SKIP == 1 ]] && skip
@@ -164,10 +178,15 @@ teardown() {
 	run fin exec -T 'echo $(id -u):$(id -g)'
 	[[ "$output" == "$(id -u):$(id -g)" ]]
 	unset output
+
+	# setting target container with --in
+	run fin exec --in=web -T cat /etc/hostname
+	[[ "$output" == "web" ]]
+	unset output
 }
 
 @test "fin run-cli" {
-	[[ $SKIP == 1 ]] && skip
+	#[[ $SKIP == 1 ]] && skip
 
 	# Dummy command to pre-pull the image run-cli is using.
 	fin rc uname
@@ -217,13 +236,13 @@ teardown() {
 	# Check one-off volume --clean
 	fin rc touch /home/docker/test
 	run fin rc --clean -T ls /home/docker/test
-	[[ "$output" =~ "cannot access /home/docker/test" ]]
+	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
 	unset output
 
 	# Check --cleanup persistent volume
 	fin rc touch /home/docker/test
 	run fin rc --cleanup -T ls /home/docker/test
-	[[ "$output" =~ "cannot access /home/docker/test" ]]
+	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
 	unset output
 }
 
@@ -316,5 +335,19 @@ services:
 	run fin config
 	echo "$output" | egrep "VIRTUAL_HOST: newvariable.docksal"
 	echo "$output" | egrep "io.docksal.virtual-host: drupal8.docksal"
+	unset output
+}
+
+@test "fin virtual host with non standard hostname characters" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Preparation step - create local env file
+	echo "VIRTUAL_HOST=feaTures.Alpha-beta_zulu.docksal" > .docksal/docksal-local.env
+
+	# Check config (check if local environment variables are used in docksal.yml)
+	run fin config
+	echo "$output" | egrep "VIRTUAL_HOST: features.alpha-beta-zulu.docksal"
+	[[ $(echo "$output" | grep -c "feaTures.Alpha-beta_zulu.docksal") -eq 0 ]]
+	[[ "${output}" =~ "The VIRTUAL_HOST has been modified from feaTures.Alpha-beta_zulu.docksal to features.alpha-beta-zulu.docksal to comply with browser standards." ]]
 	unset output
 }

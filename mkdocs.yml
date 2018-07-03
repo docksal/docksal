@@ -11,18 +11,17 @@ pages:
   - Home: index.md
   - Getting started:
     - What's in the software?: getting-started/the-software.md
-    - Setup instructions: getting-started/setup.md
-    - System requirements: getting-started/system-requirements.md
-    - Docksal setup: getting-started/env-setup.md
+    - Installing Docksal: getting-started/setup.md
+    - Switching Docker modes: getting-started/docker-modes.md
     - Project setup: getting-started/project-setup.md
-    - Docker for Mac/Windows: getting-started/env-setup-native.md
-    - Upgrading from Drude (DDE): getting-started/upgrade-dde.md
     - Portable installation: getting-started/portable.md
   - Troubleshooting:
     - General: troubleshooting.md
     - Windows SMB shares: troubleshooting-smb.md
   - Docksal Fin:
     - fin: fin/fin.md
+    - fin help: fin/fin-help.md
+    - fin run-cli: fin/fin-run-cli.md
     - Custom commands: fin/custom-commands.md
     - Addons: fin/addons.md
     - Folder aliases: fin/aliases.md
@@ -31,12 +30,16 @@ pages:
     - Acquia Drush Commands: tools/acquia-drush.md
     - Behat: tools/behat.md
     - Blackfire: tools/blackfire.md
+    - Composer: tools/composer.md
     - Drupal Console: tools/drupal-console.md
     - Drush: tools/drush.md
     - MailHog: tools/mailhog.md
     - Memcached: tools/memcached.md
     - ngrok: tools/ngrok.md
     - PHP Code Sniffer: tools/phpcs.md
+    - phpMyAdmin: tools/phpmyadmin.md
+    - Platform.sh: tools/platformsh.md
+    - Redis: tools/redis.md
     - SASS and Compass: tools/sass.md
     - Terminus: tools/terminus.md
     - Varnish: tools/varnish.md

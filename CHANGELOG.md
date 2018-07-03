@@ -1,5 +1,101 @@
 # Changelog
 
+# 1.9.1 (2018-06-07)
+
+# Changes and improvements
+
+- Fixed an error with setting DB privileges during `fin db create`
+- Disabled network cleanup in `fin cleanup` (triggered during updates) (#582)
+  - Check [this fix](https://github.com/docksal/docksal/issues/582#issuecomment-395537109) if you updated to Docksal 1.9.0 and had your stopped project(s) broken
+
+# Documentation
+
+- Updated 1.9.0 release notes to mention a breaking change in docker-compose 1.21.1
+- Fixed typos here and there
+
+
+# 1.9.0 (2018-06-05)
+
+# New software versions
+
+- fin 1.60.0
+- Stack updates
+  * Switched `cli` to [docksal/cli:2.2-php-7.1](https://github.com/docksal/service-cli/releases/tag/v2.2.0).
+- Docker 18.03.1
+- Docker Compose 1.21.1
+    * **[BREAKING]** Projects with dashes in names need `fin reset` ([Read more](https://blog.docksal.io/breaking-change-in-docker-compose-1-21-1-c00fda7e1b75))
+- VirtualBox 5.2.2
+
+# New Features
+
+- Alpine Linux support.
+- [Play-with-Docker](https://labs.play-with-docker.com/) support
+  - You can now try and play with Docksal online, free of charge, and within minutes!
+- **Experimental**: Cloud9 IDE integration
+  - Cloud9 provides an in-browser IDE and terminal for your project and stack.
+  - Run `fin config set IDE_ENABLED=1 && fin project reset cli` in your project folder to enable Cloud9 IDE.
+  - Open `http://ide.<VIRTUAL_HOST>` 
+- `fin config [get|set|remove]`
+  - New commands to manage project level (`.docksal/docksal.env`) and global (`$HOME/docksal/docksal.env`) Docksal variables.
+  - See `fin help config` for details.
+- New boilerplate frameworks:
+  - [Symfony Skeleton](https://github.com/docksal/example-symfony-skeleton)
+  - [Symfony WebApp](https://github.com/docksal/example-symfony-webapp)
+  - [Backdrop CMS](https://github.com/docksal/example-backdrop)
+
+# Changes and improvements
+
+- Improved `fin share` to allow for custom ngrok configuration (see [Additional ngrok configuration](https://docs.docksal.io/en/master/tools/ngrok/#additional-ngrok-configuration)).
+- Extended `fin config generate` to allow for `DOCKSAL_STACK` and `DOCROOT` to be set at runtime.
+  - See `fin help config` for details.
+- `fin run-cli`:
+  - Switched default image for `fin run-cli` to use `docksal/cli:2.2-php7.1`.
+  - Allow passing environment variables to the `run-cli` container at run time or through `$HOME/.docksal/docksal.env` file.
+  - Fixed Windows support.
+  - Standard secrets (`SECRET_*` variables) are now passed to the `run-cli` container.
+  - Substantially improved startup container time by declaring `/home/docker` as a volume (same as in the default stack).
+  - See `fin help run-cli` for more details
+  - **[BREAKING]** Persistent `$HOME` directory in the `run-cli` container by default.
+  - **[BREAKING]** Image and debug are now options (`--image=...`, `--debug`) 
+- Reworked `fin project create` command screen to separate out different frameworks and languages.
+- Refactored `fin ssh-add` command to allow for non-standard ssh keys to be add automatically (see [Automatically add keys](https://docs.docksal.io/en/master/advanced/ssh-agent/#automatically-add-keys)).
+- Refactored OS detection.
+- Fixed `fin help` to reference commands within folders.
+- Refactored container remove function.
+- Refactored unison volumes integration.
+  - Forked our own `docksal/unison` image.
+  - **[BREAKING]** renamed `bg-sync` to `unison` in `fin` and in `stacks/volumes-unison.yml`. 
+- Fixed `fin stop --all` to stop all Docksal projects not all existing Docker containers.
+- Fixed Travis CI to run correctly with external pull requests.
+- Improved testing across functionality.
+- Fixed issue with `fin db create` failing if database exists and `fin db drop` failing if database did not exist.
+- Fixed missing host file on WSL.
+- Added `blackfire` service configuration to `services.yml` and updated Blackfire documentation.
+- Refactored network configuration on Ubuntu
+  - During `fin system stop` network settings introduced by Docksal will now be reverted.
+- Fixed (workaround) a Docker bug with long commands overlapping on single terminal line (`fin exec` and `fin run-cli`).
+- Add a warning when running `fin` as root.
+
+# Documentation
+
+- New: [Addons](https://docs.docksal.io/en/v1.9.0/fin/addons) - extending projects with extra commands and integrations.
+- New: [phpMyAdmin](https://docs.docksal.io/en/v1.9.0/tools/phpmyadmin) integration docs.
+- New: [Redis](https://docs.docksal.io/en/v1.9.0/tools/redis) integration docs.
+- New: [fin help](https://docs.docksal.io/en/v1.9.0/fin/fin-help) - content from all `fin help` topics.
+- New: [fin run-cli](https://docs.docksal.io/en/v1.9.0/fin/fin-run-cli) command docs.
+- Updated [Using native Docker applications](https://docs.docksal.io/en/v1.9.0/getting-started/env-setup-native) docs to use the new `fin config set` command.
+- Updated [SSH agent](https://docs.docksal.io/en/v1.9.0/advanced/ssh-agent) with a section on how to automatically local non-default keys.
+- Updated [Custom commands](https://docs.docksal.io/en/v1.9.0/fin/custom-commands/#grouping-commands) with a section on grouping custom commands.
+- Updated [Setup instructions](https://docs.docksal.io/en/v1.9.0/getting-started/setup) with new boilerplate repos.
+- Updated [Blackfire](https://docs.docksal.io/en/v1.9.0/tools/blackfire) integration instructions.
+- Updated [ngrok](https://docs.docksal.io/en/v1.9.0/tools/ngrok) (`fin share`) integration instructions with the new configuration options.
+- Updated [Xdebug](https://docs.docksal.io/en/v1.9.0/tools/xdebug) docs with instructions on using Xdebug with the Atom editor.
+- Updated [Extending stock images](https://docs.docksal.io/en/v1.9.0/advanced/extend-images) 
+- Updated [Stack configuration](https://docs.docksal.io/en/v1.9.0/advanced/stack-config) docs with all available variables in Docksal.
+- Updated [Troubleshooting](https://docs.docksal.io/en/v1.9.0/troubleshooting) with instructions on "Docker unauthorized" issues.
+- Fixed typos and grammar found within documentation.
+
+
 # 1.8.0 (2018-04-05)
 
 ## New software versions
@@ -27,7 +123,7 @@
 - Added support to run `fin debug` with project configuration loading
   - `fin debug -c ...`, `fin debug --load-configuration ...`
 - Removed an old workaround in `fin drush` and `fin drupal` when run with empty arguments
-  - drush used to choke on empty arguments (e.g. drush "")
+  - drush used to choke on empty arguments (e.g., drush "")
   - drupal console never needed this workaround
 - Allow `fin alias` creation command to also update aliases
   - Added the "-f" option when creating an new alias link. This allow one to use the same command to update aliases vs. the current workflow of first removing the alias then adding it back in with the new path. (#496)
@@ -166,7 +262,7 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
 
 - Docker for Mac: osxfs caching is automatically enabled to improve read performance. (#249, #397)
 - Docker for Mac: [Unison file sync](http://docs.docksal.io/en/v1.6.0/advanced/volumes/#unison-volumes) support
-- You can add environment dependent ENV and YML files based on `$DOCKSAL_ENVIRONMENT` variable, e.g. `docksal-myenv.yml`,
+- You can add environment dependent ENV and YML files based on `$DOCKSAL_ENVIRONMENT` variable, e.g., `docksal-myenv.yml`,
  that would only apply, if `DOCKSAL_ENVIRONMENT=myenv` (#383, #354). Official documentation is pending.
 - New sample project repos and wizards: [Grav](https://github.com/docksal/example-grav), 
 [Gatsby JS](https://github.com/docksal/example-gatsby) and [Laravel](https://github.com/docksal/example-laravel)
@@ -315,7 +411,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - `host_home` volume is deprecated and removed from stack files
   - **This is a breaking change!**
   - See instructions above on the necessary adjustments to `docksal.yml`. 
-- Ability to stop at restart certain service container, e.g. `fin restart db`
+- Ability to stop at restart certain service container, e.g., `fin restart db`
 - Fix mysql import for large database (#279)
   - Database truncation was rewritten. Now database will be dropped and re-created. Should work faster and more reliable.
 - Mysql import and dump functions will properly read `MYSQL_DATABASE` environment variable (#276)
@@ -369,13 +465,13 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
     - Prefix Docksal SMB shares with `docksal-` to avoid conflicts with existing shares. Docksal share names on Windows will now look like `\\computer\docksal-c` instead of `\\computer\c` before. Should address file permissions issues some Windows users had had.
     - Domain name is now properly passed during shares mount. Should address share mount issues for domain users.
     - Mount SMB shares with `ntlmssp` or `ntlm` security options. Perform two attempts: use `ntlmssp` by default, use `ntlm` as a fallback. Should address issues for many users of corporate Windows laptops (#117)
-    - Perform umount before mount in `smb_share_mount` to simplify debugging (e.g. `fin vm mount` to remount the share)
+    - Perform umount before mount in `smb_share_mount` to simplify debugging (e.g., `fin vm mount` to remount the share)
     - Allow overriding CIFS `sec` option by setting `SEC_SMB` environment variable. Useful for debugging or for edge cases when neither of existing options work. `SMB_SEC=ntlmv2 fin vm mount`. Also see [unix.stackexchange.com/questions/124342](https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352)
 * Improve messaging to show when database dump is being imported from stdin 
 * Fix automatic VirtualBox installation on Windows
 * Docksal console desktop icon is deprecated. With the winpty improvements there is no need in this experimental console approach anymore.
 * Import SSH keys during containers reset on Linux (#180)
-* `vhost-proxy` and `dns` are now binding to `192.168.64.100` on all platforms. This should help to avoid conflicts with local web server instances (assuming they also don't bind to `0.0.0.0`, but use a specific IP instead (e.g. Apache on Linux can now run on `127.0.0.1` in parallel with Docksal)
+* `vhost-proxy` and `dns` are now binding to `192.168.64.100` on all platforms. This should help to avoid conflicts with local web server instances (assuming they also don't bind to `0.0.0.0`, but use a specific IP instead (e.g., Apache on Linux can now run on `127.0.0.1` in parallel with Docksal)
 
 ## Documentation
 
@@ -393,13 +489,13 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - New one-line installer: `curl -fsSL get.docksal.io | sh`
 - Docksal usage stats. Minimal OS/version and fin version tracking via Google Analytics.
 - `fin debug` - a new hidden command for debugging purposes
-- `fin exec` can now take a file as an argument and will execute it inside cli (e.g. `fin exec script.sh`)
+- `fin exec` can now take a file as an argument and will execute it inside cli (e.g., `fin exec script.sh`)
 - `fin vm mount` - a new hidden command to attempt re-mounting of shares on Mac and Windows.
 - `fin project create` - replaces `fin create-site`
 - `fin run-cli` - run a standalone, one-off cli container in the current directory. This allows using any tool inside cli without an already created/running Docksal project/stack.
 - `fin image` command to manage images (save, load, view Docksal images on Docker Hub).
-  - Adds support for saving and loading Docksal system and project images (e.g. from a local drive).
-- Portable installation mode support (e.g. from a USB drive or a local folder)
+  - Adds support for saving and loading Docksal system and project images (e.g., from a local drive).
+- Portable installation mode support (e.g., from a USB drive or a local folder)
   - Useful for conferences/trainings/etc. where internet bandwidth is an issue
   - `fin update` - supports VirtualBox, boot2docker.iso and tools (Mac and Windows)
   - `fin vm start` - load system images from a local `docksal-system-images.tar` file
@@ -424,7 +520,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Windows
   - Support for pipes (`|`), stream redirects (`< >`) and variable substitution from a sub-shell ( `$()` ) via `winpty -Xallow-non-tty`
   - Fixed directory switch in `fin exec`
-- Allowing non-tty installation on Mac and Linux (e.g. when used in CI/scripts)
+- Allowing non-tty installation on Mac and Linux (e.g., when used in CI/scripts)
 - Miscellaneous other small fixes and improvements
 
 ### Documentation

@@ -23,8 +23,8 @@ This command should be run in the folder with Gemfile:
 fin exec bundle install
 ```
 
-There are two folder (`.bundle`, `.bundler`) and a file (`Gemfile.lock`) will be created.
-Please add this directories (`.bundle`/`.bundler`) to `.gitignore`
+Two folders (`.bundle`, `.bundler`) and a file (`Gemfile.lock`) will be created.
+Please add these directories (`.bundle`/`.bundler`) to your `.gitignore` file.
 
 ## Compile SASS
 

@@ -1,4 +1,4 @@
-# Troubleshooting SMB shares creation, mounting and related issues on Windows
+# Troubleshooting SMB shares creation, mounting, and related issues on Windows
 
 ## Windows 10 Fall Creators Update 1709
 
@@ -15,7 +15,14 @@ exit status 255
 ```
 
 You will have to manually enable `SMB 1.0/CIFS Server` package in Windows Feature and reboot the host.  
-See [this](https://github.com/docksal/docksal/issues/382) issue for details.
+See [this issue](https://github.com/docksal/docksal/issues/382) for details.  
+To manually enable SMB1, run elevated Windows Command Prompt and execute:
+
+```cmd
+dism /online /enable-feature /all /featurename:SMB1Protocol-Server
+```
+
+Note: it requires reboot!
 
 ## How SMB related errors look
 
@@ -97,7 +104,7 @@ try opening that IP again.
 
 If after enabling files sharing you still can not access your IP via explorer,
 then see this [elaborate post on superuser about issues with File/Printer sharing on Windows](https://superuser.com/a/446500/140872).
-Hopefully it helps. Do not proceed to next steps, if you have not fixed the issue
+Hopefully it helps. Do not proceed to next steps if you have not fixed the issue
 because they will fail too.
 
 Friendly reminder: if everything fails to make it working, then you might be limited to
@@ -113,15 +120,15 @@ issues with accessing your local IP via explorer. (If error with vm
 start is not related to mounting or shares, then see regular [troubleshooting guide](troubleshooting.md).)
 
 In this step you need to check access to Docksal IP. Open explorer and navigate to `\\192.168.64.1\`.
-This is the IP that VirtualBox adapter assigns to your host machine. Just like in previous step it
+This is the IP that VirtualBox adapter assigns to your host machine. Just like in the previous step, it
 should open with no errors and now you should see your network shares.
 
 ![Getting your IP](_img/troubleshooting-smb-your-shares2.png)
 
 If you get errors when trying to open it, then there is an issue with VirtualBox network adapter. The
 most common reason is Windows Firewall blocking it. Try disabling your Firewall and check if it
-helps. It disabling firewall helped, then you either need to keep it this way or create an
-Incoming rule for your firewall to allow all traffic to all ports from IP `192.168.64.100`.
+helps. If disabling firewall helped, then you either need to keep it this way or create an
+incoming rule for your firewall to allow all traffic to all ports from IP `192.168.64.100`.
 
 If you disabled Windows Firewall, but you still can not access this IP address, then it is not
 firewall to blame. You would need to refer to the same
@@ -130,7 +137,7 @@ firewall to blame. You would need to refer to the same
 In worst case try removing Docksal VM with `fin vm remove`, uninstall VirtualBox, **reboot**, install
 VirtualBox and start vm again.
 
-If any option fails you might be limited to re-installing Windows. We had cases when
+If all options fail, you might be limited to re-installing Windows. We had cases when
 people had mysterious issues related to shares mounting. They re-installed Windows and everything
 worked like a charm.
 
@@ -139,9 +146,9 @@ worked like a charm.
 If both IPs are working, then it's not the network access issue.
 
 Open explorer and navigate to `\\192.168.64.1\`. Make sure that you see and can
-access shares, that Docksal should have created for your local drives. `docksal-c`, `docksal-d` etc.
+access shares that Docksal should have created for your local drives. `docksal-c`, `docksal-d` etc.
 
-If you see the shares, but can not access them then most likely you hit some edge case. Easiest
+If you see the shares but can not access them, then most likely you hit some edge case. Easiest
 fix is to stop Docksal VM, remove those shares manually using Windows UI and start VM back again.
 
 If you don't see those shares altogether, then there is an issue with shares creation.
@@ -152,7 +159,7 @@ Possible common reasons:
 * Microsoft account should use Microsoft account password, not the one that is used to unlock PC
 * group policies prevent share creation
 
-Check you password. Check that you can create shares, but do not create Docksal shares manually
+Check your password. Check that you can create shares, but do not create Docksal shares manually
 unless you know which permissions to set.
 
 Try running `fin vm restart`. If the issue with share creation does not go away and you think
@@ -165,7 +172,7 @@ For Microsoft Account use Microsoft Account password not the one you use to unlo
 **Your password can NOT contain:** `,` (comma), `\` (back slash) or `'` (single quote) symbol
 because the password is being passed to the console mount command.
 
-Other special symbols are not an issue but in case your password contains some other special
+Other special symbols are not an issue, but in case your password contains some other special
 symbols and you see errors that contain `Invalid argument`:
 
 ```
@@ -179,7 +186,7 @@ mount: mounting //192.168.64.1/docksal-c on /c failed: Invalid argument
 exit status 255
 ```
 
-In this case try simplifying your password and if it works with a new password,
+In this case, try simplifying your password. If it works with a new password,
 then create an issue on GitHub (see step 6), so we could investigate and fix.
 
 ### 6. Report an issue
@@ -187,7 +194,7 @@ then create an issue on GitHub (see step 6), so we could investigate and fix.
 If you checked all the steps above and it didn't help, then report an
 [issue on GitHub](https://github.com/docksal/docksal/issues) and we will investigate the edge case.
 
-If you have questions on resolving issues with steps above try searching the issue queue or
-if you stuck, then you can also create an issue on GitHUb to ask a question. Describe which step
-you stumbled upon, what fails, what is the error, what did you try to resolve it, provide output
-you are getting and `fin sysinfo` output.
+If you have questions on resolving issues with steps above, try searching the issue queue or
+if you are stuck, you can also create an issue on GitHUb to ask a question. Describe which step
+you stumbled on, what fails, what is the error, what did you try to resolve it, and provide the output
+you are getting and the `fin sysinfo` output.

@@ -16,7 +16,7 @@ The VM layer used on macOS/Windows (through VirtualBox or Docker for Mac/Windows
 that's not something you normally have to worry about. Both Docksal and Docker for Mac/Windows handle that automatically.
  
 From the perspective of a container, a local Linux path is mounted regardless of the underlying host OS. 
-On Mac the host filesystem is mounted with NFS, on Windows - using SMB.
+On Mac, the host filesystem is mounted with NFS, on Windows - using SMB.
 
 Let's take a look at an example.
 
@@ -24,7 +24,7 @@ The host machine is a macOS and the codebase root directory (the "Projects" fold
 This directory is mounted with the same path inside the VM: `/Users/username/Projects`. Any path within that directory 
 is exactly the same on the host and inside the VM.
 
-When a project stack is started, the project root directory (e.g. `/Users/username/Projects/myproject`) is bind mounted 
+When a project stack is started, the project root directory (e.g., `/Users/username/Projects/myproject`) is bind mounted 
 into `/var/www` inside the containers. A corresponding line in `docksal.yml` for this would be:
 
 ```yml
@@ -75,7 +75,7 @@ volumes:
 In the example above, `project_root` and `docksal_ssh_agent` are "named volumes". The first one is a project level one,
 while the second one is a global volume and is used by all projects.
 
-See [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-bind.yml)
+See [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-bind.yml).
 
 Defining volumes this way makes it much easier to override volume settings in one place (`volumes` section) vs multiple 
 places in the yaml file. We can now swap bind mounting with something else. See below.
@@ -119,7 +119,7 @@ with Docker for Mac, for testing and performance comparison purposes.
 We can also do more advanced and pretty interesting solutions, like using Unison to synchronize files between the host 
 and the `project_root` volume. 
 
-See [stacks/volumes-unison.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-unison.yml)
+See [stacks/volumes-unison.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-unison.yml).
 
 Unison volumes make the most sense for Docker for Mac users as an alternative to the (still slow) `osxfs` file sharing.
 
@@ -144,14 +144,15 @@ The benefits of this setup:
 
 The downsides:
 
-- Initial sync can take time especially on large codebases
+- Initial sync can take time, especially on large codebases
 - Higher disk space usage (double the size of the codebase)
 - Additional load from the unison daemon, but nothing compared to the load `osxfs` produces. 
 
 ### Using Unison volumes
 
-- Follow instructions [here](http://docs.docksal.io/en/master/getting-started/env-setup-native/) to properly 
-configure Docksal for use with Docker for Mac. Make sure you have the most recent fin version installed.
+Unprecedented, native-like FS speed on macOS and Windows (Linux is already native). See [docksal/unison](https://github.com/docksal/unison) for details
+
+- [Install Docksal](http://docs.docksal.io/en/master/getting-started/setup)
 - Add `DOCKSAL_VOLUMES=unison` in `.docksal/docksal.env` in a project
 - `fin project reset`
 - Wait until initial sync finishes.
@@ -160,4 +161,4 @@ configure Docksal for use with Docker for Mac. Make sure you have the most recen
 
 Docksal automatically enables the `osxfs:cached` mode on Docker for Mac.
 
-See [stacks/overrides-osxfs.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-osxfs.yml)
+See [stacks/overrides-osxfs.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-osxfs.yml).

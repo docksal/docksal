@@ -1,7 +1,26 @@
 # Troubleshooting
 
-Some common problems using Docksal and ways to resolve them.
+!!! attention "If something is wrong" 
+    Quite often a problem may reside within the 3rd party tools, project code, local configuration, etc., and not the stack.  
+    To make sure that the Docksal stack works properly, try launching any of the [sample projects](#examples).  
+    If you believe the issue is within the Docksal stack, then read on.
 
+First, try these quick fix steps in the order listed below. Check if the issue has cleared out **after each step**.
+
+- Update Docksal to the latest version. See the [updates](getting-started/setup.md#updates) section.
+- (Only if you use VirtualBox) Restart the Docksal VM: `fin vm restart`
+- Reset Docksal system services with `fin system reset` and restart project containers with `fin project restart`
+- Reboot the host (your computer or remote server)
+
+If that did not help, take a look at some of the common problems using Docksal and ways to resolve them below.
+
+If above did not help, try:
+
+- searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced a similar issue and already found a solution or a workaround.
+- asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
+- creating a [new issue](https://github.com/docksal/docksal/issues/new) if your problem is still not resolved.
+
+-----
 
 <a name="issue-01"></a>
 ## Issue 1. Failed creating Docksal virtual machine on Windows
@@ -20,12 +39,12 @@ Error creating machine: Error in driver during machine creation: read tcp 127.0.
 Remove docksal? [y/n]:
 ```
 
-If you see this error then most likely you had just installed Virtual Box.
-Sometimes Virtual Box fails to initialize it's network interfaces properly.
+If you see this error, most likely you had just installed Virtual Box.
+Sometimes Virtual Box fails to initialize its network interfaces properly.
 
 ### How to resolve
 
-1. Reply yes to remove malfunctioned virtual machine.
+1. Reply `yes` to remove malfunctioned virtual machine.
 2. Reboot your local host and try again.
 
 
@@ -42,8 +61,8 @@ Sometimes docker-machine certificates re-generation fails.
 
 ### How to resolve
 
-1. Perform `fin vm restart`.
-2. If above did not help, then reboot your local host.
+1. Perform `fin vm restart`
+2. If above did not help, then reboot your local host
 3. If above did not help, perform commands below and then reboot your host:
 
 ```bash
@@ -77,7 +96,7 @@ Drupal 8 project and composer.
 1. If the VM keeps running out of memory or you are getting weird issue with the `db` (or other) services failing, then
 try stopping all active projects (`fin stop --all`) and only start the one you need.
 
-2. Alternatively give the VM more RAM (e.g. 4096 MB). This may only be necessary when running several very heavy
+2. Alternatively give the VM more RAM (e.g., 4096 MB). This may only be necessary when running several very heavy
 stacks/projects at the same time.
 
 ```bash
@@ -122,8 +141,8 @@ This prevents Docksal from running properly.
 ### How to resolve
 
 1. Stop Apache or
-2. Reconfigure Apache to listen on different ports (e.g. `8080` and `4433`) or
-different/specific IPs (e.g. `127.0.0.1:80` and `127.0.0.1:443`).
+2. Reconfigure Apache to listen on different ports (e.g., `8080` and `4433`) or
+different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`)
 
 
 <a name="issue-06"></a>
@@ -206,7 +225,7 @@ Check `docksal.yml` and `.htaccess` files for configuration errors, fix them and
 <a name="issue-10"></a>
 ## Issue 10. SMB share creation, share mounting and related issues on Windows
 
-Please see a separate [troubleshooting document on share creation, share mounting and related issues](troubleshooting-smb.md).
+Please see a separate [troubleshooting document on share creation, share mounting, and related issues](troubleshooting-smb.md).
 
 
 <a name="issue-11"></a>
@@ -219,7 +238,7 @@ ERROR 2003 (HY000): Can't connect to MySQL server on 'db' (111)
 There may be many different errors. Check Mysql logs with `fin logs db` for details.
 Here we will just look at the most common case.
 
-If you see error like:
+If you see an error like:
 
 ```
 db_1   | 170614 14:26:54 [Note] Plugin 'FEDERATED' is disabled.
@@ -249,7 +268,7 @@ See Issue 3. Lack of memory for resolution.
 <a name="issue-12"></a>
 ## Issue 12. VirtualBox installation fails on macOS High Sierra 10.13
 
-New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced 
+New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced
 around third-party kernel extensions.
 
 ### How to resolve
@@ -260,7 +279,7 @@ around third-party kernel extensions.
 In certain cases you may have to reboot your Mac and then reinstall VirtualBox manually.
 
 [This video](https://www.youtube.com/watch?v=0vmQOYRCdZM) covers the manual steps necessary to install VirtualBox 
-successfully. More details [here](https://github.com/docksal/docksal/issues/417).
+successfully. [See detailed issue resolution](https://github.com/docksal/docksal/issues/417).
 
 ## Issue 13. Docker unauthorized
 
@@ -276,3 +295,24 @@ This means that you have docker credentials stored in docker config file, and th
 
 See [docker login documentation](https://docs.docker.com/engine/reference/commandline/login/#logging-out) and
 to use docker client to either log out or relogin.
+
+## Issue 14. VirtualBox installation fails on Windows (Hyper-V Enabled)
+
+Docksal / VirtualBox installations will fail on Windows if Hyper-V is enabled. This will result in a message similar to
+below:
+
+```
+Error with pre-create check: "This computer is running Hyper-V.
+VirtualBox won't boot a 64bits VM when Hyper-V is activated.
+Either use Hyper-V as a driver, or disable the Hyper-V hypervisor.
+(To skip this check, use --virtualbox-no-vtx-check)
+```
+
+To Disable Hyper-V:
+
+* [Run Command Prompt as an Administrator](https://www.howtogeek.com/194041/how-to-open-the-command-prompt-as-administrator-in-windows-8.1/)
+* Type the following and press Enter:
+
+```
+dism.exe /Online /Disable-Feature:Microsoft-Hyper-V /All
+```

@@ -12,7 +12,8 @@ services:
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
-      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
       - io.docksal.project-root=${PROJECT_ROOT}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
@@ -78,7 +79,7 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.1-php7.1}
+    image: ${CLI_IMAGE:-docksal/cli:2.2-php7.1}
     volumes:
       - project_root:/var/www:rw,nocopy  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
@@ -90,9 +91,12 @@ services:
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
       - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}  # Point xdebug to the host IP
+      - BLACKFIRE_CLIENT_ID
+      - BLACKFIRE_CLIENT_TOKEN
       - SECRET_SSH_PRIVATE_KEY
       - SECRET_ACAPI_EMAIL
       - SECRET_ACAPI_KEY
+      - SECRET_PLATFORMSH_CLI_TOKEN
       - SECRET_TERMINUS_TOKEN
     dns:
       - ${DOCKSAL_DNS1}
@@ -105,7 +109,8 @@ services:
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
-      - io.docksal.virtual-host=varnish.${VIRTUAL_HOST}
+      - io.docksal.virtual-host=varnish.${VIRTUAL_HOST},varnish.${VIRTUAL_HOST}.*
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
     environment:
       - VARNISH_BACKEND_HOST=web
     dns:
@@ -128,8 +133,9 @@ services:
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
-      - io.docksal.virtual-host=solr.${VIRTUAL_HOST}
+      - io.docksal.virtual-host=solr.${VIRTUAL_HOST},solr.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8983
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
@@ -141,8 +147,16 @@ services:
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
-      - io.docksal.virtual-host=mail.${VIRTUAL_HOST}
+      - io.docksal.virtual-host=mail.${VIRTUAL_HOST},mail.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8025
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+
+  # Blackfire
+  blackfire:
+    image: blackfire/blackfire
+    environment:
+      - BLACKFIRE_SERVER_ID
+      - BLACKFIRE_SERVER_TOKEN

@@ -13,7 +13,7 @@ run `composer require drush/drush` to add it.
 [Drush Launcher](https://github.com/drush-ops/drush-launcher) is also installed globally in the `cli` container. 
 It will automatically pickup project level drush version and pass execution to it.
 
-For legacy setups and older Drupal versions `cli` also ships with a globally installed Drush 8. 
+For legacy setups and older Drupal versions, `cli` also ships with a globally installed Drush 8. 
 The launcher is configured to use it as a fallback when no project level drush is available.
 
 ## Usage 

@@ -6,7 +6,7 @@
 
 It's recommended to see how to [extend fin with custom commands](../fin/custom-commands.md) first.
 
-From your project's root folder (where the `.docksal` folder is) download the sample `phpcs` command
+From your project's root folder (where the `.docksal` folder is) download the sample `phpcs` command:
 
 ```bash
 mkdir -p .docksal/commands
@@ -24,7 +24,7 @@ A command for `phpcbf` can be created in a similar fashion.
 ## Using directly
 
 Instead of installing or creating custom commands you can use `phpcs`/`phpcbf` directly every time.  
-From your project's root folder run
+From your project's root folder run:
 
 ```bash
 fin run phpcs \

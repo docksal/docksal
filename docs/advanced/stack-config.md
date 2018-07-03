@@ -49,7 +49,7 @@ modify settings that are needed for anyone that uses your project.
 If you don't have this file in your project folder, fin will load the [default stack](#default-configurations), 
 this way providing a zero-configuration setup.
 
-For more details on its role check [loading order](#loading-order).
+For more details on its role, check [loading order](#loading-order).
 
 <a name="docksal-env"></a>
 ### docksal.env
@@ -57,25 +57,25 @@ For more details on its role check [loading order](#loading-order).
 `docksal.env` is an [Environment file](https://docs.docker.com/compose/env-file/).
 
 It is used to override of some of the default environment variables, without the need for
-a full `docksal.yml` file (for example, to override `MYSQL_ROOT_PASSWORD`) or to provide additional environment
-variables for your automation scripts (see [custom commands](../fin/custom-commands.md).)
+a full `docksal.yml` file (e.g., to override `MYSQL_ROOT_PASSWORD`) or to provide additional environment
+variables for your automation scripts (see [custom commands](../fin/custom-commands.md)).
 
 <a name="docksal-local"></a>
 ### docksal-local.yml, docksal-local.env
 
 `docksal-local.yml` and `docksal-local.env` are used for additional customizations that happen after the main files 
-are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom port](../advanced/networking.md#expose-port) 
+are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom ports](../advanced/networking.md#expose-port) 
 or switching PHP versions.
 
 These files are intended for local overrides. They should be added to `.gitignore` and never committed into a project 
-repo. You can always include an example file in the repo, e.g. `example.docksal-local.env` and instruct users to copy 
+repo. You can always include an example file in the repo, e.g., `example.docksal-local.env`, and instruct users to copy 
 it and adjust as necessary.
 
 <a name="default-configurations"></a>
 ## Default stacks
 
 Docksal ships with a set of default configurations (stacks), which are `yml` files stored in `$HOME/.docksal/stacks/`.
-These files are a good reference, when you begin creating a custom project configuration.
+These files are a good reference when you begin creating a custom project configuration.
 
 | File name                  | Description |
 |----------------------------|:------------|
@@ -101,12 +101,12 @@ The list below goes from the earliest to the latest in this queue.
 
 Loading order:
 
-1. `$HOME/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md).)
-2. `$HOME/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`.
-3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise.
-4. `docksal.env` - sets or modifies environment variables.
-5. `docksal-local.yml` - extends the loaded stack or `docksal.yml`.
-6. `docksal-local.env` - sets or modifies environment variables set previously.
+1. `$HOME/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md))
+2. `$HOME/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`
+3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise
+4. `docksal.env` - sets or modifies environment variables
+5. `docksal-local.yml` - extends the loaded stack or `docksal.yml`
+6. `docksal-local.env` - sets or modifies environment variables set previously
 
 To see the files loaded for a particular project run `fin config show`.
 
@@ -131,8 +131,8 @@ DOCKSAL_STACK="acquia"
 
 The following stacks are available:
 
-- `default` - web, db, cli (assumed, when none specified.)
-- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects.)
+- `default` - web, db, cli (assumed, when none specified)
+- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects)
 
 <a name="custom-configuration"></a>
 ## Custom configuration
@@ -161,7 +161,7 @@ There are some values that are not required for docker-compose to work but are r
 
 #### web
 
-In the `web` service there are settings defined in the `volumes`, `labels`, `environment` and `depends_on` sections. 
+In the `web` service, there are settings defined in the `volumes`, `labels`, `environment`, and `depends_on` sections. 
 You should not remove or change these values.
 
 ```yaml
@@ -181,7 +181,7 @@ You should not remove or change these values.
 
 #### cli
 
-In the `cli` service there is the `volumes` section. You should not remove or change these volumes.
+In the `cli` service, there is the `volumes` section. You should not remove or change these volumes.
 
 ```yaml
   cli:
@@ -230,7 +230,7 @@ networks: {}
 services:
   cli:
     hostname: cli
-    image: docksal/cli:2.1-php7.1
+    image: docksal/cli:2.2-php7.1
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
@@ -272,17 +272,17 @@ volumes:
 <a name="configuration-variables"></a>
 ## Configuration Variables
 
-All variables changed below will require at the minimum a project restart `fin restart` so that they can take effect. Additional steps may be required.
+All variables changed below will require, at minimum, a project restart `fin restart` so that they can take effect. Additional steps may be required.
 
 ### DOCKSAL_NFS_PATH
 
-The location of the folder on the host machine to mount to virtual box. [More info](../file-sharing.md)
+The location of the folder on the host machine to mount to VirtualBox. See [file sharing](file-sharing.md) for more information.
 
 ### IMAGE_SSH_AGENT
 
 `Default: docksal/ssh-agent:1.0`
 
-The Docker image to use for SSH Agent. This contains the keys that are shared amongst the projects.
+The Docker image to use for SSH Agent. This contains the keys that are shared among the projects.
 
 ### IMAGE_VHOST_PROXY 
 
@@ -318,12 +318,12 @@ Allow for collecting of statistical usage of docksal. When set to `1` this will 
 
 Designates whether to use Docker through VirtualBox or Native Docker. On Linux this is always set to `1`. Otherwise it is set to `0`.
 
-For VirtualBox set to `0`
-For Docker Native set to `1`
+For VirtualBox set to `0`.
+For Docker Native set to `1`.
 
 ### DOCKSAL_DNS_UPSTREAM
 
-Override the default DNS server that Docksal uses. For environments, where access to Google DNS server (`8.8.8.8`) is blocked it should be set to the LAN DNS server. This is often true for VPN users.
+Override the default DNS server that Docksal uses. For environments where access to Google DNS server (`8.8.8.8`) is blocked, it should be set to the LAN DNS server. This is often true for VPN users or users behind a corporate firewall.
 
 ### DOCKSAL_VHOST_PROXY_IP
 
@@ -337,7 +337,7 @@ This is the domain to use which is tacked on to the end of the projects url.
 
 ### DOCKSAL_NO_DNS_RESOLVER
 
-Allow disabling the DNS resolver configuration (in case there are issues with it). Set to `true` to activate
+Allow disabling the DNS resolver configuration (in case there are issues with it). Set to `true` to activate.
 
 ### MYSQL_ROOT_PASSWORD
 
@@ -347,15 +347,17 @@ This variable is mandatory and specifies the password that will be set for the M
 
 ### MYSQL_ALLOW_EMPTY_PASSWORD
 
-This is an optional variable. Set to yes to allow the container to be started with a blank password for the root user. NOTE: Setting this variable to yes is not recommended unless you really know what you are doing, since this will leave your MySQL instance completely unprotected, allowing anyone to gain complete superuser access.
+This is an optional variable. Set to `yes` to allow the container to be started with a blank password for the root user. NOTE: Setting this variable to `yes` is not recommended unless you really know what you are doing, since this will leave your MySQL instance completely unprotected, allowing anyone to gain complete superuser access.
 
 ### MYSQL_RANDOM_ROOT_PASSWORD
 
-This is an optional variable. Set to yes to generate a random initial password for the root user (using pwgen). The generated root password will be printed to stdout (GENERATED ROOT PASSWORD: .....).
+This is an optional variable. Set to `yes` to generate a random initial password for the root user (using pwgen). The generated root password will be printed to stdout (GENERATED ROOT PASSWORD: .....).
 
 ### MYSQL_ONETIME_PASSWORD
 
-When the variable is true (which is its default state, unless MYSQL_ROOT_PASSWORD is set or MYSQL_ALLOW_EMPTY_PASSWORD is set to true), the root user's password is set as expired and must be changed before MySQL can be used normally. This variable is only supported for MySQL 5.6 and later.
+`Default: true`
+
+When the variable is true (unless MYSQL_ROOT_PASSWORD is set or MYSQL_ALLOW_EMPTY_PASSWORD is set to true), the root user's password is set as expired and must be changed before MySQL can be used normally. This variable is only supported for MySQL 5.6 and later.
 
 ### MYSQL_INITDB_SKIP_TZINFO
 
@@ -383,13 +385,13 @@ This is used to set the newly created user's password.
 
 `Default:  3306`
 
-The port mapping to use for MySQL container. E.g. `33061:3306` will expose `3306` port as `33061` on the host. 
+The port mapping to use for MySQL container, e.g., `33061:3306` will expose `3306` port as `33061` on the host. 
 
 ### POSTGRES_DB
 
 `Default:  user`
 
-This variable allows you to specify the name of a database to be created on image startup
+This variable allows you to specify the name of a database to be created on image startup.
 
 ### POSTGRES_USER
 
@@ -433,7 +435,7 @@ Group ID for the Container User. On MacOS & Linux defaults to current group acco
 
 `Default:  0`
 
-Enables PHP XDebug Service for debugging. See [XDebug](../tools/xdebug.md)
+Enables PHP XDebug Service for debugging. See [XDebug](../tools/xdebug.md).
 
 ### SECRET_SSH_PRIVATE_KEY
 
@@ -441,11 +443,11 @@ Use to pass an additional private SSH key. The key is stored in `/home/docker/.s
 
 ### SECRET_ACAPI_EMAIL
 
-Acquia Cloud API Email Address. See [Acquia Drush Commands](../tools/acquia-drush.md)
+Acquia Cloud API Email Address. See [Acquia Drush Commands](../tools/acquia-drush.md).
 
 ### SECRET_ACAPI_KEY
 
-Acquia Cloud API Key. See [Acquia Drush Commands](../tools/acquia-drush.md)
+Acquia Cloud API Key. See [Acquia Drush Commands](../tools/acquia-drush.md).
 
 ### SECRET_TERMINUS_TOKEN
 
@@ -457,11 +459,11 @@ The following variables should only be used within a CI system. They are primari
 
 ### PROJECT_INACTIVITY_TIMEOUT
 
-Defines the timeout of inactivity after which the project stack will be stopped (e.g. 0.5h)
+Defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h).
 
 ### PROJECT_DANGLING_TIMEOUT
 
-Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host (e.g. 168h). This requires PROJECTS_ROOT to be set.
+Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host (e.g., 168h). This requires PROJECTS_ROOT to be set.
 
 **WARNING: use at your own risk!**
 
@@ -472,10 +474,10 @@ Contains path to the project root directory.
 <a name="php-version"></a>
 ## Switching PHP versions
 
-The PHP version is defined by the `cli` service. The default image used is `docksal/cli:2.1-php7.1` which uses PHP 7.1.
+The PHP version is defined by the `cli` service. The default image used is `docksal/cli:2.2-php7.1`, which uses PHP 7.1.
 
 A service image name consists of two parts: a docker image name and a tag.
-`docksal/cli` is the name of the docker image, while `2.1-php7.1` is the image tag.
+`docksal/cli` is the name of the docker image, while `2.2-php7.1` is the image tag.
 
 To switch PHP versions you have to change the image used for the `cli` service to your desired one.
 
@@ -483,7 +485,7 @@ To switch PHP versions you have to change the image used for the `cli` service t
 
 ### Extend or modify config with `docksal-local.yml` or `docksal.yml`
 
-When using zero-configuration (or any other) the service image can be overridden in `docksal-local.yml`.
+When using zero-configuration (or any other), the service image can be overridden in `docksal-local.yml`.
 
 The same technique is **applicable to `docksal.yml` if `DOCKSAL_STACK` is set in `docksal.env`**. In this case,
 `docksal.yml` will extend/modify the stack configuration defined in `DOCKSAL_STACK` instead of overriding it.
@@ -497,7 +499,7 @@ version: "2.1"
 
 services:
   cli:
-    image: docksal/cli:2.1-php7.2
+    image: docksal/cli:2.2-php7.2
 ```
 
 `docksal-local.yml` will append or modify the configuration that was loaded before it, regardless of whether it was 
@@ -517,13 +519,13 @@ An example section of a `docksal.yml` file that describes the `cli` service and 
 services:
   cli:
     hostname: cli
-    image: docksal/cli:2.1-php7.2
+    image: docksal/cli:2.2-php7.2
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
 ```
 
-Note, that when not using a predefined stack, you must fully describe all other services (`web`, `db`, etc.) as well.
+Note: when not using a predefined stack, you must fully describe all other services (`web`, `db`, etc.) as well.
 
 <a name="mysql-version"></a>
 ## Switching MySQL versions
@@ -540,7 +542,7 @@ To see all Docker Hub images produced and supported by Docksal team run:
 fin image registry
 ```
 
-To get all tags of a certain image provide its name with the same command. E.g.:
+To get all tags of a certain image provide its name with the same command. For example:
 
 ```bash
 fin image registry docksal/db
@@ -550,14 +552,13 @@ fin image registry docksal/db
 
 This is optional, but highly recommended.
 
-Site provisioning can be automated via a [custom command](../fin/custom-commands.md).
-E.g. `fin init`, which will call `.docksal/commands/init`. Put project specific initialization tasks there, like:
+Site provisioning can be automated via a [custom command](../fin/custom-commands.md) (e.g., `fin init`, which will call `.docksal/commands/init`). Put project specific initialization tasks there, like:
 
-- initialize the Docksal configuration.
-- import databases or perform a site install.
-- compile SASS.
+- initialize the Docksal configuration
+- import databases or perform a site install
+- compile SASS
 - run DB updates, special commands, etc.
-- run Behat tests.
+- run Behat tests
 
 For a working example of a Docksal powered project with `fin init` take a look at:
 
