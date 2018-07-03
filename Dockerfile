@@ -41,14 +41,25 @@ RUN set -xe; \
 	rm -rf /etc/nginx && ln -s /usr/local/openresty/nginx/conf /etc/nginx ; \
 	mkdir -p /etc/nginx/conf.d
 
-# Generate a self-signed cert
+# Certs
 RUN set -xe; \
 	apk add --update --no-cache \
 		openssl \
 	; \
-	openssl req -batch -x509 -newkey rsa:4086 -days 3650 -nodes -sha256 -subj "/" \
-		-keyout /etc/nginx/server.key -out /etc/nginx/server.crt; \
-	apk del openssl && rm -rf /var/cache/apk/*
+	# Create a folder for custom vhost certs (mount custom certs here)
+	mkdir -p /etc/certs/custom; \
+	# Generate a self-signed fallback cert
+	openssl req \
+		-batch \
+		-newkey rsa:4086 \
+		-x509 \
+		-nodes \
+		-sha256 \
+		-subj "/CN=*.docksal" \
+		-days 3650 \
+		-out /etc/certs/server.crt \
+		-keyout /etc/certs/server.key; \
+	apk del openssl && rm -rf /var/cache/apk/*;
 
 COPY conf/nginx/ /etc/nginx/
 COPY conf/sudoers /etc/sudoers

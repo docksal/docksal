@@ -1,5 +1,6 @@
 {{ $CurrentContainer := where $ "ID" .Docker.CurrentContainerID | first }}
 
+{{/* Upstream template */}}
 {{ define "upstream" }}
 	{{ if .Address }}
 		{{/* If we got the containers from swarm and this container's port is published to host, use host IP:PORT */}}
@@ -23,6 +24,7 @@
 	{{ end }}
 {{ end }}
 
+{{/* HTTP server template */}}
 {{ define "http" }}
 	## HTTP
 	server {
@@ -39,6 +41,7 @@
 	}
 {{ end }}
 
+{{/* HTTPS server template */}}
 {{ define "https" }}
 	## HTTPS
 	server {
@@ -50,11 +53,26 @@
 
 		{{ end }}
 
-		ssl_certificate           /etc/nginx/server.crt;
-		ssl_certificate_key       /etc/nginx/server.key;
+		{{ $cert := (printf "/etc/certs/custom/%s.crt" .Cert) }}
+		{{ $certKey := (printf "/etc/certs/custom/%s.key" .Cert) }}
 
-		ssl_session_cache  builtin:1000  shared:SSL:10m;
-		ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+		{{/* Use custom cert if it exist */}}
+		{{/* E.g. /etc/certs/custom/example.com.crt and /etc/certs/custom/example.com.key */}}
+		{{ if (and (exists $cert) (exists $certKey)) }}
+
+		ssl_certificate {{ $cert }};
+		ssl_certificate_key {{ $certKey }};
+
+		{{/* Use default self-signed cert otherwise */}}
+		{{ else }}
+
+		ssl_certificate /etc/certs/server.crt;
+		ssl_certificate_key /etc/certs/server.key;
+
+		{{ end }}
+
+		ssl_session_cache builtin:1000 shared:SSL:10m;
+		ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
 		ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
 		ssl_prefer_server_ciphers on;
 
@@ -63,6 +81,10 @@
 		}
 	}
 {{ end }}
+
+{{/* END: Variables */}}
+
+{{/* Support Docker Compose project containers */}}
 
 {{ $dc_containers := whereLabelExists $ "com.docker.compose.service" }}
 
@@ -99,18 +121,36 @@
 		{{ end }}
 	}
 
+		{{/* Generate HTTP server config */}}
 		{{ template "http" (dict "Hosts" $hosts "Upstream" $upstream) }}
 
-		{{ if (and (exists "/etc/nginx/server.crt") (exists "/etc/nginx/server.key")) }}
-			{{ template "https" (dict "Hosts" $hosts "Upstream" $upstream) }}
-		{{ end }}
+		{{/* Get the cert name from io.docksal.cert-name container label */}}
+		{{ $certName := or (index $pr_container.Labels "io.docksal.cert-name") "none" }}
+		{{/* Unset certName if its value us "none" */}}
+		{{ $certName := when (ne $certName "none") $certName nil }}
+
+		{{/* Get the best matching cert by name for the vhost. */}}
+		{{ $primaryHost := (index (split $hosts ",") 0) }}
+		{{ $vhostCert := (closest (dir "/etc/certs/custom") (printf "%s.crt" $primaryHost)) }}
+
+		{{/* Trim file suffix - it will be added later */}}
+		{{ $vhostCert := trimSuffix ".crt" $vhostCert }}
+		{{ $vhostCert := trimSuffix ".key" $vhostCert }}
+
+		{{/* Use the cert specified on the container or fallback to the best vhost match */}}
+		{{ $cert := (coalesce $certName $vhostCert) }}
+
+		{{/* Generate HTTPS server config */}}
+		{{ template "https" (dict "Hosts" $hosts "Upstream" $upstream "Cert" $cert) }}
 
 	{{ end }}
 	# -------------------------------------------------- #
 
 {{ end }}
 
+{{/* END: Support Docker Compose project containers */}}
 
+{{/* Support standalone Docker containers */}}
 
 {{ $d_containers := whereLabelDoesNotExist $ "com.docker.compose.service" }}
 
@@ -143,11 +183,10 @@
 		}
 
 		{{ template "http" (dict "Hosts" $host "Upstream" $host) }}
-
-		{{ if (and (exists "/etc/nginx/server.crt") (exists "/etc/nginx/server.key")) }}
-			{{ template "https" (dict "Hosts" $host "Upstream" $host) }}
-		{{ end }}
+		{{ template "https" (dict "Hosts" $host "Upstream" $host) }}
 
 	{{ end }}
 
 {{ end }}
+
+{{/* END: Support standalone Docker containers */}}

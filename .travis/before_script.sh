@@ -56,3 +56,7 @@ fin docker run -d --name=nodejs \
 	--expose 3000 \
 	node:alpine \
 	node /app/index.js
+
+# Custom certs
+cd ${cwd}
+cp -R tests/certs ~/.docksal
