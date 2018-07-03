@@ -77,6 +77,48 @@ EOF
 	unset output
 }
 
+@test "fin built-in override" {
+	# [[ $SKIP == 1 ]] && skip
+
+	mkdir -p .docksal/commands
+	cat <<EOF > .docksal/commands/logs
+'#!/bin/bash
+## Overrides logs
+echo "Override logs"
+EOF
+	chmod +x .docksal/commands/logs
+
+	run fin logs
+	[[ "${output}" =~ "Built-in command 'logs' was overridden" ]]
+	unset output
+}
+
+@test "fin built-in override help" {
+	# [[ $SKIP == 1 ]] && skip
+
+	run fin help logs
+	[[ "${output}" =~ "Overrides logs" ]]
+	unset output
+}
+
+@test "fin built-in override, force built-in" {
+	# [[ $SKIP == 1 ]] && skip
+
+	run fin logs! web
+	[[ ! "${output}" =~ "Built-in command 'logs' was overridden" ]]
+	[[ "${output}" =~ "web_1" ]]
+	unset output
+}
+
+@test "fin built-in override help" {
+	# [[ $SKIP == 1 ]] && skip
+
+	run fin help logs!
+	[[ ! "${output}" =~ "Overrides logs" ]]
+	[[ "${output}" =~ "fin logs web" ]]
+	unset output
+}
+
 @test "fin stop" {
 	[[ $SKIP == 1 ]] && skip
 	
