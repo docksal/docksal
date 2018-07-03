@@ -64,9 +64,9 @@ teardown() {
 @test "fin namespace/custom-command" {
 	[[ $SKIP == 1 ]] && skip
 
-	mkdir .docksal/commands/team
+	mkdir .docksal/commands/team 2>/dev/null
 	cat <<EOF > .docksal/commands/team/test
-'#!/bin/bash
+#!/bin/bash
 echo "Test Command"
 EOF
 	chmod +x .docksal/commands/team/test
@@ -352,7 +352,7 @@ services:
 }
 
 @test "fin share" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
         # Send all mail to /bin/true
         echo "sendmail_path=/bin/true" >> .docksal/etc/php/php.ini
