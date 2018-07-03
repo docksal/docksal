@@ -10,8 +10,8 @@ After installation you can switch to using native Docker applications instead of
 
 Assuming that you have been previously using Docksal with VirtualBox, which was installed according to [setup docs](setup.md).
 
-1. Install [Docker for Mac](https://docs.docker.com/docker-for-mac)
-1. Open Terminal and run:
+1\. Install [Docker for Mac](https://docs.docker.com/docker-for-mac)
+2\. Open Terminal and run:
 
 ```bash
 fin vm stop
@@ -35,7 +35,7 @@ getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/iss
 
 ### Switching from Docker for Mac to VirtualBox 
 
-1. Stop Docksal system
+1\. Stop Docksal system
 
 ```bash
 fin system stop
@@ -60,8 +60,8 @@ This disables the "native" apps mode, resets network settings, starts Docksal VM
 
 Assuming that you have been previously using Docksal with Babun and VirtualBox, installed according to [setup docs](setup.md).
 
-1. Install [Docker for Windows](https://docs.docker.com/docker-for-windows).
-2. Open Babun and run:
+1\. Install [Docker for Windows](https://docs.docker.com/docker-for-windows).
+2\. Open Babun and run:
 
 ```bash
 fin vm stop
@@ -79,7 +79,7 @@ Share your local drives with Docker for Windows:
 
 ### Switching from Docker for Windows to VirtualBox 
 
-1. Stop Docksal system
+1\. Stop Docksal system
 
 ```bash
 fin system stop
