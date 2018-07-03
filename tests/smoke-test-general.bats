@@ -13,7 +13,7 @@ teardown() {
 
 # Global skip
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-#SKIP=1
+SKIP=1
 
 # Cannot do cleanup outside of a test case as bats will evaluate/run that code before every single test case.
 @test "uber cleanup" {
@@ -186,7 +186,7 @@ EOF
 }
 
 @test "fin run-cli" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Dummy command to pre-pull the image run-cli is using.
 	fin rc uname
@@ -353,16 +353,14 @@ services:
 }
 
 @test "fin share" {
-	[[ $SKIP == 1 ]] && skip
+	#[[ $SKIP == 1 ]] && skip
 
-	# Set Projet Name to a Docker Compose safe version
-	echo "COMPOSE_PROJECT_NAME_SAFE=ngrokshare" > .docksal/docksal-local.env
-	run fin reset -f
-
+        # Initialize the Project
+        fin init
 	# Run fin share in a emulated terminal
-	tmux new-session -d -s testNgrok 'fin share'
+	screen -S testNgrok -d -m fin share
 	# Query API for information
-	API=$(docker exec -it "ngrokshare_web_1_ngrok" sh -c "wget -qO- http://localhost:4040/api/tunnels")
+	API=$(docker exec -it "drupal8_web_1_ngrok" sh -c "wget -qO- http://localhost:4040/api/tunnels")
 	# Return Public URL for site.
 	PUBLIC_HTTP_URL=$(echo "${API}" |  python -c 'import json,sys;obj=json.load(sys.stdin);print obj["tunnels"][0]["public_url"]')
 	# Run CURL command against $PUBLIC_HTTP_URL
@@ -374,4 +372,5 @@ services:
 
 	# Clean up kill ngrok session
 	tmux kill-session -t testNgrok
+        screen -X -S testNgrok quit
 }
