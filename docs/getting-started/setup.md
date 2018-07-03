@@ -60,9 +60,8 @@ With this method, Docker will run inside the VM in VirtualBox.
 
 1. Open Terminal app and run
 
-    ```bash
-    curl -fsSL get.docksal.io | bash
-    ```
+        curl -fsSL get.docksal.io | bash
+
 
 1. Start the VM
 
@@ -85,9 +84,9 @@ With this method, Docker will run inside the VM in VirtualBox.
 
 1. Open Terminal app and run
 
-    ```bash
-    curl -fsSL get.docksal.io | DOCKER_NATIVE=1 bash
-    ```
+```bash
+curl -fsSL get.docksal.io | DOCKER_NATIVE=1 bash
+```
 
 <a name="install-linux"></a>
 ### Linux installation options 
@@ -124,9 +123,9 @@ and Fedora with derivatives are supported out of the box with automatic installa
     
 1. Open Terminal and run
 
-    ```bash
-    curl -fsSL get.docksal.io | bash
-    ```
+```bash
+curl -fsSL get.docksal.io | bash
+```
 
 <a name="install-linux-other"></a>
 ### Linux. Other distributions
