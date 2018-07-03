@@ -10,15 +10,13 @@ After installation you can switch to using native Docker applications instead of
 
 Assuming that you have been previously using Docksal with VirtualBox, which was installed according to [setup docs](setup.md).
 
-1\. Install [Docker for Mac](https://docs.docker.com/docker-for-mac)
+1. Install [Docker for Mac](https://docs.docker.com/docker-for-mac)
 
-2\. Open Terminal and run:
+2. Open Terminal and run:
 
-```bash
-fin vm stop
-fin config set --global DOCKER_NATIVE=1
-fin system reset
-```
+        fin vm stop
+        fin config set --global DOCKER_NATIVE=1
+        fin system reset
 
 This stops Docksal VM, enables "native" mode and resets Docksal system services.
 
@@ -36,20 +34,16 @@ getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/iss
 
 ### Switching from Docker for Mac to VirtualBox 
 
-1\. Stop Docksal system
+1. Stop Docksal system
 
-```bash
-fin system stop
-```
+        fin system stop
 
-2\. Close Docker for Mac
+1. Close Docker for Mac
 
-3\. Start with VM: 
+1. Start with VM: 
 
-```bash
-fin config set --global DOCKER_NATIVE=0
-fin vm start
-```
+        fin config set --global DOCKER_NATIVE=0
+        fin vm start
 
 This disables the "native" apps mode, resets network settings, starts Docksal VM and resets Docksal system services.
 
@@ -61,15 +55,13 @@ This disables the "native" apps mode, resets network settings, starts Docksal VM
 
 Assuming that you have been previously using Docksal with Babun and VirtualBox, installed according to [setup docs](setup.md).
 
-1\. Install [Docker for Windows](https://docs.docker.com/docker-for-windows).
+1. Install [Docker for Windows](https://docs.docker.com/docker-for-windows).
 
-2\. Open Babun and run:
+1. Open Babun and run:
 
-```bash
-fin vm stop
-fin config set --global DOCKER_NATIVE=1
-fin system reset
-```
+        fin vm stop
+        fin config set --global DOCKER_NATIVE=1
+        fin system reset
 
 This stops Docksal VM, enables "native" mode and resets Docksal system services.
 
@@ -81,24 +73,20 @@ Share your local drives with Docker for Windows:
 
 ### Switching from Docker for Windows to VirtualBox 
 
-1\. Stop Docksal system
+1. Stop Docksal system
 
-```bash
-fin system stop
-```
+        fin system stop
 
-2\. Close Docker for Windows
+1. Close Docker for Windows
 
     On Windows, you will also have to **completely uninstall Hyper-V** (a dependency for Docker for Windows).  
     You won't be able to use VirtualBox (or any other hypervisor) while Hyper-V is installed. 
     Hyper-V locks the VT-x extension to itself, so other hypervisors are not able to use the hardware virtualization 
     support and cannot run 64bit VMs because of that.
 
-3\. Open Babun and run: 
+1. Open Babun and run: 
 
-```bash
-fin config set --global DOCKER_NATIVE=0
-fin vm start
-```
+        fin config set --global DOCKER_NATIVE=0
+        fin vm start
 
 This disables the "native" apps mode, resets network settings, starts Docksal VM and resets Docksal system services.
