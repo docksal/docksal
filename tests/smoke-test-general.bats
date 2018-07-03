@@ -13,7 +13,7 @@ teardown() {
 
 # Global skip
 # Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-SKIP=1
+#SKIP=1
 
 # Cannot do cleanup outside of a test case as bats will evaluate/run that code before every single test case.
 @test "uber cleanup" {
@@ -353,7 +353,7 @@ services:
 }
 
 @test "fin share" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
         # Send all mail to /bin/true
         echo "sendmail_path=/bin/true" >> .docksal/etc/php/php.ini
