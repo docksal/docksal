@@ -110,7 +110,7 @@ EOF
 	unset output
 }
 
-@test "fin built-in override help" {
+@test "fin built-in override, force built-in help" {
 	# [[ $SKIP == 1 ]] && skip
 
 	run fin help logs!
