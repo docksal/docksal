@@ -67,9 +67,7 @@ With this method, Docker will run inside the VM in VirtualBox.
 
     In Terminal app run:
 
-    ```bash
-    fin vm start
-    ```
+        fin vm start
 
 <a name="install-macos-docker-for-mac"></a>
 ### macOS with Docker for Mac
@@ -84,9 +82,7 @@ With this method, Docker will run inside the VM in VirtualBox.
 
 1. Open Terminal app and run
 
-```bash
-curl -fsSL get.docksal.io | DOCKER_NATIVE=1 bash
-```
+        curl -fsSL get.docksal.io | DOCKER_NATIVE=1 bash
 
 <a name="install-linux"></a>
 ### Linux installation options 
@@ -123,9 +119,7 @@ and Fedora with derivatives are supported out of the box with automatic installa
     
 1. Open Terminal and run
 
-```bash
-curl -fsSL get.docksal.io | bash
-```
+        curl -fsSL get.docksal.io | bash
 
 <a name="install-linux-other"></a>
 ### Linux. Other distributions
@@ -174,25 +168,22 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 1. Windows 10. Enable SMB1 protocol ([Why?](https://docs.docksal.io/en/master/troubleshooting-smb/#windows-10-fall-creators-update-1709))
 
    This step will require reboot. On Windows 10 open Windows Command Prompt as  Administrator and run:
-   ```cmd
-   dism /online /enable-feature /all /featurename:SMB1Protocol-Server
-   ```
+
+        dism /online /enable-feature /all /featurename:SMB1Protocol-Server
+
 
 1. Install Docksal
 
     Open **Babun** and run:
 
-    ```bash
-    curl -fsSL get.docksal.io | bash
-    ```
+        curl -fsSL get.docksal.io | bash
+
 
 1. Start the VM
 
     In **Babun** run:
 
-    ```bash
-    fin vm start
-    ```
+        fin vm start
 
 <a name="install-windows-babun-docker-for-windows"></a>
 ### Windows with Babun and Docker for Windows 
@@ -218,9 +209,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
     Open **Babun** and run:
 
-    ```bash
-    curl -fsSL get.docksal.io | bash
-    ```
+        curl -fsSL get.docksal.io | bash
 
 <a name="install-windows-wsl"></a>
 ### Windows with Ubuntu App (WSL) and Docker for Windows 
