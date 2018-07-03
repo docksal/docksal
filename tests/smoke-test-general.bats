@@ -11,9 +11,8 @@ teardown() {
 	echo "================================================================"
 }
 
-# Global skip
-# Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-SKIP=1
+# To work on a specific test:
+# run `export SKIP=1` locally, then comment skip in the test you want to debug
 
 # Cannot do cleanup outside of a test case as bats will evaluate/run that code before every single test case.
 @test "uber cleanup" {
@@ -243,7 +242,7 @@ EOF
 }
 
 @test "fin run-cli" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Dummy command to pre-pull the image run-cli is using.
 	fin rc uname
@@ -407,4 +406,35 @@ services:
 	[[ $(echo "$output" | grep -c "feaTures.Alpha-beta_zulu.docksal") -eq 0 ]]
 	[[ "${output}" =~ "The VIRTUAL_HOST has been modified from feaTures.Alpha-beta_zulu.docksal to features.alpha-beta-zulu.docksal to comply with browser standards." ]]
 	unset output
+}
+
+@test "fin share" {
+	#[[ $SKIP == 1 ]] && skip
+
+        # Send all mail to /bin/true
+        echo "sendmail_path=/bin/true" >> .docksal/etc/php/php.ini
+        # Initialize the Project
+        fin init
+	# Run fin share in a emulated terminal
+	screen -S testNgrok -d -m fin share
+        # sleep so ngrok can load
+        sleep 10
+	# Query API for information
+	API=$(docker exec -it "drupal8_web_1_ngrok" sh -c "wget -qO- http://localhost:4040/api/tunnels")
+	# Return Public URL for site.
+	PUBLIC_HTTP_URL=$(echo "${API}" | jq -r '.tunnels[0].public_url')
+	# Run CURL command against $PUBLIC_HTTP_URL
+	run curl -i ${PUBLIC_HTTP_URL}
+	# Confirm site is reachable
+	[[ "${output}" =~ "HTTP/1.1 200 OK" ]] &&
+	[[ "${output}" =~ "My Drupal 8 Site" ]]
+	unset output
+
+        # Clean Up
+	# Clean up kill ngrok session
+        screen -X -S testNgrok quit
+        # Kill Docker Container
+        docker rm -f drupal8_web_1_ngrok
+        # Destroy Project
+        fin rm -f
 }

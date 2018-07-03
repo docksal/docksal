@@ -17,9 +17,8 @@ SERVICE_DNS_VERSION=1.0
 SERVICE_SSH_AGENT_VERSION=1.0
 DOCKSAL_IP=192.168.64.100
 
-# Global skip
-# Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-#SKIP=1
+# To work on a specific test:
+# run `export SKIP=1` locally, then comment skip in the test you want to debug
 
 # Add default sample keys on Travis only. We don't want to mess with a real host ssh key.
 [[ "$TRAVIS" == "true" ]] && cp tests/ssh-keys/* ~/.ssh

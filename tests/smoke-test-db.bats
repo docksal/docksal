@@ -11,9 +11,8 @@ teardown() {
 	echo "================================================================"
 }
 
-# Global skip
-# Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-SKIP=1
+# To work on a specific test:
+# run `export SKIP=1` locally, then comment skip in the test you want to debug
 
 @test "fin db list" {
 	[[ $SKIP == 1 ]] && skip
