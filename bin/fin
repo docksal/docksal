@@ -204,11 +204,14 @@ PATH="$CONFIG_BIN_DIR:$PATH"
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 
 # List of built-ins, update every time you add a new built-in
-DOCKSAL_INTERNAL_COMMANDS_LIST="bash_comp_words build start up stop restart reset remove
+# `init` is not included here, so that overriding it would not trigger a warning
+DOCKSAL_BUILTIN_LIST="bash_comp_words build start up stop restart reset remove
  rm image project p system sys status ps projects pl vm update bash exec run run-cli rc mysql
  sqlc mysql-list sqls mysql-import sqli mysql-dump sqld db drush drupal terminus platform wp
  composer ssh-add docker d docker-compose dc docker-machine dm debug exec-url share cleanup -v v
  --version version logs help sysinfo diagnose config fix-smb alias hosts vhosts addon a"
+# These built-ins can be overridden with addons (warning displayed)
+DOCKSAL_ALLOWED_BUILTIN_OVERRIDES="build composer drupal drush platform terminus wp"
 
 #---------------------------- URL references --------------------------------
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
@@ -1175,6 +1178,13 @@ show_help ()
 			addon="$(get_addon_script $1)"
 			# If no such addon then search for command
 			[[ ! -f "$addon" ]] && addon="$(get_command_script $1)"
+			if [[ ("$DOCKSAL_BUILTIN_LIST" =~ "$1 " || "$DOCKSAL_BUILTIN_LIST" =~ " $1") && \
+				! ("$DOCKSAL_ALLOWED_BUILTIN_OVERRIDES" =~ "$1 " || "$DOCKSAL_ALLOWED_BUILTIN_OVERRIDES" =~ " $1") ]]; then
+				echo-error "Overriding '$1' built-in is not allowed" \
+					"To avoid conflict with fin built-in rename:" \
+					"${yellow}$addon${NC}"
+				return 1
+			fi
 			# Fetch help from the file and show it
 			if [[ -f "$addon" ]]; then
 				echo
@@ -6102,8 +6112,15 @@ else
 fi
 
 if [[ -f "$addon" ]]; then
-	if [[ "$DOCKSAL_INTERNAL_COMMANDS_LIST" =~ " $1 " ]]; then
-		>&2 echo-warning "Built-in command '$1' was overridden. To force built-in execution run 'fin $1!'"
+	if [[ "$DOCKSAL_BUILTIN_LIST" =~ "$1 " || "$DOCKSAL_BUILTIN_LIST" =~ " $1" ]]; then
+		if [[ "$DOCKSAL_ALLOWED_BUILTIN_OVERRIDES" =~ "$1 " || "$DOCKSAL_ALLOWED_BUILTIN_OVERRIDES" =~ " $1" ]]; then
+			>&2 echo-warning "Built-in command '$1' was overridden. To force built-in execution run 'fin $1!'"
+		else
+			echo-error "Overriding '$1' built-in is not allowed" \
+				"To avoid conflict with fin built-in rename:" \
+				"${yellow}$addon${NC}"
+			exit 1
+		fi
 	fi
 
 	export ADDON_ROOT=$(dirname "$addon")
