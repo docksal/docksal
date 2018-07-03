@@ -4952,14 +4952,19 @@ ngrok_share ()
 		# Overwrite settings with a configuration if its available
 		NGROK_VOLUME="-v $(get_project_path_dc)/.docksal:/var/www/.docksal"
 	fi
-	
+
+	# Add -host-header by default if no arguments are included.
+	if [[ "${ARGS}" == "ngrok http" ]]; then
+		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}'"
+	fi
+
 	${winpty} docker run --rm ${NGROK_VOLUME} -it \
 		--publish 4040 \
 		--net ${network} \
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		sh -c "${ARGS}" ${container_name}.${network}:${NGROK_PORT}
+		sh -c "${ARGS} ${container_name}.${network}:${NGROK_PORT}"
 }
 
 # Print information required for issue diagnostics
