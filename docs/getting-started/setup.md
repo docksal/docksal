@@ -167,7 +167,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
 1. Windows 10. Enable SMB1 protocol ([Why?](https://docs.docksal.io/en/master/troubleshooting-smb/#windows-10-fall-creators-update-1709))
 
-   This step will require reboot. On Windows 10 open Windows Command Prompt as  Administrator and run:
+    This step will require reboot. On Windows 10 open Windows Command Prompt as  Administrator and run:
 
         dism /online /enable-feature /all /featurename:SMB1Protocol-Server
 
