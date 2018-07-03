@@ -356,7 +356,7 @@ services:
 	#[[ $SKIP == 1 ]] && skip
 
         # Initialize the Project
-        fin init
+        fin init 2>/dev/null
 	# Run fin share in a emulated terminal
 	screen -S testNgrok -d -m fin share
 	# Query API for information
