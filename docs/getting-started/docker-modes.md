@@ -41,9 +41,9 @@ getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/iss
 fin system stop
 ```
 
-2. Close Docker for Mac
+2\. Close Docker for Mac
 
-3. Start with VM: 
+3\. Start with VM: 
 
 ```bash
 fin config set --global DOCKER_NATIVE=0
@@ -85,14 +85,14 @@ Share your local drives with Docker for Windows:
 fin system stop
 ```
 
-2. Close Docker for Windows
+2\. Close Docker for Windows
 
     On Windows, you will also have to **completely uninstall Hyper-V** (a dependency for Docker for Windows).  
     You won't be able to use VirtualBox (or any other hypervisor) while Hyper-V is installed. 
     Hyper-V locks the VT-x extension to itself, so other hypervisors are not able to use the hardware virtualization 
     support and cannot run 64bit VMs because of that.
 
-3. Open Babun and run: 
+3\. Open Babun and run: 
 
 ```bash
 fin config set --global DOCKER_NATIVE=0
