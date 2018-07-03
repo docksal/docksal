@@ -1,7 +1,7 @@
 # Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases/latest) [![Build Status](https://img.shields.io/travis/docksal/docksal.svg?style=flat-square)](https://travis-ci.org/docksal/docksal)
 
 [![Setup Instructions](https://img.shields.io/badge/%E2%9A%99-%20Setup%20Instructions%20-blue.svg)](https://docs.docksal.io/en/master/getting-started/setup)
-[![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)
+[![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg)](https://gitter.im/docksal/community-support)
 [![Docksal Blog](https://img.shields.io/badge/📖-Read%20the%20Blog-orange.svg)](https://blog.docksal.io)
 
 Docker powered environments for web development on macOS, Windows, and Linux.
@@ -64,7 +64,7 @@ More advanced use cases and tutorials are available in the [Documentation](https
 
 Ready to give back? Check the [Contributing](CONTRIBUTING.md) docs on how to get involved.  
 We have a room on Gitter where questions can be asked and answered 
-[![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg?style=flat-square)](https://gitter.im/docksal/community-support)  
+[![Gitter](https://img.shields.io/gitter/room/docksal/community-support.svg)](https://gitter.im/docksal/community-support)  
 If you have experience with Docksal and Docker, please stick around in the room to help others.
 
 ## Roadmap
