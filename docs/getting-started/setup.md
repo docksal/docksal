@@ -261,6 +261,7 @@ fin update
 The steps below will remove the Docksal VM and cleanup all Docksal stuff.
 
 ```bash
+fin system stop
 fin vm remove
 rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
