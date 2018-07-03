@@ -190,8 +190,8 @@ then your custom command will take precedence.
 For example if your command name is `build`, then it will override `fin build`. 
 Running `fin build` will now invoke your custom command, instead of built-in one.
 A warning will be shown to the user, that built-in was overridden.
-`fin help build` will now show help for your custom command, instead of built-in.
 You can suppress that warning in your scripts by redirecting stderr: `fin build 2>/dev/null`. 
+`fin help build` will now show help for your custom command, instead of built-in.
 
 To force execution of the built-in that is overridden, user can put an
 exclamation mark after the command name: `fin build!`. 
