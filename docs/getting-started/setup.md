@@ -146,7 +146,7 @@ In case your distribution in not compatible with [get.docker.com](https://get.do
 latest stable Docker for your distribution first, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
 <a name="install-windows"></a>
-### Windows. Docker installation options 
+### Windows. Linux Shell installation options 
 
 Docksal on Windows requires Linux type shell to run. Choose the options you like.
 
