@@ -6,15 +6,15 @@
 
 Docker powered environments for web development on macOS, Windows, and Linux.
 
-Running Drupal, Wordpress, Magento, Laravel, Symfony, Backdrop, Grav, Hugo, Gatsby, 
-and others can be one step away with ready to use boilerplates.
+Running Drupal, Wordpress, Magento, Laravel, Symfony, Backdrop, Grav, Hugo, Gatsby,
+and others can be one step away with ready-to-use boilerplates.
 
 ```
 fin project create
 ```
 
-Create your [custom automation](https://docs.docksal.io/en/master/fin/custom-commands/) in Bash, PHP or Node 
-to spin up your project anywhere where Docksal is with a single command, or to automate regular tasks. Unified
+Create your [custom automation](https://docs.docksal.io/en/master/fin/custom-commands/) in Bash, PHP or Node
+to spin up your project anywhere where Docksal is with a single command, or to automate regular tasks. A unified
 environment ensures that your automation will work for everyone in your team.
 
 ## Better than VMs

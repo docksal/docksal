@@ -8,7 +8,7 @@ After installation you can switch to using native Docker applications instead of
 
 **Reconfigure Docksal**
 
-Assuming that you have been previously using Docksal with VirtualBox, which was installed according to [setup docs](setup.md).
+Assuming that you have been previously using Docksal with VirtualBox, which was installed according to [setup docs](setup.md):
 
 1. Install [Docker for Mac](https://docs.docker.com/docker-for-mac)
 
@@ -18,7 +18,7 @@ Assuming that you have been previously using Docksal with VirtualBox, which was 
         fin config set --global DOCKER_NATIVE=1
         fin system reset
 
-This stops Docksal VM, enables "native" mode and resets Docksal system services.
+This stops Docksal VM, enables "native" mode, and resets Docksal system services.
 
 **File sharing with Docker for Mac**
 
@@ -45,7 +45,7 @@ getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/iss
         fin config set --global DOCKER_NATIVE=0
         fin vm start
 
-This disables the "native" apps mode, resets network settings, starts Docksal VM and resets Docksal system services.
+This disables the "native" apps mode, resets network settings, starts Docksal VM, and resets Docksal system services.
 
 ## Windows
 
@@ -89,4 +89,4 @@ Share your local drives with Docker for Windows:
         fin config set --global DOCKER_NATIVE=0
         fin vm start
 
-This disables the "native" apps mode, resets network settings, starts Docksal VM and resets Docksal system services.
+This disables the "native" apps mode, resets network settings, starts Docksal VM, and resets Docksal system services.
