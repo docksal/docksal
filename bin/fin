@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.64.1
+FIN_VERSION=1.64.2
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -5604,10 +5604,10 @@ hosts_backup ()
 
 vhosts ()
 {
-	docker exec docksal-vhost-proxy sh -c "ls /etc/nginx/conf.d/* >/dev/null"
+	docker exec docksal-vhost-proxy sh -c "ls /etc/nginx/conf.d/vhosts.conf >/dev/null 2>&1"
 	[[ "$?" != "0" ]] && echo "No virtual hosts found" && return 1
 
-	NAMES=$(docker exec docksal-vhost-proxy sh -c "grep server_name /etc/nginx/conf.d/* -r | sort | uniq | sed 's/;//g' | sed 's/^.*_name//g'")
+	NAMES=$(docker exec docksal-vhost-proxy sh -c "grep server_name /etc/nginx/conf.d/vhosts.conf -r | sort | uniq | sed 's/;//g' | sed 's/^.*_name//g'")
 
 	for vhost in $NAMES ;do
 		echo-green "http://$vhost"
