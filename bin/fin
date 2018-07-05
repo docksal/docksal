@@ -153,6 +153,7 @@ CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 
 # Where custom commands live (relative path)
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
+
 # Where addons live (relative path)
 DOCKSAL_ADDONS_PATH=".docksal/addons"
 
@@ -160,15 +161,14 @@ DOCKSAL_ADDONS_PATH=".docksal/addons"
 DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 
 # Network settings
+
 export DOCKSAL_IP="192.168.64.100"
 export DOCKSAL_HOST_IP="192.168.64.1"
 export DOCKSAL_SUBNET="192.168.64.1/24"
-
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
 DOCKSAL_DEFAULT_DNS="8.8.8.8"
 # For visibility on this variable
 DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
-
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
 # Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
 DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
@@ -1324,30 +1324,32 @@ show_help_list_addons_in_help ()
 show_help_ssh-add ()
 {
 	echo
-	echo "Usage: fin ssh-add [-lD] [key]"
+	echo "Add private key identities stored in \$HOME/.ssh to the docksal/ssh-agent."
+	echo "When run without arguments, automatically adds the default key files (id_rsa, id_dsa, id_ecdsa)."
+	echo "A custom key name can be given as an argument: fin ssh-add [keyname]."
+	echo "[keyname] is the file name within \$HOME/.ssh"
 
 	echo
-	echo "Add private key identities to the docksal/ssh-agent."
-	echo "When run without arguments, automatically picks up the default key files (~/.ssh/id_rsa, ~/.ssh/id_dsa, ~/.ssh/id_ecdsa)."
-	echo "A custom key name can be given as an argument: fin ssh-add [keyname]."
-	echo
-	echo "NOTE: [keyname] is the file name within ~/.ssh (not a full path to file)."
-	echo "Example: fin ssh-add my_custom_rsa_key"
+	echo "Usage: ssh-add [-lD] [key]"
 
 	echo
 	echo "Options:"
 	printh "-D" "Deletes all keys from the agent."
 	printh "-l" "Lists all keys currently loaded by the agent."
+
+	echo
+	echo "Examples:"
+	printh "fin ssh-add my_custom_key" "Add \$HOME/.ssh/my_custom_key to SSH Agent."
 }
 
 show_help_exec ()
 {
 	echo
-	echo "Usage: fin exec [options] <command | file>"
-
-	echo
 	echo "Execute command or file in \`cli\` service container."
 	echo "fin exec will automatically cd into the same folder inside \`cli\`."
+
+	echo
+	echo "Usage: exec [options] <command | file>"
 
 	echo
 	echo "Options:"
@@ -1362,19 +1364,19 @@ show_help_exec ()
 	printh "fin exec \"ls -la > /tmp/list\"" "		Execute advanced shell command with pipes or stdout redirects happening inside \`cli\`"
 	printh "res=\$(fin exec -T drush st)" "		Use -T switch when using exec output"
 	printh "fin exec .docksal/script.sh" "		Execute a whole file inside \`cli\` container"
-	printh "fin exec --in=db mysql -uroot -p" "	Execute command in \`db\` container"
+	printh "fin exec --in=db mysql -uroot -p" "	Execute command in \`db\` container (will NOT cd into the same folder)"
 }
 
 show_help_run-cli ()
 {
 	echo
-	echo "Usage: fin run-cli [options] <command>"
-	echo "       fin rc [options] <command>"
+	echo "Runs commands in a standalone \`cli\` container mapped to the current directory."
+	echo "Container has a persistent \$HOME directory where something can be saved in between laucnhes."
+	echo "NOTE: \`fin cleanup\` will clean the persistent \$HOME directory"
 
 	echo
-	echo "Run command in a standalone \`cli\` container in the current directory"
-	echo "with a persistent \$HOME directory."
-	echo "NOTE: \`fin cleanup\` will clean the persistent \$HOME directory"
+	echo "Usage: run-cli [options] <command>"
+	echo "       rc [options] <command>"
 
 	echo
 	echo "Options:"
@@ -1393,10 +1395,12 @@ show_help_run-cli ()
 
 }
 
-
 show_help_image() {
 	echo
-	echo "Usage: fin image <command>"
+	echo "Docksal images listing and saving"
+
+	echo
+	echo "Usage: image <command>"
 
 	echo
 	echo "Commands:"
@@ -1416,10 +1420,10 @@ show_help_image() {
 
 show_help_project() {
 	echo
-	echo "Usage: fin project <command> [params]"
+	echo "Project management"
 
 	echo
-	echo "Project management"
+	echo "Usage: project <command> [params]"
 
 	echo
 	echo "Commands:"
@@ -1472,10 +1476,10 @@ show_help_remove ()
 
 show_help_system() {
 	echo
-	echo "Usage: fin system <command> [params]"
+	echo "Manage Docksal system status (Docker should be running)"
 
 	echo
-	echo "Manage Docksal system status"
+	echo "Usage: system <command> [params]"
 
 	echo
 	echo "Commands:"
@@ -1495,10 +1499,10 @@ show_help_system() {
 show_help_update ()
 {
 	echo
-	echo "Usage: fin update"
+	echo "Update Docksal system components to the latest stable version"
 
 	echo
-	echo "Update Docksal system components to the latest stable version"
+	echo "Usage: update"
 
 	echo
 	echo "Options:"
@@ -1508,20 +1512,21 @@ show_help_update ()
 show_help_exec-url ()
 {
 	echo
-	echo "Usage: fin exec-url <url>"
+	echo "Fetch script from the public URL and evaluate locally"
 
 	echo
-	echo "Fetch script from the public URL and evaluate locally"
+	echo "Usage: fin exec-url <url>"
+
 }
 
 show_help_sqlc ()
 {
 	echo
-	echo "Usage: fin sqlc [options]"
-	echo "       fin mysql [options]"
+	echo "Open MySql command line to the current db server"
 
 	echo
-	echo "Open MySql command line to the current db server"
+	echo "Usage: sqlc [options]"
+	echo "       mysql [options]"
 
 	echo
 	echo "Options:"
@@ -1536,11 +1541,11 @@ show_help_mysql ()
 show_help_sqls ()
 {
 	echo
-	echo "Usage: fin sqls [options]"
-	echo "       fin mysql-list [options]"
+	echo-green "Show list of available databases (alias: )"
 
 	echo
-	echo-green "Show list of available databases (alias: )"
+	echo "Usage: sqls [options]"
+	echo "       mysql-list [options]"
 
 	echo
 	echo-green "Options:"
@@ -1555,11 +1560,11 @@ show_help_mysql_list ()
 show_help_sqli ()
 {
 	echo
-	echo "Usage: fin sqli [dump_file.sql] [options]"
-	echo "       fin mysql-import [dump_file.sql] [options]"
+	echo "Truncate database and import SQL dump from a file or stdin"
 
 	echo
-	echo "Truncate database and import SQL dump from a file or stdin"
+	echo "Usage: fin sqli [dump_file.sql] [options]"
+	echo "       fin mysql-import [dump_file.sql] [options]"
 
 	echo
 	echo "Options:"
@@ -1581,10 +1586,10 @@ show_help_mysql-import ()
 show_help_sqld ()
 {
 	echo
-	echo "Usage: fin sqld [dump_file] [options]"
+	echo "Export database from db container into file or stdout (alias: mysql-dump)"
 
 	echo
-	echo "Export database from db container into file or stdout (alias: mysql-dump)"
+	echo "Usage: sqld [dump_file] [options]"
 
 	echo
 	echo "Options:"
@@ -1605,10 +1610,10 @@ show_help_mysql-dump ()
 show_help_db ()
 {
 	echo
-	echo "Usage: fin db <command> [file] [options]"
+	echo "Database management commands"
 
 	echo
-	echo "Database related commands"
+	echo "Usage: db <command> [file] [options]"
 
 	echo
 	echo "Commands:"
@@ -1649,10 +1654,10 @@ show_help_db ()
 show_help_vm ()
 {
 	echo
-	echo "Usage: fin vm <command>"
+	echo "Control Docksal virtual machine"
 
 	echo
-	echo "Control Docksal virtual machine"
+	echo "Usage: vm <command>"
 
 	echo
 	echo "Commands:"
@@ -1680,35 +1685,36 @@ show_help_vm ()
 show_help_alias ()
 {
 	echo
-	echo "Usage: fin alias <command or path> [alias_name]"
-
-	echo
-	echo "Create/delete project alias"
+	echo "Create, update, or delete project aliases."
 	echo "Aliases provide functionality that is similar to drush aliases."
-	echo "Using alias you are able to execute a command in a project without navigating to the project folder."
+	echo "With alias you are able to execute a command in a project without navigating to the project folder."
 	echo "You can precede any command with an alias."
 	echo "Aliases are effectively symlinks stored in \$HOME/.docksal/alias"
 	echo
-	echo "Usage:"
-	printh "fin alias [list]" "Show aliases list"
-	printh "fin alias <path> <alias_name>" "Create or update an alias that links to target path"
-	printh "fin alias remove <alias_name>" "Remove alias"
+
+	echo "Usage: alias <command or path> [alias_name]"
+	echo
+
+	echo "Commands:"
+	printh "list" "Show aliases list"
+	printh "<path> <alias_name>" "Create/update alias with <alias_name> that links to <path>"
+	printh "remove <alias_name>" "Remove alias"
 
 	echo
 	echo "Examples:"
 	printh "fin alias ~/site1/docroot dev" "	Create or update an alias ${yellow}dev${NC} that is linked to ${yellow}~/site1/docroot${NC}"
-	printh "fin @dev drush st" "	Execute \`drush st\` command in directory linked by ${yellow}dev${NC} alias"
+	printh "fin @project1 drush st" "	Execute \`drush st\` command in directory linked by ${yellow}project1${NC} alias"
 	printh "" "	Hint: create alias linking to Drupal sub-site to launch targeted commands"
-	printh "fin alias remove dev" "	Delete ${yellow}dev${NC} alias"
+	printh "fin alias remove project1" "	Delete ${yellow}project1${NC} alias"
 }
 
 show_help_share ()
 {
 	echo
-	echo "Usage: fin share [options]"
+	echo "Share the project via public url generated with ngrok"
 
 	echo
-	echo "Share the project via public url generated with ngrok"
+	echo "Usage: share [options]"
 
 	echo
 	echo "Options:"
@@ -1727,10 +1733,10 @@ show_help_share ()
 show_help_config ()
 {
 	echo
-	echo "Usage: fin config [command]"
+	echo "Display, generate, or change project configuration"
 
 	echo
-	echo "Display, generate, or change project configuration"
+	echo "Usage: config [command]"
 
 	echo
 	echo "Commands:"
@@ -1777,10 +1783,10 @@ show_help_cleanup ()
 show_help_hosts ()
 {
 	echo
-	echo "Usage: fin hosts [command]"
+	echo "Add or remove lines to/from OS-dependent hosts file (e.g., /etc/hosts)"
 
 	echo
-	echo "Add or remove lines to/from OS-dependent hosts file (e.g., /etc/hosts)"
+	echo "Usage: hosts [command]"
 
 	echo
 	echo "Commands:"
@@ -1800,19 +1806,19 @@ show_help_hosts ()
 show_help_addon ()
 {
 	echo
-	echo "Usage: fin addon <command> <name>"
-
-	echo
 	echo "Docksal Addons management commands."
 	echo -e "See available addons in the Addons Repository ${yellow}https://github.com/docksal/addons${NC}"
 
 	echo
-	echo-green "Commands:"
+	echo "Usage: addon <command> <name>"
+
+	echo
+	echo "Commands:"
 	printh "install <name>" "Install addon"
 	printh "remove <name>" "Remove addon"
 
 	echo
-	echo-green "Examples:"
+	echo "Examples:"
 	printh "fin addon install solr" "Install solr addon to the current project"
 	printh "fin addon remove solr" "Uninstall solr addon from the current project"
 }
