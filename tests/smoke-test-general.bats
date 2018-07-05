@@ -203,6 +203,13 @@ EOF
 	[[ "$output" == "$(id -u):$(id -g)" ]]
 	unset output
 
+	# check loads ssh keys
+	ssh-keygen -f $HOME/.ssh/run_cli_test -t rsa -N ''
+	fin ssh-add run_cli_test
+	run fin rc ssh-add -l
+	echo $output | grep "2048 SHA256:(.*) /root/.ssh/run_cli_test (RSA)"
+	unset output
+
 	# check to make sure custom variables are passed into container
 	run fin rc -T -e TEST_VAR="TEST VARIABLES" "echo \$TEST_VAR"
 	[[ "$output" == "TEST VARIABLES" ]]
