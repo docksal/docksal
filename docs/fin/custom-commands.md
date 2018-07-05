@@ -182,6 +182,24 @@ Commands are ran in the same exact way as normal except include the folder they 
 fin drupal/updb
 ```
 
+## Overriding some built-in commands
+
+If your custom command or addon shares the name with one of the allowed built-in fin commands, 
+then your custom command will take precedence.
+
+Allowed for override are: `build composer drupal drush init platform terminus wp`
+
+For example if your command name is `build`, then it will override `fin build`. 
+Running `fin build` will now invoke your custom command, instead of built-in one.
+A warning will be shown to the user, that built-in was overridden (except for `init`).
+You can suppress that warning in your scripts by redirecting stderr: `fin build 2>/dev/null`. 
+`fin help build` will now show help for your custom command, instead of built-in.
+
+To force execution of the built-in that is overridden, user can put an
+exclamation mark after the command name: `fin build!`. 
+In this case built-in will be executed even if custom command with the same name exists.
+Same applies to the help:`fin help build!` will force built-in help.  
+
 ## More examples
 
 Check the commands directory (examples/.docksal/commands) located in the [Docksal project](https://github.com/docksal/docksal).

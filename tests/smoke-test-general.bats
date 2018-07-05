@@ -76,6 +76,63 @@ EOF
 	unset output
 }
 
+@test "fin built-in override, illegal" {
+	[[ $SKIP == 1 ]] && skip
+
+	mkdir -p .docksal/commands
+	cat <<EOF > .docksal/commands/addons
+'#!/bin/bash
+## Overrides addon
+echo "Overridden addon! Alarm!"
+EOF
+	chmod +x .docksal/commands/addon
+
+	run fin logs
+	[[ "${output}" =~ "Overriding 'addon' built-in is not allowed" ]]
+	unset output
+}
+
+@test "fin built-in override" {
+	[[ $SKIP == 1 ]] && skip
+
+	mkdir -p .docksal/commands
+	cat <<EOF > .docksal/commands/build
+'#!/bin/bash
+## Overrides build
+echo "Override build"
+EOF
+	chmod +x .docksal/commands/build
+
+	run fin logs
+	[[ "${output}" =~ "Built-in command 'build' was overridden" ]]
+	unset output
+}
+
+@test "fin built-in override help" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin help build
+	[[ "${output}" =~ "Overrides build" ]]
+	unset output
+}
+
+@test "fin built-in override, force built-in" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin build!
+	[[ ! "${output}" =~ "Built-in command 'logs' was overridden" ]]
+	[[ "${output}" =~ "cli uses an image, skipping" ]]
+	unset output
+}
+
+@test "fin built-in override, force built-in help" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin help logs!
+	[[ "${output}" =~ "fin logs web" ]]
+	unset output
+}
+
 @test "fin stop" {
 	[[ $SKIP == 1 ]] && skip
 	

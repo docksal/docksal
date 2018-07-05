@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.64.1
+FIN_VERSION=1.65.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -202,6 +202,16 @@ PATH="$CONFIG_BIN_DIR:$PATH"
 
 # Set global variable in case native Docker app is used/not-used
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
+
+# List of built-ins, update every time you add a new built-in
+# `init` is not included here, so that overriding it would not trigger a warning
+DOCKSAL_BUILTIN_LIST="bash_comp_words build start up stop restart reset remove
+ rm image project p system sys status ps projects pl vm update bash exec run run-cli rc mysql
+ sqlc mysql-list sqls mysql-import sqli mysql-dump sqld db drush drupal terminus platform wp
+ composer ssh-add docker d docker-compose dc docker-machine dm debug exec-url share cleanup -v v
+ --version version logs help sysinfo diagnose config fix-smb alias hosts vhosts addon a"
+# These built-ins can be overridden with addons (warning displayed)
+DOCKSAL_ALLOWED_BUILTIN_OVERRIDES="build composer drupal drush platform terminus wp"
 
 #---------------------------- URL references --------------------------------
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
@@ -1161,26 +1171,45 @@ show_help ()
 	local custom_commands_list
 
 	# If nonempty param then show help for a certain command
-	if [[ ! -z "$1" ]]; then
-		# Check for help function for specific command
-		type "show_help_$1" >/dev/null 2>&1
-		if [ $? -eq 0 ]; then
-			show_help_$1
-			exit
+	if [[ "$1" != "" ]]; then
+		# When command is postfixed with exclamation mark, exclude addon overrides
+		if [[ ! "$1" =~ .+! ]]; then
+			# Search for addons
+			addon="$(get_addon_script $1)"
+			# If no such addon then search for command
+			[[ ! -f "$addon" ]] && addon="$(get_command_script $1)"
+			if [[ ("$DOCKSAL_BUILTIN_LIST" =~ "$1 " || "$DOCKSAL_BUILTIN_LIST" =~ " $1") && \
+				! ("$DOCKSAL_ALLOWED_BUILTIN_OVERRIDES" =~ "$1 " || "$DOCKSAL_ALLOWED_BUILTIN_OVERRIDES" =~ " $1") ]]; then
+				echo-error "Overriding '$1' built-in is not allowed" \
+					"To avoid conflict with fin built-in rename:" \
+					"${yellow}$addon${NC}"
+				return 1
+			fi
+			# Fetch help from the file and show it
+			if [[ -f "$addon" ]]; then
+				echo
+				echo "Addon: $1"
+				echo
+				local _help_contents=$(cat "$addon" | grep '^##' | sed -E "s/^##[ ]?//g")
+				if [[ "$_help_contents" != "" ]]; then
+					echo -e "$_help_contents"
+					echo
+				else
+					echo "No help description found"
+				fi
+				exit
+			fi
 		fi
 
-		# Search for addons
-		addon="$(get_addon_script $1)"
-		# If no such addon then search for command
-		[[ ! -f "$addon" ]] && addon="$(get_command_script $1)"
-
-		if [ -f "$addon" ]; then
-			echo -en "${green}fin $1${NC} - "
-			local _help_contents=$(cat "$addon" | grep '^##' | sed -E "s/^##[ ]?//g")
-			echo -e "$_help_contents"
-			echo
+		# Check for help function for specific command
+		local command="$1"
+		# Remove exclamation mark if present for forcing built-in help
+		[[ "$1" =~ .+! ]] && command="${1//!}"
+		type "show_help_$command" >/dev/null 2>&1
+		if [ $? -eq 0 ]; then
+			show_help_${command}
 			exit
-			fi
+		fi
 	fi
 
 	echo "Docksal control cli utility v$FIN_VERSION"
@@ -1215,6 +1244,7 @@ show_help ()
 	printh "docker-compose [command]" "Run docker-compose commands directly"
 
 	echo
+	printh "init" "Initialize a project (override it with your own automation ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
@@ -1765,15 +1795,32 @@ show_help_config ()
 	printh "fin config rm DOCKER_NATIVE --global" "	Removes DOCKER_NATIVE value from \$HOME/.docksal/docksal.env"
 }
 
-show_help_cleanup ()
+show_help_init ()
 {
 	echo
-	echo "Usage: fin cleanup [options]"
+	echo "Creates default project configuration and starts a project."
+	echo "This built-in is meant to be overridden with custom command or addon."
+	echo "Unlike other built-ins it will not trigger a warning when this happens."
+	echo -e "See ${yellow}https://docs.docksal.io/en/master/fin/custom-commands${NC} on creating custom commands."
 
+	echo
+	echo "Usage: init"
+
+	echo
+	echo "Options: [none]"
+}
+
+
+
+show_help_cleanup ()
+{
 	echo
 	echo "Remove unused docker images and orphaned containers to save disk space."
 	echo "Orphaned are containers which folders were deleted from the filesystem,"
 	echo "but their containers still linger in the Docker."
+
+	echo
+	echo "Usage: cleanup [options]"
 
 	echo
 	echo "Options:"
@@ -5305,6 +5352,15 @@ load_configuration ()
 	export COMPOSE_CONVERT_WINDOWS_PATHS=1
 }
 
+# Default init command. Initializes default config and starts containers
+init ()
+{
+	_confirm "Initialize a project in $(pwd)?"
+	config_generate
+	# Running like this forces configuration re-read
+	fin up
+}
+
 config_show ()
 {
 	check_docksal_environment
@@ -6041,8 +6097,69 @@ if [[ "$1" == "@"* ]]; then
 	if_failed_error "Could not navigate to directory linked by $1 alias"
 fi
 
-# Parse command line parameters
-case "$1" in
+## ----- RUN ADDON/COMMAND IF EXISTS -----
+
+# Will be used later in command parsing if no addon will be found
+command="$1"
+
+# When command is postfixed with exclamation mark, exclude addon overrides
+if [[ "$1" =~ .+! ]]; then
+	command="${1//!}"
+else
+	addon="$(get_addon_script $1)"
+	if [[ ! -f "$addon" ]]; then
+		# If no addon was found then try command
+		addon="$(get_command_script $1)"
+	fi
+fi
+
+if [[ -f "$addon" ]]; then
+	if [[ "$DOCKSAL_BUILTIN_LIST" =~ "$1 " || "$DOCKSAL_BUILTIN_LIST" =~ " $1" ]]; then
+		if [[ "$DOCKSAL_ALLOWED_BUILTIN_OVERRIDES" =~ "$1 " || "$DOCKSAL_ALLOWED_BUILTIN_OVERRIDES" =~ " $1" ]]; then
+			>&2 echo-warning "Built-in command '$1' was overridden. To force built-in execution run 'fin $1!'"
+		else
+			echo-error "Overriding '$1' built-in is not allowed" \
+				"To avoid conflict with fin built-in rename:" \
+				"${yellow}$addon${NC}"
+			exit 1
+		fi
+	fi
+
+	export ADDON_ROOT=$(dirname "$addon")
+	load_global_configuration
+	[[ "$PROJECT_ROOT" != "" ]] && load_configuration
+
+	# If executable is not set, then fix it
+	if [[ ! -x "$addon" ]]; then
+		echo -e "${yellow}$addon${NC} is not set to be executable."
+		_confirm "Fix automatically?"
+		chmod +x "$addon"
+		if_failed "Could not make $addon executable"
+	fi
+
+	# If it has windows line endings, then fix it
+	fix_crlf_warning "$addon"
+
+	# Read host/cli execution settings
+	_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
+
+	shift
+	if [[ "$_exec_target" != "" ]]; then
+		# Replace host addon path with the matching path inside cli
+		# "\$PROJECT_ROOT" will be resolved in cli to /var/www
+		cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
+		# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
+		cmd="$cli_addon_path "$(printf " %q" "$@")
+		CONTAINER_NAME="$_exec_target" _exec "$cmd"
+	else
+		exec "$addon" "$@"
+	fi
+fi
+
+## ----- RUN FIN BUILT-IN COMMAND -----
+
+# TODO: [!] Update DOCKSAL_INTERNAL_COMMANDS_LIST variable every time you add/remove/change command here
+case "$command" in
 	bash_comp_words)
 		# no load_configuration
 		shift
@@ -6052,6 +6169,11 @@ case "$1" in
 		load_configuration
 		shift
 		docker-compose build "$@"
+		;;
+	init)
+		# no load configuration
+		shift
+		init "$@"
 		;;
 	start)
 		load_configuration
@@ -6532,44 +6654,6 @@ case "$1" in
 		addon "$@"
 		;;
 	*)
-		addon="$(get_addon_script $1)"
-		if [[ ! -f "$addon" ]]; then
-			# If no addon was found then try command
-			addon="$(get_command_script $1)"
-		# If no command was found either then show error
-			[[ ! -f "$addon" ]] &&
-				echo-yellow "Unknown command ${NC}$*${yellow}. See 'fin help' for list of available commands" &&
-				exit 1
-		else
-			export ADDON_ROOT=$(dirname "$addon")
-		fi
-
-		load_global_configuration
-		[[ "$PROJECT_ROOT" != "" ]] && load_configuration
-
-		# If executable is not set, then fix it
-		if [[ ! -x "$addon" ]]; then
-			echo -e "${yellow}$addon${NC} is not set to be executable."
-			_confirm "Fix automatically?"
-			chmod +x "$addon"
-			if_failed "Could not make $addon executable"
-		fi
-
-		# If it has windows line endings, then fix it
-		fix_crlf_warning "$addon"
-
-		# Read host/cli execution settings
-		_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
-
-		shift
-		if [[ "$_exec_target" != "" ]]; then
-			# Replace host addon path with the matching path inside cli
-			# "\$PROJECT_ROOT" will be resolved in cli to /var/www
-			cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
-			# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
-			cmd="$cli_addon_path "$(printf " %q" "$@")
-			CONTAINER_NAME="$_exec_target" _exec "$cmd"
-		else
-			exec "$addon" "$@"
-		fi
+		echo-yellow "Unknown command ${NC}$*${yellow}. See 'fin help' for list of available commands" &&
+		exit 1
 esac
