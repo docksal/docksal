@@ -127,8 +127,8 @@ and Fedora with derivatives are supported out of the box with automatic installa
 If you cannot find your distribution in the list above, it does not mean it is not supported! 
 Lesser known Debian, Ubuntu, or Fedora derivatives are most likely supported.
 
-This happens because Docker on Linux is being installed using official [get.docker.com](https://get.docker.com) script. 
-If your distribution is not in the list above, but [get.docker.com](https://get.docker.com) supports it, 
+This happens because Docker on Linux is being installed using the official [get.docker.com](https://get.docker.com) script.
+If your distribution is not in the list above, but [get.docker.com](https://get.docker.com) supports it,
 then it **is** supported too and you can [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
 #### Incompatible distributions

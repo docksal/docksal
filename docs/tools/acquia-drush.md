@@ -9,7 +9,7 @@ Commands are pre-installed in `cli` container. Note: required `docksal/cli` vers
 
 Follow the [official docs](https://docs.acquia.com/acquia-cloud/api/auth) to generate your Acquia Cloud API key.  
 
-Add your email and key to `$HOME/docksal/docksal.env`:
+Add your email and key to `$HOME/.docksal/docksal.env`:
 
 ```
 ...

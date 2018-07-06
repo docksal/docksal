@@ -1371,7 +1371,7 @@ show_help_run-cli ()
 {
 	echo
 	echo "Runs commands in a standalone \`cli\` container mapped to the current directory."
-	echo "Container has a persistent \$HOME directory where something can be saved in between laucnhes."
+	echo "Container has a persistent \$HOME directory where something can be saved in between launches."
 	echo "NOTE: \`fin cleanup\` will clean the persistent \$HOME directory"
 
 	echo
