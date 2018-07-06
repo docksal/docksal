@@ -5905,12 +5905,12 @@ addon_hook ()
 # $1 - name
 addon_get_path ()
 {
-	addon="$(get_addon_script $1)"
+	local addon="$(get_addon_script $1)"
 	if [[ ! -f "$addon" ]]; then
 		# If no addon was found then try command
 		addon="$(get_command_script $1)"
-		[[ -f "$addon" ]] && echo "$addon"
 	fi
+	[[ -f "$addon" ]] && echo "$addon"
 }
 
 # Execute addon by its file path, passing params to it
