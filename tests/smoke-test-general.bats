@@ -66,7 +66,7 @@ teardown() {
 
 	mkdir .docksal/commands/team 2>/dev/null
 	cat <<EOF > .docksal/commands/team/test
-#!/bin/bash
+#!/usr/bin/env bash
 echo "Test Command"
 EOF
 	chmod +x .docksal/commands/team/test

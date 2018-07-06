@@ -7,7 +7,7 @@ It is possible to extend fin with custom commands per project or per host.
 Create a file at this location `.docksal/commands/updb` with the following contents:
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Runs drush updb
 ##
@@ -114,7 +114,7 @@ This approach may not be very convenient.
 Alternatively the following notation inside a custom command can be used to tell fin to run the command inside cli:
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 
 #: exec_target = cli
 
