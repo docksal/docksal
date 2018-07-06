@@ -12,7 +12,7 @@ to code without working from their desktop or needing additional tools.
 Enable IDE for the project by setting the `IDE_ENABLED` variable.
 
 ```bash
-fin config set --env=local IDE_ENABLED 1
+fin config set --env=local IDE_ENABLED=1
 ```
 
 !!! tip "For Other Developers on the Project"
