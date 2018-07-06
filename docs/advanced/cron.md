@@ -21,6 +21,6 @@ A crontab file has six fields for specifying minute, hour, day of month, month, 
 ## Configuring Cron
 
 Cron can be started within a project by creating a `crontab` file within the projects `.docksal/etc/services/cli` folder.
-Once that file has been created the `cli` container should be restarted `fin restart cli` and cron should be initialized.
-Additionally the `fin cron reload` command can also be ran to reload and initialize the cron file. The same command can
+Once that file has been created, the `cli` container should be restarted by running `fin restart cli` and cron should be initialized.
+Additionally, the `fin cron reload` command can also be run to reload and initialize the cron file. The same command can
 be used if there are changes within the cron file and the file needs to be reloaded.
