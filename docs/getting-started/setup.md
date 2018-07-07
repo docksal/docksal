@@ -113,6 +113,7 @@ and Fedora with derivatives are supported out of the box with automatic installa
 
     Check that you have installed and configured
     - curl
+    - uuid runtime utilities (`uuid-runtime` package)   
     - sudo
     
 1. Open Terminal and run
