@@ -32,6 +32,7 @@ services:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - db_data:/var/lib/mysql  # Database data volume
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-user}
@@ -49,6 +50,7 @@ services:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - db_data:/var/lib/mysql  # Database data volume
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-user}
@@ -68,6 +70,9 @@ services:
     image: ${DB_IMAGE:-postgres:9.6-alpine}
     ports:
       - "${PGSQL_PORT_MAPPING:-5432}"
+    volumes:
+      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - db_data:/var/lib/postgresql/data  # Database data volume
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-default}
       - POSTGRES_USER=${POSTGRES_USER:-user}
