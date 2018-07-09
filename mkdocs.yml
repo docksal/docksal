@@ -55,6 +55,7 @@ pages:
       - Networking: advanced/networking.md
       - DNS resolver: advanced/dns-resolver.md
       - Extending stock images: advanced/extend-images.md
+      - Cron: advanced/cron.md
     - SSH agent: advanced/ssh-agent.md
     - Database:
       - Database access: advanced/db-access.md
