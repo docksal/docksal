@@ -13,10 +13,10 @@ Open [Blackfire Account Credentials](https://blackfire.io/my/settings/credential
 With this option, the API keys are stored on your host and not exposed in the project's codebase.
 
 ```bash
-fin config set --global BLACKFIRE_CLIENT_ID=<blackfire-client-id>
-fin config set --global BLACKFIRE_CLIENT_TOKEN=<blackfire-client-token>
-fin config set --global BLACKFIRE_SERVER_ID=<blackfire-server-id>
-fin config set --global BLACKFIRE_SERVER_TOKEN=<blackfire-server-token>
+fin config set --global SECRET_BLACKFIRE_CLIENT_ID=<blackfire-client-id>
+fin config set --global SECRET_BLACKFIRE_CLIENT_TOKEN=<blackfire-client-token>
+fin config set --global SECRET_BLACKFIRE_SERVER_ID=<blackfire-server-id>
+fin config set --global SECRET_BLACKFIRE_SERVER_TOKEN=<blackfire-server-token>
 ```
 
 Note: The values will be stored in `$HOME/.docksal/docksal.env` on your host.
@@ -28,10 +28,10 @@ Note: The values will be stored in `$HOME/.docksal/docksal.env` on your host.
 With this option, the API keys are stored in the project's codebase. 
 
 ```bash
-fin config set BLACKFIRE_CLIENT_ID=<blackfire-client-id>
-fin config set BLACKFIRE_CLIENT_TOKEN=<blackfire-client-token>
-fin config set BLACKFIRE_SERVER_ID=<blackfire-server-id>
-fin config set BLACKFIRE_SERVER_TOKEN=<blackfire-server-token>
+fin config set SECRET_BLACKFIRE_CLIENT_ID=<blackfire-client-id>
+fin config set SECRET_BLACKFIRE_CLIENT_TOKEN=<blackfire-client-token>
+fin config set SECRET_BLACKFIRE_SERVER_ID=<blackfire-server-id>
+fin config set SECRET_BLACKFIRE_SERVER_TOKEN=<blackfire-server-token>
 ```
 
 Note: The values will be stored in `.docksal/docksal.env` in the project's codebase.
