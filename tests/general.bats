@@ -51,6 +51,7 @@ teardown() {
 @test "fin init (built-in)" {
 	## [[ $SKIP == 1 ]] && skip
 
+	cd ..
 	mkdir testinit
 	cd testinit
 	run fin init
@@ -63,6 +64,7 @@ teardown() {
 	fin rm -f
 	cd ..
 	rm -rf testinit
+	cd drupal8
 	unset output
 }
 
