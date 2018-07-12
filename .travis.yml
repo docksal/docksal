@@ -6,6 +6,7 @@ services:
   - docker
 
 install:
+  - echo "$TRAVIS_COMMIT_MESSAGE"
   - sudo cp ./bin/fin /usr/local/bin/fin
   - fin version
   - USE_BRANCH="${TRAVIS_BRANCH}"
