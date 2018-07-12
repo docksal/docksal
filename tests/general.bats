@@ -48,7 +48,26 @@ teardown() {
 	unset output
 }
 
-@test "fin init" {
+@test "fin init (built-in)" {
+	[[ $SKIP == 1 ]] && skip
+
+	mkdir testinit
+	cd testinit
+	run fin init
+	# Do not do unset output to preserve logs from this command
+	#unset output
+
+	# Check if site is available and its name is correct
+	run curl -sL http://testinit.docksal
+	echo "$output" | grep "<title>phpinfo"
+	#cleanup
+	fin rm -f
+	cd ..
+	rm -rf testinit
+	unset output
+}
+
+@test "fin init (custom command)" {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin init
