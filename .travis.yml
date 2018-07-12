@@ -21,7 +21,7 @@ before_script:
   - mkdir ../test-duplicates
 
 script:
-  - is_not_quicktest() { [[ "$TRAVIS_COMMIT_MESSAGE" =~ "\[quicktest\]" ]]; }
+  - is_not_quicktest() { [[ "$TRAVIS_COMMIT_MESSAGE" =~ "\[quick-test\]" ]]; }
   # Testing Docksal system services
   - if is_not_quicktest; then bats "tests/system.bats"; fi
   # Test Docksal configuration system
