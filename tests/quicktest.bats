@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
 
-@test "fin init (built-in)" {
+@test "fin quicktest" {
 	echo "Put your quick test here"
 }
