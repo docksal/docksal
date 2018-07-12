@@ -29,26 +29,29 @@ script:
       bats "$TRAVIS_BUILD_DIR/tests/$1";
     }
 
+    run_all_tests() {
+      if ! [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" ]]; then
+        run_tests system.bats
+        run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"
+        run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8"
+        run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates"
+      else
+        run_tests quicktest.bats;
+      fi
+    }
+
   # Run tests
-  - |
-    if ! [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" ]]; then \
-      run_tests system.bats \
-      run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config" \
-      run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8" \
-      run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates" \
-    else \
-      run_tests quicktest.bats;
-    fi
+  - run_all_tests
 
 after_success:
   - cd "$TRAVIS_BUILD_DIR"
   # Trigger builds in boilerplate project repos
   - |
-    if [[ "$TRAVIS_BRANCH" == "master" ]]; then \
-      tests/scripts/travisci-build-trigger docksal/drupal7 \
-      tests/scripts/travisci-build-trigger docksal/drupal7-advanced \
-      tests/scripts/travisci-build-trigger docksal/drupal8 \
-      tests/scripts/travisci-build-trigger docksal/wordpress \
-      tests/scripts/travisci-build-trigger docksal/magento \
-      tests/scripts/travisci-build-trigger docksal/magento-demo \
+    if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+      tests/scripts/travisci-build-trigger docksal/drupal7
+      tests/scripts/travisci-build-trigger docksal/drupal7-advanced
+      tests/scripts/travisci-build-trigger docksal/drupal8
+      tests/scripts/travisci-build-trigger docksal/wordpress
+      tests/scripts/travisci-build-trigger docksal/magento
+      tests/scripts/travisci-build-trigger docksal/magento-demo
     fi
