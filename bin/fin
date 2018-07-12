@@ -4400,11 +4400,6 @@ _exec ()
 	fi
 
 	if [[ "$CONTAINER_NAME" == "cli" ]]; then
-		# TODO: this should be handled by cli itself and not by fin.
-		# Source $HOME/.docksalrc in cli.
-		# Commands in this file will be sourced for both interactive and non-interactive sessions.
-		# Note: the comma at the end of the command has to be here and not below in docker exec.
-		local DOCKSALRC='source $HOME/.docksalrc >/dev/null 2>&1;'
 		# Commands in cli should be run using the docker user, not root.
 		local container_user='-u docker'
 	fi
@@ -4415,10 +4410,10 @@ _exec ()
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker exec -e COLUMNS -e LINES -it ${container_user} ${container_id} bash -ic "$DOCKSALRC $cmd; (exit \$?)"
+		${winpty} docker exec -e COLUMNS -e LINES -it ${container_user} ${container_id} bash -ilc "$cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec -e COLUMNS -e LINES ${container_user} ${container_id} bash -c "$DOCKSALRC $cmd"
+		docker exec -e COLUMNS -e LINES ${container_user} ${container_id} bash -lc "$cmd"
 	fi
 	# ------------------------------------------------ #
 }
@@ -4534,7 +4529,7 @@ run_cli ()
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
-			${env_str} ${RUN_IMAGE} bash -ic "\"$cmd; (exit \$?)\""
+			${env_str} ${RUN_IMAGE} bash -ilc "\"$cmd; (exit \$?)\""
 	else
 		# non-interactive
 		docker run --rm \
@@ -4553,7 +4548,7 @@ run_cli ()
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
-			${env_str} ${RUN_IMAGE} bash -c "\"$cmd\""
+			${env_str} ${RUN_IMAGE} bash -lc "\"$cmd\""
 	fi
 }
 
