@@ -49,13 +49,12 @@ teardown() {
 }
 
 @test "fin init (built-in)" {
-	[[ $SKIP == 1 ]] && skip
+	# [[ $SKIP == 1 ]] && skip
 
 	mkdir testinit
 	cd testinit
 	run fin init
-	# Do not do unset output to preserve logs from this command
-	#unset output
+	echo "$output" | grep "http://testinit.docksal"
 
 	# Check if site is available and its name is correct
 	run curl -sL http://testinit.docksal
