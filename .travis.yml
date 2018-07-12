@@ -22,29 +22,23 @@ before_script:
 
 script:
 
-  # Useful functions
+  # Function runs tests by file name $1 in dir specified in $2
   - |
-    # Function checks whether we should only perform quick test
-    is_quicktest() {
-      [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" ]];
-    }
-
-    # Function runs tests by file name $1 in dir specified in $2
     run_tests() {
-      if [[ "$2" != "" ]]; cd "$2"; fi
+      if [[ "$2" != "" ]]; then cd "$2"; fi
       bats "$TRAVIS_BUILD_DIR/tests/$1";
     }
 
-  # Run non-quick tests
+  # Run tests
   - |
-    if ! is_quicktest; then \
+    if ! [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" ]]; then \
       run_tests system.bats \
       run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config" \
       run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8" \
       run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates" \
+    else \
+      run_tests quicktest.bats;
     fi
-  # Run quick test
-  - if is_quicktest; then run_tests quicktest.bats; fi
 
 after_success:
   - cd "$TRAVIS_BUILD_DIR"
