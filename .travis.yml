@@ -21,19 +21,23 @@ before_script:
   - mkdir ../test-duplicates
 
 script:
+  # Checks whether its a quick test
   - is_not_quicktest() { [[ "$TRAVIS_COMMIT_MESSAGE" =~ "\[quick-test\]" ]]; }
+  # Runs tests by file name
+  - run_tests() { bats "$TRAVIS_BUILD_DIR/tests/$1"; }
   # Testing Docksal system services
-  - if is_not_quicktest; then bats "tests/system.bats"; fi
+  - if is_not_quicktest; then run_tests system.bats; fi
   # Test Docksal configuration system
   - if is_not_quicktest; then cd "$TRAVIS_BUILD_DIR/../test-config"; fi
-  - if is_not_quicktest; then bats "$TRAVIS_BUILD_DIR/tests/config.bats"; fi
+  - if is_not_quicktest; then run_tests config.bats; fi
   # Test a project workflow
   - if is_not_quicktest; then cd "$TRAVIS_BUILD_DIR/../drupal8"; fi
-  - if is_not_quicktest; then bats "$TRAVIS_BUILD_DIR/tests/general.bats"; fi
+  - if is_not_quicktest; then run_tests general.bats; fi
   # Test duplicates detection
   - if is_not_quicktest; then cd "$TRAVIS_BUILD_DIR/../test-duplicates"; fi
-  - if is_not_quicktest; then bats "$TRAVIS_BUILD_DIR/tests/duplicates.bats"; fi
-  - if ! is_not_quicktest; then bats "$TRAVIS_BUILD_DIR/tests/quicktest.bats"; fi
+  - if is_not_quicktest; then run_tests duplicates.bats; fi
+  # Quick tests
+  - if ! is_not_quicktest; then run_tests quicktest.bats; fi
 
 after_success:
   - cd "$TRAVIS_BUILD_DIR
