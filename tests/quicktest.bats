@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 @test "fin quicktest" {
-	cd test-init
+	cd ../test-init
 	run fin init
 	echo "$output" | grep "http://testinit.docksal"
 	unset output
