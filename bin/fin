@@ -6167,7 +6167,7 @@ case "$1" in
 		addon_file_path="$(addon_get_path $1)"
 		shift
 		# If init exists as an addon/command, then execute it instead
-		if [[ ! -z "$addon" ]]; then
+		if [[ ! -z "$addon_file_path" ]]; then
 			addon_execute "$addon_file_path" "$@"
 		else
 			init "$@"
