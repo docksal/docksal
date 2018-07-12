@@ -23,7 +23,7 @@ before_script:
 
 script:
   # Checks whether its a quick test
-  - is_not_quicktest() { [[ ! "$TRAVIS_COMMIT_MESSAGE" =~ "\[quick-test\]" ]]; }
+  - is_not_quicktest() { [[ ! "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" ]]; }
   # Runs tests by file name
   - run_tests() { bats "$TRAVIS_BUILD_DIR/tests/$1"; }
   # Testing Docksal system services
