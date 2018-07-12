@@ -49,7 +49,7 @@ teardown() {
 }
 
 @test "fin init (built-in)" {
-	# [[ $SKIP == 1 ]] && skip
+	## [[ $SKIP == 1 ]] && skip
 
 	mkdir testinit
 	cd testinit
