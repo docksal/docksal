@@ -1,5 +1,13 @@
 #!/usr/bin/env bats
 
 @test "fin quicktest" {
-	echo "Put your quick test here!"
+	cd test-init
+	run fin init
+	echo "$output" | grep "http://testinit.docksal"
+	unset output
+
+	# Check if site is available and its name is correct
+	run curl -sL http://testinit.docksal
+	echo "$output" | grep "<title>phpinfo"
+	unset output
 }
