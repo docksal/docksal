@@ -19,6 +19,7 @@ before_script:
   - git clone https://github.com/docksal/drupal8.git ../drupal8
   - mkdir ../test-config
   - mkdir ../test-duplicates
+  - mkdir ../test-init
 
 script:
 
