@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.64.2
+FIN_VERSION=1.65.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
