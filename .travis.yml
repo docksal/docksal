@@ -6,7 +6,6 @@ services:
   - docker
 
 install:
-  - echo "$TRAVIS_COMMIT_MESSAGE"
   - sudo cp ./bin/fin /usr/local/bin/fin
   - fin version
   - USE_BRANCH="${TRAVIS_BRANCH}"
@@ -38,11 +37,14 @@ script:
   - if ! is_not_quicktest; then run_tests quicktest.bats; fi
 
 after_success:
-  - cd "$TRAVIS_BUILD_DIR
+  - cd "$TRAVIS_BUILD_DIR"
   # Trigger builds in example project repos
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then tests/scripts/travisci-build-trigger docksal/drupal7; fi
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then tests/scripts/travisci-build-trigger docksal/drupal7-advanced; fi
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then tests/scripts/travisci-build-trigger docksal/drupal8; fi
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then tests/scripts/travisci-build-trigger docksal/wordpress; fi
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then tests/scripts/travisci-build-trigger docksal/magento; fi
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then tests/scripts/travisci-build-trigger docksal/magento-demo; fi
+  - |
+    if [[ "$TRAVIS_BRANCH" == "master" ]]; then \
+      tests/scripts/travisci-build-trigger docksal/drupal7 \
+      tests/scripts/travisci-build-trigger docksal/drupal7-advanced \
+      tests/scripts/travisci-build-trigger docksal/drupal8 \
+      tests/scripts/travisci-build-trigger docksal/wordpress \
+      tests/scripts/travisci-build-trigger docksal/magento \
+      tests/scripts/travisci-build-trigger docksal/magento-demo \
+    fi
