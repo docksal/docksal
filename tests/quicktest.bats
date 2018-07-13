@@ -6,6 +6,10 @@
 	echo "$output" | egrep "http://test-init.docksal"
 	unset output
 
+	echo "Diganose:"
+	fin diagnose --all
+	echo "==============================="
+	echo
 	# Check if site is available and its name is correct
 	run curl -sL http://test-init.docksal
 	echo "$output" | egrep "<title>phpinfo"
