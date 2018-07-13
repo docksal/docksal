@@ -9,7 +9,7 @@ install:
   - git clone https://github.com/docksal/bats.git tests/scripts/bats
   - cd tests/scripts/bats
   - sudo ./install.sh /usr/local
-  - cd ..
+  - cd "$TRAVIS_BUILD_DIR"
   - sudo cp ./bin/fin /usr/local/bin/fin
   - fin version
   - USE_BRANCH="${TRAVIS_BRANCH}"
