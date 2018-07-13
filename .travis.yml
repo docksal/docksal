@@ -26,7 +26,8 @@ script:
   - |
     run_tests() {
       if [[ "$2" != "" ]]; then cd "$2"; fi
-      bats "$TRAVIS_BUILD_DIR/tests/$1";
+      [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[verbose]" ]] && verbose="-t"
+      bats ${verbose} "$TRAVIS_BUILD_DIR/tests/$1"
     }
 
     run_all_tests() {
