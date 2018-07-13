@@ -8,7 +8,7 @@ services:
 install:
   - git clone https://github.com/docksal/bats.git tests/scripts/bats
   - cd tests/scripts/bats
-  - ./install.sh /usr/local
+  - sudo ./install.sh /usr/local
   - sudo cp ./bin/fin /usr/local/bin/fin
   - fin version
   - USE_BRANCH="${TRAVIS_BRANCH}"
