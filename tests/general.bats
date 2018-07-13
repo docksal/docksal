@@ -49,23 +49,18 @@ teardown() {
 }
 
 @test "fin init (built-in)" {
-	## [[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
-	cd ..
-	mkdir testinit
-	cd testinit
+	cd "$TRAVIS_BUILD_DIR/../test-init"
 	run fin init
-	echo "$output" | grep "http://testinit.docksal"
+	echo "$output" | egrep "http://test-init.docksal"
 	unset output
 
+	# Give Travis some time because looks like it needs some time to understand that everything is up
+	sleep 5
 	# Check if site is available and its name is correct
-	run curl -sL http://testinit.docksal
-	echo "$output" | grep "<title>phpinfo"
-	#cleanup
-	fin rm -f
-	cd ..
-	rm -rf testinit
-	cd drupal8
+	run curl -sL http://test-init.docksal
+	echo "$output" | egrep "<title>phpinfo"
 	unset output
 }
 
