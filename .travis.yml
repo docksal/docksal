@@ -6,6 +6,10 @@ services:
   - docker
 
 install:
+  - git clone https://github.com/docksal/bats.git tests/scripts/bats
+  - cd tests/scripts/bats
+  - sudo ./install.sh /usr/local
+  - cd "$TRAVIS_BUILD_DIR"
   - sudo cp ./bin/fin /usr/local/bin/fin
   - fin version
   - USE_BRANCH="${TRAVIS_BRANCH}"
@@ -26,7 +30,7 @@ script:
   - |
     run_tests() {
       if [[ "$2" != "" ]]; then cd "$2"; fi
-      bats "$TRAVIS_BUILD_DIR/tests/$1";
+      bats -i "$TRAVIS_BUILD_DIR/tests/$1"
     }
 
     run_all_tests() {
