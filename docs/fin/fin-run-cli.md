@@ -34,7 +34,7 @@ You can then initialize the default Docksal stack (LAMP) for the new project wit
 ```bash
 cd myproject
 mkdir .docksal
-echo "DOCROOT=web" >>.docksal/docksal.env
+fin config set DOCROOT=web
 fin project start
 ``` 
 
