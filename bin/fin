@@ -5223,6 +5223,9 @@ load_global_configuration ()
 load_configuration ()
 {
 	check_project_root
+	# Re-load global env file once again, since 'up' resets some variables to force re-reading config
+	set -a; source "$CONFIG_ENV"; set +a
+
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
