@@ -48,7 +48,23 @@ teardown() {
 	unset output
 }
 
-@test "fin init" {
+@test "fin init (built-in)" {
+	[[ $SKIP == 1 ]] && skip
+
+	cd "$TRAVIS_BUILD_DIR/../test-init"
+	run fin init
+	echo "$output" | egrep "http://test-init.docksal"
+	unset output
+
+	# Give Travis some time because looks like it needs some time to understand that everything is up
+	sleep 5
+	# Check if site is available and its name is correct
+	run curl -sL http://test-init.docksal
+	echo "$output" | egrep "<title>phpinfo"
+	unset output
+}
+
+@test "fin init (custom command)" {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin init

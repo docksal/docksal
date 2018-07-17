@@ -92,6 +92,10 @@ is_katacoda ()
 	[[ "$KATACODA" != "" ]]
 }
 
+is_travis () {
+	[[ "$TRAVIS" == "true" ]]
+}
+
 #------------------------------------------------------------------------------
 
 
@@ -258,34 +262,48 @@ IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.0}
 
 DOCKSAL_PATH='' #docksal path value will be cached here
 
-echo-red () { echo -e "${red}$1${NC}"; }
-echo-green () { echo -e "${green}$1${NC}"; }
+echo-red ()      { echo -e "${red}$1${NC}"; }
+echo-green ()    { echo -e "${green}$1${NC}"; }
 echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
-echo-yellow () { echo -e "${yellow}$1${NC}"; }
-echo-warning () {
+echo-yellow ()   { echo -e "${yellow}$1${NC}"; }
+
+echo-warning ()
+{
 	echo -e "${yellow_bg} WARNING: ${NC} ${yellow}$1${NC}";
 	shift
 	for arg in "$@"; do
 		echo -e "           $arg"
 	done
 }
-echo-error () {
+
+echo-error ()
+{
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}"
 	shift
 	for arg in "$@"; do
 		echo -e "         $arg"
 	done
 }
-echo-alert () {
+
+echo-alert ()
+{
 	echo -e "${red_bg} ALERT: ${NC} ${red}$1${NC}"
 	shift
 	for arg in "$@"; do
 		echo -e "         $arg"
 	done
 }
+
 # print string in $1 for $2 times
-echo-repeat () {
+echo-repeat ()
+{
     seq  -f $1 -s '' $2; echo
+}
+
+# prints message to stderr
+echo-stderr ()
+{
+	(>&2 echo "$@")
 }
 
 # Exits fin if previous command exited with non-zero code
@@ -296,6 +314,7 @@ if_failed ()
 		exit 1
 	fi
 }
+
 # Like if_failed but with more strict error
 if_failed_error ()
 {
@@ -919,7 +938,7 @@ check_project_unique ()
 _confirm ()
 {
 	# Skip checks if not running interactively (not a tty or not on Windows)
-	if ! is_tty; then return 0; fi
+	if ! is_tty || is_travis; then return 0; fi
 
 	while true; do
 		echo -en "$1 "
@@ -1215,6 +1234,7 @@ show_help ()
 	printh "docker-compose [command]" "Run docker-compose commands directly"
 
 	echo
+	printh "init" "Initialize a project (override it with your own automation ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
@@ -1765,15 +1785,32 @@ show_help_config ()
 	printh "fin config rm DOCKER_NATIVE --global" "	Removes DOCKER_NATIVE value from \$HOME/.docksal/docksal.env"
 }
 
-show_help_cleanup ()
+show_help_init ()
 {
 	echo
-	echo "Usage: fin cleanup [options]"
+	echo "Creates default project configuration and starts a project, when no project found."
+	echo "This built-in is meant to be overridden with your custom command or addon."
+	echo -e "See ${yellow}https://docs.docksal.io/en/master/fin/custom-commands${NC} on docs for creating custom commands."
 
+	echo
+	echo "Usage: init"
+
+	echo
+	echo "Examples:"
+	printh "- https://github.com/docksal/drupal8/tree/master/.docksal/commands" "	Automation example"
+	printh "- https://github.com/docksal/example-gatsby/tree/master/.docksal/commands" "Automation example"
+	printh "- https://github.com/docksal/addons" "					Addon repo"
+}
+
+show_help_cleanup ()
+{
 	echo
 	echo "Remove unused docker images and orphaned containers to save disk space."
 	echo "Orphaned are containers which folders were deleted from the filesystem,"
 	echo "but their containers still linger in the Docker."
+
+	echo
+	echo "Usage: cleanup [options]"
 
 	echo
 	echo "Options:"
@@ -5304,6 +5341,24 @@ load_configuration ()
 	export COMPOSE_CONVERT_WINDOWS_PATHS=1
 }
 
+# Default init command. Initializes default config and starts containers
+init ()
+{
+	if [[ "$(get_project_path)" != "" ]] ; then
+		echo-alert "The project exists but no init found" \
+			"Existing Docksal project was found in $(get_project_path)" \
+			"Create your own \`init\` command to tell fin how to re-initialize your project." \
+			"See ${yellow}fin help init${NC} for details"
+		return 1
+	else
+		_confirm "Initialize a project in $(pwd)?"
+	fi
+
+	config_generate
+	# Running like this forces configuration re-read
+	fin up
+}
+
 config_show ()
 {
 	check_docksal_environment
@@ -5850,6 +5905,65 @@ addon_hook ()
 	)
 }
 
+# Looks for addon/custom command by name, and returns its file path
+# $1 - name
+addon_get_path ()
+{
+	local addon="$(get_addon_script $1)"
+	if [[ ! -f "$addon" ]]; then
+		# If no addon was found then try command
+		addon="$(get_command_script $1)"
+	fi
+	[[ -f "$addon" ]] && echo "$addon"
+}
+
+# Execute addon by its file path, passing params to it
+# $1 - path to file
+# $2..$99 - params
+addon_execute ()
+{
+	local addon="$1"
+	# Check that file exists or fail
+	if [[ ! -f "$addon" ]]; then
+		echo-stderr "ERROR: addon executable $1 was not found"
+		return 1
+	fi
+
+	# Export ADDON_ROOT variable, that can be used in addons
+	export ADDON_ROOT=$(dirname "$addon")
+
+	# Load only global configuration first
+	load_global_configuration
+	# If run inside project root, then load project configuration as well
+	[[ "$PROJECT_ROOT" != "" ]] && load_configuration
+
+	# If executable is not set, then fix it
+	if [[ ! -x "$addon" ]]; then
+		echo -e "${yellow}$addon${NC} is not set to be executable."
+		_confirm "Fix automatically?"
+		chmod +x "$addon"
+		if_failed "Could not make $addon executable"
+	fi
+
+	# If it has windows line endings, then fix it
+	fix_crlf_warning "$addon"
+
+	# Read host/cli execution settings
+	_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
+
+	shift
+	if [[ "$_exec_target" != "" ]]; then
+		# Replace host addon path with the matching path inside cli
+		# "\$PROJECT_ROOT" will be resolved in cli to /var/www
+		cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
+		# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
+		cmd="$cli_addon_path "$(printf " %q" "$@")
+		CONTAINER_NAME="$_exec_target" _exec "$cmd"
+	else
+		exec "$addon" "$@"
+	fi
+}
+
 unison_sync_wait () {
 	# If not unison volumes exit
 	[[ "$DOCKSAL_VOLUMES" != "unison" ]] && return
@@ -6051,6 +6165,17 @@ case "$1" in
 		load_configuration
 		shift
 		docker-compose build "$@"
+		;;
+	init)
+		# no load configuration
+		addon_file_path="$(addon_get_path $1)"
+		shift
+		# If init exists as an addon/command, then execute it instead
+		if [[ ! -z "$addon_file_path" ]]; then
+			addon_execute "$addon_file_path" "$@"
+		else
+			init "$@"
+		fi
 		;;
 	start)
 		load_configuration
@@ -6531,44 +6656,13 @@ case "$1" in
 		addon "$@"
 		;;
 	*)
-		addon="$(get_addon_script $1)"
-		if [[ ! -f "$addon" ]]; then
-			# If no addon was found then try command
-			addon="$(get_command_script $1)"
-		# If no command was found either then show error
-			[[ ! -f "$addon" ]] &&
-				echo-yellow "Unknown command ${NC}$*${yellow}. See 'fin help' for list of available commands" &&
-				exit 1
-		else
-			export ADDON_ROOT=$(dirname "$addon")
+		addon_file_path="$(addon_get_path $1)"
+		if [[ -z "$addon_file_path" ]]; then
+			echo-yellow "Unknown command ${NC}$*${yellow}. See 'fin help' for the list of available commands"
+			exit 1
 		fi
-
-		load_global_configuration
-		[[ "$PROJECT_ROOT" != "" ]] && load_configuration
-
-		# If executable is not set, then fix it
-		if [[ ! -x "$addon" ]]; then
-			echo -e "${yellow}$addon${NC} is not set to be executable."
-			_confirm "Fix automatically?"
-			chmod +x "$addon"
-			if_failed "Could not make $addon executable"
-		fi
-
-		# If it has windows line endings, then fix it
-		fix_crlf_warning "$addon"
-
-		# Read host/cli execution settings
-		_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
 
 		shift
-		if [[ "$_exec_target" != "" ]]; then
-			# Replace host addon path with the matching path inside cli
-			# "\$PROJECT_ROOT" will be resolved in cli to /var/www
-			cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
-			# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
-			cmd="$cli_addon_path "$(printf " %q" "$@")
-			CONTAINER_NAME="$_exec_target" _exec "$cmd"
-		else
-			exec "$addon" "$@"
-		fi
+		addon_execute "$addon_file_path" "$@"
+		;;
 esac
