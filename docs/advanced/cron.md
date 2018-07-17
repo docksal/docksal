@@ -5,7 +5,7 @@
 
 ## Crontab file Explained
 
-A crontab file has six fields for specifying minute, hour, day of month, month, day of week and the command to be run at that interval. See below:
+A crontab file has six fields for specifying minute, hour, day of month, month, day of week, and the command to be run at that interval. See below:
 
 ```bash
 *     *     *     *     *  command to be executed
