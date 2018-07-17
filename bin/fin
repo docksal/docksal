@@ -5292,7 +5292,7 @@ load_configuration ()
 
 		# Enable osxfs:cached for cli on Docker for Mac
 		overrides_osxfs_file="$(get_config_dir_dc)/stacks/overrides-osxfs.yml"
-		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]] && [[ "$DOCKSAL_VOLUMES" != "unison" ]]; then
+		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]] && [[ "$DOCKSAL_VOLUMES" == "bind" ]]; then
 			COMPOSE_FILE="${overrides_osxfs_file}${SEPARATOR}${COMPOSE_FILE}"
 		fi
 
