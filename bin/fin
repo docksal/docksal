@@ -4540,6 +4540,9 @@ run_cli ()
 		MOUNT_HOME="dst=/home/docker"
 	fi
 
+	# Allows run-cli to run global addons
+	local MOUNT_DOCKSAL_HOME="type=bind,src=$CONFIG_DIR,dst=$CONFIG_DIR"
+
 	# Address an edge case when run-cli is run in the home folder (/root) on PWD/Katacoda
 	# See https://github.com/docksal/docksal/issues/661
 	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda); then
@@ -4553,6 +4556,7 @@ run_cli ()
 		${winpty} docker run --rm -it \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
+			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e SECRET_BLACKFIRE_CLIENT_ID \
 			-e SECRET_BLACKFIRE_CLIENT_TOKEN \
@@ -4572,6 +4576,7 @@ run_cli ()
 		docker run --rm \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
+			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e SECRET_BLACKFIRE_CLIENT_ID \
 			-e SECRET_BLACKFIRE_CLIENT_TOKEN \
@@ -5952,12 +5957,17 @@ addon_execute ()
 	_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
 
 	shift
-	if [[ "$_exec_target" != "" ]]; then
+	if [[ "$_exec_target" == "run-cli" ]]; then
+		cmd="$addon"
+		[[ "$@" != "" ]] && cmd="$addon "$(printf " %q" "$@")
+		run_cli "$cmd"
+	elif [[ "$_exec_target" != "" ]]; then
 		# Replace host addon path with the matching path inside cli
 		# "\$PROJECT_ROOT" will be resolved in cli to /var/www
 		cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
+		cmd="$cli_addon_path"
 		# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
-		cmd="$cli_addon_path "$(printf " %q" "$@")
+		[[ "$@" != "" ]] && cmd="$cli_addon_path "$(printf " %q" "$@")
 		CONTAINER_NAME="$_exec_target" _exec "$cmd"
 	else
 		exec "$addon" "$@"
