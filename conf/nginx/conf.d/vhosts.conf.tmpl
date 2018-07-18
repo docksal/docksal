@@ -156,36 +156,52 @@
 
 {{ range $hosts, $containers := groupByLabel $d_containers "io.docksal.virtual-host" }}
 
-	{{ range $host := split $hosts "," }}
+	{{ $container := $containers | first }}
+	{{ $upstream := $container.Name }}
 
-		upstream {{ $host }} {
-		{{ range $container := $containers }}
-			{{ $addrLen := len $container.Addresses }}
+	upstream {{ $upstream }} {
+		{{ $addrLen := len $container.Addresses }}
 
-			{{ range $knownNetwork := $CurrentContainer.Networks }}
-				{{ range $containerNetwork := $container.Networks }}
-					{{ if eq $knownNetwork.Name $containerNetwork.Name }}
-						{{/* If only 1 port exposed, use that */}}
-						{{ if eq $addrLen 1 }}
-							{{ $address := index $container.Addresses 0 }}
-							{{ template "upstream" (dict "Container" $container "Address" $address "Network" $containerNetwork) }}
-						{{/* If more than one port exposed, use the one matching VIRTUAL_PORT env var, falling back to standard web port 80 */}}
-						{{ else }}
-							{{/* Assume port 80 by default */}}
-							{{ $port := or (index $container.Labels "io.docksal.virtual-port") "80" }}
-							{{ $address := where $container.Addresses "Port" $port | first }}
-							{{ template "upstream" (dict "Container" $container "Address" $address "Network" $containerNetwork) }}
-						{{ end }}
+		{{ range $knownNetwork := $CurrentContainer.Networks }}
+			{{ range $containerNetwork := $container.Networks }}
+				{{ if eq $knownNetwork.Name $containerNetwork.Name }}
+					{{/* If only 1 port exposed, use that */}}
+					{{ if eq $addrLen 1 }}
+						{{ $address := index $container.Addresses 0 }}
+						{{ template "upstream" (dict "Container" $container "Address" $address "Network" $containerNetwork) }}
+					{{/* If more than one port exposed, use the one matching VIRTUAL_PORT env var, falling back to standard web port 80 */}}
+					{{ else }}
+						{{/* Assume port 80 by default */}}
+						{{ $port := or (index $container.Labels "io.docksal.virtual-port") "80" }}
+						{{ $address := where $container.Addresses "Port" $port | first }}
+						{{ template "upstream" (dict "Container" $container "Address" $address "Network" $containerNetwork) }}
 					{{ end }}
 				{{ end }}
 			{{ end }}
 		{{ end }}
-		}
+	}
 
-		{{ template "http" (dict "Hosts" $host "Upstream" $host) }}
-		{{ template "https" (dict "Hosts" $host "Upstream" $host) }}
+		{{/* Generate HTTP server config */}}
+		{{ template "http" (dict "Hosts" $hosts "Upstream" $upstream) }}
 
-	{{ end }}
+		{{/* Get the cert name from io.docksal.cert-name container label */}}
+		{{ $certName := or (index $container.Labels "io.docksal.cert-name") "none" }}
+		{{/* Unset certName if its value us "none" */}}
+		{{ $certName := when (ne $certName "none") $certName nil }}
+
+		{{/* Get the best matching cert by name for the vhost. */}}
+		{{ $primaryHost := (index (split $hosts ",") 0) }}
+		{{ $vhostCert := (closest (dir "/etc/certs/custom") (printf "%s.crt" $primaryHost)) }}
+
+		{{/* Trim file suffix - it will be added later */}}
+		{{ $vhostCert := trimSuffix ".crt" $vhostCert }}
+		{{ $vhostCert := trimSuffix ".key" $vhostCert }}
+
+		{{/* Use the cert specified on the container or fallback to the best vhost match */}}
+		{{ $cert := (coalesce $certName $vhostCert) }}
+
+		{{/* Generate HTTPS server config */}}
+		{{ template "https" (dict "Hosts" $hosts "Upstream" $upstream "Cert" $cert) }}
 
 {{ end }}
 
