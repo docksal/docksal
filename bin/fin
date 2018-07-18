@@ -4272,15 +4272,16 @@ check_for_updates ()
 	local UPDATES_AVAILABLE=0
 
 	local timestamp; local last_check; local next_check; local last_ping; local next_ping
-	local one_day=$((60*60*24))
+	local one_hour=$((60 * 60))
+	local one_day=$(($one_hour * 24))
 	local one_week=$(($one_day * 7))
 	timestamp=$(date +%s)
 	# Set last_check/last_ping to 0 if empty
 	last_check=$(cat "$CONFIG_LAST_CHECK" 2>/dev/null || echo 0)
 	last_ping=$(cat "$CONFIG_LAST_PING" 2>/dev/null || echo 0)
 
-	# Send ping daily
-	next_ping=$(( $last_ping + $one_day ))
+	# Send ping hourly
+	next_ping=$(( $last_ping + $one_hour ))
 	if [ ${timestamp} -gt ${next_ping} ]; then
 		stats_ping
 		echo "$timestamp" > "$CONFIG_LAST_PING"
