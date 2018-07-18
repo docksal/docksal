@@ -166,7 +166,7 @@ services:
 
 ## Executing commands inside standalone ad-hoc cli container
 
-This allows you to define a global command, that will execute in a standalone cli container spawned on demand.
+This allows you to define a global command that will execute in a standalone cli container spawned on demand.
 It is like running `fin run-cli ...`.
 This will allow you to create a command in node or php that would not actually require them to be installed locally.
 
