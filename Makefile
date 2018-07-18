@@ -8,16 +8,19 @@ NAME = docksal-vhost-proxy
 .PHONY: build test push shell run start stop logs debug clean release
 
 build:
-	fin docker build -t $(REPO):$(VERSION) .
+	docker build -t $(REPO):$(VERSION) .
 
 test:
 	IMAGE=$(REPO):$(VERSION) bats tests/smoke-test.bats
 
 push:
-	fin docker push $(REPO):$(VERSION)
+	docker push $(REPO):$(VERSION)
 
 exec:
-	fin docker exec -it $(NAME) $(CMD)
+	docker exec $(NAME) $(CMD)
+
+exec-it:
+	docker exec -it $(NAME) $(CMD)
 
 shell:
 	make exec -e CMD=bash
@@ -25,22 +28,24 @@ shell:
 conf-vhosts:
 	make exec -e CMD='cat /etc/nginx/conf.d/vhosts.conf'
 
+# This is the only place where fin is used/necessary
 start:
 	IMAGE_VHOST_PROXY=$(REPO):$(VERSION) fin system reset vhost-proxy
 
 stop:
-	fin docker stop $(NAME)
+	docker stop $(NAME)
 
 logs:
-	fin docker logs $(NAME)
+	docker logs $(NAME)
+
+logs-follow:
+	docker logs -f $(NAME)
 
 clean:
-	fin docker rm -f $(NAME)
+	docker rm -vf $(NAME)
 	rm -rf projects
-	fin cleanup
 
-debug: build start
-	fin docker logs -f $(NAME)
+debug: build start logs-follow
 
 release: build
 	make push -e VERSION=$(VERSION)

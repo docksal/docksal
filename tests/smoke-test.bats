@@ -12,14 +12,13 @@ teardown() {
 	echo "================================================================"
 }
 
-# Global skip
-# Uncomment below, then comment skip in the test you want to debug. When done, reverse.
-#SKIP=1
+# To work on a specific test:
+# run `export SKIP=1` locally, then comment skip in the test you want to debug
 
 @test "Proxy container is up and using the \"${IMAGE}\" image" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	run fin docker ps --filter "name=docksal-vhost-proxy" --format "{{ .Image }}"
+	run docker ps --filter "name=docksal-vhost-proxy" --format "{{ .Image }}"
 	[[ "$output" =~ "$IMAGE" ]]
 	unset output
 }
@@ -27,7 +26,7 @@ teardown() {
 @test "Projects directory is mounted" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	run fin docker exec docksal-vhost-proxy ls -la /projects
+	run make exec -e CMD='ls -la /projects'
 	[[ "$output" =~ "project1" ]]
 	[[ "$output" =~ "project2" ]]
 }
@@ -43,7 +42,7 @@ teardown() {
 	unset output
 
 	# Kill crontab once this test completes, so that cron does not interfere with the rest of the tests
-	make exec -e CMD="crontab -r"
+	make exec -e CMD='crontab -r'
 }
 
 @test "Test projects are up and running" {
@@ -113,10 +112,10 @@ teardown() {
 	sleep ${PROJECT_INACTIVITY_TIMEOUT}
 	date
 
-	fin docker exec docksal-vhost-proxy proxyctl stats
+	make exec -e CMD='proxyctl stats'
 	# Trigger proxyctl stop manually to skip the cron job wait.
 	# Note: cron job may still have already happened here and stopped the inactive projects
-	fin docker exec docksal-vhost-proxy proxyctl stop
+	make exec -e CMD='proxyctl stop'
 
 	# Check projects were stopped, but not removed
 	run fin pl -a
@@ -125,7 +124,7 @@ teardown() {
 	unset output
 
 	# Check project networks were removed
-	run fin docker network ls
+	run docker network ls
 	echo "$output" | grep -v project1
 	echo "$output" | grep -v project2
 	unset output
@@ -176,20 +175,20 @@ teardown() {
 	sleep ${PROJECT_DANGLING_TIMEOUT}
 	date
 
-	fin docker exec docksal-vhost-proxy proxyctl stats
+	make exec -e CMD='proxyctl stats'
 	# Trigger proxyctl cleanup manually to skip the cron job wait.
-	fin docker exec docksal-vhost-proxy proxyctl cleanup
+	make exec -e CMD='proxyctl cleanup'
 
 	# Check project1 containers were removed
-	run fin docker ps -a -q --filter "label=com.docker.compose.project=project1"
+	run docker ps -a -q --filter "label=com.docker.compose.project=project1"
 	[[ "$output" == "" ]]
 	unset output
 	# Check project1 network was removed
-	run fin docker network ls
+	run docker network ls
 	echo "$output" | grep -v project1
 	unset output
 	# Check project1 folder was removed
-	fin docker exec docksal-vhost-proxy ls -la /projects
+	make exec -e CMD='ls -la /projects'
 	echo "$output" | grep -v project1
 
 	# Check that project2 still exist
@@ -197,7 +196,7 @@ teardown() {
 	echo "$output" | grep project2
 	unset output
 	# Check that project2 folder was NOT removed
-	run fin docker exec docksal-vhost-proxy ls -la /projects
+	run make exec -e CMD='ls -la /projects'
 	echo "$output" | grep project2
 	unset output
 }
@@ -209,7 +208,7 @@ teardown() {
 	fin @project3 restart
 
 	# TODO: WTF is it stopped here?
-	fin docker exec docksal-vhost-proxy proxyctl stats
+	make exec -e CMD='proxyctl stats'
 	curl -I http://example-nodejs.docksal
 
 	run curl http://example-nodejs.docksal
@@ -225,10 +224,10 @@ teardown() {
 	unset output
 }
 
-@test "Certs: proxy picks up custom cert based on hostname" {
+@test "Certs: proxy picks up custom cert based on hostname [stack]" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	# Stop all running projects to get a cleanup output of vhosts configured in nginx
+	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
 
 	# Cleanup and restart the test project (using project2 as it is set to be permanent for testing purposes)
@@ -253,10 +252,10 @@ teardown() {
 	unset output
 }
 
-@test "Certs: proxy picks up custom cert based on cert name override" {
+@test "Certs: proxy picks up custom cert based on cert name override [stack]" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	# Stop all running projects to get a cleanup output of vhosts configured in nginx
+	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
 
 	# Cleanup and restart the test project (using project2 as it is set to be permanent for testing purposes)
@@ -273,4 +272,52 @@ teardown() {
 	[[ "$output" =~ "server_name project2.docksal;" ]]
 	[[ "$output" =~ "ssl_certificate /etc/certs/custom/example.com.crt;" ]]
 	unset output
+}
+
+@test "Certs: proxy picks up custom cert based on hostname [standalone]" {
+	#[[ ${SKIP} == 1 ]] && skip
+
+	# Stop all running projects to get a clean output of vhosts configured in nginx
+	fin stop -a
+
+	# Start a standalone container
+	docker rm -vf nginx || true
+	docker run --name nginx -d \
+		--label=io.docksal.virtual-host='nginx.example.com' \
+		nginx:alpine
+	sleep 1
+
+	# Check custom cert was picked up
+	run make conf-vhosts
+	[[ "$output" =~ "server_name nginx.example.com;" ]]
+	[[ "$output" =~ "ssl_certificate /etc/certs/custom/example.com.crt;" ]]
+	unset output
+
+	# Cleanup
+	docker rm -vf nginx || true
+}
+
+@test "Certs: proxy picks up custom cert based on cert name override [standalone]" {
+	#[[ ${SKIP} == 1 ]] && skip
+
+	# Stop all running projects to get a clean output of vhosts configured in nginx
+	fin stop -a
+	docker rm -vf nginx || true
+
+	# Start a standalone container
+	docker rm -vf nginx || true
+	docker run --name nginx -d \
+		--label=io.docksal.virtual-host='apache.example.com' \
+		--label=io.docksal.cert-name='example.com' \
+		nginx:alpine
+	sleep 1
+
+	# Check server_name is intact while custom cert was picked up
+	run make conf-vhosts
+	[[ "$output" =~ "server_name apache.example.com;" ]]
+	[[ "$output" =~ "ssl_certificate /etc/certs/custom/example.com.crt;" ]]
+	unset output
+
+	# Cleanup
+	docker rm -vf nginx || true
 }
