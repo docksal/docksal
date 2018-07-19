@@ -4283,12 +4283,8 @@ get_latest_release ()
 	URL_REPO_RELEASE="${GITHUB_API}/repos/${REPO_URL}/releases/latest"
 	local latest_tag=$(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | tr -d '[:space:]')
 
-	# Get information about that tag as we need to get the sha tag associated with that
-	URL_REPO_TAG="${GITHUB_API}/repos/${REPO_URL}/git/refs/tags/${latest_tag}"
-	local commit_sha=$(curl -sSL $URL_REPO_TAG | grep sha | sed 's/\"sha": \"\(.*\)",/\1/' | tr -d '[:space:]')
-
 	# Return the URL associated with that sha hash to get that specific version of fin's id
-	URL_REPO_COMMIT_URL="${URL_REPO}/${commit_sha}/bin/fin"
+	URL_REPO_COMMIT_URL="${URL_REPO}/${latest_tag}/bin/fin"
 	echo "${URL_REPO_COMMIT_URL}"
 }
 
