@@ -6408,7 +6408,13 @@ case "$1" in
 		if [ -f "$1" ]; then
 			# if a file is passed then run it inside cli container
 			[ "$(get_project_path)" == "" ] && echo "Should be run inside a project" && exit 1
-			_exec "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash $1"
+			# If file does not include path append ./
+			if [[ "$(basename $1)" == "$1" ]]; then
+				script_to_run="./$1"
+			else
+				script_to_run="$1"
+			fi
+			_exec "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash -c $script_to_run"
 		else
 			_exec "$@"
 		fi
