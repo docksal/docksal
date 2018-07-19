@@ -208,24 +208,29 @@ PATH="$CONFIG_BIN_DIR:$PATH"
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 
 #---------------------------- URL references --------------------------------
-URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
-URL_REPO_UI="https://github.com/docksal/docksal"
-URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
-URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
-URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
-URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
-URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
-URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
-URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
-URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
-URL_REPO_HUGO="https://github.com/docksal/example-hugo.git"
-URL_REPO_SYMFONY_SKELETON="https://github.com/docksal/example-symfony-skeleton.git"
-URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
-URL_REPO_BACKDROP="https://github.com/docksal/example-backdrop.git"
-URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
-URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
+REPO_OWNER="docksal"
+REPO_SLUG="docksal"
+GITHUB_RAW="https://raw.githubusercontent.com"
+GITHUB_API="https://api.github.com"
+REPO_URL="${REPO_OWNER}/${REPO_SLUG}"
+URL_REPO="${GITHUB_RAW}/${REPO_URL}"
+URL_REPO_UI="https://github.com/${REPO_URL}"
+URL_REPO_DRUPAL7="https://github.com/${REPO_OWNER}/drupal7.git"
+URL_REPO_DRUPAL8="https://github.com/${REPO_OWNER}/drupal8.git"
+URL_REPO_DRUPAL8COMPOSER="https://github.com/${REPO_OWNER}/boilerplate-drupal8-composer.git"
+URL_REPO_WORDPRESS="https://github.com/${REPO_OWNER}/wordpress.git"
+URL_REPO_MAGENTO="https://github.com/${REPO_OWNER}/magento.git"
+URL_REPO_GRAV="https://github.com/${REPO_OWNER}/example-grav.git"
+URL_REPO_GATSBY="https://github.com/${REPO_OWNER}/example-gatsby.git"
+URL_REPO_LARAVEL="https://github.com/${REPO_OWNER}/example-laravel.git"
+URL_REPO_HUGO="https://github.com/${REPO_OWNER}/example-hugo.git"
+URL_REPO_SYMFONY_SKELETON="https://github.com/${REPO_OWNER}/example-symfony-skeleton.git"
+URL_REPO_SYMFONY_WEBAPP="https://github.com/${REPO_OWNER}/example-symfony-webapp.git"
+URL_REPO_BACKDROP="https://github.com/${REPO_OWNER}/example-backdrop.git"
+URL_ADDONS_HOSTING="${GITHUB_RAW}"
+URL_ADDONS_REPO="$URL_ADDONS_HOSTING/${REPO_OWNER}/addons"
 # Remove URL_REPO_ADDONS in Nov 2018
-URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
+URL_REPO_ADDONS="${GITHUB_RAW}/${REPO_OWNER}/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_OVERRIDES_IDE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-ide.yml"
 URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
@@ -243,7 +248,7 @@ URL_DOCKER_NIX="https://get.docker.com/"
 # Until there is an official standalone docker.exe binary available, use the one pulled from Docker for Windows
 # See https://github.com/docker/for-win/issues/1460#issuecomment-390045959
 #URL_DOCKER_WIN="https://download.docker.com/win/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
-URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.9.0/docker-${REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_WIN="https://github.com/${REPO_URL}/releases/download/v1.9.0/docker-${REQUIREMENTS_DOCKER}.zip"
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
@@ -880,6 +885,11 @@ is_winpty_version ()
 	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") -le $(ver_to_int "$version") ]]
 }
 
+wants_rc_version ()
+{
+	[[ -n "${DOCKSAL_USE_RC}" ]]
+}
+
 check_vbox_version ()
 {
 	# Provide ability to skip checking for vbox version
@@ -1288,10 +1298,10 @@ show_help_list_commands_in_help ()
 	else
 		addons_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	fi
-	
+
 	local executable="-executable"
 	[[ is_mac ]] && executable="-perm +100"
-	
+
 	local addons_list=$(find "$addons_path" -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
 	if [[ "$addons_list" != "" ]]; then
 		local scope
@@ -4161,8 +4171,10 @@ update ()
 	if (${FULL_UPDATE}); then
 		testing_warn
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
+
+		local fin_file_url=$(get_latest_version_fin)
 		local new_fin
-		new_fin=$(curl -kfsSL "$URL_FIN?r=$RANDOM")
+		new_fin=$(curl -kfsSL "${fin_file_url}?r=$RANDOM")
 		if_failed_error "fin download failed."
 
 		# Check if fin update is required and whether it is a major version
@@ -4264,6 +4276,29 @@ update ()
 	fi
 }
 
+# Return latest tag's commit url
+get_latest_release ()
+{
+	# Get the latest release tag
+	URL_REPO_RELEASE="${GITHUB_API}/repos/${REPO_URL}/releases/latest"
+	local latest_tag=$(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | tr -d '[:space:]')
+
+	# Get information about that tag as we need to get the sha tag associated with that
+	URL_REPO_TAG="${GITHUB_API}/repos/${REPO_URL}/git/refs/tags/${latest_tag}"
+	local commit_sha=$(curl -sSL $URL_REPO_TAG | grep sha | sed 's/\"sha": \"\(.*\)",/\1/' | tr -d '[:space:]')
+
+	# Return the URL associated with that sha hash to get that specific version of fin's id
+	URL_REPO_COMMIT_URL="${URL_REPO}/${commit_sha}/bin/fin"
+	echo "${URL_REPO_COMMIT_URL}"
+}
+
+# Return the url for fin. If person has set DOCKSAL_USE_RC then we return that otherwise return masters URL
+# which will return the latest stable version.
+get_latest_version_fin ()
+{
+	wants_rc_version && echo $(get_latest_release) || echo "${URL_FIN}"
+}
+
 check_for_updates ()
 {
 	# Never trigger in scripts
@@ -4289,6 +4324,8 @@ check_for_updates ()
 
 	# Check once bi-weekly
 	next_check=$(( $last_check + ($one_week * 2) ))
+	# Check once a day if DOCKSAL_USE_RC is set
+	wants_rc_version && next_check=$(( $last_check + $one_day ))
 	if [ ${timestamp} -le ${next_check} ]; then
 		return;
 	fi
@@ -4297,8 +4334,12 @@ check_for_updates ()
 	local new_fin; local new_version
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$CONFIG_LAST_CHECK"
+
+	# Get the version of fin that should be used.
+	local fin_url=$(get_latest_version_fin)
+
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_fin=$(curl -kfsL --connect-timeout 1 --max-time 3 "$URL_FIN?r=$RANDOM")
+	new_fin=$(curl -kfsL --connect-timeout 1 --max-time 3 "${fin_url}?r=${RANDOM}")
 	new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
 	if [[ $(ver_to_int "$new_version") > $(ver_to_int ${FIN_VERSION}) ]]; then
 		UPDATE_AVAILABLE=1
@@ -4967,7 +5008,7 @@ ngrok_share ()
 	if [[ -n "$username" && -n "$password" ]]; then
 		ARGS="$ARGS -auth=\"${username}:${password}\" "
 	fi
-	
+
 	if [[ -n "$username" ]] || [[ -n "$password" ]] || [[ -n "$hostname" ]] || [[ -n "$subdomain" ]]; then
 		if [[ -z "$auth" ]]; then
 			echo-yellow "You must specify a username, password, and Ngrok authentication token to use the custom HTTP authentication."
@@ -4991,7 +5032,7 @@ ngrok_share ()
 	if [[ -f "$local_ngrok_conf" ]]; then
     		CONF_ARGS="$CONF_ARGS -config /var/www/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
   	fi
-	
+
   	if [[ -f "$ngrok_conf" ]] || [[ -f "$local_ngrok_conf" ]]; then
 	  	ARGS="ngrok start ${CONF_ARGS} -all"
 		# Overwrite settings with a configuration if its available
@@ -5427,11 +5468,11 @@ config_generate ()
 	rm -f ".docksal/docksal.yml" >/dev/null
 	# Create .docksal directory if it does not exist
 	mkdir -p ".docksal"
-	
+
 	# Create docksal.env if it does not exist
 	touch ".docksal/docksal.env" && \
 	echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
-	
+
 	# Get docroot option value or use default
 	local DOCROOT="${docroot:-docroot}"
 	# Add DOCROOT to docksal.env file
@@ -6377,8 +6418,9 @@ case "$1" in
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
 		elif [[ "$1" == "--self" ]]; then
-			echo "Downloading $URL_FIN"
-			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
+			fin_file_url=$(get_latest_version_fin)
+			echo "Downloading ${fin_file_url}"
+			curl -kfsSL "${fin_file_url}?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
 			[[ "$2" == "--diff" ]] && diff "$FIN_PATH" "$FIN_PATH_UPDATED"
 			sudo cp "$FIN_PATH_UPDATED" "$FIN_PATH"
 			[ $? -eq 0 ] && echo "Done"
