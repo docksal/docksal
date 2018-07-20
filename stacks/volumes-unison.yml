@@ -6,7 +6,8 @@
 version: "2.1"
 
 volumes:
-  project_root:
+  project_root: # Project root volume
+  db_data:  # Database data volume
   # Shared ssh-agent volume
   docksal_ssh_agent:
     external: true
@@ -22,6 +23,7 @@ services:
       - SYNC_DESTINATION=/destination
       - SYNC_MAX_INOTIFY_WATCHES=524288
       - SYNC_VERBOSE=1
+      - SYNC_NODELETE_SOURCE=0
       - UNISON_USER=docker
       - UNISON_UID=${HOST_UID:-0}
       - UNISON_GROUP=dialout

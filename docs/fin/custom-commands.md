@@ -7,7 +7,7 @@ It is possible to extend fin with custom commands per project or per host.
 Create a file at this location `.docksal/commands/updb` with the following contents:
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Runs drush updb
 ##
@@ -27,7 +27,7 @@ Now you can use it as if it was a regular fin command: `fin updb`.
 Passing parameters also works: `fin updb -y`.
 The command description will be visible in `fin help` and the full command help will be available via `fin help updb`.
 
-Note: `drush updb` this is a Drupal-specific example.
+Note: `drush updb` is a Drupal-specific example.
 
 ## Available variables
 
@@ -114,7 +114,7 @@ This approach may not be very convenient.
 Alternatively the following notation inside a custom command can be used to tell fin to run the command inside cli:
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 
 #: exec_target = cli
 
@@ -162,6 +162,18 @@ services:
       # These variables are passed from the host (including values in `docksal.env`/`docksal-local.env`)
       - SOURCE_ALIAS
       - VIRTUAL_HOST
+```
+
+## Executing commands inside standalone ad-hoc cli container
+
+This allows you to define a global command that will execute in a standalone cli container spawned on demand.
+It is like running `fin run-cli ...`.
+This will allow you to create a command in node or php that would not actually require them to be installed locally.
+
+In your script define:
+
+```
+#: exec_target = run-cli
 ```
 
 ## Grouping Commands

@@ -10,7 +10,7 @@ APACHE_BASIC_AUTH_PASS=password
 ```
 
 If using custom configuration, modify your `.docksal/docksal.yml` or `.docksal/docksal-local.yml`.  
-Add following two lines to for the `web` service and run `fin project start` to apply changes.
+Add following two lines to for the `web` service and run `fin project start` to apply changes:
 
 ```yaml
   web:

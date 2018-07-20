@@ -23,9 +23,9 @@ db:
   command: "--datadir /var/lib/mysql-sandbox"
 ```
 
-3) Reset the db service: `fin project reset db`
+3) Reset the db service: `fin project reset db` 
 4) Import the database: `fin sqli db.sql`  
-5) Create a snapshot image from the `db` container
+5) Create a snapshot image from the `db` container:
 
 ```bash
 fin project stop
@@ -54,14 +54,14 @@ To reset it to the snapshot you took in step 1 run `fin project reset db` (`fin 
 You will need a DB dump to revert.
 Either use the one created before enabling the sandbox mode or create a new one.
 
-1) Revert the changes done to the `db` service in `docksal.yml`.  
-2) Reset the `db` service: `fin project reset db`
-3) Import the DB dump.
+1) Revert the changes done to the `db` service in `docksal.yml` 
+2) Reset the `db` service: `fin project reset db` 
+3) Import the DB dump
 
 Now the `db` service container is using a persistent storage volume for the database - `/var/lib/mysql`.
 
 ## Precaution
 
-With large databases it is not recommended to snapshot a container, that is already running off of a snapshot image.  
+With large databases, it is not recommended to snapshot a container that is already running off of a snapshot image.  
 Every docker image holds all parent images plus in-memory changes inside it. 
 With every commit the size of the resulting image will increase by the full size of the DB, not just the delta.

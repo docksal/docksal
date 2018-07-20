@@ -26,7 +26,7 @@ Any other changes happen inside of the container only and are reset once the con
 ### Create a Drupal 8 Composer based project from scratch
 
 ```bash
-fin composer create-project drupal-composer/drupal-project:8.x-dev myproject --stability dev --no-interaction
+fin run-cli composer create-project drupal-composer/drupal-project:8.x-dev myproject --stability dev --no-interaction
 ```
 
 You can then initialize the default Docksal stack (LAMP) for the new project with just a few more steps:
@@ -34,6 +34,7 @@ You can then initialize the default Docksal stack (LAMP) for the new project wit
 ```bash
 cd myproject
 mkdir .docksal
+fin config set DOCROOT=web
 fin project start
 ``` 
 
@@ -57,7 +58,7 @@ You have the option to override this behavior and launch the container without t
 fin run-cli --clean
 ```
 
-Note: this does not drop the shared `$HOME` volume used for regular `fun run-cli` executions.
+Note: this does not drop the shared `$HOME` volume used for regular `fin run-cli` executions.
 
 You can wipe the shared `$HOME` volume with:
 

@@ -2,7 +2,7 @@
 
 ## Setup
 
-Add custom `behat` command to your project.
+Add a custom `behat` command to your project.
 
 >     .docksal/commands
 >       \_ behat
@@ -33,7 +33,7 @@ This will download Composer dependencies and run Behat using the pre-configured 
 
 The basic configuration (see [behat.common.yml](https://github.com/docksal/drupal7-advanced/blob/master/tests/behat/behat.common.yml) as an example) 
 uses goutte as the default driver. Goutte is a very basic browser emulator. It is much faster than real browsers, but also very limited. 
-It can make HTTP requests, but does not parse CSS, execute JS or do any rendering.
+It can make HTTP requests, but does not parse CSS, execute JS, or do any rendering.
 
 Goutte can be used in many cases and does not require additional configuration/installation.
 
@@ -58,7 +58,7 @@ browser:
     - ${DOCKSAL_DNS2}
 ```
 
-You can also use the Firefox image instead of Chrome: `selenium/standalone-firefox`
+You can also use the Firefox image instead of Chrome: `selenium/standalone-firefox`.
 
 After that you have to tell Behat to use Selenium.  
 Add your Selenium configuration in `tests/behat/behat.yml`.
@@ -176,7 +176,7 @@ Open settings (menu item *File->Settings...*). In the opened window on the left 
 
 Add a new PHP interpreter for Behat (it should be the interpreter from previous step).
 
-Path to Behat is the path in the `cli` container - `/var/www/tests/behat/bin/behat`
+Path to Behat is the path in the `cli` container: `/var/www/tests/behat/bin/behat`
 
 Default configuration file: `/var/www/tests/behat/behat.yml`
 
