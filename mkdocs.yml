@@ -30,6 +30,7 @@ pages:
     - Acquia Drush Commands: tools/acquia-drush.md
     - Behat: tools/behat.md
     - Blackfire: tools/blackfire.md
+    - Cloud9 IDE: tools/cloud9.md
     - Composer: tools/composer.md
     - Drupal Console: tools/drupal-console.md
     - Drush: tools/drush.md
