@@ -9,7 +9,7 @@ to code without working from their desktop or needing additional tools.
 
 ### Set the `IDE_ENABLED` variable for the project.
 
-Enable IDE for the project by setting the `IDE_ENABLED` variable.
+Enable IDE for the project by setting the `IDE_ENABLED` variable:
 
 ```bash
 fin config set --env=local IDE_ENABLED=1
@@ -18,10 +18,10 @@ fin config set --env=local IDE_ENABLED=1
 !!! tip "For Other Developers on the Project"
 	To enable for other developers within the project, remove the `--env=local` option from the above command.
 
-Then restart the project
+Then, reset the cli service:
 
 ```bash
-fin project restart
+fin project reset cli
 ```
 
 ## Accessing IDE
