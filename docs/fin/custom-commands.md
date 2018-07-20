@@ -173,7 +173,7 @@ This will allow you to create a command in node or php that would not actually r
 In your script define:
 
 ```
-#: exec_target = cli
+#: exec_target = run-cli
 ```
 
 ## Grouping Commands
