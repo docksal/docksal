@@ -4168,7 +4168,7 @@ update ()
 		testing_warn
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 
-		local fin_file_url=$(get_latest_version_fin)
+		local fin_file_url=$(get_fin_url)
 		local new_fin
 		new_fin=$(curl -kfsSL "${fin_file_url}?r=$RANDOM")
 		if_failed_error "fin download failed."
@@ -4286,7 +4286,7 @@ get_latest_release ()
 
 # Return the url for fin. If person has set DOCKSAL_USE_RC then we return that otherwise return masters URL
 # which will return the latest stable version.
-get_latest_version_fin ()
+get_fin_url ()
 {
 	wants_rc_version && echo $(get_latest_release) || echo "${URL_FIN}"
 }
@@ -4314,10 +4314,14 @@ check_for_updates ()
 		echo "$timestamp" > "$CONFIG_LAST_PING"
 	fi
 
-	# Check once bi-weekly
-	next_check=$(( $last_check + ($one_week * 2) ))
-	# Check once a day if DOCKSAL_USE_RC is set
-	wants_rc_version && next_check=$(( $last_check + $one_day ))
+	if wants_rc_version; then
+		# Check once a day if DOCKSAL_USE_RC is set
+		next_check=$(( $last_check + $one_day ))
+	else
+		# Check bi-weekly otherwise
+		next_check=$(( $last_check + ($one_week * 2) ))
+	fi
+
 	if [ ${timestamp} -le ${next_check} ]; then
 		return;
 	fi
@@ -4328,7 +4332,7 @@ check_for_updates ()
 	echo "$timestamp" > "$CONFIG_LAST_CHECK"
 
 	# Get the version of fin that should be used.
-	local fin_url=$(get_latest_version_fin)
+	local fin_url=$(get_fin_url)
 
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
 	new_fin=$(curl -kfsL --connect-timeout 1 --max-time 3 "${fin_url}?r=${RANDOM}")
@@ -6410,9 +6414,9 @@ case "$1" in
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
 		elif [[ "$1" == "--self" ]]; then
-			fin_file_url=$(get_latest_version_fin)
-			echo "Downloading ${fin_file_url}"
-			curl -kfsSL "${fin_file_url}?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
+			fin_url=$(get_fin_url)
+			echo "Downloading ${fin_url}"
+			curl -kfsSL "${fin_url}?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
 			[[ "$2" == "--diff" ]] && diff "$FIN_PATH" "$FIN_PATH_UPDATED"
 			sudo cp "$FIN_PATH_UPDATED" "$FIN_PATH"
 			[ $? -eq 0 ] && echo "Done"
