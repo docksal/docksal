@@ -4168,9 +4168,9 @@ update ()
 		testing_warn
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 
-		local fin_file_url=$(get_fin_url)
+		local fin_url=$(get_fin_url)
 		local new_fin
-		new_fin=$(curl -kfsSL "${fin_file_url}?r=$RANDOM")
+		new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
 		if_failed_error "fin download failed."
 
 		# Check if fin update is required and whether it is a major version
@@ -4279,9 +4279,8 @@ get_latest_release ()
 	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases/latest"
 	local latest_tag=$(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | tr -d '[:space:]')
 
-	# Return the URL associated with that sha hash to get that specific version of fin's id
-	URL_REPO_COMMIT_URL="${URL_REPO}/${latest_tag}/bin/fin"
-	echo "${URL_REPO_COMMIT_URL}"
+	# Return the fin raw URL associated with that tag
+	echo "${URL_REPO}/${latest_tag}/bin/fin"
 }
 
 # Return the url for fin. If person has set DOCKSAL_USE_RC then we return that otherwise return masters URL
@@ -4326,7 +4325,6 @@ check_for_updates ()
 		return;
 	fi
 
-	echo 'One second! Checking for updates...'
 	local new_fin; local new_version
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$CONFIG_LAST_CHECK"
