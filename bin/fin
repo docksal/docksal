@@ -4272,8 +4272,8 @@ update ()
 	fi
 }
 
-# Return latest tag's commit url
-get_latest_release ()
+# Return latest fin download url for the latest tag
+get_latest_fin_url ()
 {
 	# Get the latest release tag
 	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases/latest"
@@ -4287,7 +4287,7 @@ get_latest_release ()
 # which will return the latest stable version.
 get_fin_url ()
 {
-	wants_rc_version && echo $(get_latest_release) || echo "${URL_FIN}"
+	wants_rc_version && echo $(get_latest_fin_url) || echo "${URL_FIN}"
 }
 
 check_for_updates ()
