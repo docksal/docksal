@@ -208,6 +208,7 @@ PATH="$CONFIG_BIN_DIR:$PATH"
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 
 #---------------------------- URL references --------------------------------
+GITHUB_API="https://api.github.com"
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
@@ -880,6 +881,11 @@ is_winpty_version ()
 	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") -le $(ver_to_int "$version") ]]
 }
 
+wants_rc_version ()
+{
+	[[ -n "${DOCKSAL_USE_RC}" ]]
+}
+
 check_vbox_version ()
 {
 	# Provide ability to skip checking for vbox version
@@ -1288,10 +1294,10 @@ show_help_list_commands_in_help ()
 	else
 		addons_path="$HOME/$DOCKSAL_COMMANDS_PATH"
 	fi
-	
+
 	local executable="-executable"
 	[[ is_mac ]] && executable="-perm +100"
-	
+
 	local addons_list=$(find "$addons_path" -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
 	if [[ "$addons_list" != "" ]]; then
 		local scope
@@ -4161,8 +4167,10 @@ update ()
 	if (${FULL_UPDATE}); then
 		testing_warn
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
+
+		local fin_url=$(get_fin_url)
 		local new_fin
-		new_fin=$(curl -kfsSL "$URL_FIN?r=$RANDOM")
+		new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
 		if_failed_error "fin download failed."
 
 		# Check if fin update is required and whether it is a major version
@@ -4264,6 +4272,24 @@ update ()
 	fi
 }
 
+# Return latest fin download url for the latest tag
+get_latest_fin_url ()
+{
+	# Get the latest release tag
+	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases/latest"
+	local latest_tag=$(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | tr -d '[:space:]')
+
+	# Return the fin raw URL associated with that tag
+	echo "${URL_REPO}/${latest_tag}/bin/fin"
+}
+
+# Return the url for fin. If person has set DOCKSAL_USE_RC then we return that otherwise return masters URL
+# which will return the latest stable version.
+get_fin_url ()
+{
+	wants_rc_version && echo $(get_latest_fin_url) || echo "${URL_FIN}"
+}
+
 check_for_updates ()
 {
 	# Never trigger in scripts
@@ -4287,18 +4313,27 @@ check_for_updates ()
 		echo "$timestamp" > "$CONFIG_LAST_PING"
 	fi
 
-	# Check once bi-weekly
-	next_check=$(( $last_check + ($one_week * 2) ))
+	if wants_rc_version; then
+		# Check once a day if DOCKSAL_USE_RC is set
+		next_check=$(( $last_check + $one_day ))
+	else
+		# Check bi-weekly otherwise
+		next_check=$(( $last_check + ($one_week * 2) ))
+	fi
+
 	if [ ${timestamp} -le ${next_check} ]; then
 		return;
 	fi
 
-	echo 'One second! Checking for updates...'
 	local new_fin; local new_version
 	# Always write current timestamp to last check file
 	echo "$timestamp" > "$CONFIG_LAST_CHECK"
+
+	# Get the version of fin that should be used.
+	local fin_url=$(get_fin_url)
+
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
-	new_fin=$(curl -kfsL --connect-timeout 1 --max-time 3 "$URL_FIN?r=$RANDOM")
+	new_fin=$(curl -kfsL --connect-timeout 1 --max-time 3 "${fin_url}?r=${RANDOM}")
 	new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
 	if [[ $(ver_to_int "$new_version") > $(ver_to_int ${FIN_VERSION}) ]]; then
 		UPDATE_AVAILABLE=1
@@ -4972,7 +5007,7 @@ ngrok_share ()
 	if [[ -n "$username" && -n "$password" ]]; then
 		ARGS="$ARGS -auth=\"${username}:${password}\" "
 	fi
-	
+
 	if [[ -n "$username" ]] || [[ -n "$password" ]] || [[ -n "$hostname" ]] || [[ -n "$subdomain" ]]; then
 		if [[ -z "$auth" ]]; then
 			echo-yellow "You must specify a username, password, and Ngrok authentication token to use the custom HTTP authentication."
@@ -4996,7 +5031,7 @@ ngrok_share ()
 	if [[ -f "$local_ngrok_conf" ]]; then
     		CONF_ARGS="$CONF_ARGS -config /var/www/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
   	fi
-	
+
   	if [[ -f "$ngrok_conf" ]] || [[ -f "$local_ngrok_conf" ]]; then
 	  	ARGS="ngrok start ${CONF_ARGS} -all"
 		# Overwrite settings with a configuration if its available
@@ -5432,11 +5467,11 @@ config_generate ()
 	rm -f ".docksal/docksal.yml" >/dev/null
 	# Create .docksal directory if it does not exist
 	mkdir -p ".docksal"
-	
+
 	# Create docksal.env if it does not exist
 	touch ".docksal/docksal.env" && \
 	echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
-	
+
 	# Get docroot option value or use default
 	local DOCROOT="${docroot:-docroot}"
 	# Add DOCROOT to docksal.env file
@@ -6387,8 +6422,9 @@ case "$1" in
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
 		elif [[ "$1" == "--self" ]]; then
-			echo "Downloading $URL_FIN"
-			curl -kfsSL "$URL_FIN?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
+			fin_url=$(get_fin_url)
+			echo "Downloading ${fin_url}"
+			curl -kfsSL "${fin_url}?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
 			[[ "$2" == "--diff" ]] && diff "$FIN_PATH" "$FIN_PATH_UPDATED"
 			sudo cp "$FIN_PATH_UPDATED" "$FIN_PATH"
 			[ $? -eq 0 ] && echo "Done"
