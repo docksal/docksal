@@ -286,7 +286,7 @@ The Docker image to use for SSH Agent. This contains the keys that are shared am
 
 ### IMAGE_VHOST_PROXY 
 
-`Default: docksal/vhost-proxy:1.2` 
+`Default: docksal/vhost-proxy:1.3` 
 
 Docker image to use as the VHOST Proxy. This forwards all requests to the appropriate container based upon the hostname that is being requested.
 
