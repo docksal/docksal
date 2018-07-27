@@ -27,7 +27,7 @@ before_script:
 
 script:
   # Function runs tests by file name $1 in dir specified in $2
-  - run_tests() { [[ "$2" != "" ]] && cd "$2"; bats -i "$TRAVIS_BUILD_DIR/tests/$1"; }
+  - run_tests() { cd "${2:-$TRAVIS_BUILD_DIR}"; [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" && "$1" != "quicktest.bats" ]] && return; bats -i "$TRAVIS_BUILD_DIR/tests/$1"; }
   - run_tests system.bats
   - run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"
   - run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8"
