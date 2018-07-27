@@ -4418,21 +4418,22 @@ _exec ()
 		show_help_exec && exit
 	check_project_environment
 	check_winpty_found
-	eval $(parse_params "$@")
+	# NOTE: do NOT use parse_params here, it is not sophisticated enough to parse all possible
+	# escapes, quotes and such that can be fed to _exec
 
 	# Allow disabling TTY mode.
 	# Useful for non-interactive commands when output is saved into a variable for further comparison.
 	# In a TTY mode the output may contain unexpected control symbols/etc.
-	[[ $T == "T" ]] &&
-		local no_tty=true &&
+	if [[ "$1" == "-T" ]]; then
+		local no_tty=true
 		shift
+	fi
 
-	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
-	# CONTAINER_NAME can be used to override where to run. Used in _bash()
-
-	[[ -n "$in" ]] &&
-		CONTAINER_NAME=${in} &&
+	# Allow overriding container, where to run
+	if [[ "$1" =~ "--in" ]]; then
+		CONTAINER_NAME=$(echo "$1" | cut -d "=" -f 2)
 		shift
+	fi
 
 	CONTAINER_NAME=${CONTAINER_NAME:-cli}
 	container_id=$(get_container_id "$CONTAINER_NAME")
