@@ -539,23 +539,25 @@ parse_params ()
 	local ARGO=() # options (--params)
 	echo "local ARGV=(); local ARGN=(); local ARGO=();"
 	while [[ "$1" != "" ]]; do
-		# Escape asterisk to prevent bash asterisk expansion
+		# Escape asterisk to prevent bash asterisk expansion, and quotes to prevent string breakage
 		_escaped=${1/\*/\'\"*\"\'}
+		_escaped=${1//\'/\\\'}
+		_escaped=${1//\"/\\\"}
 		# If equals delimited named parameter
 		if [[ "$1" =~ ^..*=..* ]]; then
 			# Add to named parameters array
-			echo "ARGN+=('$_escaped');"
+			echo "ARGN+=(\"$_escaped\");"
 			# key is part before first =
 			local _key=$(echo "$1" | cut -d = -f 1)
+			if [[ "$_key" == "" || "$_key" =~ " " ]]; then
+				shift
+				continue
+			fi
 			# val is everything after key and = (protect from param==value error)
 			local _val="${1/$_key=}"
 			# remove dashes from key name
 			_key=${_key//\-}
 			# skip when key is empty
-			if [[ "$_key" == "" ]]; then
-				shift
-				continue
-			fi
 			# search for existing parameter name
 			if (echo "$existing_named" | grep "\b$_key\b" >/dev/null); then
 				# if name already exists then it's a multi-value named parameter
@@ -564,7 +566,7 @@ parse_params ()
 					echo "$_key=(\"\$$_key\");"
 				fi
 				# append new value
-				echo "$_key+=('$_val');"
+				echo "$_key+=(\"$_val\");"
 			else
 				# single-value named parameter
 				echo "local $_key=\"$_val\";"
@@ -574,8 +576,8 @@ parse_params ()
 		elif [[ "$1" =~ ^\-. ]]; then
 			# remove dashes
 			local _key=${1//\-}
-			# skip when key is empty
-			if [[ "$_key" == "" ]]; then
+			# skip when key is empty or contains space
+			if [[ "$_key" == "" || "$_key" =~ " " ]]; then
 				shift
 				continue
 			fi
@@ -586,7 +588,7 @@ parse_params ()
 		else
 			# Escape asterisk to prevent bash asterisk expansion
 			_escaped=${1/\*/\'\"*\"\'}
-			echo "ARGV+=('$_escaped');"
+			echo "ARGV+=(\"$_escaped\");"
 		fi
 		shift
 	done
