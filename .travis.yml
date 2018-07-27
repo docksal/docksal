@@ -24,39 +24,23 @@ before_script:
   - mkdir ../test-config
   - mkdir ../test-duplicates
   - mkdir ../test-init
+  # Function runs tests by file name $1 in dir specified in $2
+  - run_tests() { cd "${2:-$TRAVIS_BUILD_DIR}"; [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" && "$1" != "quicktest.bats" ]] && return; [[ "$1" == "quicktest.bats" ]] && I="-i"; bats ${I} "$TRAVIS_BUILD_DIR/tests/$1"; }
+  # Trigger builds in boilerplate project repos
+  - build_trigger() { [[ "$TRAVIS_BRANCH" == "master" ]] && cd "$TRAVIS_BUILD_DIR" && tests/scripts/travisci-build-trigger "$1"; }
+  - echo "Running tests..."
 
 script:
-
-  # Function runs tests by file name $1 in dir specified in $2
-  - |
-    run_tests() {
-      if [[ "$2" != "" ]]; then cd "$2"; fi
-      bats -i "$TRAVIS_BUILD_DIR/tests/$1"
-    }
-
-    run_all_tests() {
-      if ! [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" ]]; then
-        run_tests system.bats
-        run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"
-        run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8"
-        run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates"
-      else
-        run_tests quicktest.bats;
-      fi
-    }
-
-  # Run tests
-  - run_all_tests
+  - run_tests system.bats
+  - run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"
+  - run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8"
+  - run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates"
+  - run_tests quicktest.bats
 
 after_success:
-  - cd "$TRAVIS_BUILD_DIR"
-  # Trigger builds in boilerplate project repos
-  - |
-    if [[ "$TRAVIS_BRANCH" == "master" ]]; then
-      tests/scripts/travisci-build-trigger docksal/drupal7
-      tests/scripts/travisci-build-trigger docksal/drupal7-advanced
-      tests/scripts/travisci-build-trigger docksal/drupal8
-      tests/scripts/travisci-build-trigger docksal/wordpress
-      tests/scripts/travisci-build-trigger docksal/magento
-      tests/scripts/travisci-build-trigger docksal/magento-demo
-    fi
+  - build_trigger docksal/drupal7
+  - build_trigger docksal/drupal7-advanced
+  - build_trigger docksal/drupal8
+  - build_trigger docksal/wordpress
+  - build_trigger docksal/magento
+  - build_trigger docksal/magento-demo

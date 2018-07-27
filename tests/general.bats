@@ -195,7 +195,7 @@ EOF
 	unset output
 
 	# setting target container with --in
-	run fin exec --in=web -T cat /etc/hostname
+	run fin exec -T --in=web cat /etc/hostname
 	[[ "$output" == "web" ]]
 	unset output
 }
@@ -274,7 +274,7 @@ EOF
 	echo "echo 'Running from run-cli'" >> $HOME/.docksal/commands/target_cli
 	chmod +x $HOME/.docksal/commands/target_cli
 	run fin target_cli
-	[[ "$output" == "Running from run-cli" ]]
+	[[ "$output" =~ "Running from run-cli" ]]
 	unset output
 }
 
