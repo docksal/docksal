@@ -526,11 +526,11 @@ sudowin ()
 # Parse equal sign separated params into named local variables
 # Standalone named parameter value will equal its param name (--force creates variable $force=="force")
 # Parses multi-valued named params into an array (--path=path1 --path=path2 creates ${path[*]} array)
-# Parses un-named params into ${ARGV[*]} array
-# Additionally puts all named params into ${ARGN[*]} array
-# Additionally puts all standalone "option" params into ${ARGO[*]} array
+# Puts un-named params as-is into ${ARGV[*]} array
+# Additionally puts all named params as-is into ${ARGN[*]} array
+# Additionally puts all standalone "option" params as-is into ${ARGO[*]} array
 # @author Oleksii Chekulaiev
-# @version v1.4 (Jun-26-2018)
+# @version v1.4.1 (Jul-27-2018)
 parse_params ()
 {
 	local existing_named
@@ -541,8 +541,8 @@ parse_params ()
 	while [[ "$1" != "" ]]; do
 		# Escape asterisk to prevent bash asterisk expansion, and quotes to prevent string breakage
 		_escaped=${1/\*/\'\"*\"\'}
-		_escaped=${1//\'/\\\'}
-		_escaped=${1//\"/\\\"}
+		_escaped=${_escaped//\'/\\\'}
+		_escaped=${_escaped//\"/\\\"}
 		# If equals delimited named parameter
 		if [[ "$1" =~ ^..*=..* ]]; then
 			# Add to named parameters array
