@@ -28,6 +28,7 @@ before_script:
   - run_tests() { cd "${2:-$TRAVIS_BUILD_DIR}"; [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" && "$1" != "quicktest.bats" ]] && return; [[ "$1" == "quicktest.bats" ]] && I="-i"; bats ${I} "$TRAVIS_BUILD_DIR/tests/$1"; }
   # Trigger builds in boilerplate project repos
   - build_trigger() { [[ "$TRAVIS_BRANCH" == "master" ]] && cd "$TRAVIS_BUILD_DIR" && tests/scripts/travisci-build-trigger "$1"; }
+  - echo "Running tests..."
 
 script:
   - run_tests system.bats
