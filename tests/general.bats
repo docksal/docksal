@@ -195,7 +195,7 @@ EOF
 	unset output
 
 	# setting target container with --in
-	run fin exec --in=web -T cat /etc/hostname
+	run fin exec -T --in=web cat /etc/hostname
 	[[ "$output" == "web" ]]
 	unset output
 }
