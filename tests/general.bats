@@ -274,7 +274,7 @@ EOF
 	echo "echo 'Running from run-cli'" >> $HOME/.docksal/commands/target_cli
 	chmod +x $HOME/.docksal/commands/target_cli
 	run fin target_cli
-	[[ "$output" == "Running from run-cli" ]]
+	[[ "$output" =~ "Running from run-cli" ]]
 	unset output
 }
 
