@@ -4439,9 +4439,6 @@ _exec ()
 	container_id=$(get_container_id "$CONTAINER_NAME")
 
 	# ------------------------------------------------ #
-	# 1) cmd
-	local cmd
-
 	local cdir
 	# Only chdir to the same dir in cli container
 	# RUN_NO_CDIR can be used to override this (used in mysql_import)
@@ -4449,21 +4446,16 @@ _exec ()
 		local path=$(get_current_relative_path)
 		if [[ "$path" != "" ]] ; then
 			# We are deeper than project root and thus need to do a cd
-			cdir="cd $path &&"
+			cdir="$path"
 		fi
 	fi
-
-	cmd="$cdir"
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
 	# 2) convert array of parameters into escaped string
-	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
-	if [[ $2 != "" ]]; then
-		cmd="$cmd "$(printf " %q" "$@")
-	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
-	else
-		cmd="$cmd $@"
+	cmd="$1"
+	if [[ -n $2 ]]; then
+		args=$(printf "%q " "${@:2}")
 	fi
 	# ------------------------------------------------ #
 
@@ -4485,11 +4477,10 @@ _exec ()
 	# COLUMNS and LINES have to be passed to workaround a bug in Docker. See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
-		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker exec -e COLUMNS -e LINES -it ${container_user} ${container_id} bash -ilc "$cmd; (exit \$?)"
+		${winpty} docker exec --workdir "$cdir" -e COLUMNS -e LINES -it ${container_user} ${container_id} bash -ilc "${cmd} ${args}" ${@}
 	else
 		# non-interactive
-		docker exec -e COLUMNS -e LINES ${container_user} ${container_id} bash -lc "$cmd"
+		docker exec --workdir "$cdir" -e COLUMNS -e LINES ${container_user} ${container_id} bash -lc "${cmd} ${args}" ${@}
 	fi
 	# ------------------------------------------------ #
 }
@@ -4555,12 +4546,10 @@ run_cli ()
 	# Set default image
 	local RUN_IMAGE="${image:-docksal/cli:2.3-php7.1}"
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
-	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
-	if [[ $2 != "" ]]; then
-		cmd="$cmd "$(printf " %q" "$@")
-	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
-	else
-		cmd="$cmd $@"
+	# Prepare command and args
+	cmd="$1"
+	if [[ -n $2 ]]; then
+		args=$(printf "%q " "${@:2}")
 	fi
 
 	# Assume bash if no command was given
@@ -4615,7 +4604,7 @@ run_cli ()
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
-			${env_str} ${RUN_IMAGE} bash -ilc "$cmd"
+			${env_str} ${RUN_IMAGE} bash -ilc "${cmd} ${args}" ${@}
 	else
 		# non-interactive
 		docker run --rm \
@@ -4635,7 +4624,7 @@ run_cli ()
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
-			${env_str} ${RUN_IMAGE} bash -lc "$cmd"
+			${env_str} ${RUN_IMAGE} bash -lc "${cmd} ${args}" ${@}
 	fi
 }
 
