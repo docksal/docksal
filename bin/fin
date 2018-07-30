@@ -6463,7 +6463,7 @@ case "$1" in
 			else
 				script_to_run="$1"
 			fi
-			_exec "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash -c $script_to_run"
+			_exec "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash -c $script_to_run" "$@"
 		else
 			_exec "$@"
 		fi
