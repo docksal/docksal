@@ -4452,15 +4452,15 @@ _exec ()
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
-	# 2) convert array of parameters into escaped string
-	cmd="$1"
+	# Convert array of parameters into escaped string
+	local cmd="$1"
 	if [[ -n $2 ]]; then
 		args=$(printf "%q " "${@:2}")
 	fi
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
-	# 3) execute
+	# Execute
 	# Allow entering arbitrary containers by name (e.g., system containers like vhost-proxy).
 	if [[ "$container_id" == "" ]]; then
 		${winpty} docker exec -it "$CONTAINER_NAME" sh -i
@@ -4548,7 +4548,7 @@ run_cli ()
 	local RUN_IMAGE="${image:-docksal/cli:2.3-php7.1}"
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
 	# Prepare command and args
-	cmd="$1"
+	local cmd="$1"
 	if [[ -n $2 ]]; then
 		args=$(printf "%q " "${@:2}")
 	fi
