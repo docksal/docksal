@@ -4446,7 +4446,7 @@ _exec ()
 		local path=$(get_current_relative_path)
 		if [[ "$path" != "" ]] ; then
 			# We are deeper than project root and thus need to do a cd
-			cdir="$path"
+			cdir="/var/www/$path"
 		fi
 	fi
 	# ------------------------------------------------ #
