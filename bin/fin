@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.67.0
+FIN_VERSION=1.67.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -885,7 +885,7 @@ is_winpty_version ()
 
 wants_rc_version ()
 {
-	[[ -n "${DOCKSAL_USE_RC}" ]]
+	[[ "${DOCKSAL_USE_RC}" == 1 ]] || [[ "${DOCKSAL_USE_RC}" == "true" ]]
 }
 
 check_vbox_version ()
