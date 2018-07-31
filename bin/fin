@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.65.0
+FIN_VERSION=1.66.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -4553,7 +4553,7 @@ run_cli ()
 	done
 
 	# Set default image
-	local RUN_IMAGE="${image:-docksal/cli:2.3-php7.1}"
+	local RUN_IMAGE="${image:-docksal/cli:2.4-php7.1}"
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then

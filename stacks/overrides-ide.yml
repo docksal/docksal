@@ -7,7 +7,7 @@ version: "2.1"
 
 services:
   cli:
-    image: ${CLI_IMAGE:-docksal/cli:2.3-php7.1}-ide
+    image: ${CLI_IMAGE:-docksal/cli:2.4-php7.1}-ide
     labels:
       - io.docksal.virtual-host=ide.${VIRTUAL_HOST},ide.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=3000
