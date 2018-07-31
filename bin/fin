@@ -6143,11 +6143,11 @@ wsl_mount_drives
 if [[ "$DOCKSAL_HOST" != "" ]]; then
 	export DOCKER_HOST="$DOCKSAL_HOST"
 elif is_docker_native; then
-	# no vm used
-	export DOCKER_HOST=""
-elif is_wsl; then
-	# no vm used
-	export DOCKER_HOST="0.0.0.0:2375"
+	if is_wsl; then
+		export DOCKER_HOST="127.0.0.1:2375"
+	else
+		export DOCKER_HOST=""
+	fi
 else
 	# get active machine and its status
 	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
