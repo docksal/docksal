@@ -885,7 +885,7 @@ is_winpty_version ()
 
 wants_rc_version ()
 {
-	[[ -n "${DOCKSAL_USE_RC}" ]]
+	[[ -n "${DOCKSAL_USE_RC}" ]] && [[ "${DOCKSAL_USE_RC}" == "1" ]]
 }
 
 check_vbox_version ()
