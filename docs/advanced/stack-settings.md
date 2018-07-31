@@ -31,7 +31,7 @@ via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 CLI_IMAGE='docksal/cli:2.4-php7.1'
 ```
 
-Remember to run `fin project start` (`fin p start`) to apply the configuration.
+Run `fin project reset cli` (`fin p reset cli`) to properly reset and update the `cli` service.
 
 Available images:
 

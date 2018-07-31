@@ -479,7 +479,10 @@ The PHP version is defined by the `cli` service. The default image used is `dock
 A service image name consists of two parts: a docker image name and a tag.
 `docksal/cli` is the name of the docker image, while `2.4-php7.1` is the image tag.
 
-To switch PHP versions you have to change the image used for the `cli` service to your desired one.
+To switch PHP versions you have to change the image used for the `cli` service to your desired one.  
+
+Note: if the project stack is already running, then apply the changes with `fin project reset cli`. This will properly
+reset and update the `cli` service.
 
 [How to find out all supported PHP versions?](#docksal-images)
 
