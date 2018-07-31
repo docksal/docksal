@@ -1,14 +1,106 @@
 # Changelog
 
+# 1.10.0 (2018-07-31)
+
+## Getting Release Candidate
+
+Set `DOCKSAL_USE_RC=1` variable, and run `fin update`
+
+## New software versions
+
+- fin 1.67.0
+- System service updates
+  - Switched `vhost-proxy` to [docksal/vhost-proxy:1.3](https://github.com/docksal/service-vhost-proxy/releases/tag/v1.3.0).
+    - Added support for custom certs an more
+- Stack updates
+  - Switched `cli` to [docksal/cli:2.4-php-7.1](https://github.com/docksal/service-cli/releases/tag/v2.4.0).
+    - Cloud9 IDE integration
+    - Platform.sh CLI
+    - Custom startup script support
+    - Cron jobs and more
+
+## New Features
+
+- Support for a wide variety of Linux distributions: Debian, Ubuntu, Mint, Fedora, Centos, Alpine (#629)
+- Ability to use RC release for updates. To use: `fin config set --global DOCKSAL_USE_RC=1` (#719)
+- `fin platform` - run Platform.sh cli in `cli`
+- `fin composer` - run composer in `cli`
+- `fin project erase` command - removes containers and erases project files on the host
+- `fin db truncate` - truncate a database (defaults to the `default`)
+- `fin init` - a default placeholder command when there is no project level `init` command defined
+- `fin config` now accepts the `--env=<environment>` flag, e.g., `fin config set --env=local IDE_ENABLED=1` (#584) 
+- `fin exec` now accept the `--in=<service>`, e.g., `fin exec --in=db mysql -uroot -p` flag (#609)
+- `fin project create` now accepts `--name`, `--choice` and `--yes` options and can be run unattended 
+- `fin share`
+  - Ability to set ngrok options via `fin share` arguments (#601)
+  - Ability to use ngrok configuration file for `fin share` (#611)
+- `exec_target = run-cli` can be used in custom commands and addons to run them in a standalone run-cli session (#715)
+- [Drupal 8 Composer](https://github.com/docksal/boilerplate-drupal8-composer) boilerplate project (#174)
+
+## Changes and improvements
+
+- Switched to simplified, non-persistent network configuration on Linux
+  - Supporting various Linux flavors (Debian, Ubuntu, Mint, Fedora, Centos) is much simpler now
+- Fixed DNS connectivity when external DNS (Google DNS) is not accessible
+- Removed `vm` command when running on Linux
+- Removed `uuidgen` as a dependency (#630) 
+- `fin run-cli` now uses SSH keys from the `ssh-agent` service
+- Fixed custom command output ordering in `fin help`
+- Fixed `fin share` when no parameters are provided
+- Added description for `docker` and `docker-compose` in `fin help`
+- Fixed `fin` not correctly waited for unison during `fin up`
+- Auto-detect upstream DNS when possible (#663)
+- Added custom cert support when starting `vhost-poroxy` service
+- Fixed an issue when `fin config get/set/rm` did not work with an alias (#670)
+- Fixed network setup on Docker for Mac/Win
+- Fixed `fin vhosts` spitting out nginx config lines
+- Added a named `db_data` volume for MySQL/PostreSQL, so its easier to identify them in the `docker volume ls` list
+- Added a named `cli_home` volume for `/home/docker` in `cli`, so its easier to identify them in the `docker volume ls` list
+- Prefixed Blackfire secrets with `SECRET_` to hide the keys in `fin config` output
+- Switched to using bash login sessions for cli (`bash -l`)
+  - `bash -l` sources `~/.profile` inside cli (for both interactive and non-interactive sessions)
+- Using custom `docksal/bats` with an interactive tests mode support for automated tests (#705)
+- Applying `overrides-osxfs.yml` only for bind volumes (#709)
+- Fixed a bug that unison volumes were not deleting host files, which were deleted inside `cli`
+- Improved `parse_params` to be more robust when invalid parameters are fed in (#735)
+- Fixed `DOCKER_HOST` on WSL
+- Increased VirtualBox VM disk size to 1TB
+  - This should virtually eliminate issues with VM disk running out of space, since the host space will run out first (most likely).
+  - The VM disk space is not allocated all at once, so we can safely allocate an insanely large number (e.g. 1TB)
+- Increased verbosity of `fin sysinfo`
+- `fin diagnose` now includes information from `fin sysinfo` and should be used to provide diagnostic information when submitting issues on Github (#627)
+- Fixed VirtualBox does not install on Windows if username has spaces (#636)
+- Fixed Windows `CRLF` line endings detection (#639)
+- Removed `git` as a dependency in `fin project create` (#635)
+- Fixed `fin run-cli` run in `/root` on PWD (#661)
+- Fixed `fin exec` behaving differently and failing when passing an existing script as an argument (#720)
+- Updated `fin phpcs` sample command to include `DrupalPractice` standard (#724)
+- Escaped spaces for params passed to `fin run-cli` to make it behave the same way as `fin exec` (#738)
+- Fixed project categorization for Hugo in `fin project create`
+- Updated and improved automated tests across different projects (cli, web, fin, etc.)
+
+## Documentation
+
+- New: Setting up Cron jobs in cli (#671)
+- New: Using Platform.sh CLI tool
+- New: Enabling and using Cloud9 integration (#690)
+- Updated: installation docs (#658)
+- Updated: README.md in docksal/docksal, removed outdated information
+- Updated: Windows troubleshooting: VirtualBox installation fails on Windows (Hyper-V Enabled) (#641)
+- Updated: Extending stock Docksal images (#655)
+- Updated: Xdebug docs (#734)
+- Updated: Switching PHP versions (#744) 
+
+
 # 1.9.1 (2018-06-07)
 
-# Changes and improvements
+## Changes and improvements
 
 - Fixed an error with setting DB privileges during `fin db create`
 - Disabled network cleanup in `fin cleanup` (triggered during updates) (#582)
   - Check [this fix](https://github.com/docksal/docksal/issues/582#issuecomment-395537109) if you updated to Docksal 1.9.0 and had your stopped project(s) broken
 
-# Documentation
+## Documentation
 
 - Updated 1.9.0 release notes to mention a breaking change in docker-compose 1.21.1
 - Fixed typos here and there
@@ -16,17 +108,17 @@
 
 # 1.9.0 (2018-06-05)
 
-# New software versions
+## New software versions
 
 - fin 1.60.0
 - Stack updates
-  * Switched `cli` to [docksal/cli:2.2-php-7.1](https://github.com/docksal/service-cli/releases/tag/v2.2.0).
+  - Switched `cli` to [docksal/cli:2.2-php-7.1](https://github.com/docksal/service-cli/releases/tag/v2.2.0).
 - Docker 18.03.1
 - Docker Compose 1.21.1
-    * **[BREAKING]** Projects with dashes in names need `fin reset` ([Read more](https://blog.docksal.io/breaking-change-in-docker-compose-1-21-1-c00fda7e1b75))
+  - **[BREAKING]** Projects with dashes in names need `fin reset` ([Read more](https://blog.docksal.io/breaking-change-in-docker-compose-1-21-1-c00fda7e1b75))
 - VirtualBox 5.2.2
 
-# New Features
+## New Features
 
 - Alpine Linux support.
 - [Play-with-Docker](https://labs.play-with-docker.com/) support
@@ -43,7 +135,7 @@
   - [Symfony WebApp](https://github.com/docksal/example-symfony-webapp)
   - [Backdrop CMS](https://github.com/docksal/example-backdrop)
 
-# Changes and improvements
+## Changes and improvements
 
 - Improved `fin share` to allow for custom ngrok configuration (see [Additional ngrok configuration](https://docs.docksal.io/en/master/tools/ngrok/#additional-ngrok-configuration)).
 - Extended `fin config generate` to allow for `DOCKSAL_STACK` and `DOCROOT` to be set at runtime.
@@ -76,7 +168,7 @@
 - Fixed (workaround) a Docker bug with long commands overlapping on single terminal line (`fin exec` and `fin run-cli`).
 - Add a warning when running `fin` as root.
 
-# Documentation
+## Documentation
 
 - New: [Addons](https://docs.docksal.io/en/v1.9.0/fin/addons) - extending projects with extra commands and integrations.
 - New: [phpMyAdmin](https://docs.docksal.io/en/v1.9.0/tools/phpmyadmin) integration docs.
