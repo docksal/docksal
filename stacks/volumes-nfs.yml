@@ -6,6 +6,7 @@
 version: "2.1"
 
 volumes:
+  cli_home:  # /home/docker volume in cli
   project_root:  # Project root volume (NFS)
     driver: local
     driver_opts:

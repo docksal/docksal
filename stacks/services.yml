@@ -88,7 +88,7 @@ services:
     volumes:
       - project_root:/var/www:rw,nocopy  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
-      - /home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
+      - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
     environment:
       - HOST_UID
       - HOST_GID
