@@ -4454,7 +4454,7 @@ _exec ()
 	# ------------------------------------------------ #
 	# Convert array of parameters into escaped string
 	local cmd="$1"
-	if [[ -n $2 ]]; then
+	if [[ $# > 1 ]]; then
 		args=$(printf "%q " "${@:2}")
 	fi
 	# ------------------------------------------------ #
@@ -4549,7 +4549,7 @@ run_cli ()
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
 	# Prepare command and args
 	local cmd="$1"
-	if [[ -n $2 ]]; then
+	if [[ $# > 1 ]]; then
 		args=$(printf "%q " "${@:2}")
 	fi
 
