@@ -4,7 +4,7 @@
 
 ## New software versions
 
-- fin 1.67.1
+- fin 1.67.2
 - System service updates
   - Switched `vhost-proxy` to [docksal/vhost-proxy:1.3](https://github.com/docksal/service-vhost-proxy/releases/tag/v1.3.0).
     - Added support for custom certs an more
@@ -60,9 +60,6 @@
 - Fixed a bug that unison volumes were not deleting host files, which were deleted inside `cli`
 - Improved `parse_params` to be more robust when invalid parameters are fed in (#735)
 - Fixed `DOCKER_HOST` on WSL
-- Increased VirtualBox VM disk size to 1TB
-  - This should virtually eliminate issues with VM disk running out of space, since the host space will run out first (most likely).
-  - The VM disk space is not allocated all at once, so we can safely allocate an insanely large number (e.g. 1TB)
 - Increased verbosity of `fin sysinfo`
 - `fin diagnose` now includes information from `fin sysinfo` and should be used to provide diagnostic information when submitting issues on Github (#627)
 - Fixed VirtualBox does not install on Windows if username has spaces (#636)
