@@ -16,6 +16,7 @@ teardown() {
 
 @test "fin db list" {
 	[[ $SKIP == 1 ]] && skip
+	fin project start
 
 	run fin db list
 	echo "$output" | grep "default"
