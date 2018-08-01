@@ -14,9 +14,13 @@ teardown() {
 # To work on a specific test:
 # run `export SKIP=1` locally, then comment skip in the test you want to debug
 
+@test "Prepare project after general.bats" {
+	fin config rm --env=local VIRTUAL_HOST
+	fin project start
+}
+
 @test "fin db list" {
 	[[ $SKIP == 1 ]] && skip
-	fin project start
 
 	run fin db list
 	echo "$output" | grep "default"
@@ -46,8 +50,7 @@ teardown() {
 	dbname="nondefault"
 	fin db drop "$dbname" || true  # start clean
 	run fin db drop "$dbname"
-	echo "$output" | grep "Can't drop database '${dbname}'; database doesn't exist"
-	echo "$output" | grep "Dropping '${dbname}' database failed"
+	echo "$output" | grep "Database '${dbname}' dropped"
 	unset output
 
 	run fin db create "$dbname"
@@ -88,11 +91,6 @@ teardown() {
 	echo "$output" | grep "Truncating"
 	echo "$output" | grep "Importing"
 	unset output
-
-	# Check that the site is available
-	run curl -sL http://drupal8.docksal
-	echo "$output" | grep "My Drupal 8 Site"
-	unset output
 }
 
 @test "fin db import with user and password" {
@@ -102,11 +100,6 @@ teardown() {
 	run fin db import dump.sql --db-user="user" --db-password="user" --force
 	echo "$output" | grep "Truncating"
 	echo "$output" | grep "Importing"
-	unset output
-
-	# Check that the site is available
-	run curl -sL http://drupal8.docksal
-	echo "$output" | grep "My Drupal 8 Site"
 	unset output
 }
 
@@ -125,9 +118,11 @@ teardown() {
 	#[[ $SKIP == 1 ]] && skip
 
 	# Import mysql dump
-	run cat dump.sql | fin db import
+	# TODO: remove stderr redirection here after cli image is fixed to not throw error "mesg: ttyname failed: Inappropriate ioctl for device"
+	run cat dump.sql | fin db import 2>/dev/null
 	echo "$output" | grep "Truncating"
 	echo "$output" | grep "Importing from stdin"
+	echo "$output" | grep "Done"
 	unset output
 
 	# Check that the site is available
