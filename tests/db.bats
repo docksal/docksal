@@ -17,6 +17,7 @@ teardown() {
 @test "Prepare project after general.bats" {
 	fin config rm --env=local VIRTUAL_HOST
 	fin project start
+	sleep 5
 }
 
 @test "fin db list" {
@@ -120,7 +121,7 @@ teardown() {
 	# Import mysql dump
 	# TODO: remove stderr redirection here after cli image is fixed to not throw error "mesg: ttyname failed: Inappropriate ioctl for device"
 	run cat dump.sql | fin db import 2>/dev/null
-	unset output
+	[[ ${status} == 0 ]]
 }
 
 @test "fin db import into nonexisting db" {
