@@ -22,7 +22,7 @@ if [[ "$1" == "" ]]; then
 fi
 
 fin run phpcs \
-	--standard=Drupal -n \
+	--standard="Drupal,DrupalPractice" -n \
 	--extensions="php,module,inc,install,test,profile,theme" \
 	--ignore="*.features.*,*.pages*.inc" \
 	"$1"

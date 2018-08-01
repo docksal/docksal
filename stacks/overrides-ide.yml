@@ -7,8 +7,8 @@ version: "2.1"
 
 services:
   cli:
-    # TODO: switch the images to docksal/cli:2.3-php7.1 once released
-    image: ${CLI_IMAGE:-docksal/cli:edge-php7.1}-ide
+    image: ${CLI_IMAGE:-docksal/cli:2.4-php7.1}-ide
     labels:
       - io.docksal.virtual-host=ide.${VIRTUAL_HOST},ide.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=3000
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}

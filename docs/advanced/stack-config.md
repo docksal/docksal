@@ -49,7 +49,7 @@ modify settings that are needed for anyone that uses your project.
 If you don't have this file in your project folder, fin will load the [default stack](#default-configurations), 
 this way providing a zero-configuration setup.
 
-For more details on its role check [loading order](#loading-order).
+For more details on its role, check [loading order](#loading-order).
 
 <a name="docksal-env"></a>
 ### docksal.env
@@ -57,14 +57,14 @@ For more details on its role check [loading order](#loading-order).
 `docksal.env` is an [Environment file](https://docs.docker.com/compose/env-file/).
 
 It is used to override of some of the default environment variables, without the need for
-a full `docksal.yml` file (for example, to override `MYSQL_ROOT_PASSWORD`) or to provide additional environment
-variables for your automation scripts (see [custom commands](../fin/custom-commands.md).)
+a full `docksal.yml` file (e.g., to override `MYSQL_ROOT_PASSWORD`) or to provide additional environment
+variables for your automation scripts (see [custom commands](../fin/custom-commands.md)).
 
 <a name="docksal-local"></a>
 ### docksal-local.yml, docksal-local.env
 
 `docksal-local.yml` and `docksal-local.env` are used for additional customizations that happen after the main files 
-are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom port](../advanced/networking.md#expose-port) 
+are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom ports](../advanced/networking.md#expose-port) 
 or switching PHP versions.
 
 These files are intended for local overrides. They should be added to `.gitignore` and never committed into a project 
@@ -75,7 +75,7 @@ it and adjust as necessary.
 ## Default stacks
 
 Docksal ships with a set of default configurations (stacks), which are `yml` files stored in `$HOME/.docksal/stacks/`.
-These files are a good reference, when you begin creating a custom project configuration.
+These files are a good reference when you begin creating a custom project configuration.
 
 | File name                  | Description |
 |----------------------------|:------------|
@@ -161,7 +161,7 @@ There are some values that are not required for docker-compose to work but are r
 
 #### web
 
-In the `web` service there are settings defined in the `volumes`, `labels`, `environment` and `depends_on` sections. 
+In the `web` service, there are settings defined in the `volumes`, `labels`, `environment`, and `depends_on` sections. 
 You should not remove or change these values.
 
 ```yaml
@@ -181,7 +181,7 @@ You should not remove or change these values.
 
 #### cli
 
-In the `cli` service there is the `volumes` section. You should not remove or change these volumes.
+In the `cli` service, there is the `volumes` section. You should not remove or change these volumes.
 
 ```yaml
   cli:
@@ -230,7 +230,7 @@ networks: {}
 services:
   cli:
     hostname: cli
-    image: docksal/cli:2.2-php7.1
+    image: docksal/cli:2.4-php7.1
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
@@ -272,11 +272,11 @@ volumes:
 <a name="configuration-variables"></a>
 ## Configuration Variables
 
-All variables changed below will require at the minimum a project restart `fin restart` so that they can take effect. Additional steps may be required.
+All variables changed below will require, at minimum, a project restart `fin restart` so that they can take effect. Additional steps may be required.
 
 ### DOCKSAL_NFS_PATH
 
-The location of the folder on the host machine to mount to VirtualBox. [More info](file-sharing.md)
+The location of the folder on the host machine to mount to VirtualBox. See [file sharing](file-sharing.md) for more information.
 
 ### IMAGE_SSH_AGENT
 
@@ -286,7 +286,7 @@ The Docker image to use for SSH Agent. This contains the keys that are shared am
 
 ### IMAGE_VHOST_PROXY 
 
-`Default: docksal/vhost-proxy:1.2` 
+`Default: docksal/vhost-proxy:1.3` 
 
 Docker image to use as the VHOST Proxy. This forwards all requests to the appropriate container based upon the hostname that is being requested.
 
@@ -318,8 +318,8 @@ Allow for collecting of statistical usage of docksal. When set to `1` this will 
 
 Designates whether to use Docker through VirtualBox or Native Docker. On Linux this is always set to `1`. Otherwise it is set to `0`.
 
-For VirtualBox set to `0`
-For Docker Native set to `1`
+For VirtualBox set to `0`.
+For Docker Native set to `1`.
 
 ### DOCKSAL_DNS_UPSTREAM
 
@@ -351,7 +351,7 @@ This is an optional variable. Set to `yes` to allow the container to be started 
 
 ### MYSQL_RANDOM_ROOT_PASSWORD
 
-This is an optional variable. Set to yes to generate a random initial password for the root user (using pwgen). The generated root password will be printed to stdout (GENERATED ROOT PASSWORD: .....).
+This is an optional variable. Set to `yes` to generate a random initial password for the root user (using pwgen). The generated root password will be printed to stdout (GENERATED ROOT PASSWORD: .....).
 
 ### MYSQL_ONETIME_PASSWORD
 
@@ -474,18 +474,21 @@ Contains path to the project root directory.
 <a name="php-version"></a>
 ## Switching PHP versions
 
-The PHP version is defined by the `cli` service. The default image used is `docksal/cli:2.2-php7.1` which uses PHP 7.1.
+The PHP version is defined by the `cli` service. The default image used is `docksal/cli:2.4-php7.1`, which uses PHP 7.1.
 
 A service image name consists of two parts: a docker image name and a tag.
-`docksal/cli` is the name of the docker image, while `2.2-php7.1` is the image tag.
+`docksal/cli` is the name of the docker image, while `2.4-php7.1` is the image tag.
 
-To switch PHP versions you have to change the image used for the `cli` service to your desired one.
+To switch PHP versions you have to change the image used for the `cli` service to your desired one.  
+
+Note: if the project stack is already running, then apply the changes with `fin project reset cli`. This will properly
+reset and update the `cli` service.
 
 [How to find out all supported PHP versions?](#docksal-images)
 
 ### Extend or modify config with `docksal-local.yml` or `docksal.yml`
 
-When using zero-configuration (or any other) the service image can be overridden in `docksal-local.yml`.
+When using zero-configuration (or any other), the service image can be overridden in `docksal-local.yml`.
 
 The same technique is **applicable to `docksal.yml` if `DOCKSAL_STACK` is set in `docksal.env`**. In this case,
 `docksal.yml` will extend/modify the stack configuration defined in `DOCKSAL_STACK` instead of overriding it.
@@ -499,7 +502,7 @@ version: "2.1"
 
 services:
   cli:
-    image: docksal/cli:2.2-php7.2
+    image: docksal/cli:2.4-php7.2
 ```
 
 `docksal-local.yml` will append or modify the configuration that was loaded before it, regardless of whether it was 
@@ -519,13 +522,13 @@ An example section of a `docksal.yml` file that describes the `cli` service and 
 services:
   cli:
     hostname: cli
-    image: docksal/cli:2.2-php7.2
+    image: docksal/cli:2.4-php7.2
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
 ```
 
-Note, that when not using a predefined stack, you must fully describe all other services (`web`, `db`, etc.) as well.
+Note: when not using a predefined stack, you must fully describe all other services (`web`, `db`, etc.) as well.
 
 <a name="mysql-version"></a>
 ## Switching MySQL versions

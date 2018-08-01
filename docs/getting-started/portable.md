@@ -89,7 +89,7 @@ fin image load docksal-default-images.tar
 ### Docker for Mac/Windows ("native" mode)
 
 !!! warning "Experimental"
-    Consider reviewing the [docs](./env-setup-native.md) on switching between "native" applications and VirtualBox.
+    Consider reviewing the [docs](docker-modes.md) on switching between "native" applications and VirtualBox.
 
 Install the corresponding Docker app for your OS from the provided portable distribution. 
 Start the app and wait until Docker says it's running.
