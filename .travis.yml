@@ -34,7 +34,7 @@ script:
   - run_tests system.bats
   - run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"
   - run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8"
-  - run_tests db.bats
+  - run_tests db.bats "$TRAVIS_BUILD_DIR/../drupal8"
   - run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates"
   - run_tests quicktest.bats
 
