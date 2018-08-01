@@ -545,7 +545,7 @@ parse_params ()
 		# If equals delimited named parameter
 		if [[ "$1" =~ ^..*=..* ]]; then
 			# Add to named parameters array
-			echo "ARGN+=(\"$_escaped\");"
+			echo "ARGN+=('$_escaped');"
 			# key is part before first =
 			local _key=$(echo "$1" | cut -d = -f 1)
 			if [[ "$_key" == "" || "$_key" =~ " " ]]; then
@@ -565,10 +565,10 @@ parse_params ()
 					echo "$_key=(\"\$$_key\");"
 				fi
 				# append new value
-				echo "$_key+=(\"$_val\");"
+				echo "$_key+=('$_val');"
 			else
 				# single-value named parameter
-				echo "local $_key=\"$_val\";"
+				echo "local $_key='$_val';"
 				existing_named=" $_key"
 			fi
 		# If standalone named parameter
@@ -587,7 +587,7 @@ parse_params ()
 		else
 			# Escape asterisk to prevent bash asterisk expansion
 			_escaped=${1/\*/\'\"*\"\'}
-			echo "ARGV+=(\"$_escaped\");"
+			echo "ARGV+=('$_escaped');"
 		fi
 		shift
 	done
