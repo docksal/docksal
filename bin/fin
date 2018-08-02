@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.69.0
+FIN_VERSION=1.69.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -543,12 +543,15 @@ parse_params ()
 		_escaped=${_escaped//\'/\\\'}
 		_escaped=${_escaped//\"/\\\"}
 		# If equals delimited named parameter
-		if [[ "$1" =~ ^..*=..* ]]; then
+		nonspace="[^[:space:]]"
+		if [[ "$1" =~ ^${nonspace}${nonspace}*=..* ]]; then
 			# Add to named parameters array
 			echo "ARGN+=('$_escaped');"
 			# key is part before first =
 			local _key=$(echo "$1" | cut -d = -f 1)
+			# Just add as non-named when key is empty or contains space
 			if [[ "$_key" == "" || "$_key" =~ " " ]]; then
+				echo "ARGV+=('$_escaped');"
 				shift
 				continue
 			fi
@@ -572,11 +575,12 @@ parse_params ()
 				existing_named=" $_key"
 			fi
 		# If standalone named parameter
-		elif [[ "$1" =~ ^\-. ]]; then
+		elif [[ "$1" =~ ^\-${nonspace}+ ]]; then
 			# remove dashes
 			local _key=${1//\-}
-			# skip when key is empty or contains space
+			# Just add as non-named when key is empty or contains space
 			if [[ "$_key" == "" || "$_key" =~ " " ]]; then
+				echo "ARGV+=('$_escaped');"
 				shift
 				continue
 			fi

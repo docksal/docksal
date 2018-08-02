@@ -43,6 +43,14 @@ TERM=dumb
 	unset output
 }
 
+@test "fin db cli with query" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin db cli 'show databases like "mysql";'
+	[[ "$output" == *"mysql"* ]]
+	unset output
+}
+
 @test "fin db drop and recreate default" {
 	[[ $SKIP == 1 ]] && skip
 
