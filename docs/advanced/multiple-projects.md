@@ -17,22 +17,20 @@ VIRTUAL_HOST_ALIASES: *.myproject.docksal
 ```
 
 By default, the project domain value (`myproject.docksal`) is derived from the project folder name sans spaces and dashes.  
-Also, wildcard sub-domain aliases (`*.myproject.docksal`) are available out-of-the box.
+Also, wildcard sub-domain aliases (`*.myproject.docksal`) are added automatically.
 
 
 ## Overriding the default domain name
 
-The default domain name can be overridden via either `docksal-local.env` or `docksal.env` file in the project:
-
-`docksal.env:`
+The default project domain can be set/overridden as follows:
 
 ```bash
-VIRTUAL_HOST=custom-domain.docksal
+fin config set VIRTUAL_HOST=custom-domain.docksal
 ```
 
-Check configuration change:
+Check configuration changes:
 
-````
+````bash
 $ fin config | grep '^VIRTUAL_HOST'
 VIRTUAL_HOST: custom-domain.docksal
 VIRTUAL_HOST_ALIASES: *.custom-domain.docksal
@@ -40,6 +38,9 @@ VIRTUAL_HOST_ALIASES: *.custom-domain.docksal
 
 Apply configuration changes with `fin project start` (`fin p start` for short).
 
+Note: Use a single domain in `VIRTUAL_HOST`. Wildcards are added automatically. For multiple domains, read on.
+
+Note: Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
 
 ## Using arbitrary custom domains
 
@@ -53,14 +54,16 @@ services:
   web:
     labels:
       ...
-      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},example.com,mydomain.com,*.mydomain.com
+      - io.docksal.virtual-host=example.com,mydomain.com,*.mydomain.com
       ...
 ```
 
-`io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}` is the default value.
+Note: `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},*.${VIRTUAL_HOST}.*` is the default value.
 
 Apply configuration changes with `fin project start` (`fin p start` for short).
 
-Please note, that non `.docksal` domains (e.g., `example.com`) will not be resolved automatically.
+Note: non `.docksal` domains (e.g., `example.com`) will not be resolved automatically.
 You can use [fin hosts](advanced/fin.md#fin-help-hosts) command to add and manage additional domain names via the system's `hosts` file. 
 See `fin help hosts`.
+
+Note: Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
