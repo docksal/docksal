@@ -21,7 +21,7 @@ teardown ()
 TERM=dumb
 
 # This step is required
-@test "Start db-test project" {
+@test "Start test-db project" {
 	[[ $SKIP == 1 ]] && skip
 
 	mkdir -p .docksal
@@ -29,7 +29,7 @@ TERM=dumb
 	sleep 5
 
 	run fin projects
-	[[ "$output" == *"db-test"* ]]
+	[[ "$output" == *"test-db"* ]]
 	unset output
 }
 
