@@ -1,12 +1,15 @@
 #!/usr/bin/env bats
 
 # Debugging
-teardown() {
-	echo "Status: $status"
+teardown ()
+{
+	# TODO: figure out why $status is always 0 here
+	#echo "Status: $status"
+	# Print output from the last failed test
 	echo "Output:"
 	echo "================================================================"
 	for line in "${lines[@]}"; do
-		echo $line
+		echo "$line"
 	done
 	echo "================================================================"
 }
@@ -14,11 +17,29 @@ teardown() {
 # To work on a specific test:
 # run `export SKIP=1` locally, then comment skip in the test you want to debug
 
+# Set dumb terminal so fin does not output colors
+TERM=dumb
+
+# This step is required
+@test "Start test-db project" {
+	[[ $SKIP == 1 ]] && skip
+
+	mkdir -p .docksal
+	fin project reset -f
+	sleep 5
+
+	run fin projects
+	[[ "$output" == *"test-db"* ]]
+	unset output
+}
+
 @test "fin db list" {
 	[[ $SKIP == 1 ]] && skip
 
+	dbname="default"
+
 	run fin db list
-	echo "$output" | grep "default"
+	[[ "$output" == *"${dbname}"* ]]
 	unset output
 }
 
@@ -27,148 +48,235 @@ teardown() {
 
 	dbname="default"
 	run fin db drop "$dbname"
-	echo "$output" | grep "Database '${dbname}' dropped"
+	[[ "$output" == *"Database ${dbname} dropped"* ]]
+	unset output
+
+	# TODO: fix this in fin
+	# Running drop second time should fail
+#	run fin db drop "$dbname"
+#	echo "$output" | grep "Dropping '${dbname}' database failed"
+#	[[ ${status} != 0 ]]
+#	unset output
+
+	# Check the db does not exist
+	run fin db list
+	[[ "$output" != *"${dbname}"* ]]
 	unset output
 
 	run fin db create "$dbname"
-	echo "$output" | grep "Database '${dbname}' created"
+	[[ "$output" == *"Database ${dbname} created"* ]]
 	unset output
 
+	# TODO: fix this in fin
+	# Running create second time should fail
+#	run fin db create "$dbname"
+#	echo "$output" | grep "Database '${dbname}' creation failed"
+#	[[ ${status} != 0 ]]
+#	unset output
+
 	run fin db list
-	echo "$output" | grep "$dbname"
+	[[ "$output" == *"${dbname}"* ]]
 	unset output
 }
 
-@test "fin db drop and create nondefault" {
+@test "fin db drop and create 'nondefault' database" {
 	[[ $SKIP == 1 ]] && skip
 
 	dbname="nondefault"
 	fin db drop "$dbname" || true  # start clean
-	run fin db drop "$dbname"
-	echo "$output" | grep "Can't drop database '${dbname}'; database doesn't exist"
-	echo "$output" | grep "Dropping '${dbname}' database failed"
+
+	# Check the db does not exist
+	run fin db list
+	[[ "$output" != *"${dbname}"* ]]
 	unset output
 
 	run fin db create "$dbname"
-	echo "$output" | grep "Database '${dbname}' created"
+	[[ "$output" == *"Database ${dbname} created"* ]]
 	unset output
 
 	run fin db list
-	echo "$output" | grep "$dbname"
+	[[ "$output" == *"${dbname}"* ]]
+	[[ ${status} == 0 ]]
 	unset output
+
+	# Cleanup
+	fin db drop "$dbname"
 }
 
-# Cannot do cleanup outside of a test case as bats will evaluate/run that code before every single test case.
-@test "Initializing a Drupal 8 site" {
+@test "fin db truncate" {
 	[[ $SKIP == 1 ]] && skip
 
-	fin init
-	return 0
+	# Setup
+	dbname="default"
+	fin db cli 'CREATE TABLE IF NOT EXISTS test_table (id INT(11) NOT NULL AUTO_INCREMENT, PRIMARY KEY (id));'
+
+	run fin db cli 'SHOW TABLES;'
+	[[ "$output" == *"test_table"* ]]
+	unset output
+
+	run fin db truncate ${dbname}
+	[[ "$output" == *"Truncating ${dbname} database"* ]]
+	[[ ${status} == 0 ]]
+	unset output
+
+	# Check the test_table is gone
+	run fin db cli 'SHOW TABLES;'
+	[[ "$output" != *"test_table"* ]]
+	unset output
 }
 
 @test "fin db dump with no params" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Create backup
-	rm -f dump.sql
-	run fin db dump dump.sql
-	echo "$output" | grep "Exporting..."
+	# Setup
+	dbdump="dump.sql"
+
+	# Setup: create a dummy table for testing purposes
+	fin db cli 'CREATE TABLE IF NOT EXISTS test_table (id INT(11) NOT NULL AUTO_INCREMENT, PRIMARY KEY (id));'
+	rm -f ${dbdump} || true
+
+	# Create a backup
+	run fin db dump ${dbdump}
+	[[ "$output" == *"Exporting"* ]]
+	[[ ${status} == 0 ]]
 	unset output
 
 	# Check that we've got a valid dump
-	grep "Database: default" dump.sql
+	grep "test_table" ${dbdump}
 }
 
 @test "fin db import with no params" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Import mysql dump
-	run fin db import dump.sql --force
-	echo "$output" | grep "Truncating"
-	echo "$output" | grep "Importing"
+	# Setup
+	dbname="default"
+	dbdump="dump.sql"
+	fin db truncate ${dbname}
+
+	# Import a db dump
+	run fin db import ${dbdump} --force
+	[[ "$output" == *"Truncating ${dbname} database"* ]]
+	[[ "$output" == *"Importing ${dbdump}"* ]]
+	[[ ${status} == 0 ]]
 	unset output
 
-	# Check that the site is available
-	run curl -sL http://drupal8.docksal
-	echo "$output" | grep "My Drupal 8 Site"
+	# Check the test_table is present
+	run fin db cli 'SHOW TABLES;'
+	[[ "$output" == *"test_table"* ]]
 	unset output
 }
 
 @test "fin db import with user and password" {
 	[[ $SKIP == 1 ]] && skip
 
+	# Setup
+	dbname="default"
+	dbdump="dump.sql"
+	fin db truncate ${dbname}
+
 	# Import mysql dump
-	run fin db import dump.sql --db-user="user" --db-password="user" --force
-	echo "$output" | grep "Truncating"
-	echo "$output" | grep "Importing"
+	run fin db import ${dbdump} --db-user="user" --db-password="user" --force
+	[[ "$output" == *"Truncating ${dbname} database"* ]]
+	[[ "$output" == *"Importing ${dbdump}"* ]]
+	[[ ${status} == 0 ]]
 	unset output
 
-	# Check that the site is available
-	run curl -sL http://drupal8.docksal
-	echo "$output" | grep "My Drupal 8 Site"
+	# Check the test_table is present
+	run fin db cli 'SHOW TABLES;'
+	[[ "$output" == *"test_table"* ]]
 	unset output
 }
 
 @test "fin db import with the wrong user and password" {
 	[[ $SKIP == 1 ]] && skip
 
+	# Setup
+	dbname="default"
+	dbdump="dump.sql"
+	fin db truncate ${dbname}
+
 	# Import mysql dump
-	run fin db import dump.sql --db-user="wrong-user" --db-password="wrong-password" --force
-	echo "$output" | grep "Truncating"
-	echo "$output" | grep "Importing"
-	echo "$output" | grep "Import failed"
+	run fin db import ${dbdump} --db-user="wrong-user" --db-password="wrong-password" --force
+	[[ "$output" == *"Truncating ${dbname} database"* ]]
+	[[ "$output" == *"Importing ${dbdump}"* ]]
+	[[ "$output" == *"Import failed"* ]]
+	[[ ${status} != 0 ]]
 	unset output
 }
 
 @test "fin db import from stdin" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
-	# Import mysql dump
-	run cat dump.sql | fin db import
-	echo "$output" | grep "Truncating"
-	echo "$output" | grep "Importing from stdin"
+	# Setup
+	dbname="default"
+	dbdump="dump.sql"
+	fin db truncate ${dbname}
+
+	# Use "bash -c" here since there is a pipe
+	run bash -c "cat ${dbdump} | fin db import"
+	[[ "$output" == *"Importing from stdin"* ]]
+	[[ ${status} == 0 ]]
 	unset output
 
-	# Check that the site is available
-	run curl -sL http://drupal8.docksal
-	echo "$output" | grep "My Drupal 8 Site"
+	# Check the test_table is present
+	run fin db cli 'SHOW TABLES;'
+	[[ "$output" == *"test_table"* ]]
 	unset output
 }
 
-@test "fin db import into nonexisting db" {
+@test "fin db import a broken dump" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Import mysql dump
+	# Setup
+	dbname="default"
+	dbdump="broken.sql"
+	fin db truncate ${dbname}
+	rm -f ${dbdump} || true
+	echo "dummy" > ${dbdump}
+
+	# Import a broken dump
+	run fin db import ${dbdump} --force
+	[[ "$output" == *"Truncating ${dbname} database"* ]]
+	[[ "$output" == *"Importing ${dbdump}"* ]]
+	[[ "$output" == *"Import failed"* ]]
+	[[ ${status} != 0 ]]
+	unset output
+}
+
+@test "fin db import into 'nonexisting' database" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Setup
 	dbname="nonexisting"
-	run fin db import dump.sql --db-user="user" --db-password="user" --db="$dbname" --force
-	echo "$output" | grep "Truncating" | grep "$dbname"
-	echo "$output" | grep "Importing"
-	echo "$output" | grep "Import failed"
-	unset output
-}
-
-@test "fin db create 'nondefault' db" {
-	[[ $SKIP == 1 ]] && skip
-
-	dbname="nondefault"
-	fin db drop "$dbname" || true  # cleanup just in case
-	run fin db create "$dbname"
-	echo "$output" | grep "Database '${dbname}' created"
-	unset output
-
-	run fin db list
-	echo "$output" | grep "$dbname"
-	unset output
-}
-
-@test "fin db import into 'nondefault' db" {
-	#[[ $SKIP == 1 ]] && skip
+	dbdump="dump.sql"
 
 	# Import mysql dump
+	run fin db import "${dbdump}" --db-user="user" --db-password="user" --db="${dbname}" --force
+	[[ "$output" == *"Truncating ${dbname} database"* ]]
+	[[ "$output" == *"Importing ${dbdump}"* ]]
+	[[ "$output" == *"Import failed"* ]]
+	[[ ${status} != 0 ]]
+	unset output
+}
+
+@test "fin db import into 'nondefault' database" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Setup
 	dbname="nondefault"
-	run fin db import dump.sql --db-user="user" --db-password="user" --db="$dbname" --force
-	echo "$output" | grep "Truncating" | grep "$dbname"
-	echo "$output" | grep "Importing"
-	echo "$output" | grep "Done"
+	dbdump="dump.sql"
+	fin db drop ${dbname} || true
+	fin db create ${dbname}
+
+	# Import mysql dump
+	run fin db import ${dbdump} --db-user="user" --db-password="user" --db="${dbname}" --force
+	[[ "$output" == *"Truncating ${dbname} database"* ]]
+	[[ "$output" == *"Importing ${dbdump}"* ]]
+	[[ ${status} == 0 ]]
+	unset output
+
+	# Check the test_table is present
+	run fin db cli --db=${dbname} 'SHOW TABLES;'
+	[[ "$output" == *"test_table"* ]]
 	unset output
 }

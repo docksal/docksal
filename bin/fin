@@ -4717,7 +4717,7 @@ mysql_db_create ()
 
 	if_failed_error "Database '${__db}' creation failed"
 
-	echo "Database '${__db}' created"
+	echo -e "Database ${yellow}${__db}${NC} created"
 }
 
 # Delete a database
@@ -4743,7 +4743,7 @@ mysql_db_drop ()
 		"DROP DATABASE IF EXISTS \`${__db}\`"
 
 	if_failed_error "Dropping '${__db}' database failed"
-	echo "Database '${__db}' dropped"
+	echo -e "Database ${yellow}${__db}${NC} dropped"
 }
 
 # Truncate db
