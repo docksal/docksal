@@ -107,9 +107,9 @@ is_travis () {
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='18.06.0-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.22.0'
-REQUIREMENTS_DOCKER_MACHINE='0.15.0'
+REQUIREMENTS_DOCKER='18.03.1-ce'
+REQUIREMENTS_DOCKER_COMPOSE='1.21.1'
+REQUIREMENTS_DOCKER_MACHINE='0.14.0'
 REQUIREMENTS_VBOX='5.2.2'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
@@ -229,6 +229,7 @@ URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
 URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_OVERRIDES_IDE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-ide.yml"
+URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
 URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
 URL_STACKS_STACK_DEFAULT="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default.yml"
@@ -3989,6 +3990,7 @@ update_config_files ()
 {
 	files_to_download="
 			$URL_STACKS_OVERRIDES_IDE
+			$URL_STACKS_OVERRIDES_OSXFS
 			$URL_STACKS_SERVICES
 			$URL_STACKS_STACK_ACQUIA
 			$URL_STACKS_STACK_DEFAULT
@@ -5344,6 +5346,12 @@ load_configuration ()
 			fi
 		fi
 		export DOCKSAL_VOLUMES
+
+		# Enable osxfs:cached for cli on Docker for Mac
+		overrides_osxfs_file="$(get_config_dir_dc)/stacks/overrides-osxfs.yml"
+		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]] && [[ "$DOCKSAL_VOLUMES" == "bind" ]]; then
+			COMPOSE_FILE="${overrides_osxfs_file}${SEPARATOR}${COMPOSE_FILE}"
+		fi
 
 		# Enable Cloud9 IDE
 		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
