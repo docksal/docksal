@@ -1,5 +1,21 @@
 # Changelog
 
+# 1.10.1 (2018-08-03)
+
+## New software versions
+
+- fin 1.69.1
+
+## Changes and improvements
+
+- Fixed help for project level and global commands on Linux. Custom commands list did not display on Linux.
+- Fixed broken db commands. Some DB commands did not function properly in 1.10.0.
+
+## Documentation
+
+- Fixed path to crontab in cron.md doc
+- Updated multiple-projects.md regarding virtual host configuration
+
 # 1.10.0 (2018-07-31)
 
 ## New software versions
