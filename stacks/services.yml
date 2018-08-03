@@ -131,6 +131,14 @@ services:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
 
+  # Redis
+  redis:
+    hostname: redis
+    image: ${REDIS_IMAGE:-redis:4-alpine}
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+
   # Solr
   solr:
     hostname: solr
