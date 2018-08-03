@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.67.2
+FIN_VERSION=1.69.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -544,12 +544,15 @@ parse_params ()
 		_escaped=${_escaped//\'/\\\'}
 		_escaped=${_escaped//\"/\\\"}
 		# If equals delimited named parameter
-		if [[ "$1" =~ ^..*=..* ]]; then
+		nonspace="[^[:space:]]"
+		if [[ "$1" =~ ^${nonspace}${nonspace}*=..* ]]; then
 			# Add to named parameters array
-			echo "ARGN+=(\"$_escaped\");"
+			echo "ARGN+=('$_escaped');"
 			# key is part before first =
 			local _key=$(echo "$1" | cut -d = -f 1)
+			# Just add as non-named when key is empty or contains space
 			if [[ "$_key" == "" || "$_key" =~ " " ]]; then
+				echo "ARGV+=('$_escaped');"
 				shift
 				continue
 			fi
@@ -566,18 +569,19 @@ parse_params ()
 					echo "$_key=(\"\$$_key\");"
 				fi
 				# append new value
-				echo "$_key+=(\"$_val\");"
+				echo "$_key+=('$_val');"
 			else
 				# single-value named parameter
-				echo "local $_key=\"$_val\";"
+				echo "local $_key='$_val';"
 				existing_named=" $_key"
 			fi
 		# If standalone named parameter
-		elif [[ "$1" =~ ^\-. ]]; then
+		elif [[ "$1" =~ ^\-${nonspace}+ ]]; then
 			# remove dashes
 			local _key=${1//\-}
-			# skip when key is empty or contains space
+			# Just add as non-named when key is empty or contains space
 			if [[ "$_key" == "" || "$_key" =~ " " ]]; then
+				echo "ARGV+=('$_escaped');"
 				shift
 				continue
 			fi
@@ -588,7 +592,7 @@ parse_params ()
 		else
 			# Escape asterisk to prevent bash asterisk expansion
 			_escaped=${1/\*/\'\"*\"\'}
-			echo "ARGV+=(\"$_escaped\");"
+			echo "ARGV+=('$_escaped');"
 		fi
 		shift
 	done
@@ -1298,7 +1302,7 @@ show_help_list_commands_in_help ()
 	fi
 
 	local executable="-executable"
-	[[ is_mac ]] && executable="-perm +100"
+	is_mac && executable="-perm +100"
 
 	local addons_list=$(find "$addons_path" -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
 	if [[ "$addons_list" != "" ]]; then
@@ -4719,7 +4723,7 @@ mysql_db_create ()
 
 	if_failed_error "Database '${__db}' creation failed"
 
-	echo "Database '${__db}' created"
+	echo -e "Database ${yellow}${__db}${NC} created"
 }
 
 # Delete a database
@@ -4745,7 +4749,7 @@ mysql_db_drop ()
 		"DROP DATABASE IF EXISTS \`${__db}\`"
 
 	if_failed_error "Dropping '${__db}' database failed"
-	echo "Database '${__db}' dropped"
+	echo -e "Database ${yellow}${__db}${NC} dropped"
 }
 
 # Truncate db

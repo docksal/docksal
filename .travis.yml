@@ -24,6 +24,7 @@ before_script:
   - mkdir ../test-config
   - mkdir ../test-duplicates
   - mkdir ../test-init
+  - mkdir ../test-db
   # Function runs tests by file name $1 in dir specified in $2
   - run_tests() { cd "${2:-$TRAVIS_BUILD_DIR}"; [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" && "$1" != "quicktest.bats" ]] && return; [[ "$1" == "quicktest.bats" ]] && I="-i"; bats ${I} "$TRAVIS_BUILD_DIR/tests/$1"; }
   # Trigger builds in boilerplate project repos
@@ -34,6 +35,7 @@ script:
   - run_tests system.bats
   - run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"
   - run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8"
+  - run_tests db.bats "$TRAVIS_BUILD_DIR/../test-db"
   - run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates"
   - run_tests quicktest.bats
 
