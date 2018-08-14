@@ -169,7 +169,7 @@ DOCKSAL_IP=192.168.64.100
 
 	# Checking fin ssh-add: key doesn't exist
 	run fin ssh-add doesnt_exist_rsa
-	echo "$output" | grep "doesnt_exist_rsa: No such file or directory"
+	echo "$output" | egrep "Key '.*\/doesnt_exist_rsa' does not exist"
 	unset output
 
 	# Checking fin ssh-add -D

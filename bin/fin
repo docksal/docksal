@@ -3099,14 +3099,14 @@ _ssh_key_exists ()
 {
 	# Get fingerprints for keys already loaded in the agent
 	# This function may be called multiple times, so we should cache this value
-	if [[ "$existing_fps" == "" ]]; then
-		existing_fps=$(_ssh_add -l | awk '{print $2}')
-		export existing_fps
+	if [[ "$existing_fingerprints" == "" ]]; then
+		existing_fingerprints=$(_ssh_add -l | awk '{print $2}')
+		export existing_fingerprints
 	fi
 
-	new_fp=$(ssh-keygen -lf ${1} | awk '{print $2}')
+	new_fingerprint=$(ssh-keygen -lf ${1} | awk '{print $2}')
 
-	[[ ${existing_fps} == *${new_fp}* ]]
+	[[ ${existing_fingerprints} == *${new_fingerprint}* ]]
 }
 
 # Add key to ssh-agent or run ssh-add with provided @param
@@ -3128,6 +3128,12 @@ ssh_add ()
 		return 1
 	fi
 
+	# If there are options (e.g., -l), pass arguments as-is and exit
+	if [[ "${1}" =~ ^- ]]; then
+		_ssh_add "$@"
+		return $?
+	fi
+
 	local ssh_path="$HOME/.ssh"
 	# On Windows docker and docker-compose expect a Windows style path
 	is_windows && ssh_path=$(cygpath -w "$ssh_path")
@@ -3135,52 +3141,46 @@ ssh_add ()
 	# Ensure ssh_path exists
 	mkdir -p "$ssh_path"
 
-	# If not passed an option (e.g., -l), copy all keys from the host to the ssh-agent container
-	[[ ! "${1}" =~ ^- ]] && docker cp "$ssh_path" docksal-ssh-agent:/
+	# Copy all keys from the host to the ssh-agent container
+	docker cp "$ssh_path" docksal-ssh-agent:/
 
-	# If no arguments - load default keys
-	if [[ "${1}" == "" ]]; then
-		# Set default keys
-		# This cares of the use case when ssh-add is called without arguments and would load defaul keys
-		SECRET_SSH_KEY_ID_RSA=id_rsa
-		SECRET_SSH_KEY_ID_DSA=id_dsa
-		SECRET_SSH_KEY_ID_ECDSA=id_ecdsa
-
-		# Add SSH keys defined in environment variables
-		eval 'ssh_keys=(${!SECRET_SSH_KEY_@})'
-		for ssh_key in "${ssh_keys[@]}"
-		do
-			local ssh_key_name=${!ssh_key}
-			local ssh_key_path="${ssh_path}/${ssh_key_name}"
-
-			if [[ -f ${ssh_key_path} ]]; then
-				if ! _ssh_key_exists ${ssh_key_path}; then
-					# Call ssh-add in the ssh-agent container
-					_ssh_add ${ssh_key_name}
-				else
-					echo "Key '${ssh_key_name}' already loaded in the agent. Skipping."
-				fi
-			else
-				echo-error "Key '${ssh_key_path}' does not exist"
-			fi
-		done
-	# If there are options, pass arguments as-is
-	elif [[ "${1}" =~ ^- ]]; then
-		_ssh_add "$@"
-	# If we have a key name, load it unless it is already loaded
-	elif [[ -f "${ssh_path}/${1}" ]]; then
-		if ! _ssh_key_exists "${ssh_path}/${1}"; then
-			_ssh_add "${1}"
+	# If we have a key name as the argument, add it to the list of keys to load
+	if [[ "${1}" != "" ]]; then
+		if [[ -f "${ssh_path}/${1}" ]]; then
+			local SECRET_SSH_KEY_${1^^}=${1}
 		else
-			echo "Key '${1}' already loaded in the agent. Skipping."
+			echo-error "Key '"${ssh_path}/${1}"' does not exist"
 		fi
+	# Load default keys
 	else
-		echo-error "Key '${ssh_path}/${1}' does not exist"
+		# When ssh-add is called without arguments it should load the default keys
+		local SECRET_SSH_KEY_ID_RSA=id_rsa
+		local SECRET_SSH_KEY_ID_DSA=id_dsa
+		local SECRET_SSH_KEY_ID_ECDSA=id_ecdsa
 	fi
 
+	# Load SSH keys into the agent
+	# This is a unified approach, which handles default keys as well as keys passed as an argument
+	eval 'ssh_keys=(${!SECRET_SSH_KEY_@})'
+	for ssh_key in "${ssh_keys[@]}"
+	do
+		local ssh_key_name=${!ssh_key}
+		local ssh_key_path="${ssh_path}/${ssh_key_name}"
+
+		if [[ -f ${ssh_key_path} ]]; then
+			if ! _ssh_key_exists ${ssh_key_path}; then
+				# Call ssh-add in the ssh-agent container
+				_ssh_add ${ssh_key_name}
+			else
+				echo "Key '${ssh_key_name}' already loaded in the agent. Skipping."
+			fi
+		else
+			echo-error "Key '${ssh_key_path}' does not exist"
+		fi
+	done
+
 	# Remove copied keys from the ssh-agent container after loading into the ssh-agent.
-	# This is necessary only when not passed on option, since that's when we copy key.
-	[[ ! "${1}" =~ ^- ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
+	docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
 }
 
 #----- Installations and updates -----
