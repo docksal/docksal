@@ -419,6 +419,14 @@ Username to use for basic authentication.
 
 Password to use for basic authentication.
 
+### GIT_USER_EMAIL
+
+Overrides git `user.email` inside cli. This is picked up from host's git settings by default (`docksal/cli` v2.5+).
+
+### GIT_USER_NAME
+
+Overrides git `user.name` inside cli. This is picked up from host's git settings by default (`docksal/cli` v2.5+).
+
 ### HOST_UID
 
 User ID for the Container User. On MacOS & Linux defaults to current user account `id -u`.

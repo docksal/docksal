@@ -4612,6 +4612,8 @@ run_cli ()
 			-e SECRET_ACAPI_KEY \
 			-e SECRET_TERMINUS_TOKEN \
 			-e SECRET_PLATFORMSH_CLI_TOKEN \
+			-e GIT_USER_EMAIL \
+			-e GIT_USER_NAME \
 			-e HOST_UID \
 			-e HOST_GID \
 			-e COLUMNS \
@@ -4632,6 +4634,8 @@ run_cli ()
 			-e SECRET_ACAPI_KEY \
 			-e SECRET_TERMINUS_TOKEN \
 			-e SECRET_PLATFORMSH_CLI_TOKEN \
+			-e GIT_USER_EMAIL \
+			-e GIT_USER_NAME \
 			-e HOST_UID \
 			-e HOST_GID \
 			-e COLUMNS \
@@ -6058,6 +6062,13 @@ if is_tty; then
 		read LINES COLUMNS < <(stty size)
 	fi
 	export LINES COLUMNS
+fi
+
+# Inherit hosts git user.email and user.name settings
+# This happens before the environment variable overrides are sources, thus can be overridden via docksal.env files.
+if ( which git >/dev/null 2>&1 ); then
+	export GIT_USER_EMAIL=$(git config --get --global user.email)
+	export GIT_USER_NAME=$(git config --get --global user.name)
 fi
 
 # Load environment variables overrides, use to permanently override some variables
