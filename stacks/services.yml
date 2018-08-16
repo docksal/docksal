@@ -86,7 +86,7 @@ services:
     hostname: cli
     image: ${CLI_IMAGE:-docksal/cli:2.4-php7.1}
     volumes:
-      - project_root:/var/www:rw,nocopy,cached  # Project root volume
+      - project_root:/var/www:rw,nocopy  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
       - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
     environment:
