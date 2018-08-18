@@ -3296,6 +3296,7 @@ install_proxy_service ()
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		${mount_certs} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
+	if_failed_error "Failed starting the proxy service."
 }
 
 # Detects upstream DNS or falls back to DOCKSAL_DEFAULT_DNS
@@ -3352,6 +3353,7 @@ install_dns_service ()
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
+	if_failed_error "Failed starting the DNS service."
 }
 
 # Configure system-wide *.docksal resolver using /etc/resolver
@@ -3516,6 +3518,8 @@ install_sshagent_service ()
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always \
 		--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent \
 		"${IMAGE_SSH_AGENT}" >/dev/null
+	if_failed_error "Failed starting the SSH agent service."
+
 	# Add default keys. Using || true here to suppress errors if there are no keys on the host.
 	ssh_add || true
 }
