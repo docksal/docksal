@@ -13,6 +13,7 @@ Minimum RAM requirement: 4GB. 8GB or more recommended.
 
 - CPU should support hardware **VT-x/AMD-V virtualization** and it should be [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
 - Supported distributions: Debian with derivatives (Ubuntu, Mint, etc.), Fedora with derivatives (CentOS etc.)
+- From Docksal version 1.10.0 and greater netplan is required for non-persistent network configuration on Linux used in Docksal.
 
 ### Windows
 
