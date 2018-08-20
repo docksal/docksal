@@ -3315,6 +3315,7 @@ detect_dns ()
 				if [[ "$server" =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]] &&
 					[[ "$server" != "$DOCKSAL_IP" ]]; then
 					DOCKSAL_DNS_UPSTREAM="$server"
+					break
 				fi
 			done
 		else
