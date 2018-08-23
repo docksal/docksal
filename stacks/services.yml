@@ -98,8 +98,8 @@ services:
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
       - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}  # Point xdebug to the host IP
-      - SECRET_BLACKFIRE_CLIENT_ID
-      - SECRET_BLACKFIRE_CLIENT_TOKEN
+      - BLACKFIRE_CLIENT_ID
+      - BLACKFIRE_CLIENT_TOKEN
       - SECRET_SSH_PRIVATE_KEY
       - SECRET_ACAPI_EMAIL
       - SECRET_ACAPI_KEY
