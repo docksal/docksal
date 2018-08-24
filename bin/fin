@@ -4608,8 +4608,8 @@ run_cli ()
 			--mount ${MOUNT_HOME} \
 			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
-			-e SECRET_BLACKFIRE_CLIENT_ID \
-			-e SECRET_BLACKFIRE_CLIENT_TOKEN \
+			-e BLACKFIRE_CLIENT_ID \
+			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
@@ -4630,8 +4630,8 @@ run_cli ()
 			--mount ${MOUNT_HOME} \
 			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
-			-e SECRET_BLACKFIRE_CLIENT_ID \
-			-e SECRET_BLACKFIRE_CLIENT_TOKEN \
+			-e BLACKFIRE_CLIENT_ID \
+			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
@@ -5430,10 +5430,19 @@ config_show ()
 	if [[ "$showsecrets" != "showsecrets" ]]; then
 		# Any env variable, that starts with the "SECRET_" prefix, is rewritten to only show beginning and end
 		eval 'secrets=(${!SECRET_@})'
+
+		# Special case to handle BLACKFIRE variables as secrets
+		# TODO: figure out a way to handle this better
+		# See: https://github.com/docksal/docksal/pull/783#issuecomment-415080823
+		secrets+=('BLACKFIRE_SERVER_ID')
+		secrets+=('BLACKFIRE_SERVER_TOKEN')
+		secrets+=('BLACKFIRE_CLIENT_ID')
+		secrets+=('BLACKFIRE_CLIENT_TOKEN')
+
 		for secret in "${secrets[@]}"
 		do
 			local secret_value=${!secret}
-			# Define how many characters to show on the beginning and the ned
+			# Define how many characters to show on the beginning and the end
 			local cut_length;
 			if [[ ${#secret_value} < 10 ]]; then
 				cut_length=3;
