@@ -17,13 +17,13 @@ push:
 	docker push $(REPO):$(VERSION)
 
 exec:
-	docker exec $(NAME) $(CMD)
+	@docker exec $(NAME) $(CMD)
 
 exec-it:
-	docker exec -it $(NAME) $(CMD)
+	@docker exec -it $(NAME) $(CMD)
 
 shell:
-	make exec -e CMD=bash
+	@make exec-it -e CMD=bash
 
 conf-vhosts:
 	make exec -e CMD='cat /etc/nginx/conf.d/vhosts.conf'
