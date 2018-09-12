@@ -83,7 +83,9 @@ ENV \
 	# Disable debug output by default
 	DEBUG_LOG=0 \
 	# Disable stats log by default
-	STATS_LOG=0
+	STATS_LOG=0 \
+	# Default domain
+	DEFAULT_CERT=docksal
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
