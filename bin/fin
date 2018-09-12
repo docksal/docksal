@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.71.0
+FIN_VERSION=1.71.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -5736,7 +5736,7 @@ vhosts ()
 	NAMES=$(docker exec docksal-vhost-proxy sh -c "grep server_name /etc/nginx/conf.d/vhosts.conf -r | sort | uniq | sed 's/;//g' | sed 's/^.*_name//g'")
 
 	for vhost in $NAMES ;do
-		echo-green "http://$vhost"
+		echo-green "$vhost"
 	done
 }
 
