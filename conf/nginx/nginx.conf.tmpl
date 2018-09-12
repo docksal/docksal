@@ -30,14 +30,6 @@ http {
 
 	server {
 		listen 80;
-		server_name _; # This is just an invalid value which will never trigger on a real hostname.
-
-		location / {
-			rewrite_by_lua_file conf/lua/proxyctl.lua;
-		}
-	}
-
-	server {
 		listen 443 ssl http2;
 
 		server_name _; # This is just an invalid value which will never trigger on a real hostname.
