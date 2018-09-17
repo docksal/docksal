@@ -1053,7 +1053,14 @@ _remove_containers ()
 		docker-compose down --volumes --remove-orphans
 	else
 		# Removing requested containers only
-		docker-compose kill "$@" && docker-compose rm -vf "$@"
+		docker-compose kill "$@" &&
+			docker-compose rm -vf "$@" &&
+			# For cli, we have to manually drop the home volume, since named volumes are omitted by the "-v" option below
+			{
+				for i in "$@"; do
+					[[ "$i" == "cli" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_cli_home" >/dev/null
+				done
+			}
 	fi
 }
 
