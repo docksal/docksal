@@ -1055,10 +1055,11 @@ _remove_containers ()
 		# Removing requested containers only
 		docker-compose kill "$@" &&
 			docker-compose rm -vf "$@" &&
-			# For cli, we have to manually drop the home volume, since named volumes are omitted by the "-v" option below
+			# For cli and db, we have to manually drop the volumes, since named volumes are omitted by the "-v" option above
 			{
 				for i in "$@"; do
 					[[ "$i" == "cli" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_cli_home" >/dev/null
+					[[ "$i" == "db" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_db_data" >/dev/null
 				done
 			}
 	fi
