@@ -28,17 +28,17 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `CLI_IMAGE` variable in `.docksal/docksal.env`.
 
 ```bash
-CLI_IMAGE='docksal/cli:2.4-php7.1'
+CLI_IMAGE='docksal/cli:2.5-php7.1'
 ```
 
 Run `fin project reset cli` (`fin p reset cli`) to properly reset and update the `cli` service.
 
 Available images:
 
-- PHP 5.6 - `docksal/cli:2.4-php5.6`
-- PHP 7.0 - `docksal/cli:2.4-php7.0`
-- PHP 7.1 - `docksal/cli:2.4-php7.1`
-- PHP 7.2 - `docksal/cli:2.4-php7.2`
+- PHP 5.6 - `docksal/cli:2.5-php5.6`
+- PHP 7.0 - `docksal/cli:2.5-php7.0`
+- PHP 7.1 - `docksal/cli:2.5-php7.1`
+- PHP 7.2 - `docksal/cli:2.5-php7.2`
 
 See documentation for projects using a [custom stack configuration](../advanced/stack-config.md#php-version).
 
