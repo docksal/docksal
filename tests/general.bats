@@ -219,13 +219,6 @@ EOF
 	[[ "$output" == "$(id -u):$(id -g)" ]]
 	unset output
 
-	# check loads ssh keys
-	ssh-keygen -f $HOME/.ssh/run_cli_test -t rsa -N ''
-	fin ssh-add run_cli_test
-	run fin rc ssh-add -l
-	echo $output | grep "2048 SHA256:.* /root/.ssh/run_cli_test (RSA)"
-	unset output
-
 	# check to make sure custom variables are passed into container
 	run fin rc -T -e TEST_VAR="TEST VARIABLES" "echo \$TEST_VAR"
 	[[ "$output" == "TEST VARIABLES" ]]
@@ -233,13 +226,15 @@ EOF
 
 	# check to make sure a global default variable (from $HOME/.docksal/docksal.env) is passed automatically.
 	# These are SECRET_ and some other variables passed by default.
-	echo "SECRET_SSH_PRIVATE_KEY=xyz" >> $HOME/.docksal/docksal.env
-	run fin rc -T "echo \$SECRET_SSH_PRIVATE_KEY"
+	# Note: SECRET_SSH_PRIVATE_KEY must be a valid base64 encoded string
+	echo "SECRET_SSH_PRIVATE_KEY=\"$(echo 'xyz' | base64)\"" >> $HOME/.docksal/docksal.env
+	run fin rc -T "echo \$SECRET_SSH_PRIVATE_KEY | base64 -d"
 	[[ "$output" == "xyz" ]]
 	unset output
 
 	# Check to make sure a global default variable can be overridden
-	run fin rc -T -e SECRET_SSH_PRIVATE_KEY="abc" "echo \$SECRET_SSH_PRIVATE_KEY"
+	# Note: SECRET_SSH_PRIVATE_KEY must be a valid base64 encoded string
+	run fin rc -T -e SECRET_SSH_PRIVATE_KEY="$(echo 'abc' | base64)" "echo \$SECRET_SSH_PRIVATE_KEY | base64 -d"
 	[[ "$output" == "abc" ]]
 	unset output
 
