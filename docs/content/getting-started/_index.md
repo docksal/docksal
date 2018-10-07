@@ -8,3 +8,5 @@ pre: "<b>1. </b>"
 # Getting started
 
 Start your Docksal journey here
+
+{{% children %}}
