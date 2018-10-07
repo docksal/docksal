@@ -5,3 +5,4 @@ theme = "learn"
 [params]
   description = "Official Docksal documentation website"
   editURL = "https://github.com/docksal/docksal/edit/master/docs/"
+  google_tag_manager = "GTM-5H2GJLS"
