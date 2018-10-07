@@ -34,3 +34,7 @@ theme = "learn"
   url = "/versions"
   weight = 20
 
+  [[menu.shortcuts]]
+  name = "<i class='fas fa-bullhorn'></i> Credits"
+  url = "/credits"
+  weight = 30
