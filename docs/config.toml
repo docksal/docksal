@@ -1,6 +1,6 @@
 title = "Docksal Documentation"
 languageCode = "en-us"
-theme = "docksal-docs"
+theme = "learn"
 
 [params]
   description = "Official Docksal documentation website"

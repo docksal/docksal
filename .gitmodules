@@ -1,3 +1,3 @@
-[submodule "docs/themes/docksal-docs"]
-	path = docs/themes/docksal-docs
-	url = https://github.com/docksal/hugo-theme-learn
+[submodule "docs/themes/learn"]
+	path = docs/themes/learn
+	url = https://github.com/docksal/hugo-theme-learn.git
