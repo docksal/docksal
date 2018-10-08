@@ -4,7 +4,7 @@ title: "Docksal"
 
 ![Docksal](/images/docksald.png)
 
-## What is Docksal?
+# What is Docksal?
 
 Docksal is a tool for defining and managing development environments. It uses Docker to create fully containerized environments, 
 along with VirtualBox to support macOS and Windows. Its main feature is the inclusion of a command-line tool called `fin` that 
