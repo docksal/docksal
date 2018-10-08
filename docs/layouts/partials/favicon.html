@@ -1,1 +1,2 @@
-<link rel="shortcut icon" href="/images/favicon.png" type="image/x-icon" />
+{{ $assetBusting := not .Site.Params.disableAssetsBusting }}
+<link rel="shortcut icon" href="/images/favicon.png{{ if $assetBusting }}?{{ now.Unix }}{{ end }}" type="image/x-icon" />
