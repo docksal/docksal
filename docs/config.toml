@@ -5,6 +5,10 @@ theme = "learn"
 [params]
   description = "Official Docksal documentation website"
   editURL = "https://github.com/docksal/docksal/edit/master/docs/"
+
+  # Custom CSS => statis/css/theme-docksal.css
+  themeVariant = "docksal"
+
   google_tag_manager = "GTM-5H2GJLS"
 
   version = "v1.11.0"
