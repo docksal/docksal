@@ -1,4 +1,4 @@
-FROM openresty/openresty:alpine
+FROM openresty/openresty:1.13.6.2-1-alpine
 
 RUN set -xe; \
 	apk add --update --no-cache \
@@ -13,9 +13,9 @@ RUN set -xe; \
 	addgroup -S nginx; \
 	adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx
 
-ARG DOCKER_VERSION=18.03.1-ce
+ARG DOCKER_VERSION=18.06.1-ce
 ARG DOCKER_GEN_VERSION=0.7.4
-ARG GOMPLATE_VERSION=2.6.0
+ARG GOMPLATE_VERSION=3.0.0
 
 # Install docker client binary (if not mounting binary from host)
 RUN set -xe; \
@@ -83,7 +83,9 @@ ENV \
 	# Disable debug output by default
 	DEBUG_LOG=0 \
 	# Disable stats log by default
-	STATS_LOG=0
+	STATS_LOG=0 \
+	# Default domain
+	DEFAULT_CERT=docksal
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 

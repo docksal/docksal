@@ -24,28 +24,12 @@
 	{{ end }}
 {{ end }}
 
-{{/* HTTP server template */}}
-{{ define "http" }}
-	## HTTP
-	server {
-		listen 80;
-		{{ range $host := split .Hosts "," }}
-
-		server_name {{ $host }};
-
-		{{ end }}
-
-		location / {
-			proxy_pass http://{{ .Upstream }};
-		}
-	}
-{{ end }}
-
-{{/* HTTPS server template */}}
-{{ define "https" }}
+{{/* HTTP/HTTPS server template */}}
+{{ define "server" }}
 	## HTTPS
 	server {
 
+		listen 80;
 		listen 443 ssl http2;
 		{{ range $host := split .Hosts "," }}
 
@@ -121,9 +105,6 @@
 		{{ end }}
 	}
 
-		{{/* Generate HTTP server config */}}
-		{{ template "http" (dict "Hosts" $hosts "Upstream" $upstream) }}
-
 		{{/* Get the cert name from io.docksal.cert-name container label */}}
 		{{ $certName := or (index $pr_container.Labels "io.docksal.cert-name") "none" }}
 		{{/* Unset certName if its value us "none" */}}
@@ -140,8 +121,8 @@
 		{{/* Use the cert specified on the container or fallback to the best vhost match */}}
 		{{ $cert := (coalesce $certName $vhostCert) }}
 
-		{{/* Generate HTTPS server config */}}
-		{{ template "https" (dict "Hosts" $hosts "Upstream" $upstream "Cert" $cert) }}
+		{{/* Generate HTTP/HTTPS server config */}}
+		{{ template "server" (dict "Hosts" $hosts "Upstream" $upstream "Cert" $cert) }}
 
 	{{ end }}
 	# -------------------------------------------------- #
@@ -181,9 +162,6 @@
 		{{ end }}
 	}
 
-		{{/* Generate HTTP server config */}}
-		{{ template "http" (dict "Hosts" $hosts "Upstream" $upstream) }}
-
 		{{/* Get the cert name from io.docksal.cert-name container label */}}
 		{{ $certName := or (index $container.Labels "io.docksal.cert-name") "none" }}
 		{{/* Unset certName if its value us "none" */}}
@@ -200,8 +178,8 @@
 		{{/* Use the cert specified on the container or fallback to the best vhost match */}}
 		{{ $cert := (coalesce $certName $vhostCert) }}
 
-		{{/* Generate HTTPS server config */}}
-		{{ template "https" (dict "Hosts" $hosts "Upstream" $upstream "Cert" $cert) }}
+		{{/* Generate HTTP/HTTPS server config */}}
+		{{ template "server" (dict "Hosts" $hosts "Upstream" $upstream "Cert" $cert) }}
 
 {{ end }}
 

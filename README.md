@@ -6,7 +6,7 @@ This image(s) is part of the [Docksal](http://docksal.io) image library.
 
 ## Features
 
-- HTTP/HTTPS virtual host routing
+- HTTP/HTTPS and HTTP/2 virtual host routing
 - On-demand stack starting (upon a HTTP/HTTPS request)
 - Stack stopping after a given period of inactivity
 - Stack cleanup after a given period of inactivity
@@ -97,9 +97,12 @@ docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --res
     docksal/vhost-proxy
 ```
 
-## Using custom certs
+## Default and custom certs for HTTPS
 
-Mount a folder with certs to `/etc/certs/custom`. Certs are looked up by virtual host name. 
+The default server cert is a self-signed cert for `*.docksal`. It allows a HTTPS connection to be established, but will 
+make browsers complain that the cert is not valid. If that's not acceptable, you can use a valid custom cert. 
+
+To use custom certs, mount a folder with certs to `/etc/certs/custom`. Certs are looked up by virtual host name. 
 
 E.g., cert and key for `example.com` (or `*.example.com`) are expected in: 
 
@@ -120,6 +123,15 @@ Example: for `io.docksal.cert-name=shared` the following cert/key will be used:
 When multiple domain values are set in `io.docksal.virtual-host`, the first one is considered the primary one and 
 used for certificate lookup. You can also always point to a specific cert with `io.docksal.cert-name`. 
 
+When projects are (re)started over HTTPS, the default virtual host config kicks in first. It uses the default self-signed 
+cert, which would trigger a browser warning, even though the actual virtual host is then served using a valid custom 
+cert. To overcome this issue, you can specify the default custom cert name using the `DEFAULT_CERT` environment variable. 
+
+You can use a single domain or a shared (SNI) cert, just like with other custom certs.
+
+Example: `DEFAULT_CERT=example.com` or `DEFAULT_CERT=shared`  
+
+
 ## Logging and debugging
 
 The following container environment variables can be used to enabled various logging options (disabled by default). 
@@ -129,3 +141,19 @@ The following container environment variables can be used to enabled various log
 `STATS_LOG` - Set to `1` to enable project stats logging.
 
 Check logs with `docker logs docksal-vhost-proxy`.
+
+
+## Variable mapping for Docksal
+
+When using this image with Docksal (99% of cases), settings for `vhost-proxy` are set via `$HOME/.docksal/docksal.env`. 
+
+The following variable mappings should be applied:
+
+| Configuration variable        | Variable in `$HOME/.docksal/docksal.env`  |
+| ----------------------------- | ----------------------------------------  |
+| `ACCESS_LOG`                  | `DOCKSAL_VHOST_PROXY_ACCESS_LOG`          |
+| `DEBUG_LOG`                   | `DOCKSAL_VHOST_PROXY_DEBUG_LOG`           |
+| `STATS_LOG`                   | `DOCKSAL_VHOST_PROXY_STATS_LOG`           |
+| `PROJECT_INACTIVITY_TIMEOUT`  | `PROJECT_INACTIVITY_TIMEOUT`              |
+| `PROJECT_DANGLING_TIMEOUT`    | `PROJECT_DANGLING_TIMEOUT`                |
+| `DEFAULT_CERT`                | `DOCKSAL_VHOST_PROXY_DEFAULT_CERT`        |
