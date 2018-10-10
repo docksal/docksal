@@ -141,3 +141,19 @@ The following container environment variables can be used to enabled various log
 `STATS_LOG` - Set to `1` to enable project stats logging.
 
 Check logs with `docker logs docksal-vhost-proxy`.
+
+
+## Variable mapping for Docksal
+
+When using this image with Docksal (99% of cases), settings for `vhost-proxy` are set via `$HOME/.docksal/docksal.env`. 
+
+The following variable mappings should be applied:
+
+| Configuration variable        | Variable in `$HOME/.docksal/docksal.env`  |
+| ----------------------------- | ----------------------------------------  |
+| `ACCESS_LOG`                  | `DOCKSAL_VHOST_PROXY_ACCESS_LOG`          |
+| `DEBUG_LOG`                   | `DOCKSAL_VHOST_PROXY_DEBUG_LOG`           |
+| `STATS_LOG`                   | `DOCKSAL_VHOST_PROXY_STATS_LOG`           |
+| `PROJECT_INACTIVITY_TIMEOUT`  | `PROJECT_INACTIVITY_TIMEOUT`              |
+| `PROJECT_DANGLING_TIMEOUT`    | `PROJECT_DANGLING_TIMEOUT`                |
+| `DEFAULT_CERT`                | `DOCKSAL_VHOST_PROXY_DEFAULT_CERT`        |
