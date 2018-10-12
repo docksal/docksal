@@ -143,12 +143,13 @@ DOCKSAL_IP=192.168.64.100
 		echo "$output" | egrep "4096 SHA256:.+ bats_rsa \(RSA\)"
 		unset output
 
-		# Checking fin ssh-add with custom keys
+		# Checking fin ssh-add with a key listed in docksal.env
 		echo "SECRET_SSH_KEY_TEST=\"test_rsa\"" >> $HOME/.docksal/docksal.env
 		run fin ssh-add
 		echo "$output" | egrep "Identity added: test_rsa"
 		unset output
-
+		# Cleanup
+		sed -i~ '/SECRET_SSH_KEY_TEST/d' $HOME/.docksal/docksal.env
 	else
 		run fin ssh-add
 		# On a real host assuming there is at least one default key
@@ -158,12 +159,6 @@ DOCKSAL_IP=192.168.64.100
 		# Checking fin ssh-add -l
 		run fin ssh-add -l
 		echo "$output" | egrep "SHA256:.+ id_.+"
-		unset output
-
-		# Checking fin ssh-add with custom keys
-		echo "SECRET_SSH_KEY_TEST=\"test_rsa\"" >> $HOME/.docksal/docksal.env
-		run fin ssh-add
-		echo "$output" | egrep "Identity added: test_rsa"
 		unset output
 	fi
 
@@ -180,6 +175,13 @@ DOCKSAL_IP=192.168.64.100
 	# Checking fin ssh-add -l (no keys)
 	run fin ssh-add -l
 	echo "$output" | grep "The agent has no identities."
+	unset output
+
+	# Check that the same key will not be added twice
+	# This avoids re-prompting for a passphrase on a key, that's already present in the agent
+	fin ssh-add id_rsa
+	run fin ssh-add id_rsa
+	echo "$output" | egrep "Key 'id_rsa' already loaded in the agent. Skipping."
 	unset output
 }
 
