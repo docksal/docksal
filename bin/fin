@@ -3154,9 +3154,9 @@ ssh_add ()
 	# Load default keys
 	else
 		# When ssh-add is called without arguments it should load the default keys
-		local SECRET_SSH_KEY_ID_RSA=id_rsa
-		local SECRET_SSH_KEY_ID_DSA=id_dsa
-		local SECRET_SSH_KEY_ID_ECDSA=id_ecdsa
+		[[ -f "${ssh_path}/id_rsa" ]] && local SECRET_SSH_KEY_ID_RSA=id_rsa
+		[[ -f "${ssh_path}/id_dsa" ]] && local SECRET_SSH_KEY_ID_DSA=id_dsa
+		[[ -f "${ssh_path}/id_ecdsa" ]] && local SECRET_SSH_KEY_ID_ECDSA=id_ecdsa
 	fi
 
 	# Load SSH keys into the agent
