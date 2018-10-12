@@ -40,8 +40,8 @@ DOCKSAL_IP=192.168.64.100
 	echo "$output" | grep "Resetting Docksal DNS service and configuring resolver for .docksal domain"
 	unset output
 
-  	# Wait 2s to let the service fully initialize
-  	sleep 2
+	# Wait 2s to let the service fully initialize
+	sleep 2
 
 	# Service is running and image version is correct
 	run fin docker ps
@@ -53,9 +53,9 @@ DOCKSAL_IP=192.168.64.100
 	[[ $SKIP == 1 ]] && skip
 
 	# .docksal domain resolution via ping
-    run ping -c 1 -t 1 anything.docksal
-    [[ "$(echo \"$output\" | awk -F'[()]' '/PING/{print $2}')" == "$DOCKSAL_IP" ]]
-    unset output
+	run ping -c 1 -t 1 anything.docksal
+	[[ "$(echo \"$output\" | awk -F'[()]' '/PING/{print $2}')" == "$DOCKSAL_IP" ]]
+	unset output
 }
 
 @test "DSN: .docksal name resolution via nslookup" {
@@ -63,11 +63,11 @@ DOCKSAL_IP=192.168.64.100
 	skip
 	[[ $SKIP == 1 ]] && skip
 
-    # .docksal domain resolution via nslookup
-    run nslookup anything.docksal
-    #[[ "$(echo \"$output\" | awk '/^Address/ { print $2 }' | tail -1)" == "$DOCKSAL_IP" ]]
-    [[ "$(echo \"$output\" | grep "Address" | tail -1 | tr -d ' ' | awk -F ':' '{print $2}')" == "$DOCKSAL_IP" ]]
-    unset output
+	# .docksal domain resolution via nslookup
+	run nslookup anything.docksal
+	#[[ "$(echo \"$output\" | awk '/^Address/ { print $2 }' | tail -1)" == "$DOCKSAL_IP" ]]
+	[[ "$(echo \"$output\" | grep "Address" | tail -1 | tr -d ' ' | awk -F ':' '{print $2}')" == "$DOCKSAL_IP" ]]
+	unset output
 }
 
 @test "VHOST-PROXY: fin system reset vhost-proxy" {
@@ -77,8 +77,8 @@ DOCKSAL_IP=192.168.64.100
 	echo "$output" | grep "Resetting Docksal HTTP/HTTPS reverse proxy service"
 	unset output
 
-  	# Wait 2s to let the service fully initialize
-  	sleep 2
+	# Wait 2s to let the service fully initialize
+	sleep 2
 
 	# Service is running and image version is correct
 	run fin docker ps
@@ -106,8 +106,8 @@ DOCKSAL_IP=192.168.64.100
 	echo "$output" | egrep "Identity added: id_.+ \(id_.+\)"
 	unset output
 
-  	# Wait 2s to let the service fully initialize
-  	sleep 2
+	# Wait 2s to let the service fully initialize
+	sleep 2
 
 	# Service is running and image version is correct
 	run fin docker ps
@@ -187,16 +187,16 @@ DOCKSAL_IP=192.168.64.100
 	[[ $SKIP == 1 ]] && skip
 
 	cd ../drupal8 && fin up
-    run fin exec nslookup anything.docksal
-    [[ "$status" == 0 ]]
-    unset output
+	run fin exec nslookup anything.docksal
+	[[ "$status" == 0 ]]
+	unset output
 }
 
 @test "DNS: external name resolution inside cli" {
 	[[ $SKIP == 1 ]] && skip
 
 	cd ../drupal8 && fin up
-    run fin exec nslookup google.com
-    [[ "$status" == 0 ]]
-    unset output
+	run fin exec nslookup google.com
+	[[ "$status" == 0 ]]
+	unset output
 }
