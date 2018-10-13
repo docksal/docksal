@@ -3104,7 +3104,10 @@ _ssh_key_exists ()
 		export existing_fingerprints
 	fi
 
-	new_fingerprint=$(ssh-keygen -lf ${1} | awk '{print $2}')
+	# Older versions of openssh/ssh-keygen return md5 fingerprints vs sha256 in newer versions.
+	# For consistent results, we'll use the one in the ssh-agent container to calculate fingerprints.
+	_ssh_keygen="${winpty} docker exec -i docksal-ssh-agent /run.sh ssh-keygen"
+	new_fingerprint=$(cat ${1}.pub | ${_ssh_keygen} -lf /dev/stdin | awk '{print $2}')
 
 	[[ ${existing_fingerprints} == *${new_fingerprint}* ]]
 }
