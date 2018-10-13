@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.72.0
+FIN_VERSION=1.73.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3075,6 +3075,43 @@ system_stop ()
 	fi
 }
 
+# Helper function to run ssh-add inside the ssh-agent container
+# @param $1 -D, -l or path to custom key
+_ssh_add ()
+{
+	# Return if no key or option passed
+	[[ "$@" == "" ]] && return
+
+	if is_tty; then
+		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
+		${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "$@"
+	else
+		# In a non-interactive environment (e.g., CI) run non-interactively. Keys with passphrases cannot be used!
+		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
+		docker exec docksal-ssh-agent /run.sh ssh-add "$@"
+	fi
+}
+
+# Helper function to check whether an key is already loaded in the ssh-agent
+# This is useful for keys with a passphrase, which otherwise would require the user to re-enter it.
+# @param $1 host path to the ssh key
+_ssh_key_exists ()
+{
+	# Get fingerprints for keys already loaded in the agent
+	# This function may be called multiple times, so we should cache this value
+	if [[ "$existing_fingerprints" == "" ]]; then
+		existing_fingerprints=$(_ssh_add -l | awk '{print $2}')
+		export existing_fingerprints
+	fi
+
+	# Older versions of openssh/ssh-keygen return md5 fingerprints vs sha256 in newer versions.
+	# For consistent results, we'll use the one in the ssh-agent container to calculate fingerprints.
+	_ssh_keygen="${winpty} docker exec -i docksal-ssh-agent /run.sh ssh-keygen"
+	new_fingerprint=$(cat ${1}.pub | ${_ssh_keygen} -lf /dev/stdin | awk '{print $2}')
+
+	[[ ${existing_fingerprints} == *${new_fingerprint}* ]]
+}
+
 # Add key to ssh-agent or run ssh-add with provided @param
 # @param $1 -D, -l or path to custom key
 ssh_add ()
@@ -3094,6 +3131,12 @@ ssh_add ()
 		return 1
 	fi
 
+	# If there are options (e.g., -l), pass arguments as-is and exit
+	if [[ "${1}" =~ ^- ]]; then
+		_ssh_add "$@"
+		return $?
+	fi
+
 	local ssh_path="$HOME/.ssh"
 	# On Windows docker and docker-compose expect a Windows style path
 	is_windows && ssh_path=$(cygpath -w "$ssh_path")
@@ -3101,46 +3144,46 @@ ssh_add ()
 	# Ensure ssh_path exists
 	mkdir -p "$ssh_path"
 
-	if ! is_tty; then
-		# In a non-interactive environment (e.g., CI) run non-interactively. Keys with passphrases cannot be used!
-		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
-	fi
+	# Copy all keys from the host to the ssh-agent container
+	docker cp "$ssh_path" docksal-ssh-agent:/
 
-	# Only do this when given an argument (key name) or nothing, but not for options (e.g., -l)
-	if [[ ! "${1}" =~ ^- ]]; then
-		# Copy all keys from the host to the ssh-agent container
-		docker cp "$ssh_path" docksal-ssh-agent:/
-
-		# Add SSH Keys defined in environment variables
-		eval 'ssh_keys=(${!SECRET_SSH_KEY_@})'
-		for ssh_key in "${ssh_keys[@]}"
-		do
-			local ssh_key_name=${!ssh_key}
-			local new_ssh_key="${ssh_path}/${ssh_key_name}"
-
-			# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
-			if is_tty; then
-				# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-				${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
-			else
-				docker exec docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
-			fi
-		done
-	fi
-
-	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
-	if is_tty; then
-		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "$@"
+	# If we have a key name as the argument, add it to the list of keys to load
+	if [[ "${1}" != "" ]]; then
+		if [[ -f "${ssh_path}/${1}" ]]; then
+			local SECRET_SSH_KEY_${1^^}=${1}
+		else
+			echo-error "Key '"${ssh_path}/${1}"' does not exist"
+		fi
+	# Load default keys
 	else
-		docker exec docksal-ssh-agent /run.sh ssh-add "$@"
+		# When ssh-add is called without arguments it should load the default keys
+		[[ -f "${ssh_path}/id_rsa" ]] && local SECRET_SSH_KEY_ID_RSA=id_rsa
+		[[ -f "${ssh_path}/id_dsa" ]] && local SECRET_SSH_KEY_ID_DSA=id_dsa
+		[[ -f "${ssh_path}/id_ecdsa" ]] && local SECRET_SSH_KEY_ID_ECDSA=id_ecdsa
 	fi
-	local ret=$?
 
-	# Remove copied keys from the ssh-agent container after loading into the ssh-agent
-	# Only do this when given an argument (key name) or nothing, but not for options (e.g., -l)
-	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
-	return "$ret"
+	# Load SSH keys into the agent
+	# This is a unified approach, which handles default keys as well as keys passed as an argument
+	eval 'ssh_keys=(${!SECRET_SSH_KEY_@})'
+	for ssh_key in "${ssh_keys[@]}"
+	do
+		local ssh_key_name=${!ssh_key}
+		local ssh_key_path="${ssh_path}/${ssh_key_name}"
+
+		if [[ -f ${ssh_key_path} ]]; then
+			if ! _ssh_key_exists ${ssh_key_path}; then
+				# Call ssh-add in the ssh-agent container
+				_ssh_add ${ssh_key_name}
+			else
+				echo "Key '${ssh_key_name}' already loaded in the agent. Skipping."
+			fi
+		else
+			echo-error "Key '${ssh_key_path}' does not exist"
+		fi
+	done
+
+	# Remove copied keys from the ssh-agent container after loading into the ssh-agent.
+	docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
 }
 
 #----- Installations and updates -----

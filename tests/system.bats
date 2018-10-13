@@ -40,8 +40,8 @@ DOCKSAL_IP=192.168.64.100
 	echo "$output" | grep "Resetting Docksal DNS service and configuring resolver for .docksal domain"
 	unset output
 
-  	# Wait 2s to let the service fully initialize
-  	sleep 2
+	# Wait 2s to let the service fully initialize
+	sleep 2
 
 	# Service is running and image version is correct
 	run fin docker ps
@@ -53,9 +53,9 @@ DOCKSAL_IP=192.168.64.100
 	[[ $SKIP == 1 ]] && skip
 
 	# .docksal domain resolution via ping
-    run ping -c 1 -t 1 anything.docksal
-    [[ "$(echo \"$output\" | awk -F'[()]' '/PING/{print $2}')" == "$DOCKSAL_IP" ]]
-    unset output
+	run ping -c 1 -t 1 anything.docksal
+	[[ "$(echo \"$output\" | awk -F'[()]' '/PING/{print $2}')" == "$DOCKSAL_IP" ]]
+	unset output
 }
 
 @test "DSN: .docksal name resolution via nslookup" {
@@ -63,11 +63,11 @@ DOCKSAL_IP=192.168.64.100
 	skip
 	[[ $SKIP == 1 ]] && skip
 
-    # .docksal domain resolution via nslookup
-    run nslookup anything.docksal
-    #[[ "$(echo \"$output\" | awk '/^Address/ { print $2 }' | tail -1)" == "$DOCKSAL_IP" ]]
-    [[ "$(echo \"$output\" | grep "Address" | tail -1 | tr -d ' ' | awk -F ':' '{print $2}')" == "$DOCKSAL_IP" ]]
-    unset output
+	# .docksal domain resolution via nslookup
+	run nslookup anything.docksal
+	#[[ "$(echo \"$output\" | awk '/^Address/ { print $2 }' | tail -1)" == "$DOCKSAL_IP" ]]
+	[[ "$(echo \"$output\" | grep "Address" | tail -1 | tr -d ' ' | awk -F ':' '{print $2}')" == "$DOCKSAL_IP" ]]
+	unset output
 }
 
 @test "VHOST-PROXY: fin system reset vhost-proxy" {
@@ -77,8 +77,8 @@ DOCKSAL_IP=192.168.64.100
 	echo "$output" | grep "Resetting Docksal HTTP/HTTPS reverse proxy service"
 	unset output
 
-  	# Wait 2s to let the service fully initialize
-  	sleep 2
+	# Wait 2s to let the service fully initialize
+	sleep 2
 
 	# Service is running and image version is correct
 	run fin docker ps
@@ -106,8 +106,8 @@ DOCKSAL_IP=192.168.64.100
 	echo "$output" | egrep "Identity added: id_.+ \(id_.+\)"
 	unset output
 
-  	# Wait 2s to let the service fully initialize
-  	sleep 2
+	# Wait 2s to let the service fully initialize
+	sleep 2
 
 	# Service is running and image version is correct
 	run fin docker ps
@@ -143,12 +143,13 @@ DOCKSAL_IP=192.168.64.100
 		echo "$output" | egrep "4096 SHA256:.+ bats_rsa \(RSA\)"
 		unset output
 
-		# Checking fin ssh-add with custom keys
+		# Checking fin ssh-add with a key listed in docksal.env
 		echo "SECRET_SSH_KEY_TEST=\"test_rsa\"" >> $HOME/.docksal/docksal.env
 		run fin ssh-add
 		echo "$output" | egrep "Identity added: test_rsa"
 		unset output
-
+		# Cleanup
+		sed -i~ '/SECRET_SSH_KEY_TEST/d' $HOME/.docksal/docksal.env
 	else
 		run fin ssh-add
 		# On a real host assuming there is at least one default key
@@ -159,17 +160,11 @@ DOCKSAL_IP=192.168.64.100
 		run fin ssh-add -l
 		echo "$output" | egrep "SHA256:.+ id_.+"
 		unset output
-
-		# Checking fin ssh-add with custom keys
-		echo "SECRET_SSH_KEY_TEST=\"test_rsa\"" >> $HOME/.docksal/docksal.env
-		run fin ssh-add
-		echo "$output" | egrep "Identity added: test_rsa"
-		unset output
 	fi
 
 	# Checking fin ssh-add: key doesn't exist
 	run fin ssh-add doesnt_exist_rsa
-	echo "$output" | grep "doesnt_exist_rsa: No such file or directory"
+	echo "$output" | egrep "Key '.*\/doesnt_exist_rsa' does not exist"
 	unset output
 
 	# Checking fin ssh-add -D
@@ -181,22 +176,29 @@ DOCKSAL_IP=192.168.64.100
 	run fin ssh-add -l
 	echo "$output" | grep "The agent has no identities."
 	unset output
+
+	# Check that the same key will not be added twice
+	# This avoids re-prompting for a passphrase on a key, that's already present in the agent
+	fin ssh-add id_rsa
+	run fin ssh-add id_rsa
+	echo "$output" | egrep "Key 'id_rsa' already loaded in the agent. Skipping."
+	unset output
 }
 
 @test "DNS: .docksal name resolution inside cli" {
 	[[ $SKIP == 1 ]] && skip
 
 	cd ../drupal8 && fin up
-    run fin exec nslookup anything.docksal
-    [[ "$status" == 0 ]]
-    unset output
+	run fin exec nslookup anything.docksal
+	[[ "$status" == 0 ]]
+	unset output
 }
 
 @test "DNS: external name resolution inside cli" {
 	[[ $SKIP == 1 ]] && skip
 
 	cd ../drupal8 && fin up
-    run fin exec nslookup google.com
-    [[ "$status" == 0 ]]
-    unset output
+	run fin exec nslookup google.com
+	[[ "$status" == 0 ]]
+	unset output
 }
