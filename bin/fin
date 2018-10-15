@@ -2954,7 +2954,7 @@ project_create ()
 	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
 		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" docksal.env
+		sed -i~ "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" docksal.env
 		rm -f docksal.env.bak > /dev/null 2>&1
 	)
 
@@ -3668,7 +3668,7 @@ install_tools_windows ()
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
 	# Remove old incorrect line
-	sed -i "s/^\\\\nexport.*$//" "$HOME/.babunrc"
+	sed -i~ "s/^\\\\nexport.*$//" "$HOME/.babunrc"
 	# Disable Babun update checks as they often bring problems
 	if ! (grep '^export DISABLE_CHECK_ON_STARTUP="true"' "$HOME/.babunrc" >/dev/null 2>&1); then
 		echo -e "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> "$HOME/.babunrc"
@@ -5631,7 +5631,7 @@ config_set ()
 			# See https://stackoverflow.com/a/29613573 on why is it escaped so
 			replaceEscaped=$(sed 's/[&/\]/\\&/g' <<< "$value") # escape it
 			# Replace the value if it exists
-			sed -i.bak "s/^$key\=.*$/$key=\"$replaceEscaped\"/g" "$target_env_file"
+			sed -i~ "s/^$key\=.*$/$key=\"$replaceEscaped\"/g" "$target_env_file"
 			# Remove backup
 			rm -f "${target_env_file}.bak" >/dev/null 2>&1
 			echo "Replaced value for $key in $target_env_file"
@@ -5674,7 +5674,7 @@ config_remove ()
 		if grep -q "^${param}\=" "${target_env_file}"; then
 			# Remove the value if it exists
 			echo "Removing ${param} from $target_env_file"
-			sed -i.bak "/^${param}\=.*$/d" "$target_env_file"
+			sed -i~ "/^${param}\=.*$/d" "$target_env_file"
 			# Remove backup
 			rm -f "${target_env_file}.bak" >/dev/null 2>&1
 		else
