@@ -115,72 +115,72 @@ DOCKSAL_IP=192.168.64.100
 	unset output
 }
 
-@test "SSH-AGENT: fin ssh-add" {
+@test "SSH-AGENT: fin ssh-key" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Checking fin ssh-add -D
-	run fin ssh-add -D
+	# Checking "fin ssh-key rm"
+	run fin ssh-key rm
 	echo "$output" | grep "All identities removed."
 	unset output
 
 	# Adding default keys
 	# Run these tests on Travis only
 	if [[ "$TRAVIS" == "true" ]]; then
-		run fin ssh-add
+		run fin ssh-key add
 		echo "$output" | grep "Identity added: id_dsa (id_dsa)"
 		echo "$output" | grep "Identity added: id_ecdsa (id_ecdsa)"
 		echo "$output" | grep "Identity added: id_rsa (id_rsa)"
 		unset output
 
 		# Adding a non-default key
-		run fin ssh-add bats_rsa
+		run fin ssh-key add bats_rsa
 		echo "$output" | grep "Identity added: bats_rsa (bats_rsa)"
 		unset output
 
-		# Checking fin ssh-add -l
-		run fin ssh-add -l
+		# Checking "fin ssh-key ls"
+		run fin ssh-key ls
 		echo "$output" | egrep "SHA256:.+ id_.+"
 		echo "$output" | egrep "4096 SHA256:.+ bats_rsa \(RSA\)"
 		unset output
 
-		# Checking fin ssh-add with a key listed in docksal.env
+		# Checking "fin ssh-key add" with a key listed in docksal.env
 		echo "SECRET_SSH_KEY_TEST=\"test_rsa\"" >> $HOME/.docksal/docksal.env
-		run fin ssh-add
+		run fin ssh-key add
 		echo "$output" | egrep "Identity added: test_rsa"
 		unset output
 		# Cleanup
 		sed -i~ '/SECRET_SSH_KEY_TEST/d' $HOME/.docksal/docksal.env
 	else
-		run fin ssh-add
+		run fin ssh-key add
 		# On a real host assuming there is at least one default key
 		echo "$output" | egrep "Identity added: id_.+ \(id_.+\)"
 		unset output
 
-		# Checking fin ssh-add -l
-		run fin ssh-add -l
+		# Checking fin ssh-key ls
+		run fin ssh-key ls
 		echo "$output" | egrep "SHA256:.+ id_.+"
 		unset output
 	fi
 
-	# Checking fin ssh-add: key doesn't exist
-	run fin ssh-add doesnt_exist_rsa
+	# Checking "fin ssh-key add": key doesn't exist
+	run fin ssh-key add doesnt_exist_rsa
 	echo "$output" | egrep "Key '.*\/doesnt_exist_rsa' does not exist"
 	unset output
 
-	# Checking fin ssh-add -D
-	run fin ssh-add -D
+	# Checking "fin ssh-key rm"
+	run fin ssh-key rm
 	echo "$output" | grep "All identities removed."
 	unset output
 
-	# Checking fin ssh-add -l (no keys)
-	run fin ssh-add -l
+	# Checking "fin ssh-key ls" (no keys)
+	run fin ssh-key ls
 	echo "$output" | grep "The agent has no identities."
 	unset output
 
 	# Check that the same key will not be added twice
 	# This avoids re-prompting for a passphrase on a key, that's already present in the agent
-	fin ssh-add id_rsa
-	run fin ssh-add id_rsa
+	fin ssh-key add id_rsa
+	run fin ssh-key add id_rsa
 	echo "$output" | egrep "Key 'id_rsa' already loaded in the agent. Skipping."
 	unset output
 }
