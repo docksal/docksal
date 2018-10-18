@@ -183,6 +183,15 @@ DOCKSAL_IP=192.168.64.100
 	run fin ssh-key add id_rsa
 	echo "$output" | egrep "Key 'id_rsa' already loaded in the agent. Skipping."
 	unset output
+
+	# Checking "fin ssh-key new"
+	run fin ssh-key new myserver_id_rsa
+	# Check new key files exist and are valid SSH keys
+	ssh-keygen -lf ~/.ssh/myserver_id_rsa
+	ssh-keygen -lf ~/.ssh/myserver_id_rsa.pub
+	# Check public key was printed in the output
+	[[ "$output" == *"$(cat ~/.ssh/myserver_id_rsa.pub)"* ]]
+	unset output
 }
 
 @test "DNS: .docksal name resolution inside cli" {

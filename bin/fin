@@ -1515,12 +1515,13 @@ show_help_ssh-key() {
 	printh "add [key-name]" "Load a private SSH key in ~/.ssh by name (or default keys if no key name given)"
 	printh "ls" "List SSH keys loaded in the agent"
 	printh "rm" "Remove keys from the agent"
-	printh "new" "Generate a new SSH key pair"
+	printh "new [key-name]" "Generate a new SSH key pair"
 
 	echo
 	echo "Examples:"
 	printh "fin ssh-key add" "Adds default SSH keys if found locally (id_rsa/id_dsa/id_ecdsa)"
 	printh "fin ssh-key server_id_rsa" "Adds the key stored in ~/.ssh/server_id_rsa into the agent"
+	printh "fin ssh-key new server2_id_rsa" "Generates a new SSH key pair in ~/.ssh/server2_id_rsa"
 }
 
 show_help_system() {
@@ -3100,6 +3101,31 @@ _ssh_key ()
 	fi
 }
 
+# Generates a new SSH key pair with a given name
+ssh_key_generate ()
+{
+	local ssh_path="$HOME/.ssh"
+	# On Windows docker and docker-compose expect a Windows style path
+	is_windows && ssh_path=$(cygpath -w "$ssh_path")
+
+	ssh_key_name="${1}"
+	# If no key name provided, ask for it
+	[[ "${ssh_key_name}" == "" ]] && read -p "Enter name for a new SSH key (e.g. myserver_id_rsa): " ssh_key_name
+	# Exit if still no key name here
+	[[ "${ssh_key_name}" == "" ]] && exit 1
+
+	ssh_key_path="${ssh_path}/${ssh_key_name}"
+
+	echo "Generating a new 4096 bit RSA key..."
+	ssh-keygen -t rsa -b 4096 -f ${ssh_key_path} -q -N ""
+	chmod 600 ${ssh_key_path}
+	echo "Private key file: ${ssh_key_path}"
+	echo "Public key file:  ${ssh_key_path}.pub"
+	echo
+	echo "Contents of the public SSH key (copy and use this as an authorized key on a remote system):"
+	echo && cat ${ssh_key_path}.pub && echo
+}
+
 # Manage SSH keys in the ssh-agent
 ssh_key ()
 {
@@ -3127,8 +3153,15 @@ ssh_key ()
 	# On Windows docker and docker-compose expect a Windows style path
 	is_windows && ssh_path=$(cygpath -w "$ssh_path")
 
-	# Ensure ssh_path exists
-	mkdir -p "$ssh_path"
+	# If the user does not have any SSH keys (no ~/.ssh folder), offer to generate a default key
+	if [[ ! -d "$ssh_path" ]]; then
+		echo-yellow "You don't seem to have any SSH keys in the default location (${ssh_path})."
+		_confirm "Would you like to generate a default SSH key pair now?" --no-exit || return
+		# Ensure ssh_path exists
+		mkdir -p "$ssh_path"
+		# Generate a default id_rsa key
+		_ssh_key_generate id_rsa
+	fi
 
 	# Copy all keys from the host to the ssh-agent container.
 	# This is a safer method compared to passing individual keys via stdin.
@@ -6667,6 +6700,9 @@ case "$1" in
 		check_docker_running
 		if [[ "$1" == "" ]]; then
 			show_help_ssh-key
+		elif [[ "$1" == "new" ]]; then
+			shift
+			ssh_key_generate "$@"
 		else
 			ssh_key "$@"
 		fi
