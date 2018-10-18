@@ -3598,7 +3598,7 @@ install_tools_mac ()
 		(
 			cd "$CONFIG_DOWNLOADS_DIR" && \
 			tar zxf "$docker_pkg" && \
-			mv "docker/docker" "$CONFIG_BIN_DIR/" && \
+			mv -f "docker/docker" "$CONFIG_BIN_DIR/" && \
 			chmod +x "$DOCKER_BIN"
 		)
 		if_failed "Check file permissions."
@@ -3693,7 +3693,7 @@ install_tools_windows ()
 		(
 			cd "$CONFIG_DOWNLOADS_DIR" && \
 			unzip ${docker_pkg} && \
-			mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
+			mv -f "docker/docker.exe" "$DOCKER_BIN.exe" && \
 			chmod +x "$DOCKER_BIN"
 		)
 		if_failed "Check file permissions."
@@ -3754,7 +3754,7 @@ install_tools_windows ()
 		(
 			cd "$CONFIG_DOWNLOADS_DIR" && \
 			tar zxf "$winpty_pkg" && \
-			mv winpty-*/bin/* "$CONFIG_BIN_DIR/"
+			mv -f winpty-*/bin/* "$CONFIG_BIN_DIR/"
 		)
 		if_failed "Check file permissions."
 	fi
@@ -4257,7 +4257,7 @@ update ()
 			( "$FIN_PATH_UPDATED" update )
 
 			# overwrite old fin
-			sudo mv "$FIN_PATH_UPDATED" "$FIN_PATH"
+			sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
 			exit
 		else
 			echo "Already at $FIN_VERSION."
