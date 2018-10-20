@@ -11,12 +11,22 @@ Minimum RAM requirement: 4GB. 8GB or more recommended.
 
 ### Linux
 
-- CPU should support hardware **VT-x/AMD-V virtualization** and it should be [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
+- CPU with SSE4.2 instruction set supported (most models released in the last 10 years)
 - Supported distributions: Debian with derivatives (Ubuntu, Mint, etc.), Fedora with derivatives (CentOS etc.)
+
+
+If you get output from the following command, then your CPU is good to go:
+
+```bash
+cat /proc/cpuinfo | grep sse4_2
+``` 
+
+Linux distros outside of the Debian and Fedora family may still work (e.g. Alpine). 
+You will have to install Docker manually, then install Docksal as usual on [Linux](#install-linux).
 
 ### Windows
 
-- CPU should support hardware **VT-x/AMD-V virtualization** and it should be [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
+- CPU with hardware virtualization (**VT-x/AMD-V**) supported and [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
 - Windows 7 or newer
 
 <a name="install"></a>
