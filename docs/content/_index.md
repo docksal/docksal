@@ -2,7 +2,7 @@
 title: "Docksal"
 ---
 
-![Docksal](/images/docksald.png)
+![Docksal](/images/docksal-mark-color.svg)
 
 # What is Docksal?
 
