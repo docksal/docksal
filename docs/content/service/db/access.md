@@ -1,5 +1,5 @@
 ---
-title: "MySQL DB access for external tools"
+title: "Access for external tools"
 ---
 
 

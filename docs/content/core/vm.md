@@ -1,5 +1,6 @@
 ---
-title: "Docksal VirtualBox VM configuration"
+title: "VirtualBox VM"
+weight: 3
 ---
 
 

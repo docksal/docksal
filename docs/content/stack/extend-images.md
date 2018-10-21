@@ -1,5 +1,6 @@
 ---
-title: "Extending stock Docksal images"
+title: "Extending stock images"
+weight: 2
 ---
 
 

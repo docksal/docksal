@@ -1,8 +1,8 @@
 ---
 title: "Tools and integrations"
 chapter: true
-weight: 3
-pre: "<b>3. </b>"
+weight: 6
+pre: "<b>6. </b>"
 ---
 
 # Tools and integrations

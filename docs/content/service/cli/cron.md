@@ -1,5 +1,5 @@
 ---
-title: "Running Cron"
+title: "Cron"
 ---
 
 

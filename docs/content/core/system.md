@@ -1,9 +1,10 @@
 ---
-title: "Docksal stack"
+title: "How Docksal works"
+weight: 1
 ---
 
 
-This page explains how Docksal works under the hood.
+This section explains how Docksal works under the hood.
 
 <a name="docksal-system-services"></a>
 ## System services

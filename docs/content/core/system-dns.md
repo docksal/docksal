@@ -1,5 +1,6 @@
 ---
-title: "DNS resolver"
+title: "System: DNS resolver"
+weight: 2
 ---
 
 

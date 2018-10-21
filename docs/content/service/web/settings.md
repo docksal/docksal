@@ -1,10 +1,8 @@
 ---
-title: "Web server: Configuration overrides"
+title: "Apache settings"
 ---
 
-
-
-Configuration overrides can be added to a Docksal project codebase.
+The following settings files in the project codebase can be used to override default Apache settings.
 
 Use `.docksal/etc/apache/httpd-vhost-overrides.conf` to override the default virtual host configuration:
 

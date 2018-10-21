@@ -1,5 +1,5 @@
 ---
-title: "Database sandbox mode (snapshots)"
+title: "Database sandbox mode"
 ---
 
 

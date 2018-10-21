@@ -1,5 +1,6 @@
 ---
-title: "Stack configuration"
+title: "Configuration"
+weight: 1
 ---
 
 

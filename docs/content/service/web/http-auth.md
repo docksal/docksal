@@ -1,5 +1,5 @@
 ---
-title: "Web server: HTTP Basic Authentication"
+title: "Basic HTTP Authentication"
 ---
 
 

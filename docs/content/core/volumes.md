@@ -1,5 +1,6 @@
 ---
-title: "Volumes in Docksal"
+title: "Shared volumes"
+weight: 3
 ---
 
 

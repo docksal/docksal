@@ -1,5 +1,6 @@
 ---
 title: "Stats and analytics"
+weight: 3
 ---
 
 
