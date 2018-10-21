@@ -26,7 +26,7 @@ From the host via `fin`:
 fin drupal --version
 ```
 
-From with the cli container (`fin bash`) drush can be called directly:
+From the cli container (`fin bash`) Drupal Console can be called directly:
 
 ```
 drupal --version
