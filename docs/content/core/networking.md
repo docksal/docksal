@@ -3,6 +3,7 @@ title: "Networking"
 weight: 3
 aliases:
   - /en/master/advanced/networking/
+  - /en/v1.0.0/expose-port/
 ---
 
 <a name="expose-port"></a>
