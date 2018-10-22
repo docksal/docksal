@@ -1,5 +1,7 @@
 ---
 title: "ngrok"
+aliases:
+  - /en/master/tools/ngrok/
 ---
 
 

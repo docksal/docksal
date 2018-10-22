@@ -1,6 +1,8 @@
 ---
 title: "fin help"
 weight: 2
+aliases:
+  - /en/master/fin/fin-help/
 ---
 
 	Docksal control cli utility v1.67.2

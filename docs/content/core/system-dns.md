@@ -1,6 +1,8 @@
 ---
 title: "System: DNS resolver"
 weight: 2
+aliases:
+  - /en/master/advanced/dns-resolver/
 ---
 
 

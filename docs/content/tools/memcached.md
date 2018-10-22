@@ -1,5 +1,7 @@
 ---
 title: "Memcached"
+aliases:
+  - /en/master/tools/memcached/
 ---
 
 

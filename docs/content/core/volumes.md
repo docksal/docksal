@@ -1,6 +1,8 @@
 ---
 title: "Shared volumes"
 weight: 3
+aliases:
+  - /en/master/advanced/volumes/
 ---
 
 

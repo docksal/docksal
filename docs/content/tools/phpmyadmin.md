@@ -1,5 +1,7 @@
 ---
 title: "PHPMyAdmin"
+aliases:
+  - /en/master/tools/phpmyadmin/
 ---
 
 

@@ -1,5 +1,7 @@
 ---
 title: "PHP Code Sniffer"
+aliases:
+  - /en/master/tools/phpcs/
 ---
 
 

@@ -1,5 +1,7 @@
 ---
 title: "Cloud9 IDE"
+aliases:
+  - /en/master/tools/cloud9/
 ---
 
 

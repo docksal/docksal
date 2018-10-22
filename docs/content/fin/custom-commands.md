@@ -1,5 +1,7 @@
 ---
 title: "Custom commands"
+aliases:
+  - /en/master/fin/custom-commands/
 ---
 
 It is possible to extend fin with custom commands per project or per host.

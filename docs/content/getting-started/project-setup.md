@@ -1,6 +1,8 @@
 ---
 title: "Project setup"
 weight: 3
+aliases:
+  - /en/master/getting-started/project-setup/
 ---
 
 ## Configuring a project to use Docksal

@@ -1,6 +1,8 @@
 ---
 title: "Networking"
 weight: 3
+aliases:
+  - /en/master/advanced/networking/
 ---
 
 <a name="expose-port"></a>

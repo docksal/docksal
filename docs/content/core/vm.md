@@ -1,6 +1,8 @@
 ---
 title: "VirtualBox VM"
 weight: 3
+aliases:
+  - /en/master/advanced/vm/
 ---
 
 

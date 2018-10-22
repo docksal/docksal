@@ -1,5 +1,7 @@
 ---
 title: "Cron"
+aliases:
+  - /en/master/advanced/cron/
 ---
 
 

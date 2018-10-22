@@ -1,5 +1,7 @@
 ---
 title: "Terminus"
+aliases:
+  - /en/master/tools/terminus/
 ---
 
 

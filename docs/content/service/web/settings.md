@@ -1,5 +1,7 @@
 ---
 title: "Apache settings"
+aliases:
+  - /en/master/advanced/web-configuration-overrides/
 ---
 
 The following settings files in the project codebase can be used to override default Apache settings.

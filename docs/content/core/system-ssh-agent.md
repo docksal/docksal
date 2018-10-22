@@ -1,6 +1,8 @@
 ---
 title: "System: SSH agent"
 weight: 2
+aliases:
+  - /en/master/advanced/ssh-agent/
 ---
 
 

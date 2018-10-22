@@ -1,5 +1,7 @@
 ---
 title: "Composer"
+aliases:
+  - /en/master/tools/composer/
 ---
 
 

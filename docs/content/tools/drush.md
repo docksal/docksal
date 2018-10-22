@@ -1,5 +1,7 @@
 ---
 title: "Drush"
+aliases:
+  - /en/master/tools/drush/
 ---
 
 

@@ -1,6 +1,8 @@
 ---
 title: "File sharing"
 weight: 3
+aliases:
+  - /en/master/advanced/file-sharing/
 ---
 
 

@@ -1,5 +1,7 @@
 ---
 title: "Basic HTTP Authentication"
+aliases:
+  - /en/master/advanced/web-http-auth/
 ---
 
 

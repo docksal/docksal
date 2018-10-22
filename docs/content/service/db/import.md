@@ -1,5 +1,7 @@
 ---
 title: "Automatic database import"
+aliases:
+  - /en/master/advanced/db-import/
 ---
 
 

@@ -1,6 +1,8 @@
 ---
 title: "Configuration"
 weight: 1
+aliases:
+  - /en/master/advanced/stack-config/
 ---
 
 

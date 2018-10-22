@@ -1,6 +1,8 @@
 ---
 title: "Switching Docker modes"
 weight: 2
+aliases:
+  - /en/master/getting-started/docker-modes/
 ---
 
 ## Using native Docker applications

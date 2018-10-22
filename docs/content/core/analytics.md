@@ -1,6 +1,8 @@
 ---
 title: "Stats and analytics"
 weight: 3
+aliases:
+  - /en/master/advanced/analytics/
 ---
 
 

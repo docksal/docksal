@@ -1,5 +1,7 @@
 ---
 title: "Acquia Drush commands"
+aliases:
+  - /en/master/tools/acquia-drush/
 ---
 
 

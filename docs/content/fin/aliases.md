@@ -1,5 +1,7 @@
 ---
 title: "Project aliases"
+aliases:
+  - /en/master/fin/aliases/
 ---
 
 Usually, fin executes in the context of the current folder (project). With use of aliases you can have fin execute in 

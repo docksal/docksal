@@ -1,5 +1,7 @@
 ---
 title: "Drupal Console"
+aliases:
+  - /en/master/tools/drupal-console/
 ---
 
 

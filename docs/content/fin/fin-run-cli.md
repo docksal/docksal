@@ -1,6 +1,8 @@
 ---
 title: "fin run-cli (rc)"
 weight: 3
+aliases:
+  - /en/master/fin/fin-run-cli/
 ---
 
 ## Disposable cli environments

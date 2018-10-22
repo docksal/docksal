@@ -1,5 +1,7 @@
 ---
 title: "Varnish"
+aliases:
+  - /en/master/tools/varnish/
 ---
 
 

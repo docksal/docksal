@@ -1,6 +1,8 @@
 ---
 title: "Common issues"
 weight: 1
+aliases:
+  - /en/master/troubleshooting/
 ---
 
 {{% notice warning %}}

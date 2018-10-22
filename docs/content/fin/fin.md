@@ -1,6 +1,8 @@
 ---
 title: "fin"
 weight: 1
+aliases:
+  - /en/master/fin/fin/
 ---
 
 Docksal Fin (`fin`) is a command line tool for controlling a Docksal.  

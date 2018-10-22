@@ -1,6 +1,8 @@
 ---
 title: "Installing Docksal"
 weight: 1
+aliases:
+  - /en/master/getting-started/setup/
 ---
 
 ## System requirements

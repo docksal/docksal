@@ -1,5 +1,7 @@
 ---
 title: "Platform.sh"
+aliases:
+  - /en/master/tools/platformsh/
 ---
 
 

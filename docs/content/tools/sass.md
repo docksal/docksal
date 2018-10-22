@@ -1,5 +1,7 @@
 ---
 title: "SASS and Compass"
+aliases:
+  - /en/master/tools/sass/
 ---
 
 

@@ -1,5 +1,7 @@
 ---
 title: "Docksal"
+aliases:
+  - /en/master/
 ---
 
 ![Docksal](/images/docksal-mark-color.svg)

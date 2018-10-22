@@ -1,5 +1,7 @@
 ---
 title: "Addons"
+aliases:
+  - /en/master/fin/addons/
 ---
 
 In addition to the custom commands it is possible to extend fin further with addons per project or per host.

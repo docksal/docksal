@@ -1,5 +1,7 @@
 ---
 title: "Using Redis"
+aliases:
+  - /en/master/tools/redis/
 ---
 
 

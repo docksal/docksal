@@ -1,5 +1,7 @@
 ---
 title: "Xdebug"
+aliases:
+  - /en/master/tools/xdebug/
 ---
 
 

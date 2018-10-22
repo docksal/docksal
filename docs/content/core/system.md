@@ -1,6 +1,8 @@
 ---
 title: "How Docksal works"
 weight: 1
+aliases:
+  - /en/master/advanced/stack/
 ---
 
 

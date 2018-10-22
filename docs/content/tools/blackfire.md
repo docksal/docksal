@@ -1,5 +1,7 @@
 ---
 title: "Blackfire"
+aliases:
+  - /en/master/tools/blackfire/
 ---
 
 

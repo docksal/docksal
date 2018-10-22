@@ -1,5 +1,7 @@
 ---
 title: "Behat"
+aliases:
+  - /en/master/tools/behat/
 ---
 
 

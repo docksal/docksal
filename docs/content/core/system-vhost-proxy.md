@@ -2,7 +2,7 @@
 title: "System: Virtual host proxy"
 weight: 2
 aliases:
-    - /advanced/multiple-projects
+    - /en/master/advanced/multiple-projects/
 ---
 
 

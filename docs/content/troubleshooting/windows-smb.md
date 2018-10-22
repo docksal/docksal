@@ -1,6 +1,8 @@
 ---
 title: "Windows SMB shares"
-weight: 2 
+weight: 2
+aliases:
+  - /en/master/troubleshooting-smb/ 
 ---
 
 Troubleshooting SMB shares creation, mounting, and related issues on Windows
