@@ -19,12 +19,12 @@ To list available commands, either run `fin` with no parameters or `fin help`.
 
 Complex management commands have their own help sections, e.g. `fin help db`
 
-For a complete list of `fin help` topics see [fin-help](../fin/fin-help.md)
+For a complete list of `fin help` topics see [fin-help](/fin/fin-help/)
 
 
 ## Custom commands
 
-Fin can be extended with project level [custom commands](../fin/custom-commands.md) written in any script language.
+Fin can be extended with project level [custom commands](/fin/custom-commands/) written in any script language.
 
 If a projects has custom commands defined, they will show up at the bottom of `fin help`:
 

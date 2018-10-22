@@ -15,7 +15,7 @@ After installation you can switch to using native Docker applications instead of
 
 **Reconfigure Docksal**
 
-Assuming that you have been previously using Docksal with VirtualBox, which was installed according to [setup docs](setup.md):
+Assuming that you have been previously using Docksal with VirtualBox, which was installed according to [setup docs](/getting-started/setup/):
 
 1. Install [Docker for Mac](https://docs.docker.com/docker-for-mac)
 
@@ -60,7 +60,7 @@ This disables the "native" apps mode, resets network settings, starts Docksal VM
 
 **Reconfigure Docksal**
 
-Assuming that you have been previously using Docksal with Babun and VirtualBox, installed according to [setup docs](setup.md).
+Assuming that you have been previously using Docksal with Babun and VirtualBox, installed according to [setup docs](/getting-started/setup/).
 
 1. Install [Docker for Windows](https://docs.docker.com/docker-for-windows).
 

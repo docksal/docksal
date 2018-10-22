@@ -22,14 +22,14 @@ to other projects and containers.
 SSH agent can handle passphrase protected ssh keys, so you don't have to enter the passphrase every time the key is used. 
 The passphrase is entered one only time, when the key is loaded into the agent.
 
-See [Using ssh-agent service](../advanced/ssh-agent.md) for more information. 
+See [Using ssh-agent service](/core/system-ssh-agent/) for more information. 
 
 ### DNS
 
 [docksal-dns](https://github.com/docksal/service-dns) contains a running `dnsmasq` server that resolves `*.docksal` URI's 
-to the Docksal VM IP address (or localhost if you're running a [native Docker app](../getting-started/docker-modes.md)).
+to the Docksal VM IP address (or localhost if you're running a [native Docker app](/getting-started/docker-modes/)).
 
-See [DNS resolver](../advanced/dns-resolver.md) for more information.
+See [DNS resolver](/core/system-dns/) for more information.
 
 ### Reverse proxy
 
@@ -62,5 +62,5 @@ The console can be accessed from the host machine via `fin bash`. Individual too
 <a name="project-customization"></a>
 ## Customizing project configurations
 
-If you are ready to customize Docksal service settings for your project, then check out [Customizing project configurations](../advanced/stack-config.md)
+If you are ready to customize Docksal service settings for your project, then check out [Customizing project configurations](/stack/config/)
 to learn about the `docksal.yml` structure and how to properly edit it.

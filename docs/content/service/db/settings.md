@@ -38,4 +38,4 @@ Available images:
 - MySQL 5.7 - `docksal/db:1.1-mysql-5.7`
 - MySQL 8.0 - `docksal/db:1.1-mysql-8.0`
 
-See documentation for projects using a [custom stack configuration](../advanced/stack-config.md#mysql-version).
+See documentation for projects using a [custom stack configuration](/stack/config/#mysql-version).

@@ -16,7 +16,7 @@ including seeking support from the community and Docksal maintainers if you run 
 
 There are several way to extend a stock Docksal image:
 
-- use a [custom command](../fin/custom-commands.md) and script the adjustments there (e.g., as part of the `init` command)
+- use a [custom command](/fin/custom-commands/) and script the adjustments there (e.g., as part of the `init` command)
 - [maintain your own image](https://github.com/docksal/service-cli/issues/9#issuecomment-308774963) on Docker Hub 
 based on a stock Docksal image
 - use [docker-compose build](https://docs.docker.com/compose/reference/build/)

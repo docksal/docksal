@@ -1,12 +1,12 @@
 ---
-title: "Configuration"
+title: "Stack configuration"
 weight: 1
 aliases:
   - /en/master/advanced/stack-config/
 ---
 
 
-It is recommended that you familiarize yourself with the [Docksal stack](../advanced/stack.md) documentation before reading 
+It is recommended that you familiarize yourself with the [Docksal stack](/stack/config/) documentation before reading 
 this manual. You should understand what project containers are and which project containers exist by default.
 
 **Understanding stack configurations**
@@ -65,13 +65,13 @@ For more details on its role, check [loading order](#loading-order).
 
 It is used to override of some of the default environment variables, without the need for
 a full `docksal.yml` file (e.g., to override `MYSQL_ROOT_PASSWORD`) or to provide additional environment
-variables for your automation scripts (see [custom commands](../fin/custom-commands.md)).
+variables for your automation scripts (see [custom commands](/fin/custom-commands/)).
 
 <a name="docksal-local"></a>
 ### docksal-local.yml, docksal-local.env
 
 `docksal-local.yml` and `docksal-local.env` are used for additional customizations that happen after the main files 
-are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom ports](../advanced/networking.md#expose-port) 
+are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom ports](/core/networking/#expose-port) 
 or switching PHP versions.
 
 These files are intended for local overrides. They should be added to `.gitignore` and never committed into a project 
@@ -108,7 +108,7 @@ The list below goes from the earliest to the latest in this queue.
 
 Loading order:
 
-1. `$HOME/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](../advanced/volumes.md))
+1. `$HOME/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](/core/volumes/))
 2. `$HOME/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`
 3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise
 4. `docksal.env` - sets or modifies environment variables
@@ -283,7 +283,7 @@ All variables changed below will require, at minimum, a project restart `fin res
 
 ### DOCKSAL_NFS_PATH
 
-The location of the folder on the host machine to mount to VirtualBox. See [file sharing](file-sharing.md) for more information.
+The location of the folder on the host machine to mount to VirtualBox. See [file sharing](/core/file-sharing/) for more information.
 
 ### IMAGE_SSH_AGENT
 
@@ -450,7 +450,7 @@ Group ID for the Container User. On MacOS & Linux defaults to current group acco
 
 `Default:  0`
 
-Enables PHP XDebug Service for debugging. See [XDebug](../tools/xdebug.md).
+Enables PHP XDebug Service for debugging. See [XDebug](/tools/xdebug/).
 
 ### SECRET_SSH_PRIVATE_KEY
 
@@ -458,15 +458,15 @@ Use to pass an additional private SSH key. The key is stored in `/home/docker/.s
 
 ### SECRET_ACAPI_EMAIL
 
-Acquia Cloud API Email Address. See [Acquia Drush Commands](../tools/acquia-drush.md).
+Acquia Cloud API Email Address. See [Acquia Drush Commands](/tools/acquia-drush/).
 
 ### SECRET_ACAPI_KEY
 
-Acquia Cloud API Key. See [Acquia Drush Commands](../tools/acquia-drush.md).
+Acquia Cloud API Key. See [Acquia Drush Commands](/tools/acquia-drush/).
 
 ### SECRET_TERMINUS_TOKEN
 
-Token used for logging in to Pantheon's CLI Tool [Terminus](../tools/terminus.md).
+Token used for logging in to Pantheon's CLI Tool [Terminus](/tools/terminus/).
 
 ## CI Variables
 
@@ -570,13 +570,15 @@ fin image registry docksal/db
 
 This is optional, but highly recommended.
 
-Site provisioning can be automated via a [custom command](../fin/custom-commands.md) (e.g., `fin init`, which will call `.docksal/commands/init`). Put project specific initialization tasks there, like:
+Site provisioning can be automated via a [custom command](/fin/custom-commands/) (e.g., `fin init`, which will call `.docksal/commands/init`). Put project specific initialization tasks there, like:
 
 - initialize the Docksal configuration
 - import databases or perform a site install
 - compile SASS
 - run DB updates, special commands, etc.
 - run Behat tests
+
+### Sample projects
 
 For a working example of a Docksal powered project with `fin init` take a look at:
 

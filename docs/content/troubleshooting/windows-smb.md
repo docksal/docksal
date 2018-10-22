@@ -125,7 +125,7 @@ make sure it works.
 **NOTE:** At this step we assume you had already run `fin vm start` and it had failed
 with error related to shares or mounting. You checked out the first step and there seems to be no
 issues with accessing your local IP via explorer. (If error with vm
-start is not related to mounting or shares, then see regular [troubleshooting guide](troubleshooting.md).)
+start is not related to mounting or shares, then see regular [troubleshooting guide](/troubleshooting/common-issues/).)
 
 In this step you need to check access to Docksal IP. Open explorer and navigate to `\\192.168.64.1\`.
 This is the IP that VirtualBox adapter assigns to your host machine. Just like in the previous step, it

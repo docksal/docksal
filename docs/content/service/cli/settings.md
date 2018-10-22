@@ -41,4 +41,4 @@ Available images:
 - PHP 7.1 - `docksal/cli:2.5-php7.1`
 - PHP 7.2 - `docksal/cli:2.5-php7.2`
 
-See documentation for projects using a [custom stack configuration](../advanced/stack-config.md#php-version).
+See documentation for projects using a [custom stack configuration](/stack/config/#php-version).

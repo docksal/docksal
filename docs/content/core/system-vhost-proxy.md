@@ -69,7 +69,7 @@ Note: `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},*.${VIRTUAL_HOS
 Apply configuration changes with `fin project start` (`fin p start` for short).
 
 Note: non `.docksal` domains (e.g., `example.com`) will not be resolved automatically.
-You can use [fin hosts](advanced/fin.md#fin-help-hosts) command to add and manage additional domain names via the system's `hosts` file. 
+You can use [fin hosts](/fin/fin-help/#hosts) command to add and manage additional domain names via the system's `hosts` file. 
 See `fin help hosts`.
 
 Note: Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.

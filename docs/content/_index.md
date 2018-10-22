@@ -23,17 +23,17 @@ any other service needed for a project can be added.
 Docksal does more than simply manage containers. Below is a list of some of Docksal's key features. While it is not
 limited to these features, we think you'll find these to be some of its main selling points.
 
-- Fully [containerized environments](advanced/stack.md)
+- Fully [containerized environments](/stack/config/)
     - all projects stay separated from each other
     - each can have its own requirements
     - each can have different versions of the same service
     - each can be managed independently (start, stop, restart, trash, etc.)
     - each can be extended with any service you want
-- [Zero-configuration](advanced/stack-config.md#zero-configuration) projects - with two commands you can be up and running with an AMP stack without
+- [Zero-configuration](/stack/config/#zero-configuration) projects - with two commands you can be up and running with an AMP stack without
 having to create or understand any configurations
-- Easy to create [configurations](advanced/stack-config.md) to partially or fully override any defaults
+- Easy to create [configurations](/stack/config/) to partially or fully override any defaults
 - Tools such as drush, console, and WP-CLI are built-in so you don't need to have them installed locally
 - Automatic virtual host configuration
-- Support for [custom commands](fin/custom-commands.md) using any interpreter you want
-- Easily [share your site](tools/ngrok.md) over the internet using ngrok. This lets show your project to others without having to 
+- Support for [custom commands](/fin/custom-commands/) using any interpreter you want
+- Easily [share your site](/tools/ngrok/) over the internet using ngrok. This lets show your project to others without having to 
 move your project to a web host somewhere

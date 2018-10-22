@@ -100,7 +100,7 @@ if (PHP_SAPI !== 'cli') {
 <a name="memcache"></a>
 ## Memcache settings (**optional**)
 
-Follow [Memcached](../tools/memcached.md) instructions.
+Follow [Memcached](/tools/memcached/) instructions.
 
 Use `memcached:11211` as the memcached endpoint.
 
