@@ -24,6 +24,9 @@ functions-build:
 check-headers-file:
 	scripts/check-headers-file.sh
 
+test:
+	htmltest
+
 production-build: build check-headers-file ## Build the production site and ensure that noindex headers aren't added
 
 non-production-build: ## Build the non-production site, which adds noindex headers to prevent indexing
