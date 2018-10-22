@@ -150,14 +150,14 @@ Note: If you are working with several projects concurrently, it is a good idea t
 
 Open settings (menu item *File->Settings...*). In the opened window on the left side, select item *Build, Execution, Deployment->Deployment*:
 
-![Screenshot](/images/behat-phpstorm-deployment-configure.png)
+![PHPStorm deployment configuration](/images/behat-phpstorm-deployment-configure.png)
 
 Create a new SFTP connection and fill-out the form. Don't forget to fill-out *Web server root URL*.
 Press the *Test SFTP connection...* button and if everything is ok, you will see that test is successful.
 
 On the second tab, you should check and correct the mapping:
 
-![Screenshot](/images/behat-phpstorm-deployment-configure-mapping.png)
+![PHPStorm deployment mapping](/images/behat-phpstorm-deployment-configure-mapping.png)
 
 Local path is the path to your project on the host machine. Deployment path is `/var/www`.
 
@@ -165,11 +165,11 @@ Local path is the path to your project on the host machine. Deployment path is `
 
 Open settings (menu item *File->Settings...*). In the opened window on the left side, select item *Languages & Frameworks->PHP*:
 
-![Screenshot](/images/behat-phpstorm-PHP-configuration.png)
+![PHPStorm add PHP interpreter](/images/behat-phpstorm-PHP-configuration.png)
 
 To add a new interpreter, click on **...** button on *Interpreter:* line.
 
-![Screenshot](/images/behat-phpstorm-PHP-configuration-deployment.png)
+![PHPStorm add PHP interpreter 2](/images/behat-phpstorm-PHP-configuration-deployment.png)
 
 In the opened window, add a new interpreter and choose the **Deployment configuration** option and deployment server from the select list (it should be server from previous step).
 
@@ -177,7 +177,7 @@ In the opened window, add a new interpreter and choose the **Deployment configur
 
 Open settings (menu item *File->Settings...*). In the opened window on the left side, select item *Languages & Frameworks->PHP->Behat*:
 
-![Screenshot](/images/behat-phpstorm-PHP-Behat-configuration.png)
+![PHPStorm add behat interpreter](/images/behat-phpstorm-PHP-Behat-configuration.png)
 
 Add a new PHP interpreter for Behat (it should be the interpreter from previous step).
 
@@ -187,7 +187,7 @@ Default configuration file: `/var/www/tests/behat/behat.yml`
 
 Check that your `behat.yml` contains `wd_host` for selenium in `Behat\MinkExtension` part:
 
-![Screenshot](/images/behat-behat-yml.png)
+![behat.yml](/images/behat-behat-yml.png)
 
 It should be the same as in `behat.common.yml` for `docker` part.
 
@@ -195,7 +195,7 @@ It should be the same as in `behat.common.yml` for `docker` part.
 
 Open *Run/Debug Configurations* (menu item *Run->Edit Configurations...*). In the opened window on the left side, add the new Behat configuration:
 
-![Screenshot](/images/behat-run-debug-configuration.png)
+![PHPStorm Behat Run configuration](/images/behat-run-debug-configuration.png)
 
 Choose the Test Runner option *Defined in the configuration file*.
 
@@ -203,18 +203,18 @@ Choose the Test Runner option *Defined in the configuration file*.
 
 On the PhpStorm panel, choose Behat debug configuration and run it:
 
-![Screenshot](/images/behat-run-tests.png)
+![PHPStorm run Behat tests button](/images/behat-run-tests.png)
 
 If everything is ok, you will see a window with your test results (all tests are run in this case):
 
-![Screenshot](/images/behat-run-window.png)
+![PHPStorm Behat test results](/images/behat-run-window.png)
 
 You can re-run any scenario from this window. If you click on scenario or test, PhpStorm will open window with this scenario/test.
 
 You can also open the folder with Behat features (`tests/behat/features` directory in your project) and
 run any feature tests by right clicking on it and choosing the **Run 'feature-name'** option.
 
-![Screenshot](/images/behat-test-features.png)
+![PHPStorm run individual feature](/images/behat-test-features.png)
 
 
 ## Using host's Selenium2 driver

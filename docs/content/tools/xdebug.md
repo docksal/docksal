@@ -30,7 +30,7 @@ Note: Starting with Docksal v1.6.0 (and assuming the default stack is used), ins
 1) Open a project in PHPStorm and set a breakpoint wherever you like  
 2) Click on the **Start Listening for PHP Debug Connections** button in PHPStorm
 
-![PHPStorm](/images/xdebug-toggle-listener.png)
+![PHPStorm xdebug toggle](/images/xdebug-toggle-listener.png)
 
 3) Open the project in a browser
 
@@ -38,7 +38,7 @@ A debugging session will start and Xdebug will initialize a connection to PHPSto
 
 4) Click on **Accept** in the **Incoming Connection From Xdebug** dialogue in PHPStorm
 
-![PHPStorm](/images/xdebug-mapping.png)
+![PHPStorm xdebug mapping](/images/xdebug-mapping.png)
 
 PHPStorm will automatically configure a server and directory mappings between the host and the server.
 
@@ -53,7 +53,7 @@ If you don't get the **Incoming Connection From Xdebug** dialogue, use the follo
 
 Map the project directory on the host to `/var/www` on the server:
 
-![PHPStorm](/images/xdebug-mapping-manual.png)
+![PHPStorm xdebug manual mapping](/images/xdebug-mapping-manual.png)
 
 ### Console scripts and Drush
 
@@ -81,14 +81,14 @@ Note: If `PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}` is set before web request d
 2) Apply container configuration with `fin project start` (`fin p start`)  
 3) Adjust the following settings so that PHPStorm can handle debugging Drush commands:
 
-![Screenshot](/images/xdebug-phpstorm-drush.png)
+![PHPStorm debugging with drush](/images/xdebug-phpstorm-drush.png)
 
 (1) Increase the Max. simultaneous connections to allow drush to spawn other drush instances. Otherwise the debugger may get stuck without any response.  
 (2) Disable "Force break at the first line when a script is outside the project." Since the main drush binary resides in `cli` in `/usr/local/bin/drush`, the debugger will break on every drush invocation.
 
 2) Set path mappings for the Drush binary in PHPStorm:
 
-![Screenshot](/images/xdebug-mapping.png)
+![PHPStorm drush path mapping](/images/xdebug-mapping.png)
 
 (1) Set **Name** and **Hostname** to project's virtual host (`VIRTUAL_HOST`)  
 (2) Map the project root to `/var/www`. Additionally map the project level Drush binary to `/usr/local/bin/drush`.

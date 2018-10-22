@@ -26,7 +26,7 @@ fin share
 You will see a console output from the `ngrok` container.  
 Use `*.ngrok.io` web address displayed there to share your project with others:
 
-![](/images/ngrok.png)
+![nging console output](/images/ngrok.png)
 
 Use `Ctrl+C` to stop ngrok and sharing.
 

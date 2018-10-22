@@ -23,7 +23,7 @@ Use the IP for host and the sitename_db_1 port (in this case, `34567`, but it's 
 
 It should look like this:
 
-![macOS DNS settings](/images/db-access-sqlpro.png)
+![sqlpro connection settings](/images/db-access-sqlpro.png)
 
 ## Assigning a static port
 

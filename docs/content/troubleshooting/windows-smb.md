@@ -101,7 +101,7 @@ It should open with no errors and you should see your network shares.
 Usually there are some shares, but you may have none. If there is no shares but IP opens
 without any error messages, then you should be good with this step.
 
-![Getting your IP](/images/troubleshooting-smb-your-shares.png)
+![Your shares](/images/troubleshooting-smb-your-shares.png)
 
 But if you get errors when trying to access IP, then there is an issue with your Windows network settings and
 you need to fix it. Docksal can not fix it for you, because there are dozens of reasons why it
@@ -131,7 +131,7 @@ In this step you need to check access to Docksal IP. Open explorer and navigate 
 This is the IP that VirtualBox adapter assigns to your host machine. Just like in the previous step, it
 should open with no errors and now you should see your network shares.
 
-![Getting your IP](/images/troubleshooting-smb-your-shares2.png)
+![Your shares2](/images/troubleshooting-smb-your-shares2.png)
 
 If you get errors when trying to open it, then there is an issue with VirtualBox network adapter. The
 most common reason is Windows Firewall blocking it. Try disabling your Firewall and check if it

@@ -4,7 +4,7 @@ aliases:
   - /en/master/
 ---
 
-![Docksal](/images/docksal-mark-color.svg)
+![Docksal logo](/images/docksal-mark-color.svg)
 
 # What is Docksal?
 
