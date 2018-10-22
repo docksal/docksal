@@ -5,8 +5,7 @@ aliases:
   - /en/master/advanced/stack-config/
 ---
 
-
-It is recommended that you familiarize yourself with the [Docksal stack](/stack/config/) documentation before reading 
+It is recommended that you first review [How Docksal works](/core/overview/) documentation before reading 
 this manual. You should understand what project containers are and which project containers exist by default.
 
 **Understanding stack configurations**
@@ -501,7 +500,7 @@ reset and update the `cli` service.
 
 [How to find out all supported PHP versions?](#docksal-images)
 
-### Extend or modify config with `docksal-local.yml` or `docksal.yml`
+### Extend or modify config with docksal-local.yml or docksal.yml
 
 When using zero-configuration (or any other), the service image can be overridden in `docksal-local.yml`.
 
@@ -525,7 +524,7 @@ services:
 
 `docksal.yml` will append or modify the configuration only if `DOCKSAL_STACK` is set in `docksal.env`.
 
-### Override config with `docksal.yml`
+### Override config with docksal.yml
 
 When not using a predefined stack (`docksal.yml` is present and `DOCKSAL_STACK` is not set in `docksal.env`), 
 you are in control of everything. In this case the stack configuration is not inherited from 
