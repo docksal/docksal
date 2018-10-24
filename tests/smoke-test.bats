@@ -12,11 +12,60 @@ teardown() {
 	echo "================================================================"
 }
 
+# Checks container health status (if available)
+# @param $1 container id/name
+_healthcheck ()
+{
+    local health_status
+    health_status=$(docker inspect --format='{{json .State.Health.Status}}' "$1" 2>/dev/null)
+
+    # Wait for 5s then exit with 0 if a container does not have a health status property
+    # Necessary for backward compatibility with images that do not support health checks
+    if [[ $? != 0 ]]; then
+	echo "Waiting 10s for container to start..."
+	sleep 10
+	return 0
+    fi
+
+    # If it does, check the status
+    echo $health_status | grep '"healthy"' >/dev/null 2>&1
+}
+
+# Waits for containers to become healthy
+# For reasoning why we are not using  `depends_on` `condition` see here:
+# https://github.com/docksal/docksal/issues/225#issuecomment-306604063
+_healthcheck_wait ()
+{
+    # Wait for cli to become ready by watching its health status
+    local container_name="${NAME}"
+    local delay=5
+    local timeout=30
+    local elapsed=0
+
+    until _healthcheck "$container_name"; do
+	echo "Waiting for $container_name to become ready..."
+	sleep "$delay";
+
+	# Give the container 30s to become ready
+	elapsed=$((elapsed + delay))
+	if ((elapsed > timeout)); then
+	    echo-error "$container_name heathcheck failed" \
+		"Container did not enter a healthy state within the expected amount of time." \
+		"Try ${yellow}fin restart${NC}"
+	    exit 1
+	fi
+    done
+
+    return 0
+}
+
 # To work on a specific test:
 # run `export SKIP=1` locally, then comment skip in the test you want to debug
 
 @test "Proxy container is up and using the \"${IMAGE}\" image" {
 	[[ ${SKIP} == 1 ]] && skip
+
+	_healthcheck_wait
 
 	run docker ps --filter "name=docksal-vhost-proxy" --format "{{ .Image }}"
 	[[ "$output" =~ "$IMAGE" ]]
@@ -26,6 +75,8 @@ teardown() {
 @test "Projects directory is mounted" {
 	[[ ${SKIP} == 1 ]] && skip
 
+	_healthcheck_wait
+
 	run make exec -e CMD='ls -la /projects'
 	[[ "$output" =~ "project1" ]]
 	[[ "$output" =~ "project2" ]]
@@ -33,6 +84,8 @@ teardown() {
 
 @test "Cron is working" {
 	[[ ${SKIP} == 1 ]] && skip
+
+	_healthcheck_wait
 
 	# 'proxyctl cron' should be invoked every minute
 	sleep 60s
@@ -48,6 +101,8 @@ teardown() {
 @test "Test projects are up and running" {
 	[[ ${SKIP} == 1 ]] && skip
 
+	_healthcheck_wait
+
 	fin @project1 restart
 	fin @project2 restart
 	fin @project3 restart
@@ -61,6 +116,8 @@ teardown() {
 @test "Proxy returns 404 for a non-existing virtual-host" {
 	[[ ${SKIP} == 1 ]] && skip
 
+	_healthcheck_wait
+
 	run curl -I http://nonsense.docksal
 	[[ "$output" =~ "HTTP/1.1 404 Not Found" ]]
 	unset output
@@ -68,6 +125,8 @@ teardown() {
 
 @test "Proxy returns 200 for an existing virtual-host" {
 	[[ ${SKIP} == 1 ]] && skip
+
+	_healthcheck_wait
 
 	run curl -I http://project1.docksal
 	[[ "$output" =~ "HTTP/1.1 200 OK" ]]
@@ -81,6 +140,8 @@ teardown() {
 # We have to use a different version of curl here built with http2 support
 @test "Proxy uses HTTP/2 for HTTPS connections" {
 	[[ ${SKIP} == 1 ]] && skip
+
+	_healthcheck_wait
 
 	# Non-existing project
 	run make curl -e ARGS='-kI https://nonsense.docksal'
@@ -99,6 +160,8 @@ teardown() {
 
 @test "Proxy stops project containers after \"${PROJECT_INACTIVITY_TIMEOUT}\" of inactivity" {
 	[[ ${SKIP} == 1 ]] && skip
+
+	_healthcheck_wait
 
 	[[ "$PROJECT_INACTIVITY_TIMEOUT" == "0" ]] &&
 		skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
@@ -133,6 +196,8 @@ teardown() {
 @test "Proxy starts an existing stopped project (HTTP)" {
 	[[ ${SKIP} == 1 ]] && skip
 
+	_healthcheck_wait
+
 	# Make sure the project is stopped
 	fin @project1 stop
 
@@ -148,6 +213,8 @@ teardown() {
 @test "Proxy starts an existing stopped project (HTTPS)" {
 	[[ ${SKIP} == 1 ]] && skip
 
+	_healthcheck_wait
+
 	# Make sure the project is stopped
 	fin @project1 stop
 
@@ -162,6 +229,8 @@ teardown() {
 
 @test "Proxy cleans up non-permanent projects after \"${PROJECT_DANGLING_TIMEOUT}\" of inactivity" {
 	[[ ${SKIP} == 1 ]] && skip
+
+	_healthcheck_wait
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] &&
 		skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
@@ -204,6 +273,8 @@ teardown() {
 @test "Proxy can route request to a non-default port (project)" {
 	[[ ${SKIP} == 1 ]] && skip
 
+	_healthcheck_wait
+
 	# Restart projects to reset timing
 	fin @project3 restart
 
@@ -219,6 +290,8 @@ teardown() {
 @test "Proxy can route request to a non-default port (standalone container)" {
 	[[ ${SKIP} == 1 ]] && skip
 
+	_healthcheck_wait
+
 	run curl -k http://nodejs.docksal
 	[[ "$output" =~ "Hello World!" ]]
 	unset output
@@ -226,6 +299,8 @@ teardown() {
 
 @test "Certs: proxy picks up custom cert based on hostname [stack]" {
 	[[ ${SKIP} == 1 ]] && skip
+
+	_healthcheck_wait
 
 	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
@@ -255,6 +330,8 @@ teardown() {
 @test "Certs: proxy picks up custom cert based on cert name override [stack]" {
 	[[ ${SKIP} == 1 ]] && skip
 
+	_healthcheck_wait
+
 	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
 
@@ -276,6 +353,8 @@ teardown() {
 
 @test "Certs: proxy picks up custom cert based on hostname [standalone]" {
 	#[[ ${SKIP} == 1 ]] && skip
+
+	_healthcheck_wait
 
 	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
@@ -299,6 +378,8 @@ teardown() {
 
 @test "Certs: proxy picks up custom cert based on cert name override [standalone]" {
 	#[[ ${SKIP} == 1 ]] && skip
+
+	_healthcheck_wait
 
 	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
