@@ -5,7 +5,9 @@ aliases:
   - /en/master/fin/fin-help/
 ---
 
-	Docksal control cli utility v1.67.2
+## fin {#fin}
+
+	Docksal control cli utility v1.76.0
 	
 	Usage: fin <command>
 	
@@ -46,10 +48,12 @@ aliases:
 	  update                   	Update Docksal
 	
 	Custom commands:
+	  target_cli [g]           	No description
 	
 
-## project {#fin-help-project}
+## project {#project}
 
+	
 	Project management
 	
 	Usage: project <command> [params]
@@ -62,8 +66,7 @@ aliases:
 	
 	  status                   	List project services (alias: fin ps)
 	  restart                  	Restart project services (alias: fin restart)
-	  reset [service]          	Recreate all or specified project services, their containers and named volumes
-	                           	Changes to home directory in `cli` are preserved.
+	  reset [service]          	Recreate all or specified project services, their containers and volumes
 	
 	  remove [option] [service]	Remove all project services, networks and all their volumes, or specified services only
 	      rm [option] [service]	
@@ -86,8 +89,9 @@ aliases:
 	  fin project reset db     	Reset only DB service to start with DB from scratch
 	  fin project create       	Start a new project wizard
 
-## db {#fin-help-db}
+## db {#db}
 
+	
 	Database management commands
 	
 	Usage: db <command> [file] [options]
@@ -124,8 +128,9 @@ aliases:
 	  fin db cli --db=nondefault 'select * from users'    Execute query on database other than MYSQL_DATABASE	
 	  fin db create project2 --db-charset=utf8mb4    Create database project2 with utf8mb4 charset	
 
-## system {#fin-help-system}
+## system {#system}
 
+	
 	Manage Docksal system status (Docker should be running)
 	
 	Usage: system <command> [params]
@@ -142,8 +147,9 @@ aliases:
 	  fin system reset vhost-proxy	Reset Docksal HTTP/HTTPS reverse proxy service (resolves *.docksal domain names into container IPs)
 	  fin system reset ssh-agent	Reset Docksal ssh-agent service
 
-## config {#fin-help-config}
+## config {#config}
 
+	
 	Display, generate, or change project configuration
 	
 	Usage: config [command]
@@ -172,8 +178,9 @@ aliases:
 	  fin config set DOCKER_NATIVE=1 --global	Adds DOCKER_NATIVE=1 into $HOME/.docksal/docksal.env
 	  fin config rm DOCKER_NATIVE --global		Removes DOCKER_NATIVE value from $HOME/.docksal/docksal.env
 
-## addon {#fin-help-addon}
+## addon {#addon}
 
+	
 	Docksal Addons management commands.
 	See available addons in the Addons Repository https://github.com/docksal/addons
 	
@@ -187,8 +194,9 @@ aliases:
 	  fin addon install solr   	Install solr addon to the current project
 	  fin addon remove solr    	Uninstall solr addon from the current project
 
-## run-cli {#fin-help-run-cli}
+## run-cli {#run-cli}
 
+	
 	Runs commands in a standalone `cli` container mapped to the current directory.
 	Container has a persistent $HOME directory where something can be saved in between launches.
 	NOTE: `fin cleanup` will clean the persistent $HOME directory
@@ -209,8 +217,9 @@ aliases:
 	  fin rc "ls -la > /tmp/list"				Execute advanced shell command with pipes or stdout redirects happening inside cli
 	  fin rc -e VAR1=hello -e VAR2=world 'echo $VAR1 $VAR2'	Print hello world using ENV variables
 
-## hosts {#fin-help-hosts}
+## hosts {#hosts}
 
+	
 	Add or remove lines to/from OS-dependent hosts file (e.g., /etc/hosts)
 	
 	Usage: hosts [command]
@@ -227,8 +236,9 @@ aliases:
 	  fin hosts remove demo.docksal	Remove *all* lines containing demo.docksal from hosts file
 	  fin hosts                	Output hosts file
 
-## alias {#fin-help-alias}
+## alias {#alias}
 
+	
 	Create, update, or delete project aliases.
 	Aliases provide functionality that is similar to drush aliases.
 	With alias you are able to execute a command in a project without navigating to the project folder.
@@ -248,8 +258,9 @@ aliases:
 	                           		Hint: create alias linking to Drupal sub-site to launch targeted commands
 	  fin alias remove project1		Delete project1 alias
 
-## ssh-add {#fin-help-ssh-add}
+## ssh-add {#ssh-add}
 
+	
 	Add private key identities stored in $HOME/.ssh to the docksal/ssh-agent.
 	When run without arguments, automatically adds the default key files (id_rsa, id_dsa, id_ecdsa).
 	A custom key name can be given as an argument: fin ssh-add [keyname].
@@ -264,8 +275,9 @@ aliases:
 	Examples:
 	  fin ssh-add my_custom_key	Add $HOME/.ssh/my_custom_key to SSH Agent.
 
-## logs {#fin-help-logs}
+## logs {#logs}
 
+	
 	View output from containers.
 	
 	Usage: logs [options] [SERVICE...]
@@ -281,8 +293,9 @@ aliases:
 	  fin logs web             	Show web container logs
 	  fin logs -f web          	Show web container logs and follow it
 
-## image {#fin-help-image}
+## image {#image}
 
+	
 	Docksal images listing and saving
 	
 	Usage: image <command>
