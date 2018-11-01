@@ -29,8 +29,7 @@ this manual. You should understand what project containers are and which project
 2. [Switching MySQL version](#mysql-version)
 3. [Finding supported PHP/MySQL/etc. versions](#docksal-images)
 
-<a name="basics"></a>
-## Basics
+## Basics {#basics}
 
 Docksal relies on [Docker Compose](https://docs.docker.com/compose/) to launch groups of related containers.
 The yml files you use are [Compose Files](https://docs.docker.com/compose/compose-file/). 
@@ -45,8 +44,7 @@ You have to run `fin project start` (`fin p start` for short) to apply configura
 If you remove services or volumes you have to remove them with `fin project rm [service]`.
 
 ## Project configuration files
-<a name="docksal-yml"></a>
-### docksal.yml
+### docksal.yml {#docksal-yml}
 
 `docksal.yml` is a [Compose file](https://docs.docker.com/compose/compose-file/).
 It's the main configuration file for a project and controls its the settings for each service. Use it to
@@ -57,8 +55,7 @@ this way providing a zero-configuration setup.
 
 For more details on its role, check [loading order](#loading-order).
 
-<a name="docksal-env"></a>
-### docksal.env
+### docksal.env {#docksal-env}
 
 `docksal.env` is an [Environment file](https://docs.docker.com/compose/env-file/).
 
@@ -66,8 +63,7 @@ It is used to override of some of the default environment variables, without the
 a full `docksal.yml` file (e.g., to override `MYSQL_ROOT_PASSWORD`) or to provide additional environment
 variables for your automation scripts (see [custom commands](/fin/custom-commands/)).
 
-<a name="docksal-local"></a>
-### docksal-local.yml, docksal-local.env
+### docksal-local.yml, docksal-local.env {#docksal-local}
 
 `docksal-local.yml` and `docksal-local.env` are used for additional customizations that happen after the main files 
 are loaded. See [loading order](#loading-order). A good example of their use is [exposing custom ports](/core/networking/#expose-port) 
@@ -77,8 +73,7 @@ These files are intended for local overrides. They should be added to `.gitignor
 repo. You can always include an example file in the repo, e.g., `example.docksal-local.env`, and instruct users to copy 
 it and adjust as necessary.
 
-<a name="default-configurations"></a>
-## Default stacks
+## Default stacks {#default-configurations}
 
 Docksal ships with a set of default configurations (stacks), which are `yml` files stored in `$HOME/.docksal/stacks/`.
 These files are a good reference when you begin creating a custom project configuration.
@@ -95,8 +90,7 @@ These files are a good reference when you begin creating a custom project config
     Do not change or customize existing default stacks.  
     Use the `.docksal` folder in your project to customize the project configuration.
 
-<a name="loading-order"></a>
-## Configuration files loading order
+## Configuration files loading order {#loading-order}
 
 With this swarm of configuration files, Docksal lets you configure a project in a way that works for you and your team. 
 Just like Bash configuration files (/etc/profile, bashrc, bash_profile, bash_logout), they give the flexibility to 
@@ -116,8 +110,7 @@ Loading order:
 
 To see the files loaded for a particular project run `fin config show`.
 
-<a name="zero-configuration"></a>
-## Zero-configuration
+## Zero-configuration {#zero-configuration}
 
 You can simply create a `.docksal` folder in your project root and run `fin project start` (`fin start` for short).
 The default stack (`$HOME/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case.
@@ -140,8 +133,7 @@ The following stacks are available:
 - `default` - web, db, cli (assumed, when none specified)
 - `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects)
 
-<a name="custom-configuration"></a>
-## Custom configuration
+## Custom configuration {#custom-configuration}
 
 Custom configurations are useful when you have a larger or more complex project. One where a CI server is involved 
 or many people are on a project team, and you have to be careful about maintaining software versions. 
@@ -157,8 +149,7 @@ affect the project configuration. This also means that future Docksal updates, b
 will not automatically apply. You might need to re-generate your static configuration or append those changes manually 
 in `docksal.yml`.
 
-<a name="warning"></a>
-### Don't break your Docksal setup! List of must have values.
+### Don't break your Docksal setup! List of must have values. {#warning}
 
 
 {{% notice warning %}}
@@ -198,8 +189,7 @@ In the `cli` service, there is the `volumes` section. You should not remove or c
       - docksal_ssh_agent:/.ssh-agent:ro
 ```
 
-<a name="checking"></a>
-## Checking project configuration
+## Checking project configuration {#checking}
 
 To review the configuration applied to your project run:
 
@@ -275,8 +265,7 @@ volumes:
 ---------------------
 ```
 
-<a name="configuration-variables"></a>
-## Configuration Variables
+## Configuration Variables {#configuration-variables}
 
 All variables changed below will require, at minimum, a project restart `fin restart` so that they can take effect. Additional steps may be required.
 
@@ -485,8 +474,7 @@ Defines the timeout of inactivity after which the project stack and code base wi
 
 Contains path to the project root directory.
 
-<a name="php-version"></a>
-## Switching PHP versions
+## Switching PHP versions {#php-version}
 
 The PHP version is defined by the `cli` service. The default image used is `docksal/cli:2.5-php7.1`, which uses PHP 7.1.
 
@@ -544,14 +532,12 @@ services:
 
 Note: when not using a predefined stack, you must fully describe all other services (`web`, `db`, etc.) as well.
 
-<a name="mysql-version"></a>
-## Switching MySQL versions
+## Switching MySQL versions {#mysql-version}
 
 Switching MySQL versions is performed in the same way as the PHP version switch. 
 Instead of the `cli` service image you will be modifying the `db` service image.
 
-<a name="docksal-images"></a>
-## Docksal images and versions
+## Docksal images and versions {#docksal-images}
 
 To see all Docker Hub images produced and supported by Docksal team run:
 

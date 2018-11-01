@@ -34,8 +34,7 @@ You will have to install Docker manually, then install Docksal as usual on [Linu
 - CPU with hardware virtualization (**VT-x/AMD-V**) supported and [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
 - Windows 7 or newer
 
-<a name="install"></a>
-## Installation
+## Installation {#install}
 
 ### Choose Operating System
 
@@ -45,8 +44,7 @@ Click your operating system to proceed to OS-tailored docs:
 - [Linux](#install-linux)
 - [Windows](#install-windows)
 
-<a name="install-macos"></a>
-### macOS Docker installation options 
+### macOS Docker installation options {#install-macos} 
 
 Click the preferred option to proceed to option-specific docs.
 
@@ -55,8 +53,7 @@ Click the preferred option to proceed to option-specific docs.
 - [Docker for Mac](#install-macos-docker-for-mac)
     - Somewhat slower, but easier to use and update
 
-<a name="install-macos-virtualbox"></a>
-### macOS with VirtualBox
+### macOS with VirtualBox {#install-macos-virtualbox}
 
 With this method, Docker will run inside the VM in VirtualBox.
 
@@ -82,8 +79,7 @@ With this method, Docker will run inside the VM in VirtualBox.
 
         fin vm start
 
-<a name="install-macos-docker-for-mac"></a>
-### macOS with Docker for Mac
+### macOS with Docker for Mac {#install-macos-docker-for-mac}
 
 1. Download and Install Docker for Mac
 
@@ -97,8 +93,7 @@ With this method, Docker will run inside the VM in VirtualBox.
 
         curl -fsSL get.docksal.io | DOCKER_NATIVE=1 bash
 
-<a name="install-linux"></a>
-### Linux installation options 
+### Linux installation options {#install-linux} 
 
 Click your repo to proceed to docs.
 
@@ -109,8 +104,7 @@ Click your repo to proceed to docs.
 - [CentOS](#install-linux-debian-fedora) 
 - [Other distribution](#install-linux-other)
 
-<a name="install-linux-debian-fedora"></a>
-### Linux. Debian, Ubuntu, Fedora.
+### Linux. Debian, Ubuntu, Fedora {#install-linux-debian-fedora}
 
 Debian with all derivatives (Ubuntu, Raspbian etc.), Ubuntu with derivatives (Mint, etc.), 
 and Fedora with derivatives are supported out of the box with automatic installation. 
@@ -134,8 +128,7 @@ and Fedora with derivatives are supported out of the box with automatic installa
 
         curl -fsSL get.docksal.io | bash
 
-<a name="install-linux-other"></a>
-### Linux. Other distributions
+### Linux. Other distributions {#install-linux-other}
 
 #### Compatibility
 
@@ -151,8 +144,7 @@ then it **is** supported too and you can [follow the steps for compatible distri
 In case your distribution in not compatible with [get.docker.com](https://get.docker.com), you will need to install 
 latest stable Docker for your distribution first, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
-<a name="install-windows"></a>
-### Windows. Linux Shell installation options 
+### Windows. Linux Shell installation options {#install-windows} 
 
 Docksal on Windows requires Linux type shell to run. Choose the options you like.
 
@@ -161,8 +153,7 @@ Docksal on Windows requires Linux type shell to run. Choose the options you like
 - [Ubuntu Application (WSL)](#install-windows-wsl)
     - **Beta.** Harder to install, can ony use Docker for Mac, but native Linux shell, real Ubuntu on Windows.
 
-<a name="install-windows-babun"></a>
-### Windows with Babun. Docker installation options 
+### Windows with Babun. Docker installation options {#install-windows-babun} 
 
 Using Babun as Linux type shell supports 2 options of Docker installation.
 
@@ -171,8 +162,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 - [Docker for Windows](#install-windows-babun-docker-for-windows)
     - Somewhat slower, excludes VirtualBox, but easier to use and update
 
-<a name="install-windows-babun-virtualbox"></a>
-### Windows with Babun and VirtualBox 
+### Windows with Babun and VirtualBox {#install-windows-babun-virtualbox} 
 
 1. Download and Install Babun
 
@@ -196,8 +186,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
         fin vm start
 
-<a name="install-windows-babun-docker-for-windows"></a>
-### Windows with Babun and Docker for Windows 
+### Windows with Babun and Docker for Windows {#install-windows-babun-docker-for-windows} 
 
 1. Download and Install Babun
 
@@ -222,8 +211,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
         curl -fsSL get.docksal.io | bash
 
-<a name="install-windows-wsl"></a>
-### Windows with Ubuntu App (WSL) and Docker for Windows 
+### Windows with Ubuntu App (WSL) and Docker for Windows {#install-windows-wsl} 
 
 Warning: this way of using Docksal is not thoroughly tested. 
 It has been proven to work, but quirks may happen.
@@ -243,8 +231,7 @@ Ubuntu application is previously known as Windows Subsystem for Linux (WSL)
 
     - [Video: installing Docksal into Ubuntu App on Windows 10](https://www.youtube.com/watch?v=FJBN9-dGhyc)
 
-<a name="updates"></a>
-# Updating Docksal
+# Updating Docksal {#updates}
 
 All Docksal components can be updated with a single command:
 
@@ -252,8 +239,7 @@ All Docksal components can be updated with a single command:
 fin update
 ```
 
-<a name="uninstall"></a>
-# Uninstallation
+# Uninstallation {#uninstall}
 
 ### If you used VirtualBox 
 

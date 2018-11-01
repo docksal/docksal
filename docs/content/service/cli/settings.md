@@ -2,8 +2,7 @@
 title: "PHP settings"
 ---
 
-<a name="configuration"></a>
-## PHP configuration
+## PHP configuration {#configuration}
 
 The following settings files in the project codebase can be used to override default PHP settings:
 
@@ -20,8 +19,7 @@ folder in your project repo and modify as necessary.
 
 Apply changes with `fin project restart` (`fin p restart`).
 
-<a name="php-versions"></a>
-## Using different PHP versions
+## Using different PHP versions {#php-versions}
 
 Different PHP versions are handled via using different `cli` service images.  
 

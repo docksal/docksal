@@ -6,8 +6,7 @@ aliases:
   - /en/v1.0.0/expose-port/
 ---
 
-<a name="expose-port"></a>
-## Exposing container ports
+## Exposing container ports {#expose-port}
 
 By default, container ports are not accessible outside of Docker. Other containers can work with them, but you can't access them from your host.
 

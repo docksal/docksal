@@ -8,8 +8,7 @@ aliases:
 
 This section explains how Docksal works under the hood.
 
-<a name="docksal-system-services"></a>
-## System services
+## System services {#docksal-system-services}
 
 When you run `fin update` for the first time, Docksal installs several system containers.  
 To see the list, run `fin docker ps --filter "label=io.docksal.group=system"`.
@@ -38,8 +37,7 @@ When you request `project.docksal` in your browser, Docksal's DNS resolves it to
 This is Docksal's reverse proxy service, which routes the request to the appropriate project's `web` container. 
 This allows for a seamless work with multiple project stacks at the same time.
 
-<a name="docksal-project-services"></a>
-## Project services
+## Project services {#docksal-project-services}
 
 Each project usually consists of at least 3 services: `web`, `db`, and `cli`.
 
@@ -59,8 +57,7 @@ a Linux console with all necessary command line tools installed and pre-configur
 
 The console can be accessed from the host machine via `fin bash`. Individual tools/binaries can be executed via `fin exec`.
 
-<a name="project-customization"></a>
-## Customizing project configurations
+## Customizing project configurations {#project-customization}
 
 If you are ready to customize Docksal service settings for your project, then check out [Customizing project configurations](/stack/config/)
 to learn about the `docksal.yml` structure and how to properly edit it.

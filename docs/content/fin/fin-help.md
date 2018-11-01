@@ -48,10 +48,8 @@ aliases:
 	Custom commands:
 	
 
-## project
+## project {#fin-help-project}
 
-<a name="fin-help-project"></a>
-	
 	Project management
 	
 	Usage: project <command> [params]
@@ -88,10 +86,8 @@ aliases:
 	  fin project reset db     	Reset only DB service to start with DB from scratch
 	  fin project create       	Start a new project wizard
 
-## db
+## db {#fin-help-db}
 
-<a name="fin-help-db"></a>
-	
 	Database management commands
 	
 	Usage: db <command> [file] [options]
@@ -128,10 +124,8 @@ aliases:
 	  fin db cli --db=nondefault 'select * from users'    Execute query on database other than MYSQL_DATABASE	
 	  fin db create project2 --db-charset=utf8mb4    Create database project2 with utf8mb4 charset	
 
-## system
+## system {#fin-help-system}
 
-<a name="fin-help-system"></a>
-	
 	Manage Docksal system status (Docker should be running)
 	
 	Usage: system <command> [params]
@@ -148,10 +142,8 @@ aliases:
 	  fin system reset vhost-proxy	Reset Docksal HTTP/HTTPS reverse proxy service (resolves *.docksal domain names into container IPs)
 	  fin system reset ssh-agent	Reset Docksal ssh-agent service
 
-## config
+## config {#fin-help-config}
 
-<a name="fin-help-config"></a>
-	
 	Display, generate, or change project configuration
 	
 	Usage: config [command]
@@ -180,10 +172,8 @@ aliases:
 	  fin config set DOCKER_NATIVE=1 --global	Adds DOCKER_NATIVE=1 into $HOME/.docksal/docksal.env
 	  fin config rm DOCKER_NATIVE --global		Removes DOCKER_NATIVE value from $HOME/.docksal/docksal.env
 
-## addon
+## addon {#fin-help-addon}
 
-<a name="fin-help-addon"></a>
-	
 	Docksal Addons management commands.
 	See available addons in the Addons Repository https://github.com/docksal/addons
 	
@@ -197,10 +187,8 @@ aliases:
 	  fin addon install solr   	Install solr addon to the current project
 	  fin addon remove solr    	Uninstall solr addon from the current project
 
-## run-cli
+## run-cli {#fin-help-run-cli}
 
-<a name="fin-help-run-cli"></a>
-	
 	Runs commands in a standalone `cli` container mapped to the current directory.
 	Container has a persistent $HOME directory where something can be saved in between launches.
 	NOTE: `fin cleanup` will clean the persistent $HOME directory
@@ -221,10 +209,8 @@ aliases:
 	  fin rc "ls -la > /tmp/list"				Execute advanced shell command with pipes or stdout redirects happening inside cli
 	  fin rc -e VAR1=hello -e VAR2=world 'echo $VAR1 $VAR2'	Print hello world using ENV variables
 
-## hosts
+## hosts {#fin-help-hosts}
 
-<a name="fin-help-hosts"></a>
-	
 	Add or remove lines to/from OS-dependent hosts file (e.g., /etc/hosts)
 	
 	Usage: hosts [command]
@@ -241,10 +227,8 @@ aliases:
 	  fin hosts remove demo.docksal	Remove *all* lines containing demo.docksal from hosts file
 	  fin hosts                	Output hosts file
 
-## alias
+## alias {#fin-help-alias}
 
-<a name="fin-help-alias"></a>
-	
 	Create, update, or delete project aliases.
 	Aliases provide functionality that is similar to drush aliases.
 	With alias you are able to execute a command in a project without navigating to the project folder.
@@ -264,10 +248,8 @@ aliases:
 	                           		Hint: create alias linking to Drupal sub-site to launch targeted commands
 	  fin alias remove project1		Delete project1 alias
 
-## ssh-add
+## ssh-add {#fin-help-ssh-add}
 
-<a name="fin-help-ssh-add"></a>
-	
 	Add private key identities stored in $HOME/.ssh to the docksal/ssh-agent.
 	When run without arguments, automatically adds the default key files (id_rsa, id_dsa, id_ecdsa).
 	A custom key name can be given as an argument: fin ssh-add [keyname].
@@ -282,10 +264,8 @@ aliases:
 	Examples:
 	  fin ssh-add my_custom_key	Add $HOME/.ssh/my_custom_key to SSH Agent.
 
-## logs
+## logs {#fin-help-logs}
 
-<a name="fin-help-logs"></a>
-	
 	View output from containers.
 	
 	Usage: logs [options] [SERVICE...]
@@ -301,10 +281,8 @@ aliases:
 	  fin logs web             	Show web container logs
 	  fin logs -f web          	Show web container logs and follow it
 
-## image
+## image {#fin-help-image}
 
-<a name="fin-help-image"></a>
-	
 	Docksal images listing and saving
 	
 	Usage: image <command>

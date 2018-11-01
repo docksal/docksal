@@ -28,8 +28,7 @@ If above did not help, try:
 
 -----
 
-<a name="issue-01"></a>
-## Issue 1. Failed creating Docksal virtual machine on Windows
+## Issue 1. Failed creating Docksal virtual machine on Windows {#issue-01}
 
 ```
 ...
@@ -54,8 +53,7 @@ Sometimes Virtual Box fails to initialize its network interfaces properly.
 2. Reboot your local host and try again.
 
 
-<a name="issue-02"></a>
-## Issue 2. Error checking TLS connection (vm is not accessible)
+## Issue 2. Error checking TLS connection (vm is not accessible) {#issue-02}
 
 ```
 Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
@@ -84,8 +82,7 @@ fin vm start
 ```
 
 
-<a name="issue-03"></a>
-## Issue 3. Out-of-memory issues
+## Issue 3. Out-of-memory issues {#issue-03}
 
 Composer on Drupal 8 projects might spawn this error:
 
@@ -110,8 +107,7 @@ fin vm ram 4096
 ```
 
 
-<a name="issue-04"></a>
-## Issue 4. Conflicting NFS exports (files are not accessible)
+## Issue 4. Conflicting NFS exports (files are not accessible) {#issue-04}
 
 ```
  ERROR:  conflicting exports for /Users, 192.168.64.100
@@ -130,8 +126,7 @@ With NFS a single directory can only be exported once. It can not be exported se
 Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin vm start` again.
 
 
-<a name="issue-05"></a>
-## Issue 5. Conflicting ports
+## Issue 5. Conflicting ports {#issue-05}
 
 ```
 Resetting Docksal services...
@@ -151,8 +146,7 @@ This prevents Docksal from running properly.
 different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`)
 
 
-<a name="issue-06"></a>
-## Issue 6. Config permissions issue (vm does not start)
+## Issue 6. Config permissions issue (vm does not start) {#issue-06}
 
 ```
 open /Users/John.Doe/.docker/machine/machines/docksal/config.json: permission denied
@@ -171,8 +165,7 @@ fin vm start
 ```
 
 
-<a name="issue-07"></a>
-## Issue 7. Multiple host-only adapters (vm is not created)
+## Issue 7. Multiple host-only adapters (vm is not created) {#issue-07}
 
 ```
 Error with pre-create check: "VirtualBox is configured with multiple host-only adapters with the same IP \"192.168.64.1\". Please remove one."
@@ -186,8 +179,7 @@ Error with pre-create check: "VirtualBox is configured with multiple host-only a
 4. Click through adapters in list and delete the ones with the `192.168.64.1` IP
 
 
-<a name="issue-08"></a>
-## Issue 8. DNS server misbehaving
+## Issue 8. DNS server misbehaving {#issue-08}
 
 ```
 ERROR: error pulling image configuration: Get https://dseasb33srnrn.cloudfront.net/registry-v2/docker/registry/v2/blobs/sha256/9f/9fb8c0aed5fc7cc710884dc9cbd0974cc606053989b4f73f20e8b363e7d6cc7f/data?Expires=1490711517&Signature=SzvWOicPa6yZRxlBh1~vsl2xHtkOXR8xDj~usSP8aS9ZFhNQ8oH5pAcfZyx3sxgPgtqPgSOzuoaBtw5lT0~i0mpt~QCBpkgRhgyRQ8rzkbI1sG9ZRDXvRQ4sG49ckorbHyUT8isG5mEWl3Ar8kateU9he9fdlRhe5V5Zvn-et0s_&Key-Pair-Id=APKAJECH5M7VWIS5YZ6Q: dial tcp: lookup dseasb33srnrn.cloudfront.net on 10.0.2.3:53: server misbehaving
@@ -212,8 +204,7 @@ macOS DNS settings example:
 ![macOS DNS settings](/images/troubleshooting-network-dns.png)
 
 
-<a name="issue-09"></a>
-## Issue 9. FastCGI: incomplete headers
+## Issue 9. FastCGI: incomplete headers {#issue-09}
 
 ```
 web_1        | [Wed Apr 19 14:57:37 2017] [error] [client 172.19.0.6] (111)Connection refused: FastCGI: failed to connect to server "/usr/lib/cgi-bin/php5-fcgi": connect() failed
@@ -228,14 +219,12 @@ Errors like this appear when your Apache is misconfigured. Most often it happens
 Check `docksal.yml` and `.htaccess` files for configuration errors, fix them and run `fin project start` (`fin start` for short).
 
 
-<a name="issue-10"></a>
-## Issue 10. SMB share creation, share mounting and related issues on Windows
+## Issue 10. SMB share creation, share mounting and related issues on Windows {#issue-10}
 
 Please see a separate [troubleshooting document on share creation, share mounting, and related issues](/troubleshooting/windows-smb/).
 
 
-<a name="issue-11"></a>
-## Issue 11. Common MySQL related issues
+## Issue 11. Common MySQL related issues {#issue-11}
 
 ```
 ERROR 2003 (HY000): Can't connect to MySQL server on 'db' (111)
@@ -271,8 +260,7 @@ to run the project.
 
 See Issue 3. Lack of memory for resolution.
 
-<a name="issue-12"></a>
-## Issue 12. VirtualBox installation fails on macOS High Sierra 10.13
+## Issue 12. VirtualBox installation fails on macOS High Sierra 10.13 {#issue-12}
 
 New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced
 around third-party kernel extensions.

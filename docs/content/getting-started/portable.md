@@ -8,8 +8,7 @@ aliases:
 Docksal can be installed from a USB drive or a local folder.  
 This is useful for conferences/trainings/etc. where internet bandwidth is an issue.
 
-<a name="download"></a>
-## Creating a portable Docksal distribution
+## Creating a portable Docksal distribution {#download}
 
 {{% notice note %}}
 A working Docksal 1.2.0+ (fin v1.6.0+) environment is required
@@ -65,8 +64,7 @@ Manually download Docker for Mac/Windows apps into the portable distribution fol
 - [Docker for Windows](https://docs.docker.com/docker-for-windows/install/)
 
 
-<a name="install"></a>
-## Installing from a portable source
+## Installing from a portable source {#install}
 
 {{% notice note %}}
 Babun is included in the portable distribution, but has to be installed manually before proceeding.
@@ -75,8 +73,7 @@ All further commands are expected to be run in Babun on Windows.
 
 Docksal's one-line installer supports portable mode installation and will detect and use local files when available.
 
-<a name="install-virtualbox"></a>
-### Mac and Windows (using VirtualBox)
+### Mac and Windows (using VirtualBox) {#install-virtualbox}
 
 {{% notice note %}}
 This is the recommended setup option.
@@ -94,8 +91,7 @@ fin vm start
 fin image load docksal-default-images.tar
 ```
 
-<a name="install-native"></a>
-### Docker for Mac/Windows ("native" mode)
+### Docker for Mac/Windows ("native" mode) {#install-native}
 
 {{% notice note %}}
 Consider reviewing the [docs](/getting-started/docker-modes/) on switching between "native" applications and VirtualBox.
@@ -111,8 +107,7 @@ curl -fsSL https://get.docksal.io | DOCKER_NATIVE=1 sh
 fin image load docksal-default-images.tar
 ```
 
-<a name="install-linux"></a>
-### Linux
+### Linux {#install-linux}
 
 {{% notice warning %}}
 Only Docksal system and stack images will be installed from the portable source.
