@@ -1,0 +1,44 @@
+title = "Docksal Documentation"
+languageCode = "en-us"
+theme = "learn"
+
+[params]
+  description = "Official Docksal documentation website"
+  editURL = "https://github.com/docksal/docksal/edit/master/docs/"
+
+  # Custom CSS => statis/css/theme-docksal.css
+  themeVariant = "docksal"
+
+  google_tag_manager = "GTM-5H2GJLS"
+
+  version = "v1.11.0"
+
+  [[params.versions]]
+  version = "v1.11.0"
+  branch = "v1.11.0"
+  url = "https://docs.docksal.io"
+
+  [[params.versions]]
+  version = "v1.10.0"
+  branch = "v1.10.0"
+  url = "https://v1-10-0.docs.docksal.io"
+
+[outputs]
+  home = [ "HTML", "RSS", "JSON"]
+
+[menu]
+  [[menu.shortcuts]]
+  name = "<i class='fab fa-github'></i> Github repo"
+  identifier = "ds"
+  url = "https://github.com/docksal/docksal"
+  weight = 10
+
+  [[menu.shortcuts]]
+  name = "<i class='fas fa-list'></i> Versions"
+  url = "/versions/"
+  weight = 20
+
+  [[menu.shortcuts]]
+  name = "<i class='fas fa-bullhorn'></i> Credits"
+  url = "/credits/"
+  weight = 30
