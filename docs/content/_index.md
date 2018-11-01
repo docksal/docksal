@@ -9,17 +9,17 @@ aliases:
 # What is Docksal?
 
 Docksal is a tool for defining and managing web development environments. It uses Docker and Docker Compose to create 
-fully containerized environments for you projects.
+fully containerized environments for your projects.
 
 Running Docker on macOS and Windows is supported via VirtualBox as well as Docker for Mac / Docker for Windows. 
 
-Docksal project stacks a pre-loaded with common development tools, e.g., Composer, PHP Code Sniffer, php-cli, node, npm, 
+Docksal project stacks are pre-loaded with common development tools, which include Composer, PHP Code Sniffer, php-cli, node, npm, 
 ruby, bundler, and python. For PHP, Drupal, and WordPress development, it comes with Drush, Drupal Console, and WP-CLI. 
 
 There is built-in support for Apache Solr, Varnish, Memcache, Selenium, and Behat. 
-And since services are containerized with Docker, any other service needed for a project can be added.
+Since services are containerized with Docker, any other service needed for a project can be added.
 
-Docksal ships with a command-line tool called `fin` that simplifies the management of all components.
+Docksal features a command-line tool called `fin` that simplifies the management of all components.
 
 ## Key features
 
@@ -35,8 +35,8 @@ limited to these features, we think you'll find these to be some of its main sel
 - [Zero-configuration](/stack/config/#zero-configuration) projects - with two commands you can be up and running with 
 an AMP stack without having to create or understand any configurations
 - Easy to create [configurations](/stack/config/) to partially or fully override any defaults
-- Tools such as Composer, Drush, Drupal Console, and WP-CLI are built-in so you don't need to have them installed locally
+- Tools such as Composer, Drush, Drupal Console, and WP-CLI are built-in so you don't need to have them installed on your host computer
 - Automatic virtual host configuration and routing
 - Support for [custom commands](/fin/custom-commands/) using any interpreter you want
-- Easily [share your site](/tools/ngrok/) over the internet using ngrok. This lets show your project to others without 
-having to move your project to a web host somewhere
+- Easily [share your site](/tools/ngrok/) over the internet using ngrok, which lets show your project to others without 
+having to move your project to a web host
