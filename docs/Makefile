@@ -16,6 +16,8 @@ build: ## Build site with production settings and put deliverables in ./public
 build-preview: ## Build site with drafts and future posts enabled
 	$(DOCKER_RUN) $(DOCKER_IMAGE) hugo -D -F
 
+# https://github.com/wjdp/htmltest
+# TODO: run this in a container
 test: ## Test for broken links with htmltest
 	htmltest
 

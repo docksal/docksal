@@ -4,7 +4,7 @@ theme = "learn"
 
 [params]
   description = "Official Docksal documentation website"
-  editURL = "https://github.com/docksal/docksal/edit/master/docs/"
+  editURL = "https://github.com/docksal/docksal/edit/develop/docs/"
 
   # Custom CSS => statis/css/theme-docksal.css
   themeVariant = "docksal"
