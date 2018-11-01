@@ -1,5 +1,5 @@
 DOCKER       = docker
-HUGO_VERSION = 0.49
+HUGO_VERSION = 0.50
 DOCKER_IMAGE = jojomi/hugo:$(HUGO_VERSION)
 DOCKER_RUN   = $(DOCKER) run --rm --interactive --tty --volume $(PWD):/src
 

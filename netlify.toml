@@ -7,7 +7,7 @@ functions = "functions"
 command = "cd docs && make non-production-build"
 
 [build.environment]
-HUGO_VERSION = "0.49"
+HUGO_VERSION = "0.50"
 
 [context.production.environment]
 HUGO_BASEURL = "https://docs.docksal.io/"
