@@ -7,17 +7,27 @@ title: "PHP settings"
 The following settings files in the project codebase can be used to override default PHP settings:
 
 - `.docksal/etc/php/php.ini` - global PHP (web and cli) settings overrides
-- `.docksal/etc/php/php-fpm.conf` - PHP-FPM (web) only settings overrides
+- `.docksal/etc/php/php-fpm.conf` - PHP-FPM (web) overrides on top of what's set globally
 
-Note: for `docksal/cli` images prior to version 2.0 the following files are used to override PHP settings:
+{{% notice note %}}
+Some PHP-FPM (web) settings set by default in the cli container cannot be overridden via `php.ini`.  
+{{% /notice %}}
 
-- `.docksal/etc/php/php.ini` - PHP settings overrides
-- `.docksal/etc/php/php-cli.ini` - command line PHP settings overrides
+The following settings have to be overridden using the `php_admin_value` directive in `php-fpm.conf`:
 
-Copy `examples/.docksal/etc` from the [Docksal](https://github.com/docksal/docksal) project repo into the `.docksal` 
-folder in your project repo and modify as necessary.
+ - `memory_limit`
+ - `max_execution_time`
+ - `upload_max_filesize`
+ - `post_max_size`
+ - `max_input_vars`
 
-Apply changes with `fin project restart` (`fin p restart`).
+{{% notice tip %}}
+It is recommended to add PHP settings overrides in both `php.ini` and `php-fpm.conf` at the same time.
+{{% /notice %}}
+
+You can find example settings overrides [here](https://github.com/docksal/docksal/tree/develop/examples/.docksal/etc/php).
+
+Once settings are in place, apply changes with `fin project restart` (`fin p restart`).
 
 ## Using different PHP versions {#php-versions}
 
