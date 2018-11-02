@@ -167,8 +167,10 @@ You should not remove or change these values.
       # Project root volume
       - project_root:/var/www:ro,nocopy
     labels:
-      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST}
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
       - io.docksal.project-root=${PROJECT_ROOT}
+      - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
     # cli has to be up before web
@@ -456,7 +458,7 @@ Acquia Cloud API Key. See [Acquia Drush Commands](/tools/acquia-drush/).
 
 Token used for logging in to Pantheon's CLI Tool [Terminus](/tools/terminus/).
 
-## CI Variables
+## CI variables
 
 The following variables should only be used within a CI system. They are primarily used for setting up the ability for Docksal to turn off and conserve resources.
 
@@ -473,6 +475,24 @@ Defines the timeout of inactivity after which the project stack and code base wi
 ### PROJECTS_ROOT
 
 Contains path to the project root directory.
+
+### VIRTUAL_HOST_CERT_NAME
+
+Tells `vhost-proxy` service which cert to use for the project. Certs are expected in `$HOME/.docksal/certs`. 
+Project's `VIRTUAL_HOST` setting should match the certificate name.
+
+E.g. for `VIRTUAL_HOST=example.com`, the following cert files must be present on the host:
+
+```bash
+$HOME/.docksal/certs/example.com.crt
+$HOME/.docksal/certs/example.com.key
+```
+
+Also see [Default and custom certs for HTTPS](https://github.com/docksal/service-vhost-proxy#default-and-custom-certs-for-https).
+
+### SANDBOX_PERMANENT
+
+If set to `true`, the sandbox environment will not be removed event after the `PROJECT_DANGLING_TIMEOUT` timeout. 
 
 ## Switching PHP versions {#php-version}
 
