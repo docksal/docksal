@@ -3385,6 +3385,11 @@ detect_dns ()
 		fi
 	fi
 
+	# If localhost address was detected as upstream, fall back to the default
+	if [[ "$DOCKSAL_DNS_UPSTREAM" =~ "127.0."* ]]; then
+		DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
+	fi
+
 	# export to variable and return (for direct usage or debug)
 	export DOCKSAL_DNS_UPSTREAM
 }
