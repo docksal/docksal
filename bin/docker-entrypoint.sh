@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -e # Abort if anything fails
 
 # Symlink certs for the default virtual host (if the default domain is set)
 if [[ "$DEFAULT_CERT" != "" ]] && [[ "$DEFAULT_CERT" != "docksal" ]]; then
