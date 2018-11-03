@@ -1,14 +1,15 @@
 #!/usr/bin/env bats
 
 # Debugging
-# TODO: looks like this only outputs the first line instead of all lines.
 teardown() {
-	echo "Status: $status"
+	echo
+	# TODO: figure out how to deal with this (output from previous run commands showing up along with the error message)
+	echo "Note: ignore the lines between \"...failed\" above and here"
+	echo
+	echo "Status: ${status}"
 	echo "Output:"
 	echo "================================================================"
-	for line in "${lines[@]}"; do
-		echo $line
-	done
+	echo "${output}"
 	echo "================================================================"
 }
 
@@ -209,9 +210,9 @@ teardown() {
 
 	# TODO: WTF is it stopped here?
 	make exec -e CMD='proxyctl stats'
-	curl -I http://example-nodejs.docksal
+	curl -I http://project3.docksal
 
-	run curl http://example-nodejs.docksal
+	run curl http://project3.docksal
 	[[ "$output" =~ "Hello World!" ]]
 	unset output
 }
