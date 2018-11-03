@@ -18,9 +18,9 @@ services:
   - docker
 
 install:
-  - sudo sudo curl -L https://raw.githubusercontent.com/docksal/docksal/${DOCKSAL_VERSION}/bin/fin -o /usr/local/bin/fin && sudo chmod +x /usr/local/bin/fin
+  # Install Docksal to have a matching versions of Docker on the build host
+  - curl -fsSL https://get.docksal.io | DOCKSAL_VERSION=${DOCKSAL_VERSION} bash
   - fin version
-  - fin update
   - fin sysinfo
 
 before_script:
