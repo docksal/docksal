@@ -76,8 +76,6 @@ _healthcheck_wait ()
 @test "Projects directory is mounted" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	_healthcheck_wait
-
 	run make exec -e CMD='ls -la /projects'
 	[[ "$output" =~ "project1" ]]
 	[[ "$output" =~ "project2" ]]
@@ -85,8 +83,6 @@ _healthcheck_wait ()
 
 @test "Cron is working" {
 	[[ ${SKIP} == 1 ]] && skip
-
-	_healthcheck_wait
 
 	# 'proxyctl cron' should be invoked every minute
 	sleep 60s
@@ -102,8 +98,6 @@ _healthcheck_wait ()
 @test "Test projects are up and running" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	_healthcheck_wait
-
 	fin @project1 restart
 	fin @project2 restart
 	fin @project3 restart
@@ -117,8 +111,6 @@ _healthcheck_wait ()
 @test "Proxy returns 404 for a non-existing virtual-host" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	_healthcheck_wait
-
 	run curl -I http://nonsense.docksal
 	[[ "$output" =~ "HTTP/1.1 404 Not Found" ]]
 	unset output
@@ -126,8 +118,6 @@ _healthcheck_wait ()
 
 @test "Proxy returns 200 for an existing virtual-host" {
 	[[ ${SKIP} == 1 ]] && skip
-
-	_healthcheck_wait
 
 	run curl -I http://project1.docksal
 	[[ "$output" =~ "HTTP/1.1 200 OK" ]]
@@ -141,8 +131,6 @@ _healthcheck_wait ()
 # We have to use a different version of curl here built with http2 support
 @test "Proxy uses HTTP/2 for HTTPS connections" {
 	[[ ${SKIP} == 1 ]] && skip
-
-	_healthcheck_wait
 
 	# Non-existing project
 	run make curl -e ARGS='-kI https://nonsense.docksal'
@@ -161,8 +149,6 @@ _healthcheck_wait ()
 
 @test "Proxy stops project containers after \"${PROJECT_INACTIVITY_TIMEOUT}\" of inactivity" {
 	[[ ${SKIP} == 1 ]] && skip
-
-	_healthcheck_wait
 
 	[[ "$PROJECT_INACTIVITY_TIMEOUT" == "0" ]] &&
 		skip "Stopping has been disabled via PROJECT_INACTIVITY_TIMEOUT=0"
@@ -197,8 +183,6 @@ _healthcheck_wait ()
 @test "Proxy starts an existing stopped project (HTTP)" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	_healthcheck_wait
-
 	# Make sure the project is stopped
 	fin @project1 stop
 
@@ -214,8 +198,6 @@ _healthcheck_wait ()
 @test "Proxy starts an existing stopped project (HTTPS)" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	_healthcheck_wait
-
 	# Make sure the project is stopped
 	fin @project1 stop
 
@@ -230,8 +212,6 @@ _healthcheck_wait ()
 
 @test "Proxy cleans up non-permanent projects after \"${PROJECT_DANGLING_TIMEOUT}\" of inactivity" {
 	[[ ${SKIP} == 1 ]] && skip
-
-	_healthcheck_wait
 
 	[[ "$PROJECT_DANGLING_TIMEOUT" == "0" ]] &&
 		skip "Cleanup has been disabled via PROJECT_DANGLING_TIMEOUT=0"
@@ -274,8 +254,6 @@ _healthcheck_wait ()
 @test "Proxy can route request to a non-default port (project)" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	_healthcheck_wait
-
 	# Restart projects to reset timing
 	fin @project3 restart
 
@@ -291,8 +269,6 @@ _healthcheck_wait ()
 @test "Proxy can route request to a non-default port (standalone container)" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	_healthcheck_wait
-
 	run curl -k http://nodejs.docksal
 	[[ "$output" =~ "Hello World!" ]]
 	unset output
@@ -300,8 +276,6 @@ _healthcheck_wait ()
 
 @test "Certs: proxy picks up custom cert based on hostname [stack]" {
 	[[ ${SKIP} == 1 ]] && skip
-
-	_healthcheck_wait
 
 	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
@@ -331,8 +305,6 @@ _healthcheck_wait ()
 @test "Certs: proxy picks up custom cert based on cert name override [stack]" {
 	[[ ${SKIP} == 1 ]] && skip
 
-	_healthcheck_wait
-
 	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
 
@@ -354,8 +326,6 @@ _healthcheck_wait ()
 
 @test "Certs: proxy picks up custom cert based on hostname [standalone]" {
 	#[[ ${SKIP} == 1 ]] && skip
-
-	_healthcheck_wait
 
 	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
@@ -379,8 +349,6 @@ _healthcheck_wait ()
 
 @test "Certs: proxy picks up custom cert based on cert name override [standalone]" {
 	#[[ ${SKIP} == 1 ]] && skip
-
-	_healthcheck_wait
 
 	# Stop all running projects to get a clean output of vhosts configured in nginx
 	fin stop -a
