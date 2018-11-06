@@ -24,7 +24,7 @@ theme = "learn"
   url = "https://v1-10-0.docs.docksal.io"
 
 [outputs]
-  home = [ "HTML", "RSS", "JSON"]
+  home = [ "AMP", "HTML", "JSON", "Sitemap"]
 
 [menu]
   [[menu.shortcuts]]
