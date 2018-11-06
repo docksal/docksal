@@ -4634,12 +4634,12 @@ run_cli ()
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
-	else
-		cmd="$cmd $@"
-	fi
-
+	elif [[ $1 != "" ]]; then
+		cmd="$cmd $1"
 	# Assume bash if no command was given
-	[[ "$cmd" == "" ]] && cmd="bash"
+	else
+		cmd="bash"
+	fi
 
 	# Fail for images from v1, these are executing the commands directly and are not supported anymore.
 	if [[ "$RUN_IMAGE" == docksal/cli:1.* ]]; then
