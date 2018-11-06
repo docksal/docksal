@@ -17,7 +17,7 @@ To list available commands, either run `fin` with no parameters or `fin help`.
 
 
 
-Complex management commands have their own help sections, e.g. `fin help db`
+Complex management commands have their own help sections, e.g., `fin help db`
 
 For a complete list of `fin help` topics see [fin-help](/fin/fin-help/)
 

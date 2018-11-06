@@ -26,7 +26,7 @@ If you get output from the following command, then your CPU is good to go:
 cat /proc/cpuinfo | grep sse4_2
 ``` 
 
-Linux distros outside of the Debian and Fedora family may still work (e.g. Alpine). 
+Linux distros outside of the Debian and Fedora family may still work (e.g., Alpine). 
 You will have to install Docker manually, then install Docksal as usual on [Linux](#install-linux).
 
 ### Windows

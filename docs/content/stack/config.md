@@ -481,7 +481,7 @@ Contains path to the project root directory.
 Tells `vhost-proxy` service which cert to use for the project. Certs are expected in `$HOME/.docksal/certs`. 
 Project's `VIRTUAL_HOST` setting should match the certificate name.
 
-E.g. for `VIRTUAL_HOST=example.com`, the following cert files must be present on the host:
+For `VIRTUAL_HOST=example.com`, the following cert files must be present on the host:
 
 ```bash
 $HOME/.docksal/certs/example.com.crt
