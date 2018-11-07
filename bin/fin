@@ -3183,8 +3183,6 @@ ssh_add ()
 			if ! _ssh_key_exists ${ssh_key_path}; then
 				# Call ssh-add in the ssh-agent container
 				_ssh_add ${ssh_key_name}
-			else
-				echo "Key '${ssh_key_name}' already loaded in the agent. Skipping."
 			fi
 		else
 			echo-error "Key '${ssh_key_path}' does not exist"
