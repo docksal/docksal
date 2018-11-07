@@ -4482,7 +4482,7 @@ _bash ()
 	fi
 
 	# Pass container name to _run
-	CONTAINER_NAME=$1 _exec bash -i
+	CONTAINER_NAME=$1 _exec bash -il
 }
 
 # Run a command in the cli container changing dir to the same folder
@@ -4638,7 +4638,7 @@ run_cli ()
 		cmd="$cmd $1"
 	# Assume bash if no command was given
 	else
-		cmd="bash"
+		cmd="bash -il"
 	fi
 
 	# Fail for images from v1, these are executing the commands directly and are not supported anymore.
