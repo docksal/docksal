@@ -47,6 +47,10 @@ echo " - db"
 headergen "db"
 helpgen db
 
+echo " - ssh-key"
+headergen "ssh-key"
+helpgen ssh-key
+
 echo " - system"
 headergen "system"
 helpgen system
@@ -70,10 +74,6 @@ helpgen hosts
 echo " - alias"
 headergen "alias"
 helpgen alias
-
-echo " - ssh-add"
-headergen "ssh-add"
-helpgen ssh-add
 
 echo " - logs"
 headergen "logs"
