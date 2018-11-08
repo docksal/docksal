@@ -6694,6 +6694,10 @@ case "$1" in
 		shift
 		_exec composer "$@"
 		;;
+	ssh-add)
+		echo-warning "${NC}Deprecated. Use ${yellow}fin ssh-key add${NC} instead."
+		exit 1
+		;;
 	ssh-key)
 		# no load_configuration
 		shift
