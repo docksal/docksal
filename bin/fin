@@ -4269,6 +4269,7 @@ update ()
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 
 		local fin_url=$(get_fin_url)
+		wants_rc_version && DOCKSAL_VERSION=$(get_docksal_latest_version)
 		local new_fin
 		new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
 		if_failed_error "fin download failed."
@@ -4372,13 +4373,18 @@ update ()
 	fi
 }
 
-# Return latest fin download url for the latest tag
-get_latest_fin_url ()
+# Return the latest version
+get_docksal_latest_version ()
 {
 	# Get the latest release tag
 	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases"
-	local latest_tag=$(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
+	echo $(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
+}
 
+# Return latest fin download url for the latest tag
+get_latest_fin_url ()
+{
+	local latest_tag=$(get_docksal_latest_version)
 	# Return the fin raw URL associated with that tag
 	echo "${URL_REPO}/${latest_tag}/bin/fin"
 }
