@@ -7,13 +7,14 @@ aliases:
 
 ## fin {#fin}
 
-	Docksal control cli utility v1.76.0
+	Docksal control cli utility v1.77.0
 	
 	Usage: fin <command>
 	
 	Management Commands:
 	  db <command>             	Manage databases (fin help db)
 	  project <command>        	Manage project(s) (fin help project)
+	  ssh-key <command>        	Manage SSH keys (fin help ssh-key)
 	  system <command>         	Manage Docksal (fin help system)
 	
 	Commands:
@@ -34,7 +35,6 @@ aliases:
 	
 	  init                     	Initialize a project (override it with your own automation fin help init)
 	  addon <command>          	Addons management commands: install, remove (fin help addon)
-	  ssh-add [-lD] [key]      	Adds ssh private key to the authentication agent (fin help ssh-add)
 	  alias                    	Manage aliases that allow fin @alias execution (fin help alias)
 	  cleanup [--hard]         	Remove unused Docker images and projects (saves disk space)
 	  share                    	Create temporary public url for current project using ngrok
@@ -127,6 +127,26 @@ aliases:
 	
 	  fin db cli --db=nondefault 'select * from users'    Execute query on database other than MYSQL_DATABASE	
 	  fin db create project2 --db-charset=utf8mb4    Create database project2 with utf8mb4 charset	
+
+## ssh-key {#ssh-key}
+
+	
+	Manage SSH keys
+	
+	  Manage private SSH key identities stored in the docksal-ssh-agent service.	
+	
+	Usage: fin ssh-key <command> [params]
+	
+	Commands:
+	  add [key-name]           	Load a private SSH key in ~/.ssh by name (or default keys if no key name given)
+	  ls                       	List SSH keys loaded in the agent
+	  rm                       	Remove keys from the agent
+	  new [key-name]           	Generate a new SSH key pair
+	
+	Examples:
+	  fin ssh-key add          	Adds default SSH keys if found locally (id_rsa/id_dsa/id_ecdsa)
+	  fin ssh-key server_id_rsa	Adds the key stored in ~/.ssh/server_id_rsa into the agent
+	  fin ssh-key new server2_id_rsa	Generates a new SSH key pair in ~/.ssh/server2_id_rsa
 
 ## system {#system}
 
@@ -257,23 +277,6 @@ aliases:
 	  fin @project1 drush st   		Execute `drush st` command in directory linked by project1 alias
 	                           		Hint: create alias linking to Drupal sub-site to launch targeted commands
 	  fin alias remove project1		Delete project1 alias
-
-## ssh-add {#ssh-add}
-
-	
-	Add private key identities stored in $HOME/.ssh to the docksal/ssh-agent.
-	When run without arguments, automatically adds the default key files (id_rsa, id_dsa, id_ecdsa).
-	A custom key name can be given as an argument: fin ssh-add [keyname].
-	[keyname] is the file name within $HOME/.ssh
-	
-	Usage: ssh-add [-lD] [key]
-	
-	Options:
-	  -D                       	Deletes all keys from the agent.
-	  -l                       	Lists all keys currently loaded by the agent.
-	
-	Examples:
-	  fin ssh-add my_custom_key	Add $HOME/.ssh/my_custom_key to SSH Agent.
 
 ## logs {#logs}
 
