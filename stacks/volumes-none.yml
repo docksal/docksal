@@ -1,0 +1,15 @@
+# Do not mount the project codebase from the host
+# An empty project_root volume is created and can be used to store the project codebase inside the Docksal stack.
+# Similar to unison, but without the actual sync happening.
+# Can be used to provision completely blank environments and have all work (code checkout, etc.) done inside cli.
+# Provides THE BEST fs performance.
+
+version: "2.1"
+
+volumes:
+  cli_home:  # /home/docker volume in cli
+  project_root: # Project root volume
+  db_data:  # Database data volume
+  # Shared ssh-agent volume
+  docksal_ssh_agent:
+    external: true
