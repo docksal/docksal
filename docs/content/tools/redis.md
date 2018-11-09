@@ -13,7 +13,7 @@ There are multiple different ways to accomplish this.
 
 This can be done by adding a line to reference the custom config file (`.docksal/etc/redis/redis.conf`) in the `docksal.yml` file. The following is an example.
 
-```yml
+```yaml
 version: "2.1"
 
 services:
@@ -32,7 +32,7 @@ This would require using the [wodby/redis](https://github.com/wodby/redis) image
 
 Add the following to the `docksal.yml` file.
 
-```yml
+```yaml
 version: "2.1"
 
 services:
