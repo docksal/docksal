@@ -226,9 +226,6 @@ URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
 URL_REPO_BACKDROP="https://github.com/docksal/example-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
-# Remove URL_REPO_ADDONS in Nov 2018
-URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
-URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
 URL_STACKS_OVERRIDES_IDE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-ide.yml"
 URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
 URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
@@ -4269,7 +4266,6 @@ update ()
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 
 		local fin_url=$(get_fin_url)
-		wants_rc_version && DOCKSAL_VERSION=$(get_docksal_latest_version)
 		local new_fin
 		new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
 		if_failed_error "fin download failed."
@@ -4295,6 +4291,8 @@ update ()
 			local new_version=$(${FIN_PATH_UPDATED} v)
 			echo "fin $new_version downloaded..."
 
+			# Pass the version to the newly downloaded fin to run the updates
+			export DOCKSAL_VERSION=$(get_docksal_version_latest)
 			# Run other Updates 2-5 with newly downloaded fin version
 			( "$FIN_PATH_UPDATED" update )
 
@@ -4374,26 +4372,23 @@ update ()
 }
 
 # Return the latest version
-get_docksal_latest_version ()
+# For RC users, this will return the latest RC release tag. For everyone else - the latest stable release tag.
+get_docksal_version_latest ()
 {
-	# Get the latest release tag
 	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases"
-	echo $(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
+
+	# If we have an RC user and DOCKSAL_VERSION was not overridden, then return the latest RC release tag
+	if wants_rc_version && [[ "${DOCKSAL_VERSION}" == "master" ]]; then
+		echo $(curl -kfsSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
+	else
+		echo ${DOCKSAL_VERSION}
+	fi
 }
 
-# Return latest fin download url for the latest tag
-get_latest_fin_url ()
-{
-	local latest_tag=$(get_docksal_latest_version)
-	# Return the fin raw URL associated with that tag
-	echo "${URL_REPO}/${latest_tag}/bin/fin"
-}
-
-# Return the url for fin. If person has set DOCKSAL_USE_RC then we return that otherwise return masters URL
-# which will return the latest stable version.
+# Return the url for fin
 get_fin_url ()
 {
-	wants_rc_version && echo $(get_latest_fin_url) || echo "${URL_FIN}"
+	echo "${URL_REPO}/$(get_docksal_version_latest)/bin/fin"
 }
 
 check_for_updates ()
