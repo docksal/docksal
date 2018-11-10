@@ -238,6 +238,7 @@ URL_STACKS_STACK_DEFAULT_NODB="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-defau
 URL_STACKS_STACK_NODE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-node.yml"
 URL_STACKS_VOLUMES_BIND="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-bind.yml"
 URL_STACKS_VOLUMES_NFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-nfs.yml"
+URL_STACKS_VOLUMES_NONE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-none.yml"
 URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-unison.yml"
 
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
@@ -4092,6 +4093,7 @@ update_config_files ()
 			$URL_STACKS_STACK_NODE
 			$URL_STACKS_VOLUMES_BIND
 			$URL_STACKS_VOLUMES_NFS
+			$URL_STACKS_VOLUMES_NONE
 			$URL_STACKS_VOLUMES_UNISON
 	"
 	(

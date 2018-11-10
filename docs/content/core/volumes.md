@@ -33,7 +33,7 @@ is exactly the same on the host and inside the VM.
 When a project stack is started, the project root directory (e.g., `/Users/username/Projects/myproject`) is bind mounted 
 into `/var/www` inside the containers. A corresponding line in `docksal.yml` for this would be:
 
-```yml
+```yaml
 version: "2.1"
 
 services:
@@ -51,11 +51,11 @@ container ==bind mount==> Linux VM ==NFS/SMB mount==> Mac/Windows host
 ```
 
 
-## Named volumes
+## Bind volumes
 
 Instead of using a host path every time we want to mount a volume, we can give the volume a name and refer to it by name: 
 
-```yml
+```yaml
 version: "2.1"
 
 services:
@@ -89,7 +89,7 @@ places in the yaml file. We can now swap bind mounting with something else. See 
 
 ## NFS volumes
 
-```yml
+```yaml
 version: "2.1"
 
 volumes:
@@ -163,8 +163,23 @@ Unprecedented, native-like FS speed on macOS and Windows (Linux is already nativ
 - `fin project reset`
 - Wait until initial sync finishes.
 
+
 ## osxfs:cached mode with Docker for Mac
 
 Docksal automatically enables the `osxfs:cached` mode on Docker for Mac.
 
 See [stacks/overrides-osxfs.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-osxfs.yml).
+
+
+## None volumes
+
+This method is similar to the Unison method, but without the actual sync happening at all.  
+Nothing is mounted from the host. An empty `project_root` volume is created and mounted inside containers.
+
+This can be used to provision completely blank environments and have all work (code checkout, etc.) done inside cli.
+
+Provides THE BEST file system performance. Combined with Cloud9, can provide a way of provisioning instant blank 
+development environments with the best performance and consistency for Mac and Windows (Linux has the best performance 
+naturally). The only added cost is having to stick with a web based IDE and terminal.
+
+See [stacks/volumes-none.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-none.yml).
