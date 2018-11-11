@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.79.0
+FIN_VERSION=1.79.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -3575,7 +3575,12 @@ configure_resolver ()
 			# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
 			# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
 			# nslookup returns 0 exit code regardless of the results, so have to pipe it to grep
-			nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			if is_alpine; then
+				# nslookup on Alpine does not support the '-timeout' option
+				timeout -t 5 nslookup google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			else
+				nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			fi
 			local ret=$?
 
 			if [[ "$ret" != "0" ]]; then
