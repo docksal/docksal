@@ -8,19 +8,19 @@ NAME = docksal-vhost-proxy
 .PHONY: build test push shell run start stop logs debug clean release
 
 build:
-	docker build -t $(REPO):$(VERSION) .
+	docker build -t ${REPO}:${VERSION} .
 
 test:
-	IMAGE=$(REPO):$(VERSION) bats tests/smoke-test.bats
+	IMAGE=${REPO}:${VERSION} bats tests/test.bats
 
 push:
-	docker push $(REPO):$(VERSION)
+	docker push ${REPO}:${VERSION}
 
 exec:
-	@docker exec $(NAME) $(CMD)
+	@docker exec ${NAME} ${CMD}
 
 exec-it:
-	@docker exec -it $(NAME) $(CMD)
+	@docker exec -it ${NAME} ${CMD}
 
 shell:
 	@make exec-it -e CMD=bash
@@ -30,29 +30,29 @@ conf-vhosts:
 
 # This is the only place where fin is used/necessary
 start:
-	IMAGE_VHOST_PROXY=$(REPO):$(VERSION) fin system reset vhost-proxy
+	IMAGE_VHOST_PROXY=${REPO}:${VERSION} fin system reset vhost-proxy
 
 stop:
-	docker stop $(NAME)
+	docker stop ${NAME}
 
 logs:
-	docker logs $(NAME)
+	docker logs ${NAME}
 
 logs-follow:
-	docker logs -f $(NAME)
-
-clean:
-	docker rm -vf $(NAME)
-	rm -rf projects
+	docker logs -f ${NAME}
 
 debug: build start logs-follow
 
-release: build
-	make push -e VERSION=$(VERSION)
+release:
+	@scripts/release.sh
 
 # Curl command with http2 support via a docker container
 # Usage: make curl -e ARGS='-kI https://docksal.io'
 curl:
-	docker run -t --rm badouralix/curl-http2 $(ARGS)
+	docker run -t --rm badouralix/curl-http2 ${ARGS}
+
+clean:
+	docker rm -vf ${NAME} || true
+	rm -rf projects
 
 default: build
