@@ -261,16 +261,6 @@ EOF
 	run fin rc --cleanup -T ls /home/docker/test
 	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
 	unset output
-
-	# Check exec_target = run-cli
-	mkdir -p $HOME/.docksal/commands
-	echo "#!/bin/bash" > $HOME/.docksal/commands/target_cli
-	echo "#: exec_target = run-cli" >> $HOME/.docksal/commands/target_cli
-	echo "echo 'Running from run-cli'" >> $HOME/.docksal/commands/target_cli
-	chmod +x $HOME/.docksal/commands/target_cli
-	run fin target_cli
-	[[ "$output" =~ "Running from run-cli" ]]
-	unset output
 }
 
 @test "fin rm -f" {
