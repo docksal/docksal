@@ -263,11 +263,11 @@ EOF
 	unset output
 
 	# Check exec_target = run-cli
-	mkdir -p $HOME/.docksal/commands
-	echo "#!/bin/bash" > $HOME/.docksal/commands/target_cli
-	echo "#: exec_target = run-cli" >> $HOME/.docksal/commands/target_cli
-	echo "echo 'Running from run-cli'" >> $HOME/.docksal/commands/target_cli
-	chmod +x $HOME/.docksal/commands/target_cli
+	mkdir -p .docksal/commands
+	echo "#!/bin/bash" > .docksal/commands/target_cli
+	echo "#: exec_target = run-cli" >> .docksal/commands/target_cli
+	echo "echo 'Running from run-cli'" >> .docksal/commands/target_cli
+	chmod +x .docksal/commands/target_cli
 	run fin target_cli
 	[[ "$output" =~ "Running from run-cli" ]]
 	unset output
