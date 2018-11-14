@@ -110,13 +110,14 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 REQUIREMENTS_DOCKER='18.06.1-ce'
 REQUIREMENTS_DOCKER_COMPOSE='1.22.0'
 REQUIREMENTS_DOCKER_MACHINE='0.15.0'
-REQUIREMENTS_VBOX='5.2.2'  # Remember to update the download URLs below
+REQUIREMENTS_VBOX='5.2.20'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
 # VirtualBox download URLs
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-Win.exe"
+# Remember to update REQUIREMENTS_VBOX above
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
