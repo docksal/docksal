@@ -4305,7 +4305,7 @@ update ()
 			echo "fin $new_version downloaded..."
 
 			# Run other Updates 2-5 with newly downloaded fin version
-			( DOCKSAL_VERSION="${DOCKSAL_VERSION}" "$FIN_PATH_UPDATED" update )
+			( "$FIN_PATH_UPDATED" update )
 
 			# overwrite old fin
 			sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
