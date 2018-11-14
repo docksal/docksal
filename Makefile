@@ -5,7 +5,9 @@ VERSION ?= dev
 REPO = docksal/vhost-proxy
 NAME = docksal-vhost-proxy
 
-.PHONY: build test push shell run start stop logs debug clean release
+.EXPORT_ALL_VARIABLES:
+
+.PHONY: build exec test push shell run start stop logs debug clean release
 
 build:
 	docker build -t ${REPO}:${VERSION} .
