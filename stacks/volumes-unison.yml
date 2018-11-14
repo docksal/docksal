@@ -22,6 +22,7 @@ services:
       - project_root:/destination
     environment:
       - SYNC_DESTINATION=/destination
+      - SYNC_PREFER=newer
       - SYNC_MAX_INOTIFY_WATCHES=524288
       - SYNC_VERBOSE=1
       - SYNC_NODELETE_SOURCE=0
