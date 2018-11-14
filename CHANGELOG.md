@@ -1,6 +1,6 @@
 # Changelog
 
-# 1.11.0 (2018-11-14)
+# 1.11.0 (2018-11-15)
 
 ## New software versions
 
@@ -50,6 +50,8 @@
 - Use a login bash session in `fin run-cli` and `fin bash` (docksal/service-cli#92)
 - Fixed issue related to RC check (#815)
 - Fixed `nslookup` probe on Alpine
+- Set `SYNC_PREFER=newer` in unison volume settings to prefer most recently updated files (#821)
+- Removed the ability for global addons to use `run-cli` because we cannot guarantee that `$HOME/.docksal` directory is mapped inside Docker (#771)
 - Updated automated tests
 
 ## Documentation
