@@ -69,6 +69,7 @@ COPY conf/supervisord.conf /etc/supervisord.conf
 COPY conf/crontab /var/spool/cron/crontabs/root
 COPY bin /usr/local/bin
 COPY www /var/www/proxy
+COPY healthcheck.sh /opt/healthcheck.sh
 
 # Fix permissions
 RUN chmod 0440 /etc/sudoers
@@ -87,6 +88,11 @@ ENV \
 	# Default domain
 	DEFAULT_CERT=docksal
 
+# Starter script
 ENTRYPOINT ["docker-entrypoint.sh"]
 
+# By default, launch supervisord to keep the container running.
 CMD ["supervisord"]
+
+# Health check script
+HEALTHCHECK --interval=5s --timeout=1s --retries=3 CMD ["/opt/healthcheck.sh"]
