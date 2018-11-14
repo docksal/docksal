@@ -64,3 +64,5 @@ SECRET_SSH_KEY_ACQUIA='acquia_key'
 ```
 
 When creating the variable use the file name within `$HOME/.ssh/` directory as the variable value. NOTE: the **private** key should be referenced, not the public one.
+
+Once the key has been added to the `docksal.env` file run `fin ssh-add` to include it within the project.
