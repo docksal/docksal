@@ -168,18 +168,6 @@ services:
       - VIRTUAL_HOST
 ```
 
-## Executing commands inside standalone ad-hoc cli container
-
-This allows you to define a global command that will execute in a standalone cli container spawned on demand.
-It is like running `fin run-cli ...`.
-This will allow you to create a command in node or php that would not actually require them to be installed locally.
-
-In your script define:
-
-```
-#: exec_target = run-cli
-```
-
 ## Grouping Commands
 
 Docksal allows for commands to be grouped together within folders. This is particulary useful when creating a toolkit to share with other developers. Commands can be grouped within the Global Scope `~/.docksal/commands` and on a per project basis.
