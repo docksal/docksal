@@ -2718,6 +2718,7 @@ stop ()
 
 # Restart container(s)
 # @param $1 container_name
+# TODO: refactor this into project level restart (docker-compose restart) vs container level restart (docker restart)
 restart ()
 {
 	check_docksal_environment
@@ -2789,6 +2790,13 @@ project_status ()
 	check_project_unique
 
 	docker-compose ps
+}
+
+# Restarts individual or all project services
+# @param $1 docker-compose service name
+project_restart ()
+{
+	docker-compose restart "$@"
 }
 
 # List Docksal projects
@@ -6464,7 +6472,7 @@ case "$1" in
 			restart)
 				load_configuration
 				shift
-				restart "$@"
+				project_restart "$@"
 				;;
 			reset)
 				shift
