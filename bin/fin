@@ -4268,6 +4268,9 @@ update ()
 		TOTAL_STEPS=4
 	fi
 
+	# Pass the version to the newly downloaded fin to run the updates
+	export DOCKSAL_VERSION=$(get_docksal_version_latest)
+
 	# [STEP 1] Update fin unless already running fin.updated binary
 	if (${FULL_UPDATE}); then
 		testing_warn
@@ -4299,8 +4302,6 @@ update ()
 			local new_version=$(${FIN_PATH_UPDATED} v)
 			echo "fin $new_version downloaded..."
 
-			# Pass the version to the newly downloaded fin to run the updates
-			export DOCKSAL_VERSION=$(get_docksal_version_latest)
 			# Run other Updates 2-5 with newly downloaded fin version
 			( "$FIN_PATH_UPDATED" update )
 
