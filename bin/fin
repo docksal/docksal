@@ -1505,24 +1505,29 @@ show_help_remove ()
 
 show_help_ssh-key() {
 	echo
-	echo "Manage SSH keys"
+	echo "Manage SSH keys loaded into Docksal"
 	echo
-	printh "Manage private SSH key identities stored in the docksal-ssh-agent service."
+	printh "Private SSH keys loaded into the secure docksal-ssh-agent service are accessible to all project containers."
+	printh "This allows containers to connect to the external SSH servers that require SSH keys"
+	printh "without a need to copy over the key into the container every time."
+	printh "Default keys id_rsa/id_dsa/id_ecdsa are loaded automatically on every project start."
 	echo
 	echo "Usage: fin ssh-key <command> [params]"
 
 	echo
 	echo "Commands:"
-	printh "add [key-name]" "Load a private SSH key in ~/.ssh by name (or default keys if no key name given)"
-	printh "ls" "List SSH keys loaded in the agent"
-	printh "rm" "Remove keys from the agent"
+	printh "add [key-name]" "Add a private SSH key from \$HOME/.ssh by file name"
+	printh "" "Adds all default keys (id_rsa/id_dsa/id_ecdsa) if no file name is given."
+
+	printh "ls" "List SSH keys loaded in the docksal-ssh-agent"
+	printh "rm" "Remove all keys from the docksal-ssh-agent"
 	printh "new [key-name]" "Generate a new SSH key pair"
 
 	echo
 	echo "Examples:"
-	printh "fin ssh-key add" "Adds default SSH keys if found locally (id_rsa/id_dsa/id_ecdsa)"
-	printh "fin ssh-key server_id_rsa" "Adds the key stored in ~/.ssh/server_id_rsa into the agent"
-	printh "fin ssh-key new server2_id_rsa" "Generates a new SSH key pair in ~/.ssh/server2_id_rsa"
+	printh "fin ssh-key add" "Loads all SSH keys with default names: id_rsa/id_dsa/id_ecdsa from \$HOME/.ssh/"
+	printh "fin ssh-key server_rsa" "Loads the key stored in \$HOME/.ssh/server_id_rsa into the agent"
+	printh "fin ssh-key new server2_rsa" "Generates a new SSH key pair in ~/.ssh/server2_id_rsa"
 }
 
 show_help_system() {
