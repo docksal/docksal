@@ -244,7 +244,7 @@ URL_DOCKER_NIX="https://get.docker.com/"
 # Until there is an official standalone docker.exe binary available, use the one pulled from Docker for Windows
 # See https://github.com/docker/for-win/issues/1460#issuecomment-390045959
 #URL_DOCKER_WIN="https://download.docker.com/win/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
-URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.10.1/docker-${REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.11.0/docker-${REQUIREMENTS_DOCKER}.zip"
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
