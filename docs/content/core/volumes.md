@@ -158,7 +158,7 @@ The downsides:
 
 Unprecedented, native-like FS speed on macOS and Windows (Linux is already native). See [docksal/unison](https://github.com/docksal/unison) for details
 
-- [Install Docksal](http://docs.docksal.io/en/master/getting-started/setup)
+- [Install Docksal](/getting-started/setup/)
 - Add `DOCKSAL_VOLUMES=unison` in `.docksal/docksal.env` in a project
 - `fin project reset`
 - Wait until initial sync finishes.

@@ -815,7 +815,7 @@ check_docker_running ()
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
 				"2. If #1 did not help, run ${yellow}fin update${NC} to update." \
-				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/en/master/troubleshooting"
+				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/troubleshooting/common-issues/"
 			exit 1
 		fi
 	fi
@@ -1826,7 +1826,7 @@ show_help_init ()
 	echo
 	echo "Creates default project configuration and starts a project, when no project found."
 	echo "This built-in is meant to be overridden with your custom command or addon."
-	echo -e "See ${yellow}https://docs.docksal.io/en/master/fin/custom-commands${NC} on docs for creating custom commands."
+	echo -e "See ${yellow}https://docs.docksal.io/fin/custom-commands/${NC} on docs for creating custom commands."
 
 	echo
 	echo "Usage: init"
@@ -2124,7 +2124,7 @@ docker_machine_start ()
 		docker_machine_env
 		if_failed_error "Failed starting virtual machine" \
 			"In case you see certificates problem, reboot your local host." \
-			"Common issues: https://docs.docksal.io/en/master/troubleshooting"
+			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
 		configure_resolver
 		docker_machine_mounts
 	else
@@ -2441,7 +2441,7 @@ smb_share_mount()
 		else
 			echo-error "SMB share mount failed." \
  				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again." \
- 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/en/master/troubleshooting-smb${NC}"
+ 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/troubleshooting/windows-smb/${NC}"
 			return 1
 		fi
 	fi
