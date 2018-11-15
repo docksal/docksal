@@ -227,17 +227,17 @@ URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
 URL_REPO_BACKDROP="https://github.com/docksal/example-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
-URL_STACKS_OVERRIDES_IDE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-ide.yml"
-URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
-URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
-URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
-URL_STACKS_STACK_DEFAULT="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default.yml"
-URL_STACKS_STACK_DEFAULT_NODB="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default-nodb.yml"
-URL_STACKS_STACK_NODE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-node.yml"
-URL_STACKS_VOLUMES_BIND="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-bind.yml"
-URL_STACKS_VOLUMES_NFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-nfs.yml"
-URL_STACKS_VOLUMES_NONE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-none.yml"
-URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-unison.yml"
+STACKS_OVERRIDES_IDE="overrides-ide.yml"
+STACKS_OVERRIDES_OSXFS="overrides-osxfs.yml"
+STACKS_SERVICES="services.yml"
+STACKS_STACK_ACQUIA="stack-acquia.yml"
+STACKS_STACK_DEFAULT="stack-default.yml"
+STACKS_STACK_DEFAULT_NODB="stack-default-nodb.yml"
+STACKS_STACK_NODE="stack-node.yml"
+STACKS_VOLUMES_BIND="volumes-bind.yml"
+STACKS_VOLUMES_NFS="volumes-nfs.yml"
+STACKS_VOLUMES_NONE="volumes-none.yml"
+STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
@@ -4089,17 +4089,17 @@ update_tools ()
 update_config_files ()
 {
 	files_to_download="
-			$URL_STACKS_OVERRIDES_IDE
-			$URL_STACKS_OVERRIDES_OSXFS
-			$URL_STACKS_SERVICES
-			$URL_STACKS_STACK_ACQUIA
-			$URL_STACKS_STACK_DEFAULT
-			$URL_STACKS_STACK_DEFAULT_NODB
-			$URL_STACKS_STACK_NODE
-			$URL_STACKS_VOLUMES_BIND
-			$URL_STACKS_VOLUMES_NFS
-			$URL_STACKS_VOLUMES_NONE
-			$URL_STACKS_VOLUMES_UNISON
+			$STACKS_OVERRIDES_IDE
+			$STACKS_OVERRIDES_OSXFS
+			$STACKS_SERVICES
+			$STACKS_STACK_ACQUIA
+			$STACKS_STACK_DEFAULT
+			$STACKS_STACK_DEFAULT_NODB
+			$STACKS_STACK_NODE
+			$STACKS_VOLUMES_BIND
+			$STACKS_VOLUMES_NFS
+			$STACKS_VOLUMES_NONE
+			$STACKS_VOLUMES_UNISON
 	"
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
@@ -4108,7 +4108,7 @@ update_config_files ()
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
-			curl -kfsSLO "$f" || exit 1
+			curl -kfsSLO "${URL_REPO}/${DOCKSAL_VERSION}/stacks/$f" || exit 1
 		done
 	)
 
