@@ -4,7 +4,8 @@
 
 ## New software versions
 
-- Docker 18.06.1-ce
+- fin v1.79.4
+- Docker v18.06.1-ce
 - VirtualBox v5.2.20 (macOS Mojave compatibility)
 - System service updates
   - [docksal/dns:1.1](https://github.com/docksal/service-dns/releases/tag/v1.1.0)
