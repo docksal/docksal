@@ -6,7 +6,9 @@
 
 - fin v1.79.4
 - Docker v18.06.1-ce
-- VirtualBox v5.2.20 (macOS Mojave compatibility)
+- VirtualBox v5.2.20
+  - macOS Mojave compatibility
+  - You may have to run `fin update` twice to get VirtualBox automatically updated (macOS and Windows) (#836)
 - System service updates
   - [docksal/dns:1.1](https://github.com/docksal/service-dns/releases/tag/v1.1.0)
     - Switched base image to Alpine 3.8. Overall refactoring.
