@@ -16,6 +16,14 @@ build: ## Build site with production settings and put deliverables in ./public
 build-preview: ## Build site with drafts and future posts enabled
 	$(DOCKER_RUN) $(DOCKER_IMAGE) hugo -D -F
 
+check-headers-file:
+	scripts/check-headers-file.sh
+
+build-production: build check-headers-file ## Build the production site and ensure that noindex headers aren't added
+
+build-non-production: ## Build the non-production site, which adds noindex headers to prevent indexing
+	$(DOCKER_RUN) $(DOCKER_IMAGE) hugo --enableGitInfo
+
 # https://github.com/wjdp/htmltest
 # TODO: run this in a container
 test: ## Test for broken links with htmltest
