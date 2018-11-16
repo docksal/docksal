@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.78.0
+FIN_VERSION=1.79.4
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -110,13 +110,14 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 REQUIREMENTS_DOCKER='18.06.1-ce'
 REQUIREMENTS_DOCKER_COMPOSE='1.22.0'
 REQUIREMENTS_DOCKER_MACHINE='0.15.0'
-REQUIREMENTS_VBOX='5.2.2'  # Remember to update the download URLs below
+REQUIREMENTS_VBOX='5.2.20'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
 # VirtualBox download URLs
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-Win.exe"
+# Remember to update REQUIREMENTS_VBOX above
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
@@ -226,26 +227,24 @@ URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
 URL_REPO_BACKDROP="https://github.com/docksal/example-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
-# Remove URL_REPO_ADDONS in Nov 2018
-URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
-URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
-URL_STACKS_OVERRIDES_IDE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-ide.yml"
-URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
-URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
-URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
-URL_STACKS_STACK_DEFAULT="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default.yml"
-URL_STACKS_STACK_DEFAULT_NODB="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default-nodb.yml"
-URL_STACKS_STACK_NODE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-node.yml"
-URL_STACKS_VOLUMES_BIND="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-bind.yml"
-URL_STACKS_VOLUMES_NFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-nfs.yml"
-URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-unison.yml"
+STACKS_OVERRIDES_IDE="overrides-ide.yml"
+STACKS_OVERRIDES_OSXFS="overrides-osxfs.yml"
+STACKS_SERVICES="services.yml"
+STACKS_STACK_ACQUIA="stack-acquia.yml"
+STACKS_STACK_DEFAULT="stack-default.yml"
+STACKS_STACK_DEFAULT_NODB="stack-default-nodb.yml"
+STACKS_STACK_NODE="stack-node.yml"
+STACKS_VOLUMES_BIND="volumes-bind.yml"
+STACKS_VOLUMES_NFS="volumes-nfs.yml"
+STACKS_VOLUMES_NONE="volumes-none.yml"
+STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
 # Until there is an official standalone docker.exe binary available, use the one pulled from Docker for Windows
 # See https://github.com/docker/for-win/issues/1460#issuecomment-390045959
 #URL_DOCKER_WIN="https://download.docker.com/win/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
-URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.10.1/docker-${REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.11.0/docker-${REQUIREMENTS_DOCKER}.zip"
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
@@ -816,7 +815,7 @@ check_docker_running ()
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
 				"2. If #1 did not help, run ${yellow}fin update${NC} to update." \
-				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/en/master/troubleshooting"
+				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/troubleshooting/common-issues/"
 			exit 1
 		fi
 	fi
@@ -1029,17 +1028,19 @@ _stop_containers ()
 	load_configuration
 	check_project_unique
 
-	echo-green "Disconnecting project network..."
-	# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
-	# The project network will be automatically recreated by docker-compose up.
-	local network_name="${COMPOSE_PROJECT_NAME_SAFE}_default"
-	local network_containers=$(docker network inspect \
-		--format '{{range .Containers}}{{.Name}} {{end}}' ${network_name} 2>/dev/null)
-	# Note: there should be no quotes around ${network_containers} or it won't be split properly
-	for container in ${network_containers}; do
-		docker network disconnect -f "${network_name}" "${container}"
-	done
-	docker network rm "${network_name}" &>/dev/null
+	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]] || [[ -z $1 ]]; then
+		echo-green "Disconnecting project network..."
+		# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
+		# The project network will be automatically recreated by docker-compose up.
+		local network_name="${COMPOSE_PROJECT_NAME_SAFE}_default"
+		local network_containers=$(docker network inspect \
+			--format '{{range .Containers}}{{.Name}} {{end}}' ${network_name} 2>/dev/null)
+		# Note: there should be no quotes around ${network_containers} or it won't be split properly
+		for container in ${network_containers}; do
+			docker network disconnect -f "${network_name}" "${container}"
+		done
+		docker network rm "${network_name}" &>/dev/null
+	fi
 
 	echo-green "Stopping services..."
 	docker-compose stop "$@"
@@ -1504,24 +1505,29 @@ show_help_remove ()
 
 show_help_ssh-key() {
 	echo
-	echo "Manage SSH keys"
+	echo "Manage SSH keys loaded into Docksal"
 	echo
-	printh "Manage private SSH key identities stored in the docksal-ssh-agent service."
+	printh "Private SSH keys loaded into the secure docksal-ssh-agent service are accessible to all project containers."
+	printh "This allows containers to connect to the external SSH servers that require SSH keys"
+	printh "without a need to copy over the key into the container every time."
+	printh "Default keys id_rsa/id_dsa/id_ecdsa are loaded automatically on every project start."
 	echo
 	echo "Usage: fin ssh-key <command> [params]"
 
 	echo
 	echo "Commands:"
-	printh "add [key-name]" "Load a private SSH key in ~/.ssh by name (or default keys if no key name given)"
-	printh "ls" "List SSH keys loaded in the agent"
-	printh "rm" "Remove keys from the agent"
+	printh "add [key-name]" "Add a private SSH key from \$HOME/.ssh by file name"
+	printh "" "Adds all default keys (id_rsa/id_dsa/id_ecdsa) if no file name is given."
+
+	printh "ls" "List SSH keys loaded in the docksal-ssh-agent"
+	printh "rm" "Remove all keys from the docksal-ssh-agent"
 	printh "new [key-name]" "Generate a new SSH key pair"
 
 	echo
 	echo "Examples:"
-	printh "fin ssh-key add" "Adds default SSH keys if found locally (id_rsa/id_dsa/id_ecdsa)"
-	printh "fin ssh-key server_id_rsa" "Adds the key stored in ~/.ssh/server_id_rsa into the agent"
-	printh "fin ssh-key new server2_id_rsa" "Generates a new SSH key pair in ~/.ssh/server2_id_rsa"
+	printh "fin ssh-key add" "Loads all SSH keys with default names: id_rsa/id_dsa/id_ecdsa from \$HOME/.ssh/"
+	printh "fin ssh-key server_rsa" "Loads the key stored in \$HOME/.ssh/server_id_rsa into the agent"
+	printh "fin ssh-key new server2_rsa" "Generates a new SSH key pair in ~/.ssh/server2_id_rsa"
 }
 
 show_help_system() {
@@ -1820,7 +1826,7 @@ show_help_init ()
 	echo
 	echo "Creates default project configuration and starts a project, when no project found."
 	echo "This built-in is meant to be overridden with your custom command or addon."
-	echo -e "See ${yellow}https://docs.docksal.io/en/master/fin/custom-commands${NC} on docs for creating custom commands."
+	echo -e "See ${yellow}https://docs.docksal.io/fin/custom-commands/${NC} on docs for creating custom commands."
 
 	echo
 	echo "Usage: init"
@@ -2118,7 +2124,7 @@ docker_machine_start ()
 		docker_machine_env
 		if_failed_error "Failed starting virtual machine" \
 			"In case you see certificates problem, reboot your local host." \
-			"Common issues: https://docs.docksal.io/en/master/troubleshooting"
+			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
 		configure_resolver
 		docker_machine_mounts
 	else
@@ -2435,7 +2441,7 @@ smb_share_mount()
 		else
 			echo-error "SMB share mount failed." \
  				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again." \
- 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/en/master/troubleshooting-smb${NC}"
+ 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/troubleshooting/windows-smb/${NC}"
 			return 1
 		fi
 	fi
@@ -3577,7 +3583,12 @@ configure_resolver ()
 			# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
 			# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
 			# nslookup returns 0 exit code regardless of the results, so have to pipe it to grep
-			nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			if is_alpine; then
+				# nslookup on Alpine does not support the '-timeout' option
+				timeout -t 5 nslookup google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			else
+				nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			fi
 			local ret=$?
 
 			if [[ "$ret" != "0" ]]; then
@@ -4083,16 +4094,17 @@ update_tools ()
 update_config_files ()
 {
 	files_to_download="
-			$URL_STACKS_OVERRIDES_IDE
-			$URL_STACKS_OVERRIDES_OSXFS
-			$URL_STACKS_SERVICES
-			$URL_STACKS_STACK_ACQUIA
-			$URL_STACKS_STACK_DEFAULT
-			$URL_STACKS_STACK_DEFAULT_NODB
-			$URL_STACKS_STACK_NODE
-			$URL_STACKS_VOLUMES_BIND
-			$URL_STACKS_VOLUMES_NFS
-			$URL_STACKS_VOLUMES_UNISON
+			$STACKS_OVERRIDES_IDE
+			$STACKS_OVERRIDES_OSXFS
+			$STACKS_SERVICES
+			$STACKS_STACK_ACQUIA
+			$STACKS_STACK_DEFAULT
+			$STACKS_STACK_DEFAULT_NODB
+			$STACKS_STACK_NODE
+			$STACKS_VOLUMES_BIND
+			$STACKS_VOLUMES_NFS
+			$STACKS_VOLUMES_NONE
+			$STACKS_VOLUMES_UNISON
 	"
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
@@ -4101,7 +4113,7 @@ update_config_files ()
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
-			curl -kfsSLO "$f" || exit 1
+			curl -kfsSLO "${URL_REPO}/${DOCKSAL_VERSION}/stacks/$f" || exit 1
 		done
 	)
 
@@ -4263,6 +4275,9 @@ update ()
 		TOTAL_STEPS=4
 	fi
 
+	# Pass the version to the newly downloaded fin to run the updates
+	export DOCKSAL_VERSION=$(get_docksal_version_latest)
+
 	# [STEP 1] Update fin unless already running fin.updated binary
 	if (${FULL_UPDATE}); then
 		testing_warn
@@ -4372,22 +4387,24 @@ update ()
 	fi
 }
 
-# Return latest fin download url for the latest tag
-get_latest_fin_url ()
+# Return the latest version
+# For RC users, this will return the latest RC release tag. For everyone else - the latest stable release tag.
+get_docksal_version_latest ()
 {
-	# Get the latest release tag
 	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases"
-	local latest_tag=$(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
 
-	# Return the fin raw URL associated with that tag
-	echo "${URL_REPO}/${latest_tag}/bin/fin"
+	# If we have an RC user and DOCKSAL_VERSION was not overridden, then return the latest RC release tag
+	if wants_rc_version && [[ "${DOCKSAL_VERSION}" == "master" ]]; then
+		echo $(curl -kfsSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
+	else
+		echo ${DOCKSAL_VERSION}
+	fi
 }
 
-# Return the url for fin. If person has set DOCKSAL_USE_RC then we return that otherwise return masters URL
-# which will return the latest stable version.
+# Return the url for fin
 get_fin_url ()
 {
-	wants_rc_version && echo $(get_latest_fin_url) || echo "${URL_FIN}"
+	echo "${URL_REPO}/$(get_docksal_version_latest)/bin/fin"
 }
 
 check_for_updates ()
@@ -4683,9 +4700,6 @@ run_cli ()
 		MOUNT_HOME="dst=/home/docker"
 	fi
 
-	# Allows run-cli to run global addons
-	local MOUNT_DOCKSAL_HOME="type=bind,src=$CONFIG_DIR,dst=$CONFIG_DIR"
-
 	# Address an edge case when run-cli is run in the home folder (/root) on PWD/Katacoda
 	# See https://github.com/docksal/docksal/issues/661
 	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda); then
@@ -4699,7 +4713,6 @@ run_cli ()
 		${winpty} docker run --rm -it \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
-			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
@@ -4721,7 +4734,6 @@ run_cli ()
 		docker run --rm \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
-			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
@@ -6116,11 +6128,7 @@ addon_execute ()
 	_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
 
 	shift
-	if [[ "$_exec_target" == "run-cli" ]]; then
-		cmd="$addon"
-		[[ "$@" != "" ]] && cmd="$addon "$(printf " %q" "$@")
-		run_cli "$cmd"
-	elif [[ "$_exec_target" != "" ]]; then
+	if [[ "$_exec_target" != "" ]]; then
 		# Replace host addon path with the matching path inside cli
 		# "\$PROJECT_ROOT" will be resolved in cli to /var/www
 		cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"

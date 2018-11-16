@@ -7,31 +7,6 @@ aliases:
 
 Troubleshooting SMB shares creation, mounting, and related issues on Windows
 
-## Windows 10 Fall Creators Update 1709
-
-{{% notice info %}}
-Windows 10 Fall Creators Update 1709 disables SMBv1 protocol. You will have to to manually re-enable it.
-{{% /notice %}}
-
-The mount errors looks like this: 
-
-```
-Configuring SMB shares...
-Enter your Windows account password:
-mount: mounting //192.168.64.1/docksal-c on /c failed: Host is down
-exit status 255
-```
-
-You will have to manually enable `SMB 1.0/CIFS Server` package in Windows Feature and reboot the host.  
-See [this issue](https://github.com/docksal/docksal/issues/382) for details.  
-To manually enable SMB1, run elevated Windows Command Prompt and execute:
-
-```cmd
-dism /online /enable-feature /all /featurename:SMB1Protocol-Server
-```
-
-Note: it requires reboot!
-
 ## How SMB related errors look
 
 SMB related errors happen during VM start and look like one of the following:
