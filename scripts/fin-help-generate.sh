@@ -2,7 +2,7 @@
 
 # Generates $OUTFILE as a result
 
-OUTFILE="../docs/fin/fin-help.md"
+OUTFILE="docs/content/fin/fin-help.md"
 
 # Tell fin to remove colors
 export TERM="dumb"
@@ -10,15 +10,12 @@ export TERM="dumb"
 # $1 - header text
 headergen ()
 {
-	echo -e "## $1\n" >> "$(pwd)/$OUTFILE"
+	echo -e "## $1 {#$1}\n" >> "$(pwd)/$OUTFILE"
 }
 
 # $1 commmand
 helpgen ()
 {
-	if [[ "$1" != "" ]]; then
-		echo "<a name=\"fin-help-$1\"></a>" >> "$(pwd)/$OUTFILE"
-	fi
 	fin help "$1" | sed "s/^/	/" >> "$(pwd)/$OUTFILE"
 	echo >> "$(pwd)/$OUTFILE"
 }
@@ -27,6 +24,18 @@ helpgen ()
 
 echo "Generating help..."
 echo "Output: $(pwd)/$OUTFILE"
+
+# Markdown header
+cat <<EOF >> "$(pwd)/$OUTFILE"
+---
+title: "fin help"
+weight: 2
+aliases:
+  - /en/master/fin/fin-help/
+---
+
+EOF
+
 headergen "fin"
 helpgen
 
@@ -37,6 +46,10 @@ helpgen project
 echo " - db"
 headergen "db"
 helpgen db
+
+echo " - ssh-key"
+headergen "ssh-key"
+helpgen ssh-key
 
 echo " - system"
 headergen "system"
@@ -61,10 +74,6 @@ helpgen hosts
 echo " - alias"
 headergen "alias"
 helpgen alias
-
-echo " - ssh-add"
-headergen "ssh-add"
-helpgen ssh-add
 
 echo " - logs"
 headergen "logs"

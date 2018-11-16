@@ -15,6 +15,7 @@ services:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
       - io.docksal.project-root=${PROJECT_ROOT}
+      - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
       - APACHE_BASIC_AUTH_USER
@@ -84,20 +85,22 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.4-php7.1}
+    image: ${CLI_IMAGE:-docksal/cli:2.5-php7.1}
     volumes:
       - project_root:/var/www:rw,nocopy  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
       - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
     environment:
+      - GIT_USER_EMAIL
+      - GIT_USER_NAME
       - HOST_UID
       - HOST_GID
       - DOCROOT
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
       - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}  # Point xdebug to the host IP
-      - SECRET_BLACKFIRE_CLIENT_ID
-      - SECRET_BLACKFIRE_CLIENT_TOKEN
+      - BLACKFIRE_CLIENT_ID
+      - BLACKFIRE_CLIENT_TOKEN
       - SECRET_SSH_PRIVATE_KEY
       - SECRET_ACAPI_EMAIL
       - SECRET_ACAPI_KEY

@@ -1,5 +1,74 @@
 # Changelog
 
+# 1.11.0 (2018-11-15)
+
+## New software versions
+
+- fin v1.79.4
+- Docker v18.06.1-ce
+- VirtualBox v5.2.20
+  - macOS Mojave compatibility
+  - You may have to run `fin update` twice to get VirtualBox automatically updated (macOS and Windows) (#836)
+- System service updates
+  - [docksal/dns:1.1](https://github.com/docksal/service-dns/releases/tag/v1.1.0)
+    - Switched base image to Alpine 3.8. Overall refactoring.
+  - [docksal/ssh-agent:1.2](https://github.com/docksal/service-ssh-agent/releases/tag/v1.2.0)
+    - Switched base image to Alpine 3.8. Overall refactoring.
+    - `ssh-key` - the SSH key management script used by the new `fin ssh` set of commands
+  - [docksal/vhost-proxy:1.4](https://github.com/docksal/service-vhost-proxy/releases/tag/v1.4.0)
+    - Switched base image to `openresty/openresty:1.13.6.2-1-alpine` (Alpine 3.8)
+    - Added `DEFAULT_CERT` support
+- Stack updates
+  - [docksal/cli:2.5-php7.1](https://github.com/docksal/service-cli/releases/tag/v2.5.0)
+    - Set `max_input_vars` to `2000` for PHP FPM
+    - Added APCu pecl extension
+    - `SECRET_SSH_PRIVATE_KEY` should now be base64 encoded
+    - Refactored Acquia Cloud API authentication
+    - and more
+
+## New features
+
+- `fin ssh-key` - new set of commands to manage SSH keys and ssh-agent
+- Using SMB 2.1 to mount shares on Windows (#667)
+  - You no longer need to enable the legacy SMB 1.0 support on Windows 10!
+- `DOCKSAL_VOLUMES=none` option
+  - Not mounting the codebase from the host and using an empty volume instead. Provides best fs performance, but the code has to be managed inside the container stack.
+
+## Changes and improvements
+
+- Automatically pass git `user.email` and `user.name` settings from the host to `cli`
+- Exit if system services failed to start (#772)
+  - This prevents broken system states where one or more Docksal services failed to start without the user being informed of this being the case.
+- Properly handle Blackfire secrets in `fin sysinfo` output (#783 #784)
+- Added `DEFAULT_CERT` support for `vhost-proxy` via the `DOCKSAL_VHOST_PROXY_DEFAULT_CERT` global variable
+- Added `SANDBOX_PERMANENT` configuration variable for sandboxes
+- Print vhosts without `http://` in `fin vhosts`
+- Drop `cli_home` volume when `cli` service is removed/reset (#787)
+- Drop `db_data` volume when `db` service is removed/reset
+- Skip loading SSH keys that already exist in the `ssh-agent` (#773, #774)
+- Fixed detecting first nameserver in `/etc/resolv.conf` (#782)
+- DNS detection should not use localhost IP addresses as upstream DNS (#770)
+- Drop project network when stopping a project (#582)
+- Fixed running "fin rc" with no arguments
+- Use a login bash session in `fin run-cli` and `fin bash` (docksal/service-cli#92)
+- Fixed issue related to RC check (#815)
+- Fixed `nslookup` probe on Alpine
+- Set `SYNC_PREFER=newer` in unison volume settings to prefer most recently updated files (#821)
+- Removed the ability for global addons to use `run-cli` because we cannot guarantee that `$HOME/.docksal` directory is mapped inside Docker (#771)
+- Updated automated tests
+
+## Documentation
+
+- Migrated docs to Hugo and Netlify
+- Docs structure overhaul
+- Improved documentation for `fin reset`
+- Updated system requirements: Added CPU SSE4.2 instruction set requirements for Linux and how to check whether a CPU supports them. (docksal/service-vhost-proxy#35)
+- Updated instructions around PHP/PHP-FPM settings overrides (#608)
+- Added docs for `SANDBOX_PERMANENT` and `VIRTUAL_HOST_CERT_NAME`
+- Updated "File sharing" (VirtualBox mode)
+- Removed Windows 10 SMB1 mentions
+
+
 # 1.10.1 (2018-08-03)
 
 ## New software versions

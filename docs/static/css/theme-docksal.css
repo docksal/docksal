@@ -1,0 +1,13 @@
+#logo img {
+  max-width: 75%
+}
+#footer i.fas.fa-heart {
+  color: #fff;
+}
+i.icon.docksal {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  background-image: url("/images/docksal-mark-white.svg");
+  background-size: 15px 15px;
+}

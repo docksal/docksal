@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.69.1
+FIN_VERSION=1.79.4
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -107,16 +107,17 @@ is_travis () {
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='18.03.1-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.21.1'
-REQUIREMENTS_DOCKER_MACHINE='0.14.0'
-REQUIREMENTS_VBOX='5.2.2'  # Remember to update the download URLs below
+REQUIREMENTS_DOCKER='18.06.1-ce'
+REQUIREMENTS_DOCKER_COMPOSE='1.22.0'
+REQUIREMENTS_DOCKER_MACHINE='0.15.0'
+REQUIREMENTS_VBOX='5.2.20'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
 # VirtualBox download URLs
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-Win.exe"
+# Remember to update REQUIREMENTS_VBOX above
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
@@ -186,6 +187,7 @@ DOCKSAL_VHOST_PROXY_PORT_HTTPS="${DOCKSAL_VHOST_PROXY_PORT_HTTPS}"
 DOCKSAL_VHOST_PROXY_ACCESS_LOG="${DOCKSAL_VHOST_PROXY_ACCESS_LOG}"
 DOCKSAL_VHOST_PROXY_STATS_LOG="${DOCKSAL_VHOST_PROXY_STATS_LOG}"
 DOCKSAL_VHOST_PROXY_DEBUG_LOG="${DOCKSAL_VHOST_PROXY_DEBUG_LOG}"
+DOCKSAL_VHOST_PROXY_DEFAULT_CERT="${DOCKSAL_VHOST_PROXY_DEFAULT_CERT}"
 PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT}"
 PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT}"
 PROJECTS_ROOT="${PROJECTS_ROOT}"
@@ -225,26 +227,24 @@ URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
 URL_REPO_BACKDROP="https://github.com/docksal/example-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
-# Remove URL_REPO_ADDONS in Nov 2018
-URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
-URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
-URL_STACKS_OVERRIDES_IDE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-ide.yml"
-URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
-URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
-URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
-URL_STACKS_STACK_DEFAULT="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default.yml"
-URL_STACKS_STACK_DEFAULT_NODB="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default-nodb.yml"
-URL_STACKS_STACK_NODE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-node.yml"
-URL_STACKS_VOLUMES_BIND="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-bind.yml"
-URL_STACKS_VOLUMES_NFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-nfs.yml"
-URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-unison.yml"
+STACKS_OVERRIDES_IDE="overrides-ide.yml"
+STACKS_OVERRIDES_OSXFS="overrides-osxfs.yml"
+STACKS_SERVICES="services.yml"
+STACKS_STACK_ACQUIA="stack-acquia.yml"
+STACKS_STACK_DEFAULT="stack-default.yml"
+STACKS_STACK_DEFAULT_NODB="stack-default-nodb.yml"
+STACKS_STACK_NODE="stack-node.yml"
+STACKS_VOLUMES_BIND="volumes-bind.yml"
+STACKS_VOLUMES_NFS="volumes-nfs.yml"
+STACKS_VOLUMES_NONE="volumes-none.yml"
+STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
 # Until there is an official standalone docker.exe binary available, use the one pulled from Docker for Windows
 # See https://github.com/docker/for-win/issues/1460#issuecomment-390045959
 #URL_DOCKER_WIN="https://download.docker.com/win/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
-URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.9.0/docker-${REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.11.0/docker-${REQUIREMENTS_DOCKER}.zip"
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
@@ -255,9 +255,9 @@ URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v$
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
-IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.0}
-IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.3}
-IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.0}
+IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.2}
+IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.4}
+IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 
 #---------------------------- Helper functions --------------------------------
 
@@ -815,7 +815,7 @@ check_docker_running ()
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
 				"2. If #1 did not help, run ${yellow}fin update${NC} to update." \
-				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/en/master/troubleshooting"
+				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/troubleshooting/common-issues/"
 			exit 1
 		fi
 	fi
@@ -1027,6 +1027,21 @@ _stop_containers ()
 
 	load_configuration
 	check_project_unique
+
+	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]] || [[ -z $1 ]]; then
+		echo-green "Disconnecting project network..."
+		# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
+		# The project network will be automatically recreated by docker-compose up.
+		local network_name="${COMPOSE_PROJECT_NAME_SAFE}_default"
+		local network_containers=$(docker network inspect \
+			--format '{{range .Containers}}{{.Name}} {{end}}' ${network_name} 2>/dev/null)
+		# Note: there should be no quotes around ${network_containers} or it won't be split properly
+		for container in ${network_containers}; do
+			docker network disconnect -f "${network_name}" "${container}"
+		done
+		docker network rm "${network_name}" &>/dev/null
+	fi
+
 	echo-green "Stopping services..."
 	docker-compose stop "$@"
 }
@@ -1052,7 +1067,15 @@ _remove_containers ()
 		docker-compose down --volumes --remove-orphans
 	else
 		# Removing requested containers only
-		docker-compose kill "$@" && docker-compose rm -vf "$@"
+		docker-compose kill "$@" &&
+			docker-compose rm -vf "$@" &&
+			# For cli and db, we have to manually drop the volumes, since named volumes are omitted by the "-v" option above
+			{
+				for i in "$@"; do
+					[[ "$i" == "cli" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_cli_home" >/dev/null
+					[[ "$i" == "db" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_db_data" >/dev/null
+				done
+			}
 	fi
 }
 
@@ -1089,10 +1112,6 @@ cleanup ()
 	docker image prune -f 2>/dev/null
 	echo-green "Removing dangling volumes..."
 	docker volume prune -f 2>/dev/null
-	# TODO: this is temporary disabled as it causes issues. See https://github.com/docksal/docksal/issues/582
-#	echo-green "Removing dangling networks..."
-#	install_proxy_service  # Reset vhost-proxy to disconnect it from abandoned networks
-#	docker network prune -f 2>/dev/null
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -1222,6 +1241,7 @@ show_help ()
 	echo-green "Management Commands:"
 	printh "db <command>" "Manage databases (${yellow}fin help db${NC})" "yellow"
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
+	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal (${yellow}fin help system${NC})" "yellow"
 	if ! is_linux && ! is_docker_native; then
 		printh "vm <command>" "Manage Docksal VM (${yellow}fin help vm${NC})" "yellow"
@@ -1248,7 +1268,6 @@ show_help ()
 	echo
 	printh "init" "Initialize a project (override it with your own automation ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
-	printh "ssh-add [-lD] [key]" "Adds ssh private key to the authentication agent (${yellow}fin help ssh-add${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
 	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
 	printh "share" "Create temporary public url for current project using ngrok"
@@ -1353,27 +1372,6 @@ show_help_list_addons_in_help ()
 	fi
 }
 
-show_help_ssh-add ()
-{
-	echo
-	echo "Add private key identities stored in \$HOME/.ssh to the docksal/ssh-agent."
-	echo "When run without arguments, automatically adds the default key files (id_rsa, id_dsa, id_ecdsa)."
-	echo "A custom key name can be given as an argument: fin ssh-add [keyname]."
-	echo "[keyname] is the file name within \$HOME/.ssh"
-
-	echo
-	echo "Usage: ssh-add [-lD] [key]"
-
-	echo
-	echo "Options:"
-	printh "-D" "Deletes all keys from the agent."
-	printh "-l" "Lists all keys currently loaded by the agent."
-
-	echo
-	echo "Examples:"
-	printh "fin ssh-add my_custom_key" "Add \$HOME/.ssh/my_custom_key to SSH Agent."
-}
-
 show_help_exec ()
 {
 	echo
@@ -1466,8 +1464,7 @@ show_help_project() {
 	echo
 	printh "status" "List project services (alias: fin ps)"
 	printh "restart" "Restart project services (alias: fin restart)"
-	printh "reset [service]" "Recreate all or specified project services, their containers and named volumes"
-	printh "" "Changes to home directory in \`cli\` are preserved."
+	printh "reset [service]" "Recreate all or specified project services, their containers and volumes"
 	echo
 	printh "remove [option] [service]" "Remove all project services, networks and all their volumes, or specified services only"
 	printh "    rm [option] [service]" ""
@@ -1504,6 +1501,33 @@ show_help_rm ()
 show_help_remove ()
 {
 	show_help_project
+}
+
+show_help_ssh-key() {
+	echo
+	echo "Manage SSH keys loaded into Docksal"
+	echo
+	printh "Private SSH keys loaded into the secure docksal-ssh-agent service are accessible to all project containers."
+	printh "This allows containers to connect to the external SSH servers that require SSH keys"
+	printh "without a need to copy over the key into the container every time."
+	printh "Default keys id_rsa/id_dsa/id_ecdsa are loaded automatically on every project start."
+	echo
+	echo "Usage: fin ssh-key <command> [params]"
+
+	echo
+	echo "Commands:"
+	printh "add [key-name]" "Add a private SSH key from \$HOME/.ssh by file name"
+	printh "" "Adds all default keys (id_rsa/id_dsa/id_ecdsa) if no file name is given."
+
+	printh "ls" "List SSH keys loaded in the docksal-ssh-agent"
+	printh "rm" "Remove all keys from the docksal-ssh-agent"
+	printh "new [key-name]" "Generate a new SSH key pair"
+
+	echo
+	echo "Examples:"
+	printh "fin ssh-key add" "Loads all SSH keys with default names: id_rsa/id_dsa/id_ecdsa from \$HOME/.ssh/"
+	printh "fin ssh-key server_rsa" "Loads the key stored in \$HOME/.ssh/server_id_rsa into the agent"
+	printh "fin ssh-key new server2_rsa" "Generates a new SSH key pair in ~/.ssh/server2_id_rsa"
 }
 
 show_help_system() {
@@ -1802,7 +1826,7 @@ show_help_init ()
 	echo
 	echo "Creates default project configuration and starts a project, when no project found."
 	echo "This built-in is meant to be overridden with your custom command or addon."
-	echo -e "See ${yellow}https://docs.docksal.io/en/master/fin/custom-commands${NC} on docs for creating custom commands."
+	echo -e "See ${yellow}https://docs.docksal.io/fin/custom-commands/${NC} on docs for creating custom commands."
 
 	echo
 	echo "Usage: init"
@@ -1960,7 +1984,7 @@ bash_comp_words ()
 			done
 
 			echo "$aliases $projects vm start stop restart status reset remove bash exec config sqlc mysql sqli mysql-import sqld mysql-dump sqld drush drupal \
-			ssh-add update version cleanup sysinfo logs project $custom_commands"
+			ssh-keys update version cleanup sysinfo logs project $custom_commands"
 			exit 0
 			;;
 		*)
@@ -2100,7 +2124,7 @@ docker_machine_start ()
 		docker_machine_env
 		if_failed_error "Failed starting virtual machine" \
 			"In case you see certificates problem, reboot your local host." \
-			"Common issues: https://docs.docksal.io/en/master/troubleshooting"
+			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
 		configure_resolver
 		docker_machine_mounts
 	else
@@ -2128,7 +2152,7 @@ docker_machine_start ()
 	local _err=$?
 	if [[ ${_err} -eq 0 ]]; then
 		echo-green "Importing ssh keys..."
-		ssh_add
+		ssh_key add
 	fi
 
 	return ${_err}
@@ -2402,7 +2426,7 @@ smb_share_mount()
 	command_mount="
 		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
 		sudo mkdir -p $mount_point && \
-		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
+		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=2.1,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 
 	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
@@ -2417,7 +2441,7 @@ smb_share_mount()
 		else
 			echo-error "SMB share mount failed." \
  				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again." \
- 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/en/master/troubleshooting-smb${NC}"
+ 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/troubleshooting/windows-smb/${NC}"
 			return 1
 		fi
 	fi
@@ -2661,9 +2685,9 @@ up ()
 {
 	check_docksal_environment
 
-	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
-	( is_linux || is_docker_native ) && ssh_add
+	( is_linux || is_docker_native ) && ssh_key add
 
 	# On macOS check that project is reachable to Docker
 	check_macos_path
@@ -2705,9 +2729,9 @@ restart ()
 {
 	check_docksal_environment
 
-	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# Run ssh_key add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
-	( is_linux || is_docker_native ) && ssh_add
+	( is_linux || is_docker_native ) && ssh_key add
 
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
@@ -2759,8 +2783,8 @@ reset ()
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
-	# Run ssh_add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_add
+	# Run ssh_key add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_key add
 	_start_containers || return 1
 	unison_sync_wait
 }
@@ -2946,7 +2970,7 @@ project_create ()
 	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
 		cd "${project_name}/.docksal"
 		# Edit docksal.env to use a custom user-supplied host name
-		sed -i.bak "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" docksal.env
+		sed -i~ "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" docksal.env
 		rm -f docksal.env.bak > /dev/null 2>&1
 	)
 
@@ -3067,9 +3091,49 @@ system_stop ()
 	fi
 }
 
-# Add key to ssh-agent or run ssh-add with provided @param
-# @param $1 -D, -l or path to custom key
-ssh_add ()
+# Helper function to run ssh-key inside the ssh-agent container
+_ssh_key ()
+{
+	# Return if no key or option passed
+	[[ "$@" == "" ]] && return
+
+	if is_tty; then
+		# Run ssh-key interactively to allow entering a passphrase for ssh keys (if set)
+		${winpty} docker exec -it docksal-ssh-agent ssh-key "$@"
+	else
+		# In a non-interactive environment (e.g., CI) run non-interactively. Keys with passphrases cannot be used!
+		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
+		docker exec docksal-ssh-agent ssh-key "$@"
+	fi
+}
+
+# Generates a new SSH key pair with a given name
+ssh_key_generate ()
+{
+	local ssh_path="$HOME/.ssh"
+	# On Windows docker and docker-compose expect a Windows style path
+	is_windows && ssh_path=$(cygpath -w "$ssh_path")
+
+	ssh_key_name="${1}"
+	# If no key name provided, ask for it
+	[[ "${ssh_key_name}" == "" ]] && read -p "Enter name for a new SSH key (e.g. myserver_id_rsa): " ssh_key_name
+	# Exit if still no key name here
+	[[ "${ssh_key_name}" == "" ]] && exit 1
+
+	ssh_key_path="${ssh_path}/${ssh_key_name}"
+
+	echo "Generating a new 4096 bit RSA key..."
+	ssh-keygen -t rsa -b 4096 -f ${ssh_key_path} -q -N ""
+	chmod 600 ${ssh_key_path}
+	echo "Private key file: ${ssh_key_path}"
+	echo "Public key file:  ${ssh_key_path}.pub"
+	echo
+	echo "Contents of the public SSH key (copy and use this as an authorized key on a remote system):"
+	echo && cat ${ssh_key_path}.pub && echo
+}
+
+# Manage SSH keys in the ssh-agent
+ssh_key ()
 {
 	check_winpty_found
 
@@ -3086,53 +3150,78 @@ ssh_add ()
 		return 1
 	fi
 
+	if [[ "${1}" != "add" ]]; then
+		_ssh_key "$@"
+		return $?
+	fi
+
 	local ssh_path="$HOME/.ssh"
 	# On Windows docker and docker-compose expect a Windows style path
 	is_windows && ssh_path=$(cygpath -w "$ssh_path")
 
-	# Ensure ssh_path exists
-	mkdir -p "$ssh_path"
-
-	if ! is_tty; then
-		# In a non-interactive environment (e.g., CI) run non-interactively. Keys with passphrases cannot be used!
-		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
+	# If the user does not have any SSH keys (no ~/.ssh folder), offer to generate a default key
+	if [[ ! -d "$ssh_path" ]]; then
+		echo-yellow "You don't seem to have any SSH keys in the default location (${ssh_path})."
+		_confirm "Would you like to generate a default SSH key pair now?" --no-exit || return
+		# Ensure ssh_path exists
+		mkdir -p "$ssh_path"
+		# Generate a default id_rsa key
+		_ssh_key_generate id_rsa
 	fi
 
-	# Only do this when given an argument (key name) or nothing, but not for options (e.g., -l)
-	if [[ ! "${1}" =~ ^- ]]; then
-		# Copy all keys from the host to the ssh-agent container
-		docker cp "$ssh_path" docksal-ssh-agent:/
+	# Copy all keys from the host to the ssh-agent container.
+	# This is a safer method compared to passing individual keys via stdin.
+	# Takes 600ms vs 200ms for the stdin approach. Is faster when passing 4+ keys.
+	docker cp "$ssh_path/." docksal-ssh-agent:/.ssh
 
-		# Add SSH Keys defined in environment variables
-		eval 'ssh_keys=(${!SECRET_SSH_KEY_@})'
-		for ssh_key in "${ssh_keys[@]}"
-		do
-			local ssh_key_name=${!ssh_key}
-			local new_ssh_key="${ssh_path}/${ssh_key_name}"
-
-			# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
-			if is_tty; then
-				# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-				${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
-			else
-				docker exec docksal-ssh-agent /run.sh ssh-add "${ssh_key_name}"
-			fi
-		done
-	fi
-
-	# Load the requested key. If no key provided, ssh-add will load all default keys (id_rsa, id_dsa, id_ecdsa)
-	if is_tty; then
-		# Run ssh-add interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker exec -it docksal-ssh-agent /run.sh ssh-add "$@"
+	# If we have a key name as the argument, add it to the list of keys to load
+	if [[ "${2}" != "" ]]; then
+		if [[ -f "${ssh_path}/${2}" ]]; then
+			local SECRET_SSH_KEY_${2^^}=${2}
+		else
+			echo-error "Key '"${ssh_path}/${2}"' does not exist"
+		fi
+	# Load default keys
 	else
-		docker exec docksal-ssh-agent /run.sh ssh-add "$@"
+		# When ssh-key add is called without arguments it should load the default keys
+		[[ -f "${ssh_path}/id_rsa" ]] && local SECRET_SSH_KEY_ID_RSA=id_rsa
+		[[ -f "${ssh_path}/id_dsa" ]] && local SECRET_SSH_KEY_ID_DSA=id_dsa
+		[[ -f "${ssh_path}/id_ecdsa" ]] && local SECRET_SSH_KEY_ID_ECDSA=id_ecdsa
 	fi
-	local ret=$?
 
-	# Remove copied keys from the ssh-agent container after loading into the ssh-agent
-	# Only do this when given an argument (key name) or nothing, but not for options (e.g., -l)
-	[[ "${1#-}" == "$1" ]] && docker exec docksal-ssh-agent rm -rf /.ssh /root/.ssh
-	return "$ret"
+	# Load SSH keys into the agent
+	# This is a unified approach, which handles default keys as well as keys passed as an argument
+	eval 'ssh_keys=(${!SECRET_SSH_KEY_@})'
+	for ssh_key in "${ssh_keys[@]}"
+	do
+		local ssh_key_name=${!ssh_key}
+		local ssh_key_path="${ssh_path}/${ssh_key_name}"
+
+		if [[ -f ${ssh_key_path} ]]; then
+			# Pass the key into the ssh-agent container (~200ms vs ~600ms for docker cp)
+			# TODO: without a public key present, ssh-agent asks for a passphrase (if set) twice.
+			#cat ~/.ssh/${ssh_key_name} | ${winpty} docker exec -i docksal-ssh-agent bash -c "cat /dev/stdin > /.ssh/${ssh_key_name}"
+			# Call "ssh-key add" in the ssh-agent container
+			_ssh_key add ${ssh_key_name}
+			# Remove copied key
+			#docker exec docksal-ssh-agent rm -f /.ssh/${ssh_key_name}
+
+#			# Handle everything in one docker exec
+#			# TODO: this does not work with keys with a passphrase
+#			cat ~/.ssh/${ssh_key_name} | ${winpty} docker exec -i docksal-ssh-agent bash -c "\
+#				set -e; \
+#				cat /dev/stdin > /.ssh/${ssh_key_name}; \
+#				ssh-key add ${ssh_key_name}; \
+#				rm -f /.ssh/${ssh_key_name}; \
+#			"
+		else
+			echo-error "Key '${ssh_key_name}' does not exist."
+		fi
+	done
+
+	# Remove copied keys from the ssh-agent container after loading into the ssh-agent.
+	# Commented out in favor of passing individual keys on stdin of the agent container.
+	docker exec docksal-ssh-agent bash -c 'rm -rf /.ssh/*'
 }
 
 #----- Installations and updates -----
@@ -3292,10 +3381,12 @@ install_proxy_service ()
 		-e STATS_LOG="${DOCKSAL_VHOST_PROXY_STATS_LOG:-0}" \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
+		-e DEFAULT_CERT="${DOCKSAL_VHOST_PROXY_DEFAULT_CERT:-docksal}" \
 		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		${mount_certs} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
+	if_failed_error "Failed starting the proxy service."
 }
 
 # Detects upstream DNS or falls back to DOCKSAL_DEFAULT_DNS
@@ -3315,6 +3406,7 @@ detect_dns ()
 				if [[ "$server" =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]] &&
 					[[ "$server" != "$DOCKSAL_IP" ]]; then
 					DOCKSAL_DNS_UPSTREAM="$server"
+					break
 				fi
 			done
 		else
@@ -3330,6 +3422,11 @@ detect_dns ()
 			# In case nothing was found, fall back to the default
 			DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 		fi
+	fi
+
+	# If localhost address was detected as upstream, fall back to the default
+	if [[ "$DOCKSAL_DNS_UPSTREAM" =~ "127.0."* ]]; then
+		DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 	fi
 
 	# export to variable and return (for direct usage or debug)
@@ -3352,6 +3449,7 @@ install_dns_service ()
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
+	if_failed_error "Failed starting the DNS service."
 }
 
 # Configure system-wide *.docksal resolver using /etc/resolver
@@ -3485,7 +3583,12 @@ configure_resolver ()
 			# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
 			# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
 			# nslookup returns 0 exit code regardless of the results, so have to pipe it to grep
-			nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			if is_alpine; then
+				# nslookup on Alpine does not support the '-timeout' option
+				timeout -t 5 nslookup google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			else
+				nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			fi
 			local ret=$?
 
 			if [[ "$ret" != "0" ]]; then
@@ -3516,8 +3619,10 @@ install_sshagent_service ()
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=always \
 		--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent \
 		"${IMAGE_SSH_AGENT}" >/dev/null
+	if_failed_error "Failed starting the SSH agent service."
+
 	# Add default keys. Using || true here to suppress errors if there are no keys on the host.
-	ssh_add || true
+	ssh_key add || true
 }
 
 # Install Mac dependencies
@@ -3545,7 +3650,7 @@ install_tools_mac ()
 		(
 			cd "$CONFIG_DOWNLOADS_DIR" && \
 			tar zxf "$docker_pkg" && \
-			mv "docker/docker" "$CONFIG_BIN_DIR/" && \
+			mv -f "docker/docker" "$CONFIG_BIN_DIR/" && \
 			chmod +x "$DOCKER_BIN"
 		)
 		if_failed "Check file permissions."
@@ -3615,7 +3720,7 @@ install_tools_windows ()
 	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
 
 	# Remove old incorrect line
-	sed -i "s/^\\\\nexport.*$//" "$HOME/.babunrc"
+	sed -i~ "s/^\\\\nexport.*$//" "$HOME/.babunrc"
 	# Disable Babun update checks as they often bring problems
 	if ! (grep '^export DISABLE_CHECK_ON_STARTUP="true"' "$HOME/.babunrc" >/dev/null 2>&1); then
 		echo -e "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> "$HOME/.babunrc"
@@ -3640,7 +3745,7 @@ install_tools_windows ()
 		(
 			cd "$CONFIG_DOWNLOADS_DIR" && \
 			unzip ${docker_pkg} && \
-			mv "docker/docker.exe" "$DOCKER_BIN.exe" && \
+			mv -f "docker/docker.exe" "$DOCKER_BIN.exe" && \
 			chmod +x "$DOCKER_BIN"
 		)
 		if_failed "Check file permissions."
@@ -3701,7 +3806,7 @@ install_tools_windows ()
 		(
 			cd "$CONFIG_DOWNLOADS_DIR" && \
 			tar zxf "$winpty_pkg" && \
-			mv winpty-*/bin/* "$CONFIG_BIN_DIR/"
+			mv -f winpty-*/bin/* "$CONFIG_BIN_DIR/"
 		)
 		if_failed "Check file permissions."
 	fi
@@ -3989,16 +4094,17 @@ update_tools ()
 update_config_files ()
 {
 	files_to_download="
-			$URL_STACKS_OVERRIDES_IDE
-			$URL_STACKS_OVERRIDES_OSXFS
-			$URL_STACKS_SERVICES
-			$URL_STACKS_STACK_ACQUIA
-			$URL_STACKS_STACK_DEFAULT
-			$URL_STACKS_STACK_DEFAULT_NODB
-			$URL_STACKS_STACK_NODE
-			$URL_STACKS_VOLUMES_BIND
-			$URL_STACKS_VOLUMES_NFS
-			$URL_STACKS_VOLUMES_UNISON
+			$STACKS_OVERRIDES_IDE
+			$STACKS_OVERRIDES_OSXFS
+			$STACKS_SERVICES
+			$STACKS_STACK_ACQUIA
+			$STACKS_STACK_DEFAULT
+			$STACKS_STACK_DEFAULT_NODB
+			$STACKS_STACK_NODE
+			$STACKS_VOLUMES_BIND
+			$STACKS_VOLUMES_NFS
+			$STACKS_VOLUMES_NONE
+			$STACKS_VOLUMES_UNISON
 	"
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
@@ -4007,7 +4113,7 @@ update_config_files ()
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
-			curl -kfsSLO "$f" || exit 1
+			curl -kfsSLO "${URL_REPO}/${DOCKSAL_VERSION}/stacks/$f" || exit 1
 		done
 	)
 
@@ -4169,6 +4275,9 @@ update ()
 		TOTAL_STEPS=4
 	fi
 
+	# Pass the version to the newly downloaded fin to run the updates
+	export DOCKSAL_VERSION=$(get_docksal_version_latest)
+
 	# [STEP 1] Update fin unless already running fin.updated binary
 	if (${FULL_UPDATE}); then
 		testing_warn
@@ -4204,7 +4313,7 @@ update ()
 			( "$FIN_PATH_UPDATED" update )
 
 			# overwrite old fin
-			sudo mv "$FIN_PATH_UPDATED" "$FIN_PATH"
+			sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
 			exit
 		else
 			echo "Already at $FIN_VERSION."
@@ -4278,22 +4387,24 @@ update ()
 	fi
 }
 
-# Return latest fin download url for the latest tag
-get_latest_fin_url ()
+# Return the latest version
+# For RC users, this will return the latest RC release tag. For everyone else - the latest stable release tag.
+get_docksal_version_latest ()
 {
-	# Get the latest release tag
 	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases"
-	local latest_tag=$(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
 
-	# Return the fin raw URL associated with that tag
-	echo "${URL_REPO}/${latest_tag}/bin/fin"
+	# If we have an RC user and DOCKSAL_VERSION was not overridden, then return the latest RC release tag
+	if wants_rc_version && [[ "${DOCKSAL_VERSION}" == "master" ]]; then
+		echo $(curl -kfsSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
+	else
+		echo ${DOCKSAL_VERSION}
+	fi
 }
 
-# Return the url for fin. If person has set DOCKSAL_USE_RC then we return that otherwise return masters URL
-# which will return the latest stable version.
+# Return the url for fin
 get_fin_url ()
 {
-	wants_rc_version && echo $(get_latest_fin_url) || echo "${URL_FIN}"
+	echo "${URL_REPO}/$(get_docksal_version_latest)/bin/fin"
 }
 
 check_for_updates ()
@@ -4411,7 +4522,7 @@ _bash ()
 	fi
 
 	# Pass container name to _run
-	CONTAINER_NAME=$1 _exec bash -i
+	CONTAINER_NAME=$1 _exec bash -il
 }
 
 # Run a command in the cli container changing dir to the same folder
@@ -4557,18 +4668,18 @@ run_cli ()
 	done
 
 	# Set default image
-	local RUN_IMAGE="${image:-docksal/cli:2.4-php7.1}"
+	local RUN_IMAGE="${image:-docksal/cli:2.5-php7.1}"
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
-	else
-		cmd="$cmd $@"
-	fi
-
+	elif [[ $1 != "" ]]; then
+		cmd="$cmd $1"
 	# Assume bash if no command was given
-	[[ "$cmd" == "" ]] && cmd="bash"
+	else
+		cmd="bash -il"
+	fi
 
 	# Fail for images from v1, these are executing the commands directly and are not supported anymore.
 	if [[ "$RUN_IMAGE" == docksal/cli:1.* ]]; then
@@ -4589,9 +4700,6 @@ run_cli ()
 		MOUNT_HOME="dst=/home/docker"
 	fi
 
-	# Allows run-cli to run global addons
-	local MOUNT_DOCKSAL_HOME="type=bind,src=$CONFIG_DIR,dst=$CONFIG_DIR"
-
 	# Address an edge case when run-cli is run in the home folder (/root) on PWD/Katacoda
 	# See https://github.com/docksal/docksal/issues/661
 	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda); then
@@ -4605,15 +4713,16 @@ run_cli ()
 		${winpty} docker run --rm -it \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
-			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
-			-e SECRET_BLACKFIRE_CLIENT_ID \
-			-e SECRET_BLACKFIRE_CLIENT_TOKEN \
+			-e BLACKFIRE_CLIENT_ID \
+			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
 			-e SECRET_TERMINUS_TOKEN \
 			-e SECRET_PLATFORMSH_CLI_TOKEN \
+			-e GIT_USER_EMAIL \
+			-e GIT_USER_NAME \
 			-e HOST_UID \
 			-e HOST_GID \
 			-e COLUMNS \
@@ -4625,15 +4734,16 @@ run_cli ()
 		docker run --rm \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
-			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
-			-e SECRET_BLACKFIRE_CLIENT_ID \
-			-e SECRET_BLACKFIRE_CLIENT_TOKEN \
+			-e BLACKFIRE_CLIENT_ID \
+			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
 			-e SECRET_ACAPI_EMAIL \
 			-e SECRET_ACAPI_KEY \
 			-e SECRET_TERMINUS_TOKEN \
 			-e SECRET_PLATFORMSH_CLI_TOKEN \
+			-e GIT_USER_EMAIL \
+			-e GIT_USER_NAME \
 			-e HOST_UID \
 			-e HOST_GID \
 			-e COLUMNS \
@@ -5425,10 +5535,19 @@ config_show ()
 	if [[ "$showsecrets" != "showsecrets" ]]; then
 		# Any env variable, that starts with the "SECRET_" prefix, is rewritten to only show beginning and end
 		eval 'secrets=(${!SECRET_@})'
+
+		# Special case to handle BLACKFIRE variables as secrets
+		# TODO: figure out a way to handle this better
+		# See: https://github.com/docksal/docksal/pull/783#issuecomment-415080823
+		secrets+=('BLACKFIRE_SERVER_ID')
+		secrets+=('BLACKFIRE_SERVER_TOKEN')
+		secrets+=('BLACKFIRE_CLIENT_ID')
+		secrets+=('BLACKFIRE_CLIENT_TOKEN')
+
 		for secret in "${secrets[@]}"
 		do
 			local secret_value=${!secret}
-			# Define how many characters to show on the beginning and the ned
+			# Define how many characters to show on the beginning and the end
 			local cut_length;
 			if [[ ${#secret_value} < 10 ]]; then
 				cut_length=3;
@@ -5565,7 +5684,7 @@ config_set ()
 			# See https://stackoverflow.com/a/29613573 on why is it escaped so
 			replaceEscaped=$(sed 's/[&/\]/\\&/g' <<< "$value") # escape it
 			# Replace the value if it exists
-			sed -i.bak "s/^$key\=.*$/$key=\"$replaceEscaped\"/g" "$target_env_file"
+			sed -i~ "s/^$key\=.*$/$key=\"$replaceEscaped\"/g" "$target_env_file"
 			# Remove backup
 			rm -f "${target_env_file}.bak" >/dev/null 2>&1
 			echo "Replaced value for $key in $target_env_file"
@@ -5608,7 +5727,7 @@ config_remove ()
 		if grep -q "^${param}\=" "${target_env_file}"; then
 			# Remove the value if it exists
 			echo "Removing ${param} from $target_env_file"
-			sed -i.bak "/^${param}\=.*$/d" "$target_env_file"
+			sed -i~ "/^${param}\=.*$/d" "$target_env_file"
 			# Remove backup
 			rm -f "${target_env_file}.bak" >/dev/null 2>&1
 		else
@@ -5721,7 +5840,7 @@ vhosts ()
 	NAMES=$(docker exec docksal-vhost-proxy sh -c "grep server_name /etc/nginx/conf.d/vhosts.conf -r | sort | uniq | sed 's/;//g' | sed 's/^.*_name//g'")
 
 	for vhost in $NAMES ;do
-		echo-green "http://$vhost"
+		echo-green "$vhost"
 	done
 }
 
@@ -6009,11 +6128,7 @@ addon_execute ()
 	_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
 
 	shift
-	if [[ "$_exec_target" == "run-cli" ]]; then
-		cmd="$addon"
-		[[ "$@" != "" ]] && cmd="$addon "$(printf " %q" "$@")
-		run_cli "$cmd"
-	elif [[ "$_exec_target" != "" ]]; then
+	if [[ "$_exec_target" != "" ]]; then
 		# Replace host addon path with the matching path inside cli
 		# "\$PROJECT_ROOT" will be resolved in cli to /var/www
 		cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
@@ -6066,6 +6181,13 @@ if is_tty; then
 		read LINES COLUMNS < <(stty size)
 	fi
 	export LINES COLUMNS
+fi
+
+# Inherit hosts git user.email and user.name settings
+# This happens before the environment variable overrides are sources, thus can be overridden via docksal.env files.
+if ( which git >/dev/null 2>&1 ); then
+	export GIT_USER_EMAIL=$(git config --get --global user.email)
+	export GIT_USER_NAME=$(git config --get --global user.name)
 fi
 
 # Load environment variables overrides, use to permanently override some variables
@@ -6581,10 +6703,21 @@ case "$1" in
 		_exec composer "$@"
 		;;
 	ssh-add)
+		echo-warning "${NC}Deprecated. Use ${yellow}fin ssh-key add${NC} instead."
+		exit 1
+		;;
+	ssh-key)
 		# no load_configuration
 		shift
 		check_docker_running
-		ssh_add "$@"
+		if [[ "$1" == "" ]]; then
+			show_help_ssh-key
+		elif [[ "$1" == "new" ]]; then
+			shift
+			ssh_key_generate "$@"
+		else
+			ssh_key "$@"
+		fi
 		;;
 	docker|d)
 		# no load_configuration
