@@ -86,9 +86,10 @@ These files are a good reference when you begin creating a custom project config
 | `stack-default-static.yml` | Same configuration as `stack-default.yml` but does not inherit `services.yml`|
 | `stack-acquia.yml`         | Acquia-like stack with Solr, Varnish and memcached|
 
-!!! warning "DO NOT CHANGE DEFAULT STACKS!"
+{{% notice warning "DO NOT CHANGE DEFAULT STACKS!" %}}
     Do not change or customize existing default stacks.  
     Use the `.docksal` folder in your project to customize the project configuration.
+{{% /notice %}}
 
 ## Configuration files loading order {#loading-order}
 
