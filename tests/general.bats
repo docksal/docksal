@@ -381,6 +381,8 @@ services:
 	screen -S testNgrok -d -m fin share
 	# sleep so ngrok can load
 	sleep 10
+	echo ""
+	fin docker ps
 	# Query API for information
 	container_name="$(fin docker-compose ps | grep web | cut -d ' ' -f 1)_ngrok"
 	API=$(docker exec -it "$container_name" sh -c "wget -qO- http://localhost:4040/api/tunnels")
