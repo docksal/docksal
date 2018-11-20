@@ -503,7 +503,6 @@ get_mysql_connect ()
 # Get container id by service name
 # @param $1 docker compose service name (e.g., cli)
 # @return docker container id
-# TODO: deprecate in favor of ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 get_container_id ()
 {
 	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
@@ -1154,7 +1153,7 @@ _healthcheck ()
 _healthcheck_wait ()
 {
 	# Wait for cli to become ready by watching its health status
-	local container_name="${COMPOSE_PROJECT_NAME_SAFE}_cli_1"
+	local container_name=$(get_container_id "cli")
 	local delay=5
 	local timeout=60
 	local elapsed=0
@@ -4764,7 +4763,7 @@ _mysql ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4789,7 +4788,7 @@ mysql_list ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4812,7 +4811,7 @@ mysql_db_create ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4845,7 +4844,7 @@ mysql_db_drop ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4873,7 +4872,7 @@ mysql_db_truncate ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4914,7 +4913,7 @@ mysql_import ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4973,7 +4972,7 @@ mysql_import ()
 		echo "Importing from stdin..."
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command directly (no bash wrapper) so that stdin could be received inside that exec
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	__mysql_command=$(echo "${__mysql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
@@ -5001,7 +5000,7 @@ mysql_dump ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5016,7 +5015,6 @@ mysql_dump ()
 		echo-green "Exporting..."
 	fi
 
-	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	if [[ "${ARGV[0]}" == "" ]]; then
