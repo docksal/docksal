@@ -375,6 +375,8 @@ services:
 	echo "sendmail_path=/bin/true" >> .docksal/etc/php/php.ini
 	# Initialize the Project
 	fin init
+	echo ""
+	fin ps
 	# Run fin share in a emulated terminal
 	screen -S testNgrok -d -m fin share
 	# sleep so ngrok can load
