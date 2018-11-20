@@ -2414,9 +2414,6 @@ smb_share_mount()
 	# single quotes are banned from being used in password
 	password=${password//\'/}
 
-	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
-	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
-
 	# User ntlmssp by default. For some Windows machines ntlm should be used instead
 	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
 	SMB_SEC="${SMB_SEC:-ntlmssp}"
@@ -2425,7 +2422,7 @@ smb_share_mount()
 	command_mount="
 		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
 		sudo mkdir -p $mount_point && \
-		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=2.1,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
+		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=2.1,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKSAL_HOST_IP}/$share_name $mount_point"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 
 	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
