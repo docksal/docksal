@@ -4354,7 +4354,7 @@ update ()
 	# [STEP 5] Update project images
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		echo-green "[STEP 5/$TOTAL_STEPS] Updating Docksal images"
-		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal | sort | uniq); do
+		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal/ | sort | uniq); do
 			docker pull "$_image"
 		done
 	fi
