@@ -1,6 +1,6 @@
 ---
 title: "Extending stock images"
-weight: 2
+weight: 7
 aliases:
   - /en/master/advanced/extend-images/
 ---

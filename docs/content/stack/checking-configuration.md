@@ -1,6 +1,6 @@
 ---
 title: "Checking your configuration"
-weight: 3
+weight: 4
 aliases:
   - /en/master/advanced/stack-config/
 ---

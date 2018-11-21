@@ -1,6 +1,6 @@
 ---
 title: "Configuration variables"
-weight: 4
+weight: 5
 aliases:
   - /en/master/advanced/stack-config/
 ---

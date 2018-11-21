@@ -1,7 +1,8 @@
 ---
 title: "Stack configuration"
 chapter: true
-weight: 1
+weight: 4
+pre: "<b>4. </b>"
 aliases:	
   - /en/master/advanced/stack-config/
 ---

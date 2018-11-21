@@ -1,6 +1,6 @@
 ---
 title: "Zero configuration"
-weight: 1
+weight: 2
 aliases:
   - /en/master/advanced/stack-config/
 ---

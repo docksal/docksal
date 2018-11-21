@@ -1,6 +1,6 @@
 ---
 title: "Custom configuration"
-weight: 2
+weight: 3
 aliases:
   - /en/master/advanced/stack-config/
 ---

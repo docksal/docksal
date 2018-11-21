@@ -1,6 +1,6 @@
 ---
 title: "Docksal images"
-weight: 3
+weight: 6
 ---
 ## Switching PHP versions {#php-version}
 
