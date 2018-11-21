@@ -64,7 +64,7 @@ services:
       ...
 ```
 
-Note: `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},*.${VIRTUAL_HOST}.*` is the default value.
+Note: `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*` is the default value.
 
 Apply configuration changes with `fin project start` (`fin p start` for short).
 
