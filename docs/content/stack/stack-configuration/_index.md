@@ -2,6 +2,8 @@
 title: "Stack configuration"
 chapter: true
 weight: 1
+aliases:	
+  - /en/master/advanced/stack-config/
 ---
 
 # Stack configuration

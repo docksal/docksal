@@ -1,8 +1,6 @@
 ---
 title: "Docksal images"
 weight: 3
-aliases:
-  - /en/master/advanced/stack-config/
 ---
 ## Switching PHP versions {#php-version}
 
