@@ -90,3 +90,17 @@ Loading order:
 6. `docksal-local.env` - sets or modifies environment variables set previously
 
 To see the files loaded for a particular project run `fin config show`.
+
+## Docksal images and versions {#docksal-images}
+
+To see all Docker Hub images produced and supported by Docksal team run:
+
+```bash
+fin image registry
+```
+
+To get all tags of a certain image provide its name with the same command. For example:
+
+```bash
+fin image registry docksal/db
+```

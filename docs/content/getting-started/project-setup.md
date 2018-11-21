@@ -69,3 +69,23 @@ By default the virtual host name is equal to the project's folder name sans spac
 with the `.docksal` domain appended to it.  
 `myproject => myproject.docksal`
 {{% /notice %}}
+    
+## Automate the initialization process
+
+This is optional, but highly recommended.
+
+Site provisioning can be automated via a [custom command](/fin/custom-commands/) (e.g., `fin init`, which will call `.docksal/commands/init`). Put project specific initialization tasks there, like:
+
+- initialize the Docksal configuration
+- import databases or perform a site install
+- compile SASS
+- run DB updates, special commands, etc.
+- run Behat tests
+
+### Sample projects
+
+For a working example of a Docksal powered project with `fin init` take a look at:
+
+- [Drupal 7 sample project](https://github.com/docksal/drupal7)
+- [Drupal 8 sample project](https://github.com/docksal/drupal8)
+- [WordPress sample project](https://github.com/docksal/wordpress)
