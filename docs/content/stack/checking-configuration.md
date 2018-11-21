@@ -16,7 +16,7 @@ It does not show the contents or the configuration files directly. Instead, it c
 the resulting configuration. Some important environment variables are listed at the top.  
 
 The `COMPOSE_FILE` section displays files that were used to produce this configuration. 
-See [configuration files load order](/stack/stack-configuration/understanding-stack-config/#loading-order) for more information on how config files are loaded and merged.
+See [configuration files load order](/stack/understanding-stack-config/#loading-order) for more information on how config files are loaded and merged.
 
 A sample output from `fin config show`:
 

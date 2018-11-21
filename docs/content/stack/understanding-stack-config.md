@@ -17,7 +17,7 @@ Please read the documentation to understand their main sections.
 
 {{% notice warning %}}
 Some containers and their parameters are required for Docksal to work properly. 
-**Please see [Don't break your Docksal setup!](/stack/stack-configuration/using-stack-config/custom-configuration/#warning) section.**
+**Please see [Don't break your Docksal setup!](/stack/custom-configuration/#warning) section.**
 {{% /notice %}}
 
 You have to run `fin project start` (`fin p start` for short) to apply configuration changes.
