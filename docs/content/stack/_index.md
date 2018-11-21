@@ -1,12 +1,14 @@
 ---
-title: "Project stack"
+title: "Stack configuration"
 chapter: true
-weight: 4
-pre: "<b>4. </b>"
+weight: 1
+aliases:	
+  - /en/master/advanced/stack-config/
 ---
 
-# Project stack
+# Stack configuration
 
-Learn and understand how to configure and extend your project's stack
+It is recommended that you first review [How Docksal works](/core/overview/) documentation before reading 
+this manual. You should understand what project containers are and which project containers exist by default.
 
 {{% children %}}
