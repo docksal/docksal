@@ -108,7 +108,7 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
 REQUIREMENTS_DOCKER='18.06.1-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.22.0'
+REQUIREMENTS_DOCKER_COMPOSE='1.23.0'
 REQUIREMENTS_DOCKER_MACHINE='0.15.0'
 REQUIREMENTS_VBOX='5.2.20'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
@@ -1153,7 +1153,7 @@ _healthcheck ()
 _healthcheck_wait ()
 {
 	# Wait for cli to become ready by watching its health status
-	local container_name=$(get_container_id "cli")
+	local container_name="'cli'"
 	local delay=5
 	local timeout=60
 	local elapsed=0
