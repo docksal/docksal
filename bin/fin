@@ -1153,7 +1153,7 @@ _healthcheck ()
 _healthcheck_wait ()
 {
 	# Wait for cli to become ready by watching its health status
-	local container_name=$(get_container_id "cli")
+	local container_name="'cli'"
 	local delay=5
 	local timeout=60
 	local elapsed=0
