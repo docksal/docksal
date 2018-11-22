@@ -65,7 +65,7 @@ which would require an ssh key for access).
 Your project stack is now running. Access it in your browser: `http://myproject.docksal`
 
 {{% notice tip %}} "VIRTUAL HOST name"
-By default the virtual host name is equal to the project's folder name sans spaces and dashes, 
+By default, the virtual host name is equal to the project's folder name sans spaces (underscores are converted to hyphens)
 with the `.docksal` domain appended to it.  
 `myproject => myproject.docksal`
 {{% /notice %}}
