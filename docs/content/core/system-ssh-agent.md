@@ -33,29 +33,37 @@ Reset the `cli` container `fin project reset cli`.
 
 ## Command line reference
 
-See `fin help ssh-add` for more information and usage guidelines.
+See `fin help ssh-key` for more information and usage guidelines.
 
 ```
-$ fin help ssh-add
-fin ssh-add - Add private key identities to the ssh-agent.
-Usage: fin ssh-add [-lD] [key]
+$ fin help ssh-key
+Manage SSH keys loaded into Docksal
 
-When run without arguments, picks up the default key files (~/.ssh/id_rsa, ~/.ssh/id_dsa, ~/.ssh/id_ecdsa).
-A custom key name can be given as an argument: fin ssh-add <keyname>.
+  Private SSH keys loaded into the secure docksal-ssh-agent service are accessible to all project containers.	
+  This allows containers to connect to the external SSH servers that require SSH keys	
+  without a need to copy over the key into the container every time.	
+  Default keys id_rsa/id_dsa/id_ecdsa are loaded automatically on every project start.	
 
-NOTE: <keyname> is the file name within ~/.ssh (not full path to file).
-Example: fin ssh-add my_custom_key_rsa
+Usage: fin ssh-key <command> [params]
 
-The options are as follows:
-  -D                            Deletes all identities from the agent.
-  -l                            Lists fingerprints of all identities currently represented by the agent.
+Commands:
+  add [key-name]           	Add a private SSH key from $HOME/.ssh by file name
+                           	Adds all default keys (id_rsa/id_dsa/id_ecdsa) if no file name is given.
+  ls                       	List SSH keys loaded in the docksal-ssh-agent
+  rm                       	Remove all keys from the docksal-ssh-agent
+  new [key-name]           	Generate a new SSH key pair
+
+Examples:
+  fin ssh-key add          	Loads all SSH keys with default names: id_rsa/id_dsa/id_ecdsa from $HOME/.ssh/
+  fin ssh-key server_rsa   	Loads the key stored in $HOME/.ssh/server_id_rsa into the agent
+  fin ssh-key new server2_rsa	Generates a new SSH key pair in ~/.ssh/server2_id_rsa
 ```
 
 ## Automatically Add Keys
 
 Adding SSH keys automatically whenever Docksal project is started can be done by defining special variable(s) within
-the `$HOME/.docksal/docksal.env` file. All variables should be prefixed with `SECRET_SSH_KEY_` and then a small
-identifier of the key. After that has been done, restart your project and the keys will be added.
+the `$HOME/.docksal/docksal.env` file. All variables should be prefixed with `SECRET_SSH_KEY_` and a small
+identifier of the key. After that has been done, restart your project with `fin project restart`, and the keys will be added.
 
 For example, assuming you have a private SSH key `$HOME/.ssh/acquia_key`, you would define a variable:
 
