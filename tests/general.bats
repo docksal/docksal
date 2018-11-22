@@ -375,14 +375,10 @@ services:
 	echo "sendmail_path=/bin/true" >> .docksal/etc/php/php.ini
 	# Initialize the Project
 	fin init
-	echo ""
-	fin ps
 	# Run fin share in a emulated terminal
 	screen -S testNgrok -d -m fin share
 	# sleep so ngrok can load
 	sleep 10
-	echo ""
-	fin docker ps
 	# Query API for information
 	container_name="$(fin docker ps -a --filter "label=com.docker.compose.project=drupal8" --filter "label=com.docker.compose.service=web" --format '{{.Names }}')_ngrok"
 	API=$(docker exec -it "$container_name" sh -c "wget -qO- http://localhost:4040/api/tunnels")
@@ -399,7 +395,7 @@ services:
 	# Clean up kill ngrok session
 	screen -X -S testNgrok quit
 	# Kill Docker Container
-	docker rm -f drupal8_web_1_ngrok
+	docker rm -f "$container_name"
 	# Destroy Project
 	fin rm -f
 }
