@@ -5167,7 +5167,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		sh -c "${ARGS} ${container_name}.${network}:${NGROK_PORT}"
+		sh -c "${ARGS}" ${container_name}.${network}:${NGROK_PORT}
 }
 
 # Print information required for issue diagnostics
