@@ -3173,7 +3173,7 @@ ssh_key ()
 	# If we have a key name as the argument, add it to the list of keys to load
 	if [[ "${2}" != "" ]]; then
 		if [[ -f "${ssh_path}/${2}" ]]; then
-			local SECRET_SSH_KEY_${2^^}=${2}
+			local SECRET_SSH_KEY_${2}="${2}"
 		else
 			echo-error "Key '"${ssh_path}/${2}"' does not exist"
 		fi
