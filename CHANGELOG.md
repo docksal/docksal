@@ -1,5 +1,26 @@
 # Changelog
 
+# 1.11.1 (2018-11-27)
+
+## New software versions
+
+- fin v1.80.1
+- Docker Compose v1.23.1
+
+## Changes and improvements
+
+- Docker Compose v1.23.0+ compatibility (#819)
+  - Ships with the latest versions of Docker for Mac/Windows (v2.0.0.0) and introduces a breaking change (docker/compose#6316)
+- Fixed getting the list of Docksal project images to update (#839)
+- Make SMB share mount more predictable (#842)
+- Fixed "fin ssh-key add <key-name>" compatibility with Bash 3 (#857)
+
+## Documentation
+
+- Restructured and updated stack configuration docs (#847)
+- Updated SSH agent docs
+
+
 # 1.11.0 (2018-11-15)
 
 ## New software versions
