@@ -86,7 +86,7 @@ A minimal internet connection is still necessary to pull `fin` and Docksal stack
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL https://get.docksal.io | sh
+curl -fsSL https://get.docksal.io | bash
 fin vm start
 fin image load docksal-default-images.tar
 ```
@@ -103,7 +103,7 @@ Start the app and wait until Docker says it's running.
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL https://get.docksal.io | DOCKER_NATIVE=1 sh
+curl -fsSL https://get.docksal.io | DOCKER_NATIVE=1 bash
 fin image load docksal-default-images.tar
 ```
 

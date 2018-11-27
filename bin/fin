@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.79.4
+FIN_VERSION=1.80.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -108,7 +108,7 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
 REQUIREMENTS_DOCKER='18.06.1-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.22.0'
+REQUIREMENTS_DOCKER_COMPOSE='1.23.1'
 REQUIREMENTS_DOCKER_MACHINE='0.15.0'
 REQUIREMENTS_VBOX='5.2.20'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
@@ -503,7 +503,6 @@ get_mysql_connect ()
 # Get container id by service name
 # @param $1 docker compose service name (e.g., cli)
 # @return docker container id
-# TODO: deprecate in favor of ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 get_container_id ()
 {
 	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
@@ -1154,7 +1153,7 @@ _healthcheck ()
 _healthcheck_wait ()
 {
 	# Wait for cli to become ready by watching its health status
-	local container_name="${COMPOSE_PROJECT_NAME_SAFE}_cli_1"
+	local container_name="'cli'"
 	local delay=5
 	local timeout=60
 	local elapsed=0
@@ -2415,9 +2414,6 @@ smb_share_mount()
 	# single quotes are banned from being used in password
 	password=${password//\'/}
 
-	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
-	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
-
 	# User ntlmssp by default. For some Windows machines ntlm should be used instead
 	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
 	SMB_SEC="${SMB_SEC:-ntlmssp}"
@@ -2426,7 +2422,7 @@ smb_share_mount()
 	command_mount="
 		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
 		sudo mkdir -p $mount_point && \
-		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=2.1,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
+		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=2.1,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKSAL_HOST_IP}/$share_name $mount_point"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 
 	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
@@ -3177,7 +3173,7 @@ ssh_key ()
 	# If we have a key name as the argument, add it to the list of keys to load
 	if [[ "${2}" != "" ]]; then
 		if [[ -f "${ssh_path}/${2}" ]]; then
-			local SECRET_SSH_KEY_${2^^}=${2}
+			local SECRET_SSH_KEY_${2}="${2}"
 		else
 			echo-error "Key '"${ssh_path}/${2}"' does not exist"
 		fi
@@ -4358,7 +4354,7 @@ update ()
 	# [STEP 5] Update project images
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		echo-green "[STEP 5/$TOTAL_STEPS] Updating Docksal images"
-		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal | sort | uniq); do
+		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal/ | sort | uniq); do
 			docker pull "$_image"
 		done
 	fi
@@ -4764,7 +4760,7 @@ _mysql ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4789,7 +4785,7 @@ mysql_list ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4812,7 +4808,7 @@ mysql_db_create ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4845,7 +4841,7 @@ mysql_db_drop ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4873,7 +4869,7 @@ mysql_db_truncate ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4914,7 +4910,7 @@ mysql_import ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4973,7 +4969,7 @@ mysql_import ()
 		echo "Importing from stdin..."
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command directly (no bash wrapper) so that stdin could be received inside that exec
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	__mysql_command=$(echo "${__mysql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
@@ -5001,7 +4997,7 @@ mysql_dump ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5016,7 +5012,6 @@ mysql_dump ()
 		echo-green "Exporting..."
 	fi
 
-	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	if [[ "${ARGV[0]}" == "" ]]; then

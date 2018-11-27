@@ -11,17 +11,22 @@ theme = "learn"
 
   google_tag_manager = "GTM-5H2GJLS"
 
-  version = "v1.11.0"
+  version = "v1.11.1"
+  
+  [[params.versions]]
+  version = "v1.11.1"
+  branch = "v1.11.1"
+  url = "https://docs.docksal.io"
 
   [[params.versions]]
   version = "v1.11.0"
   branch = "v1.11.0"
-  url = "https://docs.docksal.io"
+  url = "https://v1-11-0.docs.docksal.io"
 
-  [[params.versions]]
-  version = "v1.10.0"
-  branch = "v1.10.0"
-  url = "https://v1-10-0.docs.docksal.io"
+#  [[params.versions]]
+#  version = "v1.10.0"
+#  branch = "v1.10.0"
+#  url = "https://v1-10-0.docs.docksal.io"
 
 [outputs]
   home = [ "AMP", "HTML", "JSON", "Sitemap"]
