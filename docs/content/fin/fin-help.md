@@ -7,7 +7,7 @@ aliases:
 
 ## fin {#fin}
 
-	Docksal control cli utility v1.79.4
+	Docksal control cli utility v1.80.1
 	
 	Usage: fin <command>
 	
@@ -131,22 +131,26 @@ aliases:
 ## ssh-key {#ssh-key}
 
 	
-	Manage SSH keys
+	Manage SSH keys loaded into Docksal
 	
-	  Manage private SSH key identities stored in the docksal-ssh-agent service.	
+	  Private SSH keys loaded into the secure docksal-ssh-agent service are accessible to all project containers.	
+	  This allows containers to connect to the external SSH servers that require SSH keys	
+	  without a need to copy over the key into the container every time.	
+	  Default keys id_rsa/id_dsa/id_ecdsa are loaded automatically on every project start.	
 	
 	Usage: fin ssh-key <command> [params]
 	
 	Commands:
-	  add [key-name]           	Load a private SSH key in ~/.ssh by name (or default keys if no key name given)
-	  ls                       	List SSH keys loaded in the agent
-	  rm                       	Remove keys from the agent
+	  add [key-name]           	Add a private SSH key from $HOME/.ssh by file name
+	                           	Adds all default keys (id_rsa/id_dsa/id_ecdsa) if no file name is given.
+	  ls                       	List SSH keys loaded in the docksal-ssh-agent
+	  rm                       	Remove all keys from the docksal-ssh-agent
 	  new [key-name]           	Generate a new SSH key pair
 	
 	Examples:
-	  fin ssh-key add          	Adds default SSH keys if found locally (id_rsa/id_dsa/id_ecdsa)
-	  fin ssh-key server_id_rsa	Adds the key stored in ~/.ssh/server_id_rsa into the agent
-	  fin ssh-key new server2_id_rsa	Generates a new SSH key pair in ~/.ssh/server2_id_rsa
+	  fin ssh-key add          	Loads all SSH keys with default names: id_rsa/id_dsa/id_ecdsa from $HOME/.ssh/
+	  fin ssh-key server_rsa   	Loads the key stored in $HOME/.ssh/server_id_rsa into the agent
+	  fin ssh-key new server2_rsa	Generates a new SSH key pair in ~/.ssh/server2_id_rsa
 
 ## system {#system}
 
