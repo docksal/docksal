@@ -1,0 +1,18 @@
+# Mount project volumes with NFS
+# For use on Mac with VirtualBox or Docker for Mac
+# Pros: very good performance, almost realtime file sync
+# Cons: no inotify/fs watchers
+
+version: "2.1"
+
+volumes:
+  cli_home:  # /home/docker volume in cli
+  project_root:  # Project root volume (NFS)
+    driver: local
+    driver_opts:
+      type: nfs
+      device: :${PROJECT_ROOT}
+      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3,vers=3,nolock,noacl,nocto,noatime,nodiratime,tcp,actimeo=1
+  db_data:  # Database data volume (bind)
+  docksal_ssh_agent:  # Shared ssh-agent volume
+    external: true
