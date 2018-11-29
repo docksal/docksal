@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.79.4
+FIN_VERSION=1.80.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -108,7 +108,7 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
 REQUIREMENTS_DOCKER='18.06.1-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.22.0'
+REQUIREMENTS_DOCKER_COMPOSE='1.23.1'
 REQUIREMENTS_DOCKER_MACHINE='0.15.0'
 REQUIREMENTS_VBOX='5.2.20'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
@@ -1153,7 +1153,7 @@ _healthcheck ()
 _healthcheck_wait ()
 {
 	# Wait for cli to become ready by watching its health status
-	local container_name=$(get_container_id "cli")
+	local container_name="'cli'"
 	local delay=5
 	local timeout=60
 	local elapsed=0
@@ -3173,7 +3173,7 @@ ssh_key ()
 	# If we have a key name as the argument, add it to the list of keys to load
 	if [[ "${2}" != "" ]]; then
 		if [[ -f "${ssh_path}/${2}" ]]; then
-			local SECRET_SSH_KEY_${2^^}=${2}
+			local SECRET_SSH_KEY_${2}="${2}"
 		else
 			echo-error "Key '"${ssh_path}/${2}"' does not exist"
 		fi
