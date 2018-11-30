@@ -3853,17 +3853,10 @@ install_tools_debian ()
 			sudo service docker stop 2>/dev/null
 		fi
 
-		# Pin docker-engine version to avoid apt-get upgrade.
-		# Get rid of -ce part because linux packages use `~ce` suffix in repos and pin version will not work with it
-		local PIN_DOCKER_VERSION=$(echo ${REQUIREMENTS_DOCKER} | sed "s/-.*//")
-		echo -e "Package: docker-ce\nPin: version ${PIN_DOCKER_VERSION}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
-
-		curl -fsSL "${URL_DOCKER_NIX}" | \
-			# Patch get.docker.com script on the fly to force installation of the pinned docker-ce version
-			sed "s/--force-yes docker-ce >/docker-ce >/" | \
-			sh && \
-			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-			sudo usermod -aG docker "$LOGNAME"
+		# Pin docker version
+		curl -fsSL "${URL_DOCKER_NIX}" | VERSION=${REQUIREMENTS_DOCKER} sh
+		# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
+		sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
