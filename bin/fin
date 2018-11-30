@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.80.1
+FIN_VERSION=1.81.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -2358,6 +2358,23 @@ docker_machine_remove_nfs ()
 	sleep 2
 }
 
+# The function sets nfs.server.mount.require_resv_port = 0
+# Many NFS server implementations require this because of
+# the false belief that this requirement increases security.
+# Setting it to 0 allows NFS mapping for Docker for Mac
+nfs_unrequire_resv_port ()
+{
+	local nfsconf="/etc/nfs.conf"
+	if (cat "$nfsconf" | grep -e 'nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
+		return
+	else
+		echo "Applying NFS configuration..."
+		echo "nfs.server.mount.require_resv_port = 0" | sudo tee -a "$nfsconf" >/dev/null
+		sudo nfsd restart
+		sleep 1
+	fi
+}
+
 # Fix/optimize Windows network settings for file sharing.
 # See http://serverfault.com/a/236393 for details.
 smb_windows_fix()
@@ -4325,6 +4342,7 @@ update ()
 	# [STEP 3] Update third party tools
 	echo-green "[STEP 3/$TOTAL_STEPS] Updating tools..."
 	update_tools
+	nfs_unrequire_resv_port
 
 	# [STEP 4] Update system images
 
