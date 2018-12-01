@@ -107,9 +107,9 @@ is_travis () {
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='18.06.1-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.23.1'
-REQUIREMENTS_DOCKER_MACHINE='0.15.0'
+REQUIREMENTS_DOCKER='18.09.0'
+REQUIREMENTS_DOCKER_COMPOSE='1.23.2'
+REQUIREMENTS_DOCKER_MACHINE='0.16.0'
 REQUIREMENTS_VBOX='5.2.20'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
@@ -2308,20 +2308,19 @@ docker_machine_mount_nfs ()
 		docker-machine ssh "$machine_name" \
 			"sudo mkdir -p $share_mount ;
 			timeout -t 5 sudo umount $share_mount 2>/dev/null ;
-			timeout -t 20 sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
+			timeout -t 20 sudo mount -t nfs -o nfsvers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			# [!!] Think twice about performance before changing nfs settings
 		if [ ! $? -eq 0 ]; then
 			echo "Retrying mounting local $share_export to $share_mount"
 			sleep 5
 			docker-machine ssh "$machine_name" \
-				"timeout -t 20 sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
+				"timeout -t 20 sudo mount -t nfs -o nfsvers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 			if [[ $? != 0 ]]; then
 				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
 				return 1
 			fi
 		fi
 	done
-
 }
 
 docker_machine_remove_nfs ()
@@ -3854,17 +3853,10 @@ install_tools_debian ()
 			sudo service docker stop 2>/dev/null
 		fi
 
-		# Pin docker-engine version to avoid apt-get upgrade.
-		# Get rid of -ce part because linux packages use `~ce` suffix in repos and pin version will not work with it
-		local PIN_DOCKER_VERSION=$(echo ${REQUIREMENTS_DOCKER} | sed "s/-.*//")
-		echo -e "Package: docker-ce\nPin: version ${PIN_DOCKER_VERSION}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
-
-		curl -fsSL "${URL_DOCKER_NIX}" | \
-			# Patch get.docker.com script on the fly to force installation of the pinned docker-ce version
-			sed "s/--force-yes docker-ce >/docker-ce >/" | \
-			sh && \
-			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-			sudo usermod -aG docker "$LOGNAME"
+		# Pin docker version
+		curl -fsSL "${URL_DOCKER_NIX}" | VERSION=${REQUIREMENTS_DOCKER} sh
+		# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
+		sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."

@@ -1,9 +1,6 @@
-sudo: required
+dist: xenial
 
-language: generic
-
-services:
-  - docker
+language: minimal
 
 install:
   - git clone https://github.com/docksal/bats.git tests/scripts/bats

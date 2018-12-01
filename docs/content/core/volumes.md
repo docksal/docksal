@@ -98,7 +98,7 @@ volumes:
     driver_opts:
       type: nfs
       device: :${PROJECT_ROOT}
-      o: addr=${DOCKSAL_HOST_IP},vers=3,nolock,noacl,nocto,noatime,nodiratime,tcp,actimeo=1
+      o: addr=${DOCKSAL_HOST_IP},nfsvers=3,nolock,noacl,nocto,noatime,nodiratime,tcp,actimeo=1
   docksal_ssh_agent:
     external: true
 ```
