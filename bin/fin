@@ -156,6 +156,9 @@ mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
 # Custom certs folder for vhost-proxy (overridable)
 CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 
+# Host path to make accessible to the VM (Mac only)
+DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH:-/Users}"
+
 # Where custom commands live (relative path)
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
 
@@ -2125,7 +2128,7 @@ docker_machine_start ()
 			"In case you see certificates problem, reboot your local host." \
 			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
 		configure_resolver
-		docker_machine_mounts
+		configure_mounts
 	else
 		# only auto-create default machine
 		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
@@ -2143,11 +2146,11 @@ docker_machine_start ()
 
 		echo-green "Pulling Docksal system images..."
 		update_system_images
-		docker_machine_mounts
+		configure_mounts
 	fi
 
 	# Catch the return code from docker_machine_mounts
-	# TODO: figure out a more reliable implementation as this may break if the code above gets reordered
+	# TODO: figure out a more reliable implementation, as this may break if the code above gets reordered
 	local _err=$?
 	if [[ ${_err} -eq 0 ]]; then
 		echo-green "Importing ssh keys..."
@@ -2184,37 +2187,17 @@ docker_machine_remove ()
 		"$vboxmanage" hostonlyif remove "$vboxifname" >/dev/null 2>&1
 	fi
 
-	if is_windows; then
-		echo-green "Removing SMB shares..."
-		docker_machine_remove_smb
-	fi
-	if is_mac; then
-		echo-green "Removing NFS exports..."
-		docker_machine_remove_nfs
-	fi
+	configure_mounts off
 }
 
-# Mount folder inside docker-machine with NFS
-# Unnamed params - shares in format "$LOCAL_FOLDER:$MOUNT_POINT_NAME"
-# Named --no-export param(s) - will try to mount those mount points without exporting $LOCAL_FOLDER
-docker_machine_mount_nfs ()
+# Create a NFS export
+# @param $@ - host path to be shared (accepts multiple values separated by space)
+nfs_share_add ()
 {
-	local machine_name="$DOCKER_MACHINE_NAME"
-	local network_name
-	local nfs_ip
-	eval $(parse_params "$@")
+	[[ "$@" = "" ]] && return 1
 
-	# Get required IP addresses
-	network_name=$("$vboxmanage" showvminfo "$machine_name" --machinereadable | grep hostonlyadapter | cut -d \" -f2)
-	if [[ "$network_name" == "" ]]; then
-		echo-error "Could not find virtualbox net name." && exit 1
-	fi
-	# nfs_ip is an internal IP of localhost as docker machine sees it.
-	nfs_ip=$("$vboxmanage" list hostonlyifs | grep "$network_name" -A 3 | grep IPAddress | cut -d ':' -f2 | xargs)
-	if [[ "$nfs_ip" == "" ]]; then
-		echo-error "Could not find virtualbox internal net IP address." && exit 1
-	fi
-	machine_ip=$(docker-machine ip "$machine_name")
+	local machine_name="${DOCKER_MACHINE_NAME:-docksal}"
+	eval $(parse_params "$@")
 
 	# Remove our own old exports
 	local exports_open="# <ds-nfs $machine_name"
@@ -2227,28 +2210,12 @@ docker_machine_mount_nfs ()
 
 	# Prepare new exports file
 	exports="${exports}\n${exports_open}\n"
-	for share in ${ARGV[@]}; do
-		local share_export=(${share//:/ });
-		# Check for NFS exports conflicts manually
-		if [[ "$exports" =~ "$share_export" ]]; then
-			echo
-			echo -e "${red}ERROR:${NC} Attempt to share $share_export via NFS would create a conflict in ${yellow}/etc/exports${NC}."
-			echo -e "       To solve the problem you can override the default Docksal projects folder."
-			echo -e "       by setting ${yellow}DOCKSAL_NFS_PATH${NC} value in ${yellow}$CONFIG_ENV${NC}."
-			sleep 1
-			echo
-			echo-green "Attempting auto-fix:"
-			_confirm "Do you want to use ${yellow}$HOME/Projects${NC} as Docksal projects path?"
-			# Write proposed DOCKSAL_NFS_PATH and try remounting nfs
-			mkdir -p "$HOME/Projects"
-			echo -e "\nDOCKSAL_NFS_PATH=\"$HOME/Projects\"\n" | tee -a ${CONFIG_ENV} >/dev/null
-			# Remove extra new lines
-			cat -s ${CONFIG_ENV} > ${CONFIG_ENV}
-			docker_machine_mount_nfs "$HOME/Projects:$HOME/Projects"
-			return $?
+	for share_export in ${ARGV[@]}; do
+		if [[ ! -d ${share_export} ]]; then
+			echo-error "Invalid path: ${share_export}"
+			return 1
 		fi
-		# TODO: move exports into a separate function and make it work with D4M with or without VirtualBox.
-		exports="${exports}$share_export 127.0.0.1 $machine_ip -alldirs -maproot=0:0\n"
+		exports="${exports}$share_export 127.0.0.1 ${DOCKSAL_IP} -alldirs -maproot=0:0\n"
 	done
 	exports="${exports}${exports_close}"
 
@@ -2267,7 +2234,7 @@ docker_machine_mount_nfs ()
 			echo "-----------------"
 			echo -e "$exports"
 			echo "-----------------"
-			return 1
+			return 2
 		fi
 
 		echo "Writing /etc/exports..."
@@ -2292,52 +2259,28 @@ docker_machine_mount_nfs ()
 		sudo nfsd start
 		sleep 10
 	fi
-
-	# Mount exported folders
-	echo-green "Mounting NFS shares..."
-	# Start NFS client on docker-machine
-	docker-machine ssh "$machine_name" \
-		"sudo /usr/local/etc/init.d/nfs-client start"
-	for share in ${ARGV[@]}; do
-		local share_=(${share//:/ });
-		local share_export="${share_[0]}"
-		local share_mount="${share_[1]}"
-		# Add new exports
-		echo "Mounting local $share_export to $share_mount"
-		# Timeout will break mount command, that can freeze if connection to host is blocked by firewall
-		docker-machine ssh "$machine_name" \
-			"sudo mkdir -p $share_mount ;
-			timeout -t 5 sudo umount $share_mount 2>/dev/null ;
-			timeout -t 20 sudo mount -t nfs -o nfsvers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
-			# [!!] Think twice about performance before changing nfs settings
-		if [ ! $? -eq 0 ]; then
-			echo "Retrying mounting local $share_export to $share_mount"
-			sleep 5
-			docker-machine ssh "$machine_name" \
-				"timeout -t 20 sudo mount -t nfs -o nfsvers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
-			if [[ $? != 0 ]]; then
-				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
-				return 1
-			fi
-		fi
-	done
 }
 
-docker_machine_remove_nfs ()
+# Removes all Docksal NFS exports
+nfs_share_remove ()
 {
-	local machine_name="$DOCKER_MACHINE_NAME"
+	local machine_name="${DOCKER_MACHINE_NAME:-docksal}"
 	# Remove our own old exports
 	local exports_open="# <ds-nfs $machine_name"
 	local exports_close="# ds-nfs>"
-	local exports=$(cat /etc/exports 2>/dev/null | \
+	local exports=$(cat /etc/exports 2>/dev/null)
+	local exports_new=$(cat /etc/exports 2>/dev/null | \
 		tr "\n" "\r" | \
 		sed "s/${exports_open}.*${exports_close}//" | \
 		tr "\r" "\n"
 	)
 
+	# Return if there are no changes
+	[[ "${exports_new}" == "${exports}" ]] && return
+
 	# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
 	local exports_test="/tmp/etc.exports.$RANDOM"
-	echo -e "$exports" | tee "$exports_test" >/dev/null
+	echo -e "$exports_new" | tee "$exports_test" >/dev/null
 	exports_errors=$(nfsd -F "$exports_test" checkexports 2>&1)
 	rm -f "$exports_test" >/dev/null 2>&1
 
@@ -2345,15 +2288,52 @@ docker_machine_remove_nfs ()
 	if [[ "$exports_errors" != '' ]]; then
 		echo-error "$exports_errors"
 		echo "-----------------"
-		echo -e "$exports"
+		echo -e "$exports_new"
 		echo "-----------------"
-		return 1
+		return 2
 	fi
 
 	echo "Writing and applying /etc/exports..."
-	echo -e "$exports" | sudo tee /etc/exports >/dev/null
+	echo -e "$exports_new" | sudo tee /etc/exports >/dev/null
 	sudo nfsd restart
-	sleep 2
+}
+
+# Mount folder inside docker-machine with NFS
+# Unnamed params - shares in format "$LOCAL_FOLDER:$MOUNT_POINT_NAME"
+docker_machine_mount_nfs ()
+{
+	local machine_name="$DOCKER_MACHINE_NAME"
+	local nfs_ip="$DOCKSAL_HOST_IP"
+	eval $(parse_params "$@")
+
+	machine_ip=$(docker-machine ip "$machine_name")
+
+	# Mount exported folders
+	echo-green "Mounting NFS shares..."
+	# Start NFS client on docker-machine
+	docker-machine ssh "$machine_name" "sudo /usr/local/etc/init.d/nfs-client start"
+	for share in ${ARGV[@]}; do
+		local share_=(${share//:/ });
+		local share_export="${share_[0]}"
+		local share_mount="${share_[1]}"
+		echo "Mounting local $share_export to $share_mount"
+		# [!!] Think twice about performance before changing nfs settings
+		nfs_mount_command="sudo mount -t nfs -o vers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
+		# Timeout will break mount command, that can freeze if connection to host is blocked by firewall
+		docker-machine ssh "$machine_name" \
+			"sudo mkdir -p $share_mount;
+			timeout -t 5 sudo umount $share_mount 2>/dev/null;
+			timeout -t 20 $nfs_mount_command"
+		if [[ $? != 0 ]]; then
+			echo "Retrying mounting local $share_export to $share_mount"
+			sleep 5
+			docker-machine ssh "$machine_name" "timeout -t 20 $nfs_mount_command"
+			if [[ $? != 0 ]]; then
+				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
+				return 1
+			fi
+		fi
+	done
 }
 
 # Fix/optimize Windows network settings for file sharing.
@@ -2401,6 +2381,19 @@ smb_share_add()
 			return 1
 		fi
 	fi
+}
+
+# Removes Docksal SMB shares
+smb_share_remove ()
+{
+	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	for drive in ${drives}; do
+		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Avoid conflicts with existing drive shares buy using a unique share name
+		local share_name="docksal-$mount_point"
+		command_share="net share ${share_name} /DELETE"
+		winsudo "$command_share"
+	done
 }
 
 # Method to mount the SMB share in Docker machine.
@@ -2467,30 +2460,6 @@ docker_machine_mount_smb ()
 		smb_share_add "$share_name" "$drive" &&
 			smb_share_mount "$share_name" "/$mount_point" "$password"
 	done
-}
-
-docker_machine_remove_smb ()
-{
-	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
-	for drive in ${drives}; do
-		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
-		# Avoid conflicts with existing drive shares buy using a unique share name
-		local share_name="docksal-$mount_point"
-		command_share="net share ${share_name} /DELETE"
-		winsudo "$command_share"
-	done
-}
-
-docker_machine_mounts ()
-{
-	if is_mac; then
-		echo-green "Configuring NFS shares..."
-		local MOUNT_POINT="${DOCKSAL_NFS_PATH:-/Users}"
-		docker_machine_mount_nfs "$MOUNT_POINT:$MOUNT_POINT"
-	elif is_windows; then
-		echo-green "Configuring SMB shares..."
-		docker_machine_mount_smb
-	fi
 }
 
 # Creates bind mounts on WSL from /mnt/c to /c so that docker-compose pth would match path inside docker
@@ -2595,7 +2564,7 @@ vm ()
 			docker_machine_remove "$machine_name"
 			;;
 		mount)
-			docker_machine_mounts
+			configure_mounts
 			;;
 		ip)
 			shift
@@ -3006,11 +2975,10 @@ project_erase ()
 # Resets Docksal system services
 system_reset ()
 {
-	# TODO: add /etc/exports, etc. here for a complete reset of Docksal
-
 	# Configure network has to happen before any communications with the docker daemon happen (before check_docker_running)
 	if [[ "$1" == "" ]] ; then
 		configure_network
+		configure_mounts
 		echo-green 'Resetting Docksal services...'
 		echo ' ➔ proxy'
 		install_proxy_service
@@ -3025,6 +2993,11 @@ system_reset ()
 	# Configure network has to happen before any communications with the docker daemon happen (before check_docker_running)
 	if [[ "$1" == "network" ]] ; then
 		configure_network
+		return
+	fi
+
+	if [[ "$1" == "mounts" ]] ; then
+		configure_mounts
 		return
 	fi
 
@@ -3069,7 +3042,6 @@ system_start ()
 }
 
 # Stops/disables all Docksal things
-# TODO: add projects, /etc/exports, etc. here for a complete shutdown of Docksal
 system_stop ()
 {
 	if ! is_linux && ! is_docker_native && ! is_wsl; then
@@ -3082,6 +3054,7 @@ system_stop ()
 		echo-green "Stopping Docksal system services..."
 		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
 		configure_resolver off
+		configure_mounts off
 		configure_network off
 	fi
 }
@@ -3339,6 +3312,48 @@ configure_network ()
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
 	is_wsl && configure_network_wsl "$mode" && return $?
+}
+
+# Configure Docksal mounts
+configure_mounts ()
+{
+	local mode="${1:-on}"
+
+	# Create and mount network shares from host to VM
+	if [[ "$mode" == "on" ]]; then
+		if is_mac; then
+			echo-green "Configuring NFS shares..."
+			nfs_share_add "${DOCKSAL_NFS_PATH}"
+			# Exit 2 = conflict in /etc/exports. Try to auto-resolve it.
+			if [[ $? == 2 ]]; then
+				# TODO: possibly, print a note that anything above the configured DOCKSAL_NFS_PATH is invisible to the VM.
+				echo-green "Conflict detected. Attempting auto-fix:"
+				_confirm "Suggested path for Docksal projects: ${yellow}${HOME}/Projects${NC}. Use it?"
+				DOCKSAL_NFS_PATH="${HOME}/Projects"
+				mkdir -p "${DOCKSAL_NFS_PATH}"
+				# Write proposed value to the global Docksal config
+				config_set --global DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH}"
+				# Configure exports using the new value
+				nfs_share_add "${DOCKSAL_NFS_PATH}"
+			fi
+			# Mount the share in VirtualBox
+			if ! is_docker_native; then
+				docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
+			fi
+		elif is_windows; then
+			echo-green "Configuring SMB shares..."
+			docker_machine_mount_smb
+		fi
+	else
+		if is_mac; then
+			echo-green "Removing NFS exports..."
+			nfs_share_remove
+		fi
+		if is_windows; then
+			echo-green "Removing SMB shares..."
+			smb_share_remove
+		fi
+	fi
 }
 
 # Start system-wide vhost-proxy service
