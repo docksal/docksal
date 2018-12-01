@@ -20,13 +20,13 @@ For more info, see [Directory Structure](https://gohugo.io/getting-started/direc
 
 ## Building
 
-Before starting you must install the [Learn Theme](https://github.com/matcornic/hugo-theme-learn). This can be done by running `git submodule update` within the local repository.
+Before starting, you must install the [Learn Theme](https://github.com/matcornic/hugo-theme-learn). This can be done by running `git submodule update` within the local repository.
 
 Building and previewing docs is done via a docker container.
 
 Run `make serve` and point your browser to http://localhost:1313 to open the site.
 
-If you do not have Docker installed natively and are using VirtualBox you can run using the `fin` commmand. When accessing you would use the IP address assigned to your VirtualBox machine (ie. http://192.168.64.100:1313).
+If you do not have Docker installed natively and are using VirtualBox, you can run using the `fin` commmand. When accessing, you would use the IP address assigned to your VirtualBox machine (i.e., http://192.168.64.100:1313).
 
 ```bash
 DOCKER="fin docker" make serve
