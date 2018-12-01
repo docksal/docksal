@@ -3353,7 +3353,9 @@ configure_mounts ()
 			if ! is_docker_native; then
 				docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
 			fi
-		elif is_windows; then
+		fi
+		# Create, then mount shares in VirtualBox
+		if is_windows && ! is_docker_native; then
 			echo-green "Configuring SMB shares..."
 			docker_machine_mount_smb
 		fi
@@ -3362,7 +3364,7 @@ configure_mounts ()
 			echo-green "Removing NFS exports..."
 			nfs_share_remove
 		fi
-		if is_windows; then
+		if is_windows && ! is_docker_native; then
 			echo-green "Removing SMB shares..."
 			smb_share_remove
 		fi
