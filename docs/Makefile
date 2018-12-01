@@ -1,7 +1,7 @@
-DOCKER       = docker
-HUGO_VERSION = 0.50
-DOCKER_IMAGE = jojomi/hugo:$(HUGO_VERSION)
-DOCKER_RUN   = $(DOCKER) run --rm --interactive --tty --volume $(PWD):/src
+DOCKER       ?= docker
+HUGO_VERSION ?= latest
+DOCKER_IMAGE ?= jojomi/hugo:$(HUGO_VERSION)
+DOCKER_RUN   ?= $(DOCKER) run --rm --interactive --tty --volume $(PWD):/src
 
 .PHONY: all build build-preview help serve test
 
