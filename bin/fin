@@ -2215,7 +2215,10 @@ nfs_share_add ()
 			echo-error "Invalid path: ${share_export}"
 			return 1
 		fi
-		exports="${exports}$share_export 127.0.0.1 ${DOCKSAL_IP} -alldirs -maproot=0:0\n"
+		# With docker-machine (VirtualBox), connections will originate from ${DOCKSAL_IP}
+		# With Docker Desktop, connections will originate from ${DOCKSAL_HOST_IP}
+		# Allow access from both
+		exports="${exports}$share_export ${DOCKSAL_HOST_IP} ${DOCKSAL_IP} -alldirs -maproot=0:0\n"
 	done
 	exports="${exports}${exports_close}"
 
