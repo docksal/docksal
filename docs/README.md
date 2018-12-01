@@ -20,7 +20,13 @@ For more info, see [Directory Structure](https://gohugo.io/getting-started/direc
 
 ## Building
 
-Before starting, you must install the [Learn Theme](https://github.com/matcornic/hugo-theme-learn). This can be done by running `git submodule update` within the local repository.
+Before starting, you must install the [Learn Theme](https://github.com/docksal/hugo-theme-learn). This can be done by running `git submodule update` within the local repository.
+
+To have submodules pulled automatically in the future set this within your global git configuration.
+
+```
+git config --global submodule.recurse true
+```
 
 Building and previewing docs is done via a docker container.
 
