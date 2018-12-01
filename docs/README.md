@@ -26,7 +26,7 @@ Building and previewing docs is done via a docker container.
 
 Run `make serve` and point your browser to http://localhost:1313 to open the site.
 
-If you do not have Docker installed natively and are using VirtualBox you can run using the `fin` commmand.
+If you do not have Docker installed natively and are using VirtualBox you can run using the `fin` commmand. When accessing you would use the IP address assigned to your VirtualBox machine (ie. http://192.168.64.100:1313).
 
 ```bash
 DOCKER="fin docker" make serve
