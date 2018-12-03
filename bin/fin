@@ -2957,7 +2957,7 @@ project_create ()
 	fi
 
 	echo -e "${green}Cloning repository...${NC}"
-	run_cli git clone -b master "${target_repo}" "${project_name}"
+	run_cli git clone -b master "${target_repo}" "${project_name}" --depth=1
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
 	echo -e "${yellow}3. Installing site${NC}"
