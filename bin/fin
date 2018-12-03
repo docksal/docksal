@@ -644,7 +644,7 @@ fix_crlf_warning ()
 	fi
 }
 
-# checks if binary exists and fails is it isn't
+# checks if binary exists and fails if it isn't
 check_binary_found ()
 {
 	if ( which "$1" >/dev/null 2>&1 ); then
@@ -731,7 +731,7 @@ check_project_environment ()
 	check_project_root && check_docker_running
 }
 
-# Check that project root exists, Docker is running and Docksal system services are running
+# Check that project root exists, Docker is running, and Docksal system services are running
 check_docksal_environment ()
 {
 	# Since network configuration is not permanent on Linux we need to restore it when possible
@@ -1062,7 +1062,7 @@ _remove_containers ()
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
 
-		# Taking the whole docker-compose project down (this removes containers, volumes and networks)
+		# Taking the whole docker-compose project down (this removes containers, volumes, and networks)
 		docker-compose down --volumes --remove-orphans
 	else
 		# Removing requested containers only
@@ -2147,7 +2147,7 @@ docker_machine_start ()
 	fi
 
 	# Catch the return code from docker_machine_mounts
-	# TODO: figure out a more reliable implementation, as this may break if the code above gets reordered
+	# TODO: figure out a more reliable implementation as this may break if the code above gets reordered
 	local _err=$?
 	if [[ ${_err} -eq 0 ]]; then
 		echo-green "Importing ssh keys..."
@@ -2771,7 +2771,7 @@ reset ()
 	fi
 
 	# Return here if there are errors with remove
-	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
+	# This also helps with cases when there was a typo in the reset command, like "fin reset system"
 	local ret=$?
 	[[ "$ret" != 0 ]] && return ${ret}
 
@@ -2957,7 +2957,7 @@ project_create ()
 	fi
 
 	echo -e "${green}Cloning repository...${NC}"
-	run_cli git clone -b master "${target_repo}" "${project_name}"
+	run_cli git clone -b master "${target_repo}" "${project_name}" --depth=1
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
 	echo -e "${yellow}3. Installing site${NC}"
@@ -3111,7 +3111,7 @@ ssh_key_generate ()
 
 	ssh_key_name="${1}"
 	# If no key name provided, ask for it
-	[[ "${ssh_key_name}" == "" ]] && read -p "Enter name for a new SSH key (e.g. myserver_id_rsa): " ssh_key_name
+	[[ "${ssh_key_name}" == "" ]] && read -p "Enter name for a new SSH key (e.g., myserver_id_rsa): " ssh_key_name
 	# Exit if still no key name here
 	[[ "${ssh_key_name}" == "" ]] && exit 1
 
@@ -3141,7 +3141,7 @@ ssh_key ()
 			"Please report this issue, as this should not usually happen." \
 			"Run ${yellow}fin system reset ssh-agent${NC} to start the service."
 		# We could automatically run install_sshagent_service here, however that may lead to an endless recursion
-		# if something is terribly wrong. So it's better to alret the user and ask them to try a manual fix.
+		# if something is terribly wrong. So it's better to alert the user and ask them to try a manual fix.
 		return 1
 	fi
 
@@ -4321,7 +4321,7 @@ update ()
 	echo-green "[STEP 4/$TOTAL_STEPS] Updating system images..."
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		# [4.1] Always update system images during upgrade
-		# On Win and Mac update only during upgrade because it is done in docker_machine_start
+		# On Win and Mac, update only during upgrade because it is done in docker_machine_start
 		update_system_images
 		# Run cleanup to get rid of outdated images
 		cleanup
@@ -4561,7 +4561,7 @@ _exec ()
 
 	# ------------------------------------------------ #
 	# 2) convert array of parameters into escaped string
-	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
+	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
@@ -4658,7 +4658,7 @@ run_cli ()
 	# Set default image
 	local RUN_IMAGE="${image:-docksal/cli:2.5-php7.1}"
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
-	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
+	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
@@ -5842,7 +5842,7 @@ addon () {
 	local addon_name=${ARGV[1]} # ARGV[0] is install, remove,...
 
 	# If addon contains 3 slash separated parts treat them as path
-	# i.e. username/repo/addon_name
+	# i.e., username/repo/addon_name
 	_regex="(.*\/.*)\/(.*)"
 	if [[ "$addon_name" =~ $_regex ]]; then
 		URL_ADDONS_REPO="$URL_ADDONS_HOSTING/${BASH_REMATCH[1]}"
@@ -6120,7 +6120,7 @@ addon_execute ()
 		# "\$PROJECT_ROOT" will be resolved in cli to /var/www
 		cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
 		cmd="$cli_addon_path"
-		# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
+		# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 		[[ "$@" != "" ]] && cmd="$cli_addon_path "$(printf " %q" "$@")
 		CONTAINER_NAME="$_exec_target" _exec "$cmd"
 	else
@@ -6148,7 +6148,7 @@ unison_sync_wait () {
 	done
 }
 
-# Fix permissions when running as root ( e.g. on Play with Docker, Katacoda, etc.)
+# Fix permissions when running as root ( e.g., on Play with Docker, Katacoda, etc.)
 set_project_root_permissions ()
 {
 	# Set permissions on project root to match the default user:group in cli.
