@@ -220,6 +220,7 @@ URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
 URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
 URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
+URL_REPO_ANGULAR="https://github.com/docksal/example-angular.git"
 URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
 URL_REPO_HUGO="https://github.com/docksal/example-hugo.git"
 URL_REPO_SYMFONY_SKELETON="https://github.com/docksal/example-symfony-skeleton.git"
@@ -2852,9 +2853,10 @@ project_create ()
 		echo
 		echo -e "${lime}  JS based${NC}"
 		echo -e "${green}    12.${NC} Gatsby JS"
+		echo -e "${green}    13.${NC} Angular"
 		echo
 		echo -e "${magenta}  HTML${NC}"
-		echo -e "${green}    13.${NC} Static HTML site"
+		echo -e "${green}    14.${NC} Static HTML site"
 		echo -e ""
 
 		while [[ "$choice" == "" ]]; do
@@ -2929,6 +2931,11 @@ project_create ()
 			target_repo="$URL_REPO_GATSBY"
 			;;
 		13)
+			target_cms="Angular"
+			target_host_name_search_string=""
+			target_repo="$URL_REPO_ANGULAR"
+			;;
+		14)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
