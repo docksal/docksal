@@ -4,33 +4,15 @@ aliases:
   - /en/master/tools/redis/
 ---
 
+Docksal does not maintain a Redis image as there are other integrations that are available at this time.
 
-Docksal does not have any self maintained images as there are other integrations that are available at this time.
 There are multiple different ways to accomplish this.
 
+## Use wodby/redis with config variables
 
-## Custom Redis Config File
+This is the default method.
 
-This can be done by adding a line to reference the custom config file (`.docksal/etc/redis/redis.conf`) in the `docksal.yml` file. The following is an example.
-
-```yaml
-version: "2.1"
-
-services:
-  redis:
-    hostname: redis
-    image: redis:4.0-alpine
-    volumes:
-      - ${PROJECT_ROOT}/.docksal/etc/redis/redis.conf:/usr/local/etc/redis/redis.conf
-    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
-```
-
-
-## Configure Environmental Variables For Docker Image
-
-This would require using the [wodby/redis](https://github.com/wodby/redis) image.
-
-Add the following to the `docksal.yml` file.
+Add the following to the `docksal.yml` file in your project.
 
 ```yaml
 version: "2.1"
@@ -43,11 +25,11 @@ services:
       service: redis
 ```
 
+The following variables may be set within your project's `docksal.env` file.
 
-### Environment Variables
-
-The following is listed on the [wodby/redis](https://github.com/wodby/redis) image for reference.
-**NOTE** This list may not be update to date with the repository.
+{{% notice note %}}
+This list may get outdated. Please check [wodby/redis](https://github.com/wodby/redis) for the up-to-date list.
+{{% /notice %}}
 
 | Variable                          | Default Value           | Description |
 | --------------------------------- | ----------------------- | ----------- |
@@ -75,7 +57,24 @@ The following is listed on the [wodby/redis](https://github.com/wodby/redis) ima
 | `REDIS_TIMEOUT`                   | `300`                   |             |
 
 
-## Extending the Stock Image
+## Use the official Redis image with a custom config file
+
+This can be done by adding a line to reference the custom config file (`.docksal/etc/redis/redis.conf`) in the `docksal.yml` file. The following is an example.
+
+```yaml
+version: "2.1"
+
+services:
+  redis:
+    hostname: redis
+    image: redis:4.0-alpine
+    volumes:
+      - ${PROJECT_ROOT}/.docksal/etc/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+```
+
+
+## Extending the official Redis image
 
 Redis can also be configured by extending the stock image within a Dockerfile. For more
 information, consult the [Extending stock Docksal Images](/stack/extend-images/) documentation.
