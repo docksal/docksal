@@ -134,6 +134,17 @@ services:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
 
+  # Redis
+  redis:
+    hostname: redis
+    image: ${REDIS_IMAGE:-wodby/redis:4.0}
+    environment:
+      - REDIS_MAXMEMORY=${REDIS_MAXMEMORY:-256m}
+      # Additional variables can be found https://github.com/wodby/redis
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+
   # Solr
   solr:
     hostname: solr
