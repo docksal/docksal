@@ -2319,8 +2319,6 @@ docker_machine_mount_nfs ()
 	local nfs_ip="$DOCKSAL_HOST_IP"
 	eval $(parse_params "$@")
 
-	machine_ip=$(docker-machine ip "$machine_name")
-
 	# Mount exported folders
 	echo-green "Mounting NFS shares..."
 	# Start NFS client on docker-machine
