@@ -19,27 +19,13 @@ the project again to recreate it: `fin p remove cli; fin p start`
 
 | OS             | Docker                                     | Volumes | Automatic | Comments  |
 |----------------|--------------------------------------------|---------|-----------|-----------|
-| Linux          | Native                                     | bind    | Yes       | The default option on Linux is "bind". Native FS speed. |
-|                |                                            |         |           | On Linux you don't need other options. |
-| macOS          | VirtualBox                                 | nfs     | Yes       | macOS + VirtualBox uses NFS volumes by default. |
-|                |                                            |         |           | Pros: pretty fast, only 10-15% slower than native FS. |
-|                |                                            |         |           | Cons: do not support filesystem events (fsnotify). |
-| macOS          | Docker for Mac                             | bind    | Yes       | With bind option you files will be shared with Docker for Mac via `osxfs:cached`. |
-|                |                                            |         |           | Pros: supports filesystem events and is default for Docker for Mac. |
-|                |                                            |         |           | Cons: pretty slow, 40-50% slower than native FS. |
-| macOS          | Docker for Mac                             | nfs     | *No*      | You can enable NFS volumes with Docker for Mac manually. |
-|                |                                            |         |           | Pros: much faster than default bind option. Is only 10-15% slower than native FS. |
-|                |                                            |         |           | Cons: does not support filesystem events (fsnotify). |
-| Windows        | VirtualBox, Docker for Win                 | bind    | Yes       | On Windows all files are mapped from host to Docker via Samba protocol, despite volumes say "bind". |
-|                |                                            |         |           | Pros: relatively fast, 20% overhead as compared to native FS. |
-|                |                                            |         |           | Cons: does not support filesystem events (fsnotify). |
-| macOS,<br>     |
-| Windows        | VirtualBox, Docker for Win, Docker for Mac | unison  | *No*      | You can enable `unison` volumes. With this option the `cli` filesystem will not be mapped over the network to the host, instead the files will be synced from your host to the `cli` filesystem via additional Unison container. Might be useful for huge projects where FS performance is a bottleneck. |
-|                |                                            |         |           | Pros: maximum `cli` container FS performance. |
-|                |                                            |         |           | Cons: initial wait for sync of project files into `cli`; sync delay when you switch git branches, since unison needs to sync a lot of files; higher CPU usage during files sync; sometimes Unison might "break". |
-| ANY            | ANY                                        | none    | *No*      | On any OS you can enable "none" option. This means that `cli` container's FS will not be mapped over the network to the host. It is like `unison` option but without the sync. Might be useful for huge projects where FS performance is a bottleneck but unison is not an option for you. |
-|                |                                            |         |           | Pros: maximum `cli` container FS performance; no wait for initial sync. |
-|                |                                            |         |           | Cons: one have to sync files manually or checkout and edit files inside `cli` container only. |
+| Linux          | Native                                     | bind    | Yes       | The default option on Linux is "bind". Native FS speed. <br> On Linux you don't need other options. |
+| macOS          | VirtualBox                                 | nfs     | Yes       | macOS + VirtualBox uses NFS volumes by default. <br> Pros: pretty fast, only 10-15% slower than native FS. <br> Cons: do not support filesystem events (fsnotify). |
+| macOS          | Docker for Mac                             | bind    | Yes       | With bind option you files will be shared with Docker for Mac via `osxfs:cached`. <br> Pros: supports filesystem events and is default for Docker for Mac. <br> Cons: pretty slow, 40-50% slower than native FS. |
+| macOS          | Docker for Mac                             | nfs     | *No*      | You can enable NFS volumes with Docker for Mac manually. <br> Pros: much faster than default bind option. Is only 10-15% slower than native FS. <br> Cons: does not support filesystem events (fsnotify). |
+| Windows        | VirtualBox, Docker for Win                 | bind    | Yes       | On Windows all files are mapped from host to Docker via Samba protocol, despite volumes say "bind". <br> Pros: relatively fast, 20% overhead as compared to native FS. <br> Cons: does not support filesystem events (fsnotify). |
+| macOS, Windows | VirtualBox, Docker for Win, Docker for Mac | unison  | *No*      | You can enable `unison` volumes. With this option the `cli` filesystem will not be mapped over the network to the host, instead the files will be synced from your host to the `cli` filesystem via additional Unison container. Might be useful for huge projects where FS performance is a bottleneck. <br> Pros: maximum `cli` container FS performance. <br> Cons: initial wait for sync of project files into `cli`; sync delay when you switch git branches, since unison needs to sync a lot of files; higher CPU usage during files sync; sometimes Unison might "break". |
+| ANY            | ANY                                        | none    | *No*      | On any OS you can enable "none" option. This means that `cli` container's FS will not be mapped over the network to the host. It is like `unison` option but without the sync. Might be useful for huge projects where FS performance is a bottleneck but unison is not an option for you. <br> Pros: maximum `cli` container FS performance; no wait for initial sync. <br> Cons: one have to sync files manually or checkout and edit files inside `cli` container only. |
 
 ## Full explanation on volumes in Docksal
 
