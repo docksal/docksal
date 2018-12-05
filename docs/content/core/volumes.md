@@ -11,9 +11,8 @@ If option is marked Automatic, then you do not have to do anything for this opti
 
 If option is not Automatic, then you need to enable it manually on the global or project level to use.
 All non-automatic options are enabled by placing `DOCKSAL_VOLUMES="<value from volumes column>"` into the respective
-`docksal.env` file or using `fin config set` for the same.
-E.g. `fin config set DOCKSAL_VOLUMES="NFS"`.
-Once you set a new volumes option you must re-create `cli` container. The easiest way is `fin project reset`,
+`docksal.env` file or using `fin config set` for the same, e.g., `fin config set DOCKSAL_VOLUMES="NFS"`.
+Once you set a new volumes option, you must re-create `cli` container. The easiest way is `fin project reset`,
 but it will also remove all the data from `db` volume. If you want to retain it, remove `cli` container and start
 the project again to recreate it: `fin p remove cli; fin p start`
 
@@ -24,7 +23,7 @@ the project again to recreate it: `fin p remove cli; fin p start`
 | macOS   | Docker for Mac  | bind    | **Yes**   | Files from host are shared with VM via `osxfs`, then `cli` accesses them directly. <br> **Pros:** supports filesystem events and is default for Docker for Mac. <br> **Cons:** pretty slow, 40-50% slower than native filesystem. |
 | macOS   | Docker for Mac  | nfs     | *No*      | `cli` accesses project files from host via NFS. <br> **Pros:** much faster than `bind` option. NFS is only 10-15% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
 | Windows | ANY             | bind    | **Yes**   | Files from host are shared with VM via SMB, then `cli` accesses them directly. <br> **Pros:** relatively fast, 20% overhead as compared to native FS. <br> **Cons:** does not support filesystem events (fsnotify). |
-| ANY     | ANY             | unison  | *No*      | Files from host are shared with VM, but `cli` does not access them directly. Instead `cli` filesystem is an independent volume, and files are synced from the VM to `cli` via an additional Unison container. Useful for huge projects where FS performance is a bottleneck. <br> **Pros:** maximum `cli` filesystem performance. <br> **Cons:** initial wait for files to sync into `cli`; additional Docksal disk space use; sync delay when you switch git branches; higher CPU usage during files sync; sometimes Unison might 'break'. |
+| ANY     | ANY             | unison  | *No*      | Files from host are shared with VM, but `cli` does not access them directly. Instead, `cli` filesystem is an independent volume, and files are synced from the VM to `cli` via an additional Unison container. Useful for huge projects where FS performance is a bottleneck. <br> **Pros:** maximum `cli` filesystem performance. <br> **Cons:** initial wait for files to sync into `cli`; additional Docksal disk space use; sync delay when you switch git branches; higher CPU usage during files sync; sometimes Unison might 'break.' |
 | ANY     | ANY             | none    | *No*      | `none` option is like `unison`, but without the auto-sync. Useful for huge projects where FS performance is a bottleneck, but when `unison` does not work for you. <br> **Pros:** maximum `cli` filesystem performance and no wait for the initial sync. <br> **Cons:** you have to copy files manually or checkout and edit files inside `cli` container only. |
 
 ## Full explanation on volumes in Docksal
