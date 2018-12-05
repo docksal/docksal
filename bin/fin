@@ -5185,7 +5185,7 @@ ngrok_share ()
 
 	# Add -host-header by default if no arguments are included.
 	if [[ "${ARGS}" == "ngrok http" ]]; then
-		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}'"
+		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}' ${container_name}.${network}:${NGROK_PORT}"
 	fi
 
 	${winpty} docker run --rm ${NGROK_VOLUME} -it \
@@ -5194,7 +5194,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		sh -c "${ARGS} ${container_name}.${network}:${NGROK_PORT}"
+		sh -c "${ARGS}"
 }
 
 # Print information required for issue diagnostics
