@@ -47,8 +47,7 @@ services:
 ### Environment Variables
 
 The following is listed on the [wodby/redis](https://github.com/wodby/redis) image for reference.
-**NOTE** This list may not be update to date with the repository. The following variables may also
-be set within your projects `docksal.env` file.
+**NOTE** This list may not be update to date with the repository.
 
 | Variable                          | Default Value           | Description |
 | --------------------------------- | ----------------------- | ----------- |
