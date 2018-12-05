@@ -4,9 +4,7 @@ aliases:
   - /en/master/tools/redis/
 ---
 
-Docksal does not maintain a Redis image as there are other integrations that are available at this time.
-
-There are multiple different ways to accomplish this.
+Docksal does not maintain a Redis image as there are multiple other ways to accomplish integration at this time.
 
 ## Use wodby/redis with config variables
 
@@ -28,33 +26,33 @@ services:
 The following variables may be set within your project's `docksal.env` file.
 
 {{% notice note %}}
-This list may get outdated. Please check [wodby/redis](https://github.com/wodby/redis) for the up-to-date list.
+This list may become outdated. Please check [wodby/redis](https://github.com/wodby/redis) for the up-to-date list.
 {{% /notice %}}
 
-| Variable                          | Default Value           | Description |
-| --------------------------------- | ----------------------- | ----------- |
-| `REDIS_ACTIVE_REHASHING`          | `yes`                   |             |
-| `REDIS_APPENDONLY`                | `no`                    |             |
-| `REDIS_DATABASES`                 | `16`                    |             |
-| `REDIS_DBFILENAME`                | `dump.rdb`              |             |
-| `REDIS_LATENCY_MONITOR_THRESHOLD` | `0`                     |             |
-| `REDIS_LIST_MAX_ZIPLIST_ENTRIES`  | `512`                   |             |
-| `REDIS_LIST_MAX_ZIPLIST_VALUE`    | `64`                    |             |
-| `REDIS_LOGFILE`                   |                         |             |
-| `REDIS_LUA_TIME_LIMIT`            | `5000`                  |             |
-| `REDIS_MAXMEMORY`                 | `128m`                  |             |
-| `REDIS_MAXMEMORY_POLICY`          | `allkeys-lru`           |             |
-| `REDIS_MAXMEMORY_SAMPLES`         | `3`                     |             |
-| `REDIS_NOTIFY_KEYSPACE_EVENTS`    |                         |             |
-| `REDIS_PASSWORD`                  |                         |             |
-| `REDIS_SAVE_TO_DISK`              |                         |             |
-| `REDIS_SAVES`                     | `900:1/300:10/60:10000` |             |
-| `REDIS_SET_MAX_INTSET_ENTRIES`    | `512`                   |             |
-| `REDIS_SLOWLOG_MAX_LEN`           | `32`                    |             |
-| `REDIS_SLOWLOG_SLOWER_THAN`       | `10000`                 |             |
-| `REDIS_TCP_BACKLOG`               | `511`                   |             |
-| `REDIS_TCP_KEEPALIVE`             | `60`                    |             |
-| `REDIS_TIMEOUT`                   | `300`                   |             |
+| Variable                          | Default Value           |
+| --------------------------------- | ----------------------- |
+| `REDIS_ACTIVE_REHASHING`          | `yes`                   |
+| `REDIS_APPENDONLY`                | `no`                    |
+| `REDIS_DATABASES`                 | `16`                    |
+| `REDIS_DBFILENAME`                | `dump.rdb`              |
+| `REDIS_LATENCY_MONITOR_THRESHOLD` | `0`                     |
+| `REDIS_LIST_MAX_ZIPLIST_ENTRIES`  | `512`                   |
+| `REDIS_LIST_MAX_ZIPLIST_VALUE`    | `64`                    |
+| `REDIS_LOGFILE`                   |                         |
+| `REDIS_LUA_TIME_LIMIT`            | `5000`                  |
+| `REDIS_MAXMEMORY`                 | `128m`                  |
+| `REDIS_MAXMEMORY_POLICY`          | `allkeys-lru`           |
+| `REDIS_MAXMEMORY_SAMPLES`         | `3`                     |
+| `REDIS_NOTIFY_KEYSPACE_EVENTS`    |                         |
+| `REDIS_PASSWORD`                  |                         |
+| `REDIS_SAVE_TO_DISK`              |                         |
+| `REDIS_SAVES`                     | `900:1/300:10/60:10000` |
+| `REDIS_SET_MAX_INTSET_ENTRIES`    | `512`                   |
+| `REDIS_SLOWLOG_MAX_LEN`           | `32`                    |
+| `REDIS_SLOWLOG_SLOWER_THAN`       | `10000`                 |
+| `REDIS_TCP_BACKLOG`               | `511`                   |
+| `REDIS_TCP_KEEPALIVE`             | `60`                    |
+| `REDIS_TIMEOUT`                   | `300`                   |
 
 
 ## Use the official Redis image with a custom config file
