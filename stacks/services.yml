@@ -134,6 +134,36 @@ services:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
 
+  # Redis
+  redis:
+    hostname: redis
+    image: ${REDIS_IMAGE:-wodby/redis:4.0}
+    environment:
+      - REDIS_ACTIVE_REHASHING
+      - REDIS_APPENDONLY
+      - REDIS_DATABASES
+      - REDIS_DBFILENAME
+      - REDIS_LATENCY_MONITOR_THRESHOLD
+      - REDIS_LIST_MAX_ZIPLIST_VALUE
+      - REDIS_LOGFILE
+      - REDIS_LUA_TIME_LIMIT
+      - REDIS_MAXMEMORY
+      - REDIS_MAXMEMORY_POLICY
+      - REDIS_MAXMEMORY_SAMPLES
+      - REDIS_NOTIFY_KEYSPACE_EVENTS
+      - REDIS_PASSWORD
+      - REDIS_SAVE_TO_DISK
+      - REDIS_SAVES
+      - REDIS_SET_MAX_INTSET_ENTRIES
+      - REDIS_SLOWLOG_MAX_LEN
+      - REDIS_SLOWLOG_SLOWER_THAN
+      - REDIS_TCP_BACKLOG
+      - REDIS_TCP_KEEPALIVE
+      - REDIS_TIMEOUT
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+
   # Solr
   solr:
     hostname: solr

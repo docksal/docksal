@@ -36,18 +36,19 @@ Add the following to the `docksal.yml` file.
 version: "2.1"
 
 services:
+  # Redis
   redis:
-    hostname: redis
-    image: wodby/redis:4.0
-    environment:
-      - REDIS_MAXMEMORY=256m
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: redis
 ```
 
 
 ### Environment Variables
 
 The following is listed on the [wodby/redis](https://github.com/wodby/redis) image for reference.
-**NOTE** This list may not be update to date with the repository.
+**NOTE** This list may not be update to date with the repository. The following variables may also
+be set within your projects `docksal.env` file.
 
 | Variable                          | Default Value           | Description |
 | --------------------------------- | ----------------------- | ----------- |
