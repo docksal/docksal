@@ -1036,12 +1036,16 @@ _stop_containers ()
 		# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
 		# The project network will be automatically recreated by docker-compose up.
 		local network_name="${COMPOSE_PROJECT_NAME_SAFE}_default"
-		local network_containers=$(docker network inspect \
-			--format '{{range .Containers}}{{.Name}} {{end}}' ${network_name} 2>/dev/null)
+
+		# "docker network inspect" does not list inactive endpoints (stopped containers), so cannot be used here
+		# Instead, we'll assume we should disconnect all project containers + vhost-proxy from the project network.
+		local project_containers=$(docker ps -aq \
+			--filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME_SAFE}" 2>/dev/null)
 		# Note: there should be no quotes around ${network_containers} or it won't be split properly
-		for container in ${network_containers}; do
+		for container in ${project_containers}; do
 			docker network disconnect -f "${network_name}" "${container}"
 		done
+		docker network disconnect -f "${network_name}" docksal-vhost-proxy
 		docker network rm "${network_name}" &>/dev/null
 	fi
 
