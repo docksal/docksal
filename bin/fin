@@ -5289,6 +5289,9 @@ sysinfo ()
 		echo "███  DOCKSAL: VIRTUAL HOSTS"
 		vhosts
 
+		echo "███  DOCKSAL: DNS"
+		ping -t 2 dns-test.docksal
+
 		echo
 		echo "███  DOCKER: RUNNING CONTAINERS"
 		docker ps
