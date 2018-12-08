@@ -5289,8 +5289,15 @@ sysinfo ()
 		echo "███  DOCKSAL: VIRTUAL HOSTS"
 		vhosts
 
+		echo
 		echo "███  DOCKSAL: DNS"
-		ping -t 2 dns-test.docksal
+		TEST_URL="http://dns-test.docksal"
+		curl --connect-timeout 2 -sS http://dns-test.docksal >/dev/null
+		if [[ $? != 0 ]]; then
+			echo "ERROR: Requesting $TEST_URL failed!"
+		else
+			echo "Successfully requested $TEST_URL"
+		fi
 
 		echo
 		echo "███  DOCKER: RUNNING CONTAINERS"
