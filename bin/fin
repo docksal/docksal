@@ -532,10 +532,22 @@ winsudo ()
 	cygstart --action=runas cmd /c "$@"
 }
 
+# Run command on Windows and WSL with elevated provileges
 sudowin ()
 {
-	# left for future use
-	powershell.exe Start-Process -Verb runAs -FilePath "cmd.exe" -Args '/c','dir','/?'
+	local command="$1"
+	local arguments=""
+	shift
+	while [[ "$1" != "" ]]; do
+		if [[ "$arguments" == "" ]]; then
+			arguments="'\"$1\"'"
+		else
+			arguments="$arguments,'\"$1\"'"
+		fi
+		shift
+	done
+
+	powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command" -Args "$arguments"
 }
 
 # Universal Bash parameter parsing
@@ -3321,8 +3333,8 @@ configure_network_wsl ()
 	# TODO: implement on/off modes
 	local mode="${1:-on}"
 
-	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_IP}" mask="255.255.255.0"
-	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
+	sudowin netsh.exe interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_IP}" mask="255.255.255.0"
+	sudowin netsh.exe interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
 	# Wait 5s for network configuration to apply
 	sleep 5
 }
@@ -3599,12 +3611,23 @@ configure_resolver_wsl () {
 	fi
 
 	local network_id
-	network_id="vEthernet (DockerNAT)"
+	if is_docker_native; then
+		# Use the default DockerNAT adapter
+		network_id="vEthernet (DockerNAT)"
+	else
+		# Figure out the name of the network (not the name of the adapter) the VM is using
+		network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+	fi
+
+	if [[ "$network_id" == "" ]]; then
+		echo-error "DNS resolver configuration failed"
+		return 1
+	fi
 
 	# Set DNS server to Docksal IP on the VM's VBox adapter
-	cmd.exe /c netsh interface ip set dnsservers "${network_id}" static ${dns_ip} none
+	sudowin netsh.exe interface ip set dnsservers "${network_id}" static ${dns_ip} none
 	# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
-	cmd.exe /c netsh interface ip set interface "${network_id}" metric=${metric}
+	sudowin netsh.exe interface ip set interface "${network_id}" metric=${metric}
 
 	# Flush DNS cache
 	echo-green "Clearing DNS cache..."
