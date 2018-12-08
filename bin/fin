@@ -377,6 +377,19 @@ cygpath_abs_unix ()
 	echo "/$(cygpath -m $1 | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 }
 
+# Returns the value of Windows environment var in WSL
+# @param $1 var name
+wsl_get_environment_var () 
+{
+	$(cmd.exe /c "echo %$1%")
+}
+
+# Unfortunately wslpath output contains \r that has to be cleaned 
+wsl_path ()
+{
+	echo $(wslpath "$1" | tr -d '[:cntrl:]')
+}
+
 # Search for a file/directory in a directory tree upwards. Return its path.
 # @param $1 filename
 upfind ()
@@ -4009,7 +4022,24 @@ install_tools_wsl ()
 		if_failed "Docker installation/upgrade has failed."
 	fi
 
-	# Install Docker Compose
+	# Install windows docker-machine to location where Windows can access it
+	# Create symlink for WSL
+	if ! is_docker_machine_version; then
+		local USERPROFILE=$(wsl_path $(wsl_get_environment_var "USERPROFILE"))
+		local DMDIR="$USERPROFILE/bin"
+		local DMBIN="$DMDIR/docker-machine.exe"
+
+		mkdir -p "$DMDIR"
+		if_failed "Could not create $DMDIR. Check your permissions."
+
+		echo-green "Downloading docker-machine..."
+		curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DMBIN" &&
+			chmod +x "$DMBIN" &&
+			sudo ln -s "$DMBIN" "$DOCKER_MACHINE_BIN_NIX"
+		if_failed "Check file permissions and internet connection."
+	fi
+
+	# Install Linux Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
 		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
