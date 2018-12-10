@@ -381,7 +381,7 @@ cygpath_abs_unix ()
 # @param $1 var name
 wsl_get_environment_var () 
 {
-	$(cmd.exe /c "echo %$1%")
+	echo $(cmd.exe /c "echo %$1%" | tr -d '[:cntrl:]')
 }
 
 # Unfortunately wslpath output contains \r that has to be cleaned 
@@ -546,8 +546,12 @@ sudowin ()
 		fi
 		shift
 	done
+	if [[ "$arguments" != "" ]]; then
+		powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command" -Args "$arguments"		
+	else
+		powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command"
+	fi
 
-	powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command" -Args "$arguments"
 }
 
 # Universal Bash parameter parsing
@@ -2460,12 +2464,18 @@ smb_share_add()
 	local share_name=$1
 	local share_path=$2
 
+	is_wsl && USERNAME="$(wsl_get_environment_var USERNAME)"
+
 	# Add SMB share if it does not exist.
-	if [[ "$(net share)" != *"${share_name}"*"Docksal ${share_path} drive"* ]];
+	if [[ "$(net.exe share)" != *"${share_name}"*"Docksal ${share_path} drive"* ]];
 	then
-		command_share="net share ${share_name}=${share_path} /grant:${USERNAME},FULL /REMARK:\"Docksal ${share_path} drive\""
+		command_share="net.exe share ${share_name}=${share_path} /grant:${USERNAME},FULL /REMARK:\"Docksal ${share_path} drive\""
 		echo-green "Adding docker SMB share..."
-		winsudo "$command_share"
+		if is_wsl; then
+			sudowin net.exe share "${share_name}=${share_path}" "/grant:${USERNAME},FULL" "/REMARK:Docksal-drive"
+		else
+			winsudo "$command_share"
+		fi
 
 		if [[ $? != 0 ]]; then
 			echo-error "SMB share creation failed." \
@@ -2498,6 +2508,8 @@ smb_share_mount()
 	local password=$3
 	# single quotes are banned from being used in password
 	password=${password//\'/}
+	is_wsl && USERNAME="$(wsl_get_environment_var USERNAME)"
+	is_wsl && USERDOMAIN="$(wsl_get_environment_var USERDOMAIN)"
 
 	# User ntlmssp by default. For some Windows machines ntlm should be used instead
 	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
@@ -2535,7 +2547,7 @@ docker_machine_mount_smb ()
 	# use his password for mount -t cifs ...
 
 	# Get a list of logical drives (type 3 = Local disk).
-	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	local drives=$(wmic.exe logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	read -s -p "Enter your Windows account password: " password
 	echo # Add a new line after user input.
 
@@ -2547,15 +2559,22 @@ docker_machine_mount_smb ()
 	fi
 
 	for drive in ${drives}; do
-		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Mount point is lowercase drive letter with no slash
+		local mount_point
+		if is_wsl; then
+			mount_point=$(wslpath "$drive\\" | sed 's/\///g')
+		else
+			mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		fi
 		# Avoid conflicts with existing drive shares buy using a unique share name
 		local share_name="docksal-$mount_point"
+		# echo smb_share_add "$share_name" "$drive"
 		smb_share_add "$share_name" "$drive" &&
 			smb_share_mount "$share_name" "/$mount_point" "$password"
 	done
 }
 
-# Creates bind mounts on WSL from /mnt/c to /c so that docker-compose pth would match path inside docker
+# Creates bind mounts on WSL from /mnt/c to /c so that docker-compose path would match path inside docker
 # See overridden pwd function too
 wsl_mount_drives ()
 {
@@ -3493,19 +3512,33 @@ detect_dns ()
 			# In case no name servers found, fall back to the default
 			DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 		fi
-	elif is_windows; then
+	elif is_windows || is_wsl; then
 		# Look for Primary WINS server, it represents DNS whe WINS services is in use
-		local primary_wins=$(ipconfig /all | grep "Primary WINS")
+		local primary_wins=$(ipconfig.exe /all | grep "Primary WINS")
 		if [[ "$primary_wins" =~ ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) ]]; then
 			DOCKSAL_DNS_UPSTREAM=${BASH_REMATCH[0]}
-		else
-			# In case nothing was found, fall back to the default
-			DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
+		fi
+
+		# If previous detection failed, try another one. Lists all DNS addresses. Uses first non-localhost
+		# Not an ideal check as it might pick the wrong one is there are several, but better than nothing 
+		if [[ "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
+			dns_addresses=""
+			IFS=$'\n'
+			for dns_found in $(netsh.exe interface ip show config | grep DNS | grep -v None | grep -v $DOCKSAL_IP); do
+				dns_addresses=${dns_addresses}$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '[:cntrl:]' | xargs)
+			done
+
+			for dns in $dns_addresses; do
+				if [[ ! "$dns" =~ "127.0."* ]]; then
+					DOCKSAL_DNS_UPSTREAM="${dns}"
+					break
+				fi
+			done
 		fi
 	fi
 
-	# If localhost address was detected as upstream, fall back to the default
-	if [[ "$DOCKSAL_DNS_UPSTREAM" =~ "127.0."* ]]; then
+	# If localhost address or empty was detected as upstream, fall back to the default
+	if [[ "$DOCKSAL_DNS_UPSTREAM" =~ "127.0."* || "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
 		DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 	fi
 
@@ -3694,7 +3727,7 @@ configure_resolver ()
 	elif [[ "$mode" == "off" ]]; then
 		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
 	fi
-
+return
 	is_mac && configure_resolver_mac "$mode" && return $?
 	is_linux && configure_resolver_alpine "$mode" && return $?
 	is_windows && configure_resolver_windows "$mode" && return $?
