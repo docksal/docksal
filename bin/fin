@@ -2103,7 +2103,12 @@ docker_machine_env ()
 	rm -f "$CONFIG_MACHINES_ENV" 2>/dev/null
 
 	# get the env
-	_env=$(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+	if is_wsl; then
+		# on wsl docker-machine is windows binary, but WSL does not understand windows paths
+		_env=$(docker-machine env --shell=bash docksal | sed "s/\\\\/\//g" | sed "s/C:/\/c/")
+	else
+		_env=$(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+	fi
 	res=$?
 
 	# apply the env
@@ -3706,7 +3711,7 @@ configure_resolver ()
 	elif [[ "$mode" == "off" ]]; then
 		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
 	fi
-return
+
 	is_mac && configure_resolver_mac "$mode" && return $?
 	is_linux && configure_resolver_alpine "$mode" && return $?
 	is_windows && configure_resolver_windows "$mode" && return $?
@@ -4062,19 +4067,15 @@ install_tools_generic_linux ()
 # Install WSL dependencies
 install_tools_wsl ()
 {
+	! is_docker_native && docker_machine_env
 	# Install Docker client
-	if ! is_docker_version; then
+	if ! is_docker_version || ! is_docker_server_version; then
 		echo-green "Installing Docker..."
-		# Install packages to allow apt to use a repository over HTTPS
-		sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
-		# Add Docker's official GPG key
-		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-		# Set up the repository
-		sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-		# Update source lists
-		sudo apt-get update
-		# Install Docker
-		sudo apt-get install docker-ce -y --allow-unauthenticated
+		# Pin docker version
+		curl -fsSL "${URL_DOCKER_NIX}" | VERSION=${REQUIREMENTS_DOCKER} sh
+		# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
+		sudo usermod -aG docker "$LOGNAME"
+		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
 	fi
 
