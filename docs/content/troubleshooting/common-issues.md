@@ -139,6 +139,8 @@ Error starting userland proxy: listen tcp 0.0.0.0:443: listen: address already i
 This usually happens on Linux because the default Apache server bind to `0.0.0.0:80` and `0.0.0.0:443` (all IPs).  
 This prevents Docksal from running properly.
 
+The can also be a port conflict if your computer has ever been configured to forward ports locally for development.
+
 ### How to resolve
 
 1. Stop Apache or
@@ -310,3 +312,15 @@ To Disable Hyper-V:
 ```
 dism.exe /Online /Disable-Feature:Microsoft-Hyper-V /All
 ```
+
+## Issue 15. Firewall blocking access to Docksal
+
+Visiting the project URL in your browser results in a "site can't be reached message," could be the result
+of a local firewall application blocking access to Docksal's canonical IP address.
+
+Firewall configuration can also cause problems with SMB. See [documentation on troubleshooting Windows SMB](../troubleshooting/windows-smb#smb-ip).
+
+
+### How to resolve
+
+Configure your firewall to allow connections to and from 192.168.64.100 (Docksal's canonical IP address used across all systems and configurations).
