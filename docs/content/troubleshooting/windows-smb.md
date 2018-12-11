@@ -95,7 +95,7 @@ re-installing Windows. We test Docksal on clean Windows 7 and Windows 10 install
 make sure it works.
 
 
-### 3. Check that Docksal IP is working
+### 3. Check that Docksal IP is working {#smb-ip}
 
 **NOTE:** At this step we assume you had already run `fin vm start` and it had failed
 with error related to shares or mounting. You checked out the first step and there seems to be no
