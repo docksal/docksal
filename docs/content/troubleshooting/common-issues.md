@@ -315,7 +315,7 @@ dism.exe /Online /Disable-Feature:Microsoft-Hyper-V /All
 
 ## Issue 15. Firewall blocking access to Docksal
 
-Visiting the project URL in your browser results in a "site can't be reached message," could be the result
+Visiting the project URL in your browser results in a "site can't be reached" message, could be the result
 of a local firewall application blocking access to Docksal's canonical IP address.
 
 Firewall configuration can also cause problems with SMB. See [documentation on troubleshooting Windows SMB](../troubleshooting/windows-smb#smb-ip).
