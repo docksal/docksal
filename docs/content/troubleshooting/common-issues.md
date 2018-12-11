@@ -139,7 +139,7 @@ Error starting userland proxy: listen tcp 0.0.0.0:443: listen: address already i
 This usually happens on Linux because the default Apache server bind to `0.0.0.0:80` and `0.0.0.0:443` (all IPs).  
 This prevents Docksal from running properly.
 
-The can also be a port conflict if your computer has ever been configured to forward ports locally for development.
+There can also be a port conflict if your computer has ever been configured to forward ports locally for development.
 
 ### How to resolve
 
