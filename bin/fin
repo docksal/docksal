@@ -2843,11 +2843,14 @@ project_create ()
 		echo -e "${green}    14.${NC} Static HTML site"
 		echo -e ""
 
+		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
+		local choices=14
+
 		while [[ "$choice" == "" ]]; do
-			read -p "Enter your choice (1-13): " choice
-			if ! (( "$choice" >= "1" && "$choice" <= 13 )); then
+			read -p "Enter your choice (1-$choices): " choice
+			if ! (( "$choice" >= "1" && "$choice" <= $choices )); then
 				choice=""
-				echo 'Enter a number between 1 and 13.'
+				echo-error "Enter a number between 1 and $choices."
 			fi
 		done
 	fi
