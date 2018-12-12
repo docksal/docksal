@@ -11,3 +11,8 @@ i.icon.docksal {
   background-image: url("/images/docksal-mark-white.svg");
   background-size: 15px 15px;
 }
+
+/* Algolia Search fixes */
+.searchbox {width: 270px !important;}
+.searchbox span {right: 0px; top:0px}
+#body > div.highlightable, #body > #navigation > a {z-index: -1}
