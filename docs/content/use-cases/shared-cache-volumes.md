@@ -29,13 +29,13 @@ services:
     environment:
       - COMPOSER_CACHE_DIR=/cache
     volumes:
-      - composer-cache:/home/docker/.composer/cache
-      - npm-cache:/home/docker/.npm
+      - composer_cache:/home/docker/.composer/cache
+      - npm_cache:/home/docker/.npm
 
 volumes:
-  composer-cache:
+  composer_cache:
     external: true
-  npm-cache:
+  npm_cache:
     external: true
 ```
 
