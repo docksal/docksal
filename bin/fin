@@ -1517,14 +1517,14 @@ show_help_ssh-key() {
 	printh "Private SSH keys loaded into the secure docksal-ssh-agent service are accessible to all project containers."
 	printh "This allows containers to connect to the external SSH servers that require SSH keys"
 	printh "without a need to copy over the key into the container every time."
-	printh "Default keys id_rsa/id_dsa/id_ecdsa are loaded automatically on every project start."
+	printh "Default keys id_rsa/id_dsa/id_ecdsa/id_ed25519 are loaded automatically on every project start."
 	echo
 	echo "Usage: fin ssh-key <command> [params]"
 
 	echo
 	echo "Commands:"
 	printh "add [key-name]" "Add a private SSH key from \$HOME/.ssh by file name"
-	printh "" "Adds all default keys (id_rsa/id_dsa/id_ecdsa) if no file name is given."
+	printh "" "Adds all default keys (id_rsa/id_dsa/id_ecdsa/id_ed25519) if no file name is given."
 
 	printh "ls" "List SSH keys loaded in the docksal-ssh-agent"
 	printh "rm" "Remove all keys from the docksal-ssh-agent"
@@ -3180,6 +3180,7 @@ ssh_key ()
 		[[ -f "${ssh_path}/id_rsa" ]] && local SECRET_SSH_KEY_ID_RSA=id_rsa
 		[[ -f "${ssh_path}/id_dsa" ]] && local SECRET_SSH_KEY_ID_DSA=id_dsa
 		[[ -f "${ssh_path}/id_ecdsa" ]] && local SECRET_SSH_KEY_ID_ECDSA=id_ecdsa
+		[[ -f "${ssh_path}/id_ed25519" ]] && local SECRET_SSH_KEY_ID_ED25519=id_ed25519
 	fi
 
 	# Load SSH keys into the agent
