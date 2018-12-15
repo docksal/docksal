@@ -35,13 +35,19 @@ Note: `drush updb` is a Drupal-specific example.
 
 ## Available variables
 
-These variables, provided by fin, are available for use inside you custom command scripts:
+These variables, provided by fin, are available for use inside your custom command scripts:
 
 * `PROJECT_ROOT` - absolute path to the project folder
 * `DOCROOT` - name of the docroot folder
 * `VIRTUAL_HOST` - the virtual host name for the project (e.g., `projectname.docksal`)
 * `DOCKER_RUNNING` - (string) "true" or "false"
 
+
+{{% notice note %}}
+These variables are only provided to standard custom commands or commands [targeting the cli](#target_cli). They are
+not available for commands targeting other containers unless you explicitly declare them in your `docksal.yml` file for
+that container.
+{{% /notice %}}
 
 Here is an example `init` command for a Drupal website using drush to automate the install:  
 
@@ -101,7 +107,7 @@ console.log("Custom NodeJS command!")
 Note in the above example for node, that custom command meta information lines are wrapped in a comment block
 relevant to this interpreter.
 
-## Executing commands inside cli
+## Executing commands inside cli {#target_cli}
 
 In some cases you'd want a command to be executed inside `cli` instead of the host (e.g., when you do not want to rely on
 any dependencies installed on the host and use the tools available in `cli`).
@@ -161,8 +167,8 @@ services:
   cli:
     environment:
       # These variables are set here
-      - ACAPI_EMAIL=email
-      - ACAPI_KEY=key
+      - GIT_USER_EMAIL=user@email.com
+      - GIT_USER_NAME="User Name"
       # These variables are passed from the host (including values in `docksal.env`/`docksal-local.env`)
       - SOURCE_ALIAS
       - VIRTUAL_HOST
@@ -188,4 +194,5 @@ fin drupal/updb
 
 ## More examples
 
-Check the commands directory (examples/.docksal/commands) located in the [Docksal project](https://github.com/docksal/docksal).
+Check the commands directory (examples/.docksal/commands) located in the [Docksal project](https://github.com/docksal/docksal) 
+or [read the blog post on writing custom commands](https://blog.docksal.io/writing-fin-init-and-other-docksal-custom-commands-dc103b2747cd).
