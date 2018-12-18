@@ -5548,8 +5548,10 @@ load_configuration ()
 	fi
 	export DOCROOT=${DOCROOT:-docroot}
 
+	# Make VIRTUAL_HOST lowercase, replace '_' with '-', remove everything non-letter or digit,
+	# make sure it starts with letter or digit
 	local OLD_VHOST=${VIRTUAL_HOST}
-	export VIRTUAL_HOST=$(echo ${VIRTUAL_HOST} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g' | sed 's/[^-a-z0-9\.]//g')
+	export VIRTUAL_HOST=$(echo ${VIRTUAL_HOST} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g' | sed 's/[^-a-z0-9\.]//g' | sed 's/^[^a-z0-9]*//g')
 	# Warn in case Virtual Host was auto-corrected
 	if [[ "$OLD_VHOST" != "$VIRTUAL_HOST" ]]; then
 		echo-warning "The ${yellow_bold}VIRTUAL_HOST${yellow} has been modified from ${yellow_bold}${OLD_VHOST}${yellow} to ${yellow_bold}${VIRTUAL_HOST}${NC} ${yellow}to comply with browser standards."
