@@ -62,8 +62,8 @@ Examples:
 ## Automatically Add Keys
 
 Adding SSH keys automatically whenever Docksal project is started can be done by defining special variable(s) within
-the `$HOME/.docksal/docksal.env` file. All variables should be prefixed with `SECRET_SSH_KEY_` and a small
-identifier of the key. After that has been done, restart your project with `fin project restart`, and the keys will be added.
+the `$HOME/.docksal/docksal.env` file. All variables should be prefixed with `SECRET_SSH_KEY_` plus the
+identifier of the SSH key. After that has been done, restart your project with `fin project restart`, and the keys will be added.
 
 For example, assuming you have a private SSH key `$HOME/.ssh/acquia_key`, you would define a variable:
 
@@ -72,3 +72,8 @@ SECRET_SSH_KEY_ACQUIA='acquia_key'
 ```
 
 When creating the variable use the file name within `$HOME/.ssh/` directory as the variable value. NOTE: the **private** key should be referenced, not the public one.
+
+## Manually Add Keys
+
+To add a key manually, run `fin ssh-key add <key_filename>` and it will be manually loaded. NOTE: this key will only be 
+be available to the containers until the next docksal-ssh-agent restart.
