@@ -40,13 +40,25 @@ There is no good way to automate this.
 
 [Follow this instruction to perform it manually](https://www.jeffgeerling.com/blogs/jeff-geerling/resizing-virtualbox-disk-image).
 
-## Free Up Space in VirtualBox VM
+## Free Up Space in VirtualBox VM, Docker for Mac or Docker for Windows.
 
-If you're not looking to increase the actual disk space allocated to VirtualBox but free up the space that is already used,
-here are some steps you can take:
+If you are looking to free up some space that is already used, rather than resizing the virtual disk,
+then here are some steps that you can take:
 
-Running `fin cleanup` is the easiest easiest way to clear space. This will clear out any containers of projects that no
+1. Running `fin cleanup` is the easiest easiest way to free space. This will clear out any containers of projects that no
 longer exists on your computer. 
 
-The next step would be to to look for old projects that do exist but you may not be working on. Run `fin project list --all` 
-and see the old, unused projects. You can remove the containers by going to the project directory and running `fin project remove`l
+1. The next step would be to to look for old projects that do exist, but you may not be working on. Run `fin project list --all`
+and look for old, unused projects. You can remove their containers by going to the project directory and running `fin project remove`.
+
+1. You can go even further and delete unused images. Run `fin docker images`, investigate the list of images for unused,
+outdated or temporary ones, and remove them with `fin docker image remove <name or id>`.
+
+	Navigating output of the Docker command above might be challenging, so `fin` can provide a helping hand.
+
+		fin cleanup --images
+
+	This command will run a Docker Images cleanup Wizard, that will help you to navigate image list and delete unused one by one.
+	And don't worry, if the image is still used by an existing container it will not get deleted even if you reply yes.
+
+	Removing unused images might be able to free up gigabytes of space.
