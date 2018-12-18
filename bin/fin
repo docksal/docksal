@@ -1255,7 +1255,7 @@ show_help ()
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal (${yellow}fin help system${NC})" "yellow"
-	if ! is_linux && ! is_docker_native; then
+	if [[ ! is_linux && ! is_docker_native ]] || [[ "$TERM" == "dumb" ]]; then
 		printh "vm <command>" "Manage Docksal VM (${yellow}fin help vm${NC})" "yellow"
 	fi
 	echo
