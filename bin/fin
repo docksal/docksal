@@ -3420,7 +3420,6 @@ install_proxy_service ()
 	local mount_certs
 	if [[ -d "${CONFIG_CERTS}" ]] && is_docker_path "${CONFIG_CERTS}"; then
 			mount_certs="--mount type=bind,src=${CONFIG_CERTS},dst=/etc/certs/custom"
-		fi
 	fi
 
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
