@@ -6174,12 +6174,15 @@ addon_execute ()
 
 	shift
 	if [[ "$_exec_target" != "" ]]; then
-		# Replace host addon path with the matching path inside cli
-		# "\$PROJECT_ROOT" will be resolved in cli to /var/www
-		cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
-		cmd="$cli_addon_path"
-		# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
-		[[ "$@" != "" ]] && cmd="$cli_addon_path "$(printf " %q" "$@")
+		# Replace addon path as it is on the host, with the matching path inside container
+		container_addon_path="/var/www/${addon/$PROJECT_ROOT\//}"
+		if [[ "$@" != "" ]]; then
+			# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
+			cmd="$container_addon_path "$(printf " %q" "$@")
+		else
+			cmd="$container_addon_path"
+		fi
+		# Run the command
 		CONTAINER_NAME="$_exec_target" _exec "$cmd"
 	else
 		exec "$addon" "$@"
