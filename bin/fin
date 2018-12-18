@@ -834,18 +834,26 @@ check_docksal_running ()
 	fi
 }
 
-# Checks that path is accessible to Docker (takes 1.2s on average)
-# @param $1 - Path to check (if empty checks `pwd`)
+# Ensures that path is accessible to Docker
+# @param $1 - path to check (if empty checks `pwd`)
 check_docker_path ()
 {
 	local _path="${1:-$(pwd)}"
-	(cd "$_path" 2>/dev/null && docker run -v "$_path":"$_path" docksal/empty 2>/dev/null)
-	if [[ $? != 0 ]]; then
+	if ! is_docker_path "$_path"; then
 		echo-error "The path is not accessible in Docker" \
 			"Could not access ${yellow}$_path${NC}" \
 			"It is not shared from your host to Docker."
 		exit 2
 	fi
+}
+
+# Checks if path is accessible to Docker (takes 1.2s on average)
+# @param $1 - path to check (fails if empty)
+is_docker_path ()
+{
+	local _path="${1}"
+	[[ "$_path" == "" ]] && return 1
+	(cd "$_path" 2>/dev/null && docker run -v "$_path":"$_path" docksal/empty 2>/dev/null)
 }
 
 is_vbox_version ()
