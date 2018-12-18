@@ -1116,6 +1116,32 @@ cleanup ()
 		docker container prune -f 2>/dev/null
 	fi
 
+	if [[ "$1" == "--images" ]]; then
+		echo-green "Docker images cleanup Wizard."
+		echo
+		sleep 1
+		# Print all images first
+		echo "Printing all existing images:"
+		sleep 1
+		docker images --format="{{.Repository}}:{{.Tag}}" | sort
+		echo "---------------------------------------------------"
+		echo "|      Use the list above to help you cleanup     |"
+		echo "---------------------------------------------------"
+		# Declare an arary of names and fill it with the output from the docker command
+		declare -a images
+		images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
+		# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
+		local image_name; local image_id;
+		for image in "${images[@]}"; do
+			image_name=$(echo "$image" | cut -d "+" -f 1)
+			image_id=$(echo "$image" | cut -d "+" -f 2)
+			if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
+				docker image remove "$image_id"
+			fi
+		done
+		return
+	fi
+
 	echo-green "Checking for orphaned projects..."
 	local projects=$(docker ps --all \
 		--filter 'label=io.docksal.project-root' \
@@ -1289,7 +1315,7 @@ show_help ()
 	printh "init" "Initialize a project (override it with your own automation ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
+	printh "cleanup [options]" "Remove unused Docker images and projects (saves disk space)"
 	printh "share" "Create temporary public url for current project using ngrok"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
@@ -1870,7 +1896,14 @@ show_help_cleanup ()
 
 	echo
 	echo "Options:"
+	printh "--images" "Docker images cleanup Wizard"
 	printh "--hard" "Also remove ALL stopped containers (potentially destructive operation)"
+
+	echo
+	echo "Examples:"
+	printh "fin cleanup" "Regular cleanup"
+	printh "fin cleanup --images" "Docker Images cleanup wizard, helping to navigate and delete unused ones"
+	printh "fin cleanup --hard" "Run hard cleanup removing all stopped containers"
 }
 
 show_help_hosts ()
