@@ -6315,7 +6315,7 @@ wsl_mount_drives
 
 # Export environment variables to properly reach Docker server
 if [[ "$DOCKSAL_HOST" != "" ]]; then
-	export DOCKER_HOST="$DOCKSAL_HOST"
+	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
 elif is_docker_native; then
 	if is_wsl; then
 		export DOCKER_HOST="127.0.0.1:2375"
