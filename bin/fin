@@ -532,7 +532,7 @@ winsudo ()
 	cygstart --action=runas cmd /c "$@"
 }
 
-# Run command on Windows and WSL with elevated provileges
+# Run command on Windows and WSL with elevated privileges
 sudowin ()
 {
 	local command="$1"
@@ -3504,7 +3504,7 @@ detect_dns ()
 		fi
 
 		# If previous detection failed, try another one. Lists all DNS addresses. Uses first non-localhost
-		# Not an ideal check as it might pick the wrong one is there are several, but better than nothing 
+		# Not an ideal check as it might pick the wrong one if there are several, but better than nothing 
 		if [[ "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
 			dns_addresses=""
 			IFS=$'\n'
