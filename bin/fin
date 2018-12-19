@@ -3432,7 +3432,7 @@ configure_mounts ()
 			fi
 		fi
 		# Create, then mount shares in VirtualBox
-		if [[ is_wsl || is_windows ]] && ! is_docker_native; then
+		if is_wsl || is_windows && ! is_docker_native; then
 			echo-green "Configuring SMB shares..."
 			docker_machine_mount_smb
 		fi
@@ -3441,7 +3441,7 @@ configure_mounts ()
 			echo-green "Removing NFS exports..."
 			nfs_share_remove
 		fi
-		if [[ is_wsl || is_windows ]] && ! is_docker_native; then
+		if is_wsl || is_windows && ! is_docker_native; then
 			echo-green "Removing SMB shares..."
 			smb_share_remove
 		fi
