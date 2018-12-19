@@ -24,6 +24,6 @@ DOCKSAL_STACK="acquia"
 
 The following stacks are available:
 
-- `default` - web, db, cli (assumed, when none specified)
-- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects)
+- `default` - web, mysql, cli (assumed, when none specified)
+- `acquia` - web, mysql, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects)
 - `node` - cli

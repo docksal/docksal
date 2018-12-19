@@ -45,7 +45,7 @@ services:
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
-  db:
+  mysql:
     environment:
       MYSQL_DATABASE: default
       MYSQL_PASSWORD: user

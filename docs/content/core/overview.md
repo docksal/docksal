@@ -45,9 +45,9 @@ Each project usually consists of at least 3 services: `web`, `db`, and `cli`.
 
 The [web](https://github.com/docksal/service-web) service runs Apache server 2.2 or 2.4.
 
-### db
+### mysql
 
-The [db](https://github.com/docksal/service-db) service runs MySQL 5.5, 5.6, 5.7, or 8.0.
+The [mysql](https://github.com/docksal/service-db) service runs MySQL 5.5, 5.6, 5.7, or 8.0.
 
 ### cli
 

@@ -102,5 +102,5 @@ fin image registry
 To get all tags of a certain image provide its name with the same command. For example:
 
 ```bash
-fin image registry docksal/db
+fin image registry docksal/mysql
 ```

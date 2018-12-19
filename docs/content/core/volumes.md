@@ -13,7 +13,7 @@ If option is not Automatic, then you need to enable it manually on the global or
 All non-automatic options are enabled by placing `DOCKSAL_VOLUMES="<value from volumes column>"` into the respective
 `docksal.env` file or using `fin config set` for the same, e.g., `fin config set DOCKSAL_VOLUMES="NFS"`.
 Once you set a new volumes option, you must re-create `cli` container. The easiest way is `fin project reset`,
-but it will also remove all the data from `db` volume. If you want to retain it, remove `cli` container and start
+but it will also remove all the data from `mysql` volume. If you want to retain it, remove `cli` container and start
 the project again to recreate it: `fin p remove cli; fin p start`
 
 | OS      | Docker          | Volumes | Automatic | Comments  |

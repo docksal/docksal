@@ -5,7 +5,7 @@ aliases:
 ---
 
 
-The `db` service container can perform an automatic import of the database dump upon initialization.
+The `mysql` service container can perform an automatic import of the database dump upon initialization.
 
 ## Setup
 
@@ -18,17 +18,17 @@ You can add multiple *.sql and *.sql.gz files. All files will be imported in alp
 The `MYSQL_DATABASE` variable contains the active database.
 {{% /notice %}}
 
-Add to the `db` service in the project's `.docksal/docksal.yml` file as follows:
+Add to the `mysql` service in the project's `.docksal/docksal.yml` file as follows:
 
 ```yaml
-db:
+mysql:
   ...
   volumes:
     - ${PROJECT_ROOT}/db:/docker-entrypoint-initdb.d:ro
   ...
 ```
 
-Run `fin project reset db` (`fin p reset db`) to reinitialize the `db` service.
+Run `fin project reset mysql` (`fin p reset mysql`) to reinitialize the `mysql` service.
 
 It may take some time for the database server to initialize and import the dump.  
-Check container logs for progress and/or issues if necessary (`fin logs db`).
+Check container logs for progress and/or issues if necessary (`fin logs mysql`).

@@ -20,29 +20,29 @@ For example, a 2.6GB DB dump file takes 14 minutes to import with MySQL.
 ## Enabling sandbox mode
 
 1) Backup the database: `fin sqld db.sql`  
-2) Update the `db` service in `docksal.yml` as follows: 
+2) Update the `mysql` service in `docksal.yml` as follows: 
 
 ```yaml
-db:
+mysql:
   ...
   command: "--datadir /var/lib/mysql-sandbox"
 ```
 
-3) Reset the db service: `fin project reset db` 
+3) Reset the mysql service: `fin project reset mysql` 
 4) Import the database: `fin sqli db.sql`  
-5) Create a snapshot image from the `db` container:
+5) Create a snapshot image from the `mysql` container:
 
 ```bash
 fin project stop
-fin docker commit $(fin docker-compose ps -q db) <tag>
+fin docker commit $(fin docker-compose ps -q mysql) <tag>
 ```
 
 Replace `<tag>` with any meaningful tag you'd like to use for the image, e.g., `db_backup` or `dbdata/myproject:snapshot1`.
 
-6) Update the `db` service in `docksal.yml` as follows:
+6) Update the `mysql` service in `docksal.yml` as follows:
 
 ```yaml
-db:
+mysql:
   ...
   image: <tag>
   command: "--datadir /var/lib/mysql-sandbox"
@@ -50,20 +50,20 @@ db:
 
 7) Update the stack configuration: `fin project start` (`fin p start` for short)
 
-Now the `db` service container is using an ephemeral storage for the database (changes) - `/var/lib/mysql-sandbox`.
+Now the `mysql` service container is using an ephemeral storage for the database (changes) - `/var/lib/mysql-sandbox`.
 
-To reset it to the snapshot you took in step 1 run `fin project reset db` (`fin p reset db`).
+To reset it to the snapshot you took in step 1 run `fin project reset mysql` (`fin p reset mysql`).
 
 ## Disabling sandbox mode
 
 You will need a DB dump to revert.
 Either use the one created before enabling the sandbox mode or create a new one.
 
-1) Revert the changes done to the `db` service in `docksal.yml` 
-2) Reset the `db` service: `fin project reset db` 
+1) Revert the changes done to the `mysql` service in `docksal.yml` 
+2) Reset the `mysql` service: `fin project reset mysql` 
 3) Import the DB dump
 
-Now the `db` service container is using a persistent storage volume for the database - `/var/lib/mysql`.
+Now the `mysql` service container is using a persistent storage volume for the database - `/var/lib/mysql`.
 
 {{% notice warning %}}
 With large databases, it is not recommended to snapshot a container that is already running off of a snapshot image.  

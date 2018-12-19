@@ -25,7 +25,7 @@ DB_IMAGE='docksal/db:1.1-mysql-5.6'
 Remember to run `fin project start` (`fin p start`) to apply the configuration.
 
 {{% notice warning %}}
-Different MySQL versions may not be fully compatible. A complete `db` service reset (`fin project reset db`) might be necessary
+Different MySQL versions may not be fully compatible. A complete `mysql` service reset (`fin project reset mysql`) might be necessary
 followed by a DB re-import.
 {{% /notice %}}
 

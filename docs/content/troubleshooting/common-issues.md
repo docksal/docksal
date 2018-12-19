@@ -96,7 +96,7 @@ Drupal 8 project and composer.
 
 ### How to resolve
 
-1. If the VM keeps running out of memory or you are getting weird issue with the `db` (or other) services failing, then
+1. If the VM keeps running out of memory or you are getting weird issue with the `mysql` (or other) services failing, then
 try stopping all active projects (`fin stop --all`) and only start the one you need.
 
 2. Alternatively give the VM more RAM (e.g., 4096 MB). This may only be necessary when running several very heavy
