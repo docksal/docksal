@@ -1,5 +1,5 @@
 ---
-title: "Composer Command Variable for the CLI Container"
+title: "Docker Composer Command Variable for the CLI Container"
 weight: 1
 ---
 
