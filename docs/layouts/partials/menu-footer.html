@@ -17,4 +17,15 @@
  inputSelector: '#search-by',
  debug: false // Set debug to true if you want to inspect the dropdown
  });
+ jQuery(document).ready(function() {
+     /*
+      * Prevent left and right arrow keys from engaging previous or next links.
+      */
+     jQuery('input').keydown(function (e) {
+         // left and right arrow keys
+         if (e.which == '37' || e.which == '39') {
+             e.stopPropagation();
+         }
+     });
+ });
 </script>
