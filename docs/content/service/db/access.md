@@ -35,7 +35,7 @@ To have a static port assigned, override the `MYSQL_PORT_MAPPING` variable value
 MYSQL_PORT_MAPPING='33061:3306'
 ```
 
-In this case current project db will be accessible at `192.168.64.100:33061`.
+In this case, the current project db will be accessible at `192.168.64.100:33061`.
 
 {{% notice note %}}
 If you plan to run several Docksal projects with exposed static ports at once, then use unique exposed port numbers.

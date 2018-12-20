@@ -17,7 +17,7 @@ Add the `elasticsearch` service under the `services` section in `.docksal/docksa
 
 Apply new configuration with `fin project start` (`fin p start`).
 
-Use `fin project status` to determine which port Elastic Search is exposed on. E.g.
+Use `fin project status` to determine which port Elastic Search is exposed on, e.g.,
 
 ```
 14:06:05 ~/Projects/drupal8
@@ -30,16 +30,13 @@ drupal8_elasticsearch_1   /usr/local/bin/docker-entr ...   Up             0.0.0.
 drupal8_web_1             httpd-foreground   
 ```
 
-In the example above Elastic Search port `9200` is exposed on the host as `32770` and can be accessed at `192.168.64.100:32770`.
+In the example above, Elastic Search port `9200` is exposed on the host as `32770` and can be accessed at `192.168.64.100:32770`.
 
-Alternatively manually export Elastic Search on the port `9200` on the host:
+## Assigning a Static Port
 
-```yaml
-  # Elastic Search
-  elasticsearch:
-    extends:
-      file: ${HOME}/.docksal/stacks/services.yml
-      service: elasticsearch
-    ports:
-      - "9200:9200"
+To have a static port assigned, override the `ELASTICSEARCH_PORT_MAPPING` variable in `.docksal/docksal-local.env`:
+
 ```
+ELASTICSEARCH_PORT_MAPPING='92001:9200'
+```
+In this case, the current project elastic search will be accessible at `192.168.64.100:92001`.
