@@ -17,7 +17,7 @@ Add the `elasticsearch` service under the `services` section in `.docksal/docksa
 
 Apply new configuration with `fin project start` (`fin p start`).
 
-Use `fin project status` to determine which port Elastic Search is exposed on, e.g.,
+Elastic Search will be exposed on a random port. Use `fin project status` to determine which port Elastic Search is exposed on, e.g.,
 
 ```
 14:06:05 ~/Projects/drupal8
@@ -39,4 +39,4 @@ To have a static port assigned, override the `ELASTICSEARCH_PORT_MAPPING` variab
 ```
 ELASTICSEARCH_PORT_MAPPING='9200:9200'
 ```
-In this case, the current project elastic search will be accessible at `192.168.64.100:92001`.
+In this case, the current project elastic search will be accessible at `192.168.64.100:9200`.
