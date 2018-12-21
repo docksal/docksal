@@ -42,7 +42,7 @@ Unless globally accessible site aliases are used, Drush must be run inside the D
 detect the Drupal instance and read the DB connection settings.
 {{% /notice %}}
 
-## Drush site aliases {#site-aliases}
+## Drush Site Aliases {#site-aliases}
 
 **Drush 8**
 
