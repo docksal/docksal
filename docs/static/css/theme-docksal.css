@@ -14,7 +14,6 @@ i.icon.docksal {
 
 /* Algolia Search fixes */
 .searchboxed {
-  width: 270px !important;
   margin-top: 1rem;
   position: relative;
   border: 1px solid #915eae;
