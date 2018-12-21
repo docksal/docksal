@@ -8,12 +8,12 @@ aliases:
 
 This section explains how Docksal works under the hood.
 
-## System services {#docksal-system-services}
+## System Services {#docksal-system-services}
 
 When you run `fin update` for the first time, Docksal installs several system containers.  
 To see the list, run `fin docker ps --filter "label=io.docksal.group=system"`.
 
-### SSH agent
+### SSH Agent
 
 The [docksal-ssh-agent](https://github.com/docksal/service-ssh-agent) service stores SSH keys and makes them available 
 to other projects and containers.
@@ -30,14 +30,14 @@ to the Docksal VM IP address (or localhost if you're running a [native Docker ap
 
 See [DNS resolver](/core/system-dns/) for more information.
 
-### Reverse proxy
+### Reverse Proxy
 
 When you request `project.docksal` in your browser, Docksal's DNS resolves it to Docksal's IP and your request hits the 
 [docksal-vhost-proxy](https://github.com/docksal/service-vhost-proxy) container. 
 This is Docksal's reverse proxy service, which routes the request to the appropriate project's `web` container. 
 This allows for a seamless work with multiple project stacks at the same time.
 
-## Project services {#docksal-project-services}
+## Project Services {#docksal-project-services}
 
 Each project usually consists of at least 3 services: `web`, `db`, and `cli`.
 
@@ -57,7 +57,7 @@ a Linux console with all necessary command line tools installed and pre-configur
 
 The console can be accessed from the host machine via `fin bash`. Individual tools/binaries can be executed via `fin exec`.
 
-## Customizing project configurations {#project-customization}
+## Customizing Project Configurations {#project-customization}
 
-If you are ready to customize Docksal service settings for your project, then check out [Customizing project configurations](/stack/config/)
+If you are ready to customize Docksal service settings for your project, then check out [Customizing project configurations](/stack/custom-configuration/)
 to learn about the `docksal.yml` structure and how to properly edit it.
