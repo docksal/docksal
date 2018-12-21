@@ -49,4 +49,7 @@ Available images:
 - PHP 7.1 - `docksal/cli:2.5-php7.1`
 - PHP 7.2 - `docksal/cli:2.5-php7.2`
 
+There are also "edge" versions available that contain code from ongoing updates, but may not be stable. Don't switch to an
+edge image unless directed to do so by the Docksal team for testing purposes only.
+
 See documentation for projects using a [custom stack configuration](/stack/config/#php-version).
