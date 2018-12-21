@@ -1,5 +1,5 @@
 ---
-title: "System: SSH agent"
+title: "System: SSH Agent"
 weight: 2
 aliases:
   - /en/master/advanced/ssh-agent/
@@ -13,7 +13,7 @@ The default ssh keys (`~/.ssh/id_rsa`, `~/.ssh/id_dsa`, `~/.ssh/id_ecdsa`) are l
 On macOS and Windows this happens when the Docksal VM is (re)started, on Linux - whenever `fin project start` is used.
 
 
-## Project setup
+## Project Setup
 
 To start using the ssh-agent service, add the following configuration option under the `volumes` section 
 of the `cli` service in the project's `.docksal/docksal.yml` file:
@@ -31,7 +31,7 @@ cli:
 Reset the `cli` container `fin project reset cli`.
 
 
-## Command line reference
+## Command Line Reference
 
 See `fin help ssh-key` for more information and usage guidelines.
 

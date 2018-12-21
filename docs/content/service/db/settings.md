@@ -1,8 +1,8 @@
 ---
-title: "MySQL settings"
+title: "MySQL Settings"
 ---
 
-## MySQL configuration {#configuration}
+## MySQL Configuration {#configuration}
 
 The following settings files in the project codebase can be used to override default MySQL settings:
 
@@ -13,7 +13,7 @@ folder in your project repo and modify as necessary.
 
 Apply changes with `fin project restart` (`fin p restart`).
 
-## Using different MySQL versions {#mysql-versions}
+## Using Different MySQL Versions {#mysql-versions}
 
 When using the default stack (a custom project stack is not defined in `.docksal/docksal.yml`), switching can be done 
 via the `DB_IMAGE` variable in `.docksal/docksal.env`.

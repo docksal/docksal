@@ -1,5 +1,5 @@
 ---
-title: "Docker Composer override of the command for the CLI Container"
+title: "Docker Composer Override of the Command for the CLI Container"
 weight: 1
 ---
 

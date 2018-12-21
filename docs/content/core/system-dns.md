@@ -1,5 +1,5 @@
 ---
-title: "System: DNS resolver"
+title: "System: DNS Resolver"
 weight: 2
 aliases:
   - /en/master/advanced/dns-resolver/
@@ -24,7 +24,7 @@ In cases when the Docksal VM is stopped or the `docksal-dns` service is down, th
 configured on the host (which would be your LAN/WiFi connection). This way there is always a fallback.
 
 
-## Disabling the resolver
+## Disabling the Resolver
 
 If you run into issues with DNS resolution, try disabling the automatic resolver.
 
@@ -35,7 +35,7 @@ If you run into issues with DNS resolution, try disabling the automatic resolver
 Without the automatic resolver, you can use `fin hosts` command to manage name resolution via the `hosts` file.
 
 
-## Override the default upstream DNS settings
+## Override the Default Upstream DNS Settings
 
 Some restricted network environments (e.g., corporate networks) may be blocking direct access to external DNS services, 
 making `8.8.8.8` inaccessible. In such cases, Docksal will output a warning on `fin project start` with the instructions to override the default upstream DNS settings.
@@ -53,7 +53,7 @@ making `8.8.8.8` inaccessible. In such cases, Docksal will output a warning on `
 Inspect your LAN or WiFi interface settings and connection status to figure out the DNS server your network is using.
 
 
-## Enable DNS query logging (for debugging) 
+## Enable DNS Query Logging (for debugging) 
 
 Enable logging
 

@@ -1,8 +1,8 @@
 ---
-title: "PHP settings"
+title: "PHP Settings"
 ---
 
-## PHP configuration {#configuration}
+## PHP Configuration {#configuration}
 
 The following settings files in the project codebase can be used to override default PHP settings:
 
@@ -29,7 +29,7 @@ You can find example settings overrides [here](https://github.com/docksal/docksa
 
 Once settings are in place, apply changes with `fin project restart` (`fin p restart`).
 
-## Using different PHP versions {#php-versions}
+## Using Different PHP Versions {#php-versions}
 
 Different PHP versions are handled via using different `cli` service images.  
 

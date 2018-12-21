@@ -1,5 +1,5 @@
 ---
-title: "Configuration variables"
+title: "Configuration Variables"
 weight: 5
 aliases:
   - /en/master/advanced/stack-config/
@@ -208,7 +208,7 @@ Defaults to the current cli image with the default php version defined in `~/.do
 
 Defaults to the current db image with the default mysql version defined in `~/.docksal/stacks/services.yml`. [See usage](/service/db/settings)
 
-### CLI_IMAGE
+### WEB_IMAGE
 
 Defaults to the current web image with the default apache version defined in `~/.docksal/stacks/services.yml`. [See usage](/service/web/settings)
 

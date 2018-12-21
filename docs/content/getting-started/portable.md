@@ -1,5 +1,5 @@
 ---
-title: "Portable installation"
+title: "Portable Installation"
 weight: 4
 aliases:
   - /en/master/getting-started/portable/

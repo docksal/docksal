@@ -1,5 +1,5 @@
 ---
-title: "How Docksal works"
+title: "How Docksal Works"
 weight: 1
 aliases:
   - /en/master/advanced/stack/

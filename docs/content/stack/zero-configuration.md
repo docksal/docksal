@@ -1,5 +1,5 @@
 ---
-title: "Zero configuration"
+title: "Zero Configuration"
 weight: 2
 aliases:
   - /en/master/advanced/stack-config/
@@ -13,7 +13,7 @@ This is a great way to start developing a new project. This approach can also be
 if your needs are simple. `stack-default.yml` extends the configuration from `services.yml`, 
 so you'll be getting the latest stack versions with every Docksal update.
 
-### Zero-configuration stacks
+### Zero-configuration Stacks
 
 You can switch between pre-created zero-configuration stacks by adding the following line to your `docksal.env` file 
 and running `fin project reset`.

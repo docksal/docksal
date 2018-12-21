@@ -21,7 +21,7 @@ Since services are containerized with Docker, any other service needed for a pro
 
 Docksal features a command-line tool called `fin` that simplifies the management of all components.
 
-## Key features
+## Key Features
 
 Docksal does more than simply manage containers. Below is a list of some of Docksal's key features. While it is not
 limited to these features, we think you'll find these to be some of its main selling points.
