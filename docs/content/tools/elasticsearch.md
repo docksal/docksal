@@ -37,6 +37,6 @@ In the example above, Elastic Search port `9200` is exposed on the host as `3277
 To have a static port assigned, override the `ELASTICSEARCH_PORT_MAPPING` variable in `.docksal/docksal-local.env`:
 
 ```
-ELASTICSEARCH_PORT_MAPPING='92001:9200'
+ELASTICSEARCH_PORT_MAPPING='9200:9200'
 ```
 In this case, the current project elastic search will be accessible at `192.168.64.100:92001`.
