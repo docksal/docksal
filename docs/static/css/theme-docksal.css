@@ -12,9 +12,8 @@ i.icon.docksal {
   background-size: 15px 15px;
 }
 
-/* Algolia Search fixes */
+/* Theme fixes for Algolia Search */
 .searchboxed {
-  width: 270px !important;
   margin-top: 1rem;
   position: relative;
   border: 1px solid #915eae;
@@ -25,8 +24,13 @@ i.icon.docksal {
   right: 0px;
   top:0px;}
 
-#body > div.highlightable, #body > #navigation > a {
-  z-index: -1
+body {
+  position: relative;
+}
+
+#sidebar {
+  position: absolute;
+  height: 100%;
 }
 
 .searchboxed input {
