@@ -1,5 +1,5 @@
 ---
-title: "Configuration variables"
+title: "Configuration Variables"
 weight: 5
 aliases:
   - /en/master/advanced/stack-config/
@@ -195,7 +195,24 @@ Acquia Cloud API Key. See [Acquia Drush Commands](/tools/acquia-drush/).
 
 Token used for logging in to Pantheon's CLI Tool [Terminus](/tools/terminus/).
 
-## CI variables
+## Image Variables
+
+The following variables are used to set images to a specified version. Using them will prevent the images from being udpated
+when Docksal is updated.
+
+### CLI_IMAGE
+
+Defaults to the current cli image with the default php version defined in `~/.docksal/stacks/services.yml`. [See usage](/service/cli/settings)
+
+### DB_IMAGE
+
+Defaults to the current db image with the default mysql version defined in `~/.docksal/stacks/services.yml`. [See usage](/service/db/settings)
+
+### WEB_IMAGE
+
+Defaults to the current web image with the default apache version defined in `~/.docksal/stacks/services.yml`. [See usage](/service/web/settings)
+
+## CI Variables
 
 The following variables are generally only used within a CI system. They are primarily used for giving Docksal the ability to turn off and conserve resources.
 

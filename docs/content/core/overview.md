@@ -1,5 +1,5 @@
 ---
-title: "How Docksal works"
+title: "How Docksal Works"
 weight: 1
 aliases:
   - /en/master/advanced/stack/
@@ -43,15 +43,15 @@ Each project usually consists of at least 3 services: `web`, `db`, and `cli`.
 
 ### web
 
-The [web](https://github.com/docksal/service-web) service runs Apache server 2.2 or 2.4.
+The [web service](https://github.com/docksal/service-web) runs Apache server 2.2 or 2.4.
 
 ### db
 
-The [db](https://github.com/docksal/service-db) service runs MySQL 5.5, 5.6, 5.7, or 8.0.
+The [db service](https://github.com/docksal/service-db) runs MySQL 5.5, 5.6, 5.7, or 8.0.
 
 ### cli
 
-The [cli](https://github.com/docksal/service-cli) service runs `php-fpm` (used by `web` service) and also provides 
+The [cli service](https://github.com/docksal/service-cli) runs `php-fpm` (used by `web` service) and also provides 
 a Linux console with all necessary command line tools installed and pre-configured 
 (e.g., drush, drupal console, wp-cli, phpcs, behat, mysql client, and many more).
 

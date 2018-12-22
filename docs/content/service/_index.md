@@ -1,11 +1,11 @@
 ---
-title: "Project services"
+title: "Project Services"
 chapter: true
 weight: 5
 pre: "<b>5. </b>"
 ---
 
-# Project services
+# Project Services
 
 Advanced documentation and use cases for stack services
 

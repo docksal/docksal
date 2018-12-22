@@ -25,7 +25,7 @@ Use `fin stop --all` to stop all projects, then `fin project start` to restart t
 
 ## Increasing Docksal's VirtualBox VM Disk Size (HDD)
 
-### With losing current containers and their data
+### With Losing Current Containers and Their Data
 
 Involves removing current VM. Your files will not be deleted, but databases will need to be re-imported, containers' images will be re-downloaded.
 
@@ -34,13 +34,13 @@ Involves removing current VM. Your files will not be deleted, but databases will
 
 `VBOX_HDD` is disk size in Megabytes. Default is `50000`.
 
-### Without losing current containers and data
+### Without Losing Current Containers and Data
 
 There is no good way to automate this.
 
 [Follow this instruction to perform it manually](https://www.jeffgeerling.com/blogs/jeff-geerling/resizing-virtualbox-disk-image).
 
-## Free Up Space in VirtualBox VM, Docker for Mac or Docker for Windows.
+## Free Up Space in VirtualBox VM, Docker for Mac, or Docker for Windows
 
 If you are looking to free up some space that is already used, rather than resizing the virtual disk,
 then here are some steps that you can take:

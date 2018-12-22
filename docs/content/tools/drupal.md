@@ -8,7 +8,7 @@ aliases:
 Below you will find instructions on configuring your Drupal project to work with Docksal.
 Some settings are required; others are optional or enhancements. Please review carefully.
 
-## DB connection settings (**required**) {#db}
+## DB Connection Settings (**required**) {#db}
 
 Below are sample settings for Drupal 7 and Drupal8.
 
@@ -52,7 +52,7 @@ The following command will recursively set folders to `777` (rwx) and files to `
 chmod -R +rwX files
 ```
 
-## Reverse proxy settings (**optional**) {#reverse-proxy}
+## Reverse Proxy Settings (**optional**) {#reverse-proxy}
 
 In some cases you have to let Drupal know if HTTPS is used. Add the following lines to `settings.php`:
 
@@ -94,7 +94,7 @@ if (PHP_SAPI !== 'cli') {
 }
 ```
 
-## Memcache settings (**optional**) {#memcache}
+## Memcache Settings (**optional**) {#memcache}
 
 Follow [Memcached](/tools/memcached/) instructions.
 

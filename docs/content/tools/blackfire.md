@@ -69,7 +69,7 @@ Follow the instructions to install and use blackfire via the [Chrome extension](
 See [blackfire.io](https://blackfire.io/docs/introduction) for more docs on using blackfire; including support for other browsers.
 
 
-## Debugging cli commands
+## Debugging cli Commands
 
 Use `fin exec blackfire run <command>` from host or `blackfire run <command>` within `cli` to profile cli commands.
 

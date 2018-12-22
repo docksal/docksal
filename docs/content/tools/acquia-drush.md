@@ -1,11 +1,11 @@
 ---
-title: "Acquia Drush commands"
+title: "Acquia Drush Commands"
 aliases:
   - /en/master/tools/acquia-drush/
 ---
 
 
-## Using Acquia Cloud Drush commands
+## Using Acquia Cloud Drush Commands
 
 Acquia Cloud Drush commands allow you to use all features of the Acquia Cloud API on the command line.  
 

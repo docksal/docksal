@@ -8,11 +8,11 @@ aliases:
 `phpcs` and `phpcbf` are readily available in the cli container.
 
 
-## Using as a custom fin command
+## Using as a Custom fin Command
 
 It's recommended to see how to [extend fin with custom commands](/fin/custom-commands/) first.
 
-From your project's root folder (where the `.docksal` folder is) download the sample `phpcs` command:
+From your project's root folder (where the `.docksal` folder is located), download the sample `phpcs` command:
 
 ```bash
 mkdir -p .docksal/commands
@@ -28,7 +28,7 @@ Modify `.docksal/commands/phpcs` script as you see fit.
 A command for `phpcbf` can be created in a similar fashion.
 
 
-## Using directly
+## Using Directly
 
 Instead of installing or creating custom commands you can use `phpcs`/`phpcbf` directly every time.  
 From your project's root folder run:

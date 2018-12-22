@@ -20,7 +20,7 @@ Use `memcached:11211` as the memcached endpoint.
 Complete `memcached` service definition can be found in `$HOME/.docksal/stacks/services.yml`.
 
 
-## Overriding default settings
+## Overriding Default Settings
 
 By default, memcached will be started with `128MB` memory allocation.  
 This can be overridden via the command arguments in the service definition.

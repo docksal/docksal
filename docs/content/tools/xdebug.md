@@ -25,7 +25,7 @@ Note: Starting with Docksal v1.6.0 (and assuming the default stack is used), ins
 
 ## Debugging with PHPStorm
 
-### Web requests
+### Web Requests
 
 1) Open a project in PHPStorm and set a breakpoint wherever you like  
 2) Click on the **Start Listening for PHP Debug Connections** button in PHPStorm
@@ -55,7 +55,7 @@ Map the project directory on the host to `/var/www` on the server:
 
 ![PHPStorm xdebug manual mapping](/images/xdebug-mapping-manual.png)
 
-### Console scripts and Drush
+### Console Scripts and Drush
 
 Make sure you have the server and directory mapping already configured following the instructions for web request debugging.
 

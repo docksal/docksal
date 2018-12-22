@@ -1,5 +1,5 @@
 ---
-title: "Extending stock images"
+title: "Extending Stock Images"
 weight: 7
 aliases:
   - /en/master/advanced/extend-images/
