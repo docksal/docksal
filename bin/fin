@@ -1263,6 +1263,7 @@ show_help ()
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
 
 	echo
+	printh "pull [options]" "Commands for interacting with Hosting Provider. (${yellow}fin help pull${NC})"
 	printh "drush [command]" "Drush command (requires Drupal)"
 	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
 	printh "platform [command]" "Platform.sh's CLI (requires docksal/cli 2.3+)"
@@ -1914,6 +1915,47 @@ show_help_logs ()
 	printh "fin logs web" "Show web container logs"
 	printh "fin logs -f web" "Show web container logs and follow it"
 }
+
+show_help_provider ()
+{
+	echo
+	echo "Docksal Provider Interaction commands."
+
+	echo
+	echo "Usage: pull <options> <asset>"
+
+	echo
+	echo "Possible Options for Asssets:"
+	printh "db" "Database"
+	printh "files" "Files"
+	printh "code" "Code"
+
+	echo
+	echo "Options:"
+	printh "--HOSTING-PROVIDER=<options>" "Provider to interact with. (Options: acquia, pantheon, platform.sh, drush, wp)"
+	printh "--HOSTING-SITE=<id>" "Site ID on Provider"
+	printh "--HOSTING-ENV=<env>" "Site Env on Provider"
+
+	echo
+	echo "Extra Options for Code"
+	printh "--SYNC-GIT_REMOTE" "The GIT Remote to pull from. (Defaults to origin)"
+	printh "--SYNC-GIT-BRANCH" "The GIT Branch to pull from. (Defaults to current branch)"
+
+	echo
+	echo "Extra Options for DB"
+	printh "--dbuser=<user>" "Specify the DB User (Defaults to root)"
+	printh "--dbpass=<pass>" "Specify the DB Password (Defaults to ${MYSQL_ROOT_PASSWORD}"
+
+	echo
+	echo "Extra Options for Files"
+
+	echo
+	echo "Examples:"
+	printh "fin pull" "Pull all items from provider"
+	printh "fin pull db" "Pull only the db from the provider"
+	printh "fin pull db dbname" "Pull the db name dbname from the provider. (Acquia Cloud Only)"
+}
+
 #---------- END HELP FUNCTIONS
 
 # Display fin version
@@ -6208,6 +6250,163 @@ set_project_root_permissions ()
 	is_root && chown -R 1000:1000 "$PROJECT_ROOT"
 }
 
+# Pull assets from the provider.
+provider_pull ()
+{
+	local supported_platforms=(acquia pantheon platform.sh drush wp)
+	eval $(parse_params "$@")
+	if [[ "${HOSTING_PLATFORM}" == "" || "${HOSTING_SITE}" == ""  || "${HOSTING_ENV}" == "" ]]; then
+		echo-error "Hosting Provider not set up. Following variables must be set: HOSTING_PLATFORM, HOSTING_SITE, HOSTING_ENV"
+		return -1
+	fi
+
+	if [[ "${supported_platforms[*]}" != *"${HOSTING_PLATFORM}"* ]]; then
+		echo-error "Only the following platforms are supported: ${supported_platforms[*]}"
+		return -1
+	fi
+
+	# Run some checks before continuing.
+	case "$HOSTING_PLATFORM" in
+		pantheon)
+			if [[ -z "$SECRET_TERMINUS_TOKEN" ]]; then
+				echo-error "SECRET_TERMINUS_TOKEN must be set in order to work with Pantheon."
+				exit 1;
+			fi
+		;;
+		platform.sh)
+			if [[ -z "$SECRET_PLATFORMSH_CLI_TOKEN" ]]; then
+				echo-error "SECRET_PLATFORMSH_CLI_TOKEN must be set in order to work with Platform.sh."
+				exit 1;
+			fi
+		;;
+		acquia)
+			if [[ -z "$SECRET_ACAPI_EMAIL" ]] || [[ -z "$SECRET_ACAPI_KEY" ]]; then
+				echo-error "SECRET_ACAPI_EMAIL and SECRET_ACAPI_KEY must be set in order to work with Acquia."
+				exit 1;
+			fi
+		;;
+	esac
+
+	echo-green "Starting Pull On ${HOSTING_PLATFORM}:"
+
+	# Execute a Pull On Code.
+	if [[ "${ARGV[0]}" == "code" ]] || [[ "${ARGV[0]}" == "" ]]; then
+		local git_remote=${SYNC_GIT_REMOTE:-origin}
+		local current_branch=$(run_cli "git rev-parse --abbrev-ref HEAD" | tr -d '\r')
+		local git_branch=${SYNC_GIT_BRANCH:-$current_branch}
+		echo-yellow "Pulling Code From ${git_remote} - ${git_branch}"
+		run_cli "git pull ${git_remote} ${git_branch}"
+	fi
+
+	# Execute a Pull on DB.
+	if [[ "${ARGV[0]}" == "db" ]] || [[ "${ARGV[0]}" == "" ]];  then
+		echo-green "Pulling DB"
+		local db_file="/tmp/${HOSTING_ENV}.${HOSTING_SITE}.sql.gz"
+		local file_exists=$(_exec "ls -1 /tmp/** | grep \"${db_file}\"$ | wc -l")
+
+		local yesterday="";
+		if is_mac; then
+			yesterday=$(date -v-86400S "+%Y-%m-%d %H:%M:%S")
+		else
+			yesterday=$(date --date='yesterday' "+%Y-%m-%d %H:%M:%S")
+		fi
+
+		if [[ "$file_exists" == "0" ]] || [[ ! -z $(_exec find ${db_file} -mmin +360) ]]; then
+			echo "${db_file} need updating"
+
+			echo "Exporting latest database..."
+			# Check to see if File Is Older than 1 hour
+			if [[ "$file_exists" > "0" ]] && [[ ! -z $(_exec find ${db_file} -mmin +360) ]]; then
+				_exec rm -rf $db_file
+			fi
+
+			case "$HOSTING_PLATFORM" in
+				pantheon)
+					# Get Time of Last Backup In Pantheon.
+					local last_backup=$(_exec terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1)
+					if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]]; then
+						# If last backup does not exist or is older than 24 hours create new one.
+						_exec terminus backup:create ${HOSTING_SITE}.${HOSTING_ENV} --element=db
+					fi
+					_exec terminus backup:get "${HOSTING_SITE}"."${HOSTING_ENV}" --element="db" --to="${db_file}"
+					;;
+				platform.sh)
+					_exec platform db:dump -p "${HOSTING_SITE}" -e "${HOSTING_ENV}" --gzip -f "${db_file}"
+					;;
+				acquia)
+					# Update Acquia Drush Aliases
+					_exec drush acquia-update
+
+					# TODO: Allow for all databases to be downloaded. drush ac-database-list will list all databases for a site.
+					local db_name="${ARGV[1]}"
+					local query=$(_exec drush --format=json "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-list "${ARGV[1]}");
+					# Returns timestamp of last backup. Need to
+					local last_date=$(printf "${query}" | grep id | sed 's/\"started": \"\(.*\)",/\1/' | tail -n 1 | tr -d '[:space:]')
+					# Convert Date To Y-m-d H:m:s format
+					if is_mac; then
+						last_date=$(date -r ${last_date} "+%Y-%m-%d %H:%M:%S")
+					else
+						last_date=$(date --date=@${last_date} "+%Y-%m-%d %H:%M:%S")
+					fi
+
+					if [[ "${last_date}" < "${yesterday}" ]]; then
+						_exec drush "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup "${db_name}" > /dev/null 2>&1
+						echo-yellow "Creating new backup. Sleeping for 10 seconds" && sleep 10
+						# Requery to get a new list.
+						query=$(_exec drush --format=json "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-list "${ARGV[1]}");
+					fi
+
+					# Returns id of last backup.
+					local last_id=$(printf "${query}" | grep id | sed 's/\"id": \"\(.*\)",/\1/' | tail -n 1 | tr -d '[:space:]')
+
+					_exec drush "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-download "${last_id}" --result-file="${db_file}"
+					;;
+				drush)
+					_exec drush "${HOSTING_SITE}"
+					;;
+				wp)
+					_exec wp "${HOSTING_SITE}" export
+					;;
+				*)
+					echo "Hosting Provider Not Supported Currently"
+					exit 1
+					;;
+			esac
+		fi
+
+		local __db_user="${dbuser:-root}"
+		# MYSQL_* variable expansion happens here
+		local __db_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
+		local __db_database="${db:-$MYSQL_DATABASE}"
+
+		# Import the Database.
+		# ToDo: Need to account for Multi-Site and other DB Names.
+		mysql_db_truncate "${DB_NAME}"
+		_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h ${__db_database} ${__db_database}"
+	fi
+
+	# Execute a pull on Files.
+	if [[ "${ARGV[0]}" == "files" ]] || [[ "${ARGV[0]}" == "" ]]; then
+		echo-green "Pulling Files..."
+		case "$HOSTING_PLATFORM" in
+			pantheon)
+				;;
+			platform.sh)
+				;;
+			acquia)
+				;;
+			drush)
+				;;
+			wp)
+				;;
+			*)
+				echo "Hosting Provider Not Supported Currently"
+				exit 1
+				;;
+		esac
+	fi
+}
+
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
@@ -6896,6 +7095,18 @@ case "$1" in
 		# configuration will be loaded by end functions if needed
 		shift
 		addon "$@"
+		;;
+	pull)
+		shift
+		case "$1" in
+			help)
+				show_help_provider
+				;;
+			*)
+				load_configuration
+				provider_pull "$@"
+				;;
+		esac
 		;;
 	*)
 		addon_file_path="$(addon_get_path $1)"
