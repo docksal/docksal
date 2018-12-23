@@ -1962,7 +1962,7 @@ show_help_logs ()
 	printh "fin logs -f web" "Show web container logs and follow it"
 }
 
-show_help_provider ()
+show_help_pull ()
 {
 	echo
 	echo "Docksal Provider Interaction commands."
@@ -1978,7 +1978,8 @@ show_help_provider ()
 
 	echo
 	echo "Options:"
-	printh "--HOSTING-PROVIDER=<options>" "Provider to interact with. (Options: acquia, pantheon, platform.sh, drush, wp)"
+	printh "--HOSTING-PROVIDER=<provider>" "Provider to interact with."
+	printh "" "Options: acquia, pantheon, platform.sh, drush, wp"
 	printh "--HOSTING-SITE=<id>" "Site ID on Provider"
 	printh "--HOSTING-ENV=<env>" "Site Env on Provider"
 
@@ -1994,6 +1995,9 @@ show_help_provider ()
 
 	echo
 	echo "Extra Options for Files"
+	printh "--files-sync-dir=<dir>" "Directory to sync files with."
+	printh "" "Default Drupal: {DOCROOT}/sites/default/files/"
+	printh "" "Wordpress Default: {DOCROOT}/wp-content/uploads/"
 
 	echo
 	echo "Examples:"
@@ -6415,10 +6419,10 @@ provider_pull ()
 					_exec drush "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-download "${last_id}" --result-file="${db_file}"
 					;;
 				drush)
-					_exec drush "${HOSTING_SITE}"
+					_exec drush "@${HOSTING_SITE}.${HOSTING_ENV}" sql-dump --gzip --result-file=""
 					;;
 				wp)
-					_exec wp "${HOSTING_SITE}" export
+					_exec wp "@${HOSTING_SITE}.${HOSTING_ENV}"
 					;;
 				*)
 					echo "Hosting Provider Not Supported Currently"
@@ -7151,15 +7155,8 @@ case "$1" in
 		;;
 	pull)
 		shift
-		case "$1" in
-			help)
-				show_help_provider
-				;;
-			*)
-				load_configuration
-				provider_pull "$@"
-				;;
-		esac
+		load_configuration
+		provider_pull "$@"
 		;;
 	*)
 		addon_file_path="$(addon_get_path $1)"
