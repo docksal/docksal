@@ -40,3 +40,9 @@ teardown() {
 	echo "$output" | egrep "Drupal Console Launcher version 1\..+"
 	unset output
 }
+
+# Test interacting with Providers
+# ToDo: Write Tests
+@test "fin pull" {
+	[[ $SKIP == 1 ]] && skip
+}
