@@ -1,8 +1,8 @@
 ---
-title: "PHP settings"
+title: "PHP Settings"
 ---
 
-## PHP configuration {#configuration}
+## PHP Configuration {#configuration}
 
 The following settings files in the project codebase can be used to override default PHP settings:
 
@@ -29,7 +29,7 @@ You can find example settings overrides [here](https://github.com/docksal/docksa
 
 Once settings are in place, apply changes with `fin project restart` (`fin p restart`).
 
-## Using different PHP versions {#php-versions}
+## Using Different PHP Versions {#php-versions}
 
 Different PHP versions are handled via using different `cli` service images.  
 
@@ -48,5 +48,8 @@ Available images:
 - PHP 7.0 - `docksal/cli:2.5-php7.0`
 - PHP 7.1 - `docksal/cli:2.5-php7.1`
 - PHP 7.2 - `docksal/cli:2.5-php7.2`
+
+There are also "edge" versions available that contain code from ongoing updates, but may not be stable. Don't switch to an
+edge image unless directed to do so by the Docksal team for testing purposes only.
 
 See documentation for projects using a [custom stack configuration](/stack/config/#php-version).

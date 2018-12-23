@@ -1,11 +1,11 @@
 ---
-title: "Shared volumes"
+title: "Shared Volumes"
 weight: 3
 aliases:
   - /en/master/advanced/volumes/
 ---
 
-## Quick overview of the volumes options
+## Quick Overview of the Volumes Options
 
 If option is marked Automatic, then you do not have to do anything for this option to be used.
 
@@ -73,7 +73,7 @@ container ==bind mount==> Linux VM ==NFS/SMB mount==> Mac/Windows host
 ```
 
 
-## Bind volumes
+## Bind Volumes
 
 Bind volumes mean native binding of files on host filesystem to Docker. But remember that on macOS and Windows
 "host filesystem" for Docker is actually a filesystem of a Virtual Machine it runs in. So while bind volumes
@@ -113,7 +113,7 @@ See [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/sta
 Defining volumes this way makes it much easier to override volume settings in one place (`volumes` section) vs multiple 
 places in the yaml file. We can now swap bind mounting with something else. See below.
 
-### osxfs:cached mode with Docker for Mac
+### osxfs:cached Mode with Docker for Mac
 
 As explained above for bind volumes option the files are actually mapped to the VM that Docker runs in
 via `osxfs:cached`. Docksal automatically enables the `osxfs:cached` mode on Docker for Mac.
@@ -121,7 +121,7 @@ via `osxfs:cached`. Docksal automatically enables the `osxfs:cached` mode on Doc
 See [stacks/overrides-osxfs.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-osxfs.yml).
 
 
-## NFS volumes
+## NFS Volumes
 
 With this option `cli` container will map files directly from your real host, rather than mapping them from
 the Virtual Machine that Docker runs in.
@@ -153,13 +153,13 @@ container:/var/www ==bind mount==> project_root ==> Linux:project_root ==NFS==> 
 As you can see, containers mount NFS via the host machine and not directly. This setup method only makes sense on macOS 
 with Docker for Mac, for testing and performance comparison purposes.  
 
-### Using NFS volumes
+### Using NFS Volumes
 
 - Add `DOCKSAL_VOLUMES=nfs` either globally in `$HOME/.docksal/docksal.env` or in `.docksal/docksal.env` in a project
 - `fin project reset`
 
 
-## Unison volumes
+## Unison Volumes
 
 We can also do more advanced and pretty interesting solutions, like using Unison to synchronize files between the host 
 and the `project_root` volume. 
@@ -193,7 +193,7 @@ The downsides:
 - Higher disk space usage (double the size of the codebase)
 - Additional load from the unison daemon, but nothing compared to the load `osxfs` produces. 
 
-### Using Unison volumes
+### Using Unison Volumes
 
 Unprecedented, native-like FS speed on macOS and Windows (Linux is already native). See [docksal/unison](https://github.com/docksal/unison) for details
 
@@ -202,8 +202,7 @@ Unprecedented, native-like FS speed on macOS and Windows (Linux is already nativ
 - `fin project reset`
 - Wait until initial sync finishes.
 
-
-## None volumes
+## None Volumes
 
 This method is similar to the Unison method, but without the actual sync happening at all.  
 Nothing is mounted from the host. An empty `project_root` volume is created and mounted inside containers.

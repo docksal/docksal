@@ -1,5 +1,5 @@
 ---
-title: "Understanding stack configurations"
+title: "Understanding Stack Configurations"
 weight: 1
 aliases:
   - /en/master/advanced/stack-config/
@@ -23,7 +23,7 @@ Some containers and their parameters are required for Docksal to work properly.
 You have to run `fin project start` (`fin p start` for short) to apply configuration changes.
 If you remove services or volumes you have to remove them with `fin project rm [service]`.
 
-## Project configuration files
+## Project Configuration Files
 ### docksal.yml {#docksal-yml}
 
 `docksal.yml` is a [Compose file](https://docs.docker.com/compose/compose-file/).
@@ -53,7 +53,7 @@ These files are intended for local overrides. They should be added to `.gitignor
 repo. You can always include an example file in the repo, e.g., `example.docksal-local.env`, and instruct users to copy 
 it and adjust as necessary.
 
-## Default stacks {#default-configurations}
+## Default Stacks {#default-configurations}
 
 Docksal ships with a set of default configurations (stacks), which are `yml` files stored in `$HOME/.docksal/stacks/`.
 These files are a good reference when you begin creating a custom project configuration.
@@ -71,7 +71,7 @@ Do not change or customize existing default stacks.
 Use the `.docksal` folder in your project to customize the project configuration.
 {{% /notice %}}
 
-## Configuration files loading order {#loading-order}
+## Configuration Files Loading Order {#loading-order}
 
 With this swarm of configuration files, Docksal lets you configure a project in a way that works for you and your team. 
 Just like Bash configuration files (/etc/profile, bashrc, bash_profile, bash_logout), they give the flexibility to 
@@ -91,7 +91,7 @@ Loading order:
 
 To see the files loaded for a particular project run `fin config show`.
 
-## Docksal images and versions {#docksal-images}
+## Docksal Images and Versions {#docksal-images}
 
 To see all Docker Hub images produced and supported by Docksal team run:
 

@@ -1,5 +1,5 @@
 ---
-title: "Apache settings"
+title: "Apache Settings"
 aliases:
   - /en/master/advanced/web-configuration-overrides/
 ---
@@ -22,3 +22,27 @@ Use `.docksal/etc/apache/httpd-vhosts.conf` to define additional virtual hosts:
 	ProxyPassReverse / http://docs.docksal.io/
 </VirtualHost>
 ```
+
+## Using Different Apache Versions {#apache-versions}
+
+When using the default stack (a custom project stack is not defined in `.docksal/docksal.yml`), switching can be done 
+via the `WEB_IMAGE` variable in `.docksal/docksal.env`.
+
+```bash
+WEB_IMAGE='docksal/web:2.1-apache2.2'
+```
+This can also be set with `fin config set`.
+```bash
+fin config set WEB_IMAGE='docksal/web:2.1-apache2.2'
+```
+Remember to run `fin project start` (`fin p start`) to apply the configuration.
+
+Available images:
+
+- Apache 2.2 - `docksal/web:2.1-apache2.2`
+- Apache 2.4 - `docksal/web:2.1-apache2.4`
+
+There are also "edge" versions available that contain code from ongoing updates, but may not be stable. Don't switch to an
+edge image unless directed to do so by the Docksal team for testing purposes only.
+
+See documentation for projects using a [custom stack configuration](/stack/custom-configuration/).

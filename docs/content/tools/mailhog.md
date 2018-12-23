@@ -29,7 +29,7 @@ Apply new configuration with `fin project start` (`fin p start`).
 Use `http://mail.<VIRTUAL_HOST>` to access the MailHog web UI.
 
 
-## PHP configuration
+## PHP Configuration
 
 {{% notice note %}}
 The extra PHP configuration below is only applicable to `docksal/cli` images prior to v2.0.0

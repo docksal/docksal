@@ -6,7 +6,7 @@ aliases:
 
 Docksal does not maintain a Redis image as there are multiple other ways to accomplish integration at this time.
 
-## Use wodby/redis with config variables
+## Use wodby/redis with Config Variables
 
 This is the default method.
 
@@ -55,7 +55,7 @@ This list may become outdated. Please check [wodby/redis](https://github.com/wod
 | `REDIS_TIMEOUT`                   | `300`                   |
 
 
-## Use the official Redis image with a custom config file
+## Use the Official Redis Image with a Custom Config File
 
 This can be done by adding a line to reference the custom config file (`.docksal/etc/redis/redis.conf`) in the `docksal.yml` file. The following is an example.
 
@@ -72,7 +72,7 @@ services:
 ```
 
 
-## Extending the official Redis image
+## Extending the Official Redis Image
 
 Redis can also be configured by extending the stock image within a Dockerfile. For more
 information, consult the [Extending stock Docksal Images](/stack/extend-images/) documentation.

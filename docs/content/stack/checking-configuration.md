@@ -1,10 +1,10 @@
 ---
-title: "Checking your configuration"
+title: "Checking Your Configuration"
 weight: 4
 aliases:
   - /en/master/advanced/stack-config/
 ---
-## Checking project configuration {#checking}
+## Checking Project Configuration {#checking}
 
 To review the configuration applied to your project run:
 

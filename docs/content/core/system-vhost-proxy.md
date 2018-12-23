@@ -1,5 +1,5 @@
 ---
-title: "System: Virtual host proxy"
+title: "System: Virtual Host Proxy"
 weight: 2
 aliases:
     - /en/master/advanced/multiple-projects/
@@ -12,7 +12,7 @@ The container binds to `192.168.64.100:80` and routes web requests based on the 
 DNS resolution and routing for `*.docksal` domains is automatically configured. 
 
 
-## Default virtual host / domain name
+## Default Virtual Host / Domain Name
 
 To find the current project's virtual host name run `fin config | grep '^VIRTUAL_HOST'`.
 
@@ -26,7 +26,7 @@ By default, the project domain value (`myproject.docksal`) is derived from the p
 Also, wildcard sub-domain aliases (`*.myproject.docksal`) are added automatically.
 
 
-## Overriding the default domain name
+## Overriding the Default Domain Name
 
 The default project domain can be set/overridden as follows:
 
@@ -48,7 +48,7 @@ Note: Use a single domain in `VIRTUAL_HOST`. Wildcards are added automatically. 
 
 Note: Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
 
-## Using arbitrary custom domains
+## Using Arbitrary Custom Domains
 
 A completely custom domain(s) can be assigned by extending the `io.docksal.virtual-host` label of the `web` container in 
 either `docksal-local.yml` or `docksal.yml` file in the project.

@@ -1,5 +1,5 @@
 ---
-title: "fin help"
+title: "fin Help"
 weight: 2
 aliases:
   - /en/master/fin/fin-help/

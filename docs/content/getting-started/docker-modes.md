@@ -1,11 +1,11 @@
 ---
-title: "Switching Docker modes"
+title: "Switching Docker Modes"
 weight: 2
 aliases:
   - /en/master/getting-started/docker-modes/
 ---
 
-## Using native Docker applications
+## Using Native Docker Applications
 
 After installation you can switch to using native Docker applications instead of VirtualBox, or vice versa.
 

@@ -1,10 +1,10 @@
 ---
-title: "Custom configuration"
+title: "Custom Configuration"
 weight: 3
 aliases:
   - /en/master/advanced/stack-config/
 ---
-## Custom configuration {#custom-configuration}
+## Custom Configuration {#custom-configuration}
 
 Custom configurations are useful when you have a larger or more complex project. One where a CI server is involved 
 or many people are on a project team, and you have to be careful about maintaining software versions. 
@@ -19,7 +19,7 @@ independent description of services so future changes to the default stack(s) wi
 configuration. This also means that future Docksal updates, bringing new features and changes, will not automatically 
 apply. You might need to append those changes manually in `docksal.yml`.
 
-### Don't break your Docksal setup! List of must have values. {#warning}
+### Don't Break Your Docksal Setup! List of Must Have Values {#warning}
 
 
 {{% notice warning %}}

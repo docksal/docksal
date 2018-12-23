@@ -1,5 +1,5 @@
 ---
-title: "Stats and analytics"
+title: "Stats and Analytics"
 weight: 3
 aliases:
   - /en/master/advanced/analytics/

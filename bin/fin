@@ -834,13 +834,26 @@ check_docksal_running ()
 	fi
 }
 
-check_macos_path ()
+# Ensures that path is accessible to Docker
+# @param $1 - path to check (if empty checks `pwd`)
+check_docker_path ()
 {
-	if is_mac && [[ ! "$(pwd)" =~ "$HOME" ]]; then
-		echo-alert "Current project is outside of your home folder!" \
-			"Move your project into $HOME/Projects folder"
-		sleep 2
+	local _path="${1:-$(pwd)}"
+	if ! is_docker_path "$_path"; then
+		echo-error "The path is not accessible in Docker" \
+			"Could not access ${yellow}$_path${NC}" \
+			"It is not shared from your host to Docker."
+		exit 2
 	fi
+}
+
+# Checks if path is accessible to Docker (takes 1.2s on average)
+# @param $1 - path to check (fails if empty)
+is_docker_path ()
+{
+	local _path="${1}"
+	[[ "$_path" == "" ]] && return 1
+	(cd "$_path" 2>/dev/null && docker run -v "$_path":"$_path" docksal/empty 2>/dev/null)
 }
 
 is_vbox_version ()
@@ -1103,6 +1116,32 @@ cleanup ()
 		docker container prune -f 2>/dev/null
 	fi
 
+	if [[ "$1" == "--images" ]]; then
+		echo-green "Docker images cleanup Wizard."
+		echo
+		sleep 1
+		# Print all images first
+		echo "Printing all existing images:"
+		sleep 1
+		docker images --format="{{.Repository}}:{{.Tag}}" | sort
+		echo "---------------------------------------------------"
+		echo "|      Use the list above to help you cleanup     |"
+		echo "---------------------------------------------------"
+		# Declare an arary of names and fill it with the output from the docker command
+		declare -a images
+		images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
+		# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
+		local image_name; local image_id;
+		for image in "${images[@]}"; do
+			image_name=$(echo "$image" | cut -d "+" -f 1)
+			image_id=$(echo "$image" | cut -d "+" -f 2)
+			if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
+				docker image remove "$image_id"
+			fi
+		done
+		return
+	fi
+
 	echo-green "Checking for orphaned projects..."
 	local projects=$(docker ps --all \
 		--filter 'label=io.docksal.project-root' \
@@ -1250,7 +1289,7 @@ show_help ()
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal (${yellow}fin help system${NC})" "yellow"
-	if ! is_linux && ! is_docker_native; then
+	if [[ ! is_linux && ! is_docker_native ]] || [[ "$TERM" == "dumb" ]]; then
 		printh "vm <command>" "Manage Docksal VM (${yellow}fin help vm${NC})" "yellow"
 	fi
 	echo
@@ -1277,7 +1316,7 @@ show_help ()
 	printh "init" "Initialize a project (override it with your own automation ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
+	printh "cleanup [options]" "Remove unused Docker images and projects (saves disk space)"
 	printh "share" "Create temporary public url for current project using ngrok"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
@@ -1858,7 +1897,14 @@ show_help_cleanup ()
 
 	echo
 	echo "Options:"
+	printh "--images" "Docker images cleanup Wizard"
 	printh "--hard" "Also remove ALL stopped containers (potentially destructive operation)"
+
+	echo
+	echo "Examples:"
+	printh "fin cleanup" "Regular cleanup"
+	printh "fin cleanup --images" "Docker Images cleanup wizard, helping to navigate and delete unused ones"
+	printh "fin cleanup --hard" "Run hard cleanup removing all stopped containers"
 }
 
 show_help_hosts ()
@@ -2711,8 +2757,8 @@ up ()
 	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
 	( is_linux || is_docker_native ) && ssh_key add
 
-	# On macOS check that project is reachable to Docker
-	check_macos_path
+	# Check that project directory is reachable to Docker
+	check_docker_path
 
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
@@ -3447,7 +3493,9 @@ install_proxy_service ()
 
 	# Mount custom certs folder if available
 	local mount_certs
-	[[ -d ${CONFIG_CERTS} ]] && mount_certs="--mount type=bind,src=${CONFIG_CERTS},dst=/etc/certs/custom"
+	if [[ -d "${CONFIG_CERTS}" ]] && is_docker_path "${CONFIG_CERTS}"; then
+		mount_certs="--mount type=bind,src=${CONFIG_CERTS},dst=/etc/certs/custom"
+	fi
 
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
 	# and are inactive unless configured.
@@ -4570,7 +4618,7 @@ image_registry_list ()
 	if [[ "$1" != "" ]]; then
 		tag_escaped=${1//\//\\\/}
 		# for instance $1 == "docksal/db"
-		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | \
+		curl -ksSL https://registry.hub.docker.com/v1/repositories/${1}/tags | \
 			grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | \
 			cut -d " " -f2 | \
 			tr -d \" | \
@@ -5575,8 +5623,10 @@ load_configuration ()
 	fi
 	export DOCROOT=${DOCROOT:-docroot}
 
+	# Make VIRTUAL_HOST lowercase, replace '_' with '-', remove everything non-letter or digit,
+	# make sure it starts with letter or digit
 	local OLD_VHOST=${VIRTUAL_HOST}
-	export VIRTUAL_HOST=$(echo ${VIRTUAL_HOST} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g' | sed 's/[^-a-z0-9\.]//g')
+	export VIRTUAL_HOST=$(echo ${VIRTUAL_HOST} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g' | sed 's/[^-a-z0-9\.]//g' | sed 's/^[^a-z0-9]*//g')
 	# Warn in case Virtual Host was auto-corrected
 	if [[ "$OLD_VHOST" != "$VIRTUAL_HOST" ]]; then
 		echo-warning "The ${yellow_bold}VIRTUAL_HOST${yellow} has been modified from ${yellow_bold}${OLD_VHOST}${yellow} to ${yellow_bold}${VIRTUAL_HOST}${NC} ${yellow}to comply with browser standards."
@@ -6211,12 +6261,15 @@ addon_execute ()
 
 	shift
 	if [[ "$_exec_target" != "" ]]; then
-		# Replace host addon path with the matching path inside cli
-		# "\$PROJECT_ROOT" will be resolved in cli to /var/www
-		cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
-		cmd="$cli_addon_path"
-		# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
-		[[ "$@" != "" ]] && cmd="$cli_addon_path "$(printf " %q" "$@")
+		# Replace addon path as it is on the host, with the matching path inside container
+		container_addon_path="/var/www/${addon/$PROJECT_ROOT\//}"
+		if [[ "$@" != "" ]]; then
+			# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
+			cmd="$container_addon_path "$(printf " %q" "$@")
+		else
+			cmd="$container_addon_path"
+		fi
+		# Run the command
 		CONTAINER_NAME="$_exec_target" _exec "$cmd"
 	else
 		exec "$addon" "$@"
@@ -6506,7 +6559,7 @@ wsl_mount_drives
 
 # Export environment variables to properly reach Docker server
 if [[ "$DOCKSAL_HOST" != "" ]]; then
-	export DOCKER_HOST="$DOCKSAL_HOST"
+	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
 elif is_docker_native; then
 	if is_wsl; then
 		export DOCKER_HOST="127.0.0.1:2375"

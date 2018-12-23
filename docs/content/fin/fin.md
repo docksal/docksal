@@ -22,7 +22,7 @@ Complex management commands have their own help sections, e.g., `fin help db`
 For a complete list of `fin help` topics see [fin-help](/fin/fin-help/)
 
 
-## Custom commands
+## Custom Commands
 
 Fin can be extended with project level [custom commands](/fin/custom-commands/) written in any script language.
 
