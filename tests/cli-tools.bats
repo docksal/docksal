@@ -42,7 +42,82 @@ teardown() {
 }
 
 # Test interacting with Providers
-# ToDo: Write Tests
-@test "fin pull" {
+@test "fin pull: pantheon" {
 	[[ $SKIP == 1 ]] && skip
+
+	# Test Initialize Project
+
+	# Test Pull Code
+
+	# Test Pull DB
+
+	# Test Pull Files
+
+	# Test Pull All
+
+	# Cleanup
+}
+
+@test "fin pull: acquia" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Test Initialize Project
+
+	# Test Pull Code
+
+	# Test Pull DB
+
+	# Test Pull Files
+
+	# Test Pull All
+
+	# Cleanup
+}
+
+@test "fin pull: platform.sh" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Test Initialize Project
+
+	# Test Pull Code
+
+	# Test Pull DB
+
+	# Test Pull Files
+
+	# Test Pull All
+
+	# Cleanup
+}
+
+@test "fin pull: drush" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Test Initialize Project
+
+	# Test Pull Code
+
+	# Test Pull DB
+
+	# Test Pull Files
+
+	# Test Pull All
+
+	# Cleanup
+}
+
+@test "fin pull: wp" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Test Initialize Project
+
+	# Test Pull Code
+
+	# Test Pull DB
+
+	# Test Pull Files
+
+	# Test Pull All
+
+	# Cleanup
 }
