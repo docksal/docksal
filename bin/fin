@@ -1972,6 +1972,7 @@ show_help_pull ()
 
 	echo
 	echo "Possible Options for Asssets:"
+	printh "(blank)" "All (Default)"
 	printh "db" "Database"
 	printh "files" "Files"
 	printh "code" "Code"
@@ -1980,27 +1981,32 @@ show_help_pull ()
 	echo "Options:"
 	printh "--HOSTING-PROVIDER=<provider>" "Provider to interact with."
 	printh "" "Options: acquia, pantheon, platform.sh, drush, wp"
-	printh "--HOSTING-SITE=<id>" "Site ID on Provider"
-	printh "--HOSTING-ENV=<env>" "Site Env on Provider"
+	printh "--HOSTING_SITE=<id>" "Site ID on Provider"
+	printh "--HOSTING_ENV=<env>" "Site Env on Provider"
 
 	echo
 	echo "Extra Options for Code"
-	printh "--SYNC-GIT_REMOTE" "The GIT Remote to pull from. (Defaults to origin)"
-	printh "--SYNC-GIT-BRANCH" "The GIT Branch to pull from. (Defaults to current branch)"
+	printh "--SYNC_GIT_REMOTE" "The GIT Remote to pull from. (Defaults to origin)"
+	printh "--SYNC_GIT_BRANCH" "The GIT Branch to pull from. (Defaults to current branch)"
 
 	echo
 	echo "Extra Options for DB"
-	printh "--dbuser=<user>" "Specify the DB User (Defaults to root)"
-	printh "--dbpass=<pass>" "Specify the DB Password (Defaults to ${MYSQL_ROOT_PASSWORD}"
+	printh "--DBUSER=<user>" "Specify the DB User (Defaults to root)"
+	printh "--DBPASS=<pass>" "Specify the DB Password (Defaults to ${MYSQL_ROOT_PASSWORD}"
 
 	echo
 	echo "Extra Options for Files"
-	printh "--files-sync-dir=<dir>" "Directory to sync files with."
+	printh "--RSYNC_OPTIONS=<options>" "Rsync Options to append."
+	printh "--FILES_DIR=<dir>" "Directory to sync files with."
 	printh "" "Default Drupal: {DOCROOT}/sites/default/files/"
 	printh "" "Wordpress Default: {DOCROOT}/wp-content/uploads/"
 
 	echo
 	echo "Examples:"
+	printh "fin pull init" "Start a project by pulling the repo from the provider."
+	printh "    --HOSTING_PLATFORM=acquia" "Provide the Platform Name."
+	printh "    --HOSTING_SITE=testsiteid" "Provide the Site ID."
+	printh "    test_project_directory" "Specify the directory to clone the project in."
 	printh "fin pull" "Pull all items from provider"
 	printh "fin pull db" "Pull only the db from the provider"
 	printh "fin pull db dbname" "Pull the db name dbname from the provider. (Acquia Cloud Only)"
@@ -6310,56 +6316,99 @@ set_project_root_permissions ()
 # Pull assets from the provider.
 provider_pull ()
 {
-	local supported_platforms=(acquia pantheon platform.sh drush wp)
 	eval $(parse_params "$@")
-	if [[ "${HOSTING_PLATFORM}" == "" || "${HOSTING_SITE}" == ""  || "${HOSTING_ENV}" == "" ]]; then
-		echo-error "Hosting Provider not set up. Following variables must be set: HOSTING_PLATFORM, HOSTING_SITE, HOSTING_ENV"
-		return -1
+
+	if [[ "${HOSTING_PLATFORM}" == "" || "${HOSTING_SITE}" == ""  ]]; then
+		echo-error "Hosting Provider not set up. Following variables must be set: HOSTING_PLATFORM and HOSTING_SITE"
+		exit 1
 	fi
 
-	if [[ "${supported_platforms[*]}" != *"${HOSTING_PLATFORM}"* ]]; then
-		echo-error "Only the following platforms are supported: ${supported_platforms[*]}"
-		return -1
+	HOSTING_PLATFORM=$(echo ${HOSTING_PLATFORM} | tr '[:upper:]' '[:lower:]')
+
+	# Check to see if a support platform is accepted.
+	if [[ "${HOSTING_PLATFORM}" != "acquia" ]] && [[ "${HOSTING_PLATFORM}" != "pantheon" ]] && [[ "${HOSTING_PLATFORM}" != "platform.sh" ]] &&
+		[[ "${HOSTING_PLATFORM}" != "drush" ]] && [[ "${HOSTING_PLATFORM}" != "wp" ]]; then
+		echo "${HOSTING_PLATFORM}"
+		echo-error "Only the following platforms are supported: Acquia, Pantheon, Platform.sh, Drush, and WP."
+		exit 1
 	fi
 
 	# Run some checks before continuing.
-	case "$HOSTING_PLATFORM" in
+	case "${HOSTING_PLATFORM}" in
 		pantheon)
-			if [[ -z "$SECRET_TERMINUS_TOKEN" ]]; then
+			if [[ -z "${SECRET_TERMINUS_TOKEN}" ]]; then
 				echo-error "SECRET_TERMINUS_TOKEN must be set in order to work with Pantheon."
 				exit 1;
 			fi
-		;;
+			;;
 		platform.sh)
-			if [[ -z "$SECRET_PLATFORMSH_CLI_TOKEN" ]]; then
+			if [[ -z "${SECRET_PLATFORMSH_CLI_TOKEN}" ]]; then
 				echo-error "SECRET_PLATFORMSH_CLI_TOKEN must be set in order to work with Platform.sh."
 				exit 1;
 			fi
-		;;
+			;;
 		acquia)
-			if [[ -z "$SECRET_ACAPI_EMAIL" ]] || [[ -z "$SECRET_ACAPI_KEY" ]]; then
+			if [[ -z "${SECRET_ACAPI_EMAIL}" ]] || [[ -z "${SECRET_ACAPI_KEY}" ]]; then
 				echo-error "SECRET_ACAPI_EMAIL and SECRET_ACAPI_KEY must be set in order to work with Acquia."
 				exit 1;
 			fi
-		;;
+			;;
 	esac
 
-	echo-green "Starting Pull On ${HOSTING_PLATFORM}:"
+	echo "Starting Pull On ${HOSTING_PLATFORM}"
+
+	execute_hook "pull_pre"
+
+	# Query the provider for the given repo url. Only Pantheon, Platform.sh, and Acquia support this.
+	# All others will need to do a git clone.
+	if [[ "${ARGV[0]}" == "init" ]]; then
+		execute_hook "pull_init_pre"
+		local project_directory=${ARGV[1]:-${HOSTING_SITE}}
+		case "$HOSTING_PLATFORM" in
+			pantheon)
+				local repo_url=$(run_cli -T "terminus connection:info ${HOSTING_SITE}.dev --field=\"Git Command\" | awk '{print \$3}'")
+				run_cli git clone ${repo_url} ${project_directory}
+			;;
+			platform.sh)
+				run_cli platform get ${HOSTING_SITE} -e master ${project_directory}
+			;;
+			acquia)
+				local repo_url=$(run_cli -T "drush acquia-update; drush @${HOSTING_SITE}.dev ac-site-info | grep 'vcs_url' | awk '{print \$3}'")
+				run_cli git clone ${repo_url} ${project_directory}
+			;;
+			*)
+				echo-error "Platform not supported for init process."
+				exit 1
+			;;
+		esac
+		execute_hook "pull_init_post"
+		return
+	fi
+
+	# After Init Process Let's Check to Make sure HOSTING_ENV has been set.
+	if [[ "${HOSTING_ENV}" == "" ]]; then
+		echo-error "HOSTING_ENV variable is required to continue."
+		exit 1
+	fi
 
 	# Execute a Pull On Code.
 	if [[ "${ARGV[0]}" == "code" ]] || [[ "${ARGV[0]}" == "" ]]; then
+		execute_hook "pull_code_pre"
 		local git_remote=${SYNC_GIT_REMOTE:-origin}
 		local current_branch=$(run_cli "git rev-parse --abbrev-ref HEAD" | tr -d '\r')
 		local git_branch=${SYNC_GIT_BRANCH:-$current_branch}
-		echo-yellow "Pulling Code From ${git_remote} - ${git_branch}"
+		echo "Pulling Code From ${git_remote} - ${git_branch}"
 		run_cli "git pull ${git_remote} ${git_branch}"
+		execute_hook "pull_code_post"
 	fi
 
 	# Execute a Pull on DB.
 	if [[ "${ARGV[0]}" == "db" ]] || [[ "${ARGV[0]}" == "" ]];  then
-		echo-green "Pulling DB"
+		echo "Pulling DB"
+		execute_hook "pull_db_pre"
 		local db_file="/tmp/${HOSTING_ENV}.${HOSTING_SITE}.sql.gz"
-		local file_exists=$(_exec "ls -1 /tmp/** | grep \"${db_file}\"$ | wc -l")
+		local file_exists=$(_exec "ls -1 /tmp/**  2> /dev/null | grep \"${db_file}\"\$ | wc -l | tr -d '[:space:]'")
+		local file_time=$(_exec "find ${db_file} -mmin +360 2> /dev/null | tr -d '[:space:]'")
 
 		local yesterday="";
 		if is_mac; then
@@ -6368,15 +6417,16 @@ provider_pull ()
 			yesterday=$(date --date='yesterday' "+%Y-%m-%d %H:%M:%S")
 		fi
 
-		if [[ "$file_exists" == "0" ]] || [[ ! -z $(_exec find ${db_file} -mmin +360) ]]; then
-			echo "${db_file} need updating"
+		if [[ "${file_exists}" == "0" ]] || [[ "${file_time}" == "" ]]; then
+			echo "${db_file} needs updating"
 
-			echo "Exporting latest database..."
 			# Check to see if File Is Older than 1 hour
-			if [[ "$file_exists" > "0" ]] && [[ ! -z $(_exec find ${db_file} -mmin +360) ]]; then
-				_exec rm -rf $db_file
+			if [[ "$file_exists" > "0" ]] && [[ "${file_time}" == "" ]]; then
+				echo "Removing old database file..."
+				_exec rm -rf ${db_file}
 			fi
 
+			echo "Pulling new database file..."
 			case "$HOSTING_PLATFORM" in
 				pantheon)
 					# Get Time of Last Backup In Pantheon.
@@ -6388,41 +6438,43 @@ provider_pull ()
 					_exec terminus backup:get "${HOSTING_SITE}"."${HOSTING_ENV}" --element="db" --to="${db_file}"
 					;;
 				platform.sh)
-					_exec platform db:dump -p "${HOSTING_SITE}" -e "${HOSTING_ENV}" --gzip -f "${db_file}"
+					_exec "platform db:dump -p ${HOSTING_SITE} -e ${HOSTING_ENV} --gzip -f ${db_file}"
 					;;
 				acquia)
 					# Update Acquia Drush Aliases
 					_exec drush acquia-update
 
 					# TODO: Allow for all databases to be downloaded. drush ac-database-list will list all databases for a site.
-					local db_name="${ARGV[1]}"
-					local query=$(_exec drush --format=json "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-list "${ARGV[1]}");
+					local acquia_db_name="${ARGV[1]}"
+					local query=$(_exec drush --format=json "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-list "${acquia_db_name}");
 					# Returns timestamp of last backup. Need to
-					local last_date=$(printf "${query}" | grep id | sed 's/\"started": \"\(.*\)",/\1/' | tail -n 1 | tr -d '[:space:]')
-					# Convert Date To Y-m-d H:m:s format
-					if is_mac; then
-						last_date=$(date -r ${last_date} "+%Y-%m-%d %H:%M:%S")
-					else
-						last_date=$(date --date=@${last_date} "+%Y-%m-%d %H:%M:%S")
+					local last_date=$(printf "${query}" | grep started | sed 's/\"started": \"\(.*\)",/\1/' | tail -n 1 | tr -d '[:space:]')
+					if [[ "${last_date}" != "" ]]; then
+						# Convert Date To Y-m-d H:m:s format
+						if is_mac; then
+							last_date=$(date -r ${last_date} "+%Y-%m-%d %H:%M:%S")
+						else
+							last_date=$(date --date=@${last_date} "+%Y-%m-%d %H:%M:%S")
+						fi
 					fi
 
 					if [[ "${last_date}" < "${yesterday}" ]]; then
-						_exec drush "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup "${db_name}" > /dev/null 2>&1
-						echo-yellow "Creating new backup. Sleeping for 10 seconds" && sleep 10
+						_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup "${acquia_db_name}" > /dev/null 2>&1
+						echo "Creating new backup. Sleeping for 10 seconds" && sleep 10
 						# Requery to get a new list.
-						query=$(_exec drush --format=json "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-list "${ARGV[1]}");
+						query=$(_exec drush --format=json @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name});
 					fi
 
 					# Returns id of last backup.
 					local last_id=$(printf "${query}" | grep id | sed 's/\"id": \"\(.*\)",/\1/' | tail -n 1 | tr -d '[:space:]')
-
-					_exec drush "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-download "${last_id}" --result-file="${db_file}"
+					_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
 					;;
 				drush)
-					_exec drush "@${HOSTING_SITE}.${HOSTING_ENV}" sql-dump --gzip --result-file=""
+					_exec drush @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_file}"
+					_exec drush rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_file} ${db_file}
 					;;
 				wp)
-					_exec wp "@${HOSTING_SITE}.${HOSTING_ENV}"
+					_exec "wp @${HOSTING_SITE} db export --add-drop-table - | gzip > ${db_file}"
 					;;
 				*)
 					echo "Hosting Provider Not Supported Currently"
@@ -6431,36 +6483,131 @@ provider_pull ()
 			esac
 		fi
 
-		local __db_user="${dbuser:-root}"
-		# MYSQL_* variable expansion happens here
-		local __db_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
-		local __db_database="${db:-$MYSQL_DATABASE}"
+		local __db_user="${DBUSER:-root}"
+		local __db_password="${DBPASSWORD:-root}"
+		local __db_database="${DB:-default}"
 
 		# Import the Database.
 		# ToDo: Need to account for Multi-Site and other DB Names.
 		mysql_db_truncate "${DB_NAME}"
-		_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h ${__db_database} ${__db_database}"
+		_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
+		execute_hook "pull_db_post"
+		echo-green "DB Pull Complete."
 	fi
 
 	# Execute a pull on Files.
 	if [[ "${ARGV[0]}" == "files" ]] || [[ "${ARGV[0]}" == "" ]]; then
-		echo-green "Pulling Files..."
+		echo-yellow "Pulling Files..."
+
+		execute_hook "pull_files_pre"
+		local drupal_files="sites/default/files/"
+		local wordpress_files="wp-content/uploads/"
+
+		FILES_DIR=${FILES_DIR:-"sites/default/files"}
+		local rsync_options="${RSYNC_OPTIONS} --exclude='styles' --exclude='css' --exclude='js'"
+
 		case "$HOSTING_PLATFORM" in
 			pantheon)
+				local host_url=$(_exec "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" | awk '{print \$4}'")
+				_exec rsync \
+					-rvlz \
+					--copy-unsafe-links \
+					--size-only \
+					--ipv4 \
+					--progress \
+					-e 'ssh -p 2222' \
+					${host_url}:files/ \
+					/var/www/${DOCROOT}/${FILES_DIR} \
+					--delete \
+					${rsync_options}
 				;;
 			platform.sh)
+				local host_url=$(_exec "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV}");
+				_exec rsync \
+					-rvlz \
+					--copy-unsafe-links \
+					--size-only \
+					--ipv4 \
+					--progress \
+					${host_url}:/app/${DOCROOT}/${FILES_DIR} \
+					/var/www/${DOCROOT}/${FILES_DIR} \
+					--delete \
+					${rsync_options}
 				;;
 			acquia)
+				_exec drush rsync \
+					@${HOSTING_SITE}.${HOSTING_ENV}:%files \
+					${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} \
+					--delete \
+					${rsync_options}
 				;;
 			drush)
+				_exec drush rsync \
+					@${HOSTING_SITE}.${HOSTING_ENV}:%files \
+					${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} \
+					--delete \
+					${rsync_options}
 				;;
 			wp)
+				echo-red "WP Sync Files Currently Not Supported."
+				exit 1
 				;;
 			*)
 				echo "Hosting Provider Not Supported Currently"
 				exit 1
 				;;
 		esac
+		execute_hook "pull_files_post"
+		echo-green "File Pull Successful."
+	fi
+	execute_hook "pull_post"
+	echo-green "Pull Completed"
+}
+
+# Execute specific functions if they exist within the hooks directory.
+# Examples could be hook_init_pre or hook_db_import.
+# Specifically look for hooks to run pre and post actions.
+execute_hook ()
+{
+	local HOOK=$1
+	echo "Executing Hook: ${HOOK}"
+
+	# Check to see if individual hook file exists.
+	local global_hook_individual_file="${CONFIG_DIR}/hooks/${HOOK}"
+	if [[ -f "${global_hook_individual_file}" ]] && [[ -x "${global_hook_individual_file}" ]]; then
+		echo "Executing Global Hook Individual File: ${HOOK}"
+		addon_execute "${global_hook_individual_file}"
+	fi
+
+	# Check to see if Hooks Exist within the Global Hooks file.
+	local global_hook_group_file="${CONFIG_DIR}/hooks/hooks"
+	if [[ -f "${global_hook_group_file}" ]] && [[ -x "${global_hook_group_file}" ]]; then
+		. ${global_hook_group_file}
+		# Check for help function for specific command
+		type "hook_${HOOK}" >/dev/null 2>&1
+		if [ $? -eq 0 ]; then
+			echo "Executing Global Hook Function: hook_${HOOK}"
+			hook_${HOOK}
+		fi
+	fi
+
+	# Check to see if individual hook file exists within the project.
+	local project_hook_individual_file="${PROJECT_ROOT}/.docksal/hooks/${HOOK}"
+	if [[ -f "${project_hook_individual_file}" ]] && [[ -x "${project_hook_individual_file}" ]]; then
+		echo "Executing Project Hook Individual File: ${HOOK}"
+		addon_execute "${project_hook_individual_file}"
+	fi
+
+	# Check to see if the global hook file exists within the project.
+	local project_hook_group_file="${PROJECT_ROOT}/.docksal/hooks/hooks"
+	if [[ -f "${project_hook_group_file}" ]] && [[ -x "${project_hook_group_file}" ]]; then
+		. ${project_hook_group_file}
+		# Check for help function for specific command
+		type "hook_${HOOK}" >/dev/null 2>&1
+		if [ $? -eq 0 ]; then
+			echo "Executing Project Hook Function: hook_${HOOK}"
+			hook_${HOOK}
+		fi
 	fi
 }
 
@@ -7155,7 +7302,10 @@ case "$1" in
 		;;
 	pull)
 		shift
-		load_configuration
+		# Only load the project config if $1 isn't init.
+		if [[ "$1" != "init" ]]; then
+			load_configuration
+		fi
 		provider_pull "$@"
 		;;
 	*)
