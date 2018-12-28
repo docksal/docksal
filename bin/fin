@@ -6628,7 +6628,7 @@ provider_pull_acquia_db ()
 	fi
 
 	local query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name});
-	if_failed_error "Error retrieving list of backups from Acquia."
+	if_failed_error "Error retrieving list of backups from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 
 	# Returns timestamp of last backup. Need to convert to
 	local last_date=$(printf "${query}" | grep started | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
@@ -6649,14 +6649,16 @@ provider_pull_acquia_db ()
 		# Requery to get a new list of backups.
 		query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name})
 		if_failed_error "Error retrieving list of backups from Acquia on site ${HOSTING_SITE} on environment ${HOSTING_ENV} for database ${acquia_db_name}"
+	else
+		echo-yellow "Using latest backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 	fi
 
 	# Returns id of last backup.
 	local last_id=$(printf "${query}" | grep id | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
-	echo-yellow "Downloading backup from Acquia"
+	echo-yellow "Downloading backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 	_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
-	if_failed_error "Error Downloading backup from Acquia"
+	if_failed_error "Error Downloading backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 }
 
 # Pull process to pull files from Acquia.
