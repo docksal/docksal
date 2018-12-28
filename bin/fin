@@ -5750,7 +5750,34 @@ config_generate ()
 	echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
 
 	# Get docroot option value or use default
-	local DOCROOT="${docroot:-docroot}"
+	local DOCROOT="${docroot}"
+	if [[ -z $DOCROOT ]]; then
+		if [[ -d web ]]; then
+			DOCROOT=web
+		elif [[ -d docroot ]]; then
+			DOCROOT=docroot
+		elif [[ -d public_html ]]; then
+			DOCROOT=public_html
+		elif [[ -d html ]]; then
+			DOCROOT=html
+		elif [[ -f index.php ]] || [[ -f index.html ]]; then
+			DOCROOT=.
+		else
+			DOCROOT=docroot
+		fi
+		
+		if ! _confirm "DOCROOT has been detected as ${DOCROOT}. Is that correct?" --no-exit; then
+			DOCROOT=""
+			while [[ "$DOCROOT" == "" ]]; do
+				echo -en "${yellow}Where is your project's DOCROOT?${NC} "
+				read -p "" DOCROOT
+				if [[ ! -d $DOCROOT ]]; then
+					echo-error "${DOCROOT} directory not found."
+					DOCROOT=""
+				fi
+			done
+		fi
+	fi
 	# Add DOCROOT to docksal.env file
 	echo "DOCROOT=${DOCROOT}" >> ".docksal/docksal.env"
 	# Create a basic docroot and index.php if not present
