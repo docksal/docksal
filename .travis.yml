@@ -3,7 +3,7 @@ dist: xenial
 language: minimal
 
 install:
-  - echo $(echo "${SSH_KEY}" | base64 --decode) > $HOME/.ssh/project_key
+  - echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
   - chmod 400 $HOME/.ssh/project_key
   - git clone https://github.com/docksal/bats.git tests/scripts/bats
   - cd tests/scripts/bats
