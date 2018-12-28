@@ -20,7 +20,7 @@ teardown() {
 
 	# Setup
 	fin config set --global "SECRET_ACAPI_EMAIL=${BUILD_ACAPI_EMAIL}"
-	fin config set --global "SECRET_ACAPI_KEY=${BUILD_ACAPI_KEY}"
+	fin config set --global "SECRET_ACAPI_KEY=${BUILD_ACAPI_TOKEN}"
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} pull-site
