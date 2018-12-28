@@ -24,6 +24,9 @@ teardown() {
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} pull-site
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull Init Process" ]]
+	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
 
 	cd pull-site
@@ -59,7 +62,13 @@ teardown() {
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=pantheon --HOSTING_SITE=${BUILD_PANTHEON_SITE} --HOSTING_ENV=${BUILD_PANTHEON_ENV} pull-site
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull Init Process" ]]
+	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
+
+	cd pull-site
+	fin start
 
 	# Test Pull Code
 	run fin pull code
@@ -92,6 +101,11 @@ teardown() {
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=platformsh --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} pull-site
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull Init Process" ]]
+	[[ "${output}" =~ "Pulling code complete" ]]
+	unset output
+
 	cd pull-site
 	fin start
 
@@ -122,6 +136,9 @@ teardown() {
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=drush --HOSTING_SITE=dev https://github.com/docksal/drupal8.git pull-site
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull Init Process" ]]
+	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
 
 	cd pull-site
@@ -151,6 +168,9 @@ teardown() {
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=wp --HOSTING_SITE=test https://github.com/docksal/wordpress.git pull-site
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull Init Process" ]]
+	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
 
 	cd pull-site
