@@ -6364,7 +6364,7 @@ provider_pull ()
 	# Run some checks before continuing.
 	provider_pull_find_function ${HOSTING_PLATFORM} 'check'
 
-	echo "Starting Pull On ${HOSTING_PLATFORM}"
+	echo-green "Starting provider pull for ${HOSTING_PLATFORM}"
 
 	# Query the provider for the given repo url. Only Pantheon, Platform.sh, and Acquia support this.
 	# All others will need to do a git clone.
@@ -6447,6 +6447,7 @@ provider_pull_code ()
 # Used specifically for pulling the db from a provider.
 provider_pull_db ()
 {
+	_confirm "Existing database will be truncated, Continue?"
 	echo-green "Pulling DB"
 
 	# Variables to set for local use.
@@ -6462,28 +6463,30 @@ provider_pull_db ()
 	local file_exists=$(_exec "ls -1 /tmp/**  2> /dev/null | grep \"${db_file}\"\$ | wc -l | tr -d '[:space:]'")
 	# Get the time of that file within the cli container.
 	local file_time=$(_exec "find ${db_file} -mmin +360 2> /dev/null | tr -d '[:space:]'")
-
 	# Get the time from 24 hours ago.
 	local yesterday=$(_exec date --date='yesterday' "+%Y-%m-%d %H:%M:%S");
 
-	if [[ "${file_exists}" == "0" ]] || [[ "${file_time}" == "" ]] || [[ "$FORCE" == "FORCE" ]]; then
-		echo-yellow "Cached DB File needs updating"
+	if [[ "${file_exists}" == "0" ]] || [[ -n "${file_time}" ]] || [[ "$FORCE" == "FORCE" ]]; then
+		echo-yellow "Cached DB file needs updating"
 
 		# Check to see if File Is Older than 1 hour
-		if [[ "$file_exists" > "0" ]] && [[ "${file_time}" == "" ]]; then
+		if [[ "$file_exists" > "0" ]] && [[ -z "${file_time}" ]] || [[ "$FORCE" == "FORCE" ]]; then
 			echo-yellow "Removing old database file"
 			_exec rm -rf ${db_file}
 		fi
 
 		echo-yellow "Pulling new database file..."
 		provider_pull_find_function ${HOSTING_PLATFORM} 'db' 1
+	else
+		echo-green "Cached DB file still valid found and using to import"
 	fi
 
 	# ToDo: Do we need to account for Multi-Site and other DB Names?
 
 	# Import the Database.
 	# Truncate the existing db.
-	mysql_db_truncate "${DB_NAME}"
+	echo-yellow "Truncating Existing Database"
+	mysql_db_truncate "${DB_NAME}" > /dev/null
 	# Execute ZCAT on the db file and import into mysql database.
 	_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
 	if_failed_error "Error importing DB"
@@ -6635,7 +6638,7 @@ provider_pull_acquia_db ()
 	fi
 
 	# If Last backup was more than 24 hours ago. Create one.
-	if [[ "${last_date}" < "${yesterday}" ]]; then
+	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
 		# Create backup on Acquia through Cloud API.
 		echo-yellow "Creating new backup on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 		_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup "${acquia_db_name}"
@@ -6731,7 +6734,7 @@ provider_pull_pantheon_db ()
 	# Get Time of Last Backup In Pantheon.
 	local last_backup=$(_exec -e COLUMNS="200" terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1)
 	if_failed_error "Error retrieving list of backups from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
-	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]]; then
+	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
 		# If last backup does not exist or is older than 24 hours create new one.
 		echo-yellow "Creating new backup on Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 		_exec terminus backup:create ${HOSTING_SITE}.${HOSTING_ENV} --element=db
@@ -6838,9 +6841,9 @@ provider_pull_drush_db ()
 	echo-yellow "Creating database export for @${HOSTING_SITE}.${HOSTING_ENV}"
 	_exec drush @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_file}"
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to create database export"
-	# RSYNC database file locally
+	# RSYNC database file locally and delete the source.
 	echo-yellow "Downloading database export for @${HOSTING_SITE}.${HOSTING_ENV}"
-	_exec drush rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_file} ${db_file}
+	_exec drush rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_file} ${db_file} --remove-source-files
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to download database export"
 }
 
