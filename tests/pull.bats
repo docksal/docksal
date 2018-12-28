@@ -11,6 +11,9 @@ teardown() {
 	echo "================================================================"
 }
 
+# Add project_key to SSH Agent.
+[[ "$TRAVIS" == "true" ]] && fin ssh-key add project_key
+
 # Test interacting with Providers
 @test "fin pull: acquia" {
 	[[ $SKIP == 1 ]] && skip
