@@ -25,6 +25,7 @@ teardown() {
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} pull-site
 	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull On acquia" ]]
 	[[ "${output}" =~ "Starting Pull Init Process" ]]
 	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
@@ -34,18 +35,35 @@ teardown() {
 
 	# Test Pull Code
 	run fin pull code
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull On acquia" ]]
+	[[ "${output}" =~ "Pulling code" ]]
+	[[ "${output}" =~ "Code Pull Successful" ]]
 	unset output
 
 	# Test Pull DB
 	run fin pull db ${BUILD_ACQUIA_ENV}
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull On acquia" ]]
+	[[ "${output}" =~ "Pulling new database file..." ]]
+	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
 
 	# Test Pull Files
 	run fin pull files
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull On acquia" ]]
+	[[ "${output}" =~ "Downloading files from" ]]
+	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
 
 	# Test Pull All
 	run fin pull
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting Pull On acquia" ]]
+	[[ "${output}" =~ "Code Pull Successful" ]]
+	[[ "${output}" =~ "DB Pull Successful" ]]
+	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
 
 	# Cleanup
