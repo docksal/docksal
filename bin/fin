@@ -6562,7 +6562,7 @@ provider_pull_generic_git_pull ()
 provider_pull_generic_drush_rsync ()
 {
 	echo-yellow "Downloading files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
-	_exec drush rsync \
+	_exec drush rsync -y \
 		@${HOSTING_SITE}.${HOSTING_ENV}:%files \
 		${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} \
 		--delete \
