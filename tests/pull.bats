@@ -16,7 +16,7 @@ teardown() {
 
 # Test interacting with Providers
 @test "fin pull: acquia" {
-	[[ $SKIP == 1 ]] && skip
+	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	fin config set --global "SECRET_ACAPI_EMAIL=${BUILD_ACAPI_EMAIL}"
@@ -52,7 +52,7 @@ teardown() {
 }
 
 @test "fin pull: pantheon" {
-	[[ $SKIP == 1 ]] && skip
+	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	fin config set --global "SECRET_TERMINUS_TOKEN=${BUILD_TERMINUS_TOKEN}"
@@ -85,7 +85,7 @@ teardown() {
 }
 
 @test "fin pull: platform.sh" {
-	[[ $SKIP == 1 ]] && skip
+	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	fin config set --global "SECRET_PLATFORMSH_CLI_TOKEN=${BUILD_PLATFORMSH_CLI_TOKEN}"
@@ -118,7 +118,7 @@ teardown() {
 }
 
 @test "fin pull: drush" {
-	[[ $SKIP == 1 ]] && skip
+	#[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=drush --HOSTING_SITE=dev https://github.com/docksal/drupal8.git pull-site
@@ -147,7 +147,7 @@ teardown() {
 }
 
 @test "fin pull: wp" {
-	[[ $SKIP == 1 ]] && skip
+	#[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=wp --HOSTING_SITE=test https://github.com/docksal/wordpress.git pull-site
