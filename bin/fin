@@ -5707,6 +5707,8 @@ config_generate ()
                         DOCROOT=html
                 elif [[ -f index.php ]] || [[ -f index.html ]]; then
                         DOCROOT=.
+                else
+                        DOCROOT=docroot
                 fi
                 if ! _confirm "DOCROOT has been detected as ${DOCROOT}. Is that correct?" --no-exit; then
                         DOCROOT=""
