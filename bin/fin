@@ -6624,11 +6624,11 @@ provider_pull_acquia_db ()
 		exit 1
 	fi
 
-	local query=$(_exec drush --format=json "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-list "${acquia_db_name}");
+	local query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name});
 	if_failed_error "Error retrieving list of backups from Acquia."
 
 	# Returns timestamp of last backup. Need to convert to
-	local last_date=$(printf "${query}" | grep started | sed 's/\"started": \"\(.*\)",/\1/' | tail -n 1 | tr -d '[:space:]')
+	local last_date=$(printf "${query}" | grep started | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	if [[ "${last_date}" != "" ]]; then
 		# Convert Date To Y-m-d H:m:s format
 		last_date=$(_exec date --date=@${last_date} "+%Y-%m-%d %H:%M:%S")
@@ -6637,16 +6637,19 @@ provider_pull_acquia_db ()
 	# If Last backup was more than 24 hours ago. Create one.
 	if [[ "${last_date}" < "${yesterday}" ]]; then
 		# Create backup on Acquia through Cloud API.
-		_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup "${acquia_db_name}" > /dev/null 2>&1
-		if_failed_error "Error creating backup on Acquia."
-		echo-yellow "Creating new backup. Sleeping for 10 seconds" && sleep 10
-		# Requery to get a new list.
-		query=$(_exec drush --format=json @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name});
-		if_failed_error "Error retrieving list of backups from Acquia."
+		echo-yellow "Creating new backup on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
+		_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup "${acquia_db_name}"
+		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
+		echo-yellow "Backup queued on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name} waiting 10 seconds to finish"
+		# Sleep for 10 seconds wait for backup to finish.
+		sleep 10
+		# Requery to get a new list of backups.
+		query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name})
+		if_failed_error "Error retrieving list of backups from Acquia on site ${HOSTING_SITE} on environment ${HOSTING_ENV} for database ${acquia_db_name}"
 	fi
 
 	# Returns id of last backup.
-	local last_id=$(printf "${query}" | grep id | sed 's/\"id": \"\(.*\)",/\1/' | tail -n 1 | tr -d '[:space:]')
+	local last_id=$(printf "${query}" | grep id | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
 	echo-yellow "Downloading backup from Acquia"
 	_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
