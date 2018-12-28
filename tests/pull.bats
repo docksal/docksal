@@ -54,6 +54,27 @@ teardown() {
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull on acquia" ]]
 	[[ "${output}" =~ "Pulling new database file..." ]]
+	# Depending on when test is ran may get a backup in the last 24 hours.
+	# May need to create one
+	[[ "${output}" =~ "Creating new backup on Acquia" ]] ||
+		[[ "${output}" =~ "Using latest backup from Acquia" ]]
+	[[ "${output}" =~ "DB Pull Successful" ]]
+	unset output
+
+	## Test Acquia Pull with Cached Version
+	run fin pull db ${BUILD_ACQUIA_SITE}
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting provider pull on acquia" ]]
+	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
+	[[ "${output}" =~ "DB Pull Successful" ]]
+	unset output
+
+	## Test Acquia Pull with --FORCE flag
+	run fin pull db ${BUILD_ACQUIA_SITE} --FORCE
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting provider pull on acquia" ]]
+	[[ "${output}" =~ "Pulling new database file..." ]]
+	[[ "${output}" =~ "Creating new backup on Acquia" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
 
