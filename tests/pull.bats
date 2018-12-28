@@ -42,7 +42,15 @@ teardown() {
 	unset output
 
 	# Test Pull DB
-	run fin pull db ${BUILD_ACQUIA_ENV}
+
+	## Test Acquia Pull without db name
+	run fin pull db
+	[[ "$status" == 1 ]]
+	[[ "${output}" =~ "Database name is required." ]]
+	unset output
+
+	## Test Acquia Pull with db name
+	run fin pull db ${BUILD_ACQUIA_SITE}
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting Pull On acquia" ]]
 	[[ "${output}" =~ "Pulling new database file..." ]]
