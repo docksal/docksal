@@ -6562,10 +6562,10 @@ provider_pull_acquia_init ()
 	# Set HOSTING_ENV to dev if none are set.
 	HOSTING_ENV=${HOSTING_ENV:-dev}
 	# Get the repo url for the specific environment.
-	local repo_url=$(run_cli "drush acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-site-info | grep 'vcs_url' | awk '{print \$3}'")
+	local repo_url=$(run_cli -T "drush acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-site-info | grep 'vcs_url' | awk '{print \$3}'")
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
-	local repo_checkout=$(run_cli "drush acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	local repo_checkout=$(run_cli -T "drush acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${HOSTING_ENV} info."
 
 	echo-yellow "Cloning Acquia Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
@@ -6597,14 +6597,14 @@ provider_pull_acquia_db ()
 		exit 1
 	fi
 
-	local query=$(_exec drush --format=json "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-list "${acquia_db_name}");
+	local query=$(_exec -T drush --format=json "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-instance-backup-list "${acquia_db_name}");
 	if_failed_error "Error retrieving list of backups from Acquia."
 
 	# Returns timestamp of last backup. Need to convert to
 	local last_date=$(printf "${query}" | grep started | sed 's/\"started": \"\(.*\)",/\1/' | tail -n 1 | tr -d '[:space:]')
 	if [[ "${last_date}" != "" ]]; then
 		# Convert Date To Y-m-d H:m:s format
-		last_date=$(_exec date --date=@${last_date} "+%Y-%m-%d %H:%M:%S")
+		last_date=$(_exec -T date --date=@${last_date} "+%Y-%m-%d %H:%M:%S")
 	fi
 
 	# If Last backup was more than 24 hours ago. Create one.
@@ -6614,7 +6614,7 @@ provider_pull_acquia_db ()
 		if_failed_error "Error creating backup on Acquia."
 		echo-yellow "Creating new backup. Sleeping for 10 seconds" && sleep 10
 		# Requery to get a new list.
-		query=$(_exec drush --format=json @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name});
+		query=$(_exec -T drush --format=json @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name});
 		if_failed_error "Error retrieving list of backups from Acquia."
 	fi
 
@@ -6661,7 +6661,7 @@ provider_pull_pantheon_init ()
 		repo_checkout='master'
 	elif [[ "${HOSTING_ENV}" == 'test' ]] || [[ "${HOSTING_ENV}" == "live" ]]; then
 		# If HOSTING_ENV is test or live get the latest tag for the repo.
-		repo_checkout=$(run_cli "git ls-remote --exit-code -t ${repo_url} | grep 'refs/tags/pantheon_${HOSTING_ENV}_' | awk '{print $2}' | cut -d'/' -f3 | sort -k1.15n | grep '[0-9]$' | tail -1 | tr -d '[:space:]'")
+		repo_checkout=$(run_cli -T "git ls-remote --exit-code -t ${repo_url} | grep 'refs/tags/pantheon_${HOSTING_ENV}_' | awk '{print $2}' | cut -d'/' -f3 | sort -k1.15n | grep '[0-9]$' | tail -1 | tr -d '[:space:]'")
 		if_failed_error "Error getting latest tag for ${HOSTING_ENV} on Pantheon repo"
 	fi
 
@@ -6676,7 +6676,7 @@ provider_pull_pantheon_init ()
 provider_pull_pantheon_files ()
 {
 	# Get the SFTP Hostname from Site's Info.
-	local host_url=$(_exec "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
+	local host_url=$(_exec -T "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
 	if_failed_error "Could not communicate with Pantheon. Check connection and SECRET_TERMINUS_TOKEN is set to an active token."
 	echo-yellow "Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Pantheon"
 	# Execute a rsync using Pantheon recommended Options.
@@ -6699,7 +6699,7 @@ provider_pull_pantheon_files ()
 provider_pull_pantheon_db ()
 {
 	# Get Time of Last Backup In Pantheon.
-	local last_backup=$(_exec terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1)
+	local last_backup=$(_exec -T terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1)
 	if_failed_error "Error retrieving list of backups from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]]; then
 		# If last backup does not exist or is older than 24 hours create new one.
@@ -6746,7 +6746,7 @@ provider_pull_platformsh_init ()
 # Pull process to pull files from Platform.sh
 provider_pull_platformsh_files ()
 {
-	local host_url=$(_exec "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
+	local host_url=$(_exec -T "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
 	echo-yellow "Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Platform.sh"
 	_exec rsync \
