@@ -6589,10 +6589,10 @@ provider_pull_acquia_init ()
 	# Set HOSTING_ENV to dev if none are set.
 	HOSTING_ENV=${HOSTING_ENV:-dev}
 	# Get the repo url for the specific environment.
-	local repo_url=$(run_cli -e COLUMNS="200" "drush acquia-update > /dev/null; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-site-info | grep 'vcs_url' | awk '{print \$3}'")
+	local repo_url=$(run_cli -e COLUMNS="200" "drush -q acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
-	local repo_checkout=$(run_cli -e COLUMNS="200" "drush acquia-update > /dev/null; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	local repo_checkout=$(run_cli -e COLUMNS="200" "drush -q acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${HOSTING_ENV} info."
 
 	echo-yellow "Cloning Acquia Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
