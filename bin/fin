@@ -6373,11 +6373,8 @@ provider_pull ()
 		return
 	fi
 
-	# After Init Process Let's Check to Make sure HOSTING_ENV has been set.
-	if [[ "${HOSTING_ENV}" == "" ]]; then
-		echo-error "HOSTING_ENV variable is required to continue."
-		exit 1
-	fi
+	# Check to see if providers require anything else.
+	provider_pull_find_function ${HOSTING_PLATFORM} 'precheck'
 
 	# Execute a Pull On Code.
 	if [[ "${ARGV[0]}" == "code" ]] || [[ "${ARGV[0]}" == "" ]]; then
@@ -6431,6 +6428,16 @@ provider_pull_init ()
 		if _confirm "Init command found for project run?" --no-exit; then
 			addon_execute "$addon_file_path"
 		fi
+	fi
+}
+
+# Generic Precheck function to check if HOSTING_ENV variable is set.
+provider_pull_precheck ()
+{
+	# After Init Process Let's Check to Make sure HOSTING_ENV has been set.
+	if [[ "${HOSTING_ENV}" == "" ]]; then
+		echo-error "HOSTING_ENV variable is required to continue."
+		exit 1
 	fi
 }
 
@@ -6586,6 +6593,12 @@ provider_pull_acquia_check ()
 	fi
 }
 
+# Use Generic Precheck function to makes sure env is set.
+provider_pull_acquia_precheck ()
+{
+	provider_pull_precheck
+}
+
 # Init process to pull code from acquia.
 provider_pull_acquia_init ()
 {
@@ -6679,6 +6692,10 @@ provider_pull_pantheon_check ()
 		echo-error "SECRET_TERMINUS_TOKEN must be set in order to work with Pantheon."
 		exit 1;
 	fi
+
+	# Patch to hide terminus messages for time being.
+	_exec "echo 'hide_update_message: true' > ~/.terminus/config.yml"
+	_exec "echo 'hide_git_mode_warning: true' >> ~/.terminus/config.yml"
 }
 
 # Init process to pull code from Pantheon
@@ -6704,6 +6721,12 @@ provider_pull_pantheon_init ()
 	# Run git clone and checkout the provided branch.
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
 	if_failed_error "Error cloning Pantheon project ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
+}
+
+# Use Generic Precheck function to makes sure env is set.
+provider_pull_pantheon_precheck ()
+{
+	provider_pull_precheck
 }
 
 # Pull process to pull files from Pantheon.
@@ -6778,6 +6801,12 @@ provider_pull_platformsh_init ()
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
 }
 
+# Use Generic Precheck function to makes sure env is set.
+provider_pull_platformsh_precheck ()
+{
+	provider_pull_precheck
+}
+
 # Pull process to pull files from Platform.sh
 provider_pull_platformsh_files ()
 {
@@ -6828,6 +6857,12 @@ provider_pull_drush_init ()
 	echo-yellow "Cloning Drush Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
 	if_failed_error "Could not communicate with Drush site repo. Check connection and try again."
+}
+
+# Use Generic Precheck function to makes sure env is set.
+provider_pull_drush_precheck ()
+{
+	provider_pull_precheck
 }
 
 # Execute a generic rsync on files from remote.
