@@ -26,7 +26,7 @@ teardown() {
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-site
 	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on acquia" ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Starting Pull Init Process" ]]
 	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
@@ -37,7 +37,7 @@ teardown() {
 	# Test Pull Code
 	run fin pull code
 	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on acquia" ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Pulling code" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	unset output
@@ -53,7 +53,7 @@ teardown() {
 	## Test Acquia Pull with db name
 	run fin pull db ${BUILD_ACQUIA_SITE}
 	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on acquia" ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Pulling new database file..." ]]
 	# Depending on when test is ran may get a backup in the last 24 hours.
 	# May need to create one
@@ -65,7 +65,7 @@ teardown() {
 	## Test Acquia Pull with Cached Version
 	run fin pull db ${BUILD_ACQUIA_SITE}
 	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on acquia" ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
@@ -73,7 +73,7 @@ teardown() {
 	## Test Acquia Pull with --FORCE flag
 	run fin pull db ${BUILD_ACQUIA_SITE} --FORCE
 	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on acquia" ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Pulling new database file..." ]]
 	[[ "${output}" =~ "Creating new backup on Acquia" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
@@ -82,7 +82,7 @@ teardown() {
 	# Test Pull Files
 	run fin pull files
 	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on acquia" ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Downloading files from" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
@@ -90,7 +90,7 @@ teardown() {
 	# Test Pull All
 	run fin pull
 	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on acquia" ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
@@ -121,26 +121,26 @@ teardown() {
 	# Test Pull Code
 	run fin pull code
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on pantheon" ]]
+	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
 	[[ "${output}" =~ "Pulling Code" ]]
 	unset output
 
 	# Test Pull DB
 	run fin pull db
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on pantheon" ]]
+	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
 	unset output
 
 	# Test Pull Files
 	run fin pull files
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on pantheon" ]]
+	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
 	unset output
 
 	# Test Pull All
 	run fin pull
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on pantheon" ]]
+	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
@@ -170,26 +170,26 @@ teardown() {
 	# Test Pull Code
 	run fin pull code
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on platformsh" ]]
+	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
 	[[ "${output}" =~ "Pulling Code" ]]
 	unset output
 
 	# Test Pull DB
 	run fin pull db
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on platformsh" ]]
+	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
 	unset output
 
 	# Test Pull Files
 	run fin pull files
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on platformsh" ]]
+	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
 	unset output
 
 	# Test Pull All
 	run fin pull
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on platformsh" ]]
+	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
@@ -225,26 +225,26 @@ teardown() {
 	# Test Pull Code
 	run fin pull code
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on drush" ]]
+	[[ "${output}" =~ "Starting provider pull for drush" ]]
 	[[ "${output}" =~ "Pulling Code" ]]
 	unset output
 
 	# Test Pull DB
 	run fin pull db
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on drush" ]]
+	[[ "${output}" =~ "Starting provider pull for drush" ]]
 	unset output
 
 	# Test Pull Files
 	run fin pull files
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on drush" ]]
+	[[ "${output}" =~ "Starting provider pull for drush" ]]
 	unset output
 
 	# Test Pull All
 	run fin pull
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on drush" ]]
+	[[ "${output}" =~ "Starting provider pull for drush" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
@@ -273,26 +273,26 @@ teardown() {
 	# Test Pull Code
 	run fin pull code
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on wp" ]]
+	[[ "${output}" =~ "Starting provider pull for wp" ]]
 	[[ "${output}" =~ "Pulling Code" ]]
 	unset output
 
 	# Test Pull DB
 	run fin pull db
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on wp" ]]
+	[[ "${output}" =~ "Starting provider pull for wp" ]]
 	unset output
 
 	# Test Pull Files
 	run fin pull files
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on wp" ]]
+	[[ "${output}" =~ "Starting provider pull for wp" ]]
 	unset output
 
 	# Test Pull All
 	run fin pull
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull on wp" ]]
+	[[ "${output}" =~ "Starting provider pull for wp" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
