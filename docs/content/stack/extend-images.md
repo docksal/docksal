@@ -49,7 +49,7 @@ Below is an example of extending the `cli` image with additional configs, apt, a
 
 ```Dockerfile
 # Use a stock Docksal image as the base
-FROM docksal/cli:php7.1
+FROM docksal/cli:php7.2
 
 # Install addtional apt packages
 RUN apt-get update && apt-get -y --no-install-recommends install \

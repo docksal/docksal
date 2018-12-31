@@ -26,7 +26,7 @@ Use `.docksal/etc/apache/httpd-vhosts.conf` to define additional virtual hosts:
 ## Using Different Apache Versions {#apache-versions}
 
 When using the default stack (a custom project stack is not defined in `.docksal/docksal.yml`), switching can be done 
-via the `WEB_IMAGE` variable in `.docksal/docksal.env`.
+via the `WEB_IMAGE` variable in `.docksal/docksal.env`, e.g.:
 
 ```bash
 WEB_IMAGE='docksal/web:2.1-apache2.2'
@@ -40,7 +40,7 @@ Remember to run `fin project start` (`fin p start`) to apply the configuration.
 Available images:
 
 - Apache 2.2 - `docksal/web:2.1-apache2.2`
-- Apache 2.4 - `docksal/web:2.1-apache2.4`
+- Apache 2.4 - `docksal/web:2.1-apache2.4` (default)
 
 There are also "edge" versions available that contain code from ongoing updates, but may not be stable. Don't switch to an
 edge image unless directed to do so by the Docksal team for testing purposes only.
