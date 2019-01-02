@@ -48,10 +48,11 @@ Run `fin project reset cli` (`fin p reset cli`) to properly reset and update the
 
 Available images:
 
-- PHP 5.6 - `docksal/cli:2.5-php5.6`
-- PHP 7.0 - `docksal/cli:2.5-php7.0`
+- PHP 5.6 - `docksal/cli:2.5-php5.6` (deprecated)
+- PHP 7.0 - `docksal/cli:2.5-php7.0` (deprecated)
 - PHP 7.1 - `docksal/cli:2.5-php7.1`
 - PHP 7.2 - `docksal/cli:2.5-php7.2` (default)
+- PHP 7.3 - `docksal/cli:2.5-php7.3`
 
 There are also "edge" versions available that contain code from ongoing updates, but may not be stable. Don't switch to an
 edge image unless directed to do so by the Docksal team for testing purposes only.
