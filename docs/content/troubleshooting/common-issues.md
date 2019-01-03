@@ -1,5 +1,5 @@
 ---
-title: "Common issues"
+title: "Common Issues"
 weight: 1
 aliases:
   - /en/master/troubleshooting/
@@ -28,7 +28,7 @@ If above did not help, try:
 
 -----
 
-## Issue 1. Failed creating Docksal virtual machine on Windows {#issue-01}
+## Issue 1. Failed Creating Docksal Virtual Machine on Windows {#issue-01}
 
 ```
 ...
@@ -47,13 +47,13 @@ Remove docksal? [y/n]:
 If you see this error, most likely you had just installed Virtual Box.
 Sometimes Virtual Box fails to initialize its network interfaces properly.
 
-### How to resolve
+### How to Resolve
 
 1. Reply `yes` to remove malfunctioned virtual machine.
 2. Reboot your local host and try again.
 
 
-## Issue 2. Error checking TLS connection (vm is not accessible) {#issue-02}
+## Issue 2. Error checking TLS Connection (VM is not accessible) {#issue-02}
 
 ```
 Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
@@ -63,7 +63,7 @@ Be advised that this will trigger a Docker daemon restart which will stop runnin
 
 Sometimes docker-machine certificates re-generation fails.
 
-### How to resolve
+### How to Resolve
 
 1. Perform `fin vm restart`
 2. If above did not help, then reboot your local host
@@ -82,7 +82,7 @@ fin vm start
 ```
 
 
-## Issue 3. Out-of-memory issues {#issue-03}
+## Issue 3. Out-of-memory Issues {#issue-03}
 
 Composer on Drupal 8 projects might spawn this error:
 
@@ -107,7 +107,7 @@ fin vm ram 4096
 ```
 
 
-## Issue 4. Conflicting NFS exports (files are not accessible) {#issue-04}
+## Issue 4. Conflicting NFS Exports (files are not accessible) {#issue-04}
 
 ```
  ERROR:  conflicting exports for /Users, 192.168.64.100
@@ -121,12 +121,12 @@ exports:11: export option conflict for /Users
 
 With NFS a single directory can only be exported once. It can not be exported several times with different settings.
 
-### How to resolve
+### How to Resolve
 
 Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin vm start` again.
 
 
-## Issue 5. Conflicting ports {#issue-05}
+## Issue 5. Conflicting Ports {#issue-05}
 
 ```
 Resetting Docksal services...
@@ -139,14 +139,16 @@ Error starting userland proxy: listen tcp 0.0.0.0:443: listen: address already i
 This usually happens on Linux because the default Apache server bind to `0.0.0.0:80` and `0.0.0.0:443` (all IPs).  
 This prevents Docksal from running properly.
 
-### How to resolve
+There can also be a port conflict if your computer has ever been configured to forward ports locally for development.
+
+### How to Resolve
 
 1. Stop Apache or
 2. Reconfigure Apache to listen on different ports (e.g., `8080` and `4433`) or
 different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`)
 
 
-## Issue 6. Config permissions issue (vm does not start) {#issue-06}
+## Issue 6. Config Permissions Issue (VM does not start) {#issue-06}
 
 ```
 open /Users/John.Doe/.docker/machine/machines/docksal/config.json: permission denied
@@ -155,7 +157,7 @@ open /Users/John.Doe/.docker/machine/machines/docksal/config.json: permission de
 You created the Docksal VM as the root user (probably using `sudo`).
 This is not recommended in particular because of the problems like this.
 
-### How to resolve
+### How to Resolve
 
 Re-create vm as a regular user
 
@@ -165,13 +167,13 @@ fin vm start
 ```
 
 
-## Issue 7. Multiple host-only adapters (vm is not created) {#issue-07}
+## Issue 7. Multiple Host-only Adapters (VM is not created) {#issue-07}
 
 ```
 Error with pre-create check: "VirtualBox is configured with multiple host-only adapters with the same IP \"192.168.64.1\". Please remove one."
 ```
 
-### How to resolve
+### How to Resolve
 
 1. Open VirtualBox UI
 2. Open Preferences > Network tab
@@ -179,7 +181,7 @@ Error with pre-create check: "VirtualBox is configured with multiple host-only a
 4. Click through adapters in list and delete the ones with the `192.168.64.1` IP
 
 
-## Issue 8. DNS server misbehaving {#issue-08}
+## Issue 8. DNS Server Misbehaving {#issue-08}
 
 ```
 ERROR: error pulling image configuration: Get https://dseasb33srnrn.cloudfront.net/registry-v2/docker/registry/v2/blobs/sha256/9f/9fb8c0aed5fc7cc710884dc9cbd0974cc606053989b4f73f20e8b363e7d6cc7f/data?Expires=1490711517&Signature=SzvWOicPa6yZRxlBh1~vsl2xHtkOXR8xDj~usSP8aS9ZFhNQ8oH5pAcfZyx3sxgPgtqPgSOzuoaBtw5lT0~i0mpt~QCBpkgRhgyRQ8rzkbI1sG9ZRDXvRQ4sG49ckorbHyUT8isG5mEWl3Ar8kateU9he9fdlRhe5V5Zvn-et0s_&Key-Pair-Id=APKAJECH5M7VWIS5YZ6Q: dial tcp: lookup dseasb33srnrn.cloudfront.net on 10.0.2.3:53: server misbehaving
@@ -192,7 +194,7 @@ ERROR: Get https://registry-1.docker.io/v2/: dial tcp: lookup registry-1.docker.
 
 Your system DNS server does not properly resolve `index.docker.io`.
 
-### How to resolve
+### How to Resolve
 
 Use [Google Public DNS server](https://developers.google.com/speed/public-dns/) or [Open DNS](https://www.opendns.com/setupguide/).
 
@@ -204,7 +206,7 @@ macOS DNS settings example:
 ![macOS DNS settings](/images/troubleshooting-network-dns.png)
 
 
-## Issue 9. FastCGI: incomplete headers {#issue-09}
+## Issue 9. FastCGI: Incomplete Headers {#issue-09}
 
 ```
 web_1        | [Wed Apr 19 14:57:37 2017] [error] [client 172.19.0.6] (111)Connection refused: FastCGI: failed to connect to server "/usr/lib/cgi-bin/php5-fcgi": connect() failed
@@ -214,17 +216,17 @@ web_1        | 172.19.0.6 - - [19/Apr/2017:14:57:37 +0000] "GET / HTTP/1.1" 500 
 
 Errors like this appear when your Apache is misconfigured. Most often it happens because of misconfigured environment variables in `docksal.yml`. Sometimes it can be misconfiguration in `.htaccess`.
 
-### How to resolve
+### How to Resolve
 
 Check `docksal.yml` and `.htaccess` files for configuration errors, fix them and run `fin project start` (`fin start` for short).
 
 
-## Issue 10. SMB share creation, share mounting and related issues on Windows {#issue-10}
+## Issue 10. SMB Share Creation, Share Mounting and Related Issues on Windows {#issue-10}
 
 Please see a separate [troubleshooting document on share creation, share mounting, and related issues](/troubleshooting/windows-smb/).
 
 
-## Issue 11. Common MySQL related issues {#issue-11}
+## Issue 11. Common MySQL Related Issues {#issue-11}
 
 ```
 ERROR 2003 (HY000): Can't connect to MySQL server on 'db' (111)
@@ -256,16 +258,16 @@ db_1   | 170614 14:26:54 [Note] mysqld: Shutdown complete
 Then `cannot allocate memory for the buffer pool` means you don't have enough of free memory on your Docksal VM 
 to run the project.
 
-### How to resolve
+### How to Resolve
 
 See Issue 3. Lack of memory for resolution.
 
-## Issue 12. VirtualBox installation fails on macOS High Sierra 10.13 {#issue-12}
+## Issue 12. VirtualBox Installation Fails on macOS High Sierra 10.13 {#issue-12}
 
 New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced
 around third-party kernel extensions.
 
-### How to resolve
+### How to Resolve
 
 - Open System Preferences > Security & Privacy and click the `Allow` button for `Oracle America, Inc.`
 - Restart the VirtualBox installation manually
@@ -275,7 +277,7 @@ In certain cases you may have to reboot your Mac and then reinstall VirtualBox m
 [This video](https://www.youtube.com/watch?v=0vmQOYRCdZM) covers the manual steps necessary to install VirtualBox 
 successfully. [See detailed issue resolution](https://github.com/docksal/docksal/issues/417).
 
-## Issue 13. Docker unauthorized
+## Issue 13. Docker Unauthorized
 
 ```text
 docker: Error response from daemon: Get https://registry-1.docker.io/v2/docksal/ssh-agent/manifests/1.0: 
@@ -285,12 +287,12 @@ See 'docker run --help'.
 
 This means that you have docker credentials stored in docker config file, and those credentials are incorrect.
 
-### How to resolve
+### How to Resolve
 
 See [docker login documentation](https://docs.docker.com/engine/reference/commandline/login/#logging-out) and
 to use docker client to either log out or relogin.
 
-## Issue 14. VirtualBox installation fails on Windows (Hyper-V Enabled)
+## Issue 14. VirtualBox Installation Fails on Windows (Hyper-V Enabled)
 
 Docksal / VirtualBox installations will fail on Windows if Hyper-V is enabled. This will result in a message similar to
 below:
@@ -310,3 +312,15 @@ To Disable Hyper-V:
 ```
 dism.exe /Online /Disable-Feature:Microsoft-Hyper-V /All
 ```
+
+## Issue 15. Firewall Blocking Access to Docksal
+
+Visiting the project URL in your browser results in a "site can't be reached" message, could be the result
+of a local firewall application blocking access to Docksal's canonical IP address.
+
+Firewall configuration can also cause problems with SMB. See [documentation on troubleshooting Windows SMB](../windows-smb#smb-ip).
+
+
+### How to Resolve
+
+Configure your firewall to allow connections to and from 192.168.64.100 (Docksal's canonical IP address used across all systems and configurations).

@@ -7,32 +7,7 @@ aliases:
 
 Troubleshooting SMB shares creation, mounting, and related issues on Windows
 
-## Windows 10 Fall Creators Update 1709
-
-{{% notice info %}}
-Windows 10 Fall Creators Update 1709 disables SMBv1 protocol. You will have to to manually re-enable it.
-{{% /notice %}}
-
-The mount errors looks like this: 
-
-```
-Configuring SMB shares...
-Enter your Windows account password:
-mount: mounting //192.168.64.1/docksal-c on /c failed: Host is down
-exit status 255
-```
-
-You will have to manually enable `SMB 1.0/CIFS Server` package in Windows Feature and reboot the host.  
-See [this issue](https://github.com/docksal/docksal/issues/382) for details.  
-To manually enable SMB1, run elevated Windows Command Prompt and execute:
-
-```cmd
-dism /online /enable-feature /all /featurename:SMB1Protocol-Server
-```
-
-Note: it requires reboot!
-
-## How SMB related errors look
+## How SMB related Errors Look
 
 SMB related errors happen during VM start and look like one of the following:
 
@@ -59,7 +34,7 @@ alex/projects/myproject' o='bind': no such file or directory
 ERROR: Encountered errors while bringing up the project.
 ```
 
-## Root cause
+## Root Cause
 
 During VM start Docksal creates shares for all your local drives, `docksal-c` for `C:`, `docksal-d` for `D:` etc. 
 If share creation fails, Docker will not be able to access your files.
@@ -69,7 +44,7 @@ In that case, Docker also will not be able to access your files.
 
 ## Troubleshooting
 
-### 1. Windows 7 and minimized elevated prompts
+### 1. Windows 7 and Minimized Elevated Prompts
 
 When Docksal VM is being created, VirtualBox needs to configure network adapter and requires
 administrative permissions for that. Those elevated prompts are sometimes appear minimized on the taskbar.
@@ -88,7 +63,7 @@ or if you accidentally replied **No**, then the adapter fail to set up properly 
 your only option would be to remove vm with `fin vm remove` and start it again.
 
 
-### 2. Check for Windows network settings issues
+### 2. Check for Windows Network Settings Issues
 
 Determine your local IP address. Usually you can do that by running `ipconfig` and
 looking for an active adapter that has "Local Area Connection" in the name.
@@ -120,7 +95,7 @@ re-installing Windows. We test Docksal on clean Windows 7 and Windows 10 install
 make sure it works.
 
 
-### 3. Check that Docksal IP is working
+### 3. Check that Docksal IP is Working {#smb-ip}
 
 **NOTE:** At this step we assume you had already run `fin vm start` and it had failed
 with error related to shares or mounting. You checked out the first step and there seems to be no
@@ -149,7 +124,7 @@ If all options fail, you might be limited to re-installing Windows. We had cases
 people had mysterious issues related to shares mounting. They re-installed Windows and everything
 worked like a charm.
 
-### 4. Check that drives' shares exist
+### 4. Check that Drives' Shares Exist
 
 If both IPs are working, then it's not the network access issue.
 
@@ -173,7 +148,7 @@ unless you know which permissions to set.
 Try running `fin vm restart`. If the issue with share creation does not go away and you think
 it not password or policies, then see step 6.
 
-### 5. Check your password
+### 5. Check Your Password
 
 For Microsoft Account use Microsoft Account password not the one you use to unlock your PC.
 
@@ -197,7 +172,7 @@ exit status 255
 In this case, try simplifying your password. If it works with a new password,
 then create an issue on GitHub (see step 6), so we could investigate and fix.
 
-### 6. Report an issue
+### 6. Report an Issue
 
 If you checked all the steps above and it didn't help, then report an
 [issue on GitHub](https://github.com/docksal/docksal/issues) and we will investigate the edge case.

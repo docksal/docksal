@@ -104,9 +104,9 @@ EOF
 	# Check that containers are stopped
 	run fin ps
 	# Sometimes containers would not exit with code 0 (graceful stop), but 137 instead (when docker has to kill the process). 
-	echo "$output" | egrep ".*_web_1 .* (Exit 0|Exit 137)"
-	echo "$output" | egrep ".*_db_1 .* (Exit 0|Exit 137)"
-	echo "$output" | egrep ".*_cli_1 .* (Exit 0|Exit 137)"
+	echo "$output" | egrep ".*_web_1.* .* (Exit 0|Exit 137)"
+	echo "$output" | egrep ".*_db_1.* .* (Exit 0|Exit 137)"
+	echo "$output" | egrep ".*_cli_1.* .* (Exit 0|Exit 137)"
 	unset output
 	
 	# Start containers back
@@ -117,13 +117,13 @@ EOF
 	[[ $SKIP == 1 ]] && skip
 	
 	run fin restart
-	echo "$output" | egrep "Stopping .*_web_1"
-	echo "$output" | egrep "Stopping .*_db_1"
-	echo "$output" | egrep "Stopping .*_cli_1"
+	echo "$output" | egrep "Stopping .*_web_1.*"
+	echo "$output" | egrep "Stopping .*_db_1.*"
+	echo "$output" | egrep "Stopping .*_cli_1.*"
 	
-	echo "$output" | egrep "Starting .*_web_1"
-	echo "$output" | egrep "Starting .*_db_1"
-	echo "$output" | egrep "Starting .*_cli_1"
+	echo "$output" | egrep "Starting .*_web_1.*"
+	echo "$output" | egrep "Starting .*_db_1.*"
+	echo "$output" | egrep "Starting .*_cli_1.*"
 	unset output
 
 	# Check that containers are running
@@ -261,16 +261,6 @@ EOF
 	run fin rc --cleanup -T ls /home/docker/test
 	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
 	unset output
-
-	# Check exec_target = run-cli
-	mkdir -p $HOME/.docksal/commands
-	echo "#!/bin/bash" > $HOME/.docksal/commands/target_cli
-	echo "#: exec_target = run-cli" >> $HOME/.docksal/commands/target_cli
-	echo "echo 'Running from run-cli'" >> $HOME/.docksal/commands/target_cli
-	chmod +x $HOME/.docksal/commands/target_cli
-	run fin target_cli
-	[[ "$output" =~ "Running from run-cli" ]]
-	unset output
 }
 
 @test "fin rm -f" {
@@ -390,7 +380,8 @@ services:
 	# sleep so ngrok can load
 	sleep 10
 	# Query API for information
-	API=$(docker exec -it "drupal8_web_1_ngrok" sh -c "wget -qO- http://localhost:4040/api/tunnels")
+	container_name="$(fin docker ps -a --filter "label=com.docker.compose.project=drupal8" --filter "label=com.docker.compose.service=web" --format '{{.Names }}')_ngrok"
+	API=$(docker exec -it "$container_name" sh -c "wget -qO- http://localhost:4040/api/tunnels")
 	# Return Public URL for site.
 	PUBLIC_HTTP_URL=$(echo "${API}" | jq -r '.tunnels[0].public_url')
 	# Run CURL command against $PUBLIC_HTTP_URL
@@ -404,7 +395,7 @@ services:
 	# Clean up kill ngrok session
 	screen -X -S testNgrok quit
 	# Kill Docker Container
-	docker rm -f drupal8_web_1_ngrok
+	docker rm -f "$container_name"
 	# Destroy Project
 	fin rm -f
 }

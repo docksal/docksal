@@ -1,11 +1,11 @@
 ---
-title: "Tools and integrations"
+title: "Tools and Integrations"
 chapter: true
 weight: 6
 pre: "<b>6. </b>"
 ---
 
-# Tools and integrations
+# Tools and Integrations
 
 Explore tools and integrations that can be used with Docksal
 

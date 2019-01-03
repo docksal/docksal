@@ -1,5 +1,5 @@
 ---
-title: "Access for external tools"
+title: "Access for External Tools"
 aliases:
   - /en/master/advanced/db-access/
 ---

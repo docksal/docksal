@@ -5,7 +5,7 @@ aliases:
 ---
 
 
-## Docksal configuration
+## Docksal Configuration
 
 Add the `solr` service under the `services` section in `.docksal/docksal.yml`:
 
@@ -22,7 +22,7 @@ Apply new configuration with `fin project start` (`fin p start`).
 Use `http://solr.<VIRTUAL_HOST>/solr` to access the Solr web UI.
 
 
-## Drupal configuration
+## Drupal Configuration
 
 Enable all required by your version of Drupal modules for the Apache Solr search integration.
 
@@ -43,7 +43,7 @@ For the Search API module use these values:
 | Solr core | `collection1` |
 
 
-## Updating Solr configuration
+## Updating Solr Configuration
 
 Say you need to update your `schema.xml` or other configuration.
 

@@ -1,5 +1,5 @@
 ---
-title: "Database sandbox mode"
+title: "Database Sandbox Mode"
 aliases:
   - /en/master/advanced/db-sandbox/
 ---
@@ -17,7 +17,7 @@ For example, a 2.6GB DB dump file takes 14 minutes to import with MySQL.
 
 **Your results may obviously vary.**
 
-## Enabling sandbox mode
+## Enabling Sandbox Mode
 
 1) Backup the database: `fin sqld db.sql`  
 2) Update the `db` service in `docksal.yml` as follows: 
@@ -54,7 +54,7 @@ Now the `db` service container is using an ephemeral storage for the database (c
 
 To reset it to the snapshot you took in step 1 run `fin project reset db` (`fin p reset db`).
 
-## Disabling sandbox mode
+## Disabling Sandbox Mode
 
 You will need a DB dump to revert.
 Either use the one created before enabling the sandbox mode or create a new one.

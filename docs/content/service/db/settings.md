@@ -1,8 +1,8 @@
 ---
-title: "MySQL settings"
+title: "MySQL Settings"
 ---
 
-## MySQL configuration {#configuration}
+## MySQL Configuration {#configuration}
 
 The following settings files in the project codebase can be used to override default MySQL settings:
 
@@ -13,13 +13,17 @@ folder in your project repo and modify as necessary.
 
 Apply changes with `fin project restart` (`fin p restart`).
 
-## Using different MySQL versions {#mysql-versions}
+## Using Different MySQL Versions {#mysql-versions}
 
 When using the default stack (a custom project stack is not defined in `.docksal/docksal.yml`), switching can be done 
-via the `DB_IMAGE` variable in `.docksal/docksal.env`.
+via the `DB_IMAGE` variable in `.docksal/docksal.env`, e.g.:
 
 ```bash
-DB_IMAGE='docksal/db:1.1-mysql-5.6'
+DB_IMAGE='docksal/db:1.1-mysql-5.7'
+```
+This can also be set with `fin config set`.
+```bash
+fin config set DB_IMAGE='docksal/db:1.1-mysql-5.7'
 ```
 
 Remember to run `fin project start` (`fin p start`) to apply the configuration.
@@ -32,8 +36,9 @@ followed by a DB re-import.
 Available images:
 
 - MySQL 5.5 - `docksal/db:1.1-mysql-5.5`
-- MySQL 5.6 - `docksal/db:1.1-mysql-5.6`
+- MySQL 5.6 - `docksal/db:1.1-mysql-5.6` (default)
 - MySQL 5.7 - `docksal/db:1.1-mysql-5.7`
 - MySQL 8.0 - `docksal/db:1.1-mysql-8.0`
 
-See documentation for projects using a [custom stack configuration](/stack/config/#mysql-version).
+There are also "edge" versions available that contain code from ongoing updates, but may not be stable. Don't switch to an
+edge image unless directed to do so by the Docksal team for testing purposes only.

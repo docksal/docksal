@@ -14,7 +14,7 @@ to code without working from their desktop or needing additional tools.
 ## Enabling Cloud9
 
 
-### Set the `IDE_ENABLED` variable for the project.
+### Set the `IDE_ENABLED` Variable for the Project
 
 Enable IDE for the project by setting the `IDE_ENABLED` variable:
 

@@ -1,5 +1,5 @@
 ---
-title: "Project aliases"
+title: "Project Aliases"
 aliases:
   - /en/master/fin/aliases/
 ---

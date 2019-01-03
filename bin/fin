@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.78.0
+FIN_VERSION=1.80.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -107,16 +107,17 @@ is_travis () {
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='18.06.1-ce'
-REQUIREMENTS_DOCKER_COMPOSE='1.22.0'
-REQUIREMENTS_DOCKER_MACHINE='0.15.0'
-REQUIREMENTS_VBOX='5.2.2'  # Remember to update the download URLs below
+REQUIREMENTS_DOCKER='18.09.0'
+REQUIREMENTS_DOCKER_COMPOSE='1.23.2'
+REQUIREMENTS_DOCKER_MACHINE='0.16.0'
+REQUIREMENTS_VBOX='5.2.20'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
 # VirtualBox download URLs
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-Win.exe"
+# Remember to update REQUIREMENTS_VBOX above
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
@@ -154,6 +155,9 @@ CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
 mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
 # Custom certs folder for vhost-proxy (overridable)
 CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
+
+# Host path to make accessible to the VM (Mac only)
+DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH:-/Users}"
 
 # Where custom commands live (relative path)
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
@@ -219,6 +223,7 @@ URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
 URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
 URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
+URL_REPO_ANGULAR="https://github.com/docksal/boilerplate-angular.git"
 URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
 URL_REPO_HUGO="https://github.com/docksal/example-hugo.git"
 URL_REPO_SYMFONY_SKELETON="https://github.com/docksal/example-symfony-skeleton.git"
@@ -226,26 +231,24 @@ URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
 URL_REPO_BACKDROP="https://github.com/docksal/example-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
-# Remove URL_REPO_ADDONS in Nov 2018
-URL_REPO_ADDONS="https://raw.githubusercontent.com/docksal/addons"
-URL_FIN="${URL_REPO}/${DOCKSAL_VERSION}/bin/fin"
-URL_STACKS_OVERRIDES_IDE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-ide.yml"
-URL_STACKS_OVERRIDES_OSXFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/overrides-osxfs.yml"
-URL_STACKS_SERVICES="${URL_REPO}/${DOCKSAL_VERSION}/stacks/services.yml"
-URL_STACKS_STACK_ACQUIA="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-acquia.yml"
-URL_STACKS_STACK_DEFAULT="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default.yml"
-URL_STACKS_STACK_DEFAULT_NODB="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-default-nodb.yml"
-URL_STACKS_STACK_NODE="${URL_REPO}/${DOCKSAL_VERSION}/stacks/stack-node.yml"
-URL_STACKS_VOLUMES_BIND="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-bind.yml"
-URL_STACKS_VOLUMES_NFS="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-nfs.yml"
-URL_STACKS_VOLUMES_UNISON="${URL_REPO}/${DOCKSAL_VERSION}/stacks/volumes-unison.yml"
+STACKS_OVERRIDES_IDE="overrides-ide.yml"
+STACKS_OVERRIDES_OSXFS="overrides-osxfs.yml"
+STACKS_SERVICES="services.yml"
+STACKS_STACK_ACQUIA="stack-acquia.yml"
+STACKS_STACK_DEFAULT="stack-default.yml"
+STACKS_STACK_DEFAULT_NODB="stack-default-nodb.yml"
+STACKS_STACK_NODE="stack-node.yml"
+STACKS_VOLUMES_BIND="volumes-bind.yml"
+STACKS_VOLUMES_NFS="volumes-nfs.yml"
+STACKS_VOLUMES_NONE="volumes-none.yml"
+STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
 # Until there is an official standalone docker.exe binary available, use the one pulled from Docker for Windows
 # See https://github.com/docker/for-win/issues/1460#issuecomment-390045959
 #URL_DOCKER_WIN="https://download.docker.com/win/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
-URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.10.1/docker-${REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.11.0/docker-${REQUIREMENTS_DOCKER}.zip"
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
@@ -504,7 +507,6 @@ get_mysql_connect ()
 # Get container id by service name
 # @param $1 docker compose service name (e.g., cli)
 # @return docker container id
-# TODO: deprecate in favor of ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 get_container_id ()
 {
 	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
@@ -646,7 +648,7 @@ fix_crlf_warning ()
 	fi
 }
 
-# checks if binary exists and fails is it isn't
+# checks if binary exists and fails if it isn't
 check_binary_found ()
 {
 	if ( which "$1" >/dev/null 2>&1 ); then
@@ -733,7 +735,7 @@ check_project_environment ()
 	check_project_root && check_docker_running
 }
 
-# Check that project root exists, Docker is running and Docksal system services are running
+# Check that project root exists, Docker is running, and Docksal system services are running
 check_docksal_environment ()
 {
 	# Since network configuration is not permanent on Linux we need to restore it when possible
@@ -816,7 +818,7 @@ check_docker_running ()
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
 				"2. If #1 did not help, run ${yellow}fin update${NC} to update." \
-				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/en/master/troubleshooting"
+				"3. Check errors you see in troubleshooting doc https://docs.docksal.io/troubleshooting/common-issues/"
 			exit 1
 		fi
 	fi
@@ -832,13 +834,26 @@ check_docksal_running ()
 	fi
 }
 
-check_macos_path ()
+# Ensures that path is accessible to Docker
+# @param $1 - path to check (if empty checks `pwd`)
+check_docker_path ()
 {
-	if is_mac && [[ ! "$(pwd)" =~ "$HOME" ]]; then
-		echo-alert "Current project is outside of your home folder!" \
-			"Move your project into $HOME/Projects folder"
-		sleep 2
+	local _path="${1:-$(pwd)}"
+	if ! is_docker_path "$_path"; then
+		echo-error "The path is not accessible in Docker" \
+			"Could not access ${yellow}$_path${NC}" \
+			"It is not shared from your host to Docker."
+		exit 2
 	fi
+}
+
+# Checks if path is accessible to Docker (takes 1.2s on average)
+# @param $1 - path to check (fails if empty)
+is_docker_path ()
+{
+	local _path="${1}"
+	[[ "$_path" == "" ]] && return 1
+	(cd "$_path" 2>/dev/null && docker run -v "$_path":"$_path" docksal/empty 2>/dev/null)
 }
 
 is_vbox_version ()
@@ -1029,17 +1044,23 @@ _stop_containers ()
 	load_configuration
 	check_project_unique
 
-	echo-green "Disconnecting project network..."
-	# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
-	# The project network will be automatically recreated by docker-compose up.
-	local network_name="${COMPOSE_PROJECT_NAME_SAFE}_default"
-	local network_containers=$(docker network inspect \
-		--format '{{range .Containers}}{{.Name}} {{end}}' ${network_name} 2>/dev/null)
-	# Note: there should be no quotes around ${network_containers} or it won't be split properly
-	for container in ${network_containers}; do
-		docker network disconnect -f "${network_name}" "${container}"
-	done
-	docker network rm "${network_name}" &>/dev/null
+	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]] || [[ -z $1 ]]; then
+		echo-green "Disconnecting project network..."
+		# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
+		# The project network will be automatically recreated by docker-compose up.
+		local network_name="${COMPOSE_PROJECT_NAME_SAFE}_default"
+
+		# "docker network inspect" does not list inactive endpoints (stopped containers), so cannot be used here
+		# Instead, we'll assume we should disconnect all project containers + vhost-proxy from the project network.
+		local project_containers=$(docker ps -aq \
+			--filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME_SAFE}" 2>/dev/null)
+		# Note: there should be no quotes around ${network_containers} or it won't be split properly
+		for container in ${project_containers}; do
+			docker network disconnect -f "${network_name}" "${container}"
+		done
+		docker network disconnect -f "${network_name}" docksal-vhost-proxy
+		docker network rm "${network_name}" &>/dev/null
+	fi
 
 	echo-green "Stopping services..."
 	docker-compose stop "$@"
@@ -1062,7 +1083,7 @@ _remove_containers ()
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
 
-		# Taking the whole docker-compose project down (this removes containers, volumes and networks)
+		# Taking the whole docker-compose project down (this removes containers, volumes, and networks)
 		docker-compose down --volumes --remove-orphans
 	else
 		# Removing requested containers only
@@ -1093,6 +1114,32 @@ cleanup ()
 		#--
 		echo-green "Removing stopped containers..."
 		docker container prune -f 2>/dev/null
+	fi
+
+	if [[ "$1" == "--images" ]]; then
+		echo-green "Docker images cleanup Wizard."
+		echo
+		sleep 1
+		# Print all images first
+		echo "Printing all existing images:"
+		sleep 1
+		docker images --format="{{.Repository}}:{{.Tag}}" | sort
+		echo "---------------------------------------------------"
+		echo "|      Use the list above to help you cleanup     |"
+		echo "---------------------------------------------------"
+		# Declare an arary of names and fill it with the output from the docker command
+		declare -a images
+		images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
+		# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
+		local image_name; local image_id;
+		for image in "${images[@]}"; do
+			image_name=$(echo "$image" | cut -d "+" -f 1)
+			image_id=$(echo "$image" | cut -d "+" -f 2)
+			if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
+				docker image remove "$image_id"
+			fi
+		done
+		return
 	fi
 
 	echo-green "Checking for orphaned projects..."
@@ -1153,7 +1200,7 @@ _healthcheck ()
 _healthcheck_wait ()
 {
 	# Wait for cli to become ready by watching its health status
-	local container_name="${COMPOSE_PROJECT_NAME_SAFE}_cli_1"
+	local container_name="'cli'"
 	local delay=5
 	local timeout=60
 	local elapsed=0
@@ -1242,7 +1289,7 @@ show_help ()
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal (${yellow}fin help system${NC})" "yellow"
-	if ! is_linux && ! is_docker_native; then
+	if [[ ! is_linux && ! is_docker_native ]] || [[ "$TERM" == "dumb" ]]; then
 		printh "vm <command>" "Manage Docksal VM (${yellow}fin help vm${NC})" "yellow"
 	fi
 	echo
@@ -1268,7 +1315,7 @@ show_help ()
 	printh "init" "Initialize a project (override it with your own automation ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [--hard]" "Remove unused Docker images and projects (saves disk space)"
+	printh "cleanup [options]" "Remove unused Docker images and projects (saves disk space)"
 	printh "share" "Create temporary public url for current project using ngrok"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
@@ -1504,24 +1551,29 @@ show_help_remove ()
 
 show_help_ssh-key() {
 	echo
-	echo "Manage SSH keys"
+	echo "Manage SSH keys loaded into Docksal"
 	echo
-	printh "Manage private SSH key identities stored in the docksal-ssh-agent service."
+	printh "Private SSH keys loaded into the secure docksal-ssh-agent service are accessible to all project containers."
+	printh "This allows containers to connect to the external SSH servers that require SSH keys"
+	printh "without a need to copy over the key into the container every time."
+	printh "Default keys id_rsa/id_dsa/id_ecdsa/id_ed25519 are loaded automatically on every project start."
 	echo
 	echo "Usage: fin ssh-key <command> [params]"
 
 	echo
 	echo "Commands:"
-	printh "add [key-name]" "Load a private SSH key in ~/.ssh by name (or default keys if no key name given)"
-	printh "ls" "List SSH keys loaded in the agent"
-	printh "rm" "Remove keys from the agent"
+	printh "add [key-name]" "Add a private SSH key from \$HOME/.ssh by file name"
+	printh "" "Adds all default keys (id_rsa/id_dsa/id_ecdsa/id_ed25519) if no file name is given."
+
+	printh "ls" "List SSH keys loaded in the docksal-ssh-agent"
+	printh "rm" "Remove all keys from the docksal-ssh-agent"
 	printh "new [key-name]" "Generate a new SSH key pair"
 
 	echo
 	echo "Examples:"
-	printh "fin ssh-key add" "Adds default SSH keys if found locally (id_rsa/id_dsa/id_ecdsa)"
-	printh "fin ssh-key server_id_rsa" "Adds the key stored in ~/.ssh/server_id_rsa into the agent"
-	printh "fin ssh-key new server2_id_rsa" "Generates a new SSH key pair in ~/.ssh/server2_id_rsa"
+	printh "fin ssh-key add" "Loads all SSH keys with default names: id_rsa/id_dsa/id_ecdsa from \$HOME/.ssh/"
+	printh "fin ssh-key server_rsa" "Loads the key stored in \$HOME/.ssh/server_id_rsa into the agent"
+	printh "fin ssh-key new server2_rsa" "Generates a new SSH key pair in ~/.ssh/server2_id_rsa"
 }
 
 show_help_system() {
@@ -1820,7 +1872,7 @@ show_help_init ()
 	echo
 	echo "Creates default project configuration and starts a project, when no project found."
 	echo "This built-in is meant to be overridden with your custom command or addon."
-	echo -e "See ${yellow}https://docs.docksal.io/en/master/fin/custom-commands${NC} on docs for creating custom commands."
+	echo -e "See ${yellow}https://docs.docksal.io/fin/custom-commands/${NC} on docs for creating custom commands."
 
 	echo
 	echo "Usage: init"
@@ -1844,7 +1896,14 @@ show_help_cleanup ()
 
 	echo
 	echo "Options:"
+	printh "--images" "Docker images cleanup Wizard"
 	printh "--hard" "Also remove ALL stopped containers (potentially destructive operation)"
+
+	echo
+	echo "Examples:"
+	printh "fin cleanup" "Regular cleanup"
+	printh "fin cleanup --images" "Docker Images cleanup wizard, helping to navigate and delete unused ones"
+	printh "fin cleanup --hard" "Run hard cleanup removing all stopped containers"
 }
 
 show_help_hosts ()
@@ -2118,9 +2177,9 @@ docker_machine_start ()
 		docker_machine_env
 		if_failed_error "Failed starting virtual machine" \
 			"In case you see certificates problem, reboot your local host." \
-			"Common issues: https://docs.docksal.io/en/master/troubleshooting"
+			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
 		configure_resolver
-		docker_machine_mounts
+		configure_mounts
 	else
 		# only auto-create default machine
 		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
@@ -2138,7 +2197,7 @@ docker_machine_start ()
 
 		echo-green "Pulling Docksal system images..."
 		update_system_images
-		docker_machine_mounts
+		configure_mounts
 	fi
 
 	# Catch the return code from docker_machine_mounts
@@ -2179,37 +2238,17 @@ docker_machine_remove ()
 		"$vboxmanage" hostonlyif remove "$vboxifname" >/dev/null 2>&1
 	fi
 
-	if is_windows; then
-		echo-green "Removing SMB shares..."
-		docker_machine_remove_smb
-	fi
-	if is_mac; then
-		echo-green "Removing NFS exports..."
-		docker_machine_remove_nfs
-	fi
+	configure_mounts off
 }
 
-# Mount folder inside docker-machine with NFS
-# Unnamed params - shares in format "$LOCAL_FOLDER:$MOUNT_POINT_NAME"
-# Named --no-export param(s) - will try to mount those mount points without exporting $LOCAL_FOLDER
-docker_machine_mount_nfs ()
+# Create a NFS export
+# @param $@ - host path to be shared (accepts multiple values separated by space)
+nfs_share_add ()
 {
-	local machine_name="$DOCKER_MACHINE_NAME"
-	local network_name
-	local nfs_ip
-	eval $(parse_params "$@")
+	[[ "$@" = "" ]] && return 1
 
-	# Get required IP addresses
-	network_name=$("$vboxmanage" showvminfo "$machine_name" --machinereadable | grep hostonlyadapter | cut -d \" -f2)
-	if [[ "$network_name" == "" ]]; then
-		echo-error "Could not find virtualbox net name." && exit 1
-	fi
-	# nfs_ip is an internal IP of localhost as docker machine sees it.
-	nfs_ip=$("$vboxmanage" list hostonlyifs | grep "$network_name" -A 3 | grep IPAddress | cut -d ':' -f2 | xargs)
-	if [[ "$nfs_ip" == "" ]]; then
-		echo-error "Could not find virtualbox internal net IP address." && exit 1
-	fi
-	machine_ip=$(docker-machine ip "$machine_name")
+	local machine_name="${DOCKER_MACHINE_NAME:-docksal}"
+	eval $(parse_params "$@")
 
 	# Remove our own old exports
 	local exports_open="# <ds-nfs $machine_name"
@@ -2222,28 +2261,15 @@ docker_machine_mount_nfs ()
 
 	# Prepare new exports file
 	exports="${exports}\n${exports_open}\n"
-	for share in ${ARGV[@]}; do
-		local share_export=(${share//:/ });
-		# Check for NFS exports conflicts manually
-		if [[ "$exports" =~ "$share_export" ]]; then
-			echo
-			echo -e "${red}ERROR:${NC} Attempt to share $share_export via NFS would create a conflict in ${yellow}/etc/exports${NC}."
-			echo -e "       To solve the problem you can override the default Docksal projects folder."
-			echo -e "       by setting ${yellow}DOCKSAL_NFS_PATH${NC} value in ${yellow}$CONFIG_ENV${NC}."
-			sleep 1
-			echo
-			echo-green "Attempting auto-fix:"
-			_confirm "Do you want to use ${yellow}$HOME/Projects${NC} as Docksal projects path?"
-			# Write proposed DOCKSAL_NFS_PATH and try remounting nfs
-			mkdir -p "$HOME/Projects"
-			echo -e "\nDOCKSAL_NFS_PATH=\"$HOME/Projects\"\n" | tee -a ${CONFIG_ENV} >/dev/null
-			# Remove extra new lines
-			cat -s ${CONFIG_ENV} > ${CONFIG_ENV}
-			docker_machine_mount_nfs "$HOME/Projects:$HOME/Projects"
-			return $?
+	for share_export in ${ARGV[@]}; do
+		if [[ ! -d ${share_export} ]]; then
+			echo-error "Invalid path: ${share_export}"
+			return 1
 		fi
-		# TODO: move exports into a separate function and make it work with D4M with or without VirtualBox.
-		exports="${exports}$share_export 127.0.0.1 $machine_ip -alldirs -maproot=0:0\n"
+		# With docker-machine (VirtualBox), connections will originate from ${DOCKSAL_IP}
+		# With Docker Desktop, connections will originate from ${DOCKSAL_HOST_IP}
+		# Allow access from both
+		exports="${exports}$share_export ${DOCKSAL_HOST_IP} ${DOCKSAL_IP} -alldirs -maproot=0:0\n"
 	done
 	exports="${exports}${exports_close}"
 
@@ -2262,7 +2288,7 @@ docker_machine_mount_nfs ()
 			echo "-----------------"
 			echo -e "$exports"
 			echo "-----------------"
-			return 1
+			return 2
 		fi
 
 		echo "Writing /etc/exports..."
@@ -2272,6 +2298,16 @@ docker_machine_mount_nfs ()
 	else
 		# /etc/export already contains what is required
 		echo "NFS shares are already configured"
+	fi
+
+	# Set nfs.server.mount.require_resv_port = 0
+	# Many NFS server implementations require this because of
+	# the false belief that this requirement increases security.
+	# Without this, NFS mounts are very likely to fail
+	if ! (cat /etc/nfs.conf | grep -e 'nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
+		echo "Writing /etc/nfs.conf..."
+		echo "nfs.server.mount.require_resv_port = 0" | sudo tee -a /etc/nfs.conf >/dev/null
+		NFSD_RESTART_REQUIRED="true"
 	fi
 
 	# Start/Restart nfsd
@@ -2287,53 +2323,28 @@ docker_machine_mount_nfs ()
 		sudo nfsd start
 		sleep 10
 	fi
-
-	# Mount exported folders
-	echo-green "Mounting NFS shares..."
-	# Start NFS client on docker-machine
-	docker-machine ssh "$machine_name" \
-		"sudo /usr/local/etc/init.d/nfs-client start"
-	for share in ${ARGV[@]}; do
-		local share_=(${share//:/ });
-		local share_export="${share_[0]}"
-		local share_mount="${share_[1]}"
-		# Add new exports
-		echo "Mounting local $share_export to $share_mount"
-		# Timeout will break mount command, that can freeze if connection to host is blocked by firewall
-		docker-machine ssh "$machine_name" \
-			"sudo mkdir -p $share_mount ;
-			timeout -t 5 sudo umount $share_mount 2>/dev/null ;
-			timeout -t 20 sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
-			# [!!] Think twice about performance before changing nfs settings
-		if [ ! $? -eq 0 ]; then
-			echo "Retrying mounting local $share_export to $share_mount"
-			sleep 5
-			docker-machine ssh "$machine_name" \
-				"timeout -t 20 sudo mount -t nfs -o nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
-			if [[ $? != 0 ]]; then
-				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
-				return 1
-			fi
-		fi
-	done
-
 }
 
-docker_machine_remove_nfs ()
+# Removes all Docksal NFS exports
+nfs_share_remove ()
 {
-	local machine_name="$DOCKER_MACHINE_NAME"
+	local machine_name="${DOCKER_MACHINE_NAME:-docksal}"
 	# Remove our own old exports
 	local exports_open="# <ds-nfs $machine_name"
 	local exports_close="# ds-nfs>"
-	local exports=$(cat /etc/exports 2>/dev/null | \
+	local exports=$(cat /etc/exports 2>/dev/null)
+	local exports_new=$(cat /etc/exports 2>/dev/null | \
 		tr "\n" "\r" | \
 		sed "s/${exports_open}.*${exports_close}//" | \
 		tr "\r" "\n"
 	)
 
+	# Return if there are no changes
+	[[ "${exports_new}" == "${exports}" ]] && return
+
 	# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
 	local exports_test="/tmp/etc.exports.$RANDOM"
-	echo -e "$exports" | tee "$exports_test" >/dev/null
+	echo -e "$exports_new" | tee "$exports_test" >/dev/null
 	exports_errors=$(nfsd -F "$exports_test" checkexports 2>&1)
 	rm -f "$exports_test" >/dev/null 2>&1
 
@@ -2341,15 +2352,50 @@ docker_machine_remove_nfs ()
 	if [[ "$exports_errors" != '' ]]; then
 		echo-error "$exports_errors"
 		echo "-----------------"
-		echo -e "$exports"
+		echo -e "$exports_new"
 		echo "-----------------"
-		return 1
+		return 2
 	fi
 
 	echo "Writing and applying /etc/exports..."
-	echo -e "$exports" | sudo tee /etc/exports >/dev/null
+	echo -e "$exports_new" | sudo tee /etc/exports >/dev/null
 	sudo nfsd restart
-	sleep 2
+}
+
+# Mount folder inside docker-machine with NFS
+# Unnamed params - shares in format "$LOCAL_FOLDER:$MOUNT_POINT_NAME"
+docker_machine_mount_nfs ()
+{
+	local machine_name="$DOCKER_MACHINE_NAME"
+	local nfs_ip="$DOCKSAL_HOST_IP"
+	eval $(parse_params "$@")
+
+	# Mount exported folders
+	echo-green "Mounting NFS shares..."
+	# Start NFS client on docker-machine
+	docker-machine ssh "$machine_name" "sudo /usr/local/etc/init.d/nfs-client start"
+	for share in ${ARGV[@]}; do
+		local share_=(${share//:/ });
+		local share_export="${share_[0]}"
+		local share_mount="${share_[1]}"
+		echo "Mounting local $share_export to $share_mount"
+		# [!!] Think twice about performance before changing nfs settings
+		nfs_mount_command="sudo mount -t nfs -o vers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
+		# Timeout will break mount command, that can freeze if connection to host is blocked by firewall
+		docker-machine ssh "$machine_name" \
+			"sudo mkdir -p $share_mount;
+			timeout -t 5 sudo umount $share_mount 2>/dev/null;
+			timeout -t 20 $nfs_mount_command"
+		if [[ $? != 0 ]]; then
+			echo "Retrying mounting local $share_export to $share_mount"
+			sleep 5
+			docker-machine ssh "$machine_name" "timeout -t 20 $nfs_mount_command"
+			if [[ $? != 0 ]]; then
+				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
+				return 1
+			fi
+		fi
+	done
 }
 
 # Fix/optimize Windows network settings for file sharing.
@@ -2399,6 +2445,19 @@ smb_share_add()
 	fi
 }
 
+# Removes Docksal SMB shares
+smb_share_remove ()
+{
+	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	for drive in ${drives}; do
+		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Avoid conflicts with existing drive shares buy using a unique share name
+		local share_name="docksal-$mount_point"
+		command_share="net share ${share_name} /DELETE"
+		winsudo "$command_share"
+	done
+}
+
 # Method to mount the SMB share in Docker machine.
 # @param share_name, mount_point, password
 smb_share_mount()
@@ -2409,9 +2468,6 @@ smb_share_mount()
 	# single quotes are banned from being used in password
 	password=${password//\'/}
 
-	network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2)
-	DOCKER_HOST_IP=$("$vboxmanage" list hostonlyifs | grep "${network_id}$" -A 3 | grep IPAddress |cut -d ':' -f2 | xargs)
-
 	# User ntlmssp by default. For some Windows machines ntlm should be used instead
 	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
 	SMB_SEC="${SMB_SEC:-ntlmssp}"
@@ -2420,7 +2476,7 @@ smb_share_mount()
 	command_mount="
 		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
 		sudo mkdir -p $mount_point && \
-		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=2.1,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKER_HOST_IP}/$share_name $mount_point"
+		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=2.1,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKSAL_HOST_IP}/$share_name $mount_point"
 	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
 
 	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
@@ -2435,7 +2491,7 @@ smb_share_mount()
 		else
 			echo-error "SMB share mount failed." \
  				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again." \
- 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/en/master/troubleshooting-smb${NC}"
+ 				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/troubleshooting/windows-smb/${NC}"
 			return 1
 		fi
 	fi
@@ -2466,30 +2522,6 @@ docker_machine_mount_smb ()
 		smb_share_add "$share_name" "$drive" &&
 			smb_share_mount "$share_name" "/$mount_point" "$password"
 	done
-}
-
-docker_machine_remove_smb ()
-{
-	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
-	for drive in ${drives}; do
-		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
-		# Avoid conflicts with existing drive shares buy using a unique share name
-		local share_name="docksal-$mount_point"
-		command_share="net share ${share_name} /DELETE"
-		winsudo "$command_share"
-	done
-}
-
-docker_machine_mounts ()
-{
-	if is_mac; then
-		echo-green "Configuring NFS shares..."
-		local MOUNT_POINT="${DOCKSAL_NFS_PATH:-/Users}"
-		docker_machine_mount_nfs "$MOUNT_POINT:$MOUNT_POINT"
-	elif is_windows; then
-		echo-green "Configuring SMB shares..."
-		docker_machine_mount_smb
-	fi
 }
 
 # Creates bind mounts on WSL from /mnt/c to /c so that docker-compose pth would match path inside docker
@@ -2594,7 +2626,7 @@ vm ()
 			docker_machine_remove "$machine_name"
 			;;
 		mount)
-			docker_machine_mounts
+			configure_mounts
 			;;
 		ip)
 			shift
@@ -2683,8 +2715,8 @@ up ()
 	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
 	( is_linux || is_docker_native ) && ssh_key add
 
-	# On macOS check that project is reachable to Docker
-	check_macos_path
+	# Check that project directory is reachable to Docker
+	check_docker_path
 
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
@@ -2770,7 +2802,7 @@ reset ()
 	fi
 
 	# Return here if there are errors with remove
-	# This also helps with cases when there was a typo in the reset command, like "fin reset ssystem"
+	# This also helps with cases when there was a typo in the reset command, like "fin reset system"
 	local ret=$?
 	[[ "$ret" != 0 ]] && return ${ret}
 
@@ -2851,16 +2883,20 @@ project_create ()
 		echo
 		echo -e "${lime}  JS based${NC}"
 		echo -e "${green}    12.${NC} Gatsby JS"
+		echo -e "${green}    13.${NC} Angular"
 		echo
 		echo -e "${magenta}  HTML${NC}"
-		echo -e "${green}    13.${NC} Static HTML site"
+		echo -e "${green}    14.${NC} Static HTML site"
 		echo -e ""
 
+		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
+		local choices=14
+
 		while [[ "$choice" == "" ]]; do
-			read -p "Enter your choice (1-13): " choice
-			if ! (( "$choice" >= "1" && "$choice" <= 13 )); then
+			read -p "Enter your choice (1-$choices): " choice
+			if ! (( "$choice" >= "1" && "$choice" <= $choices )); then
 				choice=""
-				echo 'Enter a number between 1 and 13.'
+				echo-error "Enter a number between 1 and $choices."
 			fi
 		done
 	fi
@@ -2928,6 +2964,11 @@ project_create ()
 			target_repo="$URL_REPO_GATSBY"
 			;;
 		13)
+			target_cms="Angular"
+			target_host_name_search_string=""
+			target_repo="$URL_REPO_ANGULAR"
+			;;
+		14)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
@@ -2956,7 +2997,7 @@ project_create ()
 	fi
 
 	echo -e "${green}Cloning repository...${NC}"
-	run_cli git clone -b master "${target_repo}" "${project_name}"
+	run_cli git clone -b master "${target_repo}" "${project_name}" --depth=1
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
 	echo -e "${yellow}3. Installing site${NC}"
@@ -3005,11 +3046,10 @@ project_erase ()
 # Resets Docksal system services
 system_reset ()
 {
-	# TODO: add /etc/exports, etc. here for a complete reset of Docksal
-
 	# Configure network has to happen before any communications with the docker daemon happen (before check_docker_running)
 	if [[ "$1" == "" ]] ; then
 		configure_network
+		configure_mounts
 		echo-green 'Resetting Docksal services...'
 		echo ' ➔ proxy'
 		install_proxy_service
@@ -3024,6 +3064,11 @@ system_reset ()
 	# Configure network has to happen before any communications with the docker daemon happen (before check_docker_running)
 	if [[ "$1" == "network" ]] ; then
 		configure_network
+		return
+	fi
+
+	if [[ "$1" == "mounts" ]] ; then
+		configure_mounts
 		return
 	fi
 
@@ -3068,7 +3113,6 @@ system_start ()
 }
 
 # Stops/disables all Docksal things
-# TODO: add projects, /etc/exports, etc. here for a complete shutdown of Docksal
 system_stop ()
 {
 	if ! is_linux && ! is_docker_native && ! is_wsl; then
@@ -3081,6 +3125,7 @@ system_stop ()
 		echo-green "Stopping Docksal system services..."
 		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
 		configure_resolver off
+		configure_mounts off
 		configure_network off
 	fi
 }
@@ -3110,7 +3155,7 @@ ssh_key_generate ()
 
 	ssh_key_name="${1}"
 	# If no key name provided, ask for it
-	[[ "${ssh_key_name}" == "" ]] && read -p "Enter name for a new SSH key (e.g. myserver_id_rsa): " ssh_key_name
+	[[ "${ssh_key_name}" == "" ]] && read -p "Enter name for a new SSH key (e.g., myserver_id_rsa): " ssh_key_name
 	# Exit if still no key name here
 	[[ "${ssh_key_name}" == "" ]] && exit 1
 
@@ -3140,7 +3185,7 @@ ssh_key ()
 			"Please report this issue, as this should not usually happen." \
 			"Run ${yellow}fin system reset ssh-agent${NC} to start the service."
 		# We could automatically run install_sshagent_service here, however that may lead to an endless recursion
-		# if something is terribly wrong. So it's better to alret the user and ask them to try a manual fix.
+		# if something is terribly wrong. So it's better to alert the user and ask them to try a manual fix.
 		return 1
 	fi
 
@@ -3171,7 +3216,7 @@ ssh_key ()
 	# If we have a key name as the argument, add it to the list of keys to load
 	if [[ "${2}" != "" ]]; then
 		if [[ -f "${ssh_path}/${2}" ]]; then
-			local SECRET_SSH_KEY_${2^^}=${2}
+			local SECRET_SSH_KEY_${2}="${2}"
 		else
 			echo-error "Key '"${ssh_path}/${2}"' does not exist"
 		fi
@@ -3181,6 +3226,7 @@ ssh_key ()
 		[[ -f "${ssh_path}/id_rsa" ]] && local SECRET_SSH_KEY_ID_RSA=id_rsa
 		[[ -f "${ssh_path}/id_dsa" ]] && local SECRET_SSH_KEY_ID_DSA=id_dsa
 		[[ -f "${ssh_path}/id_ecdsa" ]] && local SECRET_SSH_KEY_ID_ECDSA=id_ecdsa
+		[[ -f "${ssh_path}/id_ed25519" ]] && local SECRET_SSH_KEY_ID_ED25519=id_ed25519
 	fi
 
 	# Load SSH keys into the agent
@@ -3340,6 +3386,50 @@ configure_network ()
 	is_wsl && configure_network_wsl "$mode" && return $?
 }
 
+# Configure Docksal mounts
+configure_mounts ()
+{
+	local mode="${1:-on}"
+
+	# Create and mount network shares from host to VM
+	if [[ "$mode" == "on" ]]; then
+		if is_mac; then
+			echo-green "Configuring NFS shares..."
+			nfs_share_add "${DOCKSAL_NFS_PATH}"
+			# Exit 2 = conflict in /etc/exports. Try to auto-resolve it.
+			if [[ $? == 2 ]]; then
+				# TODO: possibly, print a note that anything above the configured DOCKSAL_NFS_PATH is invisible to the VM.
+				echo-green "Conflict detected. Attempting auto-fix:"
+				_confirm "Suggested path for Docksal projects: ${yellow}${HOME}/Projects${NC}. Use it?"
+				DOCKSAL_NFS_PATH="${HOME}/Projects"
+				mkdir -p "${DOCKSAL_NFS_PATH}"
+				# Write proposed value to the global Docksal config
+				config_set --global DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH}"
+				# Configure exports using the new value
+				nfs_share_add "${DOCKSAL_NFS_PATH}"
+			fi
+			# Mount the share in VirtualBox
+			if ! is_docker_native; then
+				docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
+			fi
+		fi
+		# Create, then mount shares in VirtualBox
+		if is_windows && ! is_docker_native; then
+			echo-green "Configuring SMB shares..."
+			docker_machine_mount_smb
+		fi
+	else
+		if is_mac; then
+			echo-green "Removing NFS exports..."
+			nfs_share_remove
+		fi
+		if is_windows && ! is_docker_native; then
+			echo-green "Removing SMB shares..."
+			smb_share_remove
+		fi
+	fi
+}
+
 # Start system-wide vhost-proxy service
 install_proxy_service ()
 {
@@ -3361,7 +3451,9 @@ install_proxy_service ()
 
 	# Mount custom certs folder if available
 	local mount_certs
-	[[ -d ${CONFIG_CERTS} ]] && mount_certs="--mount type=bind,src=${CONFIG_CERTS},dst=/etc/certs/custom"
+	if [[ -d "${CONFIG_CERTS}" ]] && is_docker_path "${CONFIG_CERTS}"; then
+		mount_certs="--mount type=bind,src=${CONFIG_CERTS},dst=/etc/certs/custom"
+	fi
 
 	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
 	# and are inactive unless configured.
@@ -3577,7 +3669,12 @@ configure_resolver ()
 			# We want to make sure the upstream DNS server is reachable before configuring the host to use our DNS service.
 			# If it's not reachable, hosts DNS resolution may be affected or stop working entirely.
 			# nslookup returns 0 exit code regardless of the results, so have to pipe it to grep
-			nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			if is_alpine; then
+				# nslookup on Alpine does not support the '-timeout' option
+				timeout -t 5 nslookup google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			else
+				nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+			fi
 			local ret=$?
 
 			if [[ "$ret" != "0" ]]; then
@@ -3847,17 +3944,10 @@ install_tools_debian ()
 			sudo service docker stop 2>/dev/null
 		fi
 
-		# Pin docker-engine version to avoid apt-get upgrade.
-		# Get rid of -ce part because linux packages use `~ce` suffix in repos and pin version will not work with it
-		local PIN_DOCKER_VERSION=$(echo ${REQUIREMENTS_DOCKER} | sed "s/-.*//")
-		echo -e "Package: docker-ce\nPin: version ${PIN_DOCKER_VERSION}*\nPin-Priority: 1001" | sudo tee "/etc/apt/preferences.d/docksal.pref" >/dev/null || exit 1
-
-		curl -fsSL "${URL_DOCKER_NIX}" | \
-			# Patch get.docker.com script on the fly to force installation of the pinned docker-ce version
-			sed "s/--force-yes docker-ce >/docker-ce >/" | \
-			sh && \
-			# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-			sudo usermod -aG docker "$LOGNAME"
+		# Pin docker version
+		curl -fsSL "${URL_DOCKER_NIX}" | VERSION=${REQUIREMENTS_DOCKER} sh
+		# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
+		sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
 		sudo docker version
 		if_failed "Docker installation/upgrade has failed."
@@ -4083,16 +4173,17 @@ update_tools ()
 update_config_files ()
 {
 	files_to_download="
-			$URL_STACKS_OVERRIDES_IDE
-			$URL_STACKS_OVERRIDES_OSXFS
-			$URL_STACKS_SERVICES
-			$URL_STACKS_STACK_ACQUIA
-			$URL_STACKS_STACK_DEFAULT
-			$URL_STACKS_STACK_DEFAULT_NODB
-			$URL_STACKS_STACK_NODE
-			$URL_STACKS_VOLUMES_BIND
-			$URL_STACKS_VOLUMES_NFS
-			$URL_STACKS_VOLUMES_UNISON
+			$STACKS_OVERRIDES_IDE
+			$STACKS_OVERRIDES_OSXFS
+			$STACKS_SERVICES
+			$STACKS_STACK_ACQUIA
+			$STACKS_STACK_DEFAULT
+			$STACKS_STACK_DEFAULT_NODB
+			$STACKS_STACK_NODE
+			$STACKS_VOLUMES_BIND
+			$STACKS_VOLUMES_NFS
+			$STACKS_VOLUMES_NONE
+			$STACKS_VOLUMES_UNISON
 	"
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
@@ -4101,7 +4192,7 @@ update_config_files ()
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
-			curl -kfsSLO "$f" || exit 1
+			curl -kfsSLO "${URL_REPO}/${DOCKSAL_VERSION}/stacks/$f" || exit 1
 		done
 	)
 
@@ -4263,6 +4354,9 @@ update ()
 		TOTAL_STEPS=4
 	fi
 
+	# Pass the version to the newly downloaded fin to run the updates
+	export DOCKSAL_VERSION=$(get_docksal_version_latest)
+
 	# [STEP 1] Update fin unless already running fin.updated binary
 	if (${FULL_UPDATE}); then
 		testing_warn
@@ -4318,7 +4412,7 @@ update ()
 	echo-green "[STEP 4/$TOTAL_STEPS] Updating system images..."
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		# [4.1] Always update system images during upgrade
-		# On Win and Mac update only during upgrade because it is done in docker_machine_start
+		# On Win and Mac, update only during upgrade because it is done in docker_machine_start
 		update_system_images
 		# Run cleanup to get rid of outdated images
 		cleanup
@@ -4343,7 +4437,7 @@ update ()
 	# [STEP 5] Update project images
 	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		echo-green "[STEP 5/$TOTAL_STEPS] Updating Docksal images"
-		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal | sort | uniq); do
+		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal/ | sort | uniq); do
 			docker pull "$_image"
 		done
 	fi
@@ -4372,22 +4466,24 @@ update ()
 	fi
 }
 
-# Return latest fin download url for the latest tag
-get_latest_fin_url ()
+# Return the latest version
+# For RC users, this will return the latest RC release tag. For everyone else - the latest stable release tag.
+get_docksal_version_latest ()
 {
-	# Get the latest release tag
 	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases"
-	local latest_tag=$(curl -sSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
 
-	# Return the fin raw URL associated with that tag
-	echo "${URL_REPO}/${latest_tag}/bin/fin"
+	# If we have an RC user and DOCKSAL_VERSION was not overridden, then return the latest RC release tag
+	if wants_rc_version && [[ "${DOCKSAL_VERSION}" == "master" ]]; then
+		echo $(curl -kfsSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
+	else
+		echo ${DOCKSAL_VERSION}
+	fi
 }
 
-# Return the url for fin. If person has set DOCKSAL_USE_RC then we return that otherwise return masters URL
-# which will return the latest stable version.
+# Return the url for fin
 get_fin_url ()
 {
-	wants_rc_version && echo $(get_latest_fin_url) || echo "${URL_FIN}"
+	echo "${URL_REPO}/$(get_docksal_version_latest)/bin/fin"
 }
 
 check_for_updates ()
@@ -4480,7 +4576,7 @@ image_registry_list ()
 	if [[ "$1" != "" ]]; then
 		tag_escaped=${1//\//\\\/}
 		# for instance $1 == "docksal/db"
-		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags | \
+		curl -ksSL https://registry.hub.docker.com/v1/repositories/${1}/tags | \
 			grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | \
 			cut -d " " -f2 | \
 			tr -d \" | \
@@ -4556,7 +4652,7 @@ _exec ()
 
 	# ------------------------------------------------ #
 	# 2) convert array of parameters into escaped string
-	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
+	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
@@ -4653,7 +4749,7 @@ run_cli ()
 	# Set default image
 	local RUN_IMAGE="${image:-docksal/cli:2.5-php7.1}"
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
-	# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
+	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
@@ -4683,9 +4779,6 @@ run_cli ()
 		MOUNT_HOME="dst=/home/docker"
 	fi
 
-	# Allows run-cli to run global addons
-	local MOUNT_DOCKSAL_HOME="type=bind,src=$CONFIG_DIR,dst=$CONFIG_DIR"
-
 	# Address an edge case when run-cli is run in the home folder (/root) on PWD/Katacoda
 	# See https://github.com/docksal/docksal/issues/661
 	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda); then
@@ -4699,7 +4792,6 @@ run_cli ()
 		${winpty} docker run --rm -it \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
-			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
@@ -4721,7 +4813,6 @@ run_cli ()
 		docker run --rm \
 			--mount type=bind,src=$(pwd),dst=/var/www \
 			--mount ${MOUNT_HOME} \
-			--mount "$MOUNT_DOCKSAL_HOME" \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
@@ -4752,7 +4843,7 @@ _mysql ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4777,7 +4868,7 @@ mysql_list ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4800,7 +4891,7 @@ mysql_db_create ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4833,7 +4924,7 @@ mysql_db_drop ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4861,7 +4952,7 @@ mysql_db_truncate ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4902,7 +4993,7 @@ mysql_import ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -4961,7 +5052,7 @@ mysql_import ()
 		echo "Importing from stdin..."
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command directly (no bash wrapper) so that stdin could be received inside that exec
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	__mysql_command=$(echo "${__mysql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
@@ -4989,7 +5080,7 @@ mysql_dump ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id="${COMPOSE_PROJECT_NAME_SAFE}_db_1"
+	container_id=$(get_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5004,7 +5095,6 @@ mysql_dump ()
 		echo-green "Exporting..."
 	fi
 
-	# TODO: refactor to use ${COMPOSE_PROJECT_NAME_SAFE}_<service>_1
 	container_id=$(get_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	if [[ "${ARGV[0]}" == "" ]]; then
@@ -5151,7 +5241,7 @@ ngrok_share ()
 
 	# Add -host-header by default if no arguments are included.
 	if [[ "${ARGS}" == "ngrok http" ]]; then
-		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}'"
+		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}' ${container_name}.${network}:${NGROK_PORT}"
 	fi
 
 	${winpty} docker run --rm ${NGROK_VOLUME} -it \
@@ -5160,7 +5250,7 @@ ngrok_share ()
 		--link ${container_name} \
 		--name ${ngrok_container_name} \
 		wernight/ngrok \
-		sh -c "${ARGS} ${container_name}.${network}:${NGROK_PORT}"
+		sh -c "${ARGS}"
 }
 
 # Print information required for issue diagnostics
@@ -5250,6 +5340,16 @@ sysinfo ()
 		echo
 		echo "███  DOCKSAL: VIRTUAL HOSTS"
 		vhosts
+
+		echo
+		echo "███  DOCKSAL: DNS"
+		TEST_URL="http://dns-test.docksal"
+		curl --connect-timeout 2 -sS http://dns-test.docksal >/dev/null
+		if [[ $? != 0 ]]; then
+			echo "ERROR: Requesting $TEST_URL failed!"
+		else
+			echo "Successfully requested $TEST_URL"
+		fi
 
 		echo
 		echo "███  DOCKER: RUNNING CONTAINERS"
@@ -5481,8 +5581,10 @@ load_configuration ()
 	fi
 	export DOCROOT=${DOCROOT:-docroot}
 
+	# Make VIRTUAL_HOST lowercase, replace '_' with '-', remove everything non-letter or digit,
+	# make sure it starts with letter or digit
 	local OLD_VHOST=${VIRTUAL_HOST}
-	export VIRTUAL_HOST=$(echo ${VIRTUAL_HOST} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g' | sed 's/[^-a-z0-9\.]//g')
+	export VIRTUAL_HOST=$(echo ${VIRTUAL_HOST} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g' | sed 's/[^-a-z0-9\.]//g' | sed 's/^[^a-z0-9]*//g')
 	# Warn in case Virtual Host was auto-corrected
 	if [[ "$OLD_VHOST" != "$VIRTUAL_HOST" ]]; then
 		echo-warning "The ${yellow_bold}VIRTUAL_HOST${yellow} has been modified from ${yellow_bold}${OLD_VHOST}${yellow} to ${yellow_bold}${VIRTUAL_HOST}${NC} ${yellow}to comply with browser standards."
@@ -5593,7 +5695,33 @@ config_generate ()
 	echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
 
 	# Get docroot option value or use default
-	local DOCROOT="${docroot:-docroot}"
+	local DOCROOT="${docroot}"
+        if [[ -z $DOCROOT ]]; then
+                if [[ -d web ]]; then
+                        DOCROOT=web
+                elif [[ -d docroot ]]; then
+                        DOCROOT=docroot
+                elif [[ -d public_html ]]; then
+                        DOCROOT=public_html
+                elif [[ -d html ]]; then
+                        DOCROOT=html
+                elif [[ -f index.php ]] || [[ -f index.html ]]; then
+                        DOCROOT=.
+                else
+                        DOCROOT=docroot
+                fi
+                if ! _confirm "DOCROOT has been detected as ${DOCROOT}. Is that correct?" --no-exit; then
+                        DOCROOT=""
+                        while [[ "$DOCROOT" == "" ]]; do
+                                echo -en "${yellow}Where is your project's DOCROOT?${NC} "
+                                read -p "" DOCROOT
+                                if [[ ! -d $DOCROOT ]]; then
+                                        echo-error "${DOCROOT} directory not found."
+                                        DOCROOT=""
+                                fi
+                        done
+                fi
+        fi
 	# Add DOCROOT to docksal.env file
 	echo "DOCROOT=${DOCROOT}" >> ".docksal/docksal.env"
 	# Create a basic docroot and index.php if not present
@@ -5843,7 +5971,7 @@ addon () {
 	local addon_name=${ARGV[1]} # ARGV[0] is install, remove,...
 
 	# If addon contains 3 slash separated parts treat them as path
-	# i.e. username/repo/addon_name
+	# i.e., username/repo/addon_name
 	_regex="(.*\/.*)\/(.*)"
 	if [[ "$addon_name" =~ $_regex ]]; then
 		URL_ADDONS_REPO="$URL_ADDONS_HOSTING/${BASH_REMATCH[1]}"
@@ -6116,17 +6244,16 @@ addon_execute ()
 	_exec_target=$(cat "$addon" | grep '^#:[ ]*exec_target[ ]*=' | sed -E "s/^#:[ ]*exec_target[ ]*=[ ]*//g")
 
 	shift
-	if [[ "$_exec_target" == "run-cli" ]]; then
-		cmd="$addon"
-		[[ "$@" != "" ]] && cmd="$addon "$(printf " %q" "$@")
-		run_cli "$cmd"
-	elif [[ "$_exec_target" != "" ]]; then
-		# Replace host addon path with the matching path inside cli
-		# "\$PROJECT_ROOT" will be resolved in cli to /var/www
-		cli_addon_path="\$PROJECT_ROOT${addon/$PROJECT_ROOT/}"
-		cmd="$cli_addon_path"
-		# Escape spaces that are "spaces" and not parameter delimiters (i.e. param1 param2\ with\ spaces param3)
-		[[ "$@" != "" ]] && cmd="$cli_addon_path "$(printf " %q" "$@")
+	if [[ "$_exec_target" != "" ]]; then
+		# Replace addon path as it is on the host, with the matching path inside container
+		container_addon_path="/var/www/${addon/$PROJECT_ROOT\//}"
+		if [[ "$@" != "" ]]; then
+			# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
+			cmd="$container_addon_path "$(printf " %q" "$@")
+		else
+			cmd="$container_addon_path"
+		fi
+		# Run the command
 		CONTAINER_NAME="$_exec_target" _exec "$cmd"
 	else
 		exec "$addon" "$@"
@@ -6153,7 +6280,7 @@ unison_sync_wait () {
 	done
 }
 
-# Fix permissions when running as root ( e.g. on Play with Docker, Katacoda, etc.)
+# Fix permissions when running as root ( e.g., on Play with Docker, Katacoda, etc.)
 set_project_root_permissions ()
 {
 	# Set permissions on project root to match the default user:group in cli.
@@ -6259,7 +6386,7 @@ wsl_mount_drives
 
 # Export environment variables to properly reach Docker server
 if [[ "$DOCKSAL_HOST" != "" ]]; then
-	export DOCKER_HOST="$DOCKSAL_HOST"
+	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
 elif is_docker_native; then
 	if is_wsl; then
 		export DOCKER_HOST="127.0.0.1:2375"

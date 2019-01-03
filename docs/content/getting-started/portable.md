@@ -1,5 +1,5 @@
 ---
-title: "Portable installation"
+title: "Portable Installation"
 weight: 4
 aliases:
   - /en/master/getting-started/portable/
@@ -19,7 +19,7 @@ A working Docksal 1.2.0+ (fin v1.6.0+) environment is required
 The following download script can be used to pre-download most of the dependencies and Docker images..
 
 ```bash
-curl -fsSL https://get.docksal.io/portable | sh
+curl -fsSL https://get.docksal.io/portable | bash
 ```
 
 Here's is what the script will download:
@@ -37,7 +37,7 @@ The following download options are available:
 Example:
 
 ```bash
-curl -fsSL https://get.docksal.io/portable | SKIP_DEPS=1 sh
+curl -fsSL https://get.docksal.io/portable | SKIP_DEPS=1 bash
 ```
 
 Once downloaded, place the contents of the folder on a USB drive/etc and distribute.
@@ -86,7 +86,7 @@ A minimal internet connection is still necessary to pull `fin` and Docksal stack
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL https://get.docksal.io | sh
+curl -fsSL https://get.docksal.io | bash
 fin vm start
 fin image load docksal-default-images.tar
 ```
@@ -103,7 +103,7 @@ Start the app and wait until Docker says it's running.
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL https://get.docksal.io | DOCKER_NATIVE=1 sh
+curl -fsSL https://get.docksal.io | DOCKER_NATIVE=1 bash
 fin image load docksal-default-images.tar
 ```
 
@@ -117,6 +117,6 @@ All other Docker dependencies and tools will be downloaded from internet (you wi
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL https://get.docksal.io | sh
+curl -fsSL https://get.docksal.io | bash
 fin image load docksal-default-images.tar
 ```
