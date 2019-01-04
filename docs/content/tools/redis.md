@@ -79,4 +79,4 @@ information, consult the [Extending stock Docksal Images](/stack/extend-images/)
 
 ## Accessing the Redis instance
 
-If you need command line access to the Redis instance you can run the following `fin exec --in=redis redis-cli`
+If you need command line access to the Redis instance you can run `fin docker-compose exec redis redis-cli`.  That command will work across all Docker containers.  If you know the Docker container has bash installed I.E. the `wodby/redis` image you can also run the the following `fin exec --in=redis redis-cli`.
