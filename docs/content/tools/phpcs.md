@@ -19,7 +19,7 @@ From your project's root folder (where the `.docksal` folder is located), downlo
 
 ```bash
 mkdir -p .docksal/commands
-curl -fsSL https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/drupal_phpcs -o .docksal/commands/phpcs
+curl -fsSL https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/phpcs_drupal -o .docksal/commands/phpcs
 chmod +x .docksal/commands/phpcs
 ```
 
@@ -30,7 +30,7 @@ See `fin help phpcs` for options.
 
 ```bash
 mkdir -p .docksal/commands
-curl -fsSL https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/wordpress_phpcs -o .docksal/commands/phpcs
+curl -fsSL https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/phpcs_wordpress -o .docksal/commands/phpcs
 chmod +x .docksal/commands/phpcs
 ```
 
