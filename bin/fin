@@ -6572,11 +6572,12 @@ provider_pull_generic_git_pull ()
 provider_pull_generic_drush_rsync ()
 {
 	echo-yellow "Downloading files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
-	_exec drush rsync -y \
+	[[ ! -d ${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} ]] && mkdir -p ${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} > /dev/null
+	_exec "drush -y rsync \
 		@${HOSTING_SITE}.${HOSTING_ENV}:%files \
 		${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} \
 		--delete \
-		${rsync_options}
+		${rsync_options}"
 	if_failed_error "Error Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 }
 
@@ -6701,7 +6702,7 @@ provider_pull_pantheon_init ()
 	HOSTING_ENV=${HOSTING_ENV:-dev}
 	# Set the BRANCH to be what the HOSTING_ENV is.
 	local repo_checkout=${HOSTING_ENV}
-	local repo_url=$(run_cli -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.dev --field=\"Git Command\" | awk '{print \$3}'")
+	local repo_url=$(run_cli -e COLUMNS="200" -e TERMINUS_HIDE_UPDATE_MESSAGE=1 -e TERMINUS_HIDE_GIT_MESSAGE=1 "terminus connection:info ${HOSTING_SITE}.dev --field=\"Git Command\" | awk '{print \$3}'")
 	if_failed_error "Error retrieving Git URL from Pantheon"
 
 	if [[ "${HOSTING_ENV}" == 'dev' ]]; then
@@ -6730,7 +6731,7 @@ provider_pull_pantheon_precheck ()
 provider_pull_pantheon_files ()
 {
 	# Get the SFTP Hostname from Site's Info.
-	local host_url=$(_exec -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
+	local host_url=$(_exec -e COLUMNS="200" -e TERMINUS_HIDE_UPDATE_MESSAGE=1 -e TERMINUS_HIDE_GIT_MESSAGE=1 "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
 	if_failed_error "Could not communicate with Pantheon. Check connection and SECRET_TERMINUS_TOKEN is set to an active token."
 	echo-yellow "Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Pantheon"
 	# Execute a rsync using Pantheon recommended Options.
@@ -6753,17 +6754,17 @@ provider_pull_pantheon_files ()
 provider_pull_pantheon_db ()
 {
 	# Get Time of Last Backup In Pantheon.
-	local last_backup=$(_exec -e COLUMNS="200" terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1)
+	local last_backup=$(_exec -e COLUMNS="200" -e TERMINUS_HIDE_UPDATE_MESSAGE=1 -e TERMINUS_HIDE_GIT_MESSAGE=1 terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1)
 	if_failed_error "Error retrieving list of backups from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
 		# If last backup does not exist or is older than 24 hours create new one.
 		echo-yellow "Creating new backup on Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
-		_exec terminus backup:create ${HOSTING_SITE}.${HOSTING_ENV} --element=db
+		_exec -e TERMINUS_HIDE_UPDATE_MESSAGE=1 -e TERMINUS_HIDE_GIT_MESSAGE=1 terminus backup:create ${HOSTING_SITE}.${HOSTING_ENV} --element=db
 		if_failed_error "Error creating backup on Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 	fi
 	# Download backup with Terminus to given location.
 	echo-yellow "Downloading database backup from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
-	_exec terminus backup:get "${HOSTING_SITE}"."${HOSTING_ENV}" --element="db" --to="${db_file}"
+	_exec -e TERMINUS_HIDE_UPDATE_MESSAGE=1 -e TERMINUS_HIDE_GIT_MESSAGE=1 terminus backup:get "${HOSTING_SITE}"."${HOSTING_ENV}" --element="db" --to="${db_file}"
 	if_failed_error "Error Downloading backup from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 }
 
