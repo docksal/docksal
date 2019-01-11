@@ -6692,10 +6692,6 @@ provider_pull_pantheon_check ()
 		echo-error "SECRET_TERMINUS_TOKEN must be set in order to work with Pantheon."
 		exit 1;
 	fi
-
-	# Patch to hide terminus messages for time being.
-	_exec "echo 'hide_update_message: true' > ~/.terminus/config.yml"
-	_exec "echo 'hide_git_mode_warning: true' >> ~/.terminus/config.yml"
 }
 
 # Init process to pull code from Pantheon
