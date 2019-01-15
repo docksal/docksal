@@ -28,17 +28,9 @@ To have submodules pulled automatically in the future set this within your globa
 git config --global submodule.recurse true
 ```
 
-Building and previewing docs is done via a docker container.
+Run `make serve` and point your browser to http://localhost:1313 to open the site. Building is done via a docker container. Docker binary is expected in $PATH (see below if you use Docker via VirtualBox).
 
-Run `make serve` and point your browser to http://localhost:1313 to open the site.
-
-If you do not have Docker installed natively and are using VirtualBox, you can run using the `fin` commmand. When accessing, you would use the IP address assigned to your VirtualBox machine (i.e., http://192.168.64.100:1313).
-
-```bash
-DOCKER="fin docker" make serve
-```
-
-Available `make` commands (`make` required):
+Other available `make` commands (`make` required):
 
 ```bash
 $ make
@@ -51,3 +43,13 @@ serve                Boot the development server
 ```
 
 It is also possible to use a locally installed `hugo` binary. `hugo` version must match the version defined in `Makefile`.
+
+### Building without Docker binary on local
+
+If you use Docksal via VirtualBox, then `fin docker` command can be used as a replacement for Docker binary:
+
+```bash
+DOCKER="fin docker" make serve
+```
+
+In this case to access the site you would use the IP address assigned to your VirtualBox machine (i.e., http://192.168.64.100:1313).
