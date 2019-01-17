@@ -6472,15 +6472,15 @@ provider_pull_db ()
 	local yesterday=$(_exec date --date='yesterday' "+%Y-%m-%d %H:%M:%S");
 
 	if [[ "${file_exists}" == "0" ]] || [[ -n "${file_time}" ]] || [[ "$FORCE" == "FORCE" ]]; then
-		echo-yellow "Cached DB file needs updating"
+		echo -e "${acqua}Cached DB file needs updating${NC}"
 
 		# Check to see if File Is Older than 1 hour
 		if [[ "$file_exists" > "0" ]] && [[ -z "${file_time}" ]] || [[ "$FORCE" == "FORCE" ]]; then
-			echo-yellow "Removing old database file"
-			_exec rm -rf "${db_file}"
+			echo -e "${acqua}Removing old database file${NC}"
+			_exec rm -f "${db_file}"
 		fi
 
-		echo-yellow "Pulling new database file..."
+		echo -e "${acqua}Pulling new database file...${NC}"
 		provider_pull_find_function ${HOSTING_PLATFORM} 'db' 1
 	else
 		echo-green "Cached DB file still valid found and using to import"
@@ -6490,7 +6490,7 @@ provider_pull_db ()
 
 	# Import the Database.
 	# Truncate the existing db.
-	echo-yellow "Truncating Existing Database"
+	echo -e "${acqua}Truncating Existing Database${NC}"
 	mysql_db_truncate "${DB_NAME}" > /dev/null
 	# Execute ZCAT on the db file and import into mysql database.
 	_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
@@ -6502,7 +6502,7 @@ provider_pull_db ()
 # Used specifically for pulling the db from a provider.
 provider_pull_files ()
 {
-	echo-yellow "Pulling Files..."
+	echo -e "${acqua}Pulling Files...${NC}"
 
 	# Default directory for Drupal Files.
 	local drupal_files="sites/default/files/"
@@ -6561,7 +6561,7 @@ provider_pull_generic_git_pull ()
 	local git_remote=${SYNC_GIT_REMOTE:-origin}
 	local current_branch=$(_exec "git rev-parse --abbrev-ref HEAD" | tr -d '\r')
 	local git_branch=${SYNC_GIT_BRANCH:-$current_branch}
-	echo-yellow "Pulling Code From ${git_remote} - ${git_branch}"
+	echo -e "${acqua}Pulling Code From ${git_remote} - ${git_branch}${NC}"
 	_exec "git pull -q ${git_remote} ${git_branch}"
 	if_failed_error "Error Pulling Code from ${git_remote} - ${git_branch}"
 }
@@ -6569,7 +6569,7 @@ provider_pull_generic_git_pull ()
 # Runs a generic drush rsync command.
 provider_pull_generic_drush_rsync ()
 {
-	echo-yellow "Downloading files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
+	echo -e "${acqua}Downloading files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
 	[[ ! -d ${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} ]] && mkdir -p ${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} > /dev/null
 	_exec "drush -y rsync \
 		@${HOSTING_SITE}.${HOSTING_ENV}:%files \
@@ -6652,23 +6652,23 @@ provider_pull_acquia_db ()
 	# If Last backup was more than 24 hours ago. Create one.
 	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
 		# Create backup on Acquia through Cloud API.
-		echo-yellow "Creating new backup on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
+		echo -e "${acqua}Creating new backup on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}${NC}"
 		_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup "${acquia_db_name}"
 		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
-		echo-yellow "Backup queued on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name} waiting 10 seconds to finish"
+		echo -e "${acqua}Backup queued on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
 		# Sleep for 10 seconds wait for backup to finish.
 		sleep 10
 		# Requery to get a new list of backups.
 		query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name})
 		if_failed_error "Error retrieving list of backups from Acquia on site ${HOSTING_SITE} on environment ${HOSTING_ENV} for database ${acquia_db_name}"
 	else
-		echo-yellow "Using latest backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
+		echo -e "${acqua}Using latest backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}${NC}"
 	fi
 
 	# Returns id of last backup.
 	local last_id=$(printf "${query}" | grep id | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
-	echo-yellow "Downloading backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
+	echo -e "${acqua}Downloading backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}${NC}"
 	_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
 	if_failed_error "Error Downloading backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 }
@@ -6718,7 +6718,7 @@ provider_pull_pantheon_init ()
 		if_failed_error "Error getting latest tag for ${HOSTING_ENV} on Pantheon repo"
 	fi
 
-	echo-yellow "Cloning Pantheon Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
+	echo -e "${acqua}Cloning Pantheon Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
 	# Run git clone and checkout the provided branch.
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
 	if_failed_error "Error cloning Pantheon project ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
@@ -6731,7 +6731,7 @@ provider_pull_pantheon_files ()
 	# Get the SFTP Hostname from Site's Info.
 	local host_url=$(_exec -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
 	if_failed_error "Could not communicate with Pantheon. Check connection and SECRET_TERMINUS_TOKEN is set to an active token."
-	echo-yellow "Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Pantheon"
+	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Pantheon${NC}"
 	# Execute a rsync using Pantheon recommended Options.
 	_exec rsync \
 		-rvlz \
@@ -6756,12 +6756,12 @@ provider_pull_pantheon_db ()
 	if_failed_error "Error retrieving list of backups from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
 		# If last backup does not exist or is older than 24 hours create new one.
-		echo-yellow "Creating new backup on Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
+		echo -e "${acqua}Creating new backup on Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
 		_exec terminus backup:create ${HOSTING_SITE}.${HOSTING_ENV} --element=db
 		if_failed_error "Error creating backup on Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 	fi
 	# Download backup with Terminus to given location.
-	echo-yellow "Downloading database backup from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
+	echo -e "${acqua}Downloading database backup from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
 	_exec terminus backup:get "${HOSTING_SITE}"."${HOSTING_ENV}" --element="db" --to="${db_file}"
 	if_failed_error "Error Downloading backup from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 }
@@ -6797,7 +6797,7 @@ provider_pull_platformsh_init ()
 {
 	# If HOSTING_ENV isn't set use master as default.
 	HOSTING_ENV=${HOSTING_ENV:-master}
-	echo-yellow "Cloning Platform.sh Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
+	echo -e "${acqua}Cloning Platform.sh Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
 	run_cli "platform project:get -q --environment=${HOSTING_ENV} ${HOSTING_SITE} ${project_directory}"
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
 }
@@ -6807,7 +6807,7 @@ provider_pull_platformsh_files ()
 {
 	local host_url=$(_exec "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
-	echo-yellow "Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Platform.sh"
+	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Platform.sh${NC}"
 	_exec rsync \
 		-rvlz \
 		--copy-unsafe-links \
@@ -6824,7 +6824,7 @@ provider_pull_platformsh_files ()
 # Pull process to pull db from Platform.sh
 provider_pull_platformsh_db ()
 {
-	echo-yellow "Downloading database backup from Platform.sh for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
+	echo -e "${acqua}Downloading database backup from Platform.sh for ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
 	_exec "platform db:dump -p ${HOSTING_SITE} -e ${HOSTING_ENV} --gzip -f ${db_file}"
 	if_failed_error "Error Downloading backup from Platform.sh for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 }
@@ -6849,7 +6849,7 @@ provider_pull_drush_init ()
 		exit 1
 	fi
 	local repo_checkout=${ARGV[3]:-"master"}
-	echo-yellow "Cloning Drush Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
+	echo -e "${acqua}Cloning Drush Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
 	if_failed_error "Could not communicate with Drush site repo. Check connection and try again."
 }
@@ -6874,11 +6874,11 @@ provider_pull_drush_files ()
 provider_pull_drush_db ()
 {
 	# Execute drush sql-dump on remote host and exclude cache, session, watchdog tables.
-	echo-yellow "Creating database export for @${HOSTING_SITE}.${HOSTING_ENV}"
+	echo -e "${acqua}Creating database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
 	_exec drush @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_file}"
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to create database export"
 	# RSYNC database file locally and delete the source.
-	echo-yellow "Downloading database export for @${HOSTING_SITE}.${HOSTING_ENV}"
+	echo -e "${acqua}Downloading database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
 	_exec drush rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_file} ${db_file} --remove-source-files
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to download database export"
 }
@@ -6902,7 +6902,7 @@ provider_pull_wp_init ()
 		exit 1
 	fi
 	local repo_checkout=${ARGV[3]:-"master"}
-	echo-yellow "Cloning WP Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
+	echo -e "${acqua}Cloning WP Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
 	if_failed_error "Could not communicate with WP site repo. Check connection and try again."
 }
@@ -6910,7 +6910,7 @@ provider_pull_wp_init ()
 # Pull db from provider using the wp db export function.
 provider_pull_wp_db ()
 {
-	echo-yellow "Downloading database export for @${HOSTING_SITE}"
+	echo -e "${acqua}Downloading database export for @${HOSTING_SITE}${NC}"
 	_exec "wp @${HOSTING_SITE} db export --add-drop-table - | gzip > ${db_file}"
 	if_failed_error "Error accessing WordPress Site @${HOSTING_SITE} to create database export"
 }
