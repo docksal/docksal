@@ -6355,9 +6355,8 @@ provider_pull ()
 
 	HOSTING_PLATFORM=$(echo ${HOSTING_PLATFORM} | tr '[:upper:]' '[:lower:]')
 
-	# Check to see if a support platform is accepted.
-	if [[ "${HOSTING_PLATFORM}" != "acquia" ]] && [[ "${HOSTING_PLATFORM}" != "pantheon" ]] && [[ "${HOSTING_PLATFORM}" != "platformsh" ]] &&
-		[[ "${HOSTING_PLATFORM}" != "drush" ]] && [[ "${HOSTING_PLATFORM}" != "wp" ]]; then
+	# Check to see if a support platform is supported.
+	if [[ " acquia pantheon platformsh drush wp " != *" ${HOSTING_PLATFORM} "* ]]; then
 		echo-error "Only the following platforms are supported: Acquia (acquia), Pantheon (pantheon), Platform.sh (platformsh), Drupal (drush), and WordPress (wp)."
 		exit 1
 	fi
