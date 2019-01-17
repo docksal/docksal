@@ -6444,6 +6444,7 @@ provider_pull_code ()
 {
 	echo-green "Pulling code"
 	provider_pull_find_function ${HOSTING_PLATFORM} 'code' 1
+	if_failed_error "Error pulling code from ${HOSTING_PLATFORM}."
 	echo-green "Code Pull Successful"
 }
 
@@ -6561,7 +6562,7 @@ provider_pull_generic_git_pull ()
 	local current_branch=$(_exec "git rev-parse --abbrev-ref HEAD" | tr -d '\r')
 	local git_branch=${SYNC_GIT_BRANCH:-$current_branch}
 	echo -e "${acqua}Pulling Code From ${git_remote} - ${git_branch}${NC}"
-	_exec "git pull -q ${git_remote} ${git_branch}"
+	_exec "git pull -q ${git_remote} ${git_branch}" 2>/dev/null
 	if_failed_error "Error Pulling Code from ${git_remote} - ${git_branch}"
 }
 
@@ -6569,12 +6570,13 @@ provider_pull_generic_git_pull ()
 provider_pull_generic_drush_rsync ()
 {
 	echo -e "${acqua}Downloading files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
-	[[ ! -d ${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} ]] && mkdir -p ${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} > /dev/null
-	_exec "drush -y rsync \
+	local rsync_files_dir="/var/www/${DOCROOT}/${FILES_DIR}"
+	_confirm "The following will delete all files within the files directory, Continue?"
+	_exec "drush -q -y rsync \
 		@${HOSTING_SITE}.${HOSTING_ENV}:%files \
-		${PROJECT_ROOT}/${DOCROOT}/${FILES_DIR} \
+		${rsync_files_dir} \
 		--delete \
-		${rsync_options}"
+		${rsync_options}" 2>/dev/null
 	if_failed_error "Error Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 }
 
@@ -6609,9 +6611,9 @@ provider_pull_acquia_init ()
 	local repo_checkout=$(run_cli -e COLUMNS="200" "drush -q acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${HOSTING_ENV} info."
 
-	echo-yellow "Cloning Acquia Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
+	echo -e "${acqua}Cloning Acquia Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
 	# Run a git clone to get the specific repo.
-	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
+	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}" 2>/dev/null
 	if_failed_error "Error cloning Acquia Project."
 }
 
@@ -6727,12 +6729,13 @@ provider_pull_pantheon_init ()
 # Need to run a custom rsync command as every environment is different.
 provider_pull_pantheon_files ()
 {
+	_confirm "The following will delete all files within the files directory, Continue?"
 	# Get the SFTP Hostname from Site's Info.
 	local host_url=$(_exec -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
 	if_failed_error "Could not communicate with Pantheon. Check connection and SECRET_TERMINUS_TOKEN is set to an active token."
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Pantheon${NC}"
 	# Execute a rsync using Pantheon recommended Options.
-	_exec rsync \
+	_exec "rsync \
 		-rvlz \
 		--copy-unsafe-links \
 		--size-only \
@@ -6742,7 +6745,7 @@ provider_pull_pantheon_files ()
 		${host_url}:files/ \
 		/var/www/${DOCROOT}/${FILES_DIR} \
 		--delete \
-		${rsync_options}
+		${rsync_options}" 2>/dev/null
 	if_failed_error "Could not rsync files from Pantheon. Confirm that SSH Key has been added to Pantheon account and added to Docksal SSH-Agent."
 }
 
@@ -6804,10 +6807,11 @@ provider_pull_platformsh_init ()
 # Pull process to pull files from Platform.sh
 provider_pull_platformsh_files ()
 {
+	_confirm "The following will delete all files within the files directory, Continue?"
 	local host_url=$(_exec "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Platform.sh${NC}"
-	_exec rsync \
+	_exec "rsync \
 		-rvlz \
 		--copy-unsafe-links \
 		--size-only \
@@ -6816,7 +6820,7 @@ provider_pull_platformsh_files ()
 		${host_url}:/app/${DOCROOT}/${FILES_DIR} \
 		/var/www/${DOCROOT}/${FILES_DIR} \
 		--delete \
-		${rsync_options}
+		${rsync_options}" 2>/dev/null
 	if_failed_error "Could not rsync files from Platform.sh. Confirm that SSH Key has been added to Platform.sh account and added to Docksal SSH-Agent."
 }
 
