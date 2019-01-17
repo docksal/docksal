@@ -6362,7 +6362,7 @@ provider_pull ()
 	fi
 
 	# Run some checks before continuing.
-	provider_pull_find_function ${HOSTING_PLATFORM} 'check'
+	provider_pull_find_function ${HOSTING_PLATFORM} 'precheck'
 
 	echo-green "Starting provider pull for ${HOSTING_PLATFORM}"
 
@@ -6372,9 +6372,6 @@ provider_pull ()
 		provider_pull_init
 		return
 	fi
-
-	# Check to see if providers require anything else.
-	provider_pull_find_function ${HOSTING_PLATFORM} 'precheck'
 
 	# Execute a Pull On Code.
 	if [[ "${ARGV[0]}" == "code" ]] || [[ "${ARGV[0]}" == "" ]]; then
@@ -6411,7 +6408,7 @@ provider_pull_init ()
 	echo-green "Pulling code complete."
 
 	# Change into the project directory.
-	cd ${project_directory}
+	cd "${project_directory}"
 
 	# Check to see if .docksal directory exists.
 	if [[ ! -d .docksal ]]; then
@@ -6586,17 +6583,17 @@ provider_pull_generic_drush_rsync ()
 #############################
 
 # Check to see if acquia keys have been set.
-provider_pull_acquia_check ()
+provider_pull_acquia_precheck ()
 {
 	if [[ -z "${SECRET_ACAPI_EMAIL}" ]] || [[ -z "${SECRET_ACAPI_KEY}" ]]; then
 		echo-error "SECRET_ACAPI_EMAIL and SECRET_ACAPI_KEY must be set in order to work with Acquia."
 		exit 1;
 	fi
-}
 
-# Use Generic Precheck function to makes sure env is set.
-provider_pull_acquia_precheck ()
-{
+	if [[ "${ARGV[0]}" == "init" ]] then;
+		return;
+	fi
+
 	provider_pull_precheck
 }
 
@@ -6687,12 +6684,18 @@ provider_pull_acquia_code ()
 ###############################
 
 # Check to see if tokens are set correctly.
-provider_pull_pantheon_check ()
+provider_pull_pantheon_precheck ()
 {
 	if [[ -z "${SECRET_TERMINUS_TOKEN}" ]]; then
 		echo-error "SECRET_TERMINUS_TOKEN must be set in order to work with Pantheon."
 		exit 1;
 	fi
+
+	if [[ "${ARGV[0]}" == "init" ]] then;
+		return;
+	fi
+
+	provider_pull_precheck
 }
 
 # Init process to pull code from Pantheon
@@ -6718,12 +6721,6 @@ provider_pull_pantheon_init ()
 	# Run git clone and checkout the provided branch.
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
 	if_failed_error "Error cloning Pantheon project ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
-}
-
-# Use Generic Precheck function to makes sure env is set.
-provider_pull_pantheon_precheck ()
-{
-	provider_pull_precheck
 }
 
 # Pull process to pull files from Pantheon.
@@ -6780,12 +6777,18 @@ provider_pull_pantheon_code ()
 ##################################
 
 # Check to see if tokens are set correctly.
-provider_pull_platformsh_check ()
+provider_pull_platformsh_precheck ()
 {
 	if [[ -z "${SECRET_PLATFORMSH_CLI_TOKEN}" ]]; then
 		echo-error "SECRET_PLATFORMSH_CLI_TOKEN must be set in order to work with Platform.sh."
 		exit 1
 	fi
+
+	if [[ "${ARGV[0]}" == "init" ]] then;
+		return;
+	fi
+
+	provider_pull_precheck
 }
 
 # Init process to pull code from Platform.sh
@@ -6796,12 +6799,6 @@ provider_pull_platformsh_init ()
 	echo-yellow "Cloning Platform.sh Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
 	run_cli "platform project:get -q --environment=${HOSTING_ENV} ${HOSTING_SITE} ${project_directory}"
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
-}
-
-# Use Generic Precheck function to makes sure env is set.
-provider_pull_platformsh_precheck ()
-{
-	provider_pull_precheck
 }
 
 # Pull process to pull files from Platform.sh
@@ -6859,6 +6856,10 @@ provider_pull_drush_init ()
 # Use Generic Precheck function to makes sure env is set.
 provider_pull_drush_precheck ()
 {
+	if [[ "${ARGV[0]}" == "init" ]] then;
+		return;
+	fi
+
 	provider_pull_precheck
 }
 
