@@ -5778,6 +5778,7 @@ config_generate ()
 			done
 		fi
 	fi
+
 	# Add DOCROOT to docksal.env file
 	echo "DOCROOT=${DOCROOT}" >> ".docksal/docksal.env"
 	# Create a basic docroot and index.php if not present
