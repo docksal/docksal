@@ -6590,7 +6590,7 @@ provider_pull_acquia_precheck ()
 		exit 1;
 	fi
 
-	if [[ "${ARGV[0]}" == "init" ]] then;
+	if [[ "${ARGV[0]}" == "init" ]]; then
 		return;
 	fi
 
@@ -6691,7 +6691,7 @@ provider_pull_pantheon_precheck ()
 		exit 1;
 	fi
 
-	if [[ "${ARGV[0]}" == "init" ]] then;
+	if [[ "${ARGV[0]}" == "init" ]]; then
 		return;
 	fi
 
@@ -6784,7 +6784,7 @@ provider_pull_platformsh_precheck ()
 		exit 1
 	fi
 
-	if [[ "${ARGV[0]}" == "init" ]] then;
+	if [[ "${ARGV[0]}" == "init" ]]; then
 		return;
 	fi
 
@@ -6856,7 +6856,7 @@ provider_pull_drush_init ()
 # Use Generic Precheck function to makes sure env is set.
 provider_pull_drush_precheck ()
 {
-	if [[ "${ARGV[0]}" == "init" ]] then;
+	if [[ "${ARGV[0]}" == "init" ]]; then
 		return;
 	fi
 
