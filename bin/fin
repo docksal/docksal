@@ -6358,6 +6358,10 @@ set_project_root_permissions ()
 # $HOSTING_ENV - the env id on the hosting platform for the site.
 provider_pull ()
 {
+	# Set Columns to 200 so text wouldn't
+	# get cut off when testing in CI.
+	COLUMNS=200
+
 	eval $(parse_params "$@")
 	if [[ "${HOSTING_PLATFORM}" == "" || "${HOSTING_SITE}" == ""  ]]; then
 		echo-error "Hosting Provider not set up. Following variables must be set: HOSTING_PLATFORM and HOSTING_SITE"
@@ -6573,7 +6577,7 @@ provider_pull_generic_git_pull ()
 	local current_branch=$(_exec "git rev-parse --abbrev-ref HEAD" | tr -d '\r')
 	local git_branch=${SYNC_GIT_BRANCH:-$current_branch}
 	echo -e "${acqua}Pulling Code From ${git_remote} - ${git_branch}${NC}"
-	_exec "git pull -q ${git_remote} ${git_branch}" 2>/dev/null
+	_exec -T "git pull -q ${git_remote} ${git_branch} 2>/dev/null"
 	if_failed_error "Error Pulling Code from ${git_remote} - ${git_branch}"
 }
 
@@ -6588,7 +6592,7 @@ provider_pull_generic_drush_rsync ()
 		@${HOSTING_SITE}.${HOSTING_ENV}:%files \
 		${rsync_files_dir} \
 		--delete \
-		${rsync_options}" 2>/dev/null
+		${rsync_options} 2>/dev/null"
 	if_failed_error "Error Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 }
 
@@ -6604,7 +6608,7 @@ provider_pull_generic_init ()
 	fi
 	local repo_checkout=${2:-"master"}
 	echo -e "${acqua}Cloning Drush Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
-	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}" > /dev/null
+	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory} 2>/dev/null"
 	if_failed_error "Error Cloning Repo"
 }
 
@@ -6766,12 +6770,12 @@ provider_pull_pantheon_files ()
 	_confirm "The following will delete all files within the files directory, Continue?"
 	# Get the SFTP Hostname from Site's Info.
 	local host_url
-	host_url=$(_exec -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
+	host_url=$(_exec -T "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
 	if_failed_error "Could not communicate with Pantheon. Check connection and SECRET_TERMINUS_TOKEN is set to an active token."
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Pantheon${NC}"
 	# Execute a rsync using Pantheon recommended Options.
 	_exec "rsync \
-		-rvlz \
+		-rlz \
 		--copy-unsafe-links \
 		--size-only \
 		--ipv4 \
@@ -6780,7 +6784,7 @@ provider_pull_pantheon_files ()
 		${host_url}:files/ \
 		/var/www/${DOCROOT}/${FILES_DIR} \
 		--delete \
-		${rsync_options}" 2>/dev/null
+		${rsync_options} 2>/dev/null"
 	if_failed_error "Could not rsync files from Pantheon. Confirm that SSH Key has been added to Pantheon account and added to Docksal SSH-Agent."
 }
 
@@ -6790,7 +6794,7 @@ provider_pull_pantheon_db ()
 {
 	# Get Time of Last Backup In Pantheon.
 	local last_backup
-	last_backup=$(_exec -e COLUMNS="200" terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1)
+	last_backup=$(_exec -T "terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1")
 	if_failed_error "Error retrieving list of backups from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
 		# If last backup does not exist or is older than 24 hours create new one.
@@ -6845,11 +6849,11 @@ provider_pull_platformsh_files ()
 {
 	_confirm "The following will delete all files within the files directory, Continue?"
 	local host_url
-	host_url=$(_exec "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
+	host_url=$(_exec -T "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Platform.sh${NC}"
-	_exec "rsync \
-		-rvlz \
+	_exec -T "rsync \
+		-rlz \
 		--copy-unsafe-links \
 		--size-only \
 		--ipv4 \
@@ -6857,7 +6861,7 @@ provider_pull_platformsh_files ()
 		${host_url}:/app/${DOCROOT}/${FILES_DIR} \
 		/var/www/${DOCROOT}/${FILES_DIR} \
 		--delete \
-		${rsync_options}" 2>/dev/null
+		${rsync_options} 2>/dev/null"
 	if_failed_error "Could not rsync files from Platform.sh. Confirm that SSH Key has been added to Platform.sh account and added to Docksal SSH-Agent."
 }
 
