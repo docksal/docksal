@@ -6471,7 +6471,10 @@ provider_pull_code ()
 # $1 - database name to connect to
 provider_pull_db ()
 {
-	_confirm "Existing database will be truncated, Continue?"
+	if [[ "$y" != "y" && "$yes" != "yes" ]]; then
+		_confirm "Existing database will be truncated, Continue?"
+	fi
+
 	echo-green "Pulling DB"
 
 	# Variables to set for local use.
@@ -6479,10 +6482,8 @@ provider_pull_db ()
 	local __db_password="${DBPASS:-root}"
 	local __db_database="${DBNAME:-default}"
 
-	# Set the default db_name just incase we need to cache this for Acquia or other providers.
-	local __db_database=${ARGV[1]:-${__db_database}}
 	# Set the db file that will be stored within the cli container
-	local db_file="/tmp/${db_name}.${HOSTING_ENV}.${HOSTING_SITE}.sql.gz"
+	local db_file="/tmp/${__db_database}.${HOSTING_ENV}.${HOSTING_SITE}.sql.gz"
 	# Check to see if the file exists in the cli container
 	local file_exists=$(_exec "ls -1 /tmp/**  2> /dev/null | grep \"${db_file}\"\$ | wc -l | tr -d '[:space:]'")
 	# Get the time of that file within the cli container.
@@ -6521,6 +6522,9 @@ provider_pull_db ()
 # Used specifically for pulling the db from a provider.
 provider_pull_files ()
 {
+	if [[ "$y" != "y" && "$yes" != "yes" ]]; then
+		_confirm "The following will delete all files within the files directory, Continue?"
+	fi
 	echo -e "${acqua}Pulling Files...${NC}"
 
 	# Default directory for Drupal Files.
@@ -6587,7 +6591,6 @@ provider_pull_generic_drush_rsync ()
 	echo -e "${acqua}Downloading files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
 	local rsync_files_dir
 	rsync_files_dir="/var/www/${DOCROOT}/${FILES_DIR}"
-	_confirm "The following will delete all files within the files directory, Continue?"
 	_exec "drush -q -y rsync \
 		@${HOSTING_SITE}.${HOSTING_ENV}:%files \
 		${rsync_files_dir} \
@@ -6767,7 +6770,6 @@ provider_pull_pantheon_init ()
 # Need to run a custom rsync command as every environment is different.
 provider_pull_pantheon_files ()
 {
-	_confirm "The following will delete all files within the files directory, Continue?"
 	# Get the SFTP Hostname from Site's Info.
 	local host_url
 	host_url=$(_exec -T "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
@@ -6847,7 +6849,6 @@ provider_pull_platformsh_init ()
 # Pull process to pull files from Platform.sh
 provider_pull_platformsh_files ()
 {
-	_confirm "The following will delete all files within the files directory, Continue?"
 	local host_url
 	host_url=$(_exec -T "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
