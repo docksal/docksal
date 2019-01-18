@@ -88,7 +88,7 @@ teardown() {
 	unset output
 
 	# Test Pull All
-	run fin pull
+	run fin pull ${BUILD_ACQUIA_SITE}
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
