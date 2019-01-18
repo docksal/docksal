@@ -6658,7 +6658,7 @@ provider_pull_acquia_files ()
 provider_pull_acquia_db ()
 {
 	# Update Acquia Drush Aliases in container.
-	_exec drush acquia-update
+	_exec drush -q acquia-update
 
 	# TODO: Allow for all databases to be downloaded. drush ac-database-list will list all databases for a site.
 	# Following will grab all databases for a site.
