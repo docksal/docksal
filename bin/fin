@@ -6872,6 +6872,7 @@ provider_pull_platformsh_db ()
 # Pull process to pull code from Platform.sh.
 provider_pull_platformsh_code ()
 {
+	SYNC_GIT_REMOTE=${SYNC_GIT_REMOTE:-"platform"}
 	# Execute a generic git pull on code.
 	provider_pull_generic_git_pull
 }
