@@ -6345,6 +6345,17 @@ set_project_root_permissions ()
 }
 
 # Pull main command for interacting with Hosting Providers.
+# $1 - action to run (init, db, files, code)
+# $2 -
+#	- project directory (when ran with init)
+#	- db name (when ran in with Acquia DB pull)
+# $3 -
+#	- git url (when ran in with Drush / WP init)
+# $4 -
+#	- git branch (when ran in with Drush / WP init)
+# $HOSTING_PLATFORM - the hosting platform name.
+# $HOSTING_SITE - the site id on the hosting platform.
+# $HOSTING_ENV - the env id on the hosting platform for the site.
 provider_pull ()
 {
 	eval $(parse_params "$@")
@@ -6393,6 +6404,9 @@ provider_pull ()
 
 # Provider Pull Init Subcommand
 # Used specifically for pulling the repo from a provider.
+# $1 - directory to clone the repo into
+# $2 - git repo url (optional)
+# $3 - git branch url (optional)
 provider_pull_init ()
 {
 	echo-green "Starting Pull Init Process."
@@ -6428,7 +6442,7 @@ provider_pull_init ()
 	fi
 }
 
-# Generic Precheck function to check if HOSTING_ENV variable is set.
+# Generic Precheck function to check if ${HOSTING_ENV} variable is set.
 provider_pull_precheck ()
 {
 	# After Init Process Let's Check to Make sure HOSTING_ENV has been set.
@@ -6450,6 +6464,7 @@ provider_pull_code ()
 
 # Provider Pull DB Subcommand
 # Used specifically for pulling the db from a provider.
+# $1 - database name to connect to
 provider_pull_db ()
 {
 	_confirm "Existing database will be truncated, Continue?"
@@ -6461,7 +6476,7 @@ provider_pull_db ()
 	local __db_database="${DBNAME:-default}"
 
 	# Set the default db_name just incase we need to cache this for Acquia or other providers.
-	local db_name=${ARGV[1]:-"default"}
+	local __db_database=${ARGV[1]:-${__db_database}}
 	# Set the db file that will be stored within the cli container
 	local db_file="/tmp/${db_name}.${HOSTING_ENV}.${HOSTING_SITE}.sql.gz"
 	# Check to see if the file exists in the cli container
@@ -6529,6 +6544,11 @@ provider_pull_files ()
 ##############################
 
 # Generic function for searching if function exists and executing.
+# Searches for a function that is in the format of provider_pull_${PROVIDER}_${ACTION}
+# $1 - the provider machine name to check
+# $2 - the action to perform for the provider (Examples db, files, code)
+# $3 - any value to indicate this function is required to exist
+# $4 - the message to display if this function cannot be found
 provider_pull_find_function ()
 {
 	# Providers name to attach to function.
@@ -6555,7 +6575,7 @@ provider_pull_find_function ()
 	fi
 }
 
-# Runs a git pull on the project.
+# Runs a git pull on the project repo.
 provider_pull_generic_git_pull ()
 {
 	local git_remote=${SYNC_GIT_REMOTE:-origin}
@@ -6928,6 +6948,9 @@ provider_pull_wp_code ()
 # Execute specific functions if they exist within the hooks directory.
 # Examples could be hook_init_pre or hook_db_import.
 # Specifically look for hooks to run pre and post actions.
+# Checks project and global .docksal/hooks directory for either a single hook file for specific functions
+# or checks for individual files that are the hook name.
+# $1 - name of the hook to search for
 execute_hook ()
 {
 	local HOOK=$1
