@@ -6563,16 +6563,7 @@ provider_pull_find_function ()
 	# Check for help function for specific command
 	local pull_function="provider_pull_${provider}_${action}"
 	type "${pull_function}" >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		# Execute function if found
-		${pull_function}
-	else
-		# If this was required and not found execute error message.
-		if [[ -n $required ]]; then
-			echo-error ${required_message}
-			exit 1
-		fi
-	fi
+	[[ $? -eq 0 ]] && ${pull_function} || ( [[ -n $required ]] && echo "${required_message}" )
 }
 
 # Runs a git pull on the project repo.
@@ -6590,7 +6581,8 @@ provider_pull_generic_git_pull ()
 provider_pull_generic_drush_rsync ()
 {
 	echo -e "${acqua}Downloading files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
-	local rsync_files_dir="/var/www/${DOCROOT}/${FILES_DIR}"
+	local rsync_files_dir
+	rsync_files_dir="/var/www/${DOCROOT}/${FILES_DIR}"
 	_confirm "The following will delete all files within the files directory, Continue?"
 	_exec "drush -q -y rsync \
 		@${HOSTING_SITE}.${HOSTING_ENV}:%files \
@@ -6598,6 +6590,22 @@ provider_pull_generic_drush_rsync ()
 		--delete \
 		${rsync_options}" 2>/dev/null
 	if_failed_error "Error Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
+}
+
+# Generic Git Clone for Init Function
+# $1 - git repo to clone
+# $2 - repo branch to checkout
+provider_pull_generic_init ()
+{
+	local repo_url="$1"
+	if [[ -z "${repo_url}" ]]; then
+		echo-error "Repository URL required for Drush Project to init."
+		exit 1
+	fi
+	local repo_checkout=${2:-"master"}
+	echo -e "${acqua}Cloning Drush Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
+	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}" > /dev/null
+	if_failed_error "Error Cloning Repo"
 }
 
 #############################
@@ -6624,11 +6632,13 @@ provider_pull_acquia_init ()
 {
 	# Set HOSTING_ENV to dev if none are set.
 	HOSTING_ENV=${HOSTING_ENV:-dev}
-	# Get the repo url for the specific environment.
-	local repo_url=$(run_cli -e COLUMNS="200" "drush -q acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
+	# Get the repo url for the specific environment.provider_pull_platformsh_files
+	local repo_url
+	repo_url=$(run_cli -e COLUMNS="200" "drush -q acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
-	local repo_checkout=$(run_cli -e COLUMNS="200" "drush -q acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	local repo_checkout
+	repo_checkout=$(run_cli -e COLUMNS="200" "drush -q acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${HOSTING_ENV} info."
 
 	echo -e "${acqua}Cloning Acquia Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
@@ -6660,11 +6670,13 @@ provider_pull_acquia_db ()
 		exit 1
 	fi
 
-	local query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name});
+	local query
+	query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name});
 	if_failed_error "Error retrieving list of backups from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 
 	# Returns timestamp of last backup. Need to convert to
-	local last_date=$(printf "${query}" | grep started | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
+	local last_date
+	last_date=$(printf "${query}" | grep started | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	if [[ "${last_date}" != "" ]]; then
 		# Convert Date To Y-m-d H:m:s format
 		last_date=$(_exec date --date=@${last_date} "+%Y-%m-%d %H:%M:%S")
@@ -6727,7 +6739,9 @@ provider_pull_pantheon_init ()
 	HOSTING_ENV=${HOSTING_ENV:-dev}
 	# Set the BRANCH to be what the HOSTING_ENV is.
 	local repo_checkout=${HOSTING_ENV}
-	local repo_url=$(run_cli -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.dev --field=\"Git Command\" | awk '{print \$3}'")
+	# The URL for the repo to clone.
+	local repo_url
+	repo_url=$(run_cli -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.dev --field=\"Git Command\" | awk '{print \$3}'")
 	if_failed_error "Error retrieving Git URL from Pantheon"
 
 	if [[ "${HOSTING_ENV}" == 'dev' ]]; then
@@ -6751,7 +6765,8 @@ provider_pull_pantheon_files ()
 {
 	_confirm "The following will delete all files within the files directory, Continue?"
 	# Get the SFTP Hostname from Site's Info.
-	local host_url=$(_exec -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
+	local host_url
+	host_url=$(_exec -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
 	if_failed_error "Could not communicate with Pantheon. Check connection and SECRET_TERMINUS_TOKEN is set to an active token."
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Pantheon${NC}"
 	# Execute a rsync using Pantheon recommended Options.
@@ -6774,7 +6789,8 @@ provider_pull_pantheon_files ()
 provider_pull_pantheon_db ()
 {
 	# Get Time of Last Backup In Pantheon.
-	local last_backup=$(_exec -e COLUMNS="200" terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1)
+	local last_backup
+	last_backup=$(_exec -e COLUMNS="200" terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1)
 	if_failed_error "Error retrieving list of backups from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
 		# If last backup does not exist or is older than 24 hours create new one.
@@ -6828,7 +6844,8 @@ provider_pull_platformsh_init ()
 provider_pull_platformsh_files ()
 {
 	_confirm "The following will delete all files within the files directory, Continue?"
-	local host_url=$(_exec "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
+	local host_url
+	host_url=$(_exec "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Platform.sh${NC}"
 	_exec "rsync \
@@ -6866,14 +6883,7 @@ provider_pull_platformsh_code ()
 # Execute a generic git clone on the provided.
 provider_pull_drush_init ()
 {
-	local repo_url="${ARGV[2]}"
-	if [[ -z "${repo_url}" ]]; then
-		echo-error "Repository URL required for Drush Project to init."
-		exit 1
-	fi
-	local repo_checkout=${ARGV[3]:-"master"}
-	echo -e "${acqua}Cloning Drush Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
-	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
+	provider_pull_generic_init "${ARGV[2]}" "${ARGV[3]}"
 	if_failed_error "Could not communicate with Drush site repo. Check connection and try again."
 }
 
@@ -6919,14 +6929,7 @@ provider_pull_drush_code ()
 # Execute a generic git clone on the provided.
 provider_pull_wp_init ()
 {
-	local repo_url="${ARGV[2]}"
-	if [[ -z "${repo_url}" ]]; then
-		echo-error "Repository URL required for WP Project to init."
-		exit 1
-	fi
-	local repo_checkout=${ARGV[3]:-"master"}
-	echo -e "${acqua}Cloning WP Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
-	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
+	provider_pull_generic_init "${ARGV[2]}" "${ARGV[3]}"
 	if_failed_error "Could not communicate with WP site repo. Check connection and try again."
 }
 
