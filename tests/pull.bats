@@ -11,17 +11,11 @@ teardown() {
 	echo "================================================================"
 }
 
-# Add project_key to SSH Agent.
-[[ "$TRAVIS" == "true" ]] && fin ssh-key add project_key
-
-# Test interacting with Providers
-@test "fin pull: acquia" {
+@test "fin pull init: acquia" {
 	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd ${TRAVIS_BUILD_DIR}/../test-pull
-	fin config set --global "SECRET_ACAPI_EMAIL=${BUILD_ACAPI_EMAIL}"
-	fin config set --global "SECRET_ACAPI_KEY=${BUILD_ACAPI_TOKEN}"
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-site
@@ -31,7 +25,17 @@ teardown() {
 	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
 
-	cd acquia-site
+	# Clean up
+	fin rm -f
+	rm -rf acquia-site
+}
+
+@test "fin pull code: acquia" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-site
 	fin start
 
 	# Test Pull Code
@@ -42,7 +46,18 @@ teardown() {
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	unset output
 
-	# Test Pull DB
+	# Clean up
+	fin rm -f
+	rm -rf acquia-site
+}
+
+@test "fin pull db: acquia" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-site
+	fin start
 
 	## Test Acquia Pull without db name
 	run fin pull db
@@ -62,6 +77,19 @@ teardown() {
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
 
+	# Clean up
+	fin rm -f
+	rm -rf acquia-site
+}
+
+@test "fin pull db cached: acquia" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-site
+	fin start
+
 	## Test Acquia Pull with Cached Version
 	run fin pull db ${BUILD_ACQUIA_SITE}
 	[[ "$status" == 0 ]]
@@ -69,6 +97,19 @@ teardown() {
 	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
+
+	# Clean up
+	fin rm -f
+	rm -rf acquia-site
+}
+
+@test "fin pull db force flag: acquia" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-site
+	fin start
 
 	## Test Acquia Pull with --FORCE flag
 	run fin pull db ${BUILD_ACQUIA_SITE} --FORCE
@@ -79,6 +120,19 @@ teardown() {
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
 
+	# Clean up
+	fin rm -f
+	rm -rf acquia-site
+}
+
+@test "fin pull files: acquia" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-site
+	fin start
+
 	# Test Pull Files
 	run fin pull files
 	[[ "$status" == 0 ]]
@@ -86,6 +140,19 @@ teardown() {
 	[[ "${output}" =~ "Downloading files from" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
+
+	# Clean up
+	fin rm -f
+	rm -rf acquia-site
+}
+
+@test "fin pull all: acquia" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-site
+	fin start
 
 	# Test Pull All
 	run fin pull ${BUILD_ACQUIA_SITE}
@@ -96,17 +163,16 @@ teardown() {
 	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
 
-	# Cleanup
+	# Clean up
 	fin rm -f
-	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	rm -rf acquia-site
 }
 
-@test "fin pull: pantheon" {
+@test "fin pull init: pantheon" {
 	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd ${TRAVIS_BUILD_DIR}/../test-pull
-	fin config set --global "SECRET_TERMINUS_TOKEN=${BUILD_TERMINUS_TOKEN}"
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=pantheon --HOSTING_SITE=${BUILD_PANTHEON_SITE} --HOSTING_ENV=${BUILD_PANTHEON_ENV} pantheon-site
@@ -115,27 +181,80 @@ teardown() {
 	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
 
-	cd pantheon-site
+	# Clean up
+	fin rm -f
+	rm -rf platformsh-site
+}
+
+@test "fin pull code: pantheon" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=pantheon --HOSTING_SITE=${BUILD_PANTHEON_SITE} --HOSTING_ENV=${BUILD_PANTHEON_ENV} pantheon-site
 	fin start
 
 	# Test Pull Code
 	run fin pull code
 	[[ $status == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
-	[[ "${output}" =~ "Pulling Code" ]]
+	[[ "${output}" =~ "Pulling code" ]]
+	[[ "${output}" =~ "Code Pull Successful" ]]
 	unset output
+
+	# Clean up
+	fin rm -f
+	rm -rf pantheon-site
+}
+
+@test "fin pull db: pantheon" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=pantheon --HOSTING_SITE=${BUILD_PANTHEON_SITE} --HOSTING_ENV=${BUILD_PANTHEON_ENV} pantheon-site
+	fin start
 
 	# Test Pull DB
 	run fin pull db
 	[[ $status == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
+	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
+
+	# Clean up
+	fin rm -f
+	rm -rf pantheon-site
+}
+
+@test "fin pull files: pantheon" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=pantheon --HOSTING_SITE=${BUILD_PANTHEON_SITE} --HOSTING_ENV=${BUILD_PANTHEON_ENV} pantheon-site
+	fin start
 
 	# Test Pull Files
 	run fin pull files
 	[[ $status == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
+	[[ "${output}" =~ "Downloading files from" ]]
+	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
+
+	# Clean up
+	fin rm -f
+	rm -rf pantheon-site
+}
+
+@test "fin pull all: pantheon" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=pantheon --HOSTING_SITE=${BUILD_PANTHEON_SITE} --HOSTING_ENV=${BUILD_PANTHEON_ENV} pantheon-site
+	fin start
 
 	# Test Pull All
 	run fin pull
@@ -146,16 +265,16 @@ teardown() {
 	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
 
-	# Cleanup
+	# Clean up
 	fin rm -f
+	rm -rf pantheon-site
 }
 
-@test "fin pull: platform.sh" {
+@test "fin pull init: platform.sh" {
 	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd ${TRAVIS_BUILD_DIR}/../test-pull
-	fin config set --global "SECRET_PLATFORMSH_CLI_TOKEN=${BUILD_PLATFORMSH_CLI_TOKEN}"
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=platformsh --HOSTING_SITE=${BUILD_PLATFORMSH_SITE} --HOSTING_ENV=${BUILD_PLATFORMSH_ENV} platformsh-site
@@ -164,139 +283,91 @@ teardown() {
 	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
 
-	cd platformsh-site
-	fin start
-
-	# Test Pull Code
-	run fin pull code
-	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
-	[[ "${output}" =~ "Pulling Code" ]]
-	unset output
-
-	# Test Pull DB
-	run fin pull db
-	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
-	unset output
-
-	# Test Pull Files
-	run fin pull files
-	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
-	unset output
-
-	# Test Pull All
-	run fin pull
-	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
-	[[ "${output}" =~ "Code Pull Successful" ]]
-	[[ "${output}" =~ "DB Pull Successful" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
-	unset output
-
-	# Cleanup
+	# Clean up
 	fin rm -f
+	rm -rf platformsh-site
 }
 
-@test "fin pull: drush" {
+@test "fin pull code: platform.sh" {
 	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd ${TRAVIS_BUILD_DIR}/../test-pull
-
-	# Test Initialize Project into existing directory
-	mkdir test-drush-site
-	run fin pull init --HOSTING_PLATFORM=drush --HOSTING_SITE=dev test-drush-site https://github.com/docksal/drupal8.git
-	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Project Directory test-drush-site already exists." ]]
-	unset output
-
-	# Test Initialize Project
-	run fin pull init --HOSTING_PLATFORM=drush --HOSTING_SITE=dev drush-site https://github.com/docksal/drupal8.git
-	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting Pull Init Process" ]]
-	[[ "${output}" =~ "Pulling code complete" ]]
-	unset output
-
-	cd drush-site
+	fin pull init --HOSTING_PLATFORM=platformsh --HOSTING_SITE=${BUILD_PLATFORMSH_SITE} --HOSTING_ENV=${BUILD_PLATFORMSH_ENV} platformsh-site
 	fin start
 
 	# Test Pull Code
 	run fin pull code
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for drush" ]]
+	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
 	[[ "${output}" =~ "Pulling Code" ]]
-	unset output
-
-	# Test Pull DB
-	run fin pull db
-	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for drush" ]]
-	unset output
-
-	# Test Pull Files
-	run fin pull files
-	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for drush" ]]
-	unset output
-
-	# Test Pull All
-	run fin pull
-	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for drush" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
-	[[ "${output}" =~ "DB Pull Successful" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
 
-	# Cleanup
+	# Clean up
 	fin rm -f
+	rm -rf platformsh-site
 }
 
-@test "fin pull: wp" {
+@test "fin pull db: platform.sh" {
 	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd ${TRAVIS_BUILD_DIR}/../test-pull
-
-	# Test Initialize Project
-	run fin pull init --HOSTING_PLATFORM=wp --HOSTING_SITE=test wp-site https://github.com/docksal/wordpress.git
-	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting Pull Init Process" ]]
-	[[ "${output}" =~ "Pulling code complete" ]]
-	unset output
-
-	cd wp-site
+	fin pull init --HOSTING_PLATFORM=platformsh --HOSTING_SITE=${BUILD_PLATFORMSH_SITE} --HOSTING_ENV=${BUILD_PLATFORMSH_ENV} platformsh-site
 	fin start
-
-	# Test Pull Code
-	run fin pull code
-	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for wp" ]]
-	[[ "${output}" =~ "Pulling Code" ]]
-	unset output
 
 	# Test Pull DB
 	run fin pull db
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for wp" ]]
+	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
+	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
 
-	# Test Pull Files
+	# Clean up
+	fin rm -f
+	rm -rf platformsh-site
+}
+
+@test "fin pull files: platform.sh" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=platformsh --HOSTING_SITE=${BUILD_PLATFORMSH_SITE} --HOSTING_ENV=${BUILD_PLATFORMSH_ENV} platformsh-site
+	fin start
+
+	# Test Pull DB
 	run fin pull files
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for wp" ]]
+	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
+	[[ "${output}" =~ "Downloading files from" ]]
+	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
+
+	# Clean up
+	fin rm -f
+	rm -rf platformsh-site
+}
+
+@test "fin pull all: platform.sh" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	fin pull init --HOSTING_PLATFORM=platformsh --HOSTING_SITE=${BUILD_PLATFORMSH_SITE} --HOSTING_ENV=${BUILD_PLATFORMSH_ENV} platformsh-site
+	fin start
 
 	# Test Pull All
 	run fin pull
 	[[ $status == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for wp" ]]
+	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
+	unset output
 
-	# Cleanup
+	# Clean up
 	fin rm -f
+	rm -rf platformsh-site
 }

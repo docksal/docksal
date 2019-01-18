@@ -39,6 +39,13 @@ script:
   - run_tests db.bats "$TRAVIS_BUILD_DIR/../test-db"
   - run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates"
   - run_tests quicktest.bats
+  # Run add project_key to Agent for fin pull tests.
+  - fin ssh-key add project_key
+  # Set up Provider Keys.
+  - fin config set --global "SECRET_ACAPI_EMAIL=${BUILD_ACAPI_EMAIL}"
+  - fin config set --global "SECRET_ACAPI_KEY=${BUILD_ACAPI_TOKEN}"
+  - fin config set --global "SECRET_TERMINUS_TOKEN=${BUILD_TERMINUS_TOKEN}"
+  - fin config set --global "SECRET_PLATFORMSH_CLI_TOKEN=${BUILD_PLATFORMSH_CLI_TOKEN}"
   - run_tests pull.bats "$TRAVIS_BUILD_DIR/../test-pull"
 
 after_success:
