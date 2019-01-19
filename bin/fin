@@ -6649,7 +6649,7 @@ provider_pull_acquia_init ()
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
 	local repo_checkout
-	repo_checkout=$(run_cli -T "${acquia_alias_update} drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${HOSTING_ENV} info."
 
 	echo -e "${acqua}Cloning Acquia Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
