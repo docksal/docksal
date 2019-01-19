@@ -1996,6 +1996,7 @@ show_help_pull ()
 	printh "--DBPASS=<pass>" "Specify the DB Password (Defaults to root)"
 	printh "--DBNAME=<dbname>" "Specify the DB Name to import into. (Defaults to default)"
 	printh "--FORCE" "Force a new database file to be pulled"
+	printh "--REMOTE_DB=<remote_db>" "Specify the remote DB name to pull. (Used with Acquia)"
 
 	echo
 	echo "Extra Options for Files"
@@ -2012,7 +2013,7 @@ show_help_pull ()
 	printh "    test_project_directory" "Specify the directory to clone the project in."
 	printh "fin pull" "Pull all items from provider"
 	printh "fin pull db" "Pull only the db from the provider"
-	printh "fin pull db dbname" "Pull the db name dbname from the provider. (Acquia Cloud Only)"
+	printh "fin pull db --REMOTE_DB=dbname" "Pull the db name dbname from the provider. (Acquia Cloud Only)"
 }
 
 #---------- END HELP FUNCTIONS
@@ -6682,7 +6683,8 @@ provider_pull_acquia_db ()
 	# Following will grab all databases for a site.
 	# local acquia_dbs=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-list | awk '{print $3}')
 
-	local acquia_db_name="${ARGV[1]}"
+	# Default Acquia DB Name to project name.
+	local acquia_db_name="${REMOTE_DB:-${HOSTING_SITE}}"
 	if [[ -z "${acquia_db_name}" ]]; then
 		echo-error "Database name is required."
 		exit 1
@@ -6692,7 +6694,7 @@ provider_pull_acquia_db ()
 	query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name})
 	if_failed_error "Error retrieving list of backups from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 
-	# Returns timestamp of last backup. Need to convert to
+	# Returns timestamp of last backup.
 	local last_date
 	last_date=$(printf "${query}" | grep started | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	if [[ "${last_date}" != "" ]]; then
