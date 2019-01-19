@@ -78,8 +78,7 @@ teardown() {
 	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
-	cp -R acquia-test acquia-test-pull-db-cached
-	cd acquia-test-pull-db-cached
+	cd acquia-test-pull-db
 	fin start
 
 	## Test Acquia Pull with Cached Version
@@ -95,8 +94,7 @@ teardown() {
 	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
-	cp -R acquia-test acquia-test-pull-db-force
-	cd acquia-test-pull-db-force
+	cd acquia-test-pull-db
 	fin start
 
 	## Test Acquia Pull with --FORCE flag
