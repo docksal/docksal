@@ -73,23 +73,28 @@ teardown() {
 
 	# Setup
 	cd acquia-test-pull-db
-	fin start
+	fin reset -f
 
 	## Test Acquia Pull with Cached Version
 	run fin pull db --REMOTE_DB=test
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
-	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
+	[[ "${output}" =~ "Pulling new database file..." ]]
+	# Depending on when test is ran may get a backup in the last 24 hours.
+	# May need to create one
+	[[ "${output}" =~ "Creating new backup on Acquia" ]] ||
+		[[ "${output}" =~ "Using latest backup from Acquia" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
 }
 
-@test "fin pull db by name: acquia" {
+@test "fin pull db by name import to different db: acquia" {
 	#[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd acquia-test-pull-db
-	fin start
+	fin reset -f
+
 	# Create new DB in local.
 	fin db create test
 
@@ -97,7 +102,11 @@ teardown() {
 	run fin pull db --REMOTE_DB=test --DBNAME=test
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
-	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
+	[[ "${output}" =~ "Pulling new database file..." ]]
+	# Depending on when test is ran may get a backup in the last 24 hours.
+	# May need to create one
+	[[ "${output}" =~ "Creating new backup on Acquia" ]] ||
+		[[ "${output}" =~ "Using latest backup from Acquia" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
 }
