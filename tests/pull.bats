@@ -55,14 +55,8 @@ teardown() {
 	cd acquia-test-pull-db
 	fin start
 
-	## Test Acquia Pull without db name
+	## Test Acquia Pull DB
 	run fin pull db
-	[[ "$status" == 1 ]]
-	[[ "${output}" =~ "Database name is required." ]]
-	unset output
-
-	## Test Acquia Pull with db name
-	run fin pull db ${BUILD_ACQUIA_SITE}
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Pulling new database file..." ]]
@@ -70,6 +64,40 @@ teardown() {
 	# May need to create one
 	[[ "${output}" =~ "Creating new backup on Acquia" ]] ||
 		[[ "${output}" =~ "Using latest backup from Acquia" ]]
+	[[ "${output}" =~ "DB Pull Successful" ]]
+	unset output
+}
+
+@test "fin pull db by name: acquia" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd acquia-test-pull-db
+	fin start
+
+	## Test Acquia Pull with Cached Version
+	run fin pull db --REMOTE_DB=test
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
+	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
+	[[ "${output}" =~ "DB Pull Successful" ]]
+	unset output
+}
+
+@test "fin pull db by name: acquia" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd acquia-test-pull-db
+	fin start
+	# Create new DB in local.
+	fin db create test
+
+	## Test Acquia Pull DB By Name
+	run fin pull db --REMOTE_DB=test --DBNAME=test
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
+	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
 }
@@ -82,7 +110,7 @@ teardown() {
 	fin start
 
 	## Test Acquia Pull with Cached Version
-	run fin pull db ${BUILD_ACQUIA_SITE}
+	run fin pull db
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
@@ -98,7 +126,7 @@ teardown() {
 	fin start
 
 	## Test Acquia Pull with --FORCE flag
-	run fin pull db ${BUILD_ACQUIA_SITE} --FORCE
+	run fin pull db --FORCE
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Pulling new database file..." ]]
@@ -133,7 +161,7 @@ teardown() {
 	fin start
 
 	# Test Pull All
-	run fin pull ${BUILD_ACQUIA_SITE}
+	run fin pull --REMOTE_DB="${BUILD_ACQUIA_SITE}"
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
