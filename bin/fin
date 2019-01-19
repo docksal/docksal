@@ -6591,11 +6591,11 @@ provider_pull_generic_drush_rsync ()
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
 	local rsync_files_dir
 	rsync_files_dir="/var/www/${DOCROOT}/${FILES_DIR}"
-	_exec "drush -q -y rsync \
+	_exec drush -q -y rsync \
 		@${HOSTING_SITE}.${HOSTING_ENV}:%files \
 		${rsync_files_dir} \
 		--delete \
-		${rsync_options} 2>/dev/null"
+		${rsync_options} 2>/dev/null
 	if_failed_error "Error Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 }
 
@@ -6637,7 +6637,7 @@ provider_pull_acquia_precheck ()
 # Init process to pull code from acquia.
 provider_pull_acquia_init ()
 {
-	local acquia_alias_update="drush -q acquia-update; mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Set HOSTING_ENV to dev if none are set.
 	HOSTING_ENV=${HOSTING_ENV:-dev}
@@ -6659,7 +6659,7 @@ provider_pull_acquia_init ()
 # Pull process to pull files from Acquia.
 provider_pull_acquia_files ()
 {
-	local acquia_alias_update="drush -q acquia-update; mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
@@ -6671,14 +6671,14 @@ provider_pull_acquia_files ()
 # Pull process to pull db from Acquia.
 provider_pull_acquia_db ()
 {
-	local acquia_alias_update="drush -q acquia-update; mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
 
 	# TODO: Allow for all databases to be downloaded. drush ac-database-list will list all databases for a site.
 	# Following will grab all databases for a site.
-	# local acquia_dbs=$(_exec drush "@${HOSTING_SITE}.${HOSTING_ENV}" ac-database-list | awk '{print $3}')
+	# local acquia_dbs=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-list | awk '{print $3}')
 
 	local acquia_db_name="${ARGV[1]}"
 	if [[ -z "${acquia_db_name}" ]]; then
@@ -6687,7 +6687,7 @@ provider_pull_acquia_db ()
 	fi
 
 	local query
-	query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name});
+	query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name})
 	if_failed_error "Error retrieving list of backups from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 
 	# Returns timestamp of last backup. Need to convert to
@@ -6702,7 +6702,7 @@ provider_pull_acquia_db ()
 	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
 		# Create backup on Acquia through Cloud API.
 		echo -e "${acqua}Creating new backup on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}${NC}"
-		_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup "${acquia_db_name}"
+		_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup ${acquia_db_name}
 		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
 		echo -e "${acqua}Backup queued on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
 		# Sleep for 10 seconds wait for backup to finish.
@@ -6718,7 +6718,7 @@ provider_pull_acquia_db ()
 	local last_id=$(printf "${query}" | grep id | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
 	echo -e "${acqua}Downloading backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}${NC}"
-	_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
+	_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
 	if_failed_error "Error Downloading backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
 }
 
@@ -6923,11 +6923,11 @@ provider_pull_drush_db ()
 {
 	# Execute drush sql-dump on remote host and exclude cache, session, watchdog tables.
 	echo -e "${acqua}Creating database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
-	_exec drush @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_file}"
+	_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_file}"
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to create database export"
 	# RSYNC database file locally and delete the source.
 	echo -e "${acqua}Downloading database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
-	_exec drush rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_file} ${db_file} --remove-source-files
+	_exec drush -q rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_file} ${db_file} --remove-source-files
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to download database export"
 }
 
