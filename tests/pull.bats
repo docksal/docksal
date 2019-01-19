@@ -68,6 +68,22 @@ teardown() {
 	unset output
 }
 
+@test "fin pull db cached: acquia" {
+	#[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	cd acquia-test-pull-db
+	fin start
+
+	## Test Acquia Pull with Cached Version
+	run fin pull db
+	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting provider pull for acquia" ]]
+	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
+	[[ "${output}" =~ "DB Pull Successful" ]]
+	unset output
+}
+
 @test "fin pull db by name: acquia" {
 	#[[ $SKIP == 1 ]] && skip
 
@@ -107,22 +123,6 @@ teardown() {
 	# May need to create one
 	[[ "${output}" =~ "Creating new backup on Acquia" ]] ||
 		[[ "${output}" =~ "Using latest backup from Acquia" ]]
-	[[ "${output}" =~ "DB Pull Successful" ]]
-	unset output
-}
-
-@test "fin pull db cached: acquia" {
-	#[[ $SKIP == 1 ]] && skip
-
-	# Setup
-	cd acquia-test-pull-db
-	fin start
-
-	## Test Acquia Pull with Cached Version
-	run fin pull db
-	[[ "$status" == 0 ]]
-	[[ "${output}" =~ "Starting provider pull for acquia" ]]
-	[[ "${output}" =~ "Cached DB file still valid found and using to import" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
 	unset output
 }
