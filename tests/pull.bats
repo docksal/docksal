@@ -35,6 +35,7 @@ teardown() {
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-code
+	cd acquia-test-pull-code
 	fin start
 
 	# Test Pull Code
@@ -51,6 +52,7 @@ teardown() {
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-db
+	cd acquia-test-pull-db
 	fin start
 
 	## Test Acquia Pull without db name
@@ -77,6 +79,7 @@ teardown() {
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-db-cached
+	cd acquia-test-pull-db-cached
 	fin start
 
 	## Test Acquia Pull with Cached Version
@@ -93,6 +96,7 @@ teardown() {
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-db-force
+	cd acquia-test-pull-db-force
 	fin start
 
 	## Test Acquia Pull with --FORCE flag
@@ -110,6 +114,7 @@ teardown() {
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-files
+	cd acquia-test-pull-files
 	fin start
 
 	# Test Pull Files
@@ -126,6 +131,7 @@ teardown() {
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-all
+	cd acquia-test-pull-all
 	fin start
 
 	# Test Pull All
@@ -154,6 +160,7 @@ teardown() {
 
 	# Setup
 	cp -R pantheon-test pantheon-pull-code
+	cd pantheon-pull-code
 	fin start
 
 	# Test Pull Code
@@ -170,6 +177,7 @@ teardown() {
 
 	# Setup
 	cp -R pantheon-test pantheon-pull-db
+	cd pantheon-pull-db
 	fin start
 
 	# Test Pull DB
@@ -185,6 +193,7 @@ teardown() {
 
 	# Setup
 	cp -R pantheon-test pantheon-pull-files
+	cd pantheon-pull-files
 	fin start
 
 	# Test Pull Files
@@ -201,6 +210,7 @@ teardown() {
 
 	# Setup
 	cp -R pantheon-test pantheon-pull-all
+	cd pantheon-pull-all
 	fin start
 
 	# Test Pull All
@@ -229,6 +239,7 @@ teardown() {
 
 	# Setup
 	cp -R platformsh-test platformsh-pull-code
+	cd platformsh-pull-code
 	fin start
 
 	# Test Pull Code
@@ -245,6 +256,7 @@ teardown() {
 
 	# Setup
 	cp -R platformsh-test platformsh-pull-db
+	cd platformsh-pull-db
 	fin start
 
 	# Test Pull DB
@@ -260,6 +272,7 @@ teardown() {
 
 	# Setup
 	cp -R platformsh-test platformsh-pull-files
+	cd platformsh-pull-files
 	fin start
 
 	# Test Pull DB
@@ -276,6 +289,7 @@ teardown() {
 
 	# Setup
 	cp -R platformsh-test platformsh-pull-all
+	cd platformsh-pull-all
 	fin start
 
 	# Test Pull All
