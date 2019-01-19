@@ -6797,7 +6797,7 @@ provider_pull_pantheon_files ()
 		${host_url}:files/ \
 		/var/www/${DOCROOT}/${FILES_DIR} \
 		--delete \
-		${rsync_options} 2>/dev/null"
+		${rsync_options}"
 	if_failed_error "Could not rsync files from Pantheon. Confirm that SSH Key has been added to Pantheon account and added to Docksal SSH-Agent."
 }
 
@@ -6817,7 +6817,7 @@ provider_pull_pantheon_db ()
 	fi
 	# Download backup with Terminus to given location.
 	echo -e "${acqua}Downloading database backup from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
-	_exec terminus backup:get "${HOSTING_SITE}"."${HOSTING_ENV}" --element="db" --to="${db_file}"
+	_exec terminus backup:get ${HOSTING_SITE}.${HOSTING_ENV} --element="db" --to="${db_file}"
 	if_failed_error "Error Downloading backup from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 }
 
@@ -6864,7 +6864,7 @@ provider_pull_platformsh_files ()
 	host_url=$(_exec -T "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Platform.sh${NC}"
-	_exec "rsync \
+	_exec rsync \
 		-rlz \
 		--copy-unsafe-links \
 		--size-only \
@@ -6873,7 +6873,7 @@ provider_pull_platformsh_files ()
 		${host_url}:/app/${DOCROOT}/${FILES_DIR} \
 		/var/www/${DOCROOT}/${FILES_DIR} \
 		--delete \
-		${rsync_options} 2>/dev/null"
+		${rsync_options}
 	if_failed_error "Could not rsync files from Platform.sh. Confirm that SSH Key has been added to Platform.sh account and added to Docksal SSH-Agent."
 }
 
@@ -6881,7 +6881,7 @@ provider_pull_platformsh_files ()
 provider_pull_platformsh_db ()
 {
 	echo -e "${acqua}Downloading database backup from Platform.sh for ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
-	_exec "platform db:dump -p ${HOSTING_SITE} -e ${HOSTING_ENV} --gzip -f ${db_file}"
+	_exec platform -q db:dump -p ${HOSTING_SITE} -e ${HOSTING_ENV} --gzip -f ${db_file}
 	if_failed_error "Error Downloading backup from Platform.sh for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
 }
 
