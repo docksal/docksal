@@ -6430,7 +6430,9 @@ provider_pull_init ()
 
 	# Check to see if .docksal directory exists.
 	if [[ ! -d .docksal ]]; then
-		_confirm "Project is not a docksal project. Would you like to generate config?"
+		if [[ "$y" != "y" && "$yes" != "yes" ]]; then
+			_confirm "Project is not a docksal project. Would you like to generate config?"
+		fi
 		config_generate
 	fi
 
