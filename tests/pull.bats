@@ -119,7 +119,7 @@ teardown() {
 	run fin pull files
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
-	[[ "${output}" =~ "Downloading files from" ]]
+	[[ "${output}" =~ "Downloading Files from" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
 }
@@ -198,7 +198,7 @@ teardown() {
 	run fin pull files
 	[[ $status == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
-	[[ "${output}" =~ "Downloading files from" ]]
+	[[ "${output}" =~ "Downloading Files from" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
 }
@@ -277,7 +277,7 @@ teardown() {
 	run fin pull files
 	[[ $status == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
-	[[ "${output}" =~ "Downloading files from" ]]
+	[[ "${output}" =~ "Downloading Files from" ]]
 	[[ "${output}" =~ "File Pull Successful" ]]
 	unset output
 }
