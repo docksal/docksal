@@ -6637,15 +6637,17 @@ provider_pull_acquia_precheck ()
 # Init process to pull code from acquia.
 provider_pull_acquia_init ()
 {
+	local alias_update="drush -q acquia-update; mv ~/.drush/*.aliases.* ~/.drush/site-aliases/;"
+
 	# Set HOSTING_ENV to dev if none are set.
 	HOSTING_ENV=${HOSTING_ENV:-dev}
 	# Get the repo url for the specific environment.provider_pull_platformsh_files
 	local repo_url
-	repo_url=$(run_cli -e COLUMNS="200" "drush -q acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
+	repo_url=$(run_cli -T "${alias_update} drush @${HOSTING_SITE}.${HOSTING_ENV} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
 	local repo_checkout
-	repo_checkout=$(run_cli -e COLUMNS="200" "drush -q acquia-update; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	repo_checkout=$(run_cli -T "${alias_update} drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${HOSTING_ENV} info."
 
 	echo -e "${acqua}Cloning Acquia Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
@@ -6657,6 +6659,11 @@ provider_pull_acquia_init ()
 # Pull process to pull files from Acquia.
 provider_pull_acquia_files ()
 {
+	local alias_update="drush -q acquia-update; mv ~/.drush/*.aliases.* ~/.drush/site-aliases/;"
+
+	# Update Acquia Drush Aliases in container.
+	_exec "${alias_update}"
+
 	# Execute a generic rsync on files from remote.
 	provider_pull_generic_drush_rsync
 }
@@ -6664,8 +6671,10 @@ provider_pull_acquia_files ()
 # Pull process to pull db from Acquia.
 provider_pull_acquia_db ()
 {
+	local alias_update="drush -q acquia-update; mv ~/.drush/*.aliases.* ~/.drush/site-aliases/;"
+
 	# Update Acquia Drush Aliases in container.
-	_exec drush -q acquia-update
+	_exec "${alias_update}"
 
 	# TODO: Allow for all databases to be downloaded. drush ac-database-list will list all databases for a site.
 	# Following will grab all databases for a site.
@@ -6748,7 +6757,7 @@ provider_pull_pantheon_init ()
 	local repo_checkout=${HOSTING_ENV}
 	# The URL for the repo to clone.
 	local repo_url
-	repo_url=$(run_cli -e COLUMNS="200" "terminus connection:info ${HOSTING_SITE}.dev --field=\"Git Command\" | awk '{print \$3}'")
+	repo_url=$(run_cli -T "terminus connection:info ${HOSTING_SITE}.dev --field=\"Git Command\" | awk '{print \$3}'")
 	if_failed_error "Error retrieving Git URL from Pantheon"
 
 	if [[ "${HOSTING_ENV}" == 'dev' ]]; then
@@ -6756,7 +6765,7 @@ provider_pull_pantheon_init ()
 		repo_checkout='master'
 	elif [[ "${HOSTING_ENV}" == 'test' ]] || [[ "${HOSTING_ENV}" == "live" ]]; then
 		# If HOSTING_ENV is test or live get the latest tag for the repo.
-		repo_checkout=$(run_cli -e COLUMNS="200" "git ls-remote --exit-code -t ${repo_url} | grep 'refs/tags/pantheon_${HOSTING_ENV}_' | awk '{print $2}' | cut -d'/' -f3 | sort -k1.15n | grep '[0-9]$' | tail -1 | tr -d '[:space:]'")
+		repo_checkout=$(run_cli -T "git ls-remote --exit-code -t ${repo_url} | grep 'refs/tags/pantheon_${HOSTING_ENV}_' | awk '{print $2}' | cut -d'/' -f3 | sort -k1.15n | grep '[0-9]$' | tail -1 | tr -d '[:space:]'")
 		if_failed_error "Error getting latest tag for ${HOSTING_ENV} on Pantheon repo"
 	fi
 
@@ -6853,7 +6862,7 @@ provider_pull_platformsh_files ()
 	host_url=$(_exec -T "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Platform.sh${NC}"
-	_exec -T "rsync \
+	_exec "rsync \
 		-rlz \
 		--copy-unsafe-links \
 		--size-only \
