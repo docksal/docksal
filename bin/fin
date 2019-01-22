@@ -6547,7 +6547,7 @@ provider_pull_files ()
 	# Exclude specific items by default. Allow other rsync options to be included using --RSYNC_OPTIONS flag.
 	local rsync_options="${RSYNC_OPTIONS} --exclude='styles' --exclude='css' --exclude='js'"
 	provider_pull_find_function ${HOSTING_PLATFORM} 'files' 1
-	echo-green "File Pull Successful"
+	echo-green "File Pull Complete"
 }
 
 ##############################

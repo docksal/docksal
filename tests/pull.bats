@@ -157,7 +157,7 @@ teardown() {
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Downloading Files from" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
+	[[ "${output}" =~ "File Pull Complete" ]]
 	unset output
 }
 
@@ -175,7 +175,7 @@ teardown() {
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
+	[[ "${output}" =~ "File Pull Complete" ]]
 	unset output
 }
 
@@ -236,7 +236,7 @@ teardown() {
 	[[ $status == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
 	[[ "${output}" =~ "Downloading Files from" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
+	[[ "${output}" =~ "File Pull Complete" ]]
 	unset output
 }
 
@@ -254,7 +254,7 @@ teardown() {
 	[[ "${output}" =~ "Starting provider pull for pantheon" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
+	[[ "${output}" =~ "File Pull Complete" ]]
 	unset output
 }
 
@@ -315,7 +315,7 @@ teardown() {
 	[[ $status == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
 	[[ "${output}" =~ "Downloading Files from" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
+	[[ "${output}" =~ "File Pull Complete" ]]
 	unset output
 }
 
@@ -333,7 +333,7 @@ teardown() {
 	[[ "${output}" =~ "Starting provider pull for platformsh" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
+	[[ "${output}" =~ "File Pull Complete" ]]
 	unset output
 }
 
@@ -394,7 +394,7 @@ teardown() {
 	[[ $status == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for drush" ]]
 	[[ "${output}" =~ "Downloading Files from" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
+	[[ "${output}" =~ "File Pull Complete" ]]
 	unset output
 }
 
@@ -412,6 +412,6 @@ teardown() {
 	[[ "${output}" =~ "Starting provider pull for drush" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
 	[[ "${output}" =~ "DB Pull Successful" ]]
-	[[ "${output}" =~ "File Pull Successful" ]]
+	[[ "${output}" =~ "File Pull Complete" ]]
 	unset output
 }
