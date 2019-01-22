@@ -15,7 +15,6 @@ install:
   - if [[ "$TRAVIS_PULL_REQUEST" != "false" && "${TRAVIS_PULL_REQUEST_SLUG}" == "${TRAVIS_REPO_SLUG}" ]]; then USE_BRANCH="${TRAVIS_PULL_REQUEST_BRANCH}"; fi
   - if [[ "$TRAVIS_PULL_REQUEST" != "false" && "${TRAVIS_PULL_REQUEST_SLUG}" != "${TRAVIS_REPO_SLUG}" ]]; then USE_BRANCH='develop'; fi
   - export DOCKSAL_VERSION=${USE_BRANCH}
-  - export SKIP=1
   - fin update
   - fin sysinfo
 
