@@ -6931,13 +6931,16 @@ provider_pull_drush_files ()
 # Pull database from the drush provider using the alias. Exclude cache, session, and watchdog data.
 provider_pull_drush_db ()
 {
+	cd $DOCROOT
 	# Execute drush sql-dump on remote host and exclude cache, session, watchdog tables.
 	echo -e "${acqua}Creating database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
-	_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_file}"
+	# Drush appends a .gz when using the --gzip option. Remove .gz extension.
+	local db_save=$(echo $db_file | sed 's/\.sql\.gz//')
+	_exec drush -q -y @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_save}"
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to create database export"
-	# RSYNC database file locally and delete the source.
+	# Rsync database file locally
 	echo -e "${acqua}Downloading database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
-	_exec drush -q rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_file} ${db_file} --remove-source-files
+	_exec drush -q -y rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_save} ${db_file} > /dev/null
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to download database export"
 }
 
