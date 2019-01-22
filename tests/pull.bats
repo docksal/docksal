@@ -19,7 +19,7 @@ teardown() {
 }
 
 @test "fin pull init: acquia" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-test
@@ -31,7 +31,7 @@ teardown() {
 }
 
 @test "fin pull code: acquia" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-code
@@ -48,7 +48,7 @@ teardown() {
 }
 
 @test "fin pull db: acquia" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-db
@@ -69,7 +69,7 @@ teardown() {
 }
 
 @test "fin pull db cached: acquia" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd acquia-test-pull-db
@@ -85,7 +85,7 @@ teardown() {
 }
 
 @test "fin pull db by name: acquia" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd acquia-test-pull-db
@@ -105,7 +105,7 @@ teardown() {
 }
 
 @test "fin pull db by name import to different db: acquia" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd acquia-test-pull-db
@@ -128,7 +128,7 @@ teardown() {
 }
 
 @test "fin pull db force flag: acquia" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cd acquia-test-pull-db
@@ -145,7 +145,7 @@ teardown() {
 }
 
 @test "fin pull files: acquia" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-files
@@ -162,7 +162,7 @@ teardown() {
 }
 
 @test "fin pull all: acquia" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R acquia-test acquia-test-pull-all
@@ -180,7 +180,7 @@ teardown() {
 }
 
 @test "fin pull init: pantheon" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=pantheon --HOSTING_SITE=${BUILD_PANTHEON_SITE} --HOSTING_ENV=${BUILD_PANTHEON_ENV} pantheon-test
@@ -191,7 +191,7 @@ teardown() {
 }
 
 @test "fin pull code: pantheon" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R pantheon-test pantheon-pull-code
@@ -208,7 +208,7 @@ teardown() {
 }
 
 @test "fin pull db: pantheon" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R pantheon-test pantheon-pull-db
@@ -224,7 +224,7 @@ teardown() {
 }
 
 @test "fin pull files: pantheon" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R pantheon-test pantheon-pull-files
@@ -241,7 +241,7 @@ teardown() {
 }
 
 @test "fin pull all: pantheon" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R pantheon-test pantheon-pull-all
@@ -259,7 +259,7 @@ teardown() {
 }
 
 @test "fin pull init: platform.sh" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=platformsh --HOSTING_SITE=${BUILD_PLATFORMSH_SITE} --HOSTING_ENV=${BUILD_PLATFORMSH_ENV} platformsh-test
@@ -270,7 +270,7 @@ teardown() {
 }
 
 @test "fin pull code: platform.sh" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R platformsh-test platformsh-pull-code
@@ -287,7 +287,7 @@ teardown() {
 }
 
 @test "fin pull db: platform.sh" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R platformsh-test platformsh-pull-db
@@ -303,7 +303,7 @@ teardown() {
 }
 
 @test "fin pull files: platform.sh" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R platformsh-test platformsh-pull-files
@@ -320,7 +320,7 @@ teardown() {
 }
 
 @test "fin pull all: platform.sh" {
-	#[[ $SKIP == 1 ]] && skip
+	[[ $SKIP == 1 ]] && skip
 
 	# Setup
 	cp -R platformsh-test platformsh-pull-all
