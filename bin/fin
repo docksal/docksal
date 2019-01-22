@@ -6983,7 +6983,6 @@ provider_pull_wp_files ()
 {
 	# Show Error as currently not supported.
 	echo-warning "File Pull for WordPress is currently not supported."
-	exit 1
 }
 
 # Execute specific functions if they exist within the hooks directory.
