@@ -1766,7 +1766,7 @@ show_help_vm ()
 	echo "Commands:"
 	printh "start" "Start the machine (create if needed)"
 	printh "stop" "Stop the machine"
-	printh "kill" "Forcibely stop the machine"
+	printh "kill" "Forcibly stop the machine"
 	printh "restart" "Restart the machine"
 	printh "status" "Get the status"
 	printh "ssh [command]" "Log into ssh or run a command via ssh"
