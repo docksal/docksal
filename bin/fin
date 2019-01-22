@@ -6591,6 +6591,7 @@ provider_pull_generic_git_pull ()
 # Runs a generic drush rsync command.
 provider_pull_generic_drush_rsync ()
 {
+	cd ${PROJECT_ROOT}/${DOCROOT}
 	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
 	local drush_version=$(_exec "drush version --format=string | cut -d'.' -f1" | sed "s/[[:space:]]//")
 	local separator=""
@@ -6931,16 +6932,16 @@ provider_pull_drush_files ()
 # Pull database from the drush provider using the alias. Exclude cache, session, and watchdog data.
 provider_pull_drush_db ()
 {
-	cd $DOCROOT
+	cd ${PROJECT_ROOT}/${DOCROOT}
 	# Execute drush sql-dump on remote host and exclude cache, session, watchdog tables.
 	echo -e "${acqua}Creating database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
 	# Drush appends a .gz when using the --gzip option. Remove .gz extension.
 	local db_save=$(echo $db_file | sed 's/\.sql\.gz//')
-	_exec drush -q -y @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_save}"
+	_exec drush -q -y @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_save}" 2>/dev/null
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to create database export"
 	# Rsync database file locally
 	echo -e "${acqua}Downloading database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
-	_exec drush -q -y rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_save} ${db_file} > /dev/null
+	_exec drush -q -y rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_save} ${db_file} 2>/dev/null
 	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to download database export"
 }
 
@@ -6964,16 +6965,25 @@ provider_pull_wp_init ()
 # Pull db from provider using the wp db export function.
 provider_pull_wp_db ()
 {
+	cd ${PROJECT_ROOT}/${DOCROOT}
 	echo -e "${acqua}Downloading database export for @${HOSTING_SITE}${NC}"
 	_exec "wp @${HOSTING_SITE} db export --add-drop-table - | gzip > ${db_file}"
 	if_failed_error "Error accessing WordPress Site @${HOSTING_SITE} to create database export"
 }
 
-# Pull process to pull files from WP-CLI.
+# Pull process to pull code from WP-CLI.
 provider_pull_wp_code ()
 {
 	# Execute a generic git pull on code.
 	provider_pull_generic_git_pull
+}
+
+# Pull process to pull files from WP-CLI
+provider_pull_wp_files ()
+{
+	# Show Error as currently not supported.
+	echo-warning "File Pull for WordPress is currently not supported."
+	exit 1
 }
 
 # Execute specific functions if they exist within the hooks directory.
