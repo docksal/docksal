@@ -444,7 +444,7 @@ teardown() {
 	unset output
 }
 
-@test "fin pull db: drush" {
+@test "fin pull db: wp" {
 	[[ $SKIP == 1 ]] && skip
 
 	# Setup
