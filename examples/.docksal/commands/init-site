@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+#: exec_target = cli
+
+## Initialize/reinstall site
+##
+## Usage: fin init-site
+
+# Abort if anything fails
+set -e
+
+echo "The following script is ran within the cli container and runs any necessary commands to install tools for the project."
