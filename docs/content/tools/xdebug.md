@@ -163,3 +163,5 @@ Here is an an example of what `launch.json` should look like.
   ]
 }
 ```
+
+![Visual Studio configuration](/images/xdebug-vscode.png)
