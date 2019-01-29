@@ -59,7 +59,7 @@ Map the project directory on the host to `/var/www` on the server:
 
 Make sure you have the server and directory mapping already configured following the instructions for web request debugging.
 
-Keep in mind, that the script you are trying to debug must reside within the project folder or PHPStorm won't be
+Keep in mind, the script you are trying to debug must reside within the project folder or PHPStorm won't be
 able to access its code (and thus debug it). Specifically, this means that you can only debug Drush and Drupal
 Console instances local to the project (installed with Composer as project level dependencies).
 
@@ -134,11 +134,11 @@ You can run your scripts in console and debug them in the same way as browser re
 
 - Click Debug Icon in left sidebar
 - Click Configuration Gear in top bar
-- Port should be set to 9000
-- Add Path Mappings should be configured properly.
+- Set port to 9000
+- Add Path Mappings should be configured properly
 
 
-Here is an an example of what `launch.json` should look like.
+Here is an an example of what `launch.json` should look like:
 ```json
 {
   "version": "0.2.0",
