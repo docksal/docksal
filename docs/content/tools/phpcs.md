@@ -31,8 +31,8 @@ fin phpcs cbf docroot/sites/all/modules/custom
 
 # Using Directly
 
-Instead of installing an addon you can use `phpcs`/`phpcbf` directly every time.
-Anywhere from within your project's folder the following commands below can be ran.
+Instead of installing an addon, you can use `phpcs`/`phpcbf` directly every time.
+Anywhere from within your project's folder the following commands below can be run.
 
 ### With Drupal
 
