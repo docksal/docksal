@@ -105,7 +105,7 @@ volumes:
     external: true
 ```
 
-In the example above, `project_root` and `docksal_ssh_agent` are "named volumes". The first one is a project level one,
+In the example above, `project_root` and `docksal_ssh_agent` are "named volumes." The first one is a project level one,
 while the second one is a global volume and is used by all projects.
 
 See [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-bind.yml).

@@ -64,3 +64,7 @@ Override the default admin password by changing the value of `MYSQL_ROOT_PASSWOR
 ```
 MYSQL_ROOT_PASSWORD="gue$$-me-not"
 ```
+
+{{% notice note %}}
+You must run `fin reset db` after making a change to the MySQL passwords. This will drop your existing databases and require you to re-import your data.
+{{% /notice %}}
