@@ -18,6 +18,10 @@ teardown() {
 	echo "================================================================"
 }
 
+#############
+### Acquia
+#############
+
 @test "fin pull init: acquia" {
 	[[ $SKIP == 1 ]] && skip
 
@@ -179,6 +183,10 @@ teardown() {
 	unset output
 }
 
+#############
+### Pantheon
+#############
+
 @test "fin pull init: pantheon" {
 	[[ $SKIP == 1 ]] && skip
 
@@ -257,6 +265,10 @@ teardown() {
 	[[ "${output}" =~ "File Pull Complete" ]]
 	unset output
 }
+
+#############
+### Platform.sh
+#############
 
 @test "fin pull init: platform.sh" {
 	[[ $SKIP == 1 ]] && skip
@@ -337,12 +349,17 @@ teardown() {
 	unset output
 }
 
+#############
+### Drush
+#############
+
 @test "fin pull init: drush" {
 	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=drush --HOSTING_SITE="remote" --HOSTING_ENV="dev" drush-test ${BUILD_DRUSH_GIT}
 	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting provider pull for drush" ]]
 	[[ "${output}" =~ "Starting Pull Init Process" ]]
 	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
@@ -416,12 +433,17 @@ teardown() {
 	unset output
 }
 
+#############
+### WordPress
+#############
+
 @test "fin pull init: wp" {
 	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
 	run fin pull init --HOSTING_PLATFORM=wp --HOSTING_SITE="remote" wp-test ${BUILD_WP_GIT}
 	[[ "$status" == 0 ]]
+	[[ "${output}" =~ "Starting provider pull for wp" ]]
 	[[ "${output}" =~ "Starting Pull Init Process" ]]
 	[[ "${output}" =~ "Pulling code complete" ]]
 	unset output
