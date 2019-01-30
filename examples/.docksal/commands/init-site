@@ -9,4 +9,4 @@
 # Abort if anything fails
 set -e
 
-echo "The following script is ran within the cli container and runs any necessary commands to install tools for the project."
+echo "The following script is run within the cli container and runs any necessary commands to install tools for the project."
