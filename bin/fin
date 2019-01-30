@@ -6620,7 +6620,7 @@ provider_pull_generic_init ()
 		exit 1
 	fi
 	local repo_checkout=${2:-"master"}
-	echo -e "${acqua}Cloning Drush Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
+	echo -e "${acqua}Cloning Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory} 2>/dev/null"
 	if_failed_error "Error Cloning Repo"
 }
