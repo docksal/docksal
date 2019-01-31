@@ -9,29 +9,25 @@ To quickly integrate into your hosting environment Docksal as the
 assets (db, files, and code) down to your local environment quickly
 without manually running through the steps.
 
-## Integrated Hosting Providers
+## Requirements
 
-The `cli` image comes with the tools used for interacting with various
-hosting providers. This allows for us to quickly get information from the
-provider's account.
-
-### Acquia ( `acquia` )
+### Acquia
 
 To interact with Acquia through Drush. The `SECRET_ACAPI_EMAIL` and
 `SECRET_ACAPI_KEY` are required. Additionally, access to the Acquia Cloud API
-is required. If access is not allowed fallback to using the Drush method.
+is required. If access is not allowed fallback to using the [Drush](/tools/pull/drush/) method.
 
 More information on working with [Docksal with Acquia Drush](/tools/acquia-drush).
 
-### Pantheon ( `pantheon` )
+### Pantheon
 
-Interacting with Platform.sh requires that the `SECRET_TERMINUS_TOKEN`
+Interacting with Pantheon requires that the `SECRET_TERMINUS_TOKEN`
 is set. More information on [generating tokens](https://pantheon.io/docs/machine-tokens/)
 can be found in Pantheon's documentation.
 
 More information on working with [Docksal with Pantheon](/tools/pantheon).
 
-### Platform.sh ( `platformsh` )
+### Platform.sh
 
 Interacting with Platform.sh requires that the `SECRET_PLATFORMSH_CLI_TOKEN`
 is set. More information on [creating CLI tokens](https://docs.platform.sh/gettingstarted/cli/api-tokens.html)
@@ -39,15 +35,28 @@ for use with the Platform.sh CLI tool consult with Platform's documentation.
 
 More information on working with [Docksal with Platform.sh](/tools/platformsh).
 
-## Alternatives
+### Drupal / Drush
 
-If your project is hosted on another provider that isn't in the previously
-listed group. Don't worry most Drupal and WordPress sites can be accessed
-by using their respective aliases.
+To move forward with the Drush provider integration an alias must be set up within the project and
+recognized when running the `fin drush sa` command. An example of a site alias can [Drush 8](https://github.com/drush-ops/drush/blob/8.x/examples/example.aliases.drushrc.php)
+and [Drush 9](https://github.com/drush-ops/drush/blob/master/examples/example.site.yml) can be
+found within the Drush project.
 
-### Drupal / Drush ( `drush` )
+An example of what `remote.site.yml` would look like.
+
+```yaml
+dev:
+  host: 1.1.1.1
+  paths:
+    dump-dir: /home/remote-user/backup/
+  root: /var/www/drupal8/docroot
+  uri: example.com
+  user: remote-user
+
+```
 
 The following is an example of `example.aliases.drushrc.php` .
+
 ```php
 <?php
 
@@ -59,69 +68,41 @@ $aliases['dev'] = array(
 );
 ```
 
-When configuring your project to interact the following commands can be ran.
+### WordPress / WP-CLI
 
-```bash
-fin config set --HOSTING_PROVIDER=drush
-fin config set --HOSTING_SITE="example"
-fin config set --HOSTING_ENV="dev"
-```
+To move forward with the WP-CLI provider integration an alias must be
+set up within the project. For instructions on setting up a `wp-cli.yml` or a
+config file consult the [WordPress WP-CLI Config Documentation](https://make.wordpress.org/cli/handbook/config/#config-files).
 
-{{% notice note %}}
-For more information on setting up a [drush 8.x alias](http://api.drush.org/api/drush/examples%21example.aliases.drushrc.php/master)
-take a look and can usually be set up as easily as adding a `example.aliases.drushrc.php`
-to your project root.
-
-To set up [drush 9.x alias](https://github.com/drush-ops/drush/blob/master/examples/example.site.yml).
-{{% /notice %}}
-
-More information on working with [Docksal and Drush](/tools/drush).
-
-### WordPress / WP-CLI ( `wp` )
-
-An example `wp-cli.yml` file would like like the following.
+Example of what `wp-cli.yml` would look like.
 
 ```yaml
-@staging:
-    ssh: wpcli@staging.wp-cli.org
-    user: wpcli
-    path: /srv/www/staging.wp-cli.org
+@remote:
+  ssh: ssh-user@1.1.1.1/var/www/wordpress/docroot
+  url: http://example.com
 ```
-
-When configuring your project to interact the following commands can be ran.
-
-```bash
-fin config set --HOSTING_PROVIDER=wp
-fin config set --HOSTING_SITE="staging"
-```
-
-{{% notice note %}}
-For more information on setting up a [wp-cli.yml alias](https://make.wordpress.org/cli/handbook/config/#config-files)
-take a look and can usually be set up as easily as adding a `wp-config.yml`
-to your project root.
-{{% /notice %}}
 
 More information on working with [Docksal and WP-CLI](/tools/wp).
 
-## Commands
+## Initializing Project
 
-The following commands will allow for quickly grabbing data from a
-hosting provider and should allow for an easier development experience.
-
-### Help
-
-For more information on the `pull` command including arguments and options
-use the `help` command to get more details.
+If you not using a initializing process for a specific provider and are
+starting from an already existing project you can take advantage of
+the `fin pull` command by setting the `HOSTING_PLATFORM` and
+`HOSTING_SITE` variables within the project's `.docksal/docksal.env`
+file.
 
 ```bash
-fin help pull
+fin config set --HOSTING_PROVIDER=[provider]
+
+fin config set --HOSTING_SITE="[remote name]"
+
+# WordPress is the only provider that doesn't need to use this.
+fin config set --HOSTING_ENV="[remote env]"
 ```
 
-### Initialize
-
-Starting from a provider is easy and sometimes requires a simple `git pull`
-but other times it requires a much lengthier process. Logging into the
-provider and downloading files or database.
+If you are starting from scratch then the following command can be used
+to pull code and start the project locally.
 
 ```bash
 fin pull init \
@@ -131,53 +112,85 @@ fin pull init \
     <directory_name>
 ```
 
-** NOTE **
+### Acquia / Pantheon / Platform.sh
 
-{{% notice note %}}
+Additionally the `--HOSTING_ENV` option can be used to specify exactly
+which environment on Acquia Cloud that should be used. If it isn't used then
+the `dev` environment is used.
+
+### Drush / WP-CLI
+
 Drupal and WordPress Providers are supported but require a GIT URL that
 can be cloned.
-
-An example of this would be
 
 ```bash
 fin pull init \
     --HOSTING_PLATFORM=drush \
     --HOSTING_SITE="example" \
-    --HOSTING_ENV="drush \
     my_new_site \
     https://github.com/docksal/drupal8.git
 ```
+
+## Pulling Code
+
+Pulling code utilizes the project's existing git remotes and allows for
+the project pull in the latest code from the remote.
+
+To pull code use the argument `code`. This will default to pulling `origin`
+and then pulling the current branch. If a different branch or remote is required
+then those can be specified. Using the flags `SYNC_GIT_REMOTE` and `--SYNC_GIT_BRANCH`.
+
+Example
+
+```
+# Default Pull From Origin and current branch.
+fin pull code
+
+# Pull from the production remote.
+fin pull code --SYNC_GIT_REMOTE=production
+
+# Pull the dev branch.
+fin pull code --SYNC_GIT_BRANCH=dev
+
+# Pull from the github remote and the rc branch.
+fin pull code --SYNC_GIT_REMOTE=github --SYNC_GIT_REMOTE=rc
+```
+
+```
+  --SYNC_GIT_REMOTE             The GIT Remote to pull from. (Defaults to origin)
+  --SYNC_GIT_BRANCH             The GIT Branch to pull from. (Defaults to current branch)
+```
+
+## Pulling Database
+
+To pull a database from the remote run the `pull db` command. When
+pulling the database it stays cached within your `cli` container for a
+period of one (1) hour. If at any point this needs to be updated use
+the `--FORCE` option as this will bypass the database and reimport.
+
+```bash
+fin pull db
+```
+
+When pulling there are some additional options that can be used for
+importing the data.
+
+```
+  --DBUSER=<user>               Specify the DB User (Defaults to root)
+  --DBPASS=<pass>               Specify the DB Password (Defaults to root)
+  --DBNAME=<dbname>             Specify the DB Name to import into. (Defaults to default)
+  --FORCE                       Force a new database file to be pulled
+  --REMOTE_DB=<remote_db>       Specify the remote DB name to pull. (Used with Acquia)
+```
+
+{{% notice note %}}
+Acquia has the ability to host a Drupal multi-site. Due to that there are
+multiple databases within the Acquia cloud that can be accessed. A
+database can be pulled down using the `--REMOTE_DB` option where the
+remote db is the database within the site's dashboard.
 {{% /notice %}}
 
-### Code
-
-Pulling code is simple as running the `fin pull code` command. This executes
-a `git pull` on the code. If for any other reason there is a need to pull
-from a different remote or branches they can be specified using the
-`SYNC_GIT_REMOTE` and `SYNC_GIT_BRANCH` options. If neither are supplied
-then `SYNC_GIT_REMOTE` defaults to `origin` and `SYNC_GIT_BRANCH` defaults
-to the current branch.
-
-```bash
-fin pull code \
-    --SYNC_GIT_REMOTE=<remote> \
-    --SYNC_GIT_BRANCH=<branch>
-```
-
-### Database
-
-Pulling the database is as simple as running the `fin pull db` command.
-
-```bash
-fin pull db \
-    --DBNAME=<dbname> \
-    --DBUSER=<dbuser> \
-    --DBPASS=<dbpass> \
-    --FORCE \
-    <remote_database_name>
-```
-
-### Files
+## Pulling Files
 
 Pulling down the files from an environment can sometimes be lengthy. Especially
 if you only want new files or updated files. Using the `rsync` command
@@ -189,7 +202,23 @@ the files to pull specifically can be a pain.
 fin pull files
 ```
 
-### All
+Additional options can be used for helping with rsyncing the files locally.
+
+```
+  --RSYNC_OPTIONS=<options>     Rsync Options to append.
+  --FILES_DIR=<dir>             Directory to sync files with.
+                                Default Drupal: {DOCROOT}/sites/default/files/
+                                Wordpress Default: {DOCROOT}/wp-content/uploads/
+
+```
+
+{{% notice warning %}}
+Due to limitations with WP-CLI file syncing is not supported for `wordpress`
+at this time. Please check back later as we are in the middle of
+working on this feature.
+{{% /notice %}}
+
+## Pulling All
 
 When no options are provided `fin pull` will run through all items
 (code, db, and files) and pull from the provided hosting environment.
@@ -197,4 +226,13 @@ All of the arguments will be passed through to the appropriate assets.
 
 ```bash
 fin pull
+```
+
+## Help
+
+For more information on the `pull` command including arguments and options
+use the `help` command to get more details.
+
+```bash
+fin help pull
 ```
