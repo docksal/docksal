@@ -4,12 +4,11 @@ aliases:
   - /en/master/tools/phpcs/
 ---
 
-
 `phpcs` and `phpcbf` are readily available in the cli container. Both [Drupal Coding Standards](https://www.drupal.org/docs/develop/standards) and [WordPress Coding Standards](https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards)
 have been installed and are ready to use.
 
 
-## Using as an addon
+## Using as an Addon
 
 We have converted this into a Docksal Addon which can be installed running the `addon` subcommand.
 
@@ -17,7 +16,7 @@ We have converted this into a Docksal Addon which can be installed running the `
 fin addon install phpcs
 ```
 
-This will enable the following to be ran.
+This will enable the following to run:
 
 ```bash
 # Running PHPCS
@@ -32,7 +31,7 @@ fin phpcs cbf docroot/sites/all/modules/custom
 # Using Directly
 
 Instead of installing an addon, you can use `phpcs`/`phpcbf` directly every time.
-Anywhere from within your project's folder the following commands below can be run.
+The following commands below can be run anywhere from within your project's folder:
 
 ### With Drupal
 
@@ -65,4 +64,3 @@ fin run phpcbf \
     --standards="WordPress" -n \
     docroot/wp-content/plugins
 ```
-
