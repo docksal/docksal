@@ -3,6 +3,8 @@ dist: xenial
 language: minimal
 
 install:
+  - echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
+  - chmod 400 $HOME/.ssh/project_key
   - git clone https://github.com/docksal/bats.git tests/scripts/bats
   - cd tests/scripts/bats
   - sudo ./install.sh /usr/local
@@ -22,6 +24,7 @@ before_script:
   - mkdir ../test-duplicates
   - mkdir ../test-init
   - mkdir ../test-db
+  - mkdir ../test-pull
   # Function runs tests by file name $1 in dir specified in $2
   - run_tests() { cd "${2:-$TRAVIS_BUILD_DIR}"; [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" && "$1" != "quicktest.bats" ]] && return; [[ "$1" == "quicktest.bats" ]] && I="-i"; bats ${I} "$TRAVIS_BUILD_DIR/tests/$1"; }
   # Trigger builds in boilerplate project repos
@@ -35,6 +38,14 @@ script:
   - run_tests db.bats "$TRAVIS_BUILD_DIR/../test-db"
   - run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates"
   - run_tests quicktest.bats
+  # Run add project_key to Agent for fin pull tests.
+  - fin ssh-key add project_key
+  # Set up Provider Keys.
+  - fin config set --global "SECRET_ACAPI_EMAIL=${SECRET_ACAPI_EMAIL}"
+  - fin config set --global "SECRET_ACAPI_KEY=${SECRET_ACAPI_KEY}"
+  - fin config set --global "SECRET_TERMINUS_TOKEN=${SECRET_TERMINUS_TOKEN}"
+  - fin config set --global "SECRET_PLATFORMSH_CLI_TOKEN=${SECRET_PLATFORMSH_CLI_TOKEN}"
+  - run_tests pull.bats "$TRAVIS_BUILD_DIR/../test-pull"
 
 after_success:
   - build_trigger docksal/drupal7
