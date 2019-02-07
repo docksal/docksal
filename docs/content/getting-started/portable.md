@@ -22,7 +22,7 @@ The following download script can be used to pre-download most of the dependenci
 curl -fsSL https://get.docksal.io/portable | bash
 ```
 
-Here's what the script will download:
+Here is what the script will download:
 
 - Babun and winpty (necessary for Windows only)
 - VirtualBox and boot2docker.iso (necessary for macOS and Windows)
@@ -53,7 +53,7 @@ fin image save --system
 fin image save --project
 ```
 
-This will creat two files: `docksal-system-images.tar` and `docksal-<project-name>-images.tar`.  
+This will create two files: `docksal-system-images.tar` and `docksal-<project-name>-images.tar`.  
 Instruct users to use the latter file instead of `docksal-default-images.tar` when loading stack images (see below).
 
 ### Docker for Mac/Windows
