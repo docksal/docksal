@@ -22,7 +22,7 @@ The following download script can be used to pre-download most of the dependenci
 curl -fsSL https://get.docksal.io/portable | bash
 ```
 
-Here's is what the script will download:
+Here's what the script will download:
 
 - Babun and winpty (necessary for Windows only)
 - VirtualBox and boot2docker.iso (necessary for macOS and Windows)
@@ -44,7 +44,7 @@ Once downloaded, place the contents of the folder on a USB drive/etc and distrib
 
 ### Custom stacks
 
-If you plan on using a custom stack configuration, you will have a to export the project images manually.
+If you plan on using a custom stack configuration, you will have to export the project images manually.
 
 You can export both system and project images by running the following within a Docksal project folder:
 
@@ -53,7 +53,7 @@ fin image save --system
 fin image save --project
 ```
 
-This will created two files: `docksal-system-images.tar` and `docksal-<project-name>-images.tar`.  
+This will creat two files: `docksal-system-images.tar` and `docksal-<project-name>-images.tar`.  
 Instruct users to use the latter file instead of `docksal-default-images.tar` when loading stack images (see below).
 
 ### Docker for Mac/Windows
@@ -111,7 +111,7 @@ fin image load docksal-default-images.tar
 
 {{% notice warning %}}
 Only Docksal system and stack images will be installed from the portable source.
-All other Docker dependencies and tools will be downloaded from internet (you will need a decent internet connection).
+All other Docker dependencies and tools will be downloaded from the internet (you will need a decent internet connection).
 {{% /notice %}}
 
 Within the portable Docksal distribution folder run:
