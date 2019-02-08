@@ -143,11 +143,15 @@ Here is an an example of what `launch.json` should look like:
 {
   "version": "0.2.0",
   "configurations": [
+
     {
       "name": "Listen for XDebug",
       "type": "php",
       "request": "launch",
-      "port": 9000
+      "port": 9000,
+      "pathMappings": {
+        "/var/www/": "${workspaceRoot}"
+      }
     },
     {
       "name": "Launch currently open script",
@@ -155,10 +159,7 @@ Here is an an example of what `launch.json` should look like:
       "request": "launch",
       "program": "${file}",
       "cwd": "${fileDirname}",
-      "port": 9000,
-      "pathMappings": {
-        "/var/www": "${workspaceRoot}",
-      }
+      "port": 9000
     }
   ]
 }
