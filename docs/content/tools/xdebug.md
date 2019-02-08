@@ -143,7 +143,6 @@ Here is an an example of what `launch.json` should look like:
 {
   "version": "0.2.0",
   "configurations": [
-
     {
       "name": "Listen for XDebug",
       "type": "php",
