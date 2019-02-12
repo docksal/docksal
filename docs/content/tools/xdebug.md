@@ -164,4 +164,49 @@ Here is an an example of what `launch.json` should look like:
 }
 ```
 
-![Visual Studio configuration](/images/xdebug-vscode.png)
+![Visual Studio configuration](/images/xdebug-vscode2.png)
+
+For debugging Drush commands in VSCode with XDebug and Docksal, you will need to add a path mapping to the Drush executable.
+
+- Add `"/var/www/vendor/bin/drush": "/usr/local/bin/drush"` to `pathMappings` in your `launch.json` file.
+
+Here is an an example of what `launch.json` should look like:
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Listen for XDebug",
+      "type": "php",
+      "request": "launch",
+      "port": 9000,
+      "pathMappings": {
+        "/var/www/": "${workspaceRoot}",
+        "/var/www/vendor/bin/drush": "/usr/local/bin/drush"
+      }
+    },
+    {
+      "name": "Launch currently open script",
+      "type": "php",
+      "request": "launch",
+      "program": "${file}",
+      "cwd": "${fileDirname}",
+      "port": 9000
+    }
+  ]
+}
+```
+- Ensure that your docksal.yml or docksal-local.yml has been updated to include `XDEBUG_ENABLED=1` in the CLI.  This is off by default due to performance.
+- If changes were made, be sure to run `fin up` to update your environment.
+
+Here is an an example of what `docksal-local.yml` should include:
+```yaml
+version: "2.1"
+services:
+  cli:
+    environment:
+      - XDEBUG_ENABLED=1
+      - XDEBUG_CONFIG=idekey=VSCODE remote_host=192.168.64.1
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
+```
+- Use `fin exec /var/www/vendor/bin/drush <site alias> <drush command>` to run the command you want to debug.
