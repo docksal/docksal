@@ -46,7 +46,8 @@ script:
   - fin config set --global "SECRET_ACAPI_KEY=${SECRET_ACAPI_KEY}"
   - fin config set --global "SECRET_TERMINUS_TOKEN=${SECRET_TERMINUS_TOKEN}"
   - fin config set --global "SECRET_PLATFORMSH_CLI_TOKEN=${SECRET_PLATFORMSH_CLI_TOKEN}"
-  - run_tests pull.bats "$TRAVIS_BUILD_DIR/../test-pull"
+  # Pull tests take too long (~0.5h). Disabled for now.
+  #- run_tests pull.bats "$TRAVIS_BUILD_DIR/../test-pull"
 
 after_success:
   - build_trigger docksal/drupal7
