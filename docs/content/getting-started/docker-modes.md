@@ -5,27 +5,43 @@ aliases:
   - /en/master/getting-started/docker-modes/
 ---
 
-## Using Native Docker Applications
 
-After installation you can switch to using native Docker applications instead of VirtualBox, or vice versa.
+Docksal supports two operation modes on Mac and Windows:
+
+- VirtualBox VM (default)
+- Docker Desktop for Mac/Windows
+
+You can switch between these modes at any time using the instructions below.
+
+{{% notice note %}}
+While preserved in the original instance, Docker data (images, containers, volumes) is not automatically transferred over
+between VirtualBox and Docker Desktop instances. They are completely separate VMs.
+{{% /notice %}} 
+
+{{% notice note %}}
+Running in both modes at the same time is not supported.
+{{% /notice %}} 
+
 
 ## macOS
 
-### Switching from VirtualBox to Docker for Mac
+
+### Switching from VirtualBox to Docker Desktop for Mac
 
 **Reconfigure Docksal**
 
 Assuming that you have been previously using Docksal with VirtualBox, which was installed according to [setup docs](/getting-started/setup/):
 
-1. Install [Docker for Mac](https://docs.docker.com/docker-for-mac)
+1. Stop Docksal VirtualBox VM (run in Terminal):
 
-2. Open Terminal and run:
+        fin system stop
 
-        fin vm stop
+2. Install/launch [Docker Desktop for Mac](https://docs.docker.com/docker-for-mac/install/)
+
+3. Start Docksal in Docker Desktop mode (run in Terminal):
+
         fin config set --global DOCKER_NATIVE=1
-        fin system reset
-
-This stops Docksal VM, enables "native" mode, and resets Docksal system services.
+        fin system start
 
 **File sharing with Docker for Mac**
 
@@ -39,38 +55,39 @@ substantially. On Mac, `osxfs:cached` mode for Docker for Mac provides a decent 
 getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/issues/249)
 
 
-### Switching from Docker for Mac to VirtualBox 
+### Switching from Docker Desktop for Mac to VirtualBox 
 
-1. Stop Docksal system
+1. Stop Docksal in Docker Desktop (run in Terminal):
 
         fin system stop
 
-1. Close Docker for Mac
+2. Quit Docker Desktop app
 
-1. Start with VM: 
+3. Start Docksal in VirtualBox VM mode (run in Terminal):
 
         fin config set --global DOCKER_NATIVE=0
-        fin vm start
+        fin system start
 
-This disables the "native" apps mode, resets network settings, starts Docksal VM, and resets Docksal system services.
 
 ## Windows
 
-### Switching from VirtualBox to Docker for Windows
+
+### Switching from VirtualBox to Docker Desktop for Windows
 
 **Reconfigure Docksal**
 
 Assuming that you have been previously using Docksal with Babun and VirtualBox, installed according to [setup docs](/getting-started/setup/).
 
-1. Install [Docker for Windows](https://docs.docker.com/docker-for-windows).
+1. Stop Docksal VirtualBox VM (run in Babun):
 
-1. Open Babun and run:
+        fin system stop
 
-        fin vm stop
+2. Install/launch [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/).
+
+3. Start Docksal in Docker Desktop mode (run in Babun):
+
         fin config set --global DOCKER_NATIVE=1
-        fin system reset
-
-This stops Docksal VM, enables "native" mode and resets Docksal system services.
+        fin system start
 
 **File sharing on Windows for Docker for Windows**
 
@@ -78,22 +95,21 @@ Share your local drives with Docker for Windows:
 
 ![Sharing Windows drives with Docker](/images/docker-for-win-share-drives.png)
 
-### Switching from Docker for Windows to VirtualBox 
 
-1. Stop Docksal system
+### Switching from Docker Desktop for Windows to VirtualBox 
+
+1. Stop Docksal in Docker Desktop (run in Babun):
 
         fin system stop
 
-1. Close Docker for Windows
+2. Quit Docker Desktop app
 
-    On Windows, you will also have to **completely uninstall Hyper-V** (a dependency for Docker for Windows).  
+    You will also have to **completely uninstall Hyper-V** (a dependency for Docker Desktop for Windows).  
     You won't be able to use VirtualBox (or any other hypervisor) while Hyper-V is installed. 
     Hyper-V locks the VT-x extension to itself, so other hypervisors are not able to use the hardware virtualization 
     support and cannot run 64bit VMs because of that.
 
-1. Open Babun and run: 
+3. Start Docksal in VirtualBox VM mode (run in Babun):
 
         fin config set --global DOCKER_NATIVE=0
-        fin vm start
-
-This disables the "native" apps mode, resets network settings, starts Docksal VM, and resets Docksal system services.
+        fin system start
