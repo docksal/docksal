@@ -47,7 +47,7 @@ services:
   # DB: MySQL
   mysql:
     hostname: db
-    image: ${DB_IMAGE:-docksal/db:1.2-mysql-5.6}
+    image: ${DB_IMAGE:-docksal/mysql:5.6-1.4}
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -65,6 +65,28 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+
+  # DB: MySQL
+  mariadb:
+    hostname: db
+    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.0}
+    ports:
+    - "${MYSQL_PORT_MAPPING:-3306}"
+    volumes:
+    - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    - db_data:/var/lib/mysql  # Database data volume
+    environment:
+    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+    - MYSQL_USER=${MYSQL_USER:-user}
+    - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
+    - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+    - MYSQL_ALLOW_EMPTY_PASSWORD
+    - MYSQL_RANDOM_ROOT_PASSWORD
+    - MYSQL_ONETIME_PASSWORD
+    - MYSQL_INITDB_SKIP_TZINFO
+    dns:
+    - ${DOCKSAL_DNS1}
+    - ${DOCKSAL_DNS2}
 
   # DB: PostgreSQL
   pgsql:
