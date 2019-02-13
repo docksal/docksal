@@ -18,6 +18,7 @@ services:
       - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
+      - APACHE_FCGI_HOST_PORT=cli:9000
       - APACHE_BASIC_AUTH_USER
       - APACHE_BASIC_AUTH_PASS
     dns:
@@ -38,6 +39,7 @@ services:
       - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
+      - APACHE_FCGI_HOST_PORT=cli:9000
       - APACHE_BASIC_AUTH_USER
       - APACHE_BASIC_AUTH_PASS
     dns:
