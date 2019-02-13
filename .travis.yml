@@ -24,7 +24,8 @@ before_script:
   - mkdir ../test-duplicates
   - mkdir ../test-init
   - mkdir ../test-db
-  - mkdir ../test-pull
+  # Pull tests take too long (~0.5h). Disabled for now.
+  #- mkdir ../test-pull
   # Function runs tests by file name $1 in dir specified in $2
   - run_tests() { cd "${2:-$TRAVIS_BUILD_DIR}"; [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" && "$1" != "quicktest.bats" ]] && return; [[ "$1" == "quicktest.bats" ]] && I="-i"; bats ${I} "$TRAVIS_BUILD_DIR/tests/$1"; }
   # Trigger builds in boilerplate project repos
