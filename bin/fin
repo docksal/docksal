@@ -107,17 +107,17 @@ is_travis () {
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='18.09.0'
+REQUIREMENTS_DOCKER='18.09.2'
 REQUIREMENTS_DOCKER_COMPOSE='1.23.2'
-REQUIREMENTS_DOCKER_MACHINE='0.16.0'
-REQUIREMENTS_VBOX='5.2.20'  # Remember to update the download URLs below
+REQUIREMENTS_DOCKER_MACHINE='0.16.1'
+REQUIREMENTS_VBOX='5.2.26'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-Win.exe"
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-Win.exe"
 
 # Self Paths
 FIN_PATH="/usr/local/bin/fin"
