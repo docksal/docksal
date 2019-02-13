@@ -44,6 +44,27 @@ services:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
 
+  # Web: Nginx
+  nginx:
+    hostname: web
+    image: ${WEB_IMAGE:-docksal/nginx:1.14-1.0}
+    volumes:
+    - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    labels:
+    - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
+    - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
+    - io.docksal.project-root=${PROJECT_ROOT}
+    - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
+    environment:
+    - NGINX_VHOST_PRESET=drupal
+    - NGINX_FCGI_HOST_PORT=cli:9000
+    - NGINX_SERVER_ROOT=/var/www/${DOCROOT}
+    - NGINX_BASIC_AUTH_USER
+    - NGINX_BASIC_AUTH_PASS
+    dns:
+    - ${DOCKSAL_DNS1}
+    - ${DOCKSAL_DNS2}
+
   # DB: MySQL
   mysql:
     hostname: db
