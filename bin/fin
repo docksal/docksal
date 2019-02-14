@@ -3162,6 +3162,7 @@ system_start ()
 	if ! is_linux && ! is_docker_native && ! is_wsl; then
 		echo "Starting Docksal VM..."
 		vm start
+		system_reset
 	else
 		echo "Starting Docksal system services..."
 		system_reset
