@@ -1769,7 +1769,6 @@ show_help_vm ()
 	printh "ssh [command]" "Log into ssh or run a command via ssh"
 	printh "remove" "Remove Docksal machine and cleanup after it"
 	printh "ip" "Show the machine IP address"
-	# printh "ip [new ip]" "Set machine IP address (requires vm restart)"
 	printh "ls" "List all docker machines"
 	printh "env" "Display the commands to set up the shell for direct use of Docker client"
 	printh "mount" "Try remounting host filesystem (NFS on macOS, SMB on Windows)"
@@ -2195,28 +2194,6 @@ docker_machine_stop ()
 	docker-machine stop "$DOCKER_MACHINE_NAME"
 }
 
-docker_machine_change_ip ()
-{
-	echo "(docksal) Applying IP address $DOCKER_MACHINE_IP"
-	# extract first three parts of IP and append 255 to get broadcast mask
-	local BROADCAST_MASK=`expr "$DOCKER_MACHINE_IP" : '\([0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.\)'`'255';
-	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
-		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 $DOCKER_MACHINE_IP netmask 255.255.255.0 broadcast $BROADCAST_MASK up" && \
-		sleep 2 && \
-		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
-	sleep 2
-	local i=0
-	local _logs=""
-	for i in `seq 20`; do
-		_logs=$(docker-machine env "$DOCKER_MACHINE_NAME" 2>&1)
-		if [[ $? -eq 0 ]]; then return; fi
-		echo "IP validation (attempt #${i})..."
-		sleep 3
-	done
-	echo "$_logs"
-	return 1
-}
-
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
@@ -2613,27 +2590,6 @@ vm ()
 	fi
 
 	case $1 in
-		create)
-			# usage: fin vm create <machine_name>
-			shift
-			# errors handling
-			[[ "$1" == "" ]] && echo "Please provide a name for a new vm." && return 1
-			is_docker_machine_exist "$1" && echo "Machine ${1} already exists." && return 1
-			# create
-			docker_machine_create "$1"
-			;;
-		active)
-			# Get/Set active vm
-			shift
-			if [[ "$1" == "" ]]; then
-				echo "$DOCKER_MACHINE_NAME"
-			else
-				[[ "$1" == "$DOCKER_MACHINE_NAME" ]] && echo "$1 is already active" && return 0
-				! is_docker_machine_exist "$1" && echo "No docker machine with name $1" && return 1
-				mkdir -p "$CONFIG_MACHINES" || return 1
-				echo "$1" | tee "$CONFIG_MACHINE_ACTIVE" >/dev/null && echo "$1 is set active"
-			fi
-			;;
 		start)
 			if is_docker_machine_running; then
 				echo "Machine \"$DOCKER_MACHINE_NAME\" is already running."
@@ -2656,7 +2612,7 @@ vm ()
 			;;
 		ssh)
 			shift
-			docker-machine ssh "$DOCKER_MACHINE_NAME" "$@"
+			docker-machine ssh ${DOCKER_MACHINE_NAME} "$@"
 			;;
 		stats)
 			vm-stats
@@ -2682,24 +2638,10 @@ vm ()
 			configure_mounts
 			;;
 		ip)
-			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			if [[ "$1" =~ [0-9][0-9]*[0-9]*.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9] ]]; then
-				# set ip
-				echo-green "Setting ip to $1..."
-#				echo "$1" > "$DOCKER_MACHINE_FOLDER/ip"
-#				echo-yellow "IP change will take effect on next machine start."
-				DOCKER_MACHINE_IP="$1"
-				docker_machine_change_ip
-			else
-				docker-machine ip "$machine_name"
-			fi
-
+			docker-machine ip ${DOCKER_MACHINE_NAME}
 			;;
 		env)
-			shift
-			DOCKER_MACHINE_NAME="${1:-$DOCKER_MACHINE_NAME}"
-			docker-machine env "$DOCKER_MACHINE_NAME"
+			docker-machine env ${DOCKER_MACHINE_NAME}
 			;;
 		ram)
 			shift
@@ -2713,7 +2655,7 @@ vm ()
 			show_help_vm
 			;;
 		regenerate-certs)
-			docker-machine regenerate-certs -f "$DOCKER_MACHINE_NAME"
+			docker-machine regenerate-certs -f ${DOCKER_MACHINE_NAME}
 			vm restart
 			;;
 		*)
