@@ -774,7 +774,7 @@ check_docker_running ()
 
 	if [[ ${docker_status} -eq 255 ]] && (! is_docker_native && ! is_wsl); then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
-		_confirm "Run 'fin vm start' to start it now?"
+		_confirm "Start it now?"
 		docker_machine_start
 		if_failed "Could not start Docksal docker machine properly"
 		# re-check status
@@ -2195,6 +2195,7 @@ docker_machine_stop ()
 {
 	check_binary_found 'docker-machine'
 	docker-machine stop "$DOCKER_MACHINE_NAME"
+	DOCKER_MACHINE_STATUS="Stopped"
 }
 
 docker_machine_start ()
@@ -2204,6 +2205,7 @@ docker_machine_start ()
 	if is_docker_machine_exist; then
 		docker-machine start "$DOCKER_MACHINE_NAME"
 		if_failed_error "Failed starting virtual machine"
+
 		DOCKER_MACHINE_STATUS='Running'
 		# Disable IP change for now
 		#docker_machine_change_ip &&
@@ -2211,8 +2213,6 @@ docker_machine_start ()
 		if_failed_error "Failed starting virtual machine" \
 			"In case you see certificates problem, reboot your local host." \
 			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
-		configure_resolver
-		configure_mounts
 	else
 		# only auto-create default machine
 		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
@@ -2226,32 +2226,16 @@ docker_machine_start ()
 			# Disable IP change for now
 			#docker_machine_change_ip &&
 			docker_machine_env
-		[[ $? != 0 ]] && _docker_machine_start_exception
 
-		echo-green "Pulling Docksal system images..."
-		update_system_images
-		configure_mounts
-	fi
-
-	# Catch the return code from docker_machine_mounts
-	# TODO: figure out a more reliable implementation, as this may break if the code above gets reordered
-	local _err=$?
-	if [[ ${_err} -eq 0 ]]; then
-		echo-green "Importing ssh keys..."
-		ssh_key add
-	fi
-
-	return ${_err}
-}
-
-# Displays an error message and offers to remove the vm if something failed
-_docker_machine_start_exception ()
-{
-	echo-error "Proper creation of virtual machine has failed" \
+		# Displays an error message and offers to remove the vm if something failed
+		if [[ $? != 0 ]]; then
+			echo-error "Proper creation of virtual machine has failed" \
 				"For details please refer to the log above." \
 				"${yellow}It is recommended to remove malfunctioned virtual machine.${NC}"
-	docker_machine_remove
-	exit 1
+			docker_machine_remove
+			exit 1
+		fi
+	fi
 }
 
 # param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
@@ -2588,30 +2572,27 @@ vm ()
 	check_binary_found 'docker-machine'
 
 	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] && [[ "$1" != "remove" ]] && [[ "$1" != "rm" ]] && [[ "$1" != "active" ]] ; then
-		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME does not exist. Use 'fin vm start' or 'fin up'."
+		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME does not exist. Use 'fin system start'."
 		 return 1
 	fi
 
 	case $1 in
 		start)
-			if is_docker_machine_running; then
-				echo "Machine \"$DOCKER_MACHINE_NAME\" is already running."
-			else
-				docker_machine_start
-			fi
+			# Show a message and pause for input.
+			echo -e "Deprecated. Please use ${yellow}fin system start${NC} instead."; read -p "Press any key to continue..."
+			system_start
 			;;
 		restart)
-			docker_machine_stop; docker_machine_start
+			system_stop
+			system_start
 			;;
 		status)
-			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			docker-machine status "$machine_name"
+			docker-machine status ${DOCKER_MACHINE_NAME}
 			;;
 		stop)
-			# Disable resolver configuration before machine is turned off
-			configure_resolver off
-			docker_machine_stop
+			# Show a message and pause for input.
+			echo -e "Deprecated. Please use ${yellow}fin system stop${NC} instead."; read -p "Press any key to continue..."
+			system_stop
 			;;
 		ssh)
 			shift
@@ -2621,21 +2602,15 @@ vm ()
 			vm-stats
 			;;
 		kill)
-			# Disable resolver configuration before machine is turned off
-			configure_resolver off
-			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			docker-machine kill "$machine_name"
+			system_stop
+			docker-machine kill ${DOCKER_MACHINE_NAME}
 			;;
 		ls|list)
 			docker-machine ls
 			;;
 		remove|rm)
-			# Disable resolver configuration before machine is turned off
-			configure_resolver off
-			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			docker_machine_remove "$machine_name"
+			system_stop
+			docker_machine_remove ${DOCKER_MACHINE_NAME}
 			;;
 		mount)
 			configure_mounts
@@ -3098,35 +3073,41 @@ system_status ()
 }
 
 # Starts all Docksal related things
-# TODO: add projects, network, /etc/exports, etc. here for a complete shutdown of Docksal
 system_start ()
 {
 	if ! is_linux && ! is_docker_native && ! is_wsl; then
-		echo "Starting Docksal VM..."
-		vm start
-		system_reset
-	else
-		echo "Starting Docksal system services..."
-		system_reset
+		if is_docker_machine_running; then
+			echo "Machine ${DOCKER_MACHINE_NAME} is already running."
+		else
+			echo "Starting Docksal VM..."
+			docker_machine_start
+		fi
 	fi
+
+	echo "Starting Docksal system services..."
+	system_reset
 }
 
 # Stops/disables all Docksal things
 system_stop ()
 {
 	if ! is_linux && ! is_docker_native && ! is_wsl; then
-		echo-green "Stopping Docksal VM..."
-		# VM stop will perform configure_resolver off
-		vm stop
+		# Stop the docker-machine VM.
+		if is_docker_machine_running; then
+			echo-green "Stopping Docksal VM..."
+			docker_machine_stop
+		fi
 	else
+		# Stop all Docksal project and system containers.
 		# keep in a subshell so that exit during that command would not stop other command in system stop
 		(_stop_containers --all)
 		echo-green "Stopping Docksal system services..."
 		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
-		configure_resolver off
-		configure_mounts off
-		configure_network off
 	fi
+
+	configure_resolver off
+	configure_mounts off
+	configure_network off
 }
 
 # Helper function to run ssh-key inside the ssh-agent container
@@ -4106,7 +4087,7 @@ update_virtualbox () {
 	fi
 
 	# Stop VM
-	fin vm stop >/dev/null 2>&1
+	docker_machine_stop >/dev/null 2>&1
 
 	# Download and install Mac
 	is_mac && (
@@ -4276,17 +4257,17 @@ update ()
 			local res=$?
 			if [[ "$res" != "0" ]]; then
 				[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher"
-				(which 'docker-machine' >/dev/null 2>&1) && vm stop
+				(which 'docker-machine' >/dev/null 2>&1) && docker_machine_stop
 				DOCKER_MACHINE_STATUS="Stopped"
 				update_virtualbox
-				(which 'docker-machine' >/dev/null 2>&1) && vm start
+				(which 'docker-machine' >/dev/null 2>&1) && docker_machine_start
 			fi
 		fi
 
 		if ! is_linux && ! is_docker_native && ! is_wsl && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
 				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
-					"Start it with ${yellow}fin vm start${NC} or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
+					"Start it with ${yellow}fin system start${NC} or destroy it with ${yellow}fin vm kill${NC} if you want it re-created."
 				return 1
 			fi
 		fi
