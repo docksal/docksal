@@ -2142,7 +2142,6 @@ docker_machine_create ()
 	if [[ $? -eq 0 ]]; then
 		DOCKER_MACHINE_NAME="$machine_name"
 		DOCKER_MACHINE_STATUS='Running'
-		vm active "$machine_name"
 	else
 		return 1
 	fi
