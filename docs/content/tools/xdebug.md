@@ -99,7 +99,7 @@ You can run your scripts in console and debug them in the same way as browser re
 ### Drush 9
 
 In order to use Drush 9 with XDebug you will need to run commands directly through the `exec` command to the bin directory where Drush is located.
-This can usually be done by running `fin exec -T vendor/bin/drush` from where the vendor directory is located instead of running the regular command 
+This can usually be done by running `fin exec vendor/bin/drush` from where the vendor directory is located instead of running the regular command 
 `fin drush`.
 
 ### Resources
