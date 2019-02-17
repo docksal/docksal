@@ -6021,6 +6021,12 @@ vhosts ()
 	done
 }
 
+# Execute Commands Through SSH Proxy
+ssh_proxy ()
+{
+	docker exec docksal-ssh-proxy proxyctl "$@"
+}
+
 # Addons management
 addon () {
 	eval $(parse_params "$@")
@@ -7031,6 +7037,10 @@ case "$1" in
 	vhosts)
 		# no load_configuration
 		vhosts
+		;;
+	ssh-proxy)
+		shift
+		ssh_proxy "$@"
 		;;
 	addon|a)
 		# configuration will be loaded by end functions if needed
