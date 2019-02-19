@@ -95,6 +95,13 @@ Note: If `PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}` is set before web request d
 
 You can run your scripts in console and debug them in the same way as browser requests. For example, you can run drush command: `fin drush fl` and debug this drush command from the Features module.
 
+
+### Drush 9
+
+In order to use Drush 9 with XDebug you will need to run commands directly through the `exec` command to the bin directory where Drush is located.
+This can usually be done by running `fin exec vendor/bin/drush` from where the vendor directory is located instead of running the regular command 
+`fin drush`.
+
 ### Resources
 
 - [Zero-configuration Web Application Debugging with Xdebug and PhpStorm](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm)
@@ -205,8 +212,6 @@ version: "2.1"
 services:
   cli:
     environment:
-      - XDEBUG_ENABLED=1
-      - XDEBUG_CONFIG=idekey=VSCODE remote_host=192.168.64.1
       - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
 ```
 - Use `fin exec /var/www/vendor/bin/drush <site alias> <drush command>` to run the command you want to debug.
