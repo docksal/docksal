@@ -261,6 +261,7 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.2}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.4}
+IMAGE_SSH_PROXY=${IMAGE_SSH_PROXY:-docksal/ssh-proxy:edge}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 
 #---------------------------- Helper functions --------------------------------
@@ -994,6 +995,7 @@ _start_containers ()
 	docker-compose up -d --remove-orphans --build || return 1
 	_healthcheck_wait
 	_vhost_proxy_connect
+	_ssh_proxy_connect
 }
 
 # @param $1 "-a" || "--all"
@@ -1041,6 +1043,12 @@ _stop_containers ()
 		return
 	fi
 
+	if [[ "$1" == "ssh-proxy" ]] ; then
+		echo-green 'Stopping Docksal ssh-proxy service...'
+		docker stop docksal-ssh-proxy >/dev/null
+		return
+	fi
+
 	load_configuration
 	check_project_unique
 
@@ -1059,6 +1067,7 @@ _stop_containers ()
 			docker network disconnect -f "${network_name}" "${container}"
 		done
 		docker network disconnect -f "${network_name}" docksal-vhost-proxy
+		docker network disconnect -f "${network_name}" docksal-ssh-proxy
 		docker network rm "${network_name}" &>/dev/null
 	fi
 
@@ -1081,7 +1090,10 @@ _remove_containers ()
 		# Disconnect proxy from the project network, otherwise network will not be removed.
 		# Figure out the default project network name
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+		# Remove VHOST Proxy from Project Network
 		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
+		# Remove SSH Proxy From Project Network
+		docker network disconnect "$network" docksal-ssh-proxy >/dev/null 2>&1
 
 		# Taking the whole docker-compose project down (this removes containers, volumes, and networks)
 		docker-compose down --volumes --remove-orphans
@@ -1170,6 +1182,19 @@ _vhost_proxy_connect ()
 		echo-green "Connected vhost-proxy to \"${network}\" network."
 		# Run a dummy container to trigger docker-gen to refresh proxy configuration.
 		docker run --rm --entrypoint=echo ${IMAGE_VHOST_PROXY} >/dev/null 2>&1
+	fi
+}
+
+# Connect ssh-proxy to all bridge networks on the host
+_ssh_proxy_connect ()
+{
+	# Figure out the default project network name
+	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+	docker network connect "$network" docksal-ssh-proxy >/dev/null 2>&1
+	if [[ $? == 0 ]]; then
+		echo-green "Connected ssh-proxy to \"${network}\" network."
+		# Run a dummy container to trigger docker-gen to refresh proxy configuration.
+		docker run --rm --entrypoint=echo ${IMAGE_SSH_PROXY} >/dev/null 2>&1
 	fi
 }
 
@@ -3487,6 +3512,34 @@ configure_mounts ()
 	fi
 }
 
+# Start system-wide ssh-proxy service
+install_ssh_proxy_service ()
+{
+	docker rm -f docksal-ssh-proxy >/dev/null 2>&1 || true
+	docker volume rm docksal_ssh_proxy >/dev/null 2>&1 || true
+
+	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
+	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+
+	# Create a bind mount volume to the projects directory if defined and exists. Otherwise, create an empty volume.
+	if [[ -d "$SSH_PROXY_ROOT" ]]; then
+		# No quotes around ${SSH_PROXY_ROOT} below or the volume will not work correctly!!!
+		docker volume create --name docksal_ssh_proxy --opt type=none --opt device=${SSH_PROXY_ROOT} --opt o=bind >/dev/null 2>&1
+	else
+		docker volume create --name docksal_ssh_proxy >/dev/null 2>&1
+		# Warn if SSH_PROXY_ROOT was set but is not a valid directory
+		[[ "$SSH_PROXY_ROOT" != "" ]] && echo-warning "SSH_PROXY_ROOT ($SSH_PROXY_ROOT) is not a valid directory"
+	fi
+
+	# SSH Proxy.
+	docker run -d --name docksal-ssh-proxy --label "io.docksal.group=system" --restart=always \
+		-p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_SSH_PROXY_PORT_SSH:-2222}":2222 \
+		--mount type=volume,src=docksal_ssh_proxy,dst=/var/sshpiper \
+		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+		"${IMAGE_SSH_PROXY}" >/dev/null
+	if_failed_error "Failed starting the ssh proxy service."
+}
+
 # Start system-wide vhost-proxy service
 install_proxy_service ()
 {
@@ -3529,7 +3582,7 @@ install_proxy_service ()
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		${mount_certs} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
-	if_failed_error "Failed starting the proxy service."
+	if_failed_error "Failed starting the vhost proxy service."
 }
 
 # Detects upstream DNS or falls back to DOCKSAL_DEFAULT_DNS
@@ -4303,6 +4356,7 @@ update_system_images ()
 	else
 		# Load system images as usually from Docker Hub
 		docker pull "${IMAGE_VHOST_PROXY}"
+		docker pull "${IMAGE_SSH_PROXY}"
 		docker pull "${IMAGE_DNS}"
 		docker pull "${IMAGE_SSH_AGENT}"
 	fi
@@ -5480,8 +5534,15 @@ sysinfo ()
 	fi
 
 	if [[ "$all" == "all" ]]; then
+		echo
 		echo "███  Docksal Proxy status"
 		docker exec docksal-vhost-proxy nginx -t
+	fi
+
+	if [[ "$all" == "all" ]]; then
+		echo
+		echo "███  Docksal SSH Proxy status"
+		docker exec docksal-ssh-proxy proxyctl list-projects
 	fi
 
 	# Ping stats server
@@ -6017,6 +6078,12 @@ vhosts ()
 	for vhost in $NAMES ;do
 		echo-green "$vhost"
 	done
+}
+
+# Execute Commands Through SSH Proxy
+ssh_proxy ()
+{
+	docker exec docksal-ssh-proxy proxyctl "$@"
 }
 
 # Addons management
@@ -7719,6 +7786,10 @@ case "$1" in
 	vhosts)
 		# no load_configuration
 		vhosts
+		;;
+	ssh-proxy)
+		shift
+		ssh_proxy "$@"
 		;;
 	addon|a)
 		# configuration will be loaded by end functions if needed
