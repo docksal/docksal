@@ -38,7 +38,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: varnish
     # Pin Varnish version
-    image: ${VARNISH_IMAGE:-docksal/varnish:1.1-varnish4}
+    image: ${VARNISH_IMAGE:-docksal/varnish:4.1-2.0}
     depends_on:
       - web
 

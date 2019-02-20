@@ -3,7 +3,7 @@
 # - Apache 2.4
 # - MySQL 5.6
 # - PHP 7.2
-# - Varnish 5
+# - Varnish 4.1
 # - Memcached 1.4
 # - ApacheSolr 4.5
 
@@ -34,7 +34,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: varnish
     # Pin Varnish version
-    image: ${VARNISH_IMAGE:-docksal/varnish:1.1-varnish4}
+    image: ${VARNISH_IMAGE:-docksal/varnish:4.1-2.0}
     depends_on:
       - web
 

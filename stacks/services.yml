@@ -159,7 +159,7 @@ services:
   # Varnish
   varnish:
     hostname: varnish
-    image: ${VARNISH_IMAGE:-docksal/varnish:1.1-varnish5}
+    image: ${VARNISH_IMAGE:-docksal/varnish:6.1-2.0}
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
