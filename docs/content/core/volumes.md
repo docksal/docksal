@@ -216,7 +216,8 @@ naturally). The only added cost is having to stick with a web based IDE and term
 See [stacks/volumes-none.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-none.yml).
 
 {{% notice note %}}
-When a project is created, there are a few volumes created for it. One of them is called `project_root` which is mapped 
-to a specific location on the host. If you need to move the location of your project on your host system, run `fin rm`
-inside the project first to remove these mappings.
+When a project is created, there are a few volumes created for it. One of them is called `<project_name>_project_root`
+(where `<project_name>` is the machine name of your project). This volume is mapped to a specific location on the host. 
+If you need to move the location of a project on the host system, the project stack will first need to be removed (run 
+`fin project rm` inside the project), then you can move the project folder and start the project stack again.
 {{% /notice %}}
