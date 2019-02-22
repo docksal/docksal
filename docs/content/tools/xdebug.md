@@ -25,9 +25,9 @@ Note: Starting with Docksal v1.6.0 (and assuming the default stack is used), ins
 
 ### Debugging Drush 8
 
-To debug Drush 8 commands a path mapping will need to be made for the internal drush binary and the IDE. We recommend copying the drush binary to your local project and using file mapping.
+To debug Drush 8 commands, a path mapping will need to be made for the internal drush binary and the IDE. We recommend copying the drush binary to your local project and using file mapping.
 
-This can by running the following in the project root.
+This can be done by running the following in the project root:
 
 ```
 $ mkdir bin
@@ -74,14 +74,14 @@ Keep in mind, the script you are trying to debug must reside within the project 
 able to access its code (and thus debug it). Specifically, this means that you can only debug Drush and Drupal
 Console instances local to the project (installed with Composer as project level dependencies).
 
-Note: If drush is ran before web request debugging is configured, PHPStorm will not automatically configure the server and directory mappings for you. You will have to do this manually (see instructions for manual configuration above).
+Note: If drush is run before web request debugging is configured, PHPStorm will not automatically configure the server and directory mappings for you. You will have to do this manually (see instructions for manual configuration above).
 
 ![PHPStorm debugging with drush](/images/xdebug-phpstorm-drush.png)
 
 (1) Increase the Max. simultaneous connections to allow drush to spawn other drush instances. Otherwise the debugger may get stuck without any response.
 (2) Disable "Force break at the first line when a script is outside the project." Since the main drush binary resides in `cli` in `/usr/local/bin/drush`, the debugger will break on every drush invocation.
 
-Note: If using Drush 8.x path mappings for the Drush binary will need to be set in PHPStorm.
+Note: If using Drush 8.x, path mappings for the Drush binary will need to be set in PHPStorm.
 
 ![PHPStorm drush path mapping](/images/xdebug-mapping.png)
 
