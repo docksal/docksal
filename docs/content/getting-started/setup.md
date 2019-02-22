@@ -45,6 +45,12 @@ Click your operating system to proceed to OS-tailored docs:
 - [Linux](#install-linux)
 - [Windows](#install-windows)
 
+{{% notice info %}}
+On macOS and Linux, the installer requires administrative privileges to complete the Docksal installation. The `fin` tool 
+will be written to the `/usr/local/bin` directory, modify `/etc/exports`, `/etc/resolver/docksal`, restart nfsd, clear dns 
+cache, and to add the Docksal IP to the local interface and restart it. The installer will also stop/reinstall Docker if needed.
+{{% /notice %}}
+
 ### macOS Docker installation options {#install-macos} 
 
 Click the preferred option to proceed to option-specific docs.
