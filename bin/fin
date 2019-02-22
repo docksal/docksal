@@ -1095,6 +1095,7 @@ _remove_containers ()
 					[[ "$i" == "cli" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_cli_home" >/dev/null
 					[[ "$i" == "db" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_db_data" >/dev/null
 				done
+				return 0
 			}
 	fi
 }
