@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.80.1
+FIN_VERSION=1.81.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -993,8 +993,11 @@ _start_containers ()
 	check_docker_running
 	echo-green "Starting services..."
 	docker-compose up -d --remove-orphans --build || return 1
-	_healthcheck_wait
+	# TODO: Workaround. Handle this case in docksal/vhost-proxy.
+	# When project stack is started, but vhost-proxy is not yet connected to the stack network, vhost-proxy config breaks.
+	# To mitigate this we should connect vhost-proxy to the project stack network ASAP.
 	_vhost_proxy_connect
+	_healthcheck_wait
 }
 
 # @param $1 "-a" || "--all"
@@ -1057,10 +1060,10 @@ _stop_containers ()
 			--filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME_SAFE}" 2>/dev/null)
 		# Note: there should be no quotes around ${network_containers} or it won't be split properly
 		for container in ${project_containers}; do
-			docker network disconnect -f "${network_name}" "${container}"
+			docker network disconnect -f "${network_name}" "${container}" &>/dev/null || true
 		done
-		docker network disconnect -f "${network_name}" docksal-vhost-proxy
-		docker network rm "${network_name}" &>/dev/null
+		docker network disconnect -f "${network_name}" docksal-vhost-proxy &>/dev/null || true
+		docker network rm "${network_name}" &>/dev/null || true
 	fi
 
 	echo-green "Stopping services..."
