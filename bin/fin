@@ -4915,7 +4915,12 @@ _mysql ()
 	local __database="${db:-$MYSQL_DATABASE}"
 
 	if [[ "${ARGV[*]}" != "" ]]; then
-		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${ARGV[*]}"
+		# Some arguments were passwed, allow non-interactive run
+		if is_tty; then
+			${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${ARGV[*]}"
+		else
+			docker exec "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${ARGV[*]}"
+		fi
 	else
 		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password}
 	fi
