@@ -1206,8 +1206,6 @@ _healthcheck_wait ()
 	done
 
 	# All contaners have started, check the final status
-	status=$(docker ps --filter "$FILTER" --format '{{ .Status }}')
-
 	if [[ "$status" =~ "(health: unhealthy)" ]]; then
 		echo-error "One or more containers are not healthy" \
 			"See ${yellow}fin project status${NC} for details"
