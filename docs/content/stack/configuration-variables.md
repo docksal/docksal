@@ -36,7 +36,7 @@ When set, this will allow for Docksal to no longer accept updates. This is usual
 
 ### DOCKER_VERSION_ALERT_SUPPRESS
 
-When set suppresses apert about the outdated Docksal version.
+When set, suppresses alert about the outdated Docksal version.
 
 ### DOCKSAL_ENVIRONMENT 
 
