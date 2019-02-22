@@ -1178,51 +1178,43 @@ _vhost_proxy_connect ()
 	fi
 }
 
-# Checks container health status (if available)
-# Relies on healthcheck introduced in docksal/cli v1.3.0+, uses `sleep` as a fallback
-# @param $1 container id/name
-_healthcheck ()
-{
-	local health_status
-	health_status=$(docker inspect --format='{{json .State.Health.Status}}' "$1" 2>/dev/null)
-
-	# Wait for 5s then exit with 0 if a container does not have a health status property
-	# Necessary for backward compatibility with images that do not support health checks
-	if [[ $? != 0 ]]; then
-		echo "Waiting 10s for container to start..."
-		sleep 10
-		return 0
-	fi
-
-	# If it does, check the status
-	echo $health_status | grep '"healthy"' >/dev/null 2>&1
-}
-
 # Waits for containers to become healthy
 # For reasoning why we are not using  `depends_on` `condition` see here:
 # https://github.com/docksal/docksal/issues/225#issuecomment-306604063
 # TODO: make this universal. Currently hardcoded for cli only.
 _healthcheck_wait ()
 {
-	# Wait for cli to become ready by watching its health status
-	local container_name="'cli'"
 	local delay=5
 	local timeout=60
 	local elapsed=0
+	local status=""
+	local FILTER="label=com.docker.compose.project=$COMPOSE_PROJECT_NAME"
 
-	until _healthcheck "$container_name"; do
-		echo "Waiting for $container_name to become ready..."
+	sleep 1 # Small sleep to give quick containers time to start
+	status=$(docker ps --filter "$FILTER" --format '{{ .Status }}')
+
+	# While one or more containers are starting wait for them
+	while [[ "$status" =~ "(health: starting)" ]]; do
+		echo "Waiting for project stack to become ready..."
 		sleep "$delay";
-
-		# Give the container 30s to become ready
 		elapsed=$((elapsed + delay))
 		if ((elapsed > timeout)); then
-			echo-error "$container_name heathcheck failed" \
-				"Container did not enter a healthy state within the expected amount of time." \
-				"Try ${yellow}fin project restart${NC}"
-			exit 1
+			echo-error "Project heathcheck has timed out" \
+				"One or more containers did not enter a healthy state within $timeout seconds of the project start." \
+				"See ${yellow}fin project status${NC} for details" \
+				"Check ${yellow}fin logs${NC} for more details"
+			return 1
 		fi
+		status=$(docker ps --filter "$FILTER" --format '{{ .Status }}')
 	done
+
+	# All contaners have started, check the final status
+	if [[ "$status" =~ "(health: unhealthy)" ]]; then
+		echo-error "One or more containers are not healthy" \
+			"See ${yellow}fin project status${NC} for details"
+			"This is most likely due to a project misconfiguration."
+		return 1
+	fi
 
 	return 0
 }
