@@ -7,7 +7,11 @@ aliases:
 
 ## System requirements
 
-Minimum RAM requirement: 4GB. 8GB or more recommended.
+RAM requirement: 8GB or more.
+
+{{% notice info %}}
+Docksal installer on `get.docksal.io` requires administrative privileges to complete the installation. They are required to perform multiple tasks: on all operating systems `fin` tool needs to be written to the `/usr/local/bin` directory and Docksal's IP address `192.168.64.100` needs to be assigned to the local network interface, additionally on macOS `/etc/exports` and `/etc/resolver/docksal` needs to be modified, and installer needs to restart nfsd, on Linux installer stops/reinstalls Docker service if needed, on Windows there are additional requests for permissions to create network shares for local drives to share files with Docker and to mount them with current user account and password.
+{{% /notice %}}
 
 ### Mac
 
