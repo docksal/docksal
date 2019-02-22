@@ -753,9 +753,10 @@ check_docker_running ()
 	[[ "$UPGRADE_IN_PROGRESS" == "1" ]] && return 0
 
 	# Check docker versions in this function
-	if ! is_docker_version; then
+	if ! is_docker_version && [[ -z $DOCKER_VERSION_ALERT_SUPPRESS ]]; then
 		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
 			"Run ${yellow}fin update${NC} to update to the required version." \ ""
+		DOCKER_VERSION_ALERT_SUPPRESS=1 # prevent multiple alerts
 	fi
 
 	# Check cached value
@@ -7459,6 +7460,7 @@ case "$1" in
 		_bash "$@"
 		;;
 	exec|run)
+		DOCKER_VERSION_ALERT_SUPPRESS=1 # prevent version alert for exec
 		load_configuration
 		shift
 		if [ -f "$1" ]; then
@@ -7540,6 +7542,7 @@ case "$1" in
 		esac
 		;;
 	drush)
+		DOCKER_VERSION_ALERT_SUPPRESS=1 # prevent version alert for exec
 		load_configuration
 		shift
 		# cd to docroot if alias was used and alias leads to project root

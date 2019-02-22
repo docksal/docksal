@@ -34,6 +34,10 @@ Docker image to use for DNS Routing.
 
 When set, this will allow for Docksal to no longer accept updates. This is usually good in combination with `CI=true`.
 
+### DOCKER_VERSION_ALERT_SUPPRESS
+
+When set suppresses apert about the outdated Docksal version.
+
 ### DOCKSAL_ENVIRONMENT 
 
 `Default: local`
