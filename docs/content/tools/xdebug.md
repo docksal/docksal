@@ -23,6 +23,17 @@ $ fin exec php -v | grep -i xdebug
 
 Note: Starting with Docksal v1.6.0 (and assuming the default stack is used), installing the companion browser extension is no longer necessary. Once Xdebug is enabled, debugging sessions will be started automatically.
 
+### Debugging Drush 8
+
+To debug Drush 8 commands, a path mapping will need to be made for the internal drush binary and the IDE. We recommend copying the drush binary to your local project and using file mapping.
+
+This can be done by running the following in the project root:
+
+```
+$ mkdir bin
+$ fin exec cp /usr/local/bin/drush8 ./bin/drush
+```
+
 ## Debugging with PHPStorm
 
 ### Web Requests
@@ -63,30 +74,14 @@ Keep in mind, the script you are trying to debug must reside within the project 
 able to access its code (and thus debug it). Specifically, this means that you can only debug Drush and Drupal
 Console instances local to the project (installed with Composer as project level dependencies).
 
-1) Create `.docksal/docksal-local.yml` file (or update an existing one) in your project with the following:
-
-```yaml
-version: "2.1"
-
-services:
-  cli:
-    environment:
-      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
-```
-
-This adjustment is necessary to let PHPStorm know what server configuration to use when debugging console scripts. With console scripts, there is no web server involved, so `serverName` has to be hardcoded.
-
-Note: If `PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}` is set before web request debugging is configured, PHPStorm will not automatically configure the server and directory mappings for you. You will have to do this manually (see instructions for manual configuration above).
-
-2) Apply container configuration with `fin project start` (`fin p start`)
-3) Adjust the following settings so that PHPStorm can handle debugging Drush commands:
+Note: If drush is run before web request debugging is configured, PHPStorm will not automatically configure the server and directory mappings for you. You will have to do this manually (see instructions for manual configuration above).
 
 ![PHPStorm debugging with drush](/images/xdebug-phpstorm-drush.png)
 
 (1) Increase the Max. simultaneous connections to allow drush to spawn other drush instances. Otherwise the debugger may get stuck without any response.
 (2) Disable "Force break at the first line when a script is outside the project." Since the main drush binary resides in `cli` in `/usr/local/bin/drush`, the debugger will break on every drush invocation.
 
-2) Set path mappings for the Drush binary in PHPStorm:
+Note: If using Drush 8.x, path mappings for the Drush binary will need to be set in PHPStorm.
 
 ![PHPStorm drush path mapping](/images/xdebug-mapping.png)
 
@@ -94,13 +89,6 @@ Note: If `PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}` is set before web request d
 (2) Map the project root to `/var/www`. Additionally map the project level Drush binary to `/usr/local/bin/drush`.
 
 You can run your scripts in console and debug them in the same way as browser requests. For example, you can run drush command: `fin drush fl` and debug this drush command from the Features module.
-
-
-### Drush 9
-
-In order to use Drush 9 with XDebug you will need to run commands directly through the `exec` command to the bin directory where Drush is located.
-This can usually be done by running `fin exec vendor/bin/drush` from where the vendor directory is located instead of running the regular command 
-`fin drush`.
 
 ### Resources
 
@@ -175,7 +163,13 @@ Here is an an example of what `launch.json` should look like:
 
 For debugging Drush commands in VSCode with XDebug and Docksal, you will need to add a path mapping to the Drush executable.
 
-- Add `"/var/www/vendor/bin/drush": "/usr/local/bin/drush"` to `pathMappings` in your `launch.json` file.
+### File Mapping Drush 8.x
+
+- Add `"/usr/local/bin/drush": "${workspaceRoot}/bin/drush"` to `pathMappings` in your `launch.json` file.
+
+### File Mapping Drush 9.x
+
+- Add `"/usr/local/bin/drush": "${workspaceRoot}/vendor/bin/drush"` to `pathMappings` in your `launch.json` file.
 
 Here is an an example of what `launch.json` should look like:
 ```json
@@ -189,7 +183,7 @@ Here is an an example of what `launch.json` should look like:
       "port": 9000,
       "pathMappings": {
         "/var/www/": "${workspaceRoot}",
-        "/var/www/vendor/bin/drush": "/usr/local/bin/drush"
+        "/var/www/vendor/bin/drush": "${workspaceRoot}/bin/drush"
       }
     },
     {
