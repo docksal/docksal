@@ -214,3 +214,9 @@ development environments with the best performance and consistency for Mac and W
 naturally). The only added cost is having to stick with a web based IDE and terminal.
 
 See [stacks/volumes-none.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-none.yml).
+
+{{% notice note %}}
+When a project is created, there are a few volumes created for it. One of them is called `project_root` which is mapped 
+to a specific location on the host. If you need to move the location of your project on your host system, run `fin rm`
+inside the project first to remove these mappings.
+{{% /notice %}}
