@@ -35,16 +35,16 @@ From your project's root folder run:
 
 ```bash
 fin run phpcs \
-    --standard=Drupal -n \
-    --extensions="php,module,inc,install,test,profile,theme" \
+    --standard=Drupal,DrupalPractice -n \
+    --extensions="php,module,inc,install,test,profile,theme,info" \
     --ignore="*.features.*,*.pages*.inc" \
     docroot/sites/all/modules/custom
 ```
 
 ```bash
 fin run phpcbf \
-    --standard=Drupal -n \
-    --extensions="php,module,inc,install,test,profile,theme" \
+    --standard=Drupal,DrupalPractice -n \
+    --extensions="php,module,inc,install,test,profile,theme,info" \
     --ignore="*.features.*,*.pages*.inc" \
     docroot/sites/all/modules/custom
 ```
