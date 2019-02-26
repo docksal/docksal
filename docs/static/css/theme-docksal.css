@@ -1,3 +1,7 @@
+html {
+  min-height: 100%;
+}
+
 #logo img {
   max-width: 75%
 }
@@ -26,10 +30,17 @@ i.icon.docksal {
 
 body {
   position: relative;
+  min-height: 100vh;
 }
 
 #sidebar {
   position: absolute;
+  height: 100%;
+  top: 0;
+  bottom: 0;
+}
+
+#sidebar .highlightable {
   height: 100%;
 }
 
