@@ -3371,11 +3371,18 @@ configure_network_windows ()
 # Configure Docksal network settings on WSL
 configure_network_wsl ()
 {
-	# TODO: implement on/off modes
 	local mode="${1:-on}"
 
-	sudowin netsh.exe interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_IP}" mask="255.255.255.0"
-	sudowin netsh.exe interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
+	# Docker for Win
+	if [[ "$mode" == "on" ]]; then
+		# Add Docksal IP aliases on the DockerNAT adapter
+		sudowin netsh.exe interface ip add address name=\"vEthernet \(DockerNAT\)\" addr="${DOCKSAL_IP}" mask="255.255.255.0"
+		sudowin netsh.exe interface ip add address name=\"vEthernet \(DockerNAT\)\" addr="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
+	elif [[ "$mode" == "off" ]]; then
+		# Remove Docksal IP aliases on the DockerNAT adapter
+		sudowin netsh.exe interface ip delete address name=\"vEthernet \(DockerNAT\)\" addr="${DOCKSAL_IP}"
+		sudowin netsh.exe interface ip delete address name=\"vEthernet \(DockerNAT\)\" addr="${DOCKSAL_HOST_IP}"
+	fi
 	# Wait 5s for network configuration to apply
 	sleep 5
 }
