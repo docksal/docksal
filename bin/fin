@@ -4374,7 +4374,7 @@ update ()
 			# Check for administrative privileges if needed
 			if ! (ipconfig.exe | grep "$DOCKSAL_IP") || ! (ipconfig.exe | grep "$DOCKSAL_HOST_IP"); then
 				cd "/mnt/c"
-				touch "file.tmp"
+				touch "file.tmp" &>/dev/null
 				if [[ "$?" != "0" ]]; then
 					echo-error "Docksal needs administrative privileges to set up network preferences." \
 						"--" \
