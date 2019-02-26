@@ -546,11 +546,10 @@ sudowin ()
 		shift
 	done
 	if [[ "$arguments" != "" ]]; then
-		powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command" -Args "$arguments"		
+		powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command" -Args "$arguments"
 	else
 		powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command"
 	fi
-
 }
 
 # Universal Bash parameter parsing
@@ -2195,7 +2194,7 @@ docker_machine_env ()
 
 	# get the env
 	if is_wsl; then
-		# on wsl docker-machine is windows binary, but WSL does not understand windows paths
+		# In WSL, docker-machine is a Windows binary, but WSL does not understand Windows paths
 		_env=$(docker-machine env --shell=bash docksal | sed "s/\\\\/\//g" | sed "s/C:/\/c/")
 	else
 		_env=$(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
