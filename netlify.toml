@@ -4,7 +4,7 @@
 # DO NOT REMOVE THIS
 publish = "docs/public"
 functions = "functions"
-command = "cd docs && make non-production-build"
+command = "cd docs && hugo --enableGitInfo"
 
 [build.environment]
 HUGO_VERSION = "0.50"
@@ -22,6 +22,4 @@ command = "cd docs && hugo --enableGitInfo -b $DEPLOY_PRIME_URL"
 
 [context.master]
 # This context is triggered by the `master` branch and allows search indexing
-# DO NOT REMOVE THIS (contact @chenopis or @sig-docs-maintainers)
-publish = "docs/public"
-command = "cd docs && make production-build"
+command = "cd docs && hugo"

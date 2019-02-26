@@ -5,10 +5,10 @@
 version: "2.1"
 
 services:
-  # Web
-  web:
+  # Web: Apache
+  apache:
     hostname: web
-    image: ${WEB_IMAGE:-docksal/web:2.1-apache2.4}
+    image: ${WEB_IMAGE:-docksal/apache:2.4-2.3}
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
@@ -18,35 +18,59 @@ services:
       - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
+      - APACHE_FCGI_HOST_PORT=cli:9000
       - APACHE_BASIC_AUTH_USER
       - APACHE_BASIC_AUTH_PASS
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
 
-  # DB (legacy)
-  # TODO: Deprecated and to be removed in October 2018
-  db:
-    hostname: db
-    image: ${DB_IMAGE:-docksal/db:1.2-mysql-5.6}
-    ports:
-      - "${MYSQL_PORT_MAPPING:-3306}"
+  # Web: Apache (DEPRECATED)
+  # TODO: remove November 2019
+  web:
+    hostname: web
+    image: ${WEB_IMAGE:-docksal/web:2.2-apache2.4}
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
-      - db_data:/var/lib/mysql  # Database data volume
+    labels:
+      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
+      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
+      - io.docksal.project-root=${PROJECT_ROOT}
+      - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-      - MYSQL_USER=${MYSQL_USER:-user}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+      - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
+      - APACHE_FCGI_HOST_PORT=cli:9000
+      - APACHE_BASIC_AUTH_USER
+      - APACHE_BASIC_AUTH_PASS
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
 
+  # Web: Nginx
+  nginx:
+    hostname: web
+    image: ${WEB_IMAGE:-docksal/nginx:1.14-1.0}
+    volumes:
+    - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    labels:
+    - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
+    - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
+    - io.docksal.project-root=${PROJECT_ROOT}
+    - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
+    environment:
+    - NGINX_VHOST_PRESET=drupal
+    - NGINX_FCGI_HOST_PORT=cli:9000
+    - NGINX_SERVER_ROOT=/var/www/${DOCROOT}
+    - NGINX_BASIC_AUTH_USER
+    - NGINX_BASIC_AUTH_PASS
+    dns:
+    - ${DOCKSAL_DNS1}
+    - ${DOCKSAL_DNS2}
+
   # DB: MySQL
   mysql:
     hostname: db
-    image: ${DB_IMAGE:-docksal/db:1.2-mysql-5.6}
+    image: ${DB_IMAGE:-docksal/mysql:5.6-1.4}
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -64,6 +88,28 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+
+  # DB: MySQL
+  mariadb:
+    hostname: db
+    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.0}
+    ports:
+    - "${MYSQL_PORT_MAPPING:-3306}"
+    volumes:
+    - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    - db_data:/var/lib/mysql  # Database data volume
+    environment:
+    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+    - MYSQL_USER=${MYSQL_USER:-user}
+    - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
+    - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+    - MYSQL_ALLOW_EMPTY_PASSWORD
+    - MYSQL_RANDOM_ROOT_PASSWORD
+    - MYSQL_ONETIME_PASSWORD
+    - MYSQL_INITDB_SKIP_TZINFO
+    dns:
+    - ${DOCKSAL_DNS1}
+    - ${DOCKSAL_DNS2}
 
   # DB: PostgreSQL
   pgsql:
@@ -85,7 +131,7 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.5-php7.1}
+    image: ${CLI_IMAGE:-docksal/cli:2.6-php7.2}
     volumes:
       - project_root:/var/www:rw,nocopy  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
@@ -99,6 +145,8 @@ services:
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
       - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}  # Point xdebug to the host IP
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
+      - DRUSH_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - BLACKFIRE_CLIENT_ID
       - BLACKFIRE_CLIENT_TOKEN
       - SECRET_SSH_PRIVATE_KEY
@@ -113,7 +161,7 @@ services:
   # Varnish
   varnish:
     hostname: varnish
-    image: ${VARNISH_IMAGE:-docksal/varnish:1.1-varnish5}
+    image: ${VARNISH_IMAGE:-docksal/varnish:6.1-2.0}
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     labels:
@@ -130,6 +178,17 @@ services:
     hostname: memcached
     image: ${MEMCACHED_IMAGE:-memcached:1.4-alpine}
     command: ["-m", "128"]  # Set memcached memory limit to 128 MB by default
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+
+  # Redis
+  redis:
+    hostname: redis
+    image: ${REDIS_IMAGE:-wodby/redis:5.0}
+    environment:
+      - REDIS_MAXMEMORY=${REDIS_MAXMEMORY:-256m}
+      # Additional variables can be found https://github.com/wodby/redis
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
@@ -168,3 +227,20 @@ services:
     environment:
       - BLACKFIRE_SERVER_ID
       - BLACKFIRE_SERVER_TOKEN
+
+  # Elastic Search
+  elasticsearch:
+    hostname: elasticsearch
+    image: elasticsearch:6.5.3
+    ports:
+      - "9200"
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1

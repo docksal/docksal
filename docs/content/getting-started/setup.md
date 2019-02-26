@@ -7,7 +7,11 @@ aliases:
 
 ## System requirements
 
-Minimum RAM requirement: 4GB. 8GB or more recommended.
+RAM requirement: 8GB or more.
+
+{{% notice info %}}
+Docksal installer on `get.docksal.io` requires administrative privileges to complete the installation. They are required to perform multiple tasks: on all operating systems `fin` tool needs to be written to the `/usr/local/bin` directory and Docksal's IP address `192.168.64.100` needs to be assigned to the local network interface, additionally on macOS `/etc/exports` and `/etc/resolver/docksal` needs to be modified, and installer needs to restart nfsd, on Linux installer stops/reinstalls Docker service if needed, on Windows there are additional requests for permissions to create network shares for local drives to share files with Docker and to mount them with current user account and password.
+{{% /notice %}}
 
 ### Mac
 
@@ -34,6 +38,7 @@ You will have to install Docker manually, then install Docksal as usual on [Linu
 - CPU with hardware virtualization (**VT-x/AMD-V**) supported and [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
 - Windows 7 or newer
 
+
 ## Installation {#install}
 
 ### Choose Operating System
@@ -55,11 +60,11 @@ Click the preferred option to proceed to option-specific docs.
 
 ### macOS with VirtualBox {#install-macos-virtualbox}
 
-With this method, Docker will run inside the VM in VirtualBox.
+With this method, Docker will run inside a VM in VirtualBox.
 
 1. Download and Install VirtualBox
 
-    [![Download VirtualBox 5.2.2](https://img.shields.io/badge/⇩%20-Virtual%20Box%205.2.2-green.svg?classes=inline)](http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-OSX.dmg)
+    [![Download VirtualBox 5.2.20](https://img.shields.io/badge/⇩%20-Virtual%20Box%205.2.20-green.svg?classes=inline)](http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-OSX.dmg)
 
 1. Enable Kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
 
@@ -168,13 +173,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
     [![Babun Site](https://img.shields.io/badge/↪%20-Babun%20Site-blue.svg?classes=inline)](http://babun.github.io/)
 
-1. Windows 10. Enable SMB1 protocol ([Why?](https://docs.docksal.io/en/master/troubleshooting-smb/#windows-10-fall-creators-update-1709))
-
-    This step will require reboot. On Windows 10 open Windows Command Prompt as  Administrator and run:
-
-        dism /online /enable-feature /all /featurename:SMB1Protocol-Server
-
-1. Install Docksal
+1. Install Docksal (VirtualBox will be installed automatically if necessary)
 
     Open **Babun** and run:
 
@@ -194,7 +193,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
 1. Download and Install Docker for Windows
 
-    [![Docker for Windows](https://img.shields.io/badge/⇩%20-Docker%20for%20Windows-green.svg?classes=inline)](http://download.virtualbox.org/virtualbox/5.2.2/VirtualBox-5.2.2-119230-OSX.dmg)
+    [![Docker for Windows](https://img.shields.io/badge/⇩%20-Docker%20for%20Windows-green.svg?classes=inline)](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
     
     Notes: computer will require logout and restart during the installation. 
     [See screen recording](https://youtu.be/bQgaEUcuJ98) to know what to expect.

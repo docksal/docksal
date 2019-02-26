@@ -7,7 +7,7 @@ aliases:
 
 Cli container already contains `ruby`, `bundler`.
 
-## Create Gemfile in theme folder
+## Create Gemfile in Theme Folder
 
 Example:
 
@@ -18,7 +18,7 @@ gem 'compass'
 gem 'bootstrap-sass', '~>3.2.0'
 ```
 
-## Install tools
+## Install Tools
 
 **Every developer runs `bundle install` to pull necessary gem dependencies**
 
@@ -41,7 +41,7 @@ fin exec bundle exec compass compile
 
 This is important not run `compass compile` directly, but run it via `bundle exec` so that proper gem versions were used (defined in the Gemfile).
 
-## Compass watcher
+## Compass Watcher
 
 You can run watcher to keep your CSS files up to date as changes are made:
 

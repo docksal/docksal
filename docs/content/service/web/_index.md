@@ -3,7 +3,7 @@ title: "web"
 chapter: true
 ---
 
-# docksal/web service
+# docksal/web Service
 
 Advanced documentation for `docksal/web` service 
 

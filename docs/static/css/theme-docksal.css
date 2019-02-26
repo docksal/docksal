@@ -1,3 +1,7 @@
+html {
+  min-height: 100%;
+}
+
 #logo img {
   max-width: 75%
 }
@@ -11,3 +15,53 @@ i.icon.docksal {
   background-image: url("/images/docksal-mark-white.svg");
   background-size: 15px 15px;
 }
+
+/* Theme fixes for Algolia Search */
+.searchboxed {
+  margin-top: 1rem;
+  position: relative;
+  border: 1px solid #915eae;
+  background: #764890;
+  border-radius: 4px;}
+
+.searchboxed span {
+  right: 0px;
+  top:0px;}
+
+body {
+  position: relative;
+  min-height: 100vh;
+}
+
+#sidebar {
+  position: absolute;
+  height: 100%;
+  top: 0;
+  bottom: 0;
+}
+
+#sidebar .highlightable {
+  height: 100%;
+}
+
+.searchboxed input {
+  display: inline-block;
+  color: #fff;
+  width: 100%;
+  height: 30px;
+  background: transparent;
+  border: 0;
+  padding: 0 25px 0 30px;
+  margin: 0;
+  font-weight: 300;
+}
+.searchboxed label {
+
+  color: rgba(255, 255, 255, 0.8);
+  position: absolute;
+  left: 10px;
+  top: 3px;
+
+}
+
+#search-by:focus {box-shadow: none}

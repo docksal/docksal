@@ -1,5 +1,5 @@
 ---
-title: "File sharing"
+title: "File Sharing"
 weight: 3
 aliases:
   - /en/master/advanced/file-sharing/

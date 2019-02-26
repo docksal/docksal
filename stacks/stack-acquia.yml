@@ -2,50 +2,51 @@
 #
 # - Apache 2.4
 # - MySQL 5.6
-# - PHP 5.6 / PHP 7.1
-# - Varnish 5
+# - PHP 7.2
+# - Varnish 4.1
 # - Memcached 1.4
-# - ApacheSolr 4.x
+# - ApacheSolr 4.5
 
 version: "2.1"
 
 services:
-  # Web
+  # http(s)://VIRTUAL_HOST
   web:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
-      service: web
+      service: apache
     depends_on:
       - cli
 
-  # DB
   db:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mysql
 
-  # CLI
   cli:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
 
-  # Varnish
+  # http(s)://varnish.VIRTUAL_HOST
   varnish:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: varnish
+    # Pin Varnish version
+    image: ${VARNISH_IMAGE:-docksal/varnish:4.1-2.0}
     depends_on:
       - web
 
-  # Memcached
   memcached:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: memcached
 
-  # Solr
+  # http(s)://solr.VIRTUAL_HOST/solr
   solr:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: solr
+    # Pin Solr version
+    image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}
