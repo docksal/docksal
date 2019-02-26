@@ -144,7 +144,6 @@ CONFIG_BIN_DIR="$CONFIG_DIR/bin"
 CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
-DOCKER_COMPOSE_BIN_NIX="/usr/local/bin/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
@@ -4000,8 +3999,8 @@ install_tools_debian ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			sudo chmod +x "$DOCKER_COMPOSE_BIN" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
@@ -4034,8 +4033,8 @@ install_tools_fedora ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			sudo chmod +x "$DOCKER_COMPOSE_BIN" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
@@ -4079,8 +4078,8 @@ install_tools_generic_linux ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			sudo chmod +x "$DOCKER_COMPOSE_BIN" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
@@ -4120,8 +4119,8 @@ install_tools_wsl ()
 	# Install Linux Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			sudo chmod +x "$DOCKER_COMPOSE_BIN" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
