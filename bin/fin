@@ -3259,7 +3259,7 @@ ssh_key ()
 		# Ensure ssh_path exists
 		mkdir -p "$ssh_path"
 		# Generate a default id_rsa key
-		_ssh_key_generate id_rsa
+		ssh_key_generate id_rsa
 	fi
 
 	# Copy all keys from the host to the ssh-agent container.
