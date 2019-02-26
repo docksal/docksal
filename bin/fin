@@ -245,11 +245,11 @@ STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
 URL_DOCKER_COM="https://get.docker.com/"
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
-URL_DOCKER_LINUX="https://download.docker.com/linux/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 # Until there is an official standalone docker.exe binary available, use the one pulled from Docker for Windows
 # See https://github.com/docker/for-win/issues/1460#issuecomment-390045959
 #URL_DOCKER_WIN="https://download.docker.com/win/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
 URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.11.0/docker-${REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
@@ -4094,11 +4094,11 @@ install_tools_wsl ()
 
 	# Install Linux Docker client
 	if ! is_docker_version; then
-		local docker_pkg=$(basename "$URL_DOCKER_LINUX")
+		local docker_pkg=$(basename "$URL_DOCKER_NIX")
 		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
-			curl -fL# "$URL_DOCKER_LINUX" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
+			curl -fL# "$URL_DOCKER_NIX" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
 			if_failed "Check internet connection."
 		# Use a local/portable copy if available
 		else
