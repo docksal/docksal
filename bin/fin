@@ -6323,6 +6323,7 @@ addon_execute ()
 		# Run the command
 		CONTAINER_NAME="$_exec_target" _exec "$cmd"
 	else
+		export ADDON_SCRIPT=true
 		exec "$addon" "$@"
 	fi
 }
@@ -7211,6 +7212,15 @@ if [[ "$1" == "@"* ]]; then
 	fi
 	[[ "$1" == "" ]] && echo "$_alias_cd" && exit
 	cd "$_alias_cd" 2>/dev/null
+
+	# If ran within a script
+	if [[ -n $ADDON_SCRIPT ]]; then
+		unset COMPOSE_PROJECT_NAME
+		unset COMPOSE_PROJECT_NAME_SAFE
+		unset COMPOSE_PROJECT_VHOST_NAME_SAFE
+		unset VIRTUAL_HOST
+	fi
+
 	if_failed_error "Could not navigate to directory linked by $1 alias"
 fi
 
