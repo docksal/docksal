@@ -4371,7 +4371,7 @@ update ()
 			if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
 
 			# Check for administrative privileges if needed
-			if ! (ipconfig.exe | grep "$DOCKSAL_IP") || ! (ipconfig.exe | grep "$DOCKSAL_HOST_IP"); then
+			if ! (ipconfig.exe | grep "$DOCKSAL_IP" &>/dev/null) || ! (ipconfig.exe | grep "$DOCKSAL_HOST_IP" &>/dev/null); then
 				cd "/mnt/c"
 				touch "file.tmp" &>/dev/null
 				if [[ "$?" != "0" ]]; then
