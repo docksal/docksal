@@ -245,6 +245,7 @@ STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 URL_DOCKER_NIX="https://get.docker.com/"
+URL_DOCKER_LINUX="https://download.docker.com/linux/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 # Until there is an official standalone docker.exe binary available, use the one pulled from Docker for Windows
 # See https://github.com/docker/for-win/issues/1460#issuecomment-390045959
 #URL_DOCKER_WIN="https://download.docker.com/win/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
@@ -4088,18 +4089,47 @@ install_tools_generic_linux ()
 # Install WSL dependencies
 install_tools_wsl ()
 {
-	! is_docker_native && docker_machine_env
-	# Install Docker client
-	if ! is_docker_version || ! is_docker_server_version; then
-		echo-green "Installing Docker..."
-		# Pin docker version
-		curl -fsSL "${URL_DOCKER_NIX}" | VERSION=${REQUIREMENTS_DOCKER} sh
-		# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
-		sudo usermod -aG docker "$LOGNAME"
-		sudo docker version
-		if_failed "Docker installation/upgrade has failed."
+	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
+	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
+
+	# Install Linux Docker client
+	if ! is_docker_version; then
+		local docker_pkg=$(basename "$URL_DOCKER_LINUX")
+		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		if [[ ! -f "$docker_pkg" ]]; then
+			echo-green "Downloading ${docker_pkg}..."
+			curl -fL# "$URL_DOCKER_LINUX" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
+			if_failed "Check internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${docker_pkg}. Using it..."
+			cp -f "$docker_pkg" "$CONFIG_DOWNLOADS_DIR"
+			if_failed "Check file permissions."
+		fi
+
+		# Run in sub-shell so we don't have to cd back
+		(
+			cd "$CONFIG_DOWNLOADS_DIR" && \
+			tar zxf "$docker_pkg" && \
+			mv -f "docker/docker" "$CONFIG_BIN_DIR/" && \
+			chmod +x "$DOCKER_BIN"
+		)
+		if_failed "Check file permissions."
 	fi
 
+	# Install Linux Docker Compose
+	if ! is_docker_compose_version; then
+		echo-green "Installing Docker Compose..."
+		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
+			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+			docker-compose --version
+		if_failed "Docker Compose installation/upgrade has failed."
+	fi
+
+	# Cleanup
+	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
+
+	! is_docker_native && docker_machine_env
 	# Install windows docker-machine to location where Windows can access it
 	# Create symlink for WSL
 	if ! is_docker_machine_version; then
@@ -4116,17 +4146,6 @@ install_tools_wsl ()
 			sudo ln -s "$DMBIN" "$DOCKER_MACHINE_BIN_NIX"
 		if_failed "Check file permissions and internet connection."
 	fi
-
-	# Install Linux Docker Compose
-	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
-			docker-compose --version
-		if_failed "Docker Compose installation/upgrade has failed."
-	fi
-
-	system_reset
 }
 
 update_virtualbox () {
