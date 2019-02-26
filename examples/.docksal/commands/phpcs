@@ -23,6 +23,6 @@ fi
 
 fin run phpcs \
 	--standard="Drupal,DrupalPractice" -n \
-	--extensions="php,module,inc,install,test,profile,theme" \
+	--extensions="php,module,inc,install,test,profile,theme,info" \
 	--ignore="*.features.*,*.pages*.inc" \
 	"$1"
