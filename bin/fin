@@ -145,7 +145,6 @@ CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
-DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
@@ -4142,7 +4141,7 @@ install_tools_wsl ()
 		echo-green "Downloading docker-machine..."
 		curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DMBIN" &&
 			chmod +x "$DMBIN" &&
-			sudo ln -s "$DMBIN" "$DOCKER_MACHINE_BIN_NIX"
+			sudo ln -s "$DMBIN" "$DOCKER_MACHINE_BIN"
 		if_failed "Check file permissions and internet connection."
 	fi
 }
