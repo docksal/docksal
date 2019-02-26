@@ -243,8 +243,8 @@ STACKS_VOLUMES_NFS="volumes-nfs.yml"
 STACKS_VOLUMES_NONE="volumes-none.yml"
 STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
+URL_DOCKER_COM="https://get.docker.com/"
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
-URL_DOCKER_NIX="https://get.docker.com/"
 URL_DOCKER_LINUX="https://download.docker.com/linux/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
 # Until there is an official standalone docker.exe binary available, use the one pulled from Docker for Windows
 # See https://github.com/docker/for-win/issues/1460#issuecomment-390045959
@@ -3989,7 +3989,7 @@ install_tools_debian ()
 		fi
 
 		# Pin docker version
-		curl -fsSL "${URL_DOCKER_NIX}" | VERSION=${REQUIREMENTS_DOCKER} sh
+		curl -fsSL "${URL_DOCKER_COM}" | VERSION=${REQUIREMENTS_DOCKER} sh
 		# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 		sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
@@ -4021,7 +4021,7 @@ install_tools_fedora ()
 		fi
 
 		# Install stable Docker version
-		curl -fsSL "${URL_DOCKER_NIX}" | CHANNEL=stable sh
+		curl -fsSL "${URL_DOCKER_COM}" | CHANNEL=stable sh
 		if_failed "Docker installation/upgrade has failed."
 
 		# Have to create group here to add user to it
