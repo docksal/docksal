@@ -1276,7 +1276,8 @@ show_help ()
 			fi
 	fi
 
-	echo "Docksal control cli utility v$FIN_VERSION"
+	echo
+	echo "Docksal command line utility v$FIN_VERSION"
 	echo
 	echo "Usage: fin <command>"
 	echo
@@ -1285,7 +1286,7 @@ show_help ()
 	printh "db <command>" "Manage databases (${yellow}fin help db${NC})" "yellow"
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
-	printh "system <command>" "Manage Docksal (${yellow}fin help system${NC})" "yellow"
+	printh "system <command>" "Manage Docksal state (${yellow}fin help system${NC})" "yellow"
 	if [[ ! is_linux && ! is_docker_native ]] || [[ "$TERM" == "dumb" ]]; then
 		printh "vm <command>" "Manage Docksal VM (${yellow}fin help vm${NC})" "yellow"
 	fi
@@ -1306,11 +1307,11 @@ show_help ()
 	printh "terminus [command]" "Pantheon's Terminus (requires docksal/cli 2.1+)"
 	printh "wp [command]" "WordPress CLI command (requires WordPress)"
 	printh "composer [command]" "Run Composer commands"
-	printh "docker [command]" "Run Docker commands directly"
-	printh "docker-compose [command]" "Run docker-compose commands directly"
+	printh "docker (d) [command]" "Run Docker commands directly"
+	printh "docker-compose (dc) [cmd]" "Run Docker Compose commands directly"
 
 	echo
-	printh "init" "Initialize a project (override it with your own automation ${yellow}fin help init${NC})"
+	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
 	printh "cleanup [options]" "Remove unused Docker images and projects (saves disk space)"
@@ -1323,6 +1324,11 @@ show_help ()
 	printh "diagnose" "Show diagnostic information for troubleshooting and bug reporting"
 	printh "version (--version, v, -v)" "Print fin version. [v, -v] prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
+
+	# Do not show addons and custom commands if help for fin only ie requested (needed for docs generation)
+	if [[ "$1" == "fin" ]]; then
+		return;
+	fi
 
 	# Show list of custom commands and their help if available
 	load_global_configuration
@@ -1879,7 +1885,7 @@ show_help_init ()
 	echo "Examples:"
 	printh "- https://github.com/docksal/drupal8/tree/master/.docksal/commands" "	Automation example"
 	printh "- https://github.com/docksal/example-gatsby/tree/master/.docksal/commands" "Automation example"
-	printh "- https://github.com/docksal/addons" "					Addon repo"
+	printh "- https://github.com/docksal/addons" "					Addons repo"
 }
 
 show_help_cleanup ()
