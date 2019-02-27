@@ -546,9 +546,9 @@ sudowin ()
 		shift
 	done
 	if [[ "$arguments" != "" ]]; then
-		powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command" -Args "$arguments"
+		(powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command" -Args "$arguments")
 	else
-		powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command"
+		(powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command")
 	fi
 }
 
