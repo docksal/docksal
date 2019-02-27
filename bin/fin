@@ -1299,7 +1299,7 @@ show_help ()
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
 
 	echo
-	printh "pull [options]" "Commands for interacting with Hosting Provider. (${yellow}fin help pull${NC})"
+	printh "pull [options]" "Commands for interacting with Hosting Provider (${yellow}fin help pull${NC})"
 	printh "drush [command]" "Drush command (requires Drupal)"
 	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
 	printh "platform [command]" "Platform.sh's CLI (requires docksal/cli 2.3+)"
