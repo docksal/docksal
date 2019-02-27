@@ -4534,7 +4534,7 @@ update ()
 			if [[ $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") ]]; then
 				echo-alert "The following upgrade for Boot2Docker will require a complete rebuild." \
 					"For more information see [LINK TO BLOG POST]"
-				[[ _confirm "Would you like to continue with the boot2docker upgrade?" ]] && BOOT2DOCKER_NEEDS_AN_UPGRADE=1 && BOOT2DOCKER_NEEDS_TO_REBUILD=1
+				[[ _confirm "Continue with the boot2docker upgrade" ]] && BOOT2DOCKER_NEEDS_AN_UPGRADE=1 && BOOT2DOCKER_NEEDS_TO_REBUILD=1
 			else
 				BOOT2DOCKER_NEEDS_AN_UPGRADE=1
 			fi
