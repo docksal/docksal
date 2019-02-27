@@ -233,7 +233,7 @@ services:
     hostname: elasticsearch
     image: elasticsearch:6.5.3
     ports:
-      - "9200"
+      - "${ELASTICSEARCH_PORT_MAPPING:-9200}"
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
