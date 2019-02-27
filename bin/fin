@@ -4376,23 +4376,6 @@ update ()
 			IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
 			nc -w 1 ${nc_host} ${nc_port}
 			if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
-
-			# Check for administrative privileges if needed
-			if ! (ipconfig.exe | grep "$DOCKSAL_IP" &>/dev/null) || ! (ipconfig.exe | grep "$DOCKSAL_HOST_IP" &>/dev/null); then
-				cd "/mnt/c"
-				touch "file.tmp" &>/dev/null
-				if [[ "$?" != "0" ]]; then
-					echo-error "Docksal needs administrative privileges to set up network preferences." \
-						"--" \
-						"1. Close this bash window (you can't run elevated bash while this one is running)" \
-						"2. Run cmd.exe as an Administrator" \
-						"3. Start bash in that elevated cmd.exe session" \
-						"4. Run fin update in that elevated bash session"
-						# It is not allowed to start elevated and un-elevated bash simultaneously
-					exit 1
-				fi
-				rm -f "file.tmp"
-			fi
 		fi
 	fi
 
