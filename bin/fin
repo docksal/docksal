@@ -4371,7 +4371,7 @@ update ()
 			fi
 		fi
 
-		if is_wsl; then
+		if is_wsl && is_docker_native; then
 			# Check Docker for Win running
 			IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
 			nc -w 1 ${nc_host} ${nc_port}
