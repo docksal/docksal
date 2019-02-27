@@ -1992,7 +1992,7 @@ show_help_pull ()
 	printh "--DBUSER=<user>" "Specify the DB User (Defaults to root)"
 	printh "--DBPASS=<pass>" "Specify the DB Password (Defaults to root)"
 	printh "--DBNAME=<dbname>" "Specify the DB Name to import into. (Defaults to default)"
-	printh "--FORCE" "Force a new database file to be pulled"
+	printh "--FORCE" "Generate and pull a new db dump, rather than using locally cached in /tmp"
 	printh "--REMOTE_DB=<remote_db>" "Specify the remote DB name to pull. (Used with Acquia)"
 
 	echo
