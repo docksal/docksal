@@ -1,5 +1,5 @@
 ---
-title: "fin help"
+title: "All commands reference"
 weight: 2
 aliases:
   - /en/master/fin/fin-help/

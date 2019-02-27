@@ -1,7 +1,7 @@
 ---
-title: "Pull"
+title: "Pull (providers integration)"
 aliases:
-  - /en/master/tools/pull/
+  - /en/master/fin/pull/
 ---
 
 To quickly integrate into your hosting environment, use the Docksal `pull` command. 
