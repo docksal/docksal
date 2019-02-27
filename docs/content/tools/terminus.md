@@ -1,5 +1,5 @@
 ---
-title: "Terminus"
+title: "Pantheon (Terminus)"
 aliases:
   - /en/master/tools/terminus/
 ---
