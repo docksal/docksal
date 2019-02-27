@@ -4,9 +4,8 @@ aliases:
   - /en/master/fin/pull/
 ---
 
-To quickly integrate into your hosting environment, use the Docksal `pull` command. 
-This allows you to easily bring your assets (db, files, and code) down to your 
-local environment quickly without manually running through the steps.
+`pull` command allows you to easily bring your assets: db, files, and code from your hosting environment
+down to your local environment without manually running through the steps.
 
 ## Requirements
 
@@ -24,7 +23,7 @@ Interacting with Pantheon requires that the `SECRET_TERMINUS_TOKEN`
 is set. More information on [generating tokens](https://pantheon.io/docs/machine-tokens/)
 can be found in Pantheon's documentation.
 
-More information on working with [Docksal with Pantheon](/tools/pantheon).
+More information on working with [Docksal with Pantheon](/tools/terminus).
 
 ### Platform.sh
 
