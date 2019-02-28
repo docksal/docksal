@@ -3393,8 +3393,9 @@ configure_network ()
 {
 	local mode="${1:-on}"
 
-	# Set mode to off for Mac and Windows when not running in "native" mode
-	if ! is_docker_native && (is_mac || is_windows); then
+	# Always set mode to "off" when running on Mac/Windows/WSL in VirtualBox mode.
+	# Mode "on" is only applicable to Linux and Docker for Mac/Windows.
+	if ! is_docker_native && (is_mac || is_windows || is_wsl); then
 		mode="off"
 	fi
 
