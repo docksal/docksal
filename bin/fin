@@ -701,7 +701,7 @@ check_winpty_found ()
 
 is_docker_running ()
 {
-	if ! is_linux && ! is_docker_native && ! is_wsl; then
+	if ! is_linux && ! is_docker_native; then
 		if ! is_docker_machine_running; then return 255; fi
 	fi
 	# Check if docker is running via docker info.
@@ -801,7 +801,7 @@ check_docker_running ()
 	# Last chance to return non-error code
 	[[ ${docker_status} -eq 0 ]] && return
 
-	if [[ ${docker_status} -eq 255 ]] && (! is_docker_native && ! is_wsl); then
+	if [[ ${docker_status} -eq 255 ]] && ! is_docker_native; then
 		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
 		_confirm "Start it now?"
 		docker_machine_start
@@ -3112,7 +3112,7 @@ system_status ()
 # Starts all Docksal related things
 system_start ()
 {
-	if ! is_linux && ! is_docker_native && ! is_wsl; then
+	if ! is_linux && ! is_docker_native; then
 		if is_docker_machine_running; then
 			echo "Machine ${DOCKER_MACHINE_NAME} is already running."
 		else
@@ -3128,7 +3128,7 @@ system_start ()
 # Stops/disables all Docksal things
 system_stop ()
 {
-	if ! is_linux && ! is_docker_native && ! is_wsl; then
+	if ! is_linux && ! is_docker_native; then
 		# Stop the docker-machine VM.
 		if is_docker_machine_running; then
 			echo-green "Stopping Docksal VM..."
