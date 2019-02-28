@@ -26,7 +26,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
-	run fin pull init --HOSTING_PLATFORM=acquia --HOSTING_SITE=${BUILD_ACQUIA_SITE} --HOSTING_ENV=${BUILD_ACQUIA_ENV} acquia-test
+	run fin pull init --hosting-platform=acquia --hosting-site=${BUILD_ACQUIA_SITE} --hosting-env=${BUILD_ACQUIA_ENV} acquia-test
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Starting Pull Init Process" ]]
@@ -96,7 +96,7 @@ teardown() {
 	fin reset -f
 
 	## Test Acquia Pull with Cached Version
-	run fin pull db --REMOTE_DB=test
+	run fin pull db --remote-db=test
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Pulling new database file..." ]]
@@ -119,7 +119,7 @@ teardown() {
 	fin db create test
 
 	## Test Acquia Pull DB By Name
-	run fin pull db --REMOTE_DB=test --DBNAME=test
+	run fin pull db --remote-db=test --db-name=test
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Pulling new database file..." ]]
@@ -138,8 +138,8 @@ teardown() {
 	cd acquia-test-pull-db
 	fin start
 
-	## Test Acquia Pull with --FORCE flag
-	run fin pull db --FORCE
+	## Test Acquia Pull with --force flag
+	run fin pull db --force
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Pulling new database file..." ]]
@@ -174,7 +174,7 @@ teardown() {
 	fin start
 
 	# Test Pull All
-	run fin pull --REMOTE_DB="${BUILD_ACQUIA_SITE}"
+	run fin pull --remote-db="${BUILD_ACQUIA_SITE}"
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for acquia" ]]
 	[[ "${output}" =~ "Code Pull Successful" ]]
@@ -191,7 +191,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
-	run fin pull init --HOSTING_PLATFORM=pantheon --HOSTING_SITE=${BUILD_PANTHEON_SITE} --HOSTING_ENV=${BUILD_PANTHEON_ENV} pantheon-test
+	run fin pull init --hosting-platform=pantheon --hosting-site=${BUILD_PANTHEON_SITE} --hosting-env=${BUILD_PANTHEON_ENV} pantheon-test
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting Pull Init Process" ]]
 	[[ "${output}" =~ "Pulling code complete" ]]
@@ -274,7 +274,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
-	run fin pull init --HOSTING_PLATFORM=platformsh --HOSTING_SITE=${BUILD_PLATFORMSH_SITE} --HOSTING_ENV=${BUILD_PLATFORMSH_ENV} platformsh-test
+	run fin pull init --hosting-platform=platformsh --hosting-site=${BUILD_PLATFORMSH_SITE} --hosting-env=${BUILD_PLATFORMSH_ENV} platformsh-test
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting Pull Init Process" ]]
 	[[ "${output}" =~ "Pulling code complete" ]]
@@ -357,7 +357,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
-	run fin pull init --HOSTING_PLATFORM=drush --HOSTING_SITE="remote" --HOSTING_ENV="dev" drush-test ${BUILD_DRUSH_GIT}
+	run fin pull init --hosting-platform=drush --hosting-site="remote" --hosting-env="dev" drush-test ${BUILD_DRUSH_GIT}
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for drush" ]]
 	[[ "${output}" =~ "Starting Pull Init Process" ]]
@@ -441,7 +441,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	# Test Initialize Project
-	run fin pull init --HOSTING_PLATFORM=wp --HOSTING_SITE="remote" wp-test ${BUILD_WP_GIT}
+	run fin pull init --hosting-platform=wp --hosting-site="remote" wp-test ${BUILD_WP_GIT}
 	[[ "$status" == 0 ]]
 	[[ "${output}" =~ "Starting provider pull for wp" ]]
 	[[ "${output}" =~ "Starting Pull Init Process" ]]

@@ -142,36 +142,36 @@ aliases:
 	  (blank)                  	All (Default)
 	
 	Options:
-	  --HOSTING_PROVIDER=<provider>	Provider to interact with.
+	  --hosting-provider=<provider>	Provider to interact with.
 	                           	Options: acquia, pantheon, platform.sh, drush, wp
-	  --HOSTING_SITE=<id>      	Site ID on Provider
-	  --HOSTING_ENV=<env>      	Site Env on Provider
+	  --hosting-site=<id>      	Site ID on Provider
+	  --hosting-env=<env>      	Site Env on Provider
 	
 	Extra Options for Code
-	  --SYNC_GIT_REMOTE        	The GIT Remote to pull from. (Defaults to origin)
-	  --SYNC_GIT_BRANCH        	The GIT Branch to pull from. (Defaults to current branch)
+	  --sync-git-remote        	The GIT Remote to pull from. (Defaults to origin)
+	  --sync-git-branch        	The GIT Branch to pull from. (Defaults to current branch)
 	
 	Extra Options for DB
-	  --DBUSER=<user>          	Specify the DB User (Defaults to root)
-	  --DBPASS=<pass>          	Specify the DB Password (Defaults to root)
-	  --DBNAME=<dbname>        	Specify the DB Name to import into. (Defaults to default)
-	  --FORCE                  	Generate and pull a new db dump, rather than using locally cached in /tmp
-	  --REMOTE_DB=<remote_db>  	Specify the remote DB name to pull. (Used with Acquia)
+	  --db-user=<user>          	Specify the DB User (Defaults to root)
+	  --db-pass=<pass>          	Specify the DB Password (Defaults to root)
+	  --db-name=<dbname>        	Specify the DB Name to import into. (Defaults to default)
+	  --force                  	Generate and pull a new db dump, rather than using locally cached in /tmp
+	  --remote-db=<remote_db>  	Specify the remote DB name to pull. (Used with Acquia)
 	
 	Extra Options for Files
-	  --RSYNC_OPTIONS=<options>	Rsync Options to append.
-	  --FILES_DIR=<dir>        	Directory to sync files with.
+	  --rsync-options=<options>	Rsync Options to append.
+	  --files-dir=<dir>        	Directory to sync files with.
 	                           	Default Drupal: {DOCROOT}/sites/default/files/
 	                           	Wordpress Default: {DOCROOT}/wp-content/uploads/
 	
 	Examples:
 	  fin pull init            	Start a project by pulling the repo from the provider.
-	      --HOSTING_PLATFORM=acquia	Provide the Platform Name.
-	      --HOSTING_SITE=testsiteid	Provide the Site ID.
+	      --hosting-platform=acquia	Provide the Platform Name.
+	      --hosting-site=testsiteid	Provide the Site ID.
 	      test_project_directory	Specify the directory to clone the project in.
 	  fin pull                 	Pull all items from provider
 	  fin pull db              	Pull only the db from the provider
-	  fin pull db --REMOTE_DB=dbname	Pull the db name dbname from the provider. (Acquia Cloud Only)
+	  fin pull db --remote-db=dbname	Pull the db name dbname from the provider. (Acquia Cloud Only)
 
 ## ssh-key {#ssh-key}
 
