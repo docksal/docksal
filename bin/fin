@@ -529,7 +529,16 @@ get_container_id ()
 # Run command on Windows with elevated privileges
 winsudo ()
 {
-	cygstart --action=runas cmd /c "$@"
+	if is_wsl; then
+		# TODO: WIP
+		# Starting an elevated cmd.exe and passing command(s) to it.
+		# Make sure to enclose them in quotes like this:
+		# winsudo "'<command(s) to execute in elevated cmd.exe>'"
+		powershell.exe Start-Process -Wait -Verb RunAs cmd.exe -Args "'/C', '$@'"
+	else
+		# Backward compatibility wth Babun/Cygwin
+		cygstart --action=runas cmd /c "$@"
+	fi
 }
 
 # Run command on Windows and WSL with elevated privileges
@@ -2441,13 +2450,21 @@ docker_machine_mount_nfs ()
 # See http://serverfault.com/a/236393 for details.
 smb_windows_fix()
 {
-	! is_windows && return
+	(! is_windows || ! is_wsl) && return
 
 	echo-green "Going to optimize Windows network settings for file sharing..."
 	echo "You may see an elevated command prompt - click Yes."
 	sleep 2
 
-	local tmpfile="/tmp/fix-smb.reg"
+	if is_wsl; then
+		tmpfile="/mnt/c/Windows/temp/fix-smb.reg"
+		tmpfile_win=$(wsl_path -w ${tmpfile})
+	else
+		# Backward compatibility with Babun
+		tmpfile="/cygdrive/c/Windows/temp/fix-smb.reg"
+		tmpfile_win=$(cygpath -w ${tmpfile})
+	fi
+
 	cat <<EOF > $tmpfile
 Windows Registry Editor Version 5.00
 
@@ -2458,7 +2475,11 @@ Windows Registry Editor Version 5.00
 "Size"=dword:00000003
 EOF
 	# Update registry and restart Server and Computer Browser services.
-	winsudo "regedit /S $(cygpath -w ${tmpfile}) && net stop server /y && net start server && net start browser"
+	if is_wsl; then
+		winsudo "'regedit /S ${tmpfile_win} && net stop server /y && net start server && net start browser'"
+	else
+		winsudo "regedit /S $(cygpath -w ${tmpfile}) && net stop server /y && net start server && net start browser"
+	fi
 }
 
 # Method to create the user and SMB network share on Windows.
