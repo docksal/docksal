@@ -811,7 +811,7 @@ check_docker_running ()
 	if [[ ${docker_status} -eq 255 ]] && ! is_docker_native; then
 		echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
 		_confirm "Start it now?"
-		docker_machine_start
+		system_start
 		if_failed "Could not start Docksal docker machine properly"
 		# re-check status
 		eval $(docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME")
