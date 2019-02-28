@@ -135,9 +135,7 @@ CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
-CONFIG_MACHINES="$CONFIG_DIR/machines"
-CONFIG_MACHINES_ENV="$CONFIG_DIR/machines/.env"
-CONFIG_MACHINE_ACTIVE="$CONFIG_MACHINES/.active"
+CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DIR/docker-machine.env"
 mkdir -p "$CONFIG_PROJECTS" >/dev/null 2>&1
 # BIN folder
 CONFIG_BIN_DIR="$CONFIG_DIR/bin"
@@ -811,12 +809,12 @@ check_docker_running ()
 	[[ ${docker_status} -eq 0 ]] && return
 
 	if [[ ${docker_status} -eq 255 ]] && ! is_docker_native; then
-		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
+		echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
 		_confirm "Start it now?"
 		docker_machine_start
 		if_failed "Could not start Docksal docker machine properly"
 		# re-check status
-		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+		eval $(docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME")
 		docker info >/dev/null
 		docker_status=$?
 	fi
@@ -836,7 +834,7 @@ check_docker_running ()
 		fi
 	else # MacOS, Windows
 		# Check for certificates error
-		if (docker-machine env "$DOCKER_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
+		if (docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
 			echo-error "Error connecting to Docker due to certificates error" \
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
@@ -2148,14 +2146,12 @@ docker_machine_create ()
 	check_vbox_version
 	check_binary_found 'docker-machine'
 
-	local machine_name="${1:-$DEFAULT_MACHINE_NAME}"
-
 	if is_docker_machine_exist; then
-		echo-error "Docker Machine '$machine_name' already exists"
+		echo-error "Docker Machine '$DEFAULT_MACHINE_NAME' already exists"
 		return 1
 	fi
 
-	echo-green "Creating docker machine '$machine_name'..."
+	echo-green "Creating docker machine '$DEFAULT_MACHINE_NAME'..."
 
 	# Use a local boot2docker.iso copy when available
 	ISO_FILE=${ISO_FILE:-boot2docker.iso}
@@ -2171,10 +2167,9 @@ docker_machine_create ()
 		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 		--virtualbox-hostonly-cidr "$DOCKSAL_SUBNET" \
 		--virtualbox-no-share \
-		"$machine_name"
+		"$DEFAULT_MACHINE_NAME"
 
 	if [[ $? -eq 0 ]]; then
-		DOCKER_MACHINE_NAME="$machine_name"
 		DOCKER_MACHINE_STATUS='Running'
 	else
 		return 1
@@ -2189,7 +2184,7 @@ is_docker_machine_exist ()
 	local refresh="${1:-false}"
 	if [[ "$refresh" == "true" ]]; then
 		# Refresh VM status in case it changed while the script was running.
-		DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
+		DOCKER_MACHINE_STATUS=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>&1 || echo '')
 	fi
 	[[ "$DOCKER_MACHINE_STATUS" == *"not exist"* ]] && return 1 || return 0
 }
@@ -2200,14 +2195,14 @@ docker_machine_env ()
 	local res
 
 	#remove cache
-	rm -f "$CONFIG_MACHINES_ENV" 2>/dev/null
+	rm -f "$CONFIG_DOCKER_MACHINE_ENV" 2>/dev/null
 
 	# get the env
 	if is_wsl; then
 		# In WSL, docker-machine is a Windows binary, but WSL does not understand Windows paths
 		_env=$(docker-machine env --shell=bash docksal | sed "s/\\\\/\//g" | sed "s/C:/\/c/")
 	else
-		_env=$(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+		_env=$(docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME")
 	fi
 	res=$?
 
@@ -2220,14 +2215,14 @@ docker_machine_env ()
 	fi
 
 	# Save to file for reuse during subsequent fin runs to avoid running env which is expensive
-	echo "${_env}" | tee "$CONFIG_MACHINES_ENV" >/dev/null
+	echo "${_env}" | tee "$CONFIG_DOCKER_MACHINE_ENV" >/dev/null
 }
 
 # Stop docker machine
 docker_machine_stop ()
 {
 	check_binary_found 'docker-machine'
-	docker-machine stop "$DOCKER_MACHINE_NAME"
+	docker-machine stop "$DEFAULT_MACHINE_NAME"
 	DOCKER_MACHINE_STATUS="Stopped"
 }
 
@@ -2236,28 +2231,16 @@ docker_machine_start ()
 	check_binary_found 'docker-machine'
 
 	if is_docker_machine_exist; then
-		docker-machine start "$DOCKER_MACHINE_NAME"
+		docker-machine start "$DEFAULT_MACHINE_NAME"
 		if_failed_error "Failed starting virtual machine"
 
 		DOCKER_MACHINE_STATUS='Running'
-		# Disable IP change for now
-		#docker_machine_change_ip &&
 		docker_machine_env
 		if_failed_error "Failed starting virtual machine" \
 			"In case you see certificates problem, reboot your local host." \
 			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
 	else
-		# only auto-create default machine
-		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
-			echo-error "Machine '$DOCKER_MACHINE_NAME' does not exist"
-			echo-yellow "Removing reference to non-existent machine... Run your command again."
-			rm -f "$CONFIG_MACHINE_ACTIVE"
-			exit 1
-		fi
-
 		docker_machine_create &&
-			# Disable IP change for now
-			#docker_machine_change_ip &&
 			docker_machine_env
 
 		# Displays an error message and offers to remove the vm if something failed
@@ -2271,15 +2254,12 @@ docker_machine_start ()
 	fi
 }
 
-# param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
 docker_machine_remove ()
 {
-	local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-
-	_confirm "Remove $machine_name?"
+	_confirm "Remove $DEFAULT_MACHINE_NAME?"
 	# Store host-only interface name before removing the VM.
-	local vboxifname=$("$vboxmanage" showvminfo "$machine_name" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
-	docker-machine rm -f "$machine_name"
+	local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
+	docker-machine rm -f "$DEFAULT_MACHINE_NAME"
 	if ! is_docker_machine_exist "true"; then
 		# If the VM was removed, remove the DHCP server associated with its network interface.
 		# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
@@ -2295,11 +2275,10 @@ nfs_share_add ()
 {
 	[[ "$@" = "" ]] && return 1
 
-	local machine_name="${DOCKER_MACHINE_NAME:-docksal}"
 	eval $(parse_params "$@")
 
 	# Remove our own old exports
-	local exports_open="# <ds-nfs $machine_name"
+	local exports_open="# <ds-nfs $DEFAULT_MACHINE_NAME"
 	local exports_close="# ds-nfs>"
 	local exports=$(cat /etc/exports 2>/dev/null | \
 		tr "\n" "\r" | \
@@ -2376,9 +2355,8 @@ nfs_share_add ()
 # Removes all Docksal NFS exports
 nfs_share_remove ()
 {
-	local machine_name="${DOCKER_MACHINE_NAME:-docksal}"
 	# Remove our own old exports
-	local exports_open="# <ds-nfs $machine_name"
+	local exports_open="# <ds-nfs $DEFAULT_MACHINE_NAME"
 	local exports_close="# ds-nfs>"
 	local exports=$(cat /etc/exports 2>/dev/null)
 	local exports_new=$(cat /etc/exports 2>/dev/null | \
@@ -2414,14 +2392,13 @@ nfs_share_remove ()
 # Unnamed params - shares in format "$LOCAL_FOLDER:$MOUNT_POINT_NAME"
 docker_machine_mount_nfs ()
 {
-	local machine_name="$DOCKER_MACHINE_NAME"
 	local nfs_ip="$DOCKSAL_HOST_IP"
 	eval $(parse_params "$@")
 
 	# Mount exported folders
 	echo-green "Mounting NFS shares..."
 	# Start NFS client on docker-machine
-	docker-machine ssh "$machine_name" "sudo /usr/local/etc/init.d/nfs-client start"
+	docker-machine ssh "$DEFAULT_MACHINE_NAME" "sudo /usr/local/etc/init.d/nfs-client start"
 	for share in ${ARGV[@]}; do
 		local share_=(${share//:/ });
 		local share_export="${share_[0]}"
@@ -2430,14 +2407,14 @@ docker_machine_mount_nfs ()
 		# [!!] Think twice about performance before changing nfs settings
 		nfs_mount_command="sudo mount -t nfs -o vers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 		# Timeout will break mount command, that can freeze if connection to host is blocked by firewall
-		docker-machine ssh "$machine_name" \
+		docker-machine ssh "$DEFAULT_MACHINE_NAME" \
 			"sudo mkdir -p $share_mount;
 			timeout -t 5 sudo umount $share_mount 2>/dev/null;
 			timeout -t 20 $nfs_mount_command"
 		if [[ $? != 0 ]]; then
 			echo "Retrying mounting local $share_export to $share_mount"
 			sleep 5
-			docker-machine ssh "$machine_name" "timeout -t 20 $nfs_mount_command"
+			docker-machine ssh "$DEFAULT_MACHINE_NAME" "timeout -t 20 $nfs_mount_command"
 			if [[ $? != 0 ]]; then
 				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
 				return 1
@@ -2550,14 +2527,14 @@ smb_share_mount()
 		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
 		sudo mkdir -p $mount_point && \
 		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=3,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKSAL_HOST_IP}/$share_name $mount_point"
-	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+	docker-machine ssh ${DEFAULT_MACHINE_NAME} "$command_mount"
 
 	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
 	if [[ $? != 0 ]]; then
 		echo-yellow "Mount command failed... Trying an alternative method..."
 		# Switch sec to ntlm and try again
 		command_mount=$(echo $command_mount | sed 's/sec=.*,/sec=ntlm,/')
-		docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+		docker-machine ssh ${DEFAULT_MACHINE_NAME} "$command_mount"
 
 		if [[ $? == 0 ]]; then
 			echo-green 'Success!'
@@ -2630,7 +2607,7 @@ vm ()
 	check_binary_found 'docker-machine'
 
 	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] && [[ "$1" != "remove" ]] && [[ "$1" != "rm" ]] && [[ "$1" != "active" ]] ; then
-		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME does not exist. Use 'fin system start'."
+		 echo-yellow "Docker machine $DEFAULT_MACHINE_NAME does not exist. Use 'fin system start'."
 		 return 1
 	fi
 
@@ -2645,7 +2622,7 @@ vm ()
 			system_start
 			;;
 		status)
-			docker-machine status ${DOCKER_MACHINE_NAME}
+			docker-machine status ${DEFAULT_MACHINE_NAME}
 			;;
 		stop)
 			# Show a message and pause for input.
@@ -2654,30 +2631,30 @@ vm ()
 			;;
 		ssh)
 			shift
-			docker-machine ssh ${DOCKER_MACHINE_NAME} "$@"
+			docker-machine ssh ${DEFAULT_MACHINE_NAME} "$@"
 			;;
 		stats)
 			vm-stats
 			;;
 		kill)
 			system_stop
-			docker-machine kill ${DOCKER_MACHINE_NAME}
+			docker-machine kill ${DEFAULT_MACHINE_NAME}
 			;;
 		ls|list)
 			docker-machine ls
 			;;
 		remove|rm)
 			system_stop
-			docker_machine_remove ${DOCKER_MACHINE_NAME}
+			docker_machine_remove ${DEFAULT_MACHINE_NAME}
 			;;
 		mount)
 			configure_mounts
 			;;
 		ip)
-			docker-machine ip ${DOCKER_MACHINE_NAME}
+			docker-machine ip ${DEFAULT_MACHINE_NAME}
 			;;
 		env)
-			docker-machine env --shell=bash ${DOCKER_MACHINE_NAME}
+			docker-machine env --shell=bash ${DEFAULT_MACHINE_NAME}
 			;;
 		ram)
 			shift
@@ -2691,7 +2668,7 @@ vm ()
 			show_help_vm
 			;;
 		regenerate-certs)
-			docker-machine regenerate-certs -f ${DOCKER_MACHINE_NAME}
+			docker-machine regenerate-certs -f ${DEFAULT_MACHINE_NAME}
 			vm restart
 			;;
 		*)
@@ -2707,19 +2684,19 @@ vm-stats ()
 	check_docker_running # should be running
 	check_vbox_version
 	metrics="CPU/Load/User,CPU/Load/Kernel,Net/Rate/Rx,Net/Rate/Tx"
-	"$vboxmanage" metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
+	"$vboxmanage" metrics setup --period 1 --samples 1 "$DEFAULT_MACHINE_NAME"
 	sleep 1
-	"$vboxmanage" metrics query "$DOCKER_MACHINE_NAME" "$metrics"
+	"$vboxmanage" metrics query "$DEFAULT_MACHINE_NAME" "$metrics"
 }
 
 vm-ram () {
-	echo "Total $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
+	echo "Total $("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
 		local running
 		is_docker_machine_running && running=1
 		_confirm "Continue changing Memory size to ${1}MB?"
 		[[ ${running} == 1 ]] && docker_machine_stop
-		"$vboxmanage" modifyvm "$DOCKER_MACHINE_NAME" --memory "$1" && \
+		"$vboxmanage" modifyvm "$DEFAULT_MACHINE_NAME" --memory "$1" && \
 			echo "Memory size updated."
 		[[ ${running} == 1 ]] && docker_machine_start
 	else
@@ -2732,7 +2709,7 @@ vm-ram () {
 }
 
 vm-hdd () {
-	docker-machine ssh "$DOCKER_MACHINE_NAME" df -h /mnt/sda1
+	docker-machine ssh "$DEFAULT_MACHINE_NAME" df -h /mnt/sda1
 }
 
 #------------------------------- Other Commands -----------------------------------
@@ -3135,7 +3112,7 @@ system_start ()
 {
 	if ! is_linux && ! is_docker_native; then
 		if is_docker_machine_running; then
-			echo "Machine ${DOCKER_MACHINE_NAME} is already running."
+			echo "Machine ${DEFAULT_MACHINE_NAME} is already running."
 		else
 			echo "Starting Docksal VM..."
 			docker_machine_start
@@ -3664,7 +3641,7 @@ configure_resolver_windows () {
 		network_id="vEthernet (DockerNAT)"
 	else
 		# Figure out the name of the network (not the name of the adapter) the VM is using
-		network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
 	fi
 
 	if [[ "$network_id" == "" ]]; then
@@ -3703,7 +3680,7 @@ configure_resolver_wsl () {
 		network_id="vEthernet (DockerNAT)"
 	else
 		# Figure out the name of the network (not the name of the adapter) the VM is using
-		network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
 	fi
 
 	if [[ "$network_id" == "" ]]; then
@@ -3858,7 +3835,7 @@ install_tools_mac ()
 		echo-green "Preparing to update virtual machine..." && \
 		docker_machine_stop && \
 		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-		curl -fL# "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
+		curl -fL# "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
 		docker_machine_start
 
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
@@ -3989,7 +3966,7 @@ install_tools_windows ()
 		echo-green "Preparing to update virtual machine..." && \
 		docker_machine_stop && \
 		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-		curl -fL# "$URL_BOOT2DOCKER" -o "$(cygpath $USERPROFILE)/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
+		curl -fL# "$URL_BOOT2DOCKER" -o "$(cygpath $USERPROFILE)/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
 		docker_machine_start
 	fi
 
@@ -4394,7 +4371,7 @@ update ()
 
 		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
-				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
+				echo-error "Docker Machine '$DEFAULT_MACHINE_NAME' should be running to perform update" \
 					"Start it with ${yellow}fin system start${NC} or destroy it with ${yellow}fin vm kill${NC} if you want it re-created."
 				return 1
 			fi
@@ -7189,31 +7166,17 @@ elif is_docker_native; then
 		export DOCKER_HOST=""
 	fi
 else
-	# get active machine and its status
-	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
-	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
-	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
+	DOCKER_MACHINE_STATUS=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>&1 || echo '')
 	if [[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]; then
 		# Use cached environment variables if possible
-		if [[ -f "$CONFIG_MACHINES_ENV" ]]; then
-			eval $(cat "$CONFIG_MACHINES_ENV")
+		if [[ -f "$CONFIG_DOCKER_MACHINE_ENV" ]]; then
+			eval $(cat "$CONFIG_DOCKER_MACHINE_ENV")
 			# if DOCKER_HOST is still not set then get environment variables once again
 			if [[ DOCKER_HOST == "" ]]; then
 				docker_machine_env
 			fi
 		fi
 	fi
-
-	# current active machine folder
-	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
-	mkdir -p "$DOCKER_MACHINE_FOLDER"
-
-	# TODO: revise or remove later. search for DOCKER_MACHINE_IP in the code
-	# get desired ip
-	# if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
-	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
-	#fi
-	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_IP}
 fi
 
 if is_docker_running; then
