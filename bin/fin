@@ -2584,11 +2584,12 @@ wsl_mount_drives ()
 	! is_wsl && return;
 	local mounts=$(mount)
 	# Create mnt point binds if they don't exist
-	for drive in $(ls "/mnt"); do
-		! (echo "$mounts" | grep "on /$drive" >/dev/null) && \
-			echo "Creating bind mount /mnt/$drive -> /$drive" && \
-			sudo mkdir -p "/$drive" && \
+	for drive in $(ls /mnt); do
+		if ! (echo "$mounts" | grep " on /$drive " >/dev/null); then
+			echo "Creating bind mount /mnt/$drive -> /$drive"
+			sudo mkdir -p "/$drive"
 			sudo mount --bind "/mnt/$drive" "/$drive"
+		fi
 	done
 }
 
