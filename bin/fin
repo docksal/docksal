@@ -2469,15 +2469,15 @@ smb_share_add()
 	local share_path=$2
 
 	is_wsl && USERNAME="$(wsl_get_environment_var USERNAME)"
+	is_wsl && USERDOMAIN="$(wsl_get_environment_var USERDOMAIN)"
 
 	# Add SMB share if it does not exist.
-	if [[ "$(net.exe share)" != *"${share_name}"*"Docksal ${share_path} drive"* ]];
-	then
-		command_share="net.exe share ${share_name}=${share_path} /grant:${USERNAME},FULL /REMARK:\"Docksal ${share_path} drive\""
-		echo-green "Adding docker SMB share..."
+	if [[ "$(net.exe share)" != *"${share_name}"* ]]; then
+		echo-green "Adding docker SMB share ${share_name}..."
 		if is_wsl; then
-			sudowin net.exe share "${share_name}=${share_path}" "/grant:${USERNAME},FULL" "/REMARK:Docksal-drive"
+			sudowin net.exe share "${share_name}=${share_path}" "/grant:${USERDOMAIN}\\${USERNAME},FULL" "/REMARK:Docksal"
 		else
+			command_share="net.exe share ${share_name}=${share_path} /grant:${USERDOMAIN}\\${USERNAME},FULL /REMARK:Docksal"
 			winsudo "$command_share"
 		fi
 
@@ -2493,13 +2493,18 @@ smb_share_add()
 # Removes Docksal SMB shares
 smb_share_remove ()
 {
-	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	local drives
+	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygpath); fi
+
 	for drive in ${drives}; do
-		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
-		# Avoid conflicts with existing drive shares buy using a unique share name
-		local share_name="docksal-$mount_point"
-		command_share="net share ${share_name} /DELETE"
-		winsudo "$command_share"
+		# Avoid conflicts with existing drive shares by using a unique share name
+		local share_name="docksal-$drive"
+		if is_wsl; then
+			sudowin net share ${share_name} /DELETE
+		else
+			command_share="net.exe share ${share_name} /DELETE"
+			winsudo "$command_share"
+		fi
 	done
 }
 
@@ -2549,9 +2554,6 @@ docker_machine_mount_smb ()
 	# add share \\hostname\c writable to current user
 	# ask user for his password
 	# use his password for mount -t cifs ...
-
-	# Get a list of logical drives (type 3 = Local disk).
-	local drives=$(wmic.exe logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	read -s -p "Enter your Windows account password: " password
 	echo # Add a new line after user input.
 
@@ -2562,19 +2564,16 @@ docker_machine_mount_smb ()
 		return 1
 	fi
 
+	local drives
+	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygpath); fi
+
 	for drive in ${drives}; do
 		# Mount point is lowercase drive letter with no slash
-		local mount_point
-		if is_wsl; then
-			mount_point=$(wslpath "$drive\\" | sed 's/\///g')
-		else
-			mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
-		fi
 		# Avoid conflicts with existing drive shares buy using a unique share name
-		local share_name="docksal-$mount_point"
+		local share_name="docksal-$drive"
 		# echo smb_share_add "$share_name" "$drive"
-		smb_share_add "$share_name" "$drive" &&
-			smb_share_mount "$share_name" "/$mount_point" "$password"
+		smb_share_add "$share_name" "$drive:" &&
+			smb_share_mount "$share_name" "/$drive" "$password"
 	done
 }
 
