@@ -5497,7 +5497,7 @@ sysinfo ()
 	elif is_mac; then
 		df -h # mac native
 	else
-		wmic logicaldisk get size,freespace,caption # win native
+		wmic.exe logicaldisk get size,freespace,caption # win native
 	fi
 
 	if [[ "$all" == "all" ]]; then
