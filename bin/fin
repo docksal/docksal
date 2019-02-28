@@ -148,6 +148,7 @@ DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+is_wsl && vboxmanage="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 # Stacks folder
 CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
 mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
@@ -386,7 +387,7 @@ wsl_get_environment_var ()
 # Unfortunately wslpath output contains \r that has to be cleaned 
 wsl_path ()
 {
-	echo $(wslpath "$1" | tr -d '[:cntrl:]')
+	echo $(wslpath "$@" | tr -d '[:cntrl:]')
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -4137,7 +4138,7 @@ install_tools_wsl ()
 	# Install windows docker-machine to location where Windows can access it
 	# Create symlink for WSL
 	if ! is_docker_machine_version; then
-		local USERPROFILE=$(wsl_path $(wsl_get_environment_var "USERPROFILE"))
+		local USERPROFILE=$(wsl_path -u $(wsl_get_environment_var "USERPROFILE"))
 		local DMDIR="$USERPROFILE/bin"
 		local DMBIN="$DMDIR/docker-machine.exe"
 
@@ -4160,6 +4161,12 @@ update_virtualbox () {
 	if is_windows; then
  		url="$URL_VBOX_WIN"
 		vbox_pkg=$(cygpath -u "$USERPROFILE/Downloads")/$(basename "$url")
+	fi
+
+	if is_wsl; then
+		url="$URL_VBOX_WIN"
+		local USERPROFILE=$(wsl_path -u $(wsl_get_environment_var "USERPROFILE"))
+		vbox_pkg="$USERPROFILE/Downloads"/$(basename "$url")
 	fi
 
 	if is_mac; then
@@ -4199,7 +4206,7 @@ update_virtualbox () {
 	)
 
 	# Download and install Win
-	is_windows && (
+	(is_windows || is_wsl) && (
 		chmod +x "$vbox_pkg"
 		"$vbox_pkg"
 	)
@@ -4350,7 +4357,7 @@ update ()
 	# Pre-update check #1: check if there is existing but stopped Docksal machine
 	# We need it running to know Docker server version
 	if (${FULL_UPDATE}); then
-		if ! is_linux && ! is_docker_native && ! is_wsl; then
+		if ! is_linux && ! is_docker_native; then
 			# Check VirtualBox
 			is_vbox_version
 			local res=$?
@@ -4363,7 +4370,7 @@ update ()
 			fi
 		fi
 
-		if ! is_linux && ! is_docker_native && ! is_wsl && which 'docker-machine' >/dev/null 2>&1; then
+		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
 				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
 					"Start it with ${yellow}fin system start${NC} or destroy it with ${yellow}fin vm kill${NC} if you want it re-created."
