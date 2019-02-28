@@ -25,7 +25,7 @@ before_script:
   - mkdir ../test-init
   - mkdir ../test-db
   # Pull tests take too long (~0.5h). Disabled for now.
-  #- mkdir ../test-pull
+  - if [[ "${RUN_PULL_TESTS}" == "1" ]]; then mkdir ../test-pull; fi
   # Function runs tests by file name $1 in dir specified in $2
   - run_tests() { cd "${2:-$TRAVIS_BUILD_DIR}"; [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" && "$1" != "quicktest.bats" ]] && return; [[ "$1" == "quicktest.bats" ]] && I="-i"; bats ${I} "$TRAVIS_BUILD_DIR/tests/$1"; }
   # Trigger builds in boilerplate project repos
@@ -47,7 +47,7 @@ script:
   - fin config set --global "SECRET_TERMINUS_TOKEN=${SECRET_TERMINUS_TOKEN}"
   - fin config set --global "SECRET_PLATFORMSH_CLI_TOKEN=${SECRET_PLATFORMSH_CLI_TOKEN}"
   # Pull tests take too long (~0.5h). Disabled for now.
-  #- run_tests pull.bats "$TRAVIS_BUILD_DIR/../test-pull"
+  - if [[ "${RUN_PULL_TESTS}" == "1" ]]; then run_tests pull.bats "$TRAVIS_BUILD_DIR/../test-pull"; fi
 
 after_success:
   - build_trigger docksal/drupal7
