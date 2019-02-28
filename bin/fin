@@ -2677,7 +2677,7 @@ vm ()
 			docker-machine ip ${DOCKER_MACHINE_NAME}
 			;;
 		env)
-			docker-machine env ${DOCKER_MACHINE_NAME}
+			docker-machine env --shell=bash ${DOCKER_MACHINE_NAME}
 			;;
 		ram)
 			shift
