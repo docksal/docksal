@@ -4122,33 +4122,51 @@ install_tools_wsl ()
 
 	# Install Linux Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
-		if_failed "Docker Compose installation/upgrade has failed."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		if [[ ! -f "$dc_pkg" ]]; then
+			echo-green "Downloading ${dc_pkg}..."
+			curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+				chmod +x "$DOCKER_COMPOSE_BIN"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${dc_pkg}. Using it..."
+			cp -f "$dc_pkg" "$DOCKER_COMPOSE_BIN" && \
+				chmod +x "$DOCKER_COMPOSE_BIN"
+			if_failed "Check file permissions."
+		fi
 	fi
+
+	# Install Windows Docker Machine client.
+	# The Linux one cannot correctly interact with the Windows VirtualBox cli, eventually resulting in something like:
+	# "Error creating machine: Error in driver during machine creation: write |1: broken pipe"
+	# The Windows binary has to be run from the Windows FS (e.g. from Windows user's profile).
+	local USERPROFILE=$(wsl_path -u $(wsl_env USERPROFILE))
+	local DOCKER_MACHINE_BIN_WSL="${USERPROFILE}/bin/docker-machine.exe"
+	mkdir -p "${USERPROFILE}/bin"
+	# Keeping the rest of the logic below very similar to other host environments.
+	if ! is_docker_machine_version; then
+		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
+		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		if [[ ! -f "$dm_pkg" ]]; then
+			echo-green "Downloading ${dm_pkg}..."
+			curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN_WSL" && \
+				chmod +x "$DOCKER_MACHINE_BIN_WSL"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${dm_pkg}. Using it..."
+			cp -f "$dm_pkg" "$DOCKER_MACHINE_BIN_WSL" && \
+				chmod +x "$DOCKER_MACHINE_BIN_WSL"
+			if_failed "Check file permissions."
+		fi
+	fi
+	# Create a symlink to the Windows docker-machine binary inside the WSL FS.
+	ln -s "$DOCKER_MACHINE_BIN_WSL" "$DOCKER_MACHINE_BIN"
 
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
-
-	! is_docker_native && docker_machine_env
-	# Install windows docker-machine to location where Windows can access it
-	# Create symlink for WSL
-	if ! is_docker_machine_version; then
-		local USERPROFILE=$(wsl_path -u $(wsl_get_environment_var "USERPROFILE"))
-		local DMDIR="$USERPROFILE/bin"
-		local DMBIN="$DMDIR/docker-machine.exe"
-
-		mkdir -p "$DMDIR"
-		if_failed "Could not create $DMDIR. Check your permissions."
-
-		echo-green "Downloading docker-machine..."
-		curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DMBIN" &&
-			chmod +x "$DMBIN" &&
-			sudo ln -s "$DMBIN" "$DOCKER_MACHINE_BIN"
-		if_failed "Check file permissions and internet connection."
-	fi
 }
 
 update_virtualbox () {
@@ -4193,7 +4211,7 @@ update_virtualbox () {
 	# Stop VM
 	docker_machine_stop >/dev/null 2>&1
 
-	# Download and install Mac
+	# Install Mac
 	is_mac && (
 		echo "Attaching ${vbox_pkg}"
 		hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1
@@ -4203,7 +4221,7 @@ update_virtualbox () {
 			open "/Volumes/VirtualBox/VirtualBox.pkg"
 	)
 
-	# Download and install Win
+	# Install Win/WSL
 	(is_windows || is_wsl) && (
 		chmod +x "$vbox_pkg"
 		"$vbox_pkg"
