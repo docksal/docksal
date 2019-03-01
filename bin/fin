@@ -377,7 +377,7 @@ cygpath_abs_unix ()
 
 # Returns the value of Windows environment var in WSL
 # @param $1 var name
-wsl_get_environment_var () 
+wsl_env () 
 {
 	echo $(cmd.exe /c "echo %$1%" | tr -d '[:cntrl:]')
 }
@@ -2466,8 +2466,8 @@ smb_share_add()
 	local share_name=$1
 	local share_path=$2
 
-	is_wsl && USERNAME="$(wsl_get_environment_var USERNAME)"
-	is_wsl && USERDOMAIN="$(wsl_get_environment_var USERDOMAIN)"
+	is_wsl && USERNAME="$(wsl_env USERNAME)"
+	is_wsl && USERDOMAIN="$(wsl_env USERDOMAIN)"
 
 	# Add SMB share if it does not exist.
 	if [[ "$(net.exe share)" != *"${share_name}"* ]]; then
@@ -2515,8 +2515,8 @@ smb_share_mount()
 	local password=$3
 	# single quotes are banned from being used in password
 	password=${password//\'/}
-	is_wsl && USERNAME="$(wsl_get_environment_var USERNAME)"
-	is_wsl && USERDOMAIN="$(wsl_get_environment_var USERDOMAIN)"
+	is_wsl && USERNAME="$(wsl_env USERNAME)"
+	is_wsl && USERDOMAIN="$(wsl_env USERDOMAIN)"
 
 	# User ntlmssp by default. For some Windows machines ntlm should be used instead
 	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
@@ -4163,7 +4163,7 @@ update_virtualbox () {
 
 	if is_wsl; then
 		url="$URL_VBOX_WIN"
-		local USERPROFILE=$(wsl_path -u $(wsl_get_environment_var "USERPROFILE"))
+		local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
 		vbox_pkg="$USERPROFILE/Downloads"/$(basename "$url")
 	fi
 
