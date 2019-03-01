@@ -7078,6 +7078,9 @@ execute_hook ()
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
+# Debug mode: print all commands
+[[ ${FIN_DEBUG} == 1 ]] && set -x
+
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 if is_tty; then
