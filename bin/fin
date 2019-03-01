@@ -535,7 +535,7 @@ winsudo ()
 		powershell.exe Start-Process -Wait -Verb RunAs cmd.exe -Args "'/C', '$@'"
 	else
 		# Backward compatibility wth Babun/Cygwin
-		cygstart --action=runas cmd /c "$@"
+		cygstart --action=runas cmd.exe /C "$@"
 	fi
 }
 
@@ -901,7 +901,7 @@ is_vbox_version ()
 
 is_docker_version ()
 {
-	# Skip the check on Pplay-with-Docker and Katacoda
+	# Skip the check on Play-with-Docker and Katacoda
 	(is_pwd || is_katacoda) && return
 
 	! which docker >/dev/null 2>&1 && return 1
@@ -911,7 +911,7 @@ is_docker_version ()
 
 is_docker_server_version ()
 {
-	# Skip the check on Pplay-with-Docker and Katacoda
+	# Skip the check on Play-with-Docker and Katacoda
 	(is_pwd || is_katacoda) && return
 
 	! which docker >/dev/null 2>&1 && return 1
@@ -3359,12 +3359,12 @@ configure_network_windows ()
 		# Add Docksal IP aliases on the DockerNAT adapter
 		local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_IP} mask=255.255.255.0"
 		local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_HOST_IP} mask=255.255.255.0"
-		winsudo "$command1 && $command2"
+		winsudo "$command1 & $command2"
 	elif [[ "$mode" == "off" ]]; then
 		# Remove Docksal IP aliases on the DockerNAT adapter
 		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_IP}"
-		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_HOST_IP}"
-		winsudo "$command1 && $command2"
+		local command2="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_HOST_IP}"
+		winsudo "$command1 & $command2"
 	fi
 	# Wait 5s for network configuration to apply
 	sleep 5
@@ -3533,7 +3533,7 @@ detect_dns ()
 		fi
 
 		# If previous detection failed, try another one. Lists all DNS addresses. Uses first non-localhost
-		# Not an ideal check as it might pick the wrong one if there are several, but better than nothing 
+		# Not an ideal check as it might pick the wrong one if there are several, but better than nothing
 		if [[ "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
 			dns_addresses=""
 			IFS=$'\n'
@@ -3656,7 +3656,7 @@ configure_resolver_windows () {
 	local command1="netsh interface ip set dnsservers \"${network_id}\" static ${dns_ip} none"
 	# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
 	local command2="netsh interface ip set interface \"${network_id}\" metric=${metric}"
-	winsudo "$command1 && $command2"
+	winsudo "$command1 & $command2"
 
 	# Flush DNS cache
 	echo-green "Clearing DNS cache..."
@@ -5801,7 +5801,7 @@ config_generate ()
 		else
 			DOCROOT=docroot
 		fi
-		
+
 		if ! _confirm "DOCROOT has been detected as ${DOCROOT}. Is that correct?" --no-exit; then
 			DOCROOT=""
 			while [[ "$DOCROOT" == "" ]]; do
