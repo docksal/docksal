@@ -136,10 +136,10 @@ CONFIG_ALIASES="$CONFIG_DIR/alias"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
 CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DIR/docker-machine.env"
-mkdir -p "$CONFIG_PROJECTS" >/dev/null 2>&1
-# BIN folder
+# bin and bin/downloads folders
 CONFIG_BIN_DIR="$CONFIG_DIR/bin"
 CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
+mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
@@ -149,7 +149,7 @@ is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage
 is_wsl && vboxmanage="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 # Stacks folder
 CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
-mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
+mkdir -p "$CONFIG_STACKS_DIR" 2>/dev/null
 # Custom certs folder for vhost-proxy (overridable)
 CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 
@@ -3761,9 +3761,6 @@ install_sshagent_service ()
 # Install Mac dependencies
 install_tools_mac ()
 {
-	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
-	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
-
 	# Install Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_MAC")
@@ -3849,9 +3846,6 @@ install_tools_mac ()
 # Install Windows dependencies
 install_tools_windows ()
 {
-	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
-	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
-
 	# Remove old incorrect line
 	sed -i~ "s/^\\\\nexport.*$//" "$HOME/.babunrc"
 	# Disable Babun update checks as they often bring problems
@@ -4092,9 +4086,6 @@ install_tools_generic_linux ()
 # Install WSL dependencies
 install_tools_wsl ()
 {
-	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
-	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
-
 	# Install Linux Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_NIX")
