@@ -2494,7 +2494,7 @@ smb_share_add()
 smb_share_remove ()
 {
 	local drives
-	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygpath); fi
+	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
 
 	for drive in ${drives}; do
 		# Avoid conflicts with existing drive shares by using a unique share name
@@ -2565,7 +2565,7 @@ docker_machine_mount_smb ()
 	fi
 
 	local drives
-	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygpath); fi
+	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
 
 	for drive in ${drives}; do
 		# Mount point is lowercase drive letter with no slash
