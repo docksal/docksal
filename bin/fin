@@ -711,9 +711,9 @@ is_docker_running ()
 	if ! is_linux && ! is_docker_native; then
 		if ! is_docker_machine_running; then return 255; fi
 	fi
-	# Check if docker is running via docker info.
+	# Check if docker is running via docker version.
 	# This operation is instant even if docker is not running (assuming a socket is used).
-	which docker >/dev/null 2>&1 && docker info >/dev/null || return 1
+	which docker >/dev/null 2>&1 && docker version >/dev/null || return 1
 }
 
 is_docksal_running ()
