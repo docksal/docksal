@@ -3058,13 +3058,13 @@ system_reset ()
 	if [[ "$1" == "" ]] ; then
 		configure_network
 		configure_mounts
-		echo-green 'Resetting Docksal services...'
-		echo ' ➔ proxy'
+		echo-green 'Resetting Docksal system services...'
+		echo ' * proxy'
 		install_proxy_service
-		echo ' ➔ dns'
+		echo ' * dns'
 		install_dns_service
 		configure_resolver
-		echo ' ➔ ssh-agent'
+		echo ' * ssh-agent'
 		install_sshagent_service
 		return
 	fi
@@ -3119,7 +3119,6 @@ system_start ()
 		fi
 	fi
 
-	echo "Starting Docksal system services..."
 	system_reset
 }
 
