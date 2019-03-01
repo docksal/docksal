@@ -3876,11 +3876,13 @@ install_tools_windows ()
 		fi
 
 		# Run in sub-shell so we don't have to cd back
+		# docker client binary downloaded from MS (e.g. docker-18-09-2.zip) is dynamically linked and needs DLLs from
+		# the archive. So unpacking everything below, not just docker.exe
 		(
 			cd "$CONFIG_DOWNLOADS_DIR" && \
-			unzip ${docker_pkg} && \
-			mv -f "docker/docker.exe" "$DOCKER_BIN.exe" && \
-			chmod +x "$DOCKER_BIN"
+			unzip -qq ${docker_pkg} && \
+			mv -f ./docker/* ${CONFIG_BIN_DIR}/ && \
+			chmod +x ${DOCKER_BIN}.exe
 		)
 		if_failed "Check file permissions."
 	fi
