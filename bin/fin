@@ -901,6 +901,9 @@ is_vbox_version ()
 
 is_docker_version ()
 {
+	# Skip the check on Pplay-with-Docker and Katacoda
+	(is_pwd || is_katacoda) && return
+
 	! which docker >/dev/null 2>&1 && return 1
 	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null)
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
@@ -908,6 +911,9 @@ is_docker_version ()
 
 is_docker_server_version ()
 {
+	# Skip the check on Pplay-with-Docker and Katacoda
+	(is_pwd || is_katacoda) && return
+
 	! which docker >/dev/null 2>&1 && return 1
 	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
 	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
