@@ -788,7 +788,7 @@ check_docker_running ()
 	[[ "$UPGRADE_IN_PROGRESS" == "1" ]] && return 0
 
 	# Check docker versions in this function
-	if ! is_docker_version && [[ -z $DOCKER_VERSION_ALERT_SUPPRESS ]]; then
+	if ! is_docker_version && [[ "$DOCKER_VERSION_ALERT_SUPPRESS" == "" ]]; then
 		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
 			"Run ${yellow}fin update${NC} to update to the required version." \ ""
 		DOCKER_VERSION_ALERT_SUPPRESS=1 # prevent multiple alerts
@@ -806,19 +806,15 @@ check_docker_running ()
 	is_docker_running
 	docker_status=$?
 	# Last chance to return non-error code
-	[[ ${docker_status} -eq 0 ]] && return
+	[[ ${docker_status} == 0 ]] && return
 
 	if [[ ${docker_status} -eq 255 ]] && ! is_docker_native; then
 		echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
 		_confirm "Start it now?"
-		system_start
-		if_failed "Could not start Docksal docker machine properly"
-		# re-check status
-		eval $(docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME")
-		docker info >/dev/null
-		docker_status=$?
+		system_start && return $?
 	fi
 
+	# TODO: Should the checks below be moved to system_start?
 	if is_linux; then
 		# Remind the user about running 'newgrp docker' after install.
 		if ! (id -nG | grep docker >/dev/null 2>&1) && ! is_root ; then
