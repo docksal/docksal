@@ -5380,7 +5380,7 @@ sysinfo ()
 		echo "Linux Kernel"
 	elif is_docker_native; then
 		is_mac && echo "Docker for Mac"
-		is_windows && echo "Docker for Windows"
+		(is_windows || is_wsl) && echo "Docker for Windows"
 	else
 		echo "VirtualBox VM"
 	fi
