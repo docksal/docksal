@@ -808,10 +808,11 @@ check_docker_running ()
 	# Last chance to return non-error code
 	[[ ${docker_status} == 0 ]] && return
 
-	if [[ ${docker_status} -eq 255 ]] && ! is_docker_native; then
+	if [[ ${docker_status} == 255 ]] && ! is_docker_native; then
 		echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
 		_confirm "Start it now?"
-		system_start && return $?
+		system_start
+		return $?
 	fi
 
 	# TODO: Should the checks below be moved to system_start?
@@ -2617,7 +2618,8 @@ vm ()
 	case $1 in
 		start)
 			# Show a message and pause for input.
-			echo -e "Deprecated. Please use ${yellow}fin system start${NC} instead."; read -p "Press any key to continue..."
+			echo -e "Deprecated. Please use ${yellow}fin system start${NC} instead."
+			read -p "Press any key to continue..."
 			system_start
 			;;
 		restart)
@@ -3550,7 +3552,7 @@ detect_dns ()
 		fi
 	fi
 
-	# If localhost address or empty was detected as upstream, fall back to the default
+	# If detected upstream points to localhost or is empty, then fall back to the default
 	if [[ "$DOCKSAL_DNS_UPSTREAM" =~ "127.0."* || "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
 		DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 	fi
@@ -4389,7 +4391,7 @@ update ()
 		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
 			if is_docker_machine_exist && ! is_docker_machine_running; then
 				echo-error "Docker Machine '$DEFAULT_MACHINE_NAME' should be running to perform update" \
-					"Start it with ${yellow}fin system start${NC} or destroy it with ${yellow}fin vm kill${NC} if you want it re-created."
+					"Start it with ${yellow}fin system start${NC} or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
 				return 1
 			fi
 		fi
