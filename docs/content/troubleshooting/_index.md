@@ -1,8 +1,8 @@
 ---
 title: "Troubleshooting"
 chapter: true
-weight: 8
-pre: "<b>8. </b>"
+weight: 7
+pre: "<b>7. </b>"
 ---
 
 # Troubleshooting
