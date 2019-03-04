@@ -3674,8 +3674,11 @@ configure_resolver_wsl () {
 		# Use the default DockerNAT adapter
 		network_id="vEthernet (DockerNAT)"
 	else
-		# Figure out the name of the network (not the name of the adapter) the VM is using
-		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+		# Need to check whether machine exists, otherwise we cannot get its info
+		if is_docker_machine_exist; then
+			# Figure out the name of the network (not the name of the adapter) the VM is using
+			network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+		fi
 	fi
 
 	if [[ "$network_id" == "" ]]; then
