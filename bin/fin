@@ -2587,7 +2587,6 @@ wsl_mount_drives ()
 	# Create mnt point binds if they don't exist
 	for drive in $(ls /mnt); do
 		if ! (echo "$mounts" | grep " on /$drive " >/dev/null); then
-			echo "Applying necessary pre-flight WSL adjustments..."
 			echo "Creating bind mount /mnt/$drive -> /$drive"
 			sudo mkdir -p "/$drive"
 			sudo mount --bind "/mnt/$drive" "/$drive"
