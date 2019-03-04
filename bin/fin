@@ -2428,38 +2428,26 @@ docker_machine_mount_nfs ()
 
 # Fix/optimize Windows network settings for file sharing.
 # See http://serverfault.com/a/236393 for details.
-smb_windows_fix()
+# TODO: Deprecated and soon to be removed.
+# This was applicable to Windows 7. Most likely irrelevant at this point.
+smb_windows_fix ()
 {
-	(! is_windows || ! is_wsl) && return
+	! is_windows && return
 
 	echo-green "Going to optimize Windows network settings for file sharing..."
 	echo "You may see an elevated command prompt - click Yes."
 	sleep 2
 
-	if is_wsl; then
-		tmpfile="/mnt/c/Windows/temp/fix-smb.reg"
-		tmpfile_win=$(wsl_path -w ${tmpfile})
-	else
-		# Backward compatibility with Babun
-		tmpfile="/cygdrive/c/Windows/temp/fix-smb.reg"
-		tmpfile_win=$(cygpath -w ${tmpfile})
-	fi
-
+	local tmpfile="/tmp/fix-smb.reg"
 	cat <<EOF > $tmpfile
 Windows Registry Editor Version 5.00
-
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management]
 "LargeSystemCache"=dword:00000001
-
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters]
 "Size"=dword:00000003
 EOF
 	# Update registry and restart Server and Computer Browser services.
-	if is_wsl; then
-		winsudo "'regedit /S ${tmpfile_win} && net stop server /y && net start server && net start browser'"
-	else
-		winsudo "regedit /S $(cygpath -w ${tmpfile}) && net stop server /y && net start server && net start browser"
-	fi
+	winsudo "regedit /S $(cygpath -w ${tmpfile}) && net stop server /y && net start server && net start browser"
 }
 
 # Method to create the user and SMB network share on Windows.
