@@ -6,10 +6,6 @@
 #
 # Example: travisci-build-trigger docksal/drupal8
 
-if [[ "${PROVIDER}" != "none" ]]; then
-	return 0;
-fi
-
 # Read repo name from the first argument and replace / with %2F
 # The %2F in the request URL is required so that the owner and repository name in the repository slug are interpreted
 # as a single URL segment.
