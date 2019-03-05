@@ -10,7 +10,7 @@ the Docksal default. Here are the steps that can be taken to build an image:
 1. Create image project, test and verify it worked as expected
 
     ```
-    FROM docksal/cli:php7.2
+    FROM docksal/cli:2-php7.2
     
     RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     
