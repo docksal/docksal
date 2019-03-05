@@ -3274,7 +3274,7 @@ ssh_key ()
 
 	# Remove copied keys from the ssh-agent container after loading into the ssh-agent.
 	# Commented out in favor of passing individual keys on stdin of the agent container.
-	docker exec docksal-ssh-agent bash -c 'rm -rf /.ssh/*'
+	docker exec docksal-ssh-agent rm -rf '/.ssh/*'
 }
 
 #----- Installations and updates -----
