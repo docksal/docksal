@@ -4536,7 +4536,7 @@ update ()
 		for project in ${running_projects}; do
 			# use updated version when updated
 			[[ ! -f "$FIN_PATH_UPDATED" ]] && FIN_PATH_UPDATED="fin"
-			(cd "$project" && NO_UPDATES=1 "$FIN_PATH_UPDATED" start)
+			(cd "$project" && NO_UPDATES=1 "$FIN_PATH_UPDATED" project start)
 		done
 	fi
 
@@ -7466,7 +7466,7 @@ case "$1" in
 			curl -kfsSL "${fin_url}?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
 			[[ "$2" == "--diff" ]] && diff "$FIN_PATH" "$FIN_PATH_UPDATED"
 			sudo cp "$FIN_PATH_UPDATED" "$FIN_PATH"
-			[ $? -eq 0 ] && echo "Done"
+			[[ $? == 0 ]] && echo "Done"
 			exit
 		elif [[ "$1" == "--tools" ]]; then
 			update_tools
