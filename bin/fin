@@ -4063,6 +4063,10 @@ install_tools_alpine ()
 		# docker-compose has to be install via pip on Alpine
 		# See https://github.com/docker/compose/issues/3465
 		apk add --no-cache python3 >/dev/null && \
+			# Update pip to avoid warnings like:
+			# - "Cache entry deserialization failed, entry ignored"
+			# - "You are using pip version 10.0.1, however version 19.0.3 is available."
+			pip3 install --upgrade --no-cache-dir pip >/dev/null && \
 			pip3 install "docker-compose==${REQUIREMENTS_DOCKER_COMPOSE}" >/dev/null && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
