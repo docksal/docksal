@@ -4165,7 +4165,7 @@ install_tools_wsl ()
 		fi
 	fi
 	# Create a symlink to the Windows docker-machine binary inside the WSL FS.
-	ln -s "$DOCKER_MACHINE_BIN_WSL" "$DOCKER_MACHINE_BIN"
+	ln -sf "$DOCKER_MACHINE_BIN_WSL" "$DOCKER_MACHINE_BIN"
 
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
