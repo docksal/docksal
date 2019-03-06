@@ -180,6 +180,9 @@ DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
 # Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
 DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
 
+# Docker for Windows
+DOCKER_WIN_NETWORK="vEthernet (DockerNAT)"
+
 # Declaring possible vhost-proxy settings overrides
 DOCKSAL_VHOST_PROXY_IP="${DOCKSAL_VHOST_PROXY_IP}"
 DOCKSAL_VHOST_PROXY_PORT_HTTP="${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
@@ -718,6 +721,16 @@ is_docker_running ()
 
 is_docksal_running ()
 {
+	# Verify DOCKSAL_IP is assigned to the appropriate network interface.
+	# Applicable to Docker Desktop (Mac/Windows) and Linux only.
+	# This check is redundant, since if the IP is not assigned, Docksal system services won't start and the check below
+	# will fail. However, there could be cases, when system services have been already started and after that hosts
+	# network settings are adjusted/corrupted externally.
+	is_mac && is_docker_native && ! check_network_mac && return 1
+	is_linux && ! check_network_alpine && return 1
+	is_windows && is_docker_native && ! check_network_windows && return 1
+	is_wsl && is_docker_native && ! check_network_wsl && return 1
+
 	local system_services=$(docker ps --filter "label=io.docksal.group=system" --format '{{.Names}}' 2>/dev/null)
 	# Assume Docksal is running when the following system services are running
 	(echo "$system_services" | grep 'docksal-vhost-proxy' >/dev/null 2>&1) || return 1
@@ -3307,13 +3320,19 @@ stats_ping ()
 	return 0
 }
 
+# Checks whether local network interface is configured for Docksal
+check_network_alpine ()
+{
+	grep -q "lo:docksal" <<< "$(ip addr show dev lo)"
+}
+
 # Configure Docksal network settings on Alpine via ip addr
 configure_network_alpine ()
 {
 	local mode="${1:-on}"
 	# Determine current status
 	local status
-	(grep -q "lo:docksal" <<< "$(ip addr show dev lo)") && status="enabled" || status="disabled"
+	check_network_alpine && status="enabled" || status="disabled"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
@@ -3325,13 +3344,22 @@ configure_network_alpine ()
 	fi
 }
 
+# Checks whether the local network interface is configured for Docksal.
+# Applicable to Docker Desktop only.
+check_network_mac ()
+{
+	local settings=$(ifconfig lo0)
+	grep -q "${DOCKSAL_IP} netmask" <<< ${settings}  || return 1
+	grep -q "${DOCKSAL_HOST_IP} netmask" <<< ${settings} || return 1
+}
+
 # Configure Docksal network settings on Mac
 configure_network_mac ()
 {
 	local mode="${1:-on}"
 	# Determine current status
 	local status
-	(grep -q "$DOCKSAL_IP" <<< "$(ifconfig lo0)") && status="enabled" || status="disabled"
+	check_network_mac && status="enabled" || status="disabled"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add Docksal IP aliases on the local loopback adapter
@@ -3344,41 +3372,64 @@ configure_network_mac ()
 	fi
 }
 
+# Checks whether DOCKER_WIN_NETWORK network interface is configured for Docksal
+# Applicable to Docker Desktop only.
+check_network_windows ()
+{
+	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
+	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
+	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
+}
+
 # Configure Docksal network settings on Windows
 configure_network_windows ()
 {
 	local mode="${1:-on}"
+	# Determine current status
+	local status
+	check_network_windows && status="enabled" || status="disabled"
 
 	# Docker for Win
-	if [[ "$mode" == "on" ]]; then
+	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add Docksal IP aliases on the DockerNAT adapter
-		local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_IP} mask=255.255.255.0"
-		local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_HOST_IP} mask=255.255.255.0"
+		local command1="netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr=${DOCKSAL_IP} mask=255.255.255.0"
+		local command2="netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr=${DOCKSAL_HOST_IP} mask=255.255.255.0"
 		winsudo "$command1 & $command2"
-	elif [[ "$mode" == "off" ]]; then
+	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove Docksal IP aliases on the DockerNAT adapter
-		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_IP}"
-		local command2="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_HOST_IP}"
+		local command1="netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr=${DOCKSAL_IP}"
+		local command2="netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr=${DOCKSAL_HOST_IP}"
 		winsudo "$command1 & $command2"
 	fi
 	# Wait 5s for network configuration to apply
 	sleep 5
 }
 
+# Checks whether DOCKER_WIN_NETWORK network interface is configured for Docksal
+# Applicable to Docker Desktop only.
+check_network_wsl ()
+{
+	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
+	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
+	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
+}
+
 # Configure Docksal network settings on WSL
 configure_network_wsl ()
 {
 	local mode="${1:-on}"
+	local status
+	check_network_wsl && status="enabled" || status="disabled"
 
 	# Docker for Win
-	if [[ "$mode" == "on" ]]; then
+	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add Docksal IP aliases on the DockerNAT adapter
-		sudowin netsh.exe interface ip add address name=\"vEthernet \(DockerNAT\)\" addr="${DOCKSAL_IP}" mask="255.255.255.0"
-		sudowin netsh.exe interface ip add address name=\"vEthernet \(DockerNAT\)\" addr="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
-	elif [[ "$mode" == "off" ]]; then
+		sudowin netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_IP}" mask="255.255.255.0"
+		sudowin netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
+	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove Docksal IP aliases on the DockerNAT adapter
-		sudowin netsh.exe interface ip delete address name=\"vEthernet \(DockerNAT\)\" addr="${DOCKSAL_IP}"
-		sudowin netsh.exe interface ip delete address name=\"vEthernet \(DockerNAT\)\" addr="${DOCKSAL_HOST_IP}"
+		sudowin netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_IP}"
+		sudowin netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_HOST_IP}"
 	fi
 	# Wait 5s for network configuration to apply
 	sleep 5
@@ -3636,7 +3687,7 @@ configure_resolver_windows () {
 	local network_id
 	if is_docker_native; then
 		# Use the default DockerNAT adapter
-		network_id="vEthernet (DockerNAT)"
+		network_id="${DOCKER_WIN_NETWORK}"
 	else
 		# Need to check whether machine exists, otherwise we cannot get its info
 		if is_docker_machine_exist; then
@@ -3678,7 +3729,7 @@ configure_resolver_wsl () {
 	local network_id
 	if is_docker_native; then
 		# Use the default DockerNAT adapter
-		network_id="vEthernet (DockerNAT)"
+		network_id="${DOCKER_WIN_NETWORK}"
 	else
 		# Need to check whether machine exists, otherwise we cannot get its info
 		if is_docker_machine_exist; then
