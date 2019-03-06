@@ -4772,6 +4772,21 @@ _exec ()
 		# non-interactive
 		docker exec -e COLUMNS -e LINES ${container_user} ${container_id} bash -lc "$cmd"
 	fi
+
+	res=$?
+
+	# Process a case when there is no bash in the container
+	if [[ $res == 126 ]]; then
+		if is_tty && [[ "$no_tty" != true ]]; then
+			# interactive
+			${winpty} docker exec -e COLUMNS -e LINES -it ${container_user} ${container_id} sh -ilc "$cmd"
+		else
+			# non-interactive
+			docker exec -e COLUMNS -e LINES ${container_user} ${container_id} sh -lc "$cmd"
+		fi
+	else
+		return $res
+	fi
 	# ------------------------------------------------ #
 }
 
