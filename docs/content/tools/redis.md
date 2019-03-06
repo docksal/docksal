@@ -76,3 +76,7 @@ services:
 
 Redis can also be configured by extending the stock image within a Dockerfile. For more
 information, consult the [Extending stock Docksal Images](/stack/extend-images/) documentation.
+
+## Accessing the Redis instance
+
+If you need command line access to the Redis instance you can run `fin exec --in=redis redis-cli`.
