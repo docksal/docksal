@@ -1,12 +1,11 @@
 ---
-title: "Pull"
+title: "Pull (providers integration)"
 aliases:
-  - /en/master/tools/pull/
+  - /en/master/fin/pull/
 ---
 
-To quickly integrate into your hosting environment, use the Docksal `pull` command. 
-This allows you to easily bring your assets (db, files, and code) down to your 
-local environment quickly without manually running through the steps.
+`pull` command allows you to easily bring your assets: db, files, and code from your hosting environment
+down to your local environment without manually running through the steps.
 
 ## Requirements
 
@@ -24,7 +23,7 @@ Interacting with Pantheon requires that the `SECRET_TERMINUS_TOKEN`
 is set. More information on [generating tokens](https://pantheon.io/docs/machine-tokens/)
 can be found in Pantheon's documentation.
 
-More information on working with [Docksal with Pantheon](/tools/pantheon).
+More information on working with [Docksal with Pantheon](/tools/terminus).
 
 ### Platform.sh
 
@@ -91,12 +90,12 @@ the `fin pull` command by setting the `HOSTING_PLATFORM` and
 file.
 
 ```bash
-fin config set --HOSTING_PROVIDER=[provider]
+fin config set HOSTING_PROVIDER=[provider]
 
-fin config set --HOSTING_SITE="[remote name]"
+fin config set HOSTING_SITE="[remote name]"
 
 # WordPress is the only provider that doesn't need to use this.
-fin config set --HOSTING_ENV="[remote env]"
+fin config set HOSTING_ENV="[remote env]"
 ```
 
 If you are starting from scratch, the following command can be used
@@ -104,15 +103,15 @@ to pull code and start the project locally:
 
 ```bash
 fin pull init \
-    --HOSTING_PLATFORM=<platform> \
-    --HOSTING_SITE=<site> \
-    --HOSTING_ENV=<env> \
+    --hosting-platform=<platform> \
+    --hosting-site=<site> \
+    --hosting-env=<env> \
     <directory_name>
 ```
 
 ### Acquia / Pantheon / Platform.sh
 
-Additionally, the `--HOSTING_ENV` option can be used to specify exactly
+Additionally, the `--hosting-env` option can be used to specify exactly
 which environment on Acquia Cloud that should be used. If it isn't used, 
 the `dev` environment is used by default.
 
@@ -123,8 +122,8 @@ can be cloned.
 
 ```bash
 fin pull init \
-    --HOSTING_PLATFORM=drush \
-    --HOSTING_SITE="example" \
+    --hosting-platform=drush \
+    --hosting-site="example" \
     my_new_site \
     https://github.com/docksal/drupal8.git
 ```
@@ -136,7 +135,7 @@ the project to pull in the latest code from the remote.
 
 To pull code use the argument `code`. This will default to pulling `origin`
 and then pulling the current branch. If a different branch or remote is required,
-those can be specified using the flags `SYNC_GIT_REMOTE` and `--SYNC_GIT_BRANCH`.
+those can be specified using the flags `--sync-git-remote` and `--sync-git-branch`.
 
 Example
 
@@ -145,18 +144,18 @@ Example
 fin pull code
 
 # Pull from the production remote.
-fin pull code --SYNC_GIT_REMOTE=production
+fin pull code --sync-git-remote=production
 
 # Pull the dev branch.
-fin pull code --SYNC_GIT_BRANCH=dev
+fin pull code --sync-git-branch=dev
 
 # Pull from the github remote and the rc branch.
-fin pull code --SYNC_GIT_REMOTE=github --SYNC_GIT_REMOTE=rc
+fin pull code --sync-git-remote=github --sync-git-branch=rc
 ```
 
 ```
-  --SYNC_GIT_REMOTE             The GIT Remote to pull from. (Defaults to origin)
-  --SYNC_GIT_BRANCH             The GIT Branch to pull from. (Defaults to current branch)
+  --sync-git-remote             The GIT Remote to pull from. (Defaults to origin)
+  --sync-git-branch             The GIT Branch to pull from. (Defaults to current branch)
 ```
 
 ## Pulling Database
@@ -164,7 +163,7 @@ fin pull code --SYNC_GIT_REMOTE=github --SYNC_GIT_REMOTE=rc
 To pull a database from the remote, run the `pull db` command. When
 pulling the database, it stays cached within your `cli` container for a
 period of one (1) hour. If at any point this needs to be updated, use
-the `--FORCE` option as this will bypass the database and reimport.
+the `--force` option as this will bypass the database and reimport.
 
 ```bash
 fin pull db
@@ -174,17 +173,17 @@ When pulling there are some additional options that can be used for
 importing the data.
 
 ```
-  --DBUSER=<user>               Specify the DB User (Defaults to root)
-  --DBPASS=<pass>               Specify the DB Password (Defaults to root)
-  --DBNAME=<dbname>             Specify the DB Name to import into. (Defaults to default)
-  --FORCE                       Force a new database file to be pulled
-  --REMOTE_DB=<remote_db>       Specify the remote DB name to pull. (Used with Acquia)
+  --db-user=<user>               Specify the DB User (Defaults to root)
+  --db-pass=<pass>               Specify the DB Password (Defaults to root)
+  --db-name=<dbname>             Specify the DB Name to import into. (Defaults to default)
+  --force                       Force a new database file to be pulled
+  --remote-db=<remote_db>       Specify the remote DB name to pull. (Used with Acquia)
 ```
 
 {{% notice note %}}
 Acquia has the ability to host a Drupal multi-site which allow
 multiple databases within the Acquia cloud that can be accessed. A
-database can be pulled down using the `--REMOTE_DB` option where the
+database can be pulled down using the `--remote-db` option where the
 remote db is the database within the site's dashboard.
 {{% /notice %}}
 
@@ -202,8 +201,8 @@ fin pull files
 Additional options can be used to help rsync the files locally.
 
 ```
-  --RSYNC_OPTIONS=<options>     Rsync Options to append.
-  --FILES_DIR=<dir>             Directory to sync files with.
+  --rsync-options=<options>     Rsync Options to append.
+  --files-dir=<dir>             Directory to sync files with.
                                 Default Drupal: {DOCROOT}/sites/default/files/
                                 Wordpress Default: {DOCROOT}/wp-content/uploads/
 

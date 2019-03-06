@@ -1,5 +1,5 @@
 ---
-title: "Terminus"
+title: "Pantheon (Terminus)"
 aliases:
   - /en/master/tools/terminus/
 ---
@@ -30,3 +30,9 @@ Use `fin terminus <command>` from the host or `terminus <command>` inside `cli`.
 Please refer to the [official docs](https://pantheon.io/docs/terminus) for usage details.
 
 Note: It is also possible to add/override these values via `.docksal/docksal.env` and `.docksal/docksal-local.env` at the project level. Keep in mind, `.docksal/docksal.env` is a shared configuration file and should be committed to git. `.docksal/docksal-local.env`, on the other hand, can be used for local overrides and should be excluded from git. As such, it is best to use `.docksal/docksal-local.env` for any personal keys and tokens configured at the project level.
+
+## Integration
+
+For easier integration with Pantheon environment use the [pull command](/fin/pull). 
+This allows you to easily bring your assets (db, files, and code) down to your 
+local environment quickly without manually running through the steps.
