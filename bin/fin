@@ -4733,7 +4733,7 @@ _exec ()
 	local SHELL_INTERACTIVE="sh -ilc"
 	local SHELL_NONINTERACTIVE="sh -lc"
 
-	# For cli use bash
+	# For cli and db use bash (complex SQL queries fail when fed from stdin to sh)
 	if [[ "$container_name" == "cli" ]] || [[ "$container_name" == "db" ]]; then
 		SHELL_INTERACTIVE="bash -ilc"
 		SHELL_NONINTERACTIVE="bash -lc"
@@ -4763,7 +4763,7 @@ _exec ()
 		cmd="$cmd"$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
 	else
-		cmd="$cmd""$@"
+		cmd="${cmd}${@}"
 	fi
 	# ------------------------------------------------ #
 
