@@ -1,5 +1,5 @@
 ---
-title: "All commands reference"
+title: "fin help"
 weight: 2
 aliases:
   - /en/master/fin/fin-help/
@@ -8,7 +8,7 @@ aliases:
 ## fin {#fin}
 
 	
-	Docksal command line utility v1.81.0
+	Docksal command line utility v1.82.1
 	
 	Usage: fin <command>
 	
@@ -152,11 +152,11 @@ aliases:
 	  --sync-git-branch        	The GIT Branch to pull from. (Defaults to current branch)
 	
 	Extra Options for DB
-	  --db-user=<user>          	Specify the DB User (Defaults to root)
-	  --db-pass=<pass>          	Specify the DB Password (Defaults to root)
-	  --db-name=<dbname>        	Specify the DB Name to import into. (Defaults to default)
+	  --db-user=<user>         	Specify the DB User (Defaults to root)
+	  --db-pass=<pass>         	Specify the DB Password (Defaults to root)
+	  --db-name=<dbname>       	Specify the DB Name to import into. (Defaults to default)
 	  --force                  	Generate and pull a new db dump, rather than using locally cached in /tmp
-	  --remote-db=<remote_db>  	Specify the remote DB name to pull. (Used with Acquia)
+	  --remote-db=<remotedb>   	Specify the remote DB name to pull. (Used with Acquia)
 	
 	Extra Options for Files
 	  --rsync-options=<options>	Rsync Options to append.
@@ -262,6 +262,29 @@ aliases:
 	Examples:
 	  fin addon install solr   	Install solr addon to the current project
 	  fin addon remove solr    	Uninstall solr addon from the current project
+
+## exec {#exec}
+
+	
+	Execute commands or script in `cli` service container,
+	or execute commands in other containers when specified in params.
+	fin exec will automatically cd into the same folder inside `cli`.
+	
+	Usage: exec [-T] [--in=name] <command | file>
+	  [!] Parameters order matters.
+	
+	Options:
+	  -T                       	Disable pseudo-tty allocation.
+	                           	Useful for non-interactive commands when output is saved into a variable for further comparison.
+	                           	In a TTY mode the output may contain unexpected invisible control symbols.
+	  --in=name                	Name of the service to execute the command in.
+	
+	Examples:
+	  fin exec ls -la          			Current directory listing
+	  fin exec "ls -la > /tmp/list"			Execute advanced shell command with pipes or stdout redirects happening inside `cli`
+	  res=$(fin exec -T drush st)			Use -T switch when using exec output
+	  fin exec .docksal/script.sh			Execute a whole file inside `cli` container
+	  fin exec --in=db mysql -uroot -p		Execute command in `db` container (will NOT cd into the same folder)
 
 ## run-cli {#run-cli}
 

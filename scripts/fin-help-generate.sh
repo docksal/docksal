@@ -73,6 +73,10 @@ echo " - addon"
 headergen "addon"
 helpgen addon
 
+echo " - exec"
+headergen "exec"
+helpgen exec
+
 echo " - run-cli"
 headergen "run-cli"
 helpgen run-cli
