@@ -3349,8 +3349,8 @@ configure_network_alpine ()
 check_network_mac ()
 {
 	local settings=$(ifconfig lo0)
-	grep -q "$DOCKSAL_IP" <<< ${settings}  || return 1
-	grep -q "$DOCKSAL_HOST_IP" <<< ${settings} || return 1
+	grep -q "${DOCKSAL_IP} netmask" <<< ${settings}  || return 1
+	grep -q "${DOCKSAL_HOST_IP} netmask" <<< ${settings} || return 1
 }
 
 # Configure Docksal network settings on Mac
@@ -3376,7 +3376,9 @@ configure_network_mac ()
 # Applicable to Docker Desktop only.
 check_network_windows ()
 {
-	grep -q "$DOCKSAL_IP" <<< $(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}")
+	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
+	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
+	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
 }
 
 # Configure Docksal network settings on Windows
@@ -3407,7 +3409,9 @@ configure_network_windows ()
 # Applicable to Docker Desktop only.
 check_network_wsl ()
 {
-	grep -q "$DOCKSAL_IP" <<< $(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}")
+	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
+	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
+	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
 }
 
 # Configure Docksal network settings on WSL
