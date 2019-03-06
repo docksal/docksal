@@ -4427,7 +4427,7 @@ update ()
 	fi
 
 	# Pre-update check #2: warn if boot2docker will need to be upgraded
-	if (is_mac || is_windows) && ! is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
+	if (is_mac || is_windows || is_wsl) && ! is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		local b2d_version=$(docker version --format '{{.Server.Version}}')
 		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") ]]; then
 			BOOT2DOCKER_NEEDS_AN_UPGRADE=1
