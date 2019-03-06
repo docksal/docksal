@@ -721,15 +721,21 @@ is_docker_running ()
 
 is_docksal_running ()
 {
+	# Verify DOCKSAL_IP is assigned to the appropriate network interface.
+	# Applicable to Docker Desktop (Mac/Windows) and Linux only.
+	# This check is redundant, since if the IP is not assigned, Docksal system services won't start and the check below
+	# will fail. However, there could be cases, when system services have been already started and after that hosts
+	# network settings are adjusted/corrupted externally.
+	is_mac && is_docker_native && ! check_network_mac && return 1
+	is_linux && ! check_network_alpine && return 1
+	is_windows && is_docker_native && ! check_network_windows && return 1
+	is_wsl && is_docker_native && ! check_network_wsl && return 1
+
 	local system_services=$(docker ps --filter "label=io.docksal.group=system" --format '{{.Names}}' 2>/dev/null)
 	# Assume Docksal is running when the following system services are running
 	(echo "$system_services" | grep 'docksal-vhost-proxy' >/dev/null 2>&1) || return 1
 	(echo "$system_services" | grep 'docksal-ssh-agent' >/dev/null 2>&1) || return 1
 	(echo "$system_services" | grep 'docksal-dns' >/dev/null 2>&1) || return 1
-
-	is_mac && ! (grep -q "$DOCKSAL_IP" <<< "$(ifconfig lo0)") && return 1
-	is_linux && ! (grep -q "lo:docksal" <<< "$(ip addr show dev lo)") && return 1
-	# TODO: add check on windows
 
 	return 0
 }
