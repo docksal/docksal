@@ -3493,7 +3493,8 @@ configure_mounts ()
 					echo-error "There is still an NFS conflict" \
 						"With ${yellow}${DOCKSAL_NFS_PATH}${NC} your ${yellow}/etc/exports${NC} would still contain a conflict." \
 						"You need to manually review your ${yellow}/etc/exports${NC} and resolve conflicts." \
-						"Most likely remove the lines that export folders under ${yellow}${DOCKSAL_NFS_PATH}${NC}"
+						"Most likely remove the lines that export folders under ${yellow}${DOCKSAL_NFS_PATH}${NC}" \
+						"Then run ${yellow}fin system reset${NC}"
 					exit 1
 				elif [[ $res != 0 ]]; then
 					echo-error "NFS sharing has failed"
