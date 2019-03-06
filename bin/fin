@@ -2335,11 +2335,17 @@ nfs_share_add ()
 
 		# Do not write /etc/exports if there are config check errors
 		if [[ "$exports_errors" != '' ]]; then
-			echo-error "$exports_errors"
-			echo "-----------------"
-			echo -e "$exports"
-			echo "-----------------"
-			return 2
+			if [[ "$exports_errors" =~ "conflicts" ]]; then
+				return 2 # conflict error
+			else
+				echo-error "There is an error in /etc/exports file" \
+					"Read through the error message(s) below and fix errors in ${yellow}/etc/exports${NC} manually" \
+					"Then run ${yellow}fin system reset${NC}"
+				echo "-----------------"
+				echo "$exports_errors"
+				echo "-----------------"
+				return 1 # other error
+			fi
 		fi
 
 		echo "Writing /etc/exports..."
@@ -3470,18 +3476,34 @@ configure_mounts ()
 		if is_mac; then
 			echo-green "Configuring NFS shares..."
 			nfs_share_add "${DOCKSAL_NFS_PATH}"
-			# Exit 2 = conflict in /etc/exports. Try to auto-resolve it.
-			if [[ $? == 2 ]]; then
+			res=$?
+			# Exit 2 = conflict or other error in /etc/exports. Try to auto-resolve it.
+			if [[ $res == 2 ]]; then
 				# TODO: possibly, print a note that anything above the configured DOCKSAL_NFS_PATH is invisible to the VM.
-				echo-green "Conflict detected. Attempting auto-fix:"
-				_confirm "Suggested path for Docksal projects: ${yellow}${HOME}/Projects${NC}. Use it?"
+				echo-green "Possible NFS conflict detected. Attempting auto-fix:"
+				_confirm "Suggested path for Docksal projects: ${yellow}${HOME}/Projects${NC}. Try it?"
 				DOCKSAL_NFS_PATH="${HOME}/Projects"
 				mkdir -p "${DOCKSAL_NFS_PATH}"
 				# Write proposed value to the global Docksal config
 				config_set --global DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH}"
 				# Configure exports using the new value
 				nfs_share_add "${DOCKSAL_NFS_PATH}"
+				res=$?
+				if [[ $res == 2 ]]; then
+					echo-error "There is still an NFS conflict" \
+						"With ${yellow}${DOCKSAL_NFS_PATH}${NC} your ${yellow}/etc/exports${NC} would still contain a conflict." \
+						"You need to manually review your ${yellow}/etc/exports${NC} and resolve conflicts." \
+						"Most likely remove the lines that export folders under ${yellow}${DOCKSAL_NFS_PATH}${NC}"
+					exit 1
+				elif [[ $res != 0 ]]; then
+					echo-error "NFS sharing has failed"
+					exit 1
+				fi
+			elif [[ $res != 0 ]]; then
+				echo-error "NFS sharing has failed"
+				exit 1
 			fi
+
 			# Mount the share in VirtualBox
 			if ! is_docker_native; then
 				docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
