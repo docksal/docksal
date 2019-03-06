@@ -2425,7 +2425,7 @@ docker_machine_mount_nfs ()
 			sleep 5
 			docker-machine ssh "$DEFAULT_MACHINE_NAME" "timeout -t 20 $nfs_mount_command"
 			if [[ $? != 0 ]]; then
-				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
+				echo-error "NFS share mount failed." "Try ${yellow}fin vm mount${NC} or ${yellow}fin vm restart${NC}."
 				return 1
 			fi
 		fi
@@ -2537,7 +2537,7 @@ smb_share_mount()
 			echo-green 'Success!'
 		else
 			echo-error "SMB share mount failed." \
- 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again." \
+ 				"Make sure your Windows password is correct and run ${yellow}fin vm mount${NC} to try again." \
  				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/troubleshooting/windows-smb/${NC}"
 			return 1
 		fi
@@ -2555,7 +2555,7 @@ docker_machine_mount_smb ()
 	if ([[ "$password" =~ \' ]] || [[ "$password" =~ , ]] || [[ "$password" =~ \\ ]]); then
 		echo-error "Password contains illegal characters" \
 			"Your password contains a single quote ('), a comma (,) or a back slash (\\)" \
-			"Please change you password and run ${yellow}fin vm restart${NC}"
+			"Please change you password and run ${yellow}fin vm mount${NC}"
 		return 1
 	fi
 
