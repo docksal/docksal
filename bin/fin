@@ -6,7 +6,8 @@ if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
 	red='\033[0;91m'
 	red_bg='\033[101m'
-	yellow_bg='\033[43;90m'
+	yellow_bg='\033[43m'
+	lightmagenta_bg='\033[0;105m'
 	green='\033[0;32m'
 	green_bg='\033[42m'
 	yellow='\033[0;33m'
@@ -15,6 +16,7 @@ if [[ "$TERM" != "dumb" ]]; then
 	lime='\033[0;92m'
 	acqua='\033[0;96m'
 	magenta='\033[0;35m'
+	lightmagenta='\033[0;95m'
 	NC='\033[0m'
 fi
 
@@ -293,7 +295,7 @@ echo-error ()
 
 echo-alert ()
 {
-	echo -e "${red_bg} ALERT: ${NC} ${red}$1${NC}"
+	echo -e "${lightmagenta_bg} ALERT: ${NC} ${lightmagenta}$1${NC}"
 	shift
 	for arg in "$@"; do
 		echo -e "         $arg"
