@@ -4732,7 +4732,7 @@ _exec ()
 	local SHELL_NONINTERACTIVE="sh -lc"
 
 	# For cli use bash
-	if [[ "$CONTAINER_NAME" == "cli" ]]; then
+	if [[ "$container_name" == "cli" ]] || [[ "$container_name" == "db" ]]; then
 		SHELL_INTERACTIVE="bash -ilc"
 		SHELL_NONINTERACTIVE="bash -lc"
 	fi
