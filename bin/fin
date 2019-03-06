@@ -724,6 +724,10 @@ is_docksal_running ()
 	(echo "$system_services" | grep 'docksal-ssh-agent' >/dev/null 2>&1) || return 1
 	(echo "$system_services" | grep 'docksal-dns' >/dev/null 2>&1) || return 1
 
+	is_mac && ! (grep -q "$DOCKSAL_IP" <<< "$(ifconfig lo0)") && return 1
+	is_linux && ! (grep -q "lo:docksal" <<< "$(ip addr show dev lo)") && return 1
+	# TODO: add check on windows
+
 	return 0
 }
 
