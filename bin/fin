@@ -1463,11 +1463,13 @@ show_help_list_addons_in_help ()
 show_help_exec ()
 {
 	echo
-	echo "Execute command or file in \`cli\` service container."
+	echo "Execute commands or script in \`cli\` service container,"
+	echo "or execute commands in other containers when specified in params."
 	echo "fin exec will automatically cd into the same folder inside \`cli\`."
 
 	echo
 	echo "Usage: exec [-T] [--in=name] <command | file>"
+	echo "  [!] Parameters order matters."
 
 	echo
 	echo "Options:"
