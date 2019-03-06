@@ -4169,6 +4169,24 @@ install_tools_wsl ()
 
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
+
+	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
+		local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
+		is_docker_machine_running && \
+		echo-green "Preparing to update virtual machine..." && \
+		docker_machine_stop && \
+		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
+		curl -fL# "$URL_BOOT2DOCKER" -o "${USERPROFILE}/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
+		docker_machine_start
+	fi
+
+	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
+		local server_version=$(docker version --format '{{.Server.Version}}')
+		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
+			echo-alert "Update Docker for Windows to the latest version manually"
+			sleep 2
+		fi
+	fi
 }
 
 update_virtualbox () {
