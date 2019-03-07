@@ -3911,7 +3911,9 @@ install_tools_mac ()
 	# If it was an upgrade
 	if [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
 		# Complete Rebuild of Docker Machine need to remove.
-		[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && docker_machine_remove
+		[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && \
+		docker_machine_remove &&
+		mkdir -p "$HOME/.docker/machine/machines/$DEFAULT_MACHINE_NAME"
 
 		(is_docker_machine_running && \
 		echo-green "Preparing to update virtual machine..." && \
@@ -4046,7 +4048,9 @@ install_tools_windows ()
 
 	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
 		# Complete Rebuild of Docker Machine need to remove.
-		[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && docker_machine_remove
+		[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && \
+		docker_machine_remove &&
+		mkdir -p "$HOME/.docker/machine/machines/$DEFAULT_MACHINE_NAME"
 
 		(is_docker_machine_running && \
 		echo-green "Preparing to update virtual machine..." && \
@@ -4259,7 +4263,9 @@ install_tools_wsl ()
 
 	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
 		# Complete Rebuild of Docker Machine need to remove.
-		[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && docker_machine_remove
+		[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && \
+		docker_machine_remove &&
+		mkdir -p "$HOME/.docker/machine/machines/$DEFAULT_MACHINE_NAME"
 
 		local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
 		(is_docker_machine_running && \
