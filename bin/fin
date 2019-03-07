@@ -3908,17 +3908,19 @@ install_tools_mac ()
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
-	# Complete Rebuild of Docker Machine need to remove.
-	[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && docker_machine_remove
-
 	# If it was an upgrade
-	[[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]] && \
-		is_docker_machine_running && \
+	if [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
+		# Complete Rebuild of Docker Machine need to remove.
+		[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && docker_machine_remove
+
+		(is_docker_machine_running && \
 		echo-green "Preparing to update virtual machine..." && \
-		docker_machine_stop && \
+		docker_machine_stop) || true
+
 		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
 		curl -fL# "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
 		docker_machine_start
+	fi
 
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		local server_version=$(docker version --format '{{.Server.Version}}')
@@ -4043,9 +4045,13 @@ install_tools_windows ()
 	fi
 
 	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
-		is_docker_machine_running && \
+		# Complete Rebuild of Docker Machine need to remove.
+		[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && docker_machine_remove
+
+		(is_docker_machine_running && \
 		echo-green "Preparing to update virtual machine..." && \
-		docker_machine_stop && \
+		docker_machine_stop) || true
+
 		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
 		curl -fL# "$URL_BOOT2DOCKER" -o "$(cygpath $USERPROFILE)/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
 		docker_machine_start
@@ -4252,10 +4258,14 @@ install_tools_wsl ()
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
 	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
+		# Complete Rebuild of Docker Machine need to remove.
+		[[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]] && docker_machine_remove
+
 		local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
-		is_docker_machine_running && \
+		(is_docker_machine_running && \
 		echo-green "Preparing to update virtual machine..." && \
-		docker_machine_stop && \
+		docker_machine_stop) || true
+
 		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
 		curl -fL# "$URL_BOOT2DOCKER" -o "${USERPROFILE}/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
 		docker_machine_start
