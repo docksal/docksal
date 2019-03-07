@@ -2256,14 +2256,15 @@ docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
 
-	if is_docker_machine_exist; then
-		docker-machine start "$DEFAULT_MACHINE_NAME"
-		if_failed_error "Failed starting virtual machine"
+	if is_docker_machine_exist "true"; then
+		if [[ "$DOCKER_MACHINE_STATUS" != "Running" ]]; then
+			docker-machine start "$DEFAULT_MACHINE_NAME"
+			if_failed_error "Failed starting virtual machine"
+		fi
 
-		DOCKER_MACHINE_STATUS='Running'
 		docker_machine_env
-		if_failed_error "Failed starting virtual machine" \
-			"In case you see certificates problem, reboot your local host." \
+		if_failed_error "Failed to properly access virtual machine" \
+			"In case you see certificates problem, try rebooting your local host." \
 			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
 	else
 		docker_machine_create &&
@@ -2430,7 +2431,7 @@ docker_machine_mount_nfs ()
 	# Mount exported folders
 	echo-green "Mounting NFS shares..."
 	# Start NFS client on docker-machine
-	docker-machine ssh "$DEFAULT_MACHINE_NAME" "sudo /usr/local/etc/init.d/nfs-client start"
+	docker-machine ssh "$DEFAULT_MACHINE_NAME" "sudo /usr/local/etc/init.d/nfs-client start" >/dev/null
 	for share in ${ARGV[@]}; do
 		local share_=(${share//:/ });
 		local share_export="${share_[0]}"
