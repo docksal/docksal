@@ -718,7 +718,7 @@ is_docker_running ()
 	fi
 	# Check if docker is running via docker version.
 	# This operation is instant even if docker is not running (assuming a socket is used).
-	which docker >/dev/null 2>&1 && docker version >/dev/null || return 1
+	which docker >/dev/null 2>&1 && docker version >/dev/null 2>/dev/null || return 1
 }
 
 is_docksal_running ()
@@ -846,7 +846,7 @@ check_docker_running ()
 		fi
 	else # MacOS, Windows
 		# Check for certificates error
-		if (docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
+		if ! is_docker_native && (docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
 			echo-error "Error connecting to Docker due to certificates error" \
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
@@ -3158,7 +3158,7 @@ system_stop ()
 		# keep in a subshell so that exit during that command would not stop other command in system stop
 		(_stop_containers --all)
 		echo-green "Stopping Docksal system services..."
-		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
+		docker ps -q --filter "label=io.docksal.group=system" 2>/dev/null | xargs docker rm -vf >/dev/null
 	fi
 
 	configure_resolver off
