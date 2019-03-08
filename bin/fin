@@ -904,11 +904,16 @@ is_docker_path ()
 	(cd "$_path" 2>/dev/null && docker run -v "$_path":"$_path" docksal/empty 2>/dev/null)
 }
 
+# Check VirtualBox version
+# Return value 0: VirtualBox installed and the version is OK
+# Return value 1: VirtualBox not installed
+# Return value 2: VirtualBox installed, but needs to be updated
 is_vbox_version ()
 {
 	! which "$vboxmanage" >/dev/null 2>&1 && return 1
 
-	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
+	# Trim \r from output (may be necessary on Windows)
+	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null | tr -d '\r')
 	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$REQUIREMENTS_VBOX") ]] && \
 		return 2
 
@@ -920,9 +925,10 @@ is_docker_version ()
 	# Skip the check on Play-with-Docker and Katacoda
 	(is_pwd || is_katacoda) && return
 
-	! which docker >/dev/null 2>&1 && return 1
-	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null)
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
+	! [[ -x ${DOCKER_BIN} ]] && return 1
+	# Trim \r from output (may be necessary on Windows)
+	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
 }
 
 is_docker_server_version ()
@@ -930,31 +936,34 @@ is_docker_server_version ()
 	# Skip the check on Play-with-Docker and Katacoda
 	(is_pwd || is_katacoda) && return
 
-	! which docker >/dev/null 2>&1 && return 1
-	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
+	! [[ -x ${DOCKER_BIN} ]] && return 1
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
 }
 
 is_docker_compose_version ()
 {
-	! which docker-compose >/dev/null 2>&1 && return 1
-	# Trim any control characters from docker-compose output (necessary on Windows)
-	local version=$(docker-compose version --short | tr -d '[:cntrl:]')
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") -le $(ver_to_int "$version") ]]
+	! [[ -x ${DOCKER_COMPOSE_BIN} ]] && return 1
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker-compose version --short | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") <= $(ver_to_int "$version") ))
 }
 
 is_docker_machine_version ()
 {
-	! which docker-machine >/dev/null 2>&1 && return 1
-	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") -le $(ver_to_int "$version") ]]
+	! [[ -x ${DOCKER_MACHINE_BIN} ]] && return 1
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker-machine -v  | sed "s/.*version \(.*\),.*/\1/")
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") <= $(ver_to_int "$version") ))
 }
 
 is_winpty_version ()
 {
-	! which "$WINPTY_BIN" >/dev/null 2>&1 && return 2
-	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/")
-	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") -le $(ver_to_int "$version") ]]
+	! [[ -x ${WINPTY_BIN} ]] && return 2
+	# Trim \r from output (necessary on Windows)
+	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/" | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_WINPTY") <= $(ver_to_int "$version") ))
 }
 
 wants_rc_version ()
@@ -962,6 +971,9 @@ wants_rc_version ()
 	[[ "${DOCKSAL_USE_RC}" == 1 ]] || [[ "${DOCKSAL_USE_RC}" == "true" ]]
 }
 
+# Verbal counterpart to vbox_version
+# Checks VirtualBox version and prints a message to user if the check failed and why.
+# Supports skipping version check via SKIP_VBOX_VERSION_CHECK=1
 check_vbox_version ()
 {
 	# Provide ability to skip checking for vbox version
@@ -969,8 +981,8 @@ check_vbox_version ()
 
 	is_vbox_version
 	local res=$?
-	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
-	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
+	[[ "$res" == "1" ]] && echo-error "${vboxmanage} binary was not found" && exit 1
+	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher" && exit 1
 }
 
 # Check that .docksal is present
