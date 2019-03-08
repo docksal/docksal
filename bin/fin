@@ -384,13 +384,15 @@ cygpath_abs_unix ()
 # @param $1 var name
 wsl_env () 
 {
-	echo $(cmd.exe /c "echo %$1%" | tr -d '[:cntrl:]')
+	# Trim \r from output (necessary on Windows)
+	echo $(cmd.exe /c "echo %$1%" | tr -d '\r')
 }
 
 # Unfortunately wslpath output contains \r that has to be cleaned 
 wsl_path ()
 {
-	echo $(wslpath "$@" | tr -d '[:cntrl:]')
+	# Trim \r from output (necessary on Windows)
+	echo $(wslpath "$@" | tr -d '\r')
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -525,8 +527,8 @@ get_mysql_connect ()
 # @return docker container id
 get_container_id ()
 {
-	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
-	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '[:cntrl:]')
+	# Trim \r from output (necessary on Windows)
+	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '\r')
 }
 
 # Run command on Windows with elevated privileges
@@ -912,7 +914,7 @@ is_vbox_version ()
 {
 	! which "$vboxmanage" >/dev/null 2>&1 && return 1
 
-	# Trim \r from output (may be necessary on Windows)
+	# Trim \r from output (necessary on Windows)
 	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null | tr -d '\r')
 	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$REQUIREMENTS_VBOX") ]] && \
 		return 2
@@ -926,7 +928,7 @@ is_docker_version ()
 	(is_pwd || is_katacoda) && return
 
 	! [[ -x ${DOCKER_BIN} ]] && return 1
-	# Trim \r from output (may be necessary on Windows)
+	# Trim \r from output (necessary on Windows)
 	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
 }
@@ -3399,6 +3401,7 @@ configure_network_mac ()
 # Applicable to Docker Desktop only.
 check_network_windows ()
 {
+	# Trim \r from output (necessary on Windows)
 	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
 	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
 	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
@@ -3432,6 +3435,7 @@ configure_network_windows ()
 # Applicable to Docker Desktop only.
 check_network_wsl ()
 {
+	# Trim \r from output (necessary on Windows)
 	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
 	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
 	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
@@ -3624,7 +3628,8 @@ detect_dns ()
 			dns_addresses=""
 			IFS=$'\n'
 			for dns_found in $(netsh.exe interface ip show config | grep DNS | grep -v None | grep -v $DOCKSAL_IP); do
-				dns_addresses=${dns_addresses}$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '[:cntrl:]' | xargs)
+				# Trim \r from output (necessary on Windows)
+				dns_addresses=${dns_addresses}$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '\r' | xargs)
 			done
 
 			for dns in $dns_addresses; do
@@ -6783,6 +6788,7 @@ provider_pull_find_function ()
 provider_pull_generic_git_pull ()
 {
 	local git_remote=${syncgitremote:-origin}
+	# Trim \r from output (necessary on Windows)
 	local current_branch=$(_exec "git rev-parse --abbrev-ref HEAD" | tr -d '\r')
 	local git_branch=${syncgitbranch:-$current_branch}
 	echo -e "${acqua}Pulling Code From ${git_remote} - ${git_branch}${NC}"
