@@ -115,6 +115,7 @@ REQUIREMENTS_DOCKER_MACHINE='0.16.1'
 REQUIREMENTS_VBOX='5.2.26'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
+REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
@@ -920,6 +921,29 @@ is_vbox_version ()
 		return 2
 
 	return 0
+}
+
+# Print Docker Desktop version
+# @param $1 --short - prints short version instead of full
+# Example output (--short): 2.0.0.3
+docker_desktop_version ()
+{
+	local short=${1}
+
+	if is_mac; then
+		echo $(defaults read /Applications/Docker.app/Contents/Info.plist CFBundleShortVersionString) 2>/dev/null
+	fi
+
+	if is_windows || is_wsl; then
+		is_windows && DockerCli='/cygdrive/c/Program\ Files/Docker/Docker/DockerCli.exe'
+		is_wsl && version_command='/mnt/c/Program\ Files/Docker/Docker/DockerCli.exe -Version'
+
+		if [[ ${short} ]]; then
+			echo $(${version_command} | tr -d '\r' | grep 'Version: ' | sed 's/.* \(.*\)-win.*/\1/g') 2>/dev/null
+		else
+			echo $(${version_command} | tr -d '\r') 2>/dev/null
+		fi
+	fi
 }
 
 is_docker_version ()
@@ -5538,8 +5562,7 @@ sysinfo ()
 	if is_linux; then
 		echo "Linux Kernel"
 	elif is_docker_native; then
-		is_mac && echo "Docker for Mac"
-		(is_windows || is_wsl) && echo "Docker for Windows"
+		echo "Docker Desktop"
 	else
 		echo "VirtualBox VM"
 	fi
@@ -5640,6 +5663,13 @@ sysinfo ()
 		if [[ $? != 0 ]]; then
 			echo-error "Mounts matching 192.168.64* were not found!"
 		fi
+	fi
+
+	if is_docker_native; then
+		echo
+		echo "███  DOCKER DESKTOP"
+		echo "EXPECTED VERSION: ${REQUIREMENTS_DOCKER_DESKTOP}"
+		docker_desktop_version
 	fi
 
 	# Diagnostics information
