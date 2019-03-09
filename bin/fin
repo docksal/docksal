@@ -4591,133 +4591,113 @@ update_project_images ()
 	up
 }
 
+# Updates all docksal images present on the host
+update_docksal_images ()
+{
+	check_docker_running
+
+	for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal/ | sort | uniq); do
+		docker pull "$_image"
+	done
+}
+
+# Downloads a version of fin to FIN_PATH_UPDATED
+# Return value 0: new fin version downloaded to FIN_PATH_UPDATED
+# Return value 2: new fin version is the same as the current version
+get_fin_updated ()
+{
+	local fin_url=$(get_fin_url)
+	local new_fin
+	new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
+	if_failed_error "fin download failed."
+
+	# Check if fin update is required and whether it is a major version
+	local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
+
+	if [[ "$new_version" != "$FIN_VERSION" ]]; then
+		local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
+		local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
+		if [[ "$current_major_version" != "$new_major_version" ]]; then
+			echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
+			echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
+			echo "You may not be able to use you current Docksal environment if you proceed."
+			echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
+			_confirm "Continue with the update?"
+		fi
+
+		# saving to file
+		echo "$new_fin" | sudo tee "$FIN_PATH_UPDATED" > /dev/null
+		if_failed_error "Could not write $FIN_PATH_UPDATED"
+		sudo chmod +x "$FIN_PATH_UPDATED"
+		local new_version=$(${FIN_PATH_UPDATED} v)
+		echo "fin $new_version downloaded..."
+		return 0
+	else
+		echo "Already at $FIN_VERSION."
+		return 2
+	fi
+}
+
+# If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
+is_fin_updated ()
+{
+	[[ "$0" == "$FIN_PATH_UPDATED" ]]
+}
+
 # Update Docksal
 update ()
 {
-	# If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
-	[[ "$0" == "$FIN_PATH_UPDATED" ]] && FULL_UPDATE="exit 1"
+#	if is_wsl && is_docker_native; then
+#		# Check Docker for Win running
+#		IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
+#		nc -w 1 ${nc_host} ${nc_port}
+#		if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
+#	fi
+#
+#	# Checking docker status
+#	if (which 'docker' >/dev/null 2>&1); then
+#		is_docker_running
+#		RUNNING_CODE=$? # cache status
+#		if (exit ${RUNNING_CODE}); then
+#			# If docksal services present, then we are doing an upgrade.
+#			is_docksal_running && UPGRADE_IN_PROGRESS=1
+#		else
+#			# Check out the case when current user on Ubuntu does not have access to docker daemon
+#			if is_linux; then
+#				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
+#				[[ $? =! 0 ]] && LINUX_DAEMON_RUNNING="exit 1"
+#				# if daemon is running but docker info does not return 0 then this is the case
+#				if (${LINUX_DAEMON_RUNNING}) && ! (exit ${RUNNING_CODE}); then
+#					echo-red "Your Docker daemon is running but you don't have access to it."
+#					echo-yellow "Please run 'newgrp docker' or reboot."
+#					exit 1
+#				fi
+#			fi
+#		fi
+#	fi
 
-	# Pre-update check #1: check if there is existing but stopped Docksal machine
-	# We need it running to know Docker server version
-	if (${FULL_UPDATE}); then
-		if ! is_linux && ! is_docker_native; then
-			# Check VirtualBox
-			is_vbox_version
-			local res=$?
-			if [[ "$res" != "0" ]]; then
-				[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher"
-				(which 'docker-machine' >/dev/null 2>&1) && docker_machine_stop
-				DOCKER_MACHINE_STATUS="Stopped"
-				update_virtualbox
-				(which 'docker-machine' >/dev/null 2>&1) && docker_machine_start
-			fi
-		fi
-
-		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
-			if is_docker_machine_exist && ! is_docker_machine_running; then
-				echo-error "Docker Machine '$DEFAULT_MACHINE_NAME' should be running to perform update" \
-					"Start it with ${yellow}fin system start${NC} or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
-				return 1
-			fi
-		fi
-
-		if is_wsl && is_docker_native; then
-			# Check Docker for Win running
-			IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
-			nc -w 1 ${nc_host} ${nc_port}
-			if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
-		fi
-	fi
-
-	# Checking docker status
-	if (which 'docker' >/dev/null 2>&1); then
-		is_docker_running
-		RUNNING_CODE=$? # cache status
-		if (exit ${RUNNING_CODE}); then
-			# If docksal services present, then we are doing an upgrade.
-			is_docksal_running && UPGRADE_IN_PROGRESS=1
-		else
-			# Check out the case when current user on Ubuntu does not have access to docker daemon
-			if is_linux; then
-				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
-				[ ! $? -eq 0 ] && LINUX_DAEMON_RUNNING="exit 1"
-				# if daemon is running but docker info does not return 0 then this is the case
-				if (${LINUX_DAEMON_RUNNING}) && ! (exit ${RUNNING_CODE}); then
-					echo-red "Your Docker daemon is running but you don't have access to it."
-					echo-yellow "Please run 'newgrp docker' or reboot."
-					exit 1
-				fi
-			fi
-		fi
-	fi
-
-	# Pre-update check #2: warn if boot2docker will need to be upgraded
-	if (is_mac || is_windows || is_wsl) && ! is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local b2d_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") ]]; then
-			# Upgrade to 18.09 requires the system to rebuild due to change from Aufs to Overlay2.
-			if [[ $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") ]]; then
-				echo-alert "The following upgrade for Boot2Docker will require a complete rebuild." \
-					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
-				if _confirm "Would you like to continue with the boot2docker upgrade?" --no-exit; then
-					BOOT2DOCKER_NEEDS_AN_UPGRADE=1
-					BOOT2DOCKER_NEEDS_TO_REBUILD=1
-				fi
-			else
-				BOOT2DOCKER_NEEDS_AN_UPGRADE=1
-			fi
-		fi
-	fi
-
-	# [STEP 0] Define total steps. Upgrade has 2 more steps
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		TOTAL_STEPS=6
-	else
-		TOTAL_STEPS=4
-	fi
-
-	# Pass the version to the newly downloaded fin to run the updates
-	export DOCKSAL_VERSION=$(get_docksal_version_latest)
+	# [STEP 0] Define total steps
+	TOTAL_STEPS=4
 
 	# [STEP 1] Update fin unless already running fin.updated binary
-	if (${FULL_UPDATE}); then
+	if ! is_fin_updated; then
+		# Pass the version to the newly downloaded fin to run the updates
+		export DOCKSAL_VERSION=$(get_docksal_version_latest)
+
+		# Store current fin version
+		export EXISTING_FIN_VERSION=${FIN_VERSION}
+
 		testing_warn
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 
-		local fin_url=$(get_fin_url)
-		local new_fin
-		new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
-		if_failed_error "fin download failed."
-
-		# Check if fin update is required and whether it is a major version
-		local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
-
-		if [[ "$new_version" != "$FIN_VERSION" ]]; then
-			local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
-			local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
-			if [[ "$current_major_version" != "$new_major_version" ]]; then
-				echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
-				echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
-				echo "You may not be able to use you current Docksal environment if you proceed."
-				echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
-				_confirm "Continue with the update?"
-			fi
-
-			# saving to file
-			echo "$new_fin" | sudo tee "$FIN_PATH_UPDATED" > /dev/null
-			if_failed_error "Could not write $FIN_PATH_UPDATED"
-			sudo chmod +x "$FIN_PATH_UPDATED"
-			local new_version=$(${FIN_PATH_UPDATED} v)
-			echo "fin $new_version downloaded..."
-
-			# Run other Updates 2-5 with newly downloaded fin version
+		# Download new fin version to FIN_PATH_UPDATED
+		get_fin_updated
+		if [[ $? == 0 ]]; then
+			# Run the rest of the update with the newly downloaded fin version
 			( "$FIN_PATH_UPDATED" update )
-
-			# overwrite old fin
+			# Overwrite old fin
 			sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
 			exit
-		else
-			echo "Already at $FIN_VERSION."
 		fi
 	fi
 
@@ -4728,56 +4708,37 @@ update ()
 	# [STEP 3] Update third party tools
 	echo-green "[STEP 3/$TOTAL_STEPS] Updating tools..."
 	update_tools
+	update_virtualbox
+	update_boot2docker
 
-	# [STEP 4] Update system images
-
-	echo-green "[STEP 4/$TOTAL_STEPS] Updating system images..."
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		# [4.1] Always update system images during upgrade
-		# On Win and Mac, update only during upgrade because it is done in docker_machine_start
-		update_system_images
-		# Run cleanup to get rid of outdated images
-		cleanup
-	else
-		# [4.2] On Linux update during install, but use sudo as user will not be in docker group yet.
-		if is_linux; then
-			# Override docker to run it via sudo
-			docker () {
-				sudo "$(which docker)" "$@"
-			}
-			# Install/update Docksal system services
-			update_system_images
-		fi
-
-		# [4.3] With native mode update during install, but no cleanup
-		if is_docker_native; then
-			# Install/update Docksal system services
-			update_system_images
-		fi
+	# If this is the first time installation, then the current user does not yet have access to docker without sudo
+	# TODO: don't run with sudo if not necessary
+	if is_linux; then
+		# Override docker to run it via sudo
+		docker () {
+			sudo "$(which docker)" "$@"
+		}
 	fi
 
-	# [STEP 5] Update project images
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		echo-green "[STEP 5/$TOTAL_STEPS] Updating Docksal images"
-		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal/ | sort | uniq); do
-			docker pull "$_image"
-		done
+	# Reset network settings before doing anything else (just in case)
+	system_reset network
+	# Not using system_start here since we want to pull/update system images first
+	# Otherwise system_reset will be running twice
+	if ! is_linux && ! is_docker_native; then
+		docker_machine_start
 	fi
 
-	# [STEP 6] Restart running projects if BOOT2DOCKER was not restarted
-	# This is needed to re-append restarted vhost-proxy to containers networks
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
-		echo-green "[STEP 6/$TOTAL_STEPS] Restarting running projects..."
-		running_projects=$(docker ps \
-			--filter 'label=io.docksal.project-root' \
-			--format '{{.Label "io.docksal.project-root"}}'
-		)
-		for project in ${running_projects}; do
-			# use updated version when updated
-			[[ ! -f "$FIN_PATH_UPDATED" ]] && FIN_PATH_UPDATED="fin"
-			(cd "$project" && NO_UPDATES=1 "$FIN_PATH_UPDATED" project start)
-		done
-	fi
+	check_docker_running
+
+	# From now on, we should have everything we need here to start/restart Docksal
+
+	# [STEP 4] Update Docksal images
+	echo-green "[STEP 4/$TOTAL_STEPS] Updating Docksal images..."
+	update_docksal_images
+	# Do cleanup before updating other images, otherwise we may be updating images that will be dropped anyway.
+	cleanup
+
+	system_start
 
 	# [STEP - POST UPDATE]
 	[[ "$?" == "0" ]] && echo-green "Update finished"
