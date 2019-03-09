@@ -3966,14 +3966,6 @@ install_tools_mac ()
 
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
-
-	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local server_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Please update Docker Desktop for Mac to the latest version manually"
-			sleep 2
-		fi
-	fi
 }
 
 # Install Windows dependencies
@@ -4087,14 +4079,6 @@ install_tools_windows ()
 		git config --global core.autocrlf input # do not convert line breaks. treat as is
 		echo "git config --system core.longpaths true"
 		git config --system core.longpaths true # support long paths
-	fi
-
-	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local server_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Update Docker for Windows to the latest version manually"
-			sleep 2
-		fi
 	fi
 }
 
@@ -4288,14 +4272,6 @@ install_tools_wsl ()
 
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
-
-	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local server_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Update Docker for Windows to the latest version manually"
-			sleep 2
-		fi
-	fi
 }
 
 # Installs VirtualBox on Mac/Windows
@@ -4756,9 +4732,19 @@ update ()
 	if is_linux; then
 		# Revert back to sudo-less docker to perform the check
 		unset docker
+		# Let they user know if they need to re-login to access docker daemon without sudo.
 		if ! (id -nG | grep docker &>/dev/null) && ! is_root ; then
 			echo-alert "Re-login to enable permanent Docker support." \
 				"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
+		fi
+	fi
+
+	# Since we do not control Docker Desktop, ask user to update manually when necessary
+	if is_docker_native; then
+		local server_version=$(docker version --format '{{.Server.Version}}')
+		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
+			echo-alert "Please update Docker Desktop to the latest version manually"
+			sleep 2
 		fi
 	fi
 }
