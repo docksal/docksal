@@ -845,7 +845,7 @@ check_docker_running ()
 	# TODO: Should the checks below be moved to system_start?
 	if is_linux; then
 		# Remind the user about running 'newgrp docker' after install.
-		if ! (id -nG | grep docker >/dev/null 2>&1) && ! is_root ; then
+		if ! (id -nG | grep docker &>/dev/null) && ! is_root ; then
 			echo-error "Current user is not part of the docker group." \
 				"Re-login to enable permanent Docker support." \
 				"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
@@ -4753,9 +4753,13 @@ update ()
 	# [STEP - POST UPDATE]
 	[[ "$?" == "0" ]] && echo-green "Update finished"
 
-	if is_linux && ! is_root && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo-alert "Re-login to enable permanent Docker support." \
-			"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
+	if is_linux; then
+		# Revert back to sudo-less docker to perform the check
+		unset docker
+		if ! (id -nG | grep docker &>/dev/null) && ! is_root ; then
+			echo-alert "Re-login to enable permanent Docker support." \
+				"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
+		fi
 	fi
 }
 
