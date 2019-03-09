@@ -847,7 +847,7 @@ check_docker_running ()
 		# Remind the user about running 'newgrp docker' after install.
 		if ! (id -nG | grep docker >/dev/null 2>&1) && ! is_root ; then
 			echo-error "Current user is not part of the docker group." \
-				"Re-login to enable permanent Docker support."
+				"Re-login to enable permanent Docker support." \
 				"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
 			exit 1
 		fi
