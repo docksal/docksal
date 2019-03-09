@@ -4290,7 +4290,9 @@ install_tools_wsl ()
 	fi
 }
 
-update_virtualbox () {
+# Installs VirtualBox on Mac/Windows
+# Picks up a matching vbox version package from ~/Downloads or current directory (preferred).
+install_virtualbox () {
 	local url
 	local vbox_pkg
 
@@ -4358,6 +4360,22 @@ update_virtualbox () {
 		read -p "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
 		sleep 1
 	done
+}
+
+# Checks VirtualBox version and runs an install if necessary
+update_virtualbox ()
+{
+	# Install or update VirtualBox
+	if ! is_linux && ! is_docker_native; then
+		# Check current VirtualBox version
+		is_vbox_version
+		local res=$?
+		if [[ "$res" != "0" ]]; then
+			[[ "$res" == "2" ]] && echo-red "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
+			# Note: update_virtualbox automatically stops the machine if necessary, but will not automatically start it.
+			install_virtualbox
+		fi
+	fi
 }
 
 # Downloads boot2docker.iso, updates existing machine.
