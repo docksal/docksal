@@ -3914,6 +3914,12 @@ install_tools_mac ()
 		# Complete Rebuild of Docker Machine need to remove.
 		if [[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]]; then
 			docker_machine_remove
+			# Check VirtualBox
+			is_vbox_version
+			local res=$?
+			if [[ "$res" != "0" ]]; then
+				update_virtualbox
+			fi
 			docker_machine_create
 			docker_machine_start
 		else
@@ -4052,6 +4058,12 @@ install_tools_windows ()
 		# Complete Rebuild of Docker Machine need to remove.
 		if [[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]]; then
 			docker_machine_remove
+			# Check VirtualBox
+			is_vbox_version
+			local res=$?
+			if [[ "$res" != "0" ]]; then
+				update_virtualbox
+			fi
 			docker_machine_create
 			docker_machine_start
 		else
@@ -4269,6 +4281,12 @@ install_tools_wsl ()
 		# Complete Rebuild of Docker Machine need to remove.
 		if [[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]]; then
 			docker_machine_remove
+			# Check VirtualBox
+			is_vbox_version
+			local res=$?
+			if [[ "$res" != "0" ]]; then
+				update_virtualbox
+			fi
 			docker_machine_create
 			docker_machine_start
 		else
