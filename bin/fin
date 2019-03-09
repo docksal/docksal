@@ -3179,6 +3179,9 @@ system_status ()
 # Starts all Docksal related things
 system_start ()
 {
+	# Reset network settings before doing anything else (just in case)
+	system_reset network
+
 	if ! is_linux && ! is_docker_native; then
 		if is_docker_machine_running; then
 			echo "Machine ${DEFAULT_MACHINE_NAME} is already running."
@@ -3506,12 +3509,7 @@ configure_network ()
 		mode="off"
 	fi
 
-	if [[ "$mode" == "on" ]]; then
-		echo-green "Configuring network settings..."
-	else
-		echo-green "Restoring network settings..."
-	fi
-
+	echo-green "Configuring network settings..."
 	is_linux && configure_network_alpine "$mode" && return $?
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
