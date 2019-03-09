@@ -960,7 +960,12 @@ is_docker_version ()
 	# Skip the check on Play-with-Docker and Katacoda
 	(is_pwd || is_katacoda) && return
 
-	! [[ -x ${DOCKER_BIN} ]] && return 1
+	# Rely on our own docker binary, except on Linux
+	if is_linux; then
+		! which docker &>/dev/null && return 1
+	else
+		! [[ -x ${DOCKER_BIN} ]] && return 1
+	fi
 	# Trim \r from output (necessary on Windows)
 	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
@@ -971,7 +976,12 @@ is_docker_server_version ()
 	# Skip the check on Play-with-Docker and Katacoda
 	(is_pwd || is_katacoda) && return
 
-	! [[ -x ${DOCKER_BIN} ]] && return 1
+	# Rely on our own docker binary, except on Linux
+	if is_linux; then
+		! which docker &>/dev/null && return 1
+	else
+		! [[ -x ${DOCKER_BIN} ]] && return 1
+	fi
 	# Trim \r from output (necessary on Windows)
 	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
