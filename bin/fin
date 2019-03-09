@@ -160,11 +160,10 @@ CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
-CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DIR/docker-machine.env"
 # bin and bin/downloads folders
 CONFIG_BIN_DIR="$CONFIG_DIR/bin"
 CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
-mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
+mkdir -p "$CONFIG_DOWNLOADS_DIR"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
@@ -172,6 +171,10 @@ WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 is_wsl && vboxmanage="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+CONFIG_DOCKER_MACHINE_DIR="$CONFIG_DIR/machine"
+mkdir -p "$CONFIG_DOCKER_MACHINE_DIR"
+CONFIG_DOCKER_MACHINE_ISO="$CONFIG_DOCKER_MACHINE_DIR/boot2docker-${REQUIREMENTS_DOCKER}.iso"
+CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DOCKER_MACHINE_DIR/machine.env"
 # Stacks folder
 CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
 mkdir -p "$CONFIG_STACKS_DIR" 2>/dev/null
@@ -224,6 +227,14 @@ DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
 DEFAULT_MACHINE_VBOX_RAM='2048' #mb
 DEFAULT_MACHINE_VBOX_HDD='50000' #mb
+
+# On WSL, machines are stored in the Windows user profile (not within the WSL file system)
+if is_wsl; then
+	USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
+else
+	USERPROFILE=${HOME}
+fi
+DEFAULT_MACHINE_ISO_PATH="${USERPROFILE}/.docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
 
 # Stats
 # fin sends a minimal ping with OS and fin version number
@@ -2219,12 +2230,12 @@ docker_machine_create ()
 	ISO_FILE=${ISO_FILE:-boot2docker.iso}
 	if [[ -f "$ISO_FILE" ]]; then
 		echo "Found $ISO_FILE. Using it..."
-		URL_BOOT2DOCKER="$ISO_FILE"
+		CONFIG_DOCKER_MACHINE_ISO="$ISO_FILE"
 	fi
 
 	docker-machine create \
  		--driver=virtualbox \
-		--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
+		--virtualbox-boot2docker-url "${CONFIG_DOCKER_MACHINE_ISO}" \
 		--virtualbox-disk-size "${VBOX_HDD:-$DEFAULT_MACHINE_VBOX_HDD}" \
 		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 		--virtualbox-hostonly-cidr "$DOCKSAL_SUBNET" \
@@ -2322,7 +2333,7 @@ docker_machine_remove ()
 	_confirm "Remove $DEFAULT_MACHINE_NAME?"
 	# Store host-only interface name before removing the VM.
 	local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
-	docker-machine rm -f "$DEFAULT_MACHINE_NAME"
+	docker-machine rm -f "$DEFAULT_MACHINE_NAME" >/dev/null
 	if ! is_docker_machine_exist "true"; then
 		# If the VM was removed, remove the DHCP server associated with its network interface.
 		# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
@@ -3948,27 +3959,10 @@ install_tools_mac ()
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
-	# If it was an upgrade
-	if [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
-		# Complete Rebuild of Docker Machine need to remove.
-		if [[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]]; then
-			docker_machine_remove
-			docker_machine_create
-			docker_machine_start
-		else
-			is_docker_machine_running && \
-			echo-green "Preparing to update virtual machine..." && \
-			docker_machine_stop && \
-			echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-			curl -fL# "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
-			docker_machine_start
-		fi
-	fi
-
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		local server_version=$(docker version --format '{{.Server.Version}}')
 		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Update Docker for Mac to the latest version manually"
+			echo-alert "Please update Docker Desktop for Mac to the latest version manually"
 			sleep 2
 		fi
 	fi
@@ -4085,22 +4079,6 @@ install_tools_windows ()
 		git config --global core.autocrlf input # do not convert line breaks. treat as is
 		echo "git config --system core.longpaths true"
 		git config --system core.longpaths true # support long paths
-	fi
-
-	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
-		# Complete Rebuild of Docker Machine need to remove.
-		if [[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]]; then
-			docker_machine_remove
-			docker_machine_create
-			docker_machine_start
-		else
-			is_docker_machine_running && \
-			echo-green "Preparing to update virtual machine..." && \
-			docker_machine_stop && \
-			echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-			curl -fL# "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
-			docker_machine_start
-		fi
 	fi
 
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
@@ -4303,24 +4281,6 @@ install_tools_wsl ()
 	# Cleanup
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
-	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
-
-		# Complete Rebuild of Docker Machine need to remove.
-		if [[ "$BOOT2DOCKER_NEEDS_TO_REBUILD" == "1" ]]; then
-			docker_machine_remove
-			docker_machine_create
-			docker_machine_start
-		else
-			local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
-			is_docker_machine_running && \
-			echo-green "Preparing to update virtual machine..." && \
-			docker_machine_stop
-			echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-			curl -fL# "$URL_BOOT2DOCKER" -o "${USERPROFILE}/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
-			docker_machine_start
-		fi
-	fi
-
 	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
 		local server_version=$(docker version --format '{{.Server.Version}}')
 		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
@@ -4398,6 +4358,96 @@ update_virtualbox () {
 		read -p "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
 		sleep 1
 	done
+}
+
+# Downloads boot2docker.iso, updates existing machine.
+# Does not automatically create a new machine and starts the updated one.
+# Dependency: update_tools, update_boot2docker
+# @option --force-download - forces the boot2docker.iso download
+update_boot2docker ()
+{
+	# Only applicable to Mac/Windows using VirtualBox/Boot2Docker
+	if is_linux || is_docker_native; then return; fi
+
+	# Flag to force boot2docker.iso download (useful if the previous download resulted in a corrupted file).
+	local force_download=${1}
+
+	# Download a new version of boot2docker.iso if necessary
+	# We can grep machine's boot2docker.iso file for the version (exact match only)
+	if ! (grep ${REQUIREMENTS_DOCKER} ${CONFIG_DOCKER_MACHINE_ISO} &>/dev/null) || [[ ${force_download} ]]; then
+		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
+		# Download to temporary location, then move to the permanent location.
+		# This minimizes the chance of getting a corrupt file if the download fails or is interrupted.
+		curl -fL# "${URL_BOOT2DOCKER}" -o "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso"
+		if_failed_error "boot2docker.iso download failed"
+		mv "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso" ${CONFIG_DOCKER_MACHINE_ISO}
+	fi
+
+	if is_docker_machine_exist; then
+		# We need the machine up to get it's version
+		if ! is_docker_machine_running; then
+			# Reset network settings (just in case) before starting the machine
+			# TODO: alternatively, we could do a system_start here, but it would take longer.
+			system_reset network
+			echo "Starting the existing machine to determine its version..."
+			docker_machine_start
+		fi
+
+		local b2d_version=$(docker version --format '{{.Server.Version}}')
+		if (( $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") )); then
+			# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
+			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
+				echo-alert "This update will destroy and recreate the VM!" \
+					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
+				# This stops the update if not denied by user
+				if _confirm "Would you like to continue with the update?"; then
+					BOOT2DOCKER_NEEDS_UPGRADE=1
+					BOOT2DOCKER_NEEDS_REBUILD=1
+				fi
+			else
+				# Perform an upgrade without a rebuild for boot2docker versions 18.09+
+				BOOT2DOCKER_NEEDS_UPGRADE=1
+			fi
+		fi
+	fi
+
+	# An alternative version check that does not require starting the machine
+#	# Figure out if the existing machine version matches the required version.
+#	# We can grep machine's boot2docker.iso file for the version without starting the machine!
+#	if ! (grep ${REQUIREMENTS_DOCKER} ${DOCKER_MACHINE_ISO} >/dev/null); then
+#		# Upgrade to boot2docker 18.09 requires the machine to be rebuilt due to the change from AUFS to Overlay2.
+#		if [[ ${EXISTING_FIN_VERSION} ]] && (( $(ver_to_int "${EXISTING_FIN_VERSION}") < $(ver_to_int "1.82.2") )); then
+#			echo-alert "This update will destroy and recreate the VM!" \
+#				"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
+#			# This stops the update if not denied by user
+#			if _confirm "Would you like to continue with the update?"; then
+#				BOOT2DOCKER_NEEDS_UPGRADE=1
+#				BOOT2DOCKER_NEEDS_REBUILD=1
+#			fi
+#		else
+#			# Perform an upgrade without a rebuild for boot2docker versions 18.09+
+#			BOOT2DOCKER_NEEDS_UPGRADE=1
+#		fi
+#	fi
+
+	# Machine needs to be upgraded
+	if [[ "$BOOT2DOCKER_NEEDS_UPGRADE" == "1" ]]; then
+		# Stop the existing machine before the update
+		if is_docker_machine_exist; then
+			docker_machine_stop &>/dev/null
+		fi
+		# Update machine's boot2docker.iso
+		cp -f ${CONFIG_DOCKER_MACHINE_ISO} ${DEFAULT_MACHINE_ISO_PATH}
+	fi
+
+	# Machine needs to be rebuilt
+	if [[ "$BOOT2DOCKER_NEEDS_REBUILD" == "1" ]]; then
+		# Recreate the VM
+		docker_machine_remove
+	fi
+
+	# Cleanup
+	rm -rf "${CONFIG_DOWNLOADS_DIR}" &>/dev/null
 }
 
 update_tools ()
