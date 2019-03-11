@@ -4510,8 +4510,7 @@ update_config_files ()
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
 		# Cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
-		rm -rf "$CONFIG_STACKS_DIR" &>/dev/null
-		mkdir -p "$CONFIG_STACKS_DIR"
+		rm -f "$CONFIG_STACKS_DIR/*" &>/dev/null
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
