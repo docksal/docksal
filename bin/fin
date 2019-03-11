@@ -3972,9 +3972,6 @@ install_tools_mac ()
 			if_failed "Check file permissions."
 		fi
 	fi
-
-	# Cleanup
-	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 }
 
 # Install Windows dependencies
@@ -4073,9 +4070,6 @@ install_tools_windows ()
 		)
 		if_failed "Check file permissions."
 	fi
-
-	# Cleanup
-	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
 	# Run one-time adjustments during install only.
 	if ! is_update; then
@@ -4277,9 +4271,6 @@ install_tools_wsl ()
 	fi
 	# Create a symlink to the Windows docker-machine binary inside the WSL FS.
 	ln -sf "$DOCKER_MACHINE_BIN_WSL" "$DOCKER_MACHINE_BIN"
-
-	# Cleanup
-	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 }
 
 # Installs VirtualBox on Mac/Windows
@@ -4458,9 +4449,6 @@ update_boot2docker ()
 		# Recreate the VM
 		docker_machine_remove
 	fi
-
-	# Cleanup
-	rm -rf "${CONFIG_DOWNLOADS_DIR}" &>/dev/null
 }
 
 update_tools ()
@@ -4719,6 +4707,9 @@ update ()
 	echo-green "Update finished"
 
 	# [STEP - POST UPDATE]
+	# Cleanup
+	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
+
 	if is_linux; then
 		# Let they user know if they need to re-login to access docker daemon without sudo.
 		if ! (id -nG | grep docker &>/dev/null) && ! is_root ; then
