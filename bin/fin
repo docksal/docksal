@@ -727,12 +727,16 @@ check_winpty_found ()
 	winpty='winpty -Xallow-non-tty'
 }
 
+# Checks if docker is accessible
+# DOCKER_HOST, set at the beginning of runtime, defines how we talk to the docker daemon
 is_docker_running ()
 {
+	# Docker machine mode - first check that the VM is running
 	if ! is_linux && ! is_docker_native; then
 		if ! is_docker_machine_running; then return 255; fi
 	fi
-	# Check if docker is running via docker version.
+
+	# Running "docker version" is sufficient to check if docker is running in any host environment setup.
 	# This operation is instant even if docker is not running (assuming a socket is used).
 	which docker >/dev/null 2>&1 && docker version >/dev/null 2>/dev/null || return 1
 }
@@ -836,6 +840,9 @@ check_docker_running ()
 	# Last chance to return non-error code
 	[[ ${docker_status} == 0 ]] && return
 
+	# Status code 255 is returned only when there is a docker machine, but it is not running.
+	# We still have to check "! is_docker_native", since user may be switching between modes and has an existing, but
+	# stopped docker machine, while using the native mode.
 	if [[ ${docker_status} == 255 ]] && ! is_docker_native; then
 		echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
 		_confirm "Start it now?"
@@ -843,7 +850,6 @@ check_docker_running ()
 		return $?
 	fi
 
-	# TODO: Should the checks below be moved to system_start?
 	if is_linux; then
 		# Remind the user about running 'newgrp docker' after install.
 		if ! (id -nG | grep docker &>/dev/null) && ! is_root ; then
@@ -858,6 +864,7 @@ check_docker_running ()
 			sudo service docker start
 		fi
 	else # MacOS, Windows
+		# Docker machine mode
 		# Check for certificates error
 		if ! is_docker_native && (docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
 			echo-error "Error connecting to Docker due to certificates error" \
@@ -868,14 +875,14 @@ check_docker_running ()
 			exit 1
 		fi
 
-		# Other generic errors
+		# Docker Desktop may not be running
 		if is_docker_native; then
-			echo-error "Your Docker client is unable to talk to the Docker server." \
+			echo-error "Docker Desktop is not running" \
 				"WHAT TO DO?" \
-				"Check that your Docker for Mac/Win app is running."
+				"Start Docker Dekstop, wait for Docker to start, and try again."
 			exit 1
 		else
-			echo-error "Your Docker client is unable to talk to the Docker server." \
+			echo-error "Unable to talk to docker daemon." \
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
 				"2. If #1 did not help, run ${yellow}fin update${NC} to update." \
@@ -4631,35 +4638,6 @@ is_fin_updated ()
 # Update Docksal
 update ()
 {
-#	if is_wsl && is_docker_native; then
-#		# Check Docker for Win running
-#		IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
-#		nc -w 1 ${nc_host} ${nc_port}
-#		if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
-#	fi
-#
-#	# Checking docker status
-#	if (which 'docker' >/dev/null 2>&1); then
-#		is_docker_running
-#		RUNNING_CODE=$? # cache status
-#		if (exit ${RUNNING_CODE}); then
-#			# If docksal services present, then we are doing an upgrade.
-#			is_docksal_running && UPGRADE_IN_PROGRESS=1
-#		else
-#			# Check out the case when current user on Ubuntu does not have access to docker daemon
-#			if is_linux; then
-#				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
-#				[[ $? =! 0 ]] && LINUX_DAEMON_RUNNING="exit 1"
-#				# if daemon is running but docker info does not return 0 then this is the case
-#				if (${LINUX_DAEMON_RUNNING}) && ! (exit ${RUNNING_CODE}); then
-#					echo-red "Your Docker daemon is running but you don't have access to it."
-#					echo-yellow "Please run 'newgrp docker' or reboot."
-#					exit 1
-#				fi
-#			fi
-#		fi
-#	fi
-
 	# [STEP 0] Define total steps
 	TOTAL_STEPS=4
 
@@ -7396,16 +7374,22 @@ fi
 # Create drives bind mounts on wsl
 wsl_mount_drives
 
-# Export environment variables to properly reach Docker server
-if [[ "$DOCKSAL_HOST" != "" ]]; then
-	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
-elif is_docker_native; then
+# DOCKER_HOST defines how we talk to the docker daemon
+# Linux - via /var/run/docker.sock (DOCKER_HOST='')
+is_linux && export DOCKER_HOST='';
+if is_docker_native; then
 	if is_wsl; then
-		export DOCKER_HOST="127.0.0.1:2375"
+		# WSL + Docker Desktop => connecting via HTTP
+		# The "legacy" (tcp://localhost:2375) connection option in Docker Desktop settings must be enabled.
+		export DOCKER_HOST='127.0.0.1:2375'
 	else
-		export DOCKER_HOST=""
+		# Mac + Docker Desktop - via /var/run/docker.sock (DOCKER_HOST='')
+		# Windows/Babun + Docker Desktop - via Windows named pipe (DOCKER_HOST='')
+		export DOCKER_HOST=''
 	fi
 else
+	# Mac/Windows + Docker Machine => connecting via tcp://192.168.64.100:2376 (TLS) (DOCKER_HOST='192.168.64.100:2376')
+	# We rely on docker-machine to configure the connection settings
 	DOCKER_MACHINE_STATUS=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>&1 || echo '')
 	if [[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]; then
 		# Use cached environment variables if possible
@@ -7417,6 +7401,11 @@ else
 			fi
 		fi
 	fi
+fi
+
+# Allow overriding DOCKER_HOST externally via DOCKSAL_HOST
+if [[ "$DOCKSAL_HOST" != "" ]]; then
+	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
 fi
 
 if is_docker_running; then
