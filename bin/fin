@@ -815,9 +815,6 @@ check_docksal_environment ()
 
 check_docker_running ()
 {
-	# Immediately break on upgrade
-	[[ "$UPGRADE_IN_PROGRESS" == "1" ]] && return 0
-
 	# Check docker versions in this function
 	if ! is_docker_version && [[ "$DOCKER_VERSION_ALERT_SUPPRESS" == "" ]]; then
 		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
@@ -4623,7 +4620,6 @@ get_fin_updated ()
 	sudo chmod +x "$FIN_PATH_UPDATED"
 	local new_version=$(${FIN_PATH_UPDATED} v)
 	echo "fin $new_version downloaded..."
-	return 0
 }
 
 # If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
@@ -4680,13 +4676,12 @@ update ()
 
 		# Download new fin version to FIN_PATH_UPDATED
 		get_fin_updated
-		if [[ $? == 0 ]]; then
-			# Run the rest of the update with the newly downloaded fin version
-			( "$FIN_PATH_UPDATED" update )
-			# Overwrite old fin
-			sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
-			exit
-		fi
+		# Run the rest of the update with the newly downloaded fin version
+		( "$FIN_PATH_UPDATED" update )
+		# Overwrite old fin
+		sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
+		# Must exit here since we've just overwritten the original fin and this may cause bash to choke and through an error.
+		exit
 	fi
 
 	# [STEP 2] Update stacks
@@ -4710,9 +4705,10 @@ update ()
 
 	# Reset network settings before doing anything else (just in case)
 	system_reset network
-	# Not using system_start here since we want to pull/update system images first
-	# Otherwise system_reset will be running twice
+	# Not using system_start/system_reset here since we want to pull/update system images first, otherwise
+	# system_reset will be running twice
 	if ! is_linux && ! is_docker_native; then
+		# docker_machine_start will quit here if something fails.
 		docker_machine_start
 	fi
 
@@ -4720,20 +4716,20 @@ update ()
 
 	# From now on, we should have everything we need here to start/restart Docksal
 
+	# Do cleanup before updating images, otherwise we may be updating images that will be dropped anyway.
+	cleanup
+
 	# [STEP 4] Update Docksal images
 	echo-green "[STEP 4/$TOTAL_STEPS] Updating Docksal images..."
 	update_docksal_images
-	# Do cleanup before updating other images, otherwise we may be updating images that will be dropped anyway.
-	cleanup
 
-	system_start
+	# Reset system services after image updates
+	system_reset
+
+	echo-green "Update finished"
 
 	# [STEP - POST UPDATE]
-	[[ "$?" == "0" ]] && echo-green "Update finished"
-
 	if is_linux; then
-		# Revert back to sudo-less docker to perform the check
-		unset docker
 		# Let they user know if they need to re-login to access docker daemon without sudo.
 		if ! (id -nG | grep docker &>/dev/null) && ! is_root ; then
 			echo-alert "Re-login to enable permanent Docker support." \
