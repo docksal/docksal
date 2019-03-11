@@ -4409,7 +4409,7 @@ update_boot2docker ()
 				echo-alert "This update will destroy and recreate the VM!" \
 					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
 				# This stops the update if not denied by user
-				if _confirm "Would you like to continue with the update?"; then
+				if _confirm "Would you like to continue with the update?" --no-exit; then
 					BOOT2DOCKER_NEEDS_UPGRADE=1
 					BOOT2DOCKER_NEEDS_REBUILD=1
 				fi
