@@ -961,13 +961,15 @@ docker_desktop_version ()
 	fi
 
 	if is_windows || is_wsl; then
-		is_windows && DockerCli='/cygdrive/c/Program\ Files/Docker/Docker/DockerCli.exe'
-		is_wsl && version_command='/mnt/c/Program\ Files/Docker/Docker/DockerCli.exe -Version'
+		# Calling these should be done in quotes and via "bash -c" to expand arguments properly
+		local DockerCli=''
+		is_windows && DockerCli='/cygdrive/c/Program Files/Docker/Docker/DockerCli.exe'
+		is_wsl && DockerCli='/mnt/c/Program Files/Docker/Docker/DockerCli.exe'
 
 		if [[ ${short} ]]; then
-			echo $(${version_command} | tr -d '\r' | grep 'Version: ' | sed 's/.* \(.*\)-win.*/\1/g') 2>/dev/null
+			"${DockerCli}" -Version | tr -d '\r' | grep 'Version: ' | sed 's/.* \(.*\) .*/\1/g'
 		else
-			echo $(${version_command} | tr -d '\r') 2>/dev/null
+			"${DockerCli}" -Version
 		fi
 	fi
 }
