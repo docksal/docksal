@@ -4728,9 +4728,11 @@ update ()
 
 	# Since we do not control Docker Desktop, ask user to update manually when necessary
 	if is_docker_native; then
-		local server_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Please update Docker Desktop to the latest version manually"
+		local docker_desktop_version=$(docker_desktop_version --short)
+		if [[ $(ver_to_int ${REQUIREMENTS_DOCKER_DESKTOP}) > $(ver_to_int ${docker_desktop_version}) ]]; then
+			echo-alert "Please update Docker Desktop to the latest version manually." \
+				"Detected Docker Desktop version: ${docker_desktop_version}" \
+				"Expected Docker Desktop version: ${REQUIREMENTS_DOCKER_DESKTOP}"
 			sleep 2
 		fi
 	fi
