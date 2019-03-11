@@ -4608,28 +4608,23 @@ get_fin_updated ()
 	# Check if fin update is required and whether it is a major version
 	local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
 
-	if [[ "$new_version" != "$FIN_VERSION" ]]; then
-		local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
-		local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
-		if [[ "$current_major_version" != "$new_major_version" ]]; then
-			echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
-			echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
-			echo "You may not be able to use you current Docksal environment if you proceed."
-			echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
-			_confirm "Continue with the update?"
-		fi
-
-		# saving to file
-		echo "$new_fin" | sudo tee "$FIN_PATH_UPDATED" > /dev/null
-		if_failed_error "Could not write $FIN_PATH_UPDATED"
-		sudo chmod +x "$FIN_PATH_UPDATED"
-		local new_version=$(${FIN_PATH_UPDATED} v)
-		echo "fin $new_version downloaded..."
-		return 0
-	else
-		echo "Already at $FIN_VERSION."
-		return 2
+	local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
+	local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
+	if [[ "$current_major_version" != "$new_major_version" ]]; then
+		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
+		echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
+		echo "You may not be able to use you current Docksal environment if you proceed."
+		echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
+		_confirm "Continue with the update?"
 	fi
+
+	# saving to file
+	echo "$new_fin" | sudo tee "$FIN_PATH_UPDATED" > /dev/null
+	if_failed_error "Could not write $FIN_PATH_UPDATED"
+	sudo chmod +x "$FIN_PATH_UPDATED"
+	local new_version=$(${FIN_PATH_UPDATED} v)
+	echo "fin $new_version downloaded..."
+	return 0
 }
 
 # If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
