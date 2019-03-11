@@ -172,6 +172,7 @@ FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
+CONFIG_LAST_UPDATE="$CONFIG_DIR/.last_update"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
@@ -4077,10 +4078,9 @@ install_tools_windows ()
 	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
 
 	# Run one-time adjustments during install only.
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		# Optimize SMB sharing
+	if ! is_update; then
+		# Optimize SMB sharing (deprecated)
 		smb_windows_fix
-		[ ! $? -eq 0 ] && echo-red "Failed. Windows shares might not work properly with Docksal."
 		# Git settings
 		echo-green "Adjusting git defaults..."
 		echo "git config --global core.autocrlf input"
@@ -4635,6 +4635,14 @@ is_fin_updated ()
 	[[ "$0" == "$FIN_PATH_UPDATED" ]]
 }
 
+# Returns true when running an update
+# Returns false when installing fin for the first time
+is_update ()
+{
+	# If there is a timestamp for the last install/update, then we are updating
+	[[ -f ${CONFIG_LAST_UPDATE} ]]
+}
+
 # Update Docksal
 update ()
 {
@@ -4703,6 +4711,10 @@ update ()
 
 	# Reset system services after image updates
 	system_reset
+
+	# Store last successful update timestamp
+	local timestamp=$(date +%s)
+	echo "$timestamp" > "$CONFIG_LAST_UPDATE"
 
 	echo-green "Update finished"
 
@@ -7376,8 +7388,9 @@ wsl_mount_drives
 
 # DOCKER_HOST defines how we talk to the docker daemon
 # Linux - via /var/run/docker.sock (DOCKER_HOST='')
-is_linux && export DOCKER_HOST='';
-if is_docker_native; then
+if is_linux; then
+	export DOCKER_HOST='';
+elif is_docker_native; then
 	if is_wsl; then
 		# WSL + Docker Desktop => connecting via HTTP
 		# The "legacy" (tcp://localhost:2375) connection option in Docker Desktop settings must be enabled.
