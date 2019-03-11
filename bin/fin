@@ -145,25 +145,33 @@ REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
 URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg"
 URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-Win.exe"
 
-# Self Paths
-FIN_PATH="/usr/local/bin/fin"
-FIN_PATH_UPDATED="/usr/local/bin/fin.updated"
-FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
 if is_windows; then
 	BABUN_WIN_HOME="$HOME"
 	HOME="/$(cygpath_abs_unix ${HOME})"
 fi
+
+# Directory structure in ~/.docksal
 CONFIG_DIR="$HOME/.docksal"
-CONFIG_ENV="$CONFIG_DIR/docksal.env"
+CONFIG_DOWNLOADS_DIR="$CONFIG_DIR/downloads"
+CONFIG_BIN_DIR="$CONFIG_DIR/bin"
+CONFIG_STACKS_DIR="$CONFIG_DIR/stacks"
+mkdir -p "$CONFIG_DOWNLOADS_DIR"
+mkdir -p "$CONFIG_BIN_DIR"
+mkdir -p "$CONFIG_STACKS_DIR"
+CONFIG_DOCKER_MACHINE_DIR="$CONFIG_DIR/machine"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
+# Custom certs folder for vhost-proxy (overridable, expected to be created by the user manually)
+CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
+
+# File/binary paths
+FIN_PATH="/usr/local/bin/fin"
+FIN_PATH_UPDATED="$CONFIG_DOWNLOADS_DIR/fin.updated"
+FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
+CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
-# bin and bin/downloads folders
-CONFIG_BIN_DIR="$CONFIG_DIR/bin"
-CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
-mkdir -p "$CONFIG_DOWNLOADS_DIR"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
@@ -171,13 +179,9 @@ WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 is_wsl && vboxmanage="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
-CONFIG_DOCKER_MACHINE_DIR="$CONFIG_DIR/machine"
-mkdir -p "$CONFIG_DOCKER_MACHINE_DIR"
 CONFIG_DOCKER_MACHINE_ISO="$CONFIG_DOCKER_MACHINE_DIR/boot2docker-${REQUIREMENTS_DOCKER}.iso"
 CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DOCKER_MACHINE_DIR/machine.env"
-# Stacks folder
-CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
-mkdir -p "$CONFIG_STACKS_DIR" 2>/dev/null
+
 # Custom certs folder for vhost-proxy (overridable)
 CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 
@@ -4371,6 +4375,9 @@ update_boot2docker ()
 	# Only applicable to Mac/Windows using VirtualBox/Boot2Docker
 	if is_linux || is_docker_native; then return; fi
 
+	# Ensure CONFIG_DOCKER_MACHINE_DIR exists
+	mkdir -p ${CONFIG_DOCKER_MACHINE_DIR}
+
 	# Flag to force boot2docker.iso download (useful if the previous download resulted in a corrupted file).
 	local force_download=${1}
 
@@ -4503,7 +4510,8 @@ update_config_files ()
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
 		# Cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
-		rm -f "$CONFIG_STACKS_DIR/*"
+		rm -rf "$CONFIG_STACKS_DIR" &>/dev/null
+		mkdir -p "$CONFIG_STACKS_DIR"
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
