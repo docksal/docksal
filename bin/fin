@@ -878,10 +878,18 @@ check_docker_running ()
 
 		# Docker Desktop may not be running
 		if is_docker_native; then
-			echo-error "Docker Desktop is not running" \
-				"WHAT TO DO?" \
-				"Start Docker Dekstop, wait for Docker to start, and try again."
-			exit 1
+			if is_wsl; then
+				echo-error "Docker Desktop is not running or cannot be accessed" \
+					"WHAT TO DO?" \
+					"1. Start Docker Desktop, wait for Docker to start." \
+					"2. Make sure 'Expose daemon on tcp://localhost:2375 without TLS' in Docker Desktop settings is set."
+				exit 1
+			else
+				echo-error "Docker Desktop is not running" \
+					"WHAT TO DO?" \
+					"Start Docker Desktop, wait for Docker to start, and try again."
+				exit 1
+			fi
 		else
 			echo-error "Unable to talk to docker daemon." \
 				"WHAT TO DO?" \
