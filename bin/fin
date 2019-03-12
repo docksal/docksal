@@ -7817,20 +7817,17 @@ case "$1" in
 	docker|d)
 		# no load_configuration
 		shift
-		check_docker_running
 		check_winpty_found
 		${winpty} docker "$@"
 		;;
 	docker-compose|dc)
 		load_configuration
 		shift
-		check_docker_running
 		docker-compose "$@"
 		;;
 	docker-machine|dm)
 		# no load_configuration
 		shift
-		check_docker_running
 		docker-machine "$@"
 		;;
 	debug)
