@@ -840,7 +840,8 @@ check_docker_running ()
 	if [[ ${docker_status} == 255 ]] && ! is_docker_native; then
 		echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
 		_confirm "Start it now?"
-		system_start
+		# docker_machine_start will quit here if something fails.
+		docker_machine_start
 		return $?
 	fi
 
@@ -3204,18 +3205,13 @@ system_status ()
 system_start ()
 {
 	# Reset network settings before doing anything else (just in case)
+	# (May happen if switching modes native vs not).
 	system_reset network
 
-	if ! is_linux && ! is_docker_native; then
-		if is_docker_machine_running; then
-			echo "Machine ${DEFAULT_MACHINE_NAME} is already running."
-		else
-			echo "Starting Docksal VM..."
-			docker_machine_start
-			# docker_machine_start will quit here if something fails.
-		fi
-	fi
+	# This will instruct the user what to do if Docker daemon is not accessible
+	check_docker_running
 
+	# This will do the rest of the configuration, assuming the VM/Docker are already running.
 	system_reset
 }
 
@@ -4378,9 +4374,6 @@ update_boot2docker ()
 	if is_docker_machine_exist "true"; then
 		# We need the machine up to get it's version
 		if ! is_docker_machine_running; then
-			# Reset network settings (just in case) before starting the machine
-			# TODO: alternatively, we could do a system_start here, but it would take longer.
-			system_reset network
 			echo "Starting the existing machine to determine its version..."
 			docker_machine_start
 		fi
@@ -4623,6 +4616,10 @@ update ()
 	echo-green "[STEP 2/$TOTAL_STEPS] Updating stack files..."
 	update_config_files
 
+	# Reset network settings before doing anything else (just in case)
+	# (May happen if switching modes native vs not).
+	system_reset network
+
 	# [STEP 3] Update third party tools
 	echo-green "[STEP 3/$TOTAL_STEPS] Updating tools..."
 	update_tools
@@ -4638,8 +4635,6 @@ update ()
 		}
 	fi
 
-	# Reset network settings before doing anything else (just in case)
-	system_reset network
 	# Not using system_start/system_reset here since we want to pull/update system images first, otherwise
 	# system_reset will be running twice
 	if ! is_linux && ! is_docker_native; then
