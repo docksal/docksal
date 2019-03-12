@@ -148,8 +148,8 @@ URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
 if is_windows; then
-	BABUN_WIN_HOME="$HOME"
-	HOME="/$(cygpath_abs_unix ${HOME})"
+	BABUN_WIN_HOME=${HOME}
+	HOME=$(cygpath_abs_unix ${HOME})
 fi
 
 # Directory structure in ~/.docksal
@@ -232,14 +232,6 @@ DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
 DEFAULT_MACHINE_VBOX_RAM='2048' #mb
 DEFAULT_MACHINE_VBOX_HDD='50000' #mb
-
-# On WSL, machines are stored in the Windows user profile (not within the WSL file system)
-if is_wsl; then
-	USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
-else
-	USERPROFILE=${HOME}
-fi
-DEFAULT_MACHINE_ISO_PATH="${USERPROFILE}/.docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
 
 # Stats
 # fin sends a minimal ping with OS and fin version number
@@ -4450,6 +4442,22 @@ update_boot2docker ()
 		if is_docker_machine_exist; then
 			docker_machine_stop &>/dev/null
 		fi
+
+		# Figure out the path to machines boot2docker.iso
+		local RELATIVE_PATH=".docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
+		if is_wsl; then
+			# Machines are stores within Windows file system
+			local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
+			DEFAULT_MACHINE_ISO_PATH="${USERPROFILE}/${RELATIVE_PATH}"
+		elif is_windows; then
+			# Machines are stores within Windows file system
+			local USERPROFILE=$(cygpath -u ${USERPROFILE})
+			DEFAULT_MACHINE_ISO_PATH="${USERPROFILE}/${RELATIVE_PATH}"
+		else
+			# Mac - straightforward
+			DEFAULT_MACHINE_ISO_PATH="${HOME}/${RELATIVE_PATH}"
+		fi
+
 		# Update machine's boot2docker.iso
 		cp -f ${CONFIG_DOCKER_MACHINE_ISO} ${DEFAULT_MACHINE_ISO_PATH}
 	fi
