@@ -157,11 +157,13 @@ CONFIG_DIR="$HOME/.docksal"
 CONFIG_DOWNLOADS_DIR="$CONFIG_DIR/downloads"
 CONFIG_BIN_DIR="$CONFIG_DIR/bin"
 CONFIG_STACKS_DIR="$CONFIG_DIR/stacks"
+CONFIG_DOCKER_MACHINE_DIR="$CONFIG_DIR/machine"
+CONFIG_ALIASES="$CONFIG_DIR/alias"
 mkdir -p "$CONFIG_DOWNLOADS_DIR"
 mkdir -p "$CONFIG_BIN_DIR"
 mkdir -p "$CONFIG_STACKS_DIR"
-CONFIG_DOCKER_MACHINE_DIR="$CONFIG_DIR/machine"
-CONFIG_ALIASES="$CONFIG_DIR/alias"
+mkdir -p "$CONFIG_DOCKER_MACHINE_DIR"
+mkdir -p "$CONFIG_ALIASES"
 # Custom certs folder for vhost-proxy (overridable, expected to be created by the user manually)
 CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 
@@ -4373,9 +4375,6 @@ update_boot2docker ()
 {
 	# Only applicable to Mac/Windows using VirtualBox/Boot2Docker
 	if is_linux || is_docker_native; then return; fi
-
-	# Ensure CONFIG_DOCKER_MACHINE_DIR exists
-	mkdir -p ${CONFIG_DOCKER_MACHINE_DIR}
 
 	# Flag to force boot2docker.iso download (useful if the previous download resulted in a corrupted file).
 	local force_download=${1}
