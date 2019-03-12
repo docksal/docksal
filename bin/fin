@@ -4651,9 +4651,6 @@ update ()
 
 	# From now on, we should have everything we need here to start/restart Docksal
 
-	# Do cleanup before updating images, otherwise we may be updating images that will be dropped anyway.
-	cleanup
-
 	# [STEP 4] Update Docksal images
 	echo-green "[STEP 4/$TOTAL_STEPS] Updating Docksal images..."
 	# Pull/update system image
@@ -4661,8 +4658,11 @@ update ()
 	# update_system_images does "docker pull" with does the pull interactively (with a progress indicator), which looks
 	# better.
 	update_system_images
+
+	# Do cleanup before updating images, otherwise we may be updating images that will be dropped anyway.
+	is_update && cleanup
 	# Update existing docksal images
-	update_docksal_images
+	is_update && update_docksal_images
 
 	# Reset system services after image updates
 	system_reset
