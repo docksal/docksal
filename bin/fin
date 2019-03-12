@@ -2241,7 +2241,7 @@ docker_machine_create ()
 	check_vbox_version
 	check_binary_found 'docker-machine'
 
-	if is_docker_machine_exist; then
+	if is_docker_machine_exist "true"; then
 		echo-error "Docker Machine '$DEFAULT_MACHINE_NAME' already exists"
 		return 1
 	fi
@@ -4375,7 +4375,7 @@ update_boot2docker ()
 	# Only applicable to Mac/Windows using VirtualBox/Boot2Docker
 	if is_linux || is_docker_native; then return; fi
 
-	if is_docker_machine_exist; then
+	if is_docker_machine_exist "true"; then
 		# We need the machine up to get it's version
 		if ! is_docker_machine_running; then
 			# Reset network settings (just in case) before starting the machine
