@@ -4524,7 +4524,7 @@ update_system_images ()
 		docker pull "${IMAGE_DNS}"
 		docker pull "${IMAGE_SSH_AGENT}"
 	fi
-	system_reset
+	# no system_reset here, just the image pull
 }
 
 # Update project images
@@ -4656,6 +4656,12 @@ update ()
 
 	# [STEP 4] Update Docksal images
 	echo-green "[STEP 4/$TOTAL_STEPS] Updating Docksal images..."
+	# Pull/update system image
+	# While system_reset would also pull images it will do this in a non-interactive way (via docker run).
+	# update_system_images does "docker pull" with does the pull interactively (with a progress indicator), which looks
+	# better.
+	update_system_images
+	# Update existing docksal images
 	update_docksal_images
 
 	# Reset system services after image updates
@@ -7640,6 +7646,7 @@ case "$1" in
 		shift
 		if [[ "$1" == "--system-images" ]]; then
 			update_system_images
+			system_reset
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
 		elif [[ "$1" == "--self" ]]; then
