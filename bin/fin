@@ -4446,19 +4446,21 @@ update_boot2docker ()
 			docker_machine_stop &>/dev/null
 		fi
 
-		# Figure out the path to machines boot2docker.iso
-		local RELATIVE_PATH=".docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
+		# Path to boot2docker.iso for the machine
+		local DEFAULT_MACHINE_ISO_PATH=".docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
 		if is_wsl; then
 			# Machines are stores within Windows file system
+			# First, contruct the path in Unix notation, then convert it into Windows one.
 			local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
-			DEFAULT_MACHINE_ISO_PATH="${USERPROFILE}/${RELATIVE_PATH}"
+			DEFAULT_MACHINE_ISO_PATH=$(wsl_path -w "${USERPROFILE}/${DEFAULT_MACHINE_ISO_PATH}")
 		elif is_windows; then
 			# Machines are stores within Windows file system
+			# First, contruct the path in Unix notation, then convert it into Windows one.
 			local USERPROFILE=$(cygpath -u ${USERPROFILE})
-			DEFAULT_MACHINE_ISO_PATH="${USERPROFILE}/${RELATIVE_PATH}"
+			DEFAULT_MACHINE_ISO_PATH=$(cygpath -w "${USERPROFILE}/${DEFAULT_MACHINE_ISO_PATH}")
 		else
 			# Mac - straightforward
-			DEFAULT_MACHINE_ISO_PATH="${HOME}/${RELATIVE_PATH}"
+			DEFAULT_MACHINE_ISO_PATH="${HOME}/${DEFAULT_MACHINE_ISO_PATH}"
 		fi
 
 		# Update machine's boot2docker.iso
