@@ -2351,6 +2351,8 @@ docker_machine_start ()
 
 docker_machine_remove ()
 {
+	! is_docker_machine_exist && return
+
 	_confirm "Remove $DEFAULT_MACHINE_NAME?"
 	# Store host-only interface name before removing the VM.
 	local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
