@@ -182,7 +182,6 @@ WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 is_wsl && vboxmanage="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
-CONFIG_DOCKER_MACHINE_ISO="$CONFIG_DOCKER_MACHINE_DIR/boot2docker-${REQUIREMENTS_DOCKER}.iso"
 CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DOCKER_MACHINE_DIR/machine.env"
 
 # Custom certs folder for vhost-proxy (overridable)
@@ -2251,14 +2250,14 @@ docker_machine_create ()
 
 	# Use a local boot2docker.iso copy when available
 	ISO_FILE=${ISO_FILE:-boot2docker.iso}
-	if [[ -f "$ISO_FILE" ]]; then
-		echo "Found $ISO_FILE. Using it..."
-		CONFIG_DOCKER_MACHINE_ISO="$ISO_FILE"
+	if [[ -f "${ISO_FILE}" ]]; then
+		echo "Found ${ISO_FILE}. Using it..."
+		URL_BOOT2DOCKER="${ISO_FILE}"
 	fi
 
 	docker-machine create \
  		--driver=virtualbox \
-		--virtualbox-boot2docker-url "${CONFIG_DOCKER_MACHINE_ISO}" \
+		--virtualbox-boot2docker-url "${URL_BOOT2DOCKER}" \
 		--virtualbox-disk-size "${VBOX_HDD:-$DEFAULT_MACHINE_VBOX_HDD}" \
 		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 		--virtualbox-hostonly-cidr "$DOCKSAL_SUBNET" \
@@ -4256,8 +4255,8 @@ install_tools_wsl ()
 	# "Error creating machine: Error in driver during machine creation: write |1: broken pipe"
 	# The Windows binary has to be run from the Windows FS (e.g. from Windows user's profile).
 	local USERPROFILE=$(wsl_path -u $(wsl_env USERPROFILE))
-	local DOCKER_MACHINE_BIN_WSL="${USERPROFILE}/bin/docker-machine.exe"
-	mkdir -p "${USERPROFILE}/bin"
+	local DOCKER_MACHINE_BIN_WSL="${USERPROFILE}/.docksal/bin/docker-machine.exe"
+	mkdir -p "${USERPROFILE}/.docksal/bin"
 	# Keeping the rest of the logic below very similar to other host environments.
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
@@ -4376,20 +4375,6 @@ update_boot2docker ()
 	# Only applicable to Mac/Windows using VirtualBox/Boot2Docker
 	if is_linux || is_docker_native; then return; fi
 
-	# Flag to force boot2docker.iso download (useful if the previous download resulted in a corrupted file).
-	local force_download=${1}
-
-	# Download a new version of boot2docker.iso if necessary
-	# We can grep machine's boot2docker.iso file for the version (exact match only)
-	if ! (grep ${REQUIREMENTS_DOCKER} ${CONFIG_DOCKER_MACHINE_ISO} &>/dev/null) || [[ ${force_download} ]]; then
-		echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
-		# Download to temporary location, then move to the permanent location.
-		# This minimizes the chance of getting a corrupt file if the download fails or is interrupted.
-		curl -fL# "${URL_BOOT2DOCKER}" -o "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso"
-		if_failed_error "boot2docker.iso download failed"
-		mv "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso" ${CONFIG_DOCKER_MACHINE_ISO}
-	fi
-
 	if is_docker_machine_exist; then
 		# We need the machine up to get it's version
 		if ! is_docker_machine_running; then
@@ -4402,74 +4387,31 @@ update_boot2docker ()
 
 		local b2d_version=$(docker version --format '{{.Server.Version}}')
 		if (( $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") )); then
-			# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
 			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
+				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
 				echo-alert "This update will destroy and recreate the VM!" \
 					"You can skip the VM update for now, create DB backups/etc., then restart the update to complete it." \
 					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
-				# This stops the update if not denied by user
 				if _confirm "Do you want to update the VM now?" --no-exit; then
-					BOOT2DOCKER_NEEDS_UPGRADE=1
-					BOOT2DOCKER_NEEDS_REBUILD=1
+					# Machine is removed here, but not recreated.
+					# It will be started/recreated later in the update process.
+					docker_machine_remove
 				fi
 			else
 				# Perform an upgrade without a rebuild for boot2docker versions 18.09+
-				BOOT2DOCKER_NEEDS_UPGRADE=1
+				# Stop the existing machine before the update
+				if is_docker_machine_exist; then
+					docker_machine_stop &>/dev/null
+				fi
+
+				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
+				# Download to temporary location, then move to the permanent location.
+				# This minimizes the chance of getting a corrupt file if the download fails or is interrupted.
+				curl -fL# "${URL_BOOT2DOCKER}" -o "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso"
+				if_failed_error "boot2docker.iso download failed"
+				mv "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso" ${DEFAULT_MACHINE_ISO_PATH}
 			fi
 		fi
-	fi
-
-	# An alternative version check that does not require starting the machine
-#	# Figure out if the existing machine version matches the required version.
-#	# We can grep machine's boot2docker.iso file for the version without starting the machine!
-#	if ! (grep ${REQUIREMENTS_DOCKER} ${DOCKER_MACHINE_ISO} >/dev/null); then
-#		# Upgrade to boot2docker 18.09 requires the machine to be rebuilt due to the change from AUFS to Overlay2.
-#		if [[ ${EXISTING_FIN_VERSION} ]] && (( $(ver_to_int "${EXISTING_FIN_VERSION}") < $(ver_to_int "1.82.2") )); then
-#			echo-alert "This update will destroy and recreate the VM!" \
-#				"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
-#			# This stops the update if not denied by user
-#			if _confirm "Would you like to continue with the update?"; then
-#				BOOT2DOCKER_NEEDS_UPGRADE=1
-#				BOOT2DOCKER_NEEDS_REBUILD=1
-#			fi
-#		else
-#			# Perform an upgrade without a rebuild for boot2docker versions 18.09+
-#			BOOT2DOCKER_NEEDS_UPGRADE=1
-#		fi
-#	fi
-
-	# Machine needs to be upgraded
-	if [[ "$BOOT2DOCKER_NEEDS_UPGRADE" == "1" ]]; then
-		# Stop the existing machine before the update
-		if is_docker_machine_exist; then
-			docker_machine_stop &>/dev/null
-		fi
-
-		# Path to boot2docker.iso for the machine
-		local DEFAULT_MACHINE_ISO_PATH=".docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
-		if is_wsl; then
-			# Machines are stores within Windows file system
-			# First, contruct the path in Unix notation, then convert it into Windows one.
-			local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
-			DEFAULT_MACHINE_ISO_PATH=$(wsl_path -w "${USERPROFILE}/${DEFAULT_MACHINE_ISO_PATH}")
-		elif is_windows; then
-			# Machines are stores within Windows file system
-			# First, contruct the path in Unix notation, then convert it into Windows one.
-			local USERPROFILE=$(cygpath -u ${USERPROFILE})
-			DEFAULT_MACHINE_ISO_PATH=$(cygpath -w "${USERPROFILE}/${DEFAULT_MACHINE_ISO_PATH}")
-		else
-			# Mac - straightforward
-			DEFAULT_MACHINE_ISO_PATH="${HOME}/${DEFAULT_MACHINE_ISO_PATH}"
-		fi
-
-		# Update machine's boot2docker.iso
-		cp -f ${CONFIG_DOCKER_MACHINE_ISO} ${DEFAULT_MACHINE_ISO_PATH}
-	fi
-
-	# Machine needs to be rebuilt
-	if [[ "$BOOT2DOCKER_NEEDS_REBUILD" == "1" ]]; then
-		# Recreate the VM
-		docker_machine_remove
 	fi
 }
 
