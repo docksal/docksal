@@ -811,8 +811,11 @@ check_docksal_environment ()
 	check_project_root && check_docksal_running
 }
 
+# @param --quiet - don't ask for confirmation to start the machine
 check_docker_running ()
 {
+	eval $(parse_params "$@")
+
 	# Check docker versions in this function
 	if ! is_docker_version && [[ "$DOCKER_VERSION_ALERT_SUPPRESS" == "" ]]; then
 		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
@@ -838,8 +841,10 @@ check_docker_running ()
 	# We still have to check "! is_docker_native", since user may be switching between modes and has an existing, but
 	# stopped docker machine, while using the native mode.
 	if [[ ${docker_status} == 255 ]] && ! is_docker_native; then
-		echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
-		_confirm "Start it now?"
+		if [[ "$quiet" == "" ]]; then
+			echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
+			_confirm "Start it now?"
+		fi
 		# docker_machine_start will quit here if something fails.
 		docker_machine_start
 		return $?
@@ -3209,7 +3214,7 @@ system_start ()
 	system_reset network
 
 	# This will instruct the user what to do if Docker daemon is not accessible
-	check_docker_running
+	check_docker_running --quiet
 
 	# This will do the rest of the configuration, assuming the VM/Docker are already running.
 	system_reset
