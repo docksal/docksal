@@ -7260,9 +7260,13 @@ fi
 
 # Inherit hosts git user.email and user.name settings
 # This happens before the environment variable overrides are sources, thus can be overridden via docksal.env files.
-if ( which git >/dev/null 2>&1 ); then
-	export GIT_USER_EMAIL=$(git config --get --global user.email)
-	export GIT_USER_NAME=$(git config --get --global user.name)
+# On macOS there is a git wrapper even when git is not installed, so we have to check for git differently on mac
+# See https://github.com/docksal/docksal/issues/1003
+if ! is_mac || (xcode_tools_dir=$(xcode-select -p 2>/dev/null) && ls ${xcode_tools_dir}/usr/bin/git); then
+	if ( which git &>/dev/null ); then
+		export GIT_USER_EMAIL=$(git config --get --global user.email)
+		export GIT_USER_NAME=$(git config --get --global user.name)
+	fi
 fi
 
 # Load environment variables overrides, use to permanently override some variables
