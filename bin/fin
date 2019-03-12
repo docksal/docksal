@@ -4399,10 +4399,7 @@ update_boot2docker ()
 				fi
 			else
 				# Perform an upgrade without a rebuild for boot2docker versions 18.09+
-				# Stop the existing machine before the update
-				if is_docker_machine_exist; then
-					docker_machine_stop &>/dev/null
-				fi
+				docker_machine_stop &>/dev/null
 
 				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
 				# Download to temporary location, then move to the permanent location.
