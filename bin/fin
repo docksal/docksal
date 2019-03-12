@@ -2247,7 +2247,7 @@ docker_machine_create ()
 	check_vbox_version
 	check_binary_found 'docker-machine'
 
-	if is_docker_machine_exist "true"; then
+	if is_docker_machine_exist; then
 		echo-error "Docker Machine '$DEFAULT_MACHINE_NAME' already exists"
 		return 1
 	fi
@@ -2277,17 +2277,15 @@ docker_machine_create ()
 	fi
 }
 
-# Param $1 refresh machine status true|false (defaults to false)
 is_docker_machine_exist ()
 {
-	! which 'docker-machine' >/dev/null 2>&1 && return 1
+	which 'docker-machine' &>/dev/null || return 1
+	DOCKER_MACHINE_STATUS=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>/dev/null)
+	res=$?
 
-	local refresh="${1:-false}"
-	if [[ "$refresh" == "true" ]]; then
-		# Refresh VM status in case it changed while the script was running.
-		DOCKER_MACHINE_STATUS=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>&1 || echo '')
-	fi
-	[[ "$DOCKER_MACHINE_STATUS" == *"not exist"* ]] && return 1 || return 0
+	[[ ${res} != 0 ]] && DOCKER_MACHINE_STATUS='Invalid'
+
+	return ${res}
 }
 
 docker_machine_env ()
@@ -2331,7 +2329,7 @@ docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
 
-	if is_docker_machine_exist "true"; then
+	if is_docker_machine_exist; then
 		if [[ "$DOCKER_MACHINE_STATUS" != "Running" ]]; then
 			docker-machine start "$DEFAULT_MACHINE_NAME"
 			if_failed_error "Failed starting virtual machine"
@@ -2364,7 +2362,7 @@ docker_machine_remove ()
 	# Store host-only interface name before removing the VM.
 	local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
 	docker-machine rm -f "$DEFAULT_MACHINE_NAME" >/dev/null
-	if ! is_docker_machine_exist "true"; then
+	if ! is_docker_machine_exist; then
 		# If the VM was removed, remove the DHCP server associated with its network interface.
 		# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
 		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" >/dev/null 2>&1
@@ -4378,7 +4376,7 @@ update_boot2docker ()
 	# Only applicable to Mac/Windows using VirtualBox/Boot2Docker
 	if is_linux || is_docker_native; then return; fi
 
-	if is_docker_machine_exist "true"; then
+	if is_docker_machine_exist; then
 		# We need the machine up to get it's version
 		if ! is_docker_machine_running; then
 			echo "Starting the existing machine to determine its version..."
