@@ -4404,9 +4404,10 @@ update_boot2docker ()
 			# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
 			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
 				echo-alert "This update will destroy and recreate the VM!" \
+					"You can skip the VM update for now, create DB backups/etc., then restart the update to complete it." \
 					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
 				# This stops the update if not denied by user
-				if _confirm "Would you like to continue with the update?" --no-exit; then
+				if _confirm "Do you want to update the VM now?" --no-exit; then
 					BOOT2DOCKER_NEEDS_UPGRADE=1
 					BOOT2DOCKER_NEEDS_REBUILD=1
 				fi
