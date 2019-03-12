@@ -4356,8 +4356,8 @@ update_virtualbox ()
 		is_vbox_version
 		local res=$?
 		if [[ "$res" != "0" ]]; then
-			[[ "$res" == "2" ]] && echo-red "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
-			# Note: update_virtualbox automatically stops the machine if necessary, but will not automatically start it.
+			[[ "$res" == "2" ]] && echo-alert "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
+			# Note: install_virtualbox automatically stops the machine if necessary, but will not automatically start it.
 			install_virtualbox
 		fi
 	fi
@@ -4381,7 +4381,7 @@ update_boot2docker ()
 	# Download a new version of boot2docker.iso if necessary
 	# We can grep machine's boot2docker.iso file for the version (exact match only)
 	if ! (grep ${REQUIREMENTS_DOCKER} ${CONFIG_DOCKER_MACHINE_ISO} &>/dev/null) || [[ ${force_download} ]]; then
-		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
+		echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
 		# Download to temporary location, then move to the permanent location.
 		# This minimizes the chance of getting a corrupt file if the download fails or is interrupted.
 		curl -fL# "${URL_BOOT2DOCKER}" -o "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso"
