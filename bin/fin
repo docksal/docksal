@@ -3677,6 +3677,7 @@ detect_dns ()
 		# Not an ideal check as it might pick the wrong one if there are several, but better than nothing
 		if [[ "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
 			dns_addresses=""
+			local _IFS=${IFS}
 			IFS=$'\n'
 			for dns_found in $(netsh.exe interface ip show config | grep DNS | grep -v None | grep -v $DOCKSAL_IP); do
 				# Trim \r from output (necessary on Windows)
@@ -3689,6 +3690,7 @@ detect_dns ()
 					break
 				fi
 			done
+			IFS=${_IFS}
 		fi
 	fi
 
