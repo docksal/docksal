@@ -819,7 +819,7 @@ check_docksal_environment ()
 check_docker_server_version ()
 {
 	# Prevent multiple alerts
-	[[ "$DOCKER_VERSION_ALERT_SUPPRESS" != "" ]] && return
+	[[ ${DOCKER_VERSION_ALERT_SUPPRESS} == 1 ]] && return
 
 	if ! is_docker_server_version; then
 		# Since we do not control Docker Desktop, ask user to update manually when necessary
@@ -844,6 +844,7 @@ check_docker_running ()
 	# Check cached value (saves ~200ms)
 	if [[ "$DOCKER_RUNNING" == "true" ]]; then
 		# If docker is running, perform docker server / docker desktop version checks
+		# --quiet is used during update to suppress this check until the end of the update process
 		[[ "$quiet" == "" ]] && check_docker_server_version
 
 		# Since Docker is running and we can talk to it, no more checks are necessary. Return here.
@@ -4614,6 +4615,9 @@ is_update ()
 # Update Docksal
 update ()
 {
+	# Suppress alerts until the very end of the update
+	export DOCKER_VERSION_ALERT_SUPPRESS=1
+
 	# [STEP 0] Define total steps
 	TOTAL_STEPS=4
 
@@ -4662,6 +4666,7 @@ update ()
 	fi
 
 	# This will instruct the user what to do if Docker daemon is not accessible
+	# --quiet suppresses the user confirmation when starting the existing docker machine
 	check_docker_running --quiet
 
 	# From now on, we should have everything we need here to start/restart Docksal
@@ -4692,9 +4697,11 @@ update ()
 	# Cleanup
 	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
 
-	# Rerun checks here to inform the users of any issues (e.g. "newgrp docker" on Linux or Docker Desktop version mismatch).
-	# Disable suppression during the final check
-	DOCKER_VERSION_ALERT_SUPPRESS=0 check_docker_running
+	# Rerun docker access/version checks here to inform the users of any issues
+	echo-green "Running post update checks..."
+	# Disabling alert suppression here, since it was likely enabled during earlier calls to check_docker_running
+	unset DOCKER_VERSION_ALERT_SUPPRESS
+	check_docker_running
 }
 
 # Return the latest version
