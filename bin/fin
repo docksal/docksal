@@ -811,20 +811,39 @@ check_docksal_environment ()
 	check_project_root && check_docksal_running
 }
 
+check_docker_server_version ()
+{
+	# Prevent multiple alerts
+	[[ "$DOCKER_VERSION_ALERT_SUPPRESS" != "" ]] && return
+
+	if ! is_docker_server_version; then
+		# Since we do not control Docker Desktop, ask user to update manually when necessary
+		if is_docker_native; then
+			echo-alert "Please update Docker Desktop to the latest version manually." \
+				"Expected Docker Desktop version: ${REQUIREMENTS_DOCKER_DESKTOP}"
+		else
+			echo-alert "Required Docker server version is $REQUIREMENTS_DOCKER" \
+				"Run ${yellow}fin update${NC} to update to the required version." \ ""
+		fi
+	fi
+
+	# Prevent multiple alerts
+	DOCKER_VERSION_ALERT_SUPPRESS=1
+}
+
 # @param --quiet - don't ask for confirmation to start the machine
 check_docker_running ()
 {
 	eval $(parse_params "$@")
 
-	# Check docker versions in this function
-	if ! is_docker_version && [[ "$DOCKER_VERSION_ALERT_SUPPRESS" == "" ]]; then
-		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
-			"Run ${yellow}fin update${NC} to update to the required version." \ ""
-		DOCKER_VERSION_ALERT_SUPPRESS=1 # prevent multiple alerts
-	fi
+	# Check cached value (saves ~200ms)
+	if [[ "$DOCKER_RUNNING" == "true" ]]; then
+		# If docker is running, perform docker server / docker desktop version checks
+		[[ "$quiet" == "" ]] && check_docker_server_version
 
-	# Check cached value
-	[[ "$DOCKER_RUNNING" == "true" ]] && return 0
+		# Since Docker is running and we can talk to it, no more checks are necessary. Return here.
+		return
+	fi
 
 	# If we got here then cached value is not true
 	local docker_status
@@ -4640,14 +4659,8 @@ update ()
 		}
 	fi
 
-	# Not using system_start/system_reset here since we want to pull/update system images first, otherwise
-	# system_reset will be running twice
-	if ! is_linux && ! is_docker_native; then
-		# docker_machine_start will quit here if something fails.
-		docker_machine_start
-	fi
-
-	check_docker_running
+	# This will instruct the user what to do if Docker daemon is not accessible
+	check_docker_running --quiet
 
 	# From now on, we should have everything we need here to start/restart Docksal
 
@@ -4677,24 +4690,8 @@ update ()
 	# Cleanup
 	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
 
-	if is_linux; then
-		# Let they user know if they need to re-login to access docker daemon without sudo.
-		if ! (id -nG | grep docker &>/dev/null) && ! is_root ; then
-			echo-alert "Re-login to enable permanent Docker support." \
-				"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
-		fi
-	fi
-
-	# Since we do not control Docker Desktop, ask user to update manually when necessary
-	if is_docker_native; then
-		local docker_desktop_version=$(docker_desktop_version --short)
-		if [[ $(ver_to_int ${REQUIREMENTS_DOCKER_DESKTOP}) > $(ver_to_int ${docker_desktop_version}) ]]; then
-			echo-alert "Please update Docker Desktop to the latest version manually." \
-				"Detected Docker Desktop version: ${docker_desktop_version}" \
-				"Expected Docker Desktop version: ${REQUIREMENTS_DOCKER_DESKTOP}"
-			sleep 2
-		fi
-	fi
+	# Rerun checks here to inform the users of any issues (e.g. "newgrp docker" on Linux or Docker Desktop version mismatch).
+	check_docker_running
 }
 
 # Return the latest version
