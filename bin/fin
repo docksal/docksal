@@ -723,16 +723,21 @@ check_winpty_found ()
 
 # Checks if docker is accessible
 # DOCKER_HOST, set at the beginning of runtime, defines how we talk to the docker daemon
+# Returns 0 - we can successfully reach the docker daemon
+# Returns 1 - docker daemon is inaccessible
+# Returns 255 - docker-machine is down
 is_docker_running ()
 {
-	# Docker machine mode - first check that the VM is running
-	if ! is_linux && ! is_docker_native; then
-		if ! is_docker_machine_running; then return 255; fi
-	fi
-
 	# Running "docker version" is sufficient to check if docker is running in any host environment setup.
 	# This operation is instant even if docker is not running (assuming a socket is used).
-	which docker >/dev/null 2>&1 && docker version >/dev/null 2>/dev/null || return 1
+	# However, if DOCKER_HOST is an HTTP/TLS endpoint and it is down, then this check will take over a minute to fail.
+	# To mitigate this case, we first check for is_docker_machine_running when in docker-machine mode.
+	if ! is_linux && ! is_docker_native; then
+		# Return a distinct code if the machine is down.
+		# This is checked down the road.
+		is_docker_machine_running || return 255
+	fi
+	docker version &>/dev/null || return 1
 }
 
 is_docksal_running ()
@@ -856,10 +861,8 @@ check_docker_running ()
 	# Last chance to return non-error code
 	[[ ${docker_status} == 0 ]] && return
 
-	# Status code 255 is returned only when there is a docker machine, but it is not running.
-	# We still have to check "! is_docker_native", since user may be switching between modes and has an existing, but
-	# stopped docker machine, while using the native mode.
-	if [[ ${docker_status} == 255 ]] && ! is_docker_native; then
+	# Status code 255 is returned only for docker-machine mode, when the machine exists, but it is not running.
+	if [[ ${docker_status} == 255 ]]; then
 		if [[ "$quiet" == "" ]]; then
 			echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
 			_confirm "Start it now?"
@@ -2256,6 +2259,7 @@ bash_comp_words ()
 
 is_docker_machine_running ()
 {
+	# Check the cached value set when docker-machine state is altered
 	[[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]
 }
 
@@ -7344,6 +7348,7 @@ else
 fi
 
 # Create drives bind mounts on wsl
+# E.g. /mnt/c -> /c
 wsl_mount_drives
 
 # DOCKER_HOST defines how we talk to the docker daemon
