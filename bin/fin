@@ -4528,8 +4528,6 @@ EOF
 # Update system service images
 update_system_images ()
 {
-	check_docker_running
-
 	IMAGE_FILE=${IMAGE_FILE:-docksal-system-images.tar}
 	if [[ -f "$IMAGE_FILE" ]]; then
 		# Load system images from the current directory when available
@@ -7642,6 +7640,7 @@ case "$1" in
 		# no load_configuration
 		shift
 		if [[ "$1" == "--system-images" ]]; then
+			check_docker_running
 			update_system_images
 			system_reset
 		elif [[ "$1" == "--project-images" ]]; then
