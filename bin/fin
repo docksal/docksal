@@ -4689,7 +4689,8 @@ update ()
 	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
 
 	# Rerun checks here to inform the users of any issues (e.g. "newgrp docker" on Linux or Docker Desktop version mismatch).
-	check_docker_running
+	# Disable suppression during the final check
+	DOCKER_VERSION_ALERT_SUPPRESS=0 check_docker_running
 }
 
 # Return the latest version
