@@ -2313,8 +2313,10 @@ docker_machine_create ()
 		--virtualbox-no-share \
 		"$DEFAULT_MACHINE_NAME"
 
-	if [[ $? -eq 0 ]]; then
-		DOCKER_MACHINE_STATUS='Running'
+	if [[ $? == 0 ]]; then
+		# Update cached values
+		DOCKER_MACHINE_STATUS="Running"
+		# Note docker is not yet accessible here until docker_machine_env is called later
 	else
 		return 1
 	fi
@@ -2354,7 +2356,9 @@ docker_machine_stop ()
 {
 	check_binary_found 'docker-machine'
 	docker-machine stop "$DEFAULT_MACHINE_NAME"
+	# Manually update cached values
 	DOCKER_MACHINE_STATUS="Stopped"
+	DOCKER_RUNNING="false"
 }
 
 docker_machine_start ()
@@ -2369,9 +2373,20 @@ docker_machine_start ()
 		if_failed_error "Failed to properly access virtual machine" \
 			"In case you see certificates problem, try rebooting your local host." \
 			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
+
+		# Update cached values
+		# We would not get here if something above failed, so a blind update is fine (saves 1.5s)
+		DOCKER_MACHINE_STATUS="Running"
+		# Once machine is up, is_docker_running check should be instant (no savings in doing a blind update)
+		# docker_machine_env has to happen before this check or the check will fail
+		is_docker_running && DOCKER_RUNNING="true"
 	elif [[ "$DOCKER_MACHINE_STATUS" == "Defunct" ]]; then
 		docker_machine_create &&
 			docker_machine_env
+
+		# Once machine is up, is_docker_running check should be instant (no savings in doing a blind update)
+		# docker_machine_env has to happen before this check or the check will fail
+		is_docker_running && DOCKER_RUNNING="true"
 
 		# Displays an error message and offers to remove the vm if something failed
 		if [[ $? != 0 ]]; then
@@ -2398,6 +2413,9 @@ docker_machine_remove ()
 	fi
 
 	docker-machine rm -f "$DEFAULT_MACHINE_NAME" 2>/dev/null
+	# Manually update cached values
+	DOCKER_MACHINE_STATUS="Defunct"
+	DOCKER_RUNNING="false"
 
 	if [[ "${vboxifname}" != "" ]]; then
 		# After VM is removed, remove the DHCP server associated with its network interface.
@@ -2773,6 +2791,9 @@ vm ()
 		kill)
 			system_stop
 			docker-machine kill ${DEFAULT_MACHINE_NAME}
+			# Manually update cached values
+			DOCKER_MACHINE_STATUS="Defunct"
+			DOCKER_RUNNING="false"
 			;;
 		ls|list)
 			docker-machine ls
@@ -7399,6 +7420,7 @@ if [[ "$DOCKSAL_HOST" != "" ]]; then
 	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
 fi
 
+# Cache docker status (saves ~200ms)
 if is_docker_running; then
 	export DOCKER_RUNNING="true"
 else
