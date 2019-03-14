@@ -2380,13 +2380,17 @@ docker_machine_start ()
 
 docker_machine_remove ()
 {
-	! is_docker_machine_exist && return
+	# In certain cases, the VM may not exist, but there would still be a record of it in docker-machine (dm ls).
+	# If the machine status is Invalid, then we skip the confirmation and just drop the leftovers right away.
+	if [[ ${DOCKER_MACHINE_STATUS} != 'Invalid' ]]; then
+		# Store host-only interface name before removing the VM.
+		local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
+		_confirm "Remove $DEFAULT_MACHINE_NAME?"
+	fi
 
-	_confirm "Remove $DEFAULT_MACHINE_NAME?"
-	# Store host-only interface name before removing the VM.
-	local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
 	docker-machine rm -f "$DEFAULT_MACHINE_NAME" >/dev/null
-	if ! is_docker_machine_exist; then
+
+	if ! is_docker_machine_exist && ${vboxifname}; then
 		# If the VM was removed, remove the DHCP server associated with its network interface.
 		# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
 		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" >/dev/null 2>&1
