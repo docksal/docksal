@@ -3831,7 +3831,7 @@ configure_resolver_windows () {
 		# Figure out the name of the network (not the name of the adapter) the VM is using
 		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
 	else
-		# There is nothing to configure
+		# There is nothing to configure (machine and thus its network interface does not exist)
 		return
 	fi
 
@@ -3869,7 +3869,7 @@ configure_resolver_wsl () {
 		# Figure out the name of the network (not the name of the adapter) the VM is using
 		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
 	else
-		# There is nothing to configure
+		# There is nothing to configure (machine and thus its network interface does not exist)
 		return
 	fi
 
