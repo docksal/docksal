@@ -2263,17 +2263,17 @@ bash_comp_words ()
 # DOCKER_MACHINE_STATUS is set at the beginning of runtime using this function.
 docker_machine_status ()
 {
-	is_docker_machine_version || return 1
-
-	local status
-	status=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>/dev/null) || status='Defunct'
-	echo ${status}
-
-	if [[ "${status}" == "Defunct" ]]; then return 1; fi
+	echo $(docker-machine status "$DEFAULT_MACHINE_NAME" 2>/dev/null || echo 'Defunct' )
 }
 
 is_docker_machine_exist ()
 {
+	is_docker_machine_version || return 1
+
+	# Refresh machine status
+	# This is necessary to make sure we don't get the cached value after operations with the VM.
+	DOCKER_MACHINE_STATUS=$(docker_machine_status)
+
 	[[ "$DOCKER_MACHINE_STATUS" != "Defunct" ]]
 }
 
