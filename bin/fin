@@ -2258,6 +2258,25 @@ bash_comp_words ()
 
 #------------------------------- Docker-Machine -----------------------------------
 
+# Get machine status from docker machine.
+# This is an expensive operation (~1.5s) and should be used when relying on the cached status is not good enough.
+# DOCKER_MACHINE_STATUS is set at the beginning of runtime using this function.
+docker_machine_status ()
+{
+	is_docker_machine_version || return 1
+
+	local status
+	status=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>/dev/null) || status='Defunct'
+	echo ${status}
+
+	if [[ "${status}" == "Defunct" ]]; then return 1; fi
+}
+
+is_docker_machine_exist ()
+{
+	[[ "$DOCKER_MACHINE_STATUS" != "Defunct" ]]
+}
+
 is_docker_machine_running ()
 {
 	# Check the cached value set when docker-machine state is altered
@@ -2301,17 +2320,6 @@ docker_machine_create ()
 	fi
 }
 
-is_docker_machine_exist ()
-{
-	which 'docker-machine' &>/dev/null || return 1
-	DOCKER_MACHINE_STATUS=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>/dev/null)
-	res=$?
-
-	[[ ${res} != 0 ]] && DOCKER_MACHINE_STATUS='Invalid'
-
-	return ${res}
-}
-
 docker_machine_env ()
 {
 	local _env
@@ -2353,17 +2361,15 @@ docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
 
-	if is_docker_machine_exist; then
-		if [[ "$DOCKER_MACHINE_STATUS" != "Running" ]]; then
-			docker-machine start "$DEFAULT_MACHINE_NAME"
-			if_failed_error "Failed starting virtual machine"
-		fi
+	if [[ "$DOCKER_MACHINE_STATUS" == "Stopped" ]]; then
+		docker-machine start "$DEFAULT_MACHINE_NAME"
+		if_failed_error "Failed starting virtual machine"
 
 		docker_machine_env
 		if_failed_error "Failed to properly access virtual machine" \
 			"In case you see certificates problem, try rebooting your local host." \
 			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
-	else
+	elif [[ "$DOCKER_MACHINE_STATUS" == "Defunct" ]]; then
 		docker_machine_create &&
 			docker_machine_env
 
@@ -2382,20 +2388,23 @@ docker_machine_remove ()
 {
 	# In certain cases, the VM may not exist, but there would still be a record of it in docker-machine (dm ls).
 	# If the machine status is Invalid, then we skip the confirmation and just drop the leftovers right away.
-	if [[ ${DOCKER_MACHINE_STATUS} != 'Invalid' ]]; then
+	# TODO: this looks to be an edge case with Babun only. Rewrite once Babun support is removed.
+	if [[ ${DOCKER_MACHINE_STATUS} != 'Defunct' ]]; then
 		# Store host-only interface name before removing the VM.
 		local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
 		_confirm "Remove $DEFAULT_MACHINE_NAME?"
 	fi
 
-	docker-machine rm -f "$DEFAULT_MACHINE_NAME" >/dev/null
+	# Run machine remove silently anyway to cleanup leftovers
+	docker-machine rm -f "$DEFAULT_MACHINE_NAME" 2>/dev/null
 
-	if ! is_docker_machine_exist && ${vboxifname}; then
+	# If the machine has been just removed (vboxifname not empty)
+	if [[ ${vboxifname} != "" ]]; then
 		# If the VM was removed, remove the DHCP server associated with its network interface.
 		# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
-		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" >/dev/null 2>&1
+		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" &>/dev/null
 		# Killing the network interface also helps to avoid issues when VM is recreated.
-		"$vboxmanage" hostonlyif remove "$vboxifname" >/dev/null 2>&1
+		"$vboxmanage" hostonlyif remove "$vboxifname" 2>/dev/null
 	fi
 }
 
@@ -7371,7 +7380,8 @@ elif is_docker_native; then
 else
 	# Mac/Windows + Docker Machine => connecting via tcp://192.168.64.100:2376 (TLS) (DOCKER_HOST='192.168.64.100:2376')
 	# We rely on docker-machine to configure the connection settings
-	DOCKER_MACHINE_STATUS=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>&1 || echo '')
+	# docker_machine_status is an expensive operation (~1.5s), so we cache it here
+	DOCKER_MACHINE_STATUS=$(docker_machine_status)
 	if [[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]; then
 		# Use cached environment variables if possible
 		if [[ -f "$CONFIG_DOCKER_MACHINE_ENV" ]]; then
