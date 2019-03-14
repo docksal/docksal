@@ -3274,13 +3274,13 @@ _ssh_key ()
 	# Return if no key or option passed
 	[[ "$@" == "" ]] && return
 
-	if is_tty; then
-		# Run ssh-key interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker exec -it docksal-ssh-agent ssh-key "$@"
-	else
+	if ! is_tty || is_travis ; then
 		# In a non-interactive environment (e.g., CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 		docker exec docksal-ssh-agent ssh-key "$@"
+	else
+		# Run ssh-key interactively to allow entering a passphrase for ssh keys (if set)
+		${winpty} docker exec -it docksal-ssh-agent ssh-key "$@"
 	fi
 }
 
@@ -3338,7 +3338,7 @@ ssh_key ()
 
 	# If the user does not have any SSH keys (no ~/.ssh folder), offer to generate a default key
 	if [[ ! -d "$ssh_path" ]]; then
-		echo-yellow "You don't seem to have any SSH keys in the default location (${ssh_path})."
+		echo-yellow "You don't seem to have any SSH keys in the default location ('${ssh_path}')."
 		_confirm "Would you like to generate a default SSH key pair now?" --no-exit || return
 		# Ensure ssh_path exists
 		mkdir -p "$ssh_path"
