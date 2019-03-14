@@ -3817,17 +3817,13 @@ configure_resolver_windows () {
 	if is_docker_native; then
 		# Use the default DockerNAT adapter
 		network_id="${DOCKER_WIN_NETWORK}"
-	else
+	elif is_docker_machine_exist; then
 		# Need to check whether machine exists, otherwise we cannot get its info
-		if is_docker_machine_exist; then
-			# Figure out the name of the network (not the name of the adapter) the VM is using
-			network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
-		fi
-	fi
-
-	if [[ "$network_id" == "" ]]; then
-		echo-error "DNS resolver configuration failed"
-		return 1
+		# Figure out the name of the network (not the name of the adapter) the VM is using
+		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+	else
+		# There is nothing to configure
+		return
 	fi
 
 	# Set DNS server to Docksal IP on the VM's VBox adapter
@@ -3859,17 +3855,13 @@ configure_resolver_wsl () {
 	if is_docker_native; then
 		# Use the default DockerNAT adapter
 		network_id="${DOCKER_WIN_NETWORK}"
-	else
+	elif is_docker_machine_exist; then
 		# Need to check whether machine exists, otherwise we cannot get its info
-		if is_docker_machine_exist; then
-			# Figure out the name of the network (not the name of the adapter) the VM is using
-			network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
-		fi
-	fi
-
-	if [[ "$network_id" == "" ]]; then
-		echo-error "DNS resolver configuration failed"
-		return 1
+		# Figure out the name of the network (not the name of the adapter) the VM is using
+		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+	else
+		# There is nothing to configure
+		return
 	fi
 
 	# Set DNS server to Docksal IP on the VM's VBox adapter
