@@ -2747,7 +2747,9 @@ wsl_mount_drives ()
 vm ()
 {
 	if is_docker_native; then
-		echo "Docksal VM cannot be used with Docker for Mac/Docker for Windows"
+		echo-error "Docksal VM cannot be used in Docker Desktop mode" \
+			"You have DOCKER_NATIVE set to 1. VM functions should not be used in this mode." \
+			"See https://docs.docksal.io/getting-started/docker-modes/ for details"
 		return 1
 	fi
 	if is_linux; then
