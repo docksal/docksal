@@ -75,7 +75,7 @@ With this method, Docker will run inside a VM in VirtualBox.
 
 1. Open Terminal app and run
 
-        curl -fsSL get.docksal.io | bash
+        bash <(curl -fsSL https://get.docksal.io)
 
 
 1. Start the VM
@@ -96,7 +96,7 @@ With this method, Docker will run inside a VM in VirtualBox.
 
 1. Open Terminal app and run
 
-        curl -fsSL get.docksal.io | DOCKER_NATIVE=1 bash
+        DOCKER_NATIVE=1 bash <(curl -fsSL https://get.docksal.io)
 
 ### Linux installation options {#install-linux} 
 
@@ -131,7 +131,7 @@ and Fedora with derivatives are supported out of the box with automatic installa
     
 1. Open Terminal and run
 
-        curl -fsSL get.docksal.io | bash
+        bash <(curl -fsSL https://get.docksal.io)
 
 ### Linux. Other distributions {#install-linux-other}
 
@@ -177,7 +177,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
     Open **Babun** and run:
 
-        curl -fsSL get.docksal.io | bash
+        bash <(curl -fsSL https://get.docksal.io)
 
 1. Start the VM
 
@@ -208,7 +208,7 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
     Open **Babun** and run:
 
-        curl -fsSL get.docksal.io | bash
+        bash <(curl -fsSL https://get.docksal.io)
 
 ### Windows with Ubuntu App (WSL) and Docker for Windows {#install-windows-wsl} 
 
