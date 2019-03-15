@@ -100,6 +100,29 @@ is_travis () {
 
 #------------------------------------------------------------------------------
 
+# Returns absolute path to a file/folder in a Unix notation under cygwin on Windows.
+# cygpath -m returns something like C:/Users/user/...
+# This function converts that into something like /c/Users/user/...
+# @param $1 file/folder
+cygpath_abs_unix ()
+{
+	echo "/$(cygpath -m $1 | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
+}
+
+# Returns the value of Windows environment var in WSL
+# @param $1 var name
+wsl_env ()
+{
+	# Trim \r from output (necessary on Windows)
+	echo $(cmd.exe /c "echo %$1%" | tr -d '\r')
+}
+
+# Unfortunately wslpath output contains \r that has to be cleaned
+wsl_path ()
+{
+	# Trim \r from output (necessary on Windows)
+	echo $(wslpath "$@" | tr -d '\r')
+}
 
 #---------------------------- Global Constants --------------------------------
 
@@ -109,39 +132,49 @@ is_travis () {
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='18.09.3'
+REQUIREMENTS_DOCKER='18.09.2'
 REQUIREMENTS_DOCKER_COMPOSE='1.23.2'
 REQUIREMENTS_DOCKER_MACHINE='0.16.1'
 REQUIREMENTS_VBOX='5.2.26'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
+REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
 URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg"
 URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-Win.exe"
 
-# Self Paths
-FIN_PATH="/usr/local/bin/fin"
-FIN_PATH_UPDATED="/usr/local/bin/fin.updated"
-FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
 if is_windows; then
-	BABUN_WIN_HOME="$HOME"
-	# Cannot use cygpath_abs_unix here as it's being defined much later
-	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
+	BABUN_WIN_HOME=${HOME}
+	HOME=$(cygpath_abs_unix ${HOME})
 fi
+
+# Directory structure in ~/.docksal
 CONFIG_DIR="$HOME/.docksal"
-CONFIG_ENV="$CONFIG_DIR/docksal.env"
+CONFIG_DOWNLOADS_DIR="$CONFIG_DIR/downloads"
+CONFIG_BIN_DIR="$CONFIG_DIR/bin"
+CONFIG_STACKS_DIR="$CONFIG_DIR/stacks"
+CONFIG_DOCKER_MACHINE_DIR="$CONFIG_DIR/machine"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
+mkdir -p "$CONFIG_DOWNLOADS_DIR"
+mkdir -p "$CONFIG_BIN_DIR"
+mkdir -p "$CONFIG_STACKS_DIR"
+mkdir -p "$CONFIG_DOCKER_MACHINE_DIR"
+mkdir -p "$CONFIG_ALIASES"
+# Custom certs folder for vhost-proxy (overridable, expected to be created by the user manually)
+CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
+
+# File/binary paths
+FIN_PATH="/usr/local/bin/fin"
+FIN_PATH_UPDATED="$CONFIG_DOWNLOADS_DIR/fin.updated"
+FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
+CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
-CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DIR/docker-machine.env"
-# bin and bin/downloads folders
-CONFIG_BIN_DIR="$CONFIG_DIR/bin"
-CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
-mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
+CONFIG_LAST_UPDATE="$CONFIG_DIR/.last_update"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
@@ -149,9 +182,8 @@ WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 is_wsl && vboxmanage="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
-# Stacks folder
-CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
-mkdir -p "$CONFIG_STACKS_DIR" 2>/dev/null
+CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DOCKER_MACHINE_DIR/machine.env"
+
 # Custom certs folder for vhost-proxy (overridable)
 CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 
@@ -371,28 +403,6 @@ docker-compose ()
 	"$(which docker-compose)" "$@"
 }
 
-# Returns absolute path to a file/folder in a Unix notation under cygwin on Windows.
-# cygpath -m returns something like C:/Users/user/...
-# This function converts that into something like /c/Users/user/...
-# @param $1 file/folder
-cygpath_abs_unix ()
-{
-	echo "/$(cygpath -m $1 | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
-}
-
-# Returns the value of Windows environment var in WSL
-# @param $1 var name
-wsl_env () 
-{
-	echo $(cmd.exe /c "echo %$1%" | tr -d '[:cntrl:]')
-}
-
-# Unfortunately wslpath output contains \r that has to be cleaned 
-wsl_path ()
-{
-	echo $(wslpath "$@" | tr -d '[:cntrl:]')
-}
-
 # Search for a file/directory in a directory tree upwards. Return its path.
 # @param $1 filename
 upfind ()
@@ -525,8 +535,8 @@ get_mysql_connect ()
 # @return docker container id
 get_container_id ()
 {
-	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
-	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '[:cntrl:]')
+	# Trim \r from output (necessary on Windows)
+	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '\r')
 }
 
 # Run command on Windows with elevated privileges
@@ -711,14 +721,23 @@ check_winpty_found ()
 	winpty='winpty -Xallow-non-tty'
 }
 
+# Checks if docker is accessible
+# DOCKER_HOST, set at the beginning of runtime, defines how we talk to the docker daemon
+# Returns 0 - we can successfully reach the docker daemon
+# Returns 1 - docker daemon is inaccessible
+# Returns 255 - docker-machine is down
 is_docker_running ()
 {
-	if ! is_linux && ! is_docker_native; then
-		if ! is_docker_machine_running; then return 255; fi
-	fi
-	# Check if docker is running via docker version.
+	# Running "docker version" is sufficient to check if docker is running in any host environment setup.
 	# This operation is instant even if docker is not running (assuming a socket is used).
-	which docker >/dev/null 2>&1 && docker version >/dev/null 2>/dev/null || return 1
+	# However, if DOCKER_HOST is an HTTP/TLS endpoint and it is down, then this check will take over a minute to fail.
+	# To mitigate this case, we first check for is_docker_machine_running when in docker-machine mode.
+	if ! is_linux && ! is_docker_native; then
+		# Return a distinct code if the machine is down.
+		# This is checked down the road.
+		is_docker_machine_running || return 255
+	fi
+	docker version &>/dev/null || return 1
 }
 
 is_docksal_running ()
@@ -797,20 +816,40 @@ check_docksal_environment ()
 	check_project_root && check_docksal_running
 }
 
-check_docker_running ()
+check_docker_server_version ()
 {
-	# Immediately break on upgrade
-	[[ "$UPGRADE_IN_PROGRESS" == "1" ]] && return 0
+	# Prevent multiple alerts
+	[[ ${DOCKER_VERSION_ALERT_SUPPRESS} == 1 ]] && return
 
-	# Check docker versions in this function
-	if ! is_docker_version && [[ "$DOCKER_VERSION_ALERT_SUPPRESS" == "" ]]; then
-		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
-			"Run ${yellow}fin update${NC} to update to the required version." \ ""
-		DOCKER_VERSION_ALERT_SUPPRESS=1 # prevent multiple alerts
+	if ! is_docker_server_version; then
+		# Since we do not control Docker Desktop, ask user to update manually when necessary
+		if is_docker_native; then
+			echo-alert "Please update Docker Desktop to the latest version manually." \
+				"Expected Docker Desktop version: ${REQUIREMENTS_DOCKER_DESKTOP}"
+		else
+			echo-alert "Required Docker server version is $REQUIREMENTS_DOCKER" \
+				"Run ${yellow}fin update${NC} to update to the required version." \ ""
+		fi
 	fi
 
-	# Check cached value
-	[[ "$DOCKER_RUNNING" == "true" ]] && return 0
+	# Prevent multiple alerts
+	DOCKER_VERSION_ALERT_SUPPRESS=1
+}
+
+# @param --quiet - don't ask for confirmation to start the machine
+check_docker_running ()
+{
+	eval $(parse_params "$@")
+
+	# Check cached value (saves ~200ms)
+	if [[ "$DOCKER_RUNNING" == "true" ]]; then
+		# If docker is running, perform docker server / docker desktop version checks
+		# --quiet is used during update to suppress this check until the end of the update process
+		[[ "$quiet" == "" ]] && check_docker_server_version
+
+		# Since Docker is running and we can talk to it, no more checks are necessary. Return here.
+		return
+	fi
 
 	# If we got here then cached value is not true
 	local docker_status
@@ -823,19 +862,22 @@ check_docker_running ()
 	# Last chance to return non-error code
 	[[ ${docker_status} == 0 ]] && return
 
-	if [[ ${docker_status} == 255 ]] && ! is_docker_native; then
-		echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
-		_confirm "Start it now?"
-		system_start
+	# Status code 255 is returned only for docker-machine mode, when the machine exists, but it is not running.
+	if [[ ${docker_status} == 255 ]]; then
+		if [[ "$quiet" == "" ]]; then
+			echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
+			_confirm "Start it now?"
+		fi
+		# docker_machine_start will quit here if something fails.
+		docker_machine_start
 		return $?
 	fi
 
-	# TODO: Should the checks below be moved to system_start?
 	if is_linux; then
 		# Remind the user about running 'newgrp docker' after install.
-		if ! (id -nG | grep docker >/dev/null 2>&1) && ! is_root ; then
+		if ! (id -nG | grep docker &>/dev/null) && ! is_root ; then
 			echo-error "Current user is not part of the docker group." \
-				"Re-login to enable permanent Docker support."
+				"Re-login to enable permanent Docker support." \
 				"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
 			exit 1
 		fi
@@ -845,6 +887,7 @@ check_docker_running ()
 			sudo service docker start
 		fi
 	else # MacOS, Windows
+		# Docker machine mode
 		# Check for certificates error
 		if ! is_docker_native && (docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
 			echo-error "Error connecting to Docker due to certificates error" \
@@ -855,14 +898,22 @@ check_docker_running ()
 			exit 1
 		fi
 
-		# Other generic errors
+		# Docker Desktop may not be running
 		if is_docker_native; then
-			echo-error "Your Docker client is unable to talk to the Docker server." \
-				"WHAT TO DO?" \
-				"Check that your Docker for Mac/Win app is running."
-			exit 1
+			if is_wsl; then
+				echo-error "Docker Desktop is not running or cannot be accessed" \
+					"WHAT TO DO?" \
+					"1. Start Docker Desktop, wait for Docker to start." \
+					"2. Make sure 'Expose daemon on tcp://localhost:2375 without TLS' in Docker Desktop settings is set."
+				exit 1
+			else
+				echo-error "Docker Desktop is not running" \
+					"WHAT TO DO?" \
+					"Start Docker Desktop, wait for Docker to start, and try again."
+				exit 1
+			fi
 		else
-			echo-error "Your Docker client is unable to talk to the Docker server." \
+			echo-error "Unable to talk to docker daemon." \
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
 				"2. If #1 did not help, run ${yellow}fin update${NC} to update." \
@@ -904,15 +955,45 @@ is_docker_path ()
 	(cd "$_path" 2>/dev/null && docker run -v "$_path":"$_path" docksal/empty 2>/dev/null)
 }
 
+# Check VirtualBox version
+# Return value 0: VirtualBox installed and the version is OK
+# Return value 1: VirtualBox not installed
+# Return value 2: VirtualBox installed, but needs to be updated
 is_vbox_version ()
 {
 	! which "$vboxmanage" >/dev/null 2>&1 && return 1
 
-	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
+	# Trim \r from output (necessary on Windows)
+	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null | tr -d '\r')
 	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$REQUIREMENTS_VBOX") ]] && \
 		return 2
 
 	return 0
+}
+
+# Print Docker Desktop version
+# @param $1 --short - prints short version instead of full
+# Example output (--short): 2.0.0.3
+docker_desktop_version ()
+{
+	local short=${1}
+
+	if is_mac; then
+		echo $(defaults read /Applications/Docker.app/Contents/Info.plist CFBundleShortVersionString) 2>/dev/null
+	fi
+
+	if is_windows || is_wsl; then
+		# Calling these should be done in quotes and via "bash -c" to expand arguments properly
+		local DockerCli=''
+		is_windows && DockerCli='/cygdrive/c/Program Files/Docker/Docker/DockerCli.exe'
+		is_wsl && DockerCli='/mnt/c/Program Files/Docker/Docker/DockerCli.exe'
+
+		if [[ ${short} ]]; then
+			"${DockerCli}" -Version | tr -d '\r' | grep 'Version: ' | sed 's/.* \(.*\) .*/\1/g'
+		else
+			"${DockerCli}" -Version
+		fi
+	fi
 }
 
 is_docker_version ()
@@ -920,9 +1001,15 @@ is_docker_version ()
 	# Skip the check on Play-with-Docker and Katacoda
 	(is_pwd || is_katacoda) && return
 
-	! which docker >/dev/null 2>&1 && return 1
-	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null)
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
+	# Rely on our own docker binary, except on Linux
+	if is_linux; then
+		! which docker &>/dev/null && return 1
+	else
+		! [[ -x ${DOCKER_BIN} ]] && return 1
+	fi
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
 }
 
 is_docker_server_version ()
@@ -930,31 +1017,39 @@ is_docker_server_version ()
 	# Skip the check on Play-with-Docker and Katacoda
 	(is_pwd || is_katacoda) && return
 
-	! which docker >/dev/null 2>&1 && return 1
-	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
+	# Rely on our own docker binary, except on Linux
+	if is_linux; then
+		! which docker &>/dev/null && return 1
+	else
+		! [[ -x ${DOCKER_BIN} ]] && return 1
+	fi
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
 }
 
 is_docker_compose_version ()
 {
-	! which docker-compose >/dev/null 2>&1 && return 1
-	# Trim any control characters from docker-compose output (necessary on Windows)
-	local version=$(docker-compose version --short | tr -d '[:cntrl:]')
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") -le $(ver_to_int "$version") ]]
+	! [[ -x ${DOCKER_COMPOSE_BIN} ]] && return 1
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker-compose version --short | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") <= $(ver_to_int "$version") ))
 }
 
 is_docker_machine_version ()
 {
-	! which docker-machine >/dev/null 2>&1 && return 1
-	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") -le $(ver_to_int "$version") ]]
+	! [[ -x ${DOCKER_MACHINE_BIN} ]] && return 1
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker-machine -v  | sed "s/.*version \(.*\),.*/\1/")
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") <= $(ver_to_int "$version") ))
 }
 
 is_winpty_version ()
 {
-	! which "$WINPTY_BIN" >/dev/null 2>&1 && return 2
-	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/")
-	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") -le $(ver_to_int "$version") ]]
+	! [[ -x ${WINPTY_BIN} ]] && return 2
+	# Trim \r from output (necessary on Windows)
+	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/" | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_WINPTY") <= $(ver_to_int "$version") ))
 }
 
 wants_rc_version ()
@@ -962,6 +1057,9 @@ wants_rc_version ()
 	[[ "${DOCKSAL_USE_RC}" == 1 ]] || [[ "${DOCKSAL_USE_RC}" == "true" ]]
 }
 
+# Verbal counterpart to vbox_version
+# Checks VirtualBox version and prints a message to user if the check failed and why.
+# Supports skipping version check via SKIP_VBOX_VERSION_CHECK=1
 check_vbox_version ()
 {
 	# Provide ability to skip checking for vbox version
@@ -969,8 +1067,8 @@ check_vbox_version ()
 
 	is_vbox_version
 	local res=$?
-	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
-	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
+	[[ "$res" == "1" ]] && echo-error "${vboxmanage} binary was not found" && exit 1
+	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher" && exit 1
 }
 
 # Check that .docksal is present
@@ -2160,8 +2258,28 @@ bash_comp_words ()
 
 #------------------------------- Docker-Machine -----------------------------------
 
+# Get machine status from docker machine.
+# This is an expensive operation (~1.5s) and should be used when relying on the cached status is not good enough.
+# DOCKER_MACHINE_STATUS is set at the beginning of runtime using this function.
+docker_machine_status ()
+{
+	echo $(docker-machine status "$DEFAULT_MACHINE_NAME" 2>/dev/null || echo 'Defunct' )
+}
+
+is_docker_machine_exist ()
+{
+	is_docker_machine_version || return 1
+
+	# Refresh machine status
+	# This is necessary to make sure we don't get the cached value after operations with the VM.
+	DOCKER_MACHINE_STATUS=$(docker_machine_status)
+
+	[[ "$DOCKER_MACHINE_STATUS" != "Defunct" ]]
+}
+
 is_docker_machine_running ()
 {
+	# Check the cached value set when docker-machine state is altered
 	[[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]
 }
 
@@ -2181,38 +2299,27 @@ docker_machine_create ()
 
 	# Use a local boot2docker.iso copy when available
 	ISO_FILE=${ISO_FILE:-boot2docker.iso}
-	if [[ -f "$ISO_FILE" ]]; then
-		echo "Found $ISO_FILE. Using it..."
-		URL_BOOT2DOCKER="$ISO_FILE"
+	if [[ -f "${ISO_FILE}" ]]; then
+		echo "Found ${ISO_FILE}. Using it..."
+		URL_BOOT2DOCKER="${ISO_FILE}"
 	fi
 
 	docker-machine create \
  		--driver=virtualbox \
-		--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
+		--virtualbox-boot2docker-url "${URL_BOOT2DOCKER}" \
 		--virtualbox-disk-size "${VBOX_HDD:-$DEFAULT_MACHINE_VBOX_HDD}" \
 		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 		--virtualbox-hostonly-cidr "$DOCKSAL_SUBNET" \
 		--virtualbox-no-share \
 		"$DEFAULT_MACHINE_NAME"
 
-	if [[ $? -eq 0 ]]; then
-		DOCKER_MACHINE_STATUS='Running'
+	if [[ $? == 0 ]]; then
+		# Update cached values
+		DOCKER_MACHINE_STATUS="Running"
+		# Note docker is not yet accessible here until docker_machine_env is called later
 	else
 		return 1
 	fi
-}
-
-# Param $1 refresh machine status true|false (defaults to false)
-is_docker_machine_exist ()
-{
-	! which 'docker-machine' >/dev/null 2>&1 && return 1
-
-	local refresh="${1:-false}"
-	if [[ "$refresh" == "true" ]]; then
-		# Refresh VM status in case it changed while the script was running.
-		DOCKER_MACHINE_STATUS=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>&1 || echo '')
-	fi
-	[[ "$DOCKER_MACHINE_STATUS" == *"not exist"* ]] && return 1 || return 0
 }
 
 docker_machine_env ()
@@ -2249,26 +2356,37 @@ docker_machine_stop ()
 {
 	check_binary_found 'docker-machine'
 	docker-machine stop "$DEFAULT_MACHINE_NAME"
+	# Manually update cached values
 	DOCKER_MACHINE_STATUS="Stopped"
+	DOCKER_RUNNING="false"
 }
 
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
 
-	if is_docker_machine_exist "true"; then
-		if [[ "$DOCKER_MACHINE_STATUS" != "Running" ]]; then
-			docker-machine start "$DEFAULT_MACHINE_NAME"
-			if_failed_error "Failed starting virtual machine"
-		fi
+	if [[ "$DOCKER_MACHINE_STATUS" == "Stopped" ]]; then
+		docker-machine start "$DEFAULT_MACHINE_NAME"
+		if_failed_error "Failed starting virtual machine"
 
 		docker_machine_env
 		if_failed_error "Failed to properly access virtual machine" \
 			"In case you see certificates problem, try rebooting your local host." \
 			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
-	else
+
+		# Update cached values
+		# We would not get here if something above failed, so a blind update is fine (saves 1.5s)
+		DOCKER_MACHINE_STATUS="Running"
+		# Once machine is up, is_docker_running check should be instant (no savings in doing a blind update)
+		# docker_machine_env has to happen before this check or the check will fail
+		is_docker_running && DOCKER_RUNNING="true"
+	elif [[ "$DOCKER_MACHINE_STATUS" == "Defunct" ]]; then
 		docker_machine_create &&
 			docker_machine_env
+
+		# Once machine is up, is_docker_running check should be instant (no savings in doing a blind update)
+		# docker_machine_env has to happen before this check or the check will fail
+		is_docker_running && DOCKER_RUNNING="true"
 
 		# Displays an error message and offers to remove the vm if something failed
 		if [[ $? != 0 ]]; then
@@ -2283,16 +2401,28 @@ docker_machine_start ()
 
 docker_machine_remove ()
 {
+	# Do not check for machine existence here.
+	# In certain cases (e.g. machine create failed), the VirtualBox VM may not exist, but there would be a broken
+	# machine record in docker-machine (dm ls).
+
 	_confirm "Remove $DEFAULT_MACHINE_NAME?"
-	# Store host-only interface name before removing the VM.
-	local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
-	docker-machine rm -f "$DEFAULT_MACHINE_NAME"
-	if ! is_docker_machine_exist "true"; then
-		# If the VM was removed, remove the DHCP server associated with its network interface.
+
+	if is_docker_machine_exist; then
+		# Store host-only interface name before removing the VM.
+		local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
+	fi
+
+	docker-machine rm -f "$DEFAULT_MACHINE_NAME" 2>/dev/null
+	# Manually update cached values
+	DOCKER_MACHINE_STATUS="Defunct"
+	DOCKER_RUNNING="false"
+
+	if [[ "${vboxifname}" != "" ]]; then
+		# After VM is removed, remove the DHCP server associated with its network interface.
 		# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
-		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" >/dev/null 2>&1
+		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" 2>/dev/null
 		# Killing the network interface also helps to avoid issues when VM is recreated.
-		"$vboxmanage" hostonlyif remove "$vboxifname" >/dev/null 2>&1
+		"$vboxmanage" hostonlyif remove "$vboxifname" 2>/dev/null
 	fi
 }
 
@@ -2661,6 +2791,9 @@ vm ()
 		kill)
 			system_stop
 			docker-machine kill ${DEFAULT_MACHINE_NAME}
+			# Manually update cached values
+			DOCKER_MACHINE_STATUS="Defunct"
+			DOCKER_RUNNING="false"
 			;;
 		ls|list)
 			docker-machine ls
@@ -3132,16 +3265,14 @@ system_status ()
 # Starts all Docksal related things
 system_start ()
 {
-	if ! is_linux && ! is_docker_native; then
-		if is_docker_machine_running; then
-			echo "Machine ${DEFAULT_MACHINE_NAME} is already running."
-		else
-			echo "Starting Docksal VM..."
-			docker_machine_start
-			# docker_machine_start will quit here if something fails.
-		fi
-	fi
+	# Reset network settings before doing anything else (just in case)
+	# (May happen if switching modes native vs not).
+	system_reset network
 
+	# This will instruct the user what to do if Docker daemon is not accessible
+	check_docker_running --quiet
+
+	# This will do the rest of the configuration, assuming the VM/Docker are already running.
 	system_reset
 }
 
@@ -3173,13 +3304,13 @@ _ssh_key ()
 	# Return if no key or option passed
 	[[ "$@" == "" ]] && return
 
-	if is_tty; then
-		# Run ssh-key interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker exec -it docksal-ssh-agent ssh-key "$@"
-	else
+	if ! is_tty || is_travis ; then
 		# In a non-interactive environment (e.g., CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 		docker exec docksal-ssh-agent ssh-key "$@"
+	else
+		# Run ssh-key interactively to allow entering a passphrase for ssh keys (if set)
+		${winpty} docker exec -it docksal-ssh-agent ssh-key "$@"
 	fi
 }
 
@@ -3237,7 +3368,7 @@ ssh_key ()
 
 	# If the user does not have any SSH keys (no ~/.ssh folder), offer to generate a default key
 	if [[ ! -d "$ssh_path" ]]; then
-		echo-yellow "You don't seem to have any SSH keys in the default location (${ssh_path})."
+		echo-yellow "You don't seem to have any SSH keys in the default location ('${ssh_path}')."
 		_confirm "Would you like to generate a default SSH key pair now?" --no-exit || return
 		# Ensure ssh_path exists
 		mkdir -p "$ssh_path"
@@ -3387,6 +3518,7 @@ configure_network_mac ()
 # Applicable to Docker Desktop only.
 check_network_windows ()
 {
+	# Trim \r from output (necessary on Windows)
 	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
 	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
 	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
@@ -3420,6 +3552,7 @@ configure_network_windows ()
 # Applicable to Docker Desktop only.
 check_network_wsl ()
 {
+	# Trim \r from output (necessary on Windows)
 	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
 	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
 	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
@@ -3457,12 +3590,7 @@ configure_network ()
 		mode="off"
 	fi
 
-	if [[ "$mode" == "on" ]]; then
-		echo-green "Configuring network settings..."
-	else
-		echo-green "Restoring network settings..."
-	fi
-
+	echo-green "Configuring network settings..."
 	is_linux && configure_network_alpine "$mode" && return $?
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
@@ -3514,7 +3642,7 @@ configure_mounts ()
 			fi
 		fi
 		# Create, then mount shares in VirtualBox
-		if is_wsl || is_windows && ! is_docker_native; then
+		if (is_wsl || is_windows) && ! is_docker_native; then
 			echo-green "Configuring SMB shares..."
 			docker_machine_mount_smb
 		fi
@@ -3523,7 +3651,7 @@ configure_mounts ()
 			echo-green "Removing NFS exports..."
 			nfs_share_remove
 		fi
-		if is_wsl || is_windows && ! is_docker_native; then
+		if (is_wsl || is_windows) && ! is_docker_native; then
 			echo-green "Removing SMB shares..."
 			smb_share_remove
 		fi
@@ -3610,9 +3738,11 @@ detect_dns ()
 		# Not an ideal check as it might pick the wrong one if there are several, but better than nothing
 		if [[ "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
 			dns_addresses=""
+			local _IFS=${IFS}
 			IFS=$'\n'
 			for dns_found in $(netsh.exe interface ip show config | grep DNS | grep -v None | grep -v $DOCKSAL_IP); do
-				dns_addresses=${dns_addresses}$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '[:cntrl:]' | xargs)
+				# Trim \r from output (necessary on Windows)
+				dns_addresses=${dns_addresses}$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '\r' | xargs)
 			done
 
 			for dns in $dns_addresses; do
@@ -3621,6 +3751,7 @@ detect_dns ()
 					break
 				fi
 			done
+			IFS=${_IFS}
 		fi
 	fi
 
@@ -3716,17 +3847,13 @@ configure_resolver_windows () {
 	if is_docker_native; then
 		# Use the default DockerNAT adapter
 		network_id="${DOCKER_WIN_NETWORK}"
-	else
+	elif is_docker_machine_exist; then
 		# Need to check whether machine exists, otherwise we cannot get its info
-		if is_docker_machine_exist; then
-			# Figure out the name of the network (not the name of the adapter) the VM is using
-			network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
-		fi
-	fi
-
-	if [[ "$network_id" == "" ]]; then
-		echo-error "DNS resolver configuration failed"
-		return 1
+		# Figure out the name of the network (not the name of the adapter) the VM is using
+		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+	else
+		# There is nothing to configure (machine and thus its network interface does not exist)
+		return
 	fi
 
 	# Set DNS server to Docksal IP on the VM's VBox adapter
@@ -3758,17 +3885,13 @@ configure_resolver_wsl () {
 	if is_docker_native; then
 		# Use the default DockerNAT adapter
 		network_id="${DOCKER_WIN_NETWORK}"
-	else
+	elif is_docker_machine_exist; then
 		# Need to check whether machine exists, otherwise we cannot get its info
-		if is_docker_machine_exist; then
-			# Figure out the name of the network (not the name of the adapter) the VM is using
-			network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
-		fi
-	fi
-
-	if [[ "$network_id" == "" ]]; then
-		echo-error "DNS resolver configuration failed"
-		return 1
+		# Figure out the name of the network (not the name of the adapter) the VM is using
+		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+	else
+		# There is nothing to configure (machine and thus its network interface does not exist)
+		return
 	fi
 
 	# Set DNS server to Docksal IP on the VM's VBox adapter
@@ -3905,26 +4028,6 @@ install_tools_mac ()
 			if_failed "Check file permissions."
 		fi
 	fi
-
-	# Cleanup
-	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
-
-	# If it was an upgrade
-	[[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]] && \
-		is_docker_machine_running && \
-		echo-green "Preparing to update virtual machine..." && \
-		docker_machine_stop && \
-		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-		curl -fL# "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
-		docker_machine_start
-
-	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local server_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Update Docker for Mac to the latest version manually"
-			sleep 2
-		fi
-	fi
 }
 
 # Install Windows dependencies
@@ -4024,37 +4127,16 @@ install_tools_windows ()
 		if_failed "Check file permissions."
 	fi
 
-	# Cleanup
-	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
-
 	# Run one-time adjustments during install only.
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		# Optimize SMB sharing
+	if ! is_update; then
+		# Optimize SMB sharing (deprecated)
 		smb_windows_fix
-		[ ! $? -eq 0 ] && echo-red "Failed. Windows shares might not work properly with Docksal."
 		# Git settings
 		echo-green "Adjusting git defaults..."
 		echo "git config --global core.autocrlf input"
 		git config --global core.autocrlf input # do not convert line breaks. treat as is
 		echo "git config --system core.longpaths true"
 		git config --system core.longpaths true # support long paths
-	fi
-
-	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
-		is_docker_machine_running && \
-		echo-green "Preparing to update virtual machine..." && \
-		docker_machine_stop && \
-		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-		curl -fL# "$URL_BOOT2DOCKER" -o "$(cygpath $USERPROFILE)/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
-		docker_machine_start
-	fi
-
-	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local server_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Update Docker for Windows to the latest version manually"
-			sleep 2
-		fi
 	fi
 }
 
@@ -4224,8 +4306,8 @@ install_tools_wsl ()
 	# "Error creating machine: Error in driver during machine creation: write |1: broken pipe"
 	# The Windows binary has to be run from the Windows FS (e.g. from Windows user's profile).
 	local USERPROFILE=$(wsl_path -u $(wsl_env USERPROFILE))
-	local DOCKER_MACHINE_BIN_WSL="${USERPROFILE}/bin/docker-machine.exe"
-	mkdir -p "${USERPROFILE}/bin"
+	local DOCKER_MACHINE_BIN_WSL="${USERPROFILE}/.docksal/bin/docker-machine.exe"
+	mkdir -p "${USERPROFILE}/.docksal/bin"
 	# Keeping the rest of the logic below very similar to other host environments.
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
@@ -4245,30 +4327,11 @@ install_tools_wsl ()
 	fi
 	# Create a symlink to the Windows docker-machine binary inside the WSL FS.
 	ln -sf "$DOCKER_MACHINE_BIN_WSL" "$DOCKER_MACHINE_BIN"
-
-	# Cleanup
-	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
-
-	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
-		local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
-		is_docker_machine_running && \
-		echo-green "Preparing to update virtual machine..." && \
-		docker_machine_stop && \
-		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-		curl -fL# "$URL_BOOT2DOCKER" -o "${USERPROFILE}/.docker/machine/machines/$DEFAULT_MACHINE_NAME/boot2docker.iso" && \
-		docker_machine_start
-	fi
-
-	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local server_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Update Docker for Windows to the latest version manually"
-			sleep 2
-		fi
-	fi
 }
 
-update_virtualbox () {
+# Installs VirtualBox on Mac/Windows
+# Picks up a matching vbox version package from ~/Downloads or current directory (preferred).
+install_virtualbox () {
 	local url
 	local vbox_pkg
 
@@ -4338,6 +4401,65 @@ update_virtualbox () {
 	done
 }
 
+# Checks VirtualBox version and runs an install if necessary
+update_virtualbox ()
+{
+	# Install or update VirtualBox
+	if ! is_linux && ! is_docker_native; then
+		# Check current VirtualBox version
+		is_vbox_version
+		local res=$?
+		if [[ "$res" != "0" ]]; then
+			[[ "$res" == "2" ]] && echo-alert "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
+			# Note: install_virtualbox automatically stops the machine if necessary, but will not automatically start it.
+			install_virtualbox
+		fi
+	fi
+}
+
+# Downloads boot2docker.iso, updates existing machine.
+# Does not automatically create a new machine and starts the updated one.
+# Dependency: update_tools, update_boot2docker
+# @option --force-download - forces the boot2docker.iso download
+update_boot2docker ()
+{
+	# Only applicable to Mac/Windows using VirtualBox/Boot2Docker
+	if is_linux || is_docker_native; then return; fi
+
+	if is_docker_machine_exist; then
+		# We need the machine up to get it's version
+		if ! is_docker_machine_running; then
+			echo "Starting the existing machine to determine its version..."
+			docker_machine_start
+		fi
+
+		local b2d_version=$(docker version --format '{{.Server.Version}}')
+		if (( $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") )); then
+			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
+				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
+				echo-alert "This update will destroy and recreate the VM!" \
+					"You can skip the VM update for now, create DB backups/etc., then restart the update to complete it." \
+					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
+				if _confirm "Do you want to update the VM now?" --no-exit; then
+					# Machine is removed here, but not recreated.
+					# It will be started/recreated later in the update process.
+					docker_machine_remove
+				fi
+			else
+				# Perform an upgrade without a rebuild for boot2docker versions 18.09+
+				docker_machine_stop &>/dev/null
+
+				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
+				# Download to temporary location, then move to the permanent location.
+				# This minimizes the chance of getting a corrupt file if the download fails or is interrupted.
+				curl -fL# "${URL_BOOT2DOCKER}" -o "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso"
+				if_failed_error "boot2docker.iso download failed"
+				mv "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso" ${DEFAULT_MACHINE_ISO_PATH}
+			fi
+		fi
+	fi
+}
+
 update_tools ()
 {
 	if is_linux; then
@@ -4389,7 +4511,7 @@ update_config_files ()
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
 		# Cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
-		rm -f "$CONFIG_STACKS_DIR/*"
+		rm -f "$CONFIG_STACKS_DIR/*" &>/dev/null
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
@@ -4437,8 +4559,6 @@ EOF
 # Update system service images
 update_system_images ()
 {
-	check_docker_running
-
 	IMAGE_FILE=${IMAGE_FILE:-docksal-system-images.tar}
 	if [[ -f "$IMAGE_FILE" ]]; then
 		# Load system images from the current directory when available
@@ -4450,7 +4570,7 @@ update_system_images ()
 		docker pull "${IMAGE_DNS}"
 		docker pull "${IMAGE_SSH_AGENT}"
 	fi
-	system_reset
+	# no system_reset here, just the image pull
 }
 
 # Update project images
@@ -4463,191 +4583,151 @@ update_project_images ()
 	up
 }
 
+# Updates all docksal images present on the host
+update_docksal_images ()
+{
+	check_docker_running
+
+	for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal/ | sort | uniq); do
+		docker pull "$_image"
+	done
+}
+
+# Downloads a version of fin to FIN_PATH_UPDATED
+# Return value 0: new fin version downloaded to FIN_PATH_UPDATED
+# Return value 2: new fin version is the same as the current version
+get_fin_updated ()
+{
+	local fin_url=$(get_fin_url)
+	local new_fin
+	new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
+	if_failed_error "fin download failed."
+
+	# Check if fin update is required and whether it is a major version
+	local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
+
+	local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
+	local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
+	if [[ "$current_major_version" != "$new_major_version" ]]; then
+		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
+		echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
+		echo "You may not be able to use you current Docksal environment if you proceed."
+		echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
+		_confirm "Continue with the update?"
+	fi
+
+	# saving to file
+	echo "$new_fin" | sudo tee "$FIN_PATH_UPDATED" > /dev/null
+	if_failed_error "Could not write $FIN_PATH_UPDATED"
+	sudo chmod +x "$FIN_PATH_UPDATED"
+	local new_version=$(${FIN_PATH_UPDATED} v)
+	echo "fin $new_version downloaded..."
+}
+
+# If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
+is_fin_updated ()
+{
+	[[ "$0" == "$FIN_PATH_UPDATED" ]]
+}
+
+# Returns true when running an update
+# Returns false when installing fin for the first time
+is_update ()
+{
+	# If there is a timestamp for the last install/update, then we are updating
+	[[ -f ${CONFIG_LAST_UPDATE} ]]
+}
+
 # Update Docksal
 update ()
 {
-	# If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
-	[[ "$0" == "$FIN_PATH_UPDATED" ]] && FULL_UPDATE="exit 1"
+	# Suppress alerts until the very end of the update
+	export DOCKER_VERSION_ALERT_SUPPRESS=1
 
-	# Pre-update check #1: check if there is existing but stopped Docksal machine
-	# We need it running to know Docker server version
-	if (${FULL_UPDATE}); then
-		if ! is_linux && ! is_docker_native; then
-			# Check VirtualBox
-			is_vbox_version
-			local res=$?
-			if [[ "$res" != "0" ]]; then
-				[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher"
-				(which 'docker-machine' >/dev/null 2>&1) && docker_machine_stop
-				DOCKER_MACHINE_STATUS="Stopped"
-				update_virtualbox
-				(which 'docker-machine' >/dev/null 2>&1) && docker_machine_start
-			fi
-		fi
-
-		if ! is_linux && ! is_docker_native && which 'docker-machine' >/dev/null 2>&1; then
-			if is_docker_machine_exist && ! is_docker_machine_running; then
-				echo-error "Docker Machine '$DEFAULT_MACHINE_NAME' should be running to perform update" \
-					"Start it with ${yellow}fin system start${NC} or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
-				return 1
-			fi
-		fi
-
-		if is_wsl && is_docker_native; then
-			# Check Docker for Win running
-			IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
-			nc -w 1 ${nc_host} ${nc_port}
-			if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
-		fi
-	fi
-
-	# Checking docker status
-	if (which 'docker' >/dev/null 2>&1); then
-		is_docker_running
-		RUNNING_CODE=$? # cache status
-		if (exit ${RUNNING_CODE}); then
-			# If docksal services present, then we are doing an upgrade.
-			is_docksal_running && UPGRADE_IN_PROGRESS=1
-		else
-			# Check out the case when current user on Ubuntu does not have access to docker daemon
-			if is_linux; then
-				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
-				[ ! $? -eq 0 ] && LINUX_DAEMON_RUNNING="exit 1"
-				# if daemon is running but docker info does not return 0 then this is the case
-				if (${LINUX_DAEMON_RUNNING}) && ! (exit ${RUNNING_CODE}); then
-					echo-red "Your Docker daemon is running but you don't have access to it."
-					echo-yellow "Please run 'newgrp docker' or reboot."
-					exit 1
-				fi
-			fi
-		fi
-	fi
-
-	# Pre-update check #2: warn if boot2docker will need to be upgraded
-	if (is_mac || is_windows || is_wsl) && ! is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local b2d_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") ]]; then
-			BOOT2DOCKER_NEEDS_AN_UPGRADE=1
-		fi
-	fi
-
-	# [STEP 0] Define total steps. Upgrade has 2 more steps
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		TOTAL_STEPS=6
-	else
-		TOTAL_STEPS=4
-	fi
-
-	# Pass the version to the newly downloaded fin to run the updates
-	export DOCKSAL_VERSION=$(get_docksal_version_latest)
+	# [STEP 0] Define total steps
+	TOTAL_STEPS=4
 
 	# [STEP 1] Update fin unless already running fin.updated binary
-	if (${FULL_UPDATE}); then
+	if ! is_fin_updated; then
+		# Pass the version to the newly downloaded fin to run the updates
+		export DOCKSAL_VERSION=$(get_docksal_version_latest)
+
+		# Store current fin version
+		export EXISTING_FIN_VERSION=${FIN_VERSION}
+
 		testing_warn
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 
-		local fin_url=$(get_fin_url)
-		local new_fin
-		new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
-		if_failed_error "fin download failed."
-
-		# Check if fin update is required and whether it is a major version
-		local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
-
-		if [[ "$new_version" != "$FIN_VERSION" ]]; then
-			local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
-			local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
-			if [[ "$current_major_version" != "$new_major_version" ]]; then
-				echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
-				echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
-				echo "You may not be able to use you current Docksal environment if you proceed."
-				echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
-				_confirm "Continue with the update?"
-			fi
-
-			# saving to file
-			echo "$new_fin" | sudo tee "$FIN_PATH_UPDATED" > /dev/null
-			if_failed_error "Could not write $FIN_PATH_UPDATED"
-			sudo chmod +x "$FIN_PATH_UPDATED"
-			local new_version=$(${FIN_PATH_UPDATED} v)
-			echo "fin $new_version downloaded..."
-
-			# Run other Updates 2-5 with newly downloaded fin version
-			( "$FIN_PATH_UPDATED" update )
-
-			# overwrite old fin
-			sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
-			exit
-		else
-			echo "Already at $FIN_VERSION."
-		fi
+		# Download new fin version to FIN_PATH_UPDATED
+		get_fin_updated
+		# Run the rest of the update with the newly downloaded fin version
+		( "$FIN_PATH_UPDATED" update )
+		# Overwrite old fin
+		sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
+		# Must exit here since we've just overwritten the original fin and this may cause bash to choke and through an error.
+		exit
 	fi
 
 	# [STEP 2] Update stacks
 	echo-green "[STEP 2/$TOTAL_STEPS] Updating stack files..."
 	update_config_files
 
+	# Reset network settings before doing anything else (just in case)
+	# (May happen if switching modes native vs not).
+	system_reset network
+
 	# [STEP 3] Update third party tools
 	echo-green "[STEP 3/$TOTAL_STEPS] Updating tools..."
 	update_tools
+	update_virtualbox
+	update_boot2docker
 
-	# [STEP 4] Update system images
-
-	echo-green "[STEP 4/$TOTAL_STEPS] Updating system images..."
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		# [4.1] Always update system images during upgrade
-		# On Win and Mac, update only during upgrade because it is done in docker_machine_start
-		update_system_images
-		# Run cleanup to get rid of outdated images
-		cleanup
-	else
-		# [4.2] On Linux update during install, but use sudo as user will not be in docker group yet.
-		if is_linux; then
-			# Override docker to run it via sudo
-			docker () {
-				sudo "$(which docker)" "$@"
-			}
-			# Install/update Docksal system services
-			update_system_images
-		fi
-
-		# [4.3] With native mode update during install, but no cleanup
-		if is_docker_native; then
-			# Install/update Docksal system services
-			update_system_images
-		fi
+	# If this is the first time installation, then the current user does not yet have access to docker without sudo
+	# TODO: don't run with sudo if not necessary
+	if is_linux; then
+		# Override docker to run it via sudo
+		docker () {
+			sudo "$(which docker)" "$@"
+		}
 	fi
 
-	# [STEP 5] Update project images
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		echo-green "[STEP 5/$TOTAL_STEPS] Updating Docksal images"
-		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal/ | sort | uniq); do
-			docker pull "$_image"
-		done
-	fi
+	# This will instruct the user what to do if Docker daemon is not accessible
+	# --quiet suppresses the user confirmation when starting the existing docker machine
+	check_docker_running --quiet
 
-	# [STEP 6] Restart running projects if BOOT2DOCKER was not restarted
-	# This is needed to re-append restarted vhost-proxy to containers networks
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
-		echo-green "[STEP 6/$TOTAL_STEPS] Restarting running projects..."
-		running_projects=$(docker ps \
-			--filter 'label=io.docksal.project-root' \
-			--format '{{.Label "io.docksal.project-root"}}'
-		)
-		for project in ${running_projects}; do
-			# use updated version when updated
-			[[ ! -f "$FIN_PATH_UPDATED" ]] && FIN_PATH_UPDATED="fin"
-			(cd "$project" && NO_UPDATES=1 "$FIN_PATH_UPDATED" project start)
-		done
-	fi
+	# From now on, we should have everything we need here to start/restart Docksal
+
+	# [STEP 4] Update Docksal images
+	echo-green "[STEP 4/$TOTAL_STEPS] Updating Docksal images..."
+	# Pull/update system image
+	# While system_reset would also pull images it will do this in a non-interactive way (via docker run).
+	# update_system_images does "docker pull" with does the pull interactively (with a progress indicator), which looks
+	# better.
+	update_system_images
+
+	# Do cleanup before updating images, otherwise we may be updating images that will be dropped anyway.
+	is_update && cleanup
+	# Update existing docksal images
+	is_update && update_docksal_images
+
+	# Reset system services after image updates
+	system_reset
+
+	# Store last successful update timestamp
+	local timestamp=$(date +%s)
+	echo "$timestamp" > "$CONFIG_LAST_UPDATE"
+
+	echo-green "Update finished"
 
 	# [STEP - POST UPDATE]
-	[[ "$?" == "0" ]] && echo-green "Update finished"
+	# Cleanup
+	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
 
-	if is_linux && ! is_root && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo-alert "Re-login to enable permanent Docker support." \
-			"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
-	fi
+	# Rerun docker access/version checks here to inform the users of any issues
+	echo-green "Running post update checks..."
+	# Disabling alert suppression here, since it was likely enabled during earlier calls to check_docker_running
+	unset DOCKER_VERSION_ALERT_SUPPRESS
+	check_docker_running
 }
 
 # Return the latest version
@@ -5488,8 +5568,7 @@ sysinfo ()
 	if is_linux; then
 		echo "Linux Kernel"
 	elif is_docker_native; then
-		is_mac && echo "Docker for Mac"
-		(is_windows || is_wsl) && echo "Docker for Windows"
+		echo "Docker Desktop"
 	else
 		echo "VirtualBox VM"
 	fi
@@ -5590,6 +5669,13 @@ sysinfo ()
 		if [[ $? != 0 ]]; then
 			echo-error "Mounts matching 192.168.64* were not found!"
 		fi
+	fi
+
+	if is_docker_native; then
+		echo
+		echo "███  DOCKER DESKTOP"
+		echo "EXPECTED VERSION: ${REQUIREMENTS_DOCKER_DESKTOP}"
+		docker_desktop_version
 	fi
 
 	# Diagnostics information
@@ -6738,6 +6824,7 @@ provider_pull_find_function ()
 provider_pull_generic_git_pull ()
 {
 	local git_remote=${syncgitremote:-origin}
+	# Trim \r from output (necessary on Windows)
 	local current_branch=$(_exec "git rev-parse --abbrev-ref HEAD" | tr -d '\r')
 	local git_branch=${syncgitbranch:-$current_branch}
 	echo -e "${acqua}Pulling Code From ${git_remote} - ${git_branch}${NC}"
@@ -7212,9 +7299,13 @@ fi
 
 # Inherit hosts git user.email and user.name settings
 # This happens before the environment variable overrides are sources, thus can be overridden via docksal.env files.
-if ( which git >/dev/null 2>&1 ); then
-	export GIT_USER_EMAIL=$(git config --get --global user.email)
-	export GIT_USER_NAME=$(git config --get --global user.name)
+# On macOS there is a git wrapper even when git is not installed, so we have to check for git differently on mac
+# See https://github.com/docksal/docksal/issues/1003
+if ! is_mac || (xcode_tools_dir=$(xcode-select -p 2>/dev/null) && [[ -x "${xcode_tools_dir}/usr/bin/git}" ]]); then
+	if ( which git &>/dev/null ); then
+		export GIT_USER_EMAIL=$(git config --get --global user.email)
+		export GIT_USER_NAME=$(git config --get --global user.name)
+	fi
 fi
 
 # Load environment variables overrides, use to permanently override some variables
@@ -7290,19 +7381,28 @@ else
 fi
 
 # Create drives bind mounts on wsl
+# E.g. /mnt/c -> /c
 wsl_mount_drives
 
-# Export environment variables to properly reach Docker server
-if [[ "$DOCKSAL_HOST" != "" ]]; then
-	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
+# DOCKER_HOST defines how we talk to the docker daemon
+# Linux - via /var/run/docker.sock (DOCKER_HOST='')
+if is_linux; then
+	export DOCKER_HOST='';
 elif is_docker_native; then
 	if is_wsl; then
-		export DOCKER_HOST="127.0.0.1:2375"
+		# WSL + Docker Desktop => connecting via HTTP
+		# The "legacy" (tcp://localhost:2375) connection option in Docker Desktop settings must be enabled.
+		export DOCKER_HOST='127.0.0.1:2375'
 	else
-		export DOCKER_HOST=""
+		# Mac + Docker Desktop - via /var/run/docker.sock (DOCKER_HOST='')
+		# Windows/Babun + Docker Desktop - via Windows named pipe (DOCKER_HOST='')
+		export DOCKER_HOST=''
 	fi
 else
-	DOCKER_MACHINE_STATUS=$(docker-machine status "$DEFAULT_MACHINE_NAME" 2>&1 || echo '')
+	# Mac/Windows + Docker Machine => connecting via tcp://192.168.64.100:2376 (TLS) (DOCKER_HOST='192.168.64.100:2376')
+	# We rely on docker-machine to configure the connection settings
+	# docker_machine_status is an expensive operation (~1.5s), so we cache it here
+	DOCKER_MACHINE_STATUS=$(docker_machine_status)
 	if [[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]; then
 		# Use cached environment variables if possible
 		if [[ -f "$CONFIG_DOCKER_MACHINE_ENV" ]]; then
@@ -7315,6 +7415,12 @@ else
 	fi
 fi
 
+# Allow overriding DOCKER_HOST externally via DOCKSAL_HOST
+if [[ "$DOCKSAL_HOST" != "" ]]; then
+	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
+fi
+
+# Cache docker status (saves ~200ms)
 if is_docker_running; then
 	export DOCKER_RUNNING="true"
 else
@@ -7575,7 +7681,9 @@ case "$1" in
 		# no load_configuration
 		shift
 		if [[ "$1" == "--system-images" ]]; then
+			check_docker_running
 			update_system_images
+			system_reset
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
 		elif [[ "$1" == "--self" ]]; then
@@ -7746,20 +7854,17 @@ case "$1" in
 	docker|d)
 		# no load_configuration
 		shift
-		is_docker_running # exports env
 		check_winpty_found
 		${winpty} docker "$@"
 		;;
 	docker-compose|dc)
 		load_configuration
 		shift
-		is_docker_running # exports env
 		docker-compose "$@"
 		;;
 	docker-machine|dm)
 		# no load_configuration
 		shift
-		is_docker_running # exports env
 		docker-machine "$@"
 		;;
 	debug)
