@@ -1,7 +1,6 @@
 ---
-title: "Pull (providers integration)"
-aliases:
-  - /en/master/fin/pull/
+title: "fin pull (hosting integrations)"
+weight: 3
 ---
 
 `pull` command allows you to easily bring your assets: db, files, and code from your hosting environment
