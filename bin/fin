@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.83.0
+FIN_VERSION=1.83.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -150,6 +150,13 @@ URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26
 if is_windows; then
 	BABUN_WIN_HOME=${HOME}
 	HOME=$(cygpath_abs_unix ${HOME})
+fi
+# Windows user home directory
+# WIN_HOME is a Unix path, e.g. /c/Users/user
+if is_windows; then
+	WIN_HOME=$(cygpath -u ${USERPROFILE})
+elif is_wsl; then
+	WIN_HOME=$(wsl_path -u $(wsl_env "USERPROFILE"))
 fi
 
 # Directory structure in ~/.docksal
@@ -4450,6 +4457,16 @@ update_boot2docker ()
 			else
 				# Perform an upgrade without a rebuild for boot2docker versions 18.09+
 				docker_machine_stop &>/dev/null
+
+				# Path to boot2docker.iso for the machine
+				local DEFAULT_MACHINE_ISO_PATH=".docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
+				# On Windows (Babun and WSL) machines are stores in the Windows user profile
+				if is_windows || is_wsl; then
+					DEFAULT_MACHINE_ISO_PATH="${WIN_HOME}/${DEFAULT_MACHINE_ISO_PATH}"
+				else
+					# Mac - straightforward
+					DEFAULT_MACHINE_ISO_PATH="${HOME}/${DEFAULT_MACHINE_ISO_PATH}"
+				fi
 
 				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
 				# Download to temporary location, then move to the permanent location.
