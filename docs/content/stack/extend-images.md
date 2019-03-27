@@ -71,7 +71,7 @@ USER docker
 # Install additional global npm dependencies
 RUN \
 	# Initialize nvm environment
-	. $NVM_DIR/nvm.sh && \
+	. $HOME/.profile && \
 	# Install node packages
 	npm install -g node-sass
 
