@@ -523,6 +523,8 @@ get_command_script ()
 	COMMANDS_ROOT="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
 	# First search project commands folder for the command
 	command_script="$COMMANDS_ROOT/$1"
+	# Then search for a default command in a group
+	[ ! -f "$command_script" ] && command_script="$COMMANDS_ROOT/$1/.default"
 	# Then search global docksal commands directory for the command
 	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
 	# If command was found then return it
