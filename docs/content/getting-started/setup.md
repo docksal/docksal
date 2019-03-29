@@ -37,17 +37,15 @@ You will have to install Docker manually, then install Docksal as usual on [Linu
 
 ## Install Docksal {#install}
 
+{{% notice note %}}
 The installer script (`get.docksal.io`) requires administrative privileges to complete the installation. 
-
 On all operating systems, `fin` cli tool is written to `/usr/local/bin` and Docksal's IP address (`192.168.64.100`) 
 is assigned to the host's local network interface.
-
 On macOS, `/etc/exports` and `/etc/resolver/docksal` have to be modified, and `nfsd` service has to be restarted. 
-
 On Linux, installer (re)installs the Docker service if needed.
-
 On Windows, there are additional requests for permissions to create network shares for local drives to share files with 
 Docker and to mount them with the current user's account and password.
+{{% /notice %}}
 
 ### Choose Operating System
 
