@@ -9,10 +9,6 @@ aliases:
 
 RAM requirement: 8GB or more.
 
-{{% notice info %}}
-Docksal installer on `get.docksal.io` requires administrative privileges to complete the installation. They are required to perform multiple tasks: on all operating systems `fin` tool needs to be written to the `/usr/local/bin` directory and Docksal's IP address `192.168.64.100` needs to be assigned to the local network interface, additionally on macOS `/etc/exports` and `/etc/resolver/docksal` needs to be modified, and installer needs to restart nfsd, on Linux installer stops/reinstalls Docker service if needed, on Windows there are additional requests for permissions to create network shares for local drives to share files with Docker and to mount them with current user account and password.
-{{% /notice %}}
-
 ### Mac
 
 - Must be a 2010 or newer model
@@ -40,6 +36,18 @@ You will have to install Docker manually, then install Docksal as usual on [Linu
 
 
 ## Installation {#install}
+
+The installer script (`get.docksal.io`) requires administrative privileges to complete the installation. 
+
+On all operating systems, `fin` cli tool is written to `/usr/local/bin` and Docksal's IP address (`192.168.64.100`) 
+is assigned to the host's local network interface.
+
+On macOS, `/etc/exports` and `/etc/resolver/docksal` have to be modified, and `nfsd` service has to be restarted. 
+
+On Linux, installer (re)installs the Docker service if needed.
+
+On Windows, there are additional requests for permissions to create network shares for local drives to share files with 
+Docker and to mount them with the current user's account and password.
 
 ### Choose Operating System
 
