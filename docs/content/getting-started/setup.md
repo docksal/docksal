@@ -165,9 +165,13 @@ Click the preferred option to proceed to option-specific docs.
 
 ### Windows and VirtualBox {#install-windows-virtualbox} 
 
-1. Enable Windows Sybsystem for Linux (WSL) support and install **Ubuntu 18.04** app from Windows Store
+1. Enable Windows Subsystem for Linux (WSL) support
 
     [![WSL](https://img.shields.io/badge/⇩%20-Windows%20Subsystem%20for%20Linux-green.svg?classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+
+1. Install **Ubuntu 18.04** app from Microsoft Store 
+
+    [![WSL](https://img.shields.io/badge/⇩%20-Ubuntu%2018.04%20App-green.svg?classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
 1. Install Docksal (VirtualBox will be installed automatically if necessary)
 
@@ -183,9 +187,13 @@ Click the preferred option to proceed to option-specific docs.
 
 ### Windows and Docker for Windows {#install-windows-docker-for-windows} 
 
-1. Enable Windows Sybsystem for Linux (WSL) support and install **Ubuntu 18.04** app from Windows Store
+1. Enable Windows Subsystem for Linux (WSL) support
 
     [![WSL](https://img.shields.io/badge/⇩%20-Windows%20Subsystem%20for%20Linux-green.svg?classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+
+1. Install **Ubuntu 18.04** app from Microsoft Store
+
+    [![WSL](https://img.shields.io/badge/⇩%20-Ubuntu%2018.04%20App-green.svg?classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
 1. Download and Install Docker for Windows
 
