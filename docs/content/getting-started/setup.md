@@ -135,8 +135,6 @@ and Fedora with derivatives are supported out of the box with automatic installa
 
 ### Linux. Other distributions {#install-linux-other}
 
-#### Compatibility
-
 If you cannot find your distribution in the list above, it does not mean it is not supported! 
 Lesser known Debian, Ubuntu, or Fedora derivatives are most likely supported.
 
@@ -144,60 +142,47 @@ This happens because Docker on Linux is being installed using the official [get.
 If your distribution is not in the list above, but [get.docker.com](https://get.docker.com) supports it,
 then it **is** supported too and you can [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
-#### Incompatible distributions
-
 In case your distribution in not compatible with [get.docker.com](https://get.docker.com), you will need to install 
 latest stable Docker for your distribution first, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
-### Windows. Linux Shell installation options {#install-windows} 
 
-Docksal on Windows requires Linux type shell to run. Choose the options you like.
+### Windows Docker installation options {#install-windows} 
 
-- [Babun](#install-windows-babun) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg?classes=inline)
-    - Faster install, but CYGWIN is less native.
-- [Ubuntu Application (WSL)](#install-windows-wsl)
-    - **Beta.** Harder to install, can ony use Docker for Mac, but native Linux shell, real Ubuntu on Windows.
+Click the preferred option to proceed to option-specific docs.
 
-### Windows with Babun. Docker installation options {#install-windows-babun} 
+- [VirtualBox](#install-windows-virtualbox) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg?classes=inline)
+    - Use if your other VMs are in VirtualBox/Vagrant.
+- [Docker for Windows](#install-windows-docker-for-windows)
+    - Can be faster, but not compatible with VirtualBox (don't use if you have existing VMs in VirtualBox/Vagrant)  
 
-Using Babun as Linux type shell supports 2 options of Docker installation.
+### Windows and VirtualBox {#install-windows-virtualbox} 
 
-- [VirtualBox](#install-windows-babun-virtualbox) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg?classes=inline)
-    - Faster, somewhat less convenient to use and update.
-- [Docker for Windows](#install-windows-babun-docker-for-windows)
-    - Somewhat slower, excludes VirtualBox, but easier to use and update
+1. Enable Windows Sybsystem for Linux (WSL) support and install **Ubuntu 18.04** app from Windows Store
 
-### Windows with Babun and VirtualBox {#install-windows-babun-virtualbox} 
-
-1. Download and Install Babun
-
-    [![Babun Site](https://img.shields.io/badge/↪%20-Babun%20Site-blue.svg?classes=inline)](http://babun.github.io/)
+    [![WSL](https://img.shields.io/badge/⇩%20-Windows%20Subsystem%20for%20Linux-green.svg?classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
 1. Install Docksal (VirtualBox will be installed automatically if necessary)
 
-    Open **Babun** and run:
+    Open **WSL** and run:
 
         bash <(curl -fsSL https://get.docksal.io)
 
 1. Start the VM
 
-    In **Babun** run:
+    In **WSL** run:
 
-        fin vm start
+        fin system start
 
-### Windows with Babun and Docker for Windows {#install-windows-babun-docker-for-windows} 
+### Windows and Docker for Windows {#install-windows-docker-for-windows} 
 
-1. Download and Install Babun
+1. Enable Windows Sybsystem for Linux (WSL) support and install **Ubuntu 18.04** app from Windows Store
 
-    [![Babun Site](https://img.shields.io/badge/↪%20-Babun%20Site-blue.svg?classes=inline)](http://babun.github.io/)
+    [![WSL](https://img.shields.io/badge/⇩%20-Windows%20Subsystem%20for%20Linux-green.svg?classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
 1. Download and Install Docker for Windows
 
     [![Docker for Windows](https://img.shields.io/badge/⇩%20-Docker%20for%20Windows-green.svg?classes=inline)](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
     
-    Notes: computer will require logout and restart during the installation. 
-    [See screen recording](https://youtu.be/bQgaEUcuJ98) to know what to expect.
-
 1. Configure Docker for Windows
 
     Share your local drives with Docker for Windows:
@@ -206,29 +191,10 @@ Using Babun as Linux type shell supports 2 options of Docker installation.
 
 1. Install Docksal
 
-    Open **Babun** and run:
+    Open **WSL** and run:
 
-        bash <(curl -fsSL https://get.docksal.io)
+        DOCKER_NATIVE=1 bash <(curl -fsSL https://get.docksal.io)
 
-### Windows with Ubuntu App (WSL) and Docker for Windows {#install-windows-wsl} 
-
-Warning: this way of using Docksal is not thoroughly tested. 
-It has been proven to work, but quirks may happen.
-
-Ubuntu application is previously known as Windows Subsystem for Linux (WSL)
-
-1. Install Ubuntu App
-    
-    - [Video: install Ubuntu App on Wndows 10 [Part 1/2]](https://www.youtube.com/watch?v=2Mk_wprFpzQ)  
-    - [Video: install Ubuntu App on Wndows 10 [Part 2/2]](https://www.youtube.com/watch?v=44UCMVZQT80)  
-
-1. Install and configure Docker for Windows
-
-    - [Video: installing and configuring Docker for Windows](https://www.youtube.com/watch?v=bQgaEUcuJ98)
-
-1. Install Docksal
-
-    - [Video: installing Docksal into Ubuntu App on Windows 10](https://www.youtube.com/watch?v=FJBN9-dGhyc)
 
 # Updating Docksal {#updates}
 
