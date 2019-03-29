@@ -36,7 +36,7 @@ You will have to install Docker manually, then install Docksal as usual on [Linu
 ### Windows
 
 - CPU with hardware virtualization (**VT-x/AMD-V**) supported and [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
-- Windows 7 or newer
+- Windows 10 or newer
 
 
 ## Installation {#install}
