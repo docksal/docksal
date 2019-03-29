@@ -179,7 +179,7 @@ Click the preferred option to proceed to option-specific docs.
 
         bash <(curl -fsSL https://get.docksal.io)
 
-1. Start the VM
+1. Start Docksal
 
     In **WSL** run:
 
