@@ -35,7 +35,7 @@ You will have to install Docker manually, then install Docksal as usual on [Linu
 - Windows 10 or newer
 
 
-## Installation {#install}
+## Install Docksal {#install}
 
 The installer script (`get.docksal.io`) requires administrative privileges to complete the installation. 
 
@@ -212,7 +212,7 @@ Click the preferred option to proceed to option-specific docs.
         DOCKER_NATIVE=1 bash <(curl -fsSL https://get.docksal.io)
 
 
-# Updating Docksal {#updates}
+## Update Docksal {#updates}
 
 All Docksal components can be updated with a single command:
 
@@ -220,7 +220,7 @@ All Docksal components can be updated with a single command:
 fin update
 ```
 
-# Uninstallation {#uninstall}
+## Uninstall Docksal {#uninstall}
 
 ### If you used VirtualBox 
 
@@ -261,7 +261,7 @@ rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 
-Optionally follow Docker uninstallation instructions for 
+Optionally follow Docker removal instructions for 
 [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/#uninstall-docker-ce), 
 [Debian](https://docs.docker.com/install/linux/docker-ce/debian/#uninstall-docker-ce), 
 [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/#uninstall-docker-ce), 
