@@ -1,5 +1,80 @@
 # Changelog
 
+# 1.12.0 (2019-03-xx)
+
+**RELEASE CONTAINS BREAKING CHANGES**
+
+## New software versions
+
+- fin v1.83.0
+- Docker v18.09.2
+- Docker Compose v1.23.2
+- Docker Machine v0.16.1
+- VirtualBox v5.2.26
+- Stacks
+  - [docksal/apache:2.2](https://github.com/docksal/service-apache/releases/tag/v2.2.0)
+  - [docksal/apache:2.3](https://github.com/docksal/service-apache/releases/tag/v2.3.0)
+  - [docksal/cli:2.6-php7.2](https://github.com/docksal/service-cli/releases/tag/v2.6.0)
+  - [docksal/solr:2.0](https://github.com/docksal/service-solr/releases/tag/v2.0.0)
+  - [docksal/varnish:2.0](https://github.com/docksal/service-varnish/releases/tag/v2.0.0)
+- Boilerplates
+  - Updated [docksal/boilerplate-drupal8-composer](https://github.com/docksal/boilerplate-drupal8-composer) to 8.6.10
+  - Updated [docksal/boilerplate-drupal8](https://github.com/docksal/boilerplate-drupal8) to 8.6.10
+  - Updated [docksal/boilerplate-drupal7](https://github.com/docksal/boilerplate-drupal7) to 7.63
+  - Updated [docksal/boilerplate-drupal7-advanced](https://github.com/docksal/boilerplate-drupal7-advanced) to 7.63
+- Addons
+  - Added [PHPCS and PHPCBF](https://github.com/docksal/addons/tree/master/phpcs) addon
+
+## New features
+
+- `fin pull` - New set of commands to interact with hosting providers
+- [Pantheon](https://pantheon.io/) stack (#143)
+- Windows Subsystem for Linux (WSL) support (Docker Desktop and VirtualBox modes)
+  - WSL is not the default and only supported installation mode on Windows
+  - Babun is deprecated and is no longer supported
+  - Versions of Windows prior to Windows 10 are no longer supported
+- Added new services to stacks
+  - [Nginx](https://github.com/docksal/service-nginx)
+  - [MariaDB](https://github.com/docksal/service-mariadb)
+  - [Redis](https://github.com/wodby/redis)
+  - [Elasticsearch](https://hub.docker.com/_/elasticsearch)
+- Angular boilerplate
+
+## Changes and improvements
+
+- Refactored Docksal install/update mechanism 
+- `fin run-cli` switched to `docksal/cli:2.6-php7.2`
+- Fixed a regression in upstream DNS detection
+- Improved version checking for Docker, Docker Compose, Docker Machine, and Docker Desktop
+- Removed deprecated `db` service in `stacks/services.yml`
+- Refactored version pinning with Docker install script
+- Improved mounting of SMB and NFS shared volumes
+- Fixed issue with using Drush Launcher and XDebug
+- Fixed install process for Drupa7 Advanced
+- Added universal healthcheck waiting for all services during stack startup (#554)
+- Added ability to use an alias in a custom command (#974)
+- Added `PROJECT_URL` variable and printing it after project start (#716)
+- Fixed default ssh key generation when there are no SSH keys on the host
+- Switched to using SMB v3.02 to mount shares on Windows
+- Deprecated `fin vm start/stop` in favor of `fin system start/stop`
+- Deprecated Babun as an installation method on Windows
+- Added a global debug mode in `fin` (e.g. `FIN_DEBUG=1 fin <command>`)
+- `fin exec` and `fin bash` now use `sh` by default and only use `bash` for `cli` and `db` (#993, #942)
+- Refactored Travis tests to run concurrently
+
+## Documentation
+
+- Added [fin pull (hosting integrations)](https://docs.docksal.io/fin/fin-pull/)
+- Added [Advanced Use Cases](https://docs.docksal.io/fin/fin-pull/use-cases/) section
+- Added a page about the [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-update/) (breaking change in Docker 18.09)
+- Added instructions for [using Xdebug with Visual Studio Code](https://docs.docksal.io/tools/xdebug/#debugging-with-visual-studio-code) (#955)
+- Improved [installation instructions](https://docs.docksal.io/getting-started/setup/) (#1006)
+- Improved documentation for [Redis](https://docs.docksal.io/tools/redis/) (#923)
+- Improved documentation for [shared volumes](https://docs.docksal.io/core/volumes/)
+- Improved documentation on [extending Docksal images](https://docs.docksal.io/stack/extend-images/)
+- Improved documentation on [switching Docker modes](https://docs.docksal.io/getting-started/docker-modes/) 
+
+
 # 1.11.1 (2018-11-27)
 
 ## New software versions
