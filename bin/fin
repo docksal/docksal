@@ -2311,9 +2311,20 @@ docker_machine_create ()
 		URL_BOOT2DOCKER="${ISO_FILE}"
 	fi
 
+	# Use 2 CPUs in case of 4 or more CPUs/cores on host
+	# This tremendously helps with network files sytem operations in some cases
+	local VIRTUALBOX_CPU_COUNT=1
+	system_cpu_count=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
+	# process possible failure as 1 cpu
+	system_cpu_count=${system_cpu_count:-1}
+	if (( ${system_cpu_count} > 3 )); then
+		VIRTUALBOX_CPU_COUNT=2
+	fi
+
 	docker-machine create \
  		--driver=virtualbox \
 		--virtualbox-boot2docker-url "${URL_BOOT2DOCKER}" \
+		--virtualbox-cpu-count "$VIRTUALBOX_CPU_COUNT" \
 		--virtualbox-disk-size "${VBOX_HDD:-$DEFAULT_MACHINE_VBOX_HDD}" \
 		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 		--virtualbox-hostonly-cidr "$DOCKSAL_SUBNET" \
