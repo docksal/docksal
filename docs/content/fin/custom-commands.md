@@ -176,12 +176,12 @@ services:
 
 ## Grouping Commands
 
-Docksal allows for commands to be grouped together within folders. This is particulary useful when creating a toolkit to share with other developers. Commands can be grouped within the Global Scope `~/.docksal/commands` and on a per project basis. Command groups can also have a `.default` command that runs when the group name is given. For example, a project's `.docksal/commands` folder might contain a `test` directory as a command group:
+Docksal allows for commands to be grouped together within folders. This is particulary useful when creating a toolkit to share with other developers. Commands can be grouped within the Global Scope `~/.docksal/commands` and on a per project basis. Command groups can also have a default command, with the same name as the folder, that runs when the group name is given. For example, a project's `.docksal/commands` folder might contain a `test` directory as a command group:
 
 | File          | Command           | What it does...                                       |
 | ------------- | ----------------- | ----------------------------------------------------- |
 | test/         | | |
-| test/.default | `fin test`        | (runs all the tests)                                  |
+| test/test     | `fin test`        | (runs all the tests)                                  |
 | test/behat    | `fin test/behat`  | `./vendor/bin/behat --config=behat-docksal.yml "$@"`  |
 | test/sniff    | `fin test/sniff`  | `./vendor/bin/phpcs -h`                               |
 
