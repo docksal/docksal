@@ -231,7 +231,7 @@ rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 
-Optionally remove VirtualBox application.
+Optionally, remove VirtualBox application.
 
 ### If you used Docker for Mac / Docker for Windows
 
@@ -245,7 +245,7 @@ rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 
-Optionally remove Docker for Mac / Docker for Windows application.
+Optionally, remove Docker for Mac / Docker for Windows application.
 
 ### If you used Linux
 
@@ -259,7 +259,7 @@ rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 
-Optionally follow Docker removal instructions for 
+Optionally, follow Docker removal instructions for 
 [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/#uninstall-docker-ce), 
 [Debian](https://docs.docker.com/install/linux/docker-ce/debian/#uninstall-docker-ce), 
 [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/#uninstall-docker-ce), 
