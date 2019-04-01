@@ -528,7 +528,7 @@ get_command_script ()
 	# Then search global docksal commands directory for the command
 	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
 	# Then search for a default command in a global command group
-	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1/.default"
+	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1/$1"
 	# If command was found then return it
 	[ -f "$command_script" ] && echo "$command_script"
 }
