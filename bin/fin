@@ -2192,7 +2192,7 @@ docker_machine_create ()
 	system_cpu_count=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
 	# process possible failure as 1 cpu
 	system_cpu_count=${system_cpu_count:-1}
-	if [[ "$system_cpu_count" > 3 ]]; then
+	if (( ${system_cpu_count} > 3 )); then
 		VIRTUALBOX_CPU_COUNT=2
 	fi
 
