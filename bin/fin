@@ -523,8 +523,12 @@ get_command_script ()
 	COMMANDS_ROOT="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
 	# First search project commands folder for the command
 	command_script="$COMMANDS_ROOT/$1"
+	# Then search for a default command in a group
+	[ ! -f "$command_script" ] && command_script="$COMMANDS_ROOT/$1/$1"
 	# Then search global docksal commands directory for the command
 	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
+	# Then search for a default command in a global command group
+	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1/$1"
 	# If command was found then return it
 	[ -f "$command_script" ] && echo "$command_script"
 }
@@ -1539,8 +1543,12 @@ show_help_list_commands_in_help ()
 			local g
 			[[ "$1" == 'global' ]] && g=' [g]'
                         cmd_name=${cmd_name/${addons_path}\//}
+			local cmd_path=${cmd_name}
+                        local cmd_short=${cmd_name##*/}
+                        local cmd_regex="${cmd_short}/${cmd_short}$"
+                        [[ ${cmd_name} =~ $cmd_regex ]] && cmd_name=${cmd_name/${cmd_short}\/${cmd_short}/${cmd_short}}
 			# command description is lines that start with ##
-			local filename="$addons_path/$cmd_name"
+			local filename="$addons_path/$cmd_path"
 			local cmd_desc
 			[[ ! -f "$filename" ]] && continue
 			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
