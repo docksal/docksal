@@ -1,16 +1,34 @@
 # Changelog
 
-# 1.12.0 (2019-03-xx)
+# 1.12.0 (2019-04-04)
 
 **RELEASE CONTAINS BREAKING CHANGES**
 
+There was a breaking change in Docker 18.09.0.  
+If you are using VirtualBox mode (Boot2Docker), your VM will need to be reset during the update.  
+See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-update/) for more information.
+
+**DEPRECATION NOTICE**
+
+- Versions of Windows prior to Windows 10 are no longer supported
+- Babun (Windows) is deprecated and is no longer supported
+- WSL is now the default and the only supported installation mode on Windows
+
 ## New software versions
 
-- fin v1.83.0
+- fin v1.85.0
 - Docker v18.09.2
 - Docker Compose v1.23.2
 - Docker Machine v0.16.1
 - VirtualBox v5.2.26
+- System services
+  - [docksal/dns:1.1](https://github.com/docksal/service-dns/releases)
+    - Switched base image to Alpine 3.9
+  - [docksal/ssh-agent:1.2](https://github.com/docksal/service-ssh-agent/releases)
+    - Switched base image to Alpine 3.9
+  - [docksal/vhost-proxy:1.5](https://github.com/docksal/service-vhost-proxy/releases)
+    - New neutral landing pages (goodbye "flask" and "grim reaper")
+    - Tests and automation overhaul
 - Stacks
   - [docksal/apache:2.2](https://github.com/docksal/service-apache/releases/tag/v2.2.0)
   - [docksal/apache:2.3](https://github.com/docksal/service-apache/releases/tag/v2.3.0)
@@ -30,9 +48,9 @@
 - `fin pull` - New set of commands to interact with hosting providers
 - [Pantheon](https://pantheon.io/) stack (#143)
 - Windows Subsystem for Linux (WSL) support (Docker Desktop and VirtualBox modes)
-  - WSL is not the default and only supported installation mode on Windows
-  - Babun is deprecated and is no longer supported
   - Versions of Windows prior to Windows 10 are no longer supported
+  - Babun (Windows) is deprecated and is no longer supported
+  - WSL is now the default and the only supported installation mode on Windows
 - Added new services to stacks
   - [Nginx](https://github.com/docksal/service-nginx)
   - [MariaDB](https://github.com/docksal/service-mariadb)
@@ -50,7 +68,7 @@
 - Refactored version pinning with Docker install script
 - Improved mounting of SMB and NFS shared volumes
 - Fixed issue with using Drush Launcher and XDebug
-- Fixed install process for Drupa7 Advanced
+- Fixed install process for Drupal 7 Advanced
 - Added universal healthcheck waiting for all services during stack startup (#554)
 - Added ability to use an alias in a custom command (#974)
 - Added `PROJECT_URL` variable and printing it after project start (#716)
@@ -68,11 +86,11 @@
 - Added [Advanced Use Cases](https://docs.docksal.io/fin/fin-pull/use-cases/) section
 - Added a page about the [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-update/) (breaking change in Docker 18.09)
 - Added instructions for [using Xdebug with Visual Studio Code](https://docs.docksal.io/tools/xdebug/#debugging-with-visual-studio-code) (#955)
-- Improved [installation instructions](https://docs.docksal.io/getting-started/setup/) (#1006)
+- Updated [installation instructions](https://docs.docksal.io/getting-started/setup/) (#946, #1006)
 - Improved documentation for [Redis](https://docs.docksal.io/tools/redis/) (#923)
 - Improved documentation for [shared volumes](https://docs.docksal.io/core/volumes/)
 - Improved documentation on [extending Docksal images](https://docs.docksal.io/stack/extend-images/)
-- Improved documentation on [switching Docker modes](https://docs.docksal.io/getting-started/docker-modes/) 
+- Improved documentation on [switching Docker modes](https://docs.docksal.io/getting-started/docker-modes/)
 
 
 # 1.11.1 (2018-11-27)
