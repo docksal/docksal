@@ -11,8 +11,10 @@ Xdebug can be used to debug both web requests as well as cli scripts (e.g., Drus
 
 `xdebug` extension is disabled by default since it causes about a 20% performance hit. To enable it:
 
-1) Set `XDEBUG_ENABLED=1` in `.docksal/docksal.env` or `.docksal/docksal-local.env` in your project
-2) Apply container configuration with `fin project start` (`fin p start`)
+```bash
+fin config set XDEBUG_ENABLED=1
+fin project start
+``` 
 
 To verify that Xdebug was enabled run:
 
