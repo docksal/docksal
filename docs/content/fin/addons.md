@@ -9,7 +9,7 @@ In addition to the custom commands it is possible to extend fin further with add
 Addons by default can be found in the [Docksal Addons Repository](https://github.com/docksal/addons).
 In order to use addons, fin version 1.7.0 or higher is required.
 
-## Installing To Project
+## Installing to Project
 
 Installing an addon can be as simple executing the `addon` command within the project that the addon should be added for.
 
@@ -19,7 +19,7 @@ fin addon install <name>
 
 Fin will first look for the addon in the `~/.docksal/addons` directory. If it is not located there, then it will attempt to search the [Docksal Addons Repository](https://github.com/docksal/addons).
 
-## Removing From Project
+## Removing from Project
 
 To remove an addon run:
 

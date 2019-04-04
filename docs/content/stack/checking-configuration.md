@@ -1,10 +1,10 @@
 ---
-title: "Checking your configuration"
+title: "Checking Your Configuration"
 weight: 4
 aliases:
   - /en/master/advanced/stack-config/
 ---
-## Checking project configuration {#checking}
+## Checking Project Configuration {#checking}
 
 To review the configuration applied to your project run:
 
@@ -41,7 +41,7 @@ networks: {}
 services:
   cli:
     hostname: cli
-    image: docksal/cli:2.5-php7.1
+    image: docksal/cli:2.6-php7.2
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy

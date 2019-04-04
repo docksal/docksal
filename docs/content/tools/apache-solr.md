@@ -5,7 +5,7 @@ aliases:
 ---
 
 
-## Docksal configuration
+## Docksal Configuration
 
 Add the `solr` service under the `services` section in `.docksal/docksal.yml`:
 
@@ -22,7 +22,7 @@ Apply new configuration with `fin project start` (`fin p start`).
 Use `http://solr.<VIRTUAL_HOST>/solr` to access the Solr web UI.
 
 
-## Drupal configuration
+## Drupal Configuration
 
 Enable all required by your version of Drupal modules for the Apache Solr search integration.
 
@@ -43,7 +43,7 @@ For the Search API module use these values:
 | Solr core | `collection1` |
 
 
-## Updating Solr configuration
+## Updating Solr Configuration
 
 Say you need to update your `schema.xml` or other configuration.
 
@@ -71,16 +71,13 @@ Run `fin image registry docksal/solr` to get a list of available image tags.
 
 ```bash
 fin image registry docksal/solr
-docksal/solr:solr4
-docksal/solr:solr3
-docksal/solr:1.0-solr4
-docksal/solr:1.0-solr3
-docksal/solr:4.x
-docksal/solr:3.x
+docksal/sorl:1.0-solr3 (deprecated)
+docksal/sorl:1.0-solr4 (deprecated)
+docksal/solr:5.5-2.0
+docksal/solr:6.6-2.0
+docksal/solr:7.5-2.0
 ```
 
 Legend: 
 
-- `solr4` - the latest stable `Solr 4` image versions
-- `1.0-solr4` - stable `Solr 4` image version `1.0`
-- `solr:4.x` - `Solr 4` development image version  
+- `<image-repo>:<software-version>[-<image-stability-tag>][-<flavor>]`

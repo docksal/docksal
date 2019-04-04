@@ -1,5 +1,5 @@
 ---
-title: "Project setup"
+title: "Project Setup"
 weight: 3
 aliases:
   - /en/master/getting-started/project-setup/

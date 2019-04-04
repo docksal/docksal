@@ -1,5 +1,5 @@
 ---
-title: "Access for external tools"
+title: "Access for External Tools"
 aliases:
   - /en/master/advanced/db-access/
 ---
@@ -35,7 +35,7 @@ To have a static port assigned, override the `MYSQL_PORT_MAPPING` variable value
 MYSQL_PORT_MAPPING='33061:3306'
 ```
 
-In this case current project db will be accessible at `192.168.64.100:33061`.
+In this case, the current project db will be accessible at `192.168.64.100:33061`.
 
 {{% notice note %}}
 If you plan to run several Docksal projects with exposed static ports at once, then use unique exposed port numbers.
@@ -64,3 +64,7 @@ Override the default admin password by changing the value of `MYSQL_ROOT_PASSWOR
 ```
 MYSQL_ROOT_PASSWORD="gue$$-me-not"
 ```
+
+{{% notice note %}}
+You must run `fin reset db` after making a change to the MySQL passwords. This will drop your existing databases and require you to re-import your data.
+{{% /notice %}}

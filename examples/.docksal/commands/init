@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+## Initialize stack and site (full reset)
+##
+## Usage: fin init
+
+# Abort if anything fails
+set -e
+
+#-------------------------- Helper functions --------------------------------
+
+# Console colors
+red='\033[0;31m'
+green='\033[0;32m'
+green_bg='\033[42m'
+yellow='\033[1;33m'
+NC='\033[0m'
+
+echo-red () { echo -e "${red}$1${NC}"; }
+echo-green () { echo -e "${green}$1${NC}"; }
+echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
+echo-yellow () { echo -e "${yellow}$1${NC}"; }
+
+#-------------------------- Execution --------------------------------
+
+# Stack initialization
+echo -e "${green_bg} Step 1 ${NC}${green} Initializing stack...${NC}"
+if [[ $DOCKER_RUNNING == "true" ]]; then
+	fin reset -f
+else
+	fin up
+fi
+echo "Waiting 10s for MySQL to initialize...";
+sleep 10
+
+# Site initialization
+echo -e "${green_bg} Step 2 ${NC}${green} Initializing site...${NC}"
+# This runs inside cli using http://docs.docksal.io/en/v1.4.0/fin/custom-commands/#executing-commands-inside-cli
+fin init-site
+
+echo -en "${green_bg} DONE! ${NC} "
+echo -e "Open ${yellow}http://${VIRTUAL_HOST}${NC} in your browser to verify the setup."
+
+#-------------------------- END: Execution --------------------------------

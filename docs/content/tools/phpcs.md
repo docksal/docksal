@@ -4,38 +4,40 @@ aliases:
   - /en/master/tools/phpcs/
 ---
 
+`phpcs` and `phpcbf` are readily available in the cli container. Both [Drupal Coding Standards](https://www.drupal.org/docs/develop/standards) and [WordPress Coding Standards](https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards)
+have been installed and are ready to use.
 
-`phpcs` and `phpcbf` are readily available in the cli container.
 
+## Using as an Addon
 
-## Using as a custom fin command
+We have converted this into a Docksal Addon which can be installed running the `addon` subcommand.
 
-It's recommended to see how to [extend fin with custom commands](/fin/custom-commands/) first.
-
-From your project's root folder (where the `.docksal` folder is) download the sample `phpcs` command:
-
-```bash
-mkdir -p .docksal/commands
-curl -fsSL https://raw.githubusercontent.com/docksal/docksal/master/examples/.docksal/commands/phpcs -o .docksal/commands/phpcs
-chmod +x .docksal/commands/phpcs
+```
+fin addon install phpcs
 ```
 
-Run `fin phpcs docroot/sites/all/modules/custom` or any path you want to run sniffer against.  
-See `fin help phpcs` for options.
+This will enable the following to run:
 
-Modify `.docksal/commands/phpcs` script as you see fit.
+```bash
+# Running PHPCS
+fin phpcs cs docroot/sites/all/modules/custom
+```
 
-A command for `phpcbf` can be created in a similar fashion.
+```bash
+# Running PHPCBF
+fin phpcs cbf docroot/sites/all/modules/custom
+```
 
+# Using Directly
 
-## Using directly
+Instead of installing an addon, you can use `phpcs`/`phpcbf` directly every time.
+The following commands below can be run anywhere from within your project's folder:
 
-Instead of installing or creating custom commands you can use `phpcs`/`phpcbf` directly every time.  
-From your project's root folder run:
+### With Drupal
 
 ```bash
 fin run phpcs \
-    --standard=Drupal -n \
+    --standards="Drupal,DrupalPractice" -n \
     --extensions="php,module,inc,install,test,profile,theme" \
     --ignore="*.features.*,*.pages*.inc" \
     docroot/sites/all/modules/custom
@@ -43,8 +45,22 @@ fin run phpcs \
 
 ```bash
 fin run phpcbf \
-    --standard=Drupal -n \
+    --standards="Drupal,DrupalPractice" -n \
     --extensions="php,module,inc,install,test,profile,theme" \
     --ignore="*.features.*,*.pages*.inc" \
     docroot/sites/all/modules/custom
+```
+
+### With WordPress
+
+```bash
+fin run phpcs \
+    --standards="WordPress" -n \
+    docroot/wp-content/plugin
+```
+
+```bash
+fin run phpcbf \
+    --standards="WordPress" -n \
+    docroot/wp-content/plugins
 ```

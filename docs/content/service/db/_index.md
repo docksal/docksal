@@ -3,7 +3,7 @@ title: "db"
 chapter: true
 ---
 
-# docksal/db service
+# docksal/db Service
 
 Advanced documentation for `docksal/db` service 
 

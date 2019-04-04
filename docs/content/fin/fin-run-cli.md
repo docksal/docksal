@@ -1,27 +1,27 @@
 ---
-title: "fin run-cli (rc)"
+title: "On-demand disposable cli"
 weight: 3
 aliases:
   - /en/master/fin/fin-run-cli/
 ---
 
-## Disposable cli environments
+## Disposable cli Environments
 
 With this command you can launch a standalone `cli` container within the scope of the current directory.
 The directory is mapped into `/var/www` in the container.
 
 This gives you access to all of the tools available in `docksal/cli` without launching an entire Docksal stack.
-This also eliminates the need of having any of the console tools installed locally on the host.
+This also eliminates the need of having any of the console tools present in `docksal/cli` installed locally on the host.
 
 
-## Example uses
+## Example Uses
 
-### Run a script in a disposable environment
+### Run a Script in a Disposable Environment
 
-You can run any scripts (PHP, Python, Ruby, Nodejs, Bash, etc.) in a safe, disposable environment:
+You can run any Linux command or script (Bash, PHP, Python, Ruby, Nodejs, etc.) in a safe, disposable environment:
 
 ```bash
-fin run-cli <script-file-name>
+fin run-cli <command or script>
 ```
 
 The container will only have access to the current directory scope on the host.
@@ -30,7 +30,7 @@ The results of the execution can be stored in the same directory.
 Any other changes happen inside of the container only and are reset once the container is stopped.
 
 
-### Create a Drupal 8 Composer based project from scratch
+### Create a Drupal 8 Composer-based Project from Scratch
 
 ```bash
 fin run-cli composer create-project drupal-composer/drupal-project:8.x-dev myproject --stability dev --no-interaction
@@ -46,7 +46,7 @@ fin project start
 ``` 
 
 
-## Data persistence
+## Data Persistence
 
 Generally, anything you do inside of a `fun run-cli` environment is gone once the container is stopped.
 You can install new packages, run scripts, break things, etc., without the risk of damaging your host system.

@@ -56,6 +56,7 @@ to your local and run `fin init`.
 - [Backdrop CMS](https://github.com/docksal/example-backdrop)
 - [Hugo](https://github.com/docksal/example-hugo)
 - [GatsbyJS](https://github.com/docksal/example-gatsby)
+- [Angular](https://github.com/docksal/boilerplate-angular)
 
 
 More advanced use cases and tutorials are available in the [Documentation](https://docs.docksal.io/en/master) and on the [Official Blog](http://blog.docksal.io).

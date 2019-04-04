@@ -1,5 +1,5 @@
 ---
-title: "Portable installation"
+title: "Portable Installation"
 weight: 4
 aliases:
   - /en/master/getting-started/portable/
@@ -19,10 +19,10 @@ A working Docksal 1.2.0+ (fin v1.6.0+) environment is required
 The following download script can be used to pre-download most of the dependencies and Docker images..
 
 ```bash
-curl -fsSL https://get.docksal.io/portable | sh
+bash <(curl -fsSL https://get.docksal.io/portable)
 ```
 
-Here's is what the script will download:
+Here is what the script will download:
 
 - Babun and winpty (necessary for Windows only)
 - VirtualBox and boot2docker.iso (necessary for macOS and Windows)
@@ -37,14 +37,14 @@ The following download options are available:
 Example:
 
 ```bash
-curl -fsSL https://get.docksal.io/portable | SKIP_DEPS=1 sh
+SKIP_DEPS=1 bash <(curl -fsSL https://get.docksal.io/portable)
 ```
 
 Once downloaded, place the contents of the folder on a USB drive/etc and distribute.
 
 ### Custom stacks
 
-If you plan on using a custom stack configuration, you will have a to export the project images manually.
+If you plan on using a custom stack configuration, you will have to export the project images manually.
 
 You can export both system and project images by running the following within a Docksal project folder:
 
@@ -53,7 +53,7 @@ fin image save --system
 fin image save --project
 ```
 
-This will created two files: `docksal-system-images.tar` and `docksal-<project-name>-images.tar`.  
+This will create two files: `docksal-system-images.tar` and `docksal-<project-name>-images.tar`.  
 Instruct users to use the latter file instead of `docksal-default-images.tar` when loading stack images (see below).
 
 ### Docker for Mac/Windows
@@ -86,7 +86,7 @@ A minimal internet connection is still necessary to pull `fin` and Docksal stack
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL https://get.docksal.io | bash
+bash <(curl -fsSL https://get.docksal.io)
 fin vm start
 fin image load docksal-default-images.tar
 ```
@@ -103,7 +103,7 @@ Start the app and wait until Docker says it's running.
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL https://get.docksal.io | DOCKER_NATIVE=1 bash
+DOCKER_NATIVE=1 bash <(curl -fsSL https://get.docksal.io)
 fin image load docksal-default-images.tar
 ```
 
@@ -111,12 +111,12 @@ fin image load docksal-default-images.tar
 
 {{% notice warning %}}
 Only Docksal system and stack images will be installed from the portable source.
-All other Docker dependencies and tools will be downloaded from internet (you will need a decent internet connection).
+All other Docker dependencies and tools will be downloaded from the internet (you will need a decent internet connection).
 {{% /notice %}}
 
 Within the portable Docksal distribution folder run:
 
 ```bash
-curl -fsSL https://get.docksal.io | sh
+bash <(curl -fsSL https://get.docksal.io)
 fin image load docksal-default-images.tar
 ```

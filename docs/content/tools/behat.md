@@ -14,7 +14,7 @@ Add a custom `behat` command to your project.
 
 See [docksal/drupal7-advanced/.docksal/commands/behat](https://github.com/docksal/drupal7-advanced/blob/master/.docksal/commands/behat) as an example.
 
-## Expected folder structure
+## Expected Folder Structure
 
 Docksal expects your Behat tests to be in the `tests/behat` folder of the project repo.
 
@@ -27,14 +27,14 @@ Docksal expects your Behat tests to be in the `tests/behat` folder of the projec
 See [docksal/drupal7-advanced](https://github.com/docksal/drupal7-advanced) repo for a working Drupal 7 + Behat setup or [docksal/qa-suite](https://github.com/docksal/qa-suite) for example of QA-oriented suite with Behat,  Selenium and Backstop with PhantomJS, SlimerJS plus CasperJS.
 
 
-## Running tests
+## Running Tests
 
 Run `fin behat` to launch Behat tests.
 
 This will download Composer dependencies and run Behat using the pre-configured `docker` profile.
 
 
-## Behat goutte driver
+## Behat Goutte Driver
 
 The basic configuration (see [behat.common.yml](https://github.com/docksal/drupal7-advanced/blob/master/tests/behat/behat.common.yml) as an example) 
 uses goutte as the default driver. Goutte is a very basic browser emulator. It is much faster than real browsers, but also very limited. 
@@ -43,7 +43,7 @@ It can make HTTP requests, but does not parse CSS, execute JS, or do any renderi
 Goutte can be used in many cases and does not require additional configuration/installation.
 
 
-## Behat Selenium2 driver
+## Behat Selenium2 Driver
 
 If your tests require javascript support, the `selenium2-driver` should be used. It can be set as the default one.
 Selenium2 works with real browsers, using them as zombies for testing purposes. 
@@ -94,7 +94,7 @@ docker:
 ```
 
 
-## Behat selenium2 driver and VNC
+## Behat Selenium2 Driver and VNC
 
 If you use Selenium with a browser in a container, you can obtain the test screenshots, however you cannot see the browser itself.  
 Sometimes it is very useful to watch the tests running in the browser (e.g., when you are creating a new test and want to see how it performs).  
@@ -146,7 +146,7 @@ ssh docker@192.168.64.100 -p 2223
 
 Note: If you are working with several projects concurrently, it is a good idea to have a separate SSH port assigned per project (e.g., `2222:22`, `2223:22`, etc.).
 
-### Add a new deployment server
+### Add a New Deployment Server
 
 Open settings (menu item *File->Settings...*). In the opened window on the left side, select item *Build, Execution, Deployment->Deployment*:
 
@@ -161,7 +161,7 @@ On the second tab, you should check and correct the mapping:
 
 Local path is the path to your project on the host machine. Deployment path is `/var/www`.
 
-### Add a new PHP interpreter
+### Add a new PHP Interpreter
 
 Open settings (menu item *File->Settings...*). In the opened window on the left side, select item *Languages & Frameworks->PHP*:
 
@@ -173,7 +173,7 @@ To add a new interpreter, click on **...** button on *Interpreter:* line.
 
 In the opened window, add a new interpreter and choose the **Deployment configuration** option and deployment server from the select list (it should be server from previous step).
 
-### Add a Behat interpreter configuration
+### Add a Behat Interpreter Configuration
 
 Open settings (menu item *File->Settings...*). In the opened window on the left side, select item *Languages & Frameworks->PHP->Behat*:
 
@@ -191,7 +191,7 @@ Check that your `behat.yml` contains `wd_host` for selenium in `Behat\MinkExtens
 
 It should be the same as in `behat.common.yml` for `docker` part.
 
-### Add a Behat debug configuration
+### Add a Behat Debug Configuration
 
 Open *Run/Debug Configurations* (menu item *Run->Edit Configurations...*). In the opened window on the left side, add the new Behat configuration:
 
@@ -199,7 +199,7 @@ Open *Run/Debug Configurations* (menu item *Run->Edit Configurations...*). In th
 
 Choose the Test Runner option *Defined in the configuration file*.
 
-### Run tests
+### Run Tests
 
 On the PhpStorm panel, choose Behat debug configuration and run it:
 
@@ -217,7 +217,7 @@ run any feature tests by right clicking on it and choosing the **Run 'feature-na
 ![PHPStorm run individual feature](/images/behat-test-features.png)
 
 
-## Using host's Selenium2 driver
+## Using Host's Selenium2 Driver
 
 You can use selenium from your host machine instead of the one in a container.
 
