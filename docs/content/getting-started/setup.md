@@ -37,6 +37,8 @@ You will have to install Docker manually, then install Docksal as usual on [Linu
 
 ## Install Docksal {#install}
 
+### Administrative Privileges
+
 {{% notice note %}}
 The installer script (`get.docksal.io`) requires administrative privileges to complete the installation. 
 On all operating systems, `fin` cli tool is written to `/usr/local/bin` and Docksal's IP address (`192.168.64.100`) 
@@ -68,9 +70,9 @@ Click the preferred option to proceed to option-specific docs.
 
 With this method, Docker will run inside a VM in VirtualBox.
 
-1. Download and Install VirtualBox
+1. Install VirtualBox
 
-    [![Download VirtualBox 5.2.20](https://img.shields.io/badge/⇩%20-Virtual%20Box%205.2.20-green.svg?classes=inline)](http://download.virtualbox.org/virtualbox/5.2.20/VirtualBox-5.2.20-125813-OSX.dmg)
+    [![Download VirtualBox 5.2.26](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge)](http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg)
 
 1. Enable Kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
 
@@ -83,20 +85,19 @@ With this method, Docker will run inside a VM in VirtualBox.
 
         bash <(curl -fsSL https://get.docksal.io)
 
-
-1. Start the VM
+1. Start Docksal
 
     In Terminal app run:
 
-        fin vm start
+        fin system start
 
-### macOS with Docker for Mac {#install-macos-docker-for-mac}
+### macOS with Docker Desktop {#install-macos-docker-for-mac}
 
-1. Download and Install Docker for Mac
+1. Install Docker Desktop for Mac
 
-    [![Docker for Mac](https://img.shields.io/badge/⇩%20-Docker%20For%20Mac-green.svg?classes=inline)](https://download.docker.com/mac/stable/Docker.dmg)
+    [![Docker Desktop for Mac](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge)](https://download.docker.com/mac/stable/Docker.dmg)
 
-1. Start Docker for Mac
+1. Start Docker Desktop
 
     Wait until it says "Docker is running" in the menubar icon menu.
 
@@ -158,54 +159,58 @@ Click the preferred option to proceed to option-specific docs.
 
 - [VirtualBox](#install-windows-virtualbox) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg?classes=inline)
     - Use if your other VMs are in VirtualBox/Vagrant.
-- [Docker for Windows](#install-windows-docker-for-windows)
+- [Docker Desktop](#install-windows-docker-for-windows)
     - Can be faster, but not compatible with VirtualBox (don't use if you have existing VMs in VirtualBox/Vagrant)  
 
 ### Windows and VirtualBox {#install-windows-virtualbox} 
 
 1. Enable Windows Subsystem for Linux (WSL) support
 
-    [![WSL](https://img.shields.io/badge/⇩%20-Windows%20Subsystem%20for%20Linux-green.svg?classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+    [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
 1. Install **Ubuntu 18.04** app from Microsoft Store 
 
-    [![WSL](https://img.shields.io/badge/⇩%20-Ubuntu%2018.04%20App-green.svg?classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
 1. Install Docksal (VirtualBox will be installed automatically if necessary)
 
-    Open **WSL** and run:
+    Open **Ubuntu** shell and run:
 
         bash <(curl -fsSL https://get.docksal.io)
 
 1. Start Docksal
 
-    In **WSL** run:
+    In **Ubuntu** shell run:
 
         fin system start
 
-### Windows and Docker for Windows {#install-windows-docker-for-windows} 
+### Windows and Docker Desktop {#install-windows-docker-for-windows} 
 
 1. Enable Windows Subsystem for Linux (WSL) support
 
-    [![WSL](https://img.shields.io/badge/⇩%20-Windows%20Subsystem%20for%20Linux-green.svg?classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+    [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
 1. Install **Ubuntu 18.04** app from Microsoft Store
 
-    [![WSL](https://img.shields.io/badge/⇩%20-Ubuntu%2018.04%20App-green.svg?classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
-1. Download and Install Docker for Windows
+1. Install Docker Desktop for Windows
 
-    [![Docker for Windows](https://img.shields.io/badge/⇩%20-Docker%20for%20Windows-green.svg?classes=inline)](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
+    [![Docker Desktop for Windows](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge)](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
     
-1. Configure Docker for Windows
+1. Configure Docker Desktop on Windows
 
-    Share your local drives with Docker for Windows:
+    1.1. Share your local drives with Docker for Windows:
     
-    ![Sharing Windows drives with Docker](/images/docker-for-win-share-drives.png)
+    ![Share your Windows drives with Docker Desktop](/images/docker-for-win-share-drives.png)
+    
+    1.2. Share Docker Desktop port to the local network:
+    
+    ![Expose Docker daemon on tcp://localhost:2375 without TLS](/images/docker-for-win-expose-network.png)
 
 1. Install Docksal
 
-    Open **WSL** and run:
+    Open **Ubuntu** shell and run:
 
         DOCKER_NATIVE=1 bash <(curl -fsSL https://get.docksal.io)
 
