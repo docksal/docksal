@@ -61,10 +61,10 @@ Click your operating system to proceed to OS-tailored docs:
 
 Click the preferred option to proceed to option-specific docs.
 
-- [VirtualBox](#install-macos-virtualbox) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg?classes=inline)
-    - Faster, somewhat less convenient.
-- [Docker for Mac](#install-macos-docker-for-mac)
-    - Somewhat slower, but easier to use and update
+- [Docker Desktop](#install-macos-docker-for-mac) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg?classes=inline)
+    - Easier to use
+- [VirtualBox](#install-macos-virtualbox)
+    - Old school style
 
 ### macOS with VirtualBox {#install-macos-virtualbox}
 
