@@ -11,28 +11,20 @@ RAM requirement: 8GB or more.
 
 ### Mac
 
-- Must be a 2010 or newer model
-- macOS 10.11 or newer
+Must be a 2010 or newer model.
+
 
 ### Linux
 
-- CPU with SSE4.2 instruction set supported (most models released in the last 10 years)
-- Supported distributions: Debian with derivatives (Ubuntu, Mint, etc.), Fedora with derivatives (CentOS etc.)
-
-
-If you get output from the following command, then your CPU is good to go:
+CPU with SSE4.2 instruction set supported (most CPUs). If you get output from the following command, then your CPU is good to go:
 
 ```bash
 cat /proc/cpuinfo | grep sse4_2
 ``` 
 
-Linux distros outside of the Debian and Fedora family may still work (e.g., Alpine). 
-You will have to install Docker manually, then install Docksal as usual on [Linux](#install-linux).
-
 ### Windows
 
-- CPU with hardware virtualization (**VT-x/AMD-V**) supported and [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
-- Windows 10 or newer
+Windows 10 and CPU with hardware virtualization (**VT-x/AMD-V**) supported and [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
 
 
 ## Install Docksal {#install}
@@ -49,15 +41,15 @@ On Windows, there are additional requests for permissions to create network shar
 Docker and to mount them with the current user's account and password.
 {{% /notice %}}
 
-### Choose Operating System
+### What is your operating system?
 
-Click your operating system to proceed to OS-tailored docs:
+Click to jump to OS-tailored docs:
 
 - [macOS](#install-macos)
 - [Linux](#install-linux)
 - [Windows](#install-windows)
 
-### macOS Docker installation options {#install-macos} 
+### macOS installation options {#install-macos} 
 
 Click the preferred option to proceed to option-specific docs.
 
@@ -87,8 +79,6 @@ With this method, Docker will run inside a VM in VirtualBox.
 
 1. Start Docksal
 
-    In Terminal app run:
-
         fin system start
 
 ### macOS with Docker Desktop {#install-macos-docker-for-mac}
@@ -116,7 +106,7 @@ Click your repo to proceed to docs.
 - [CentOS](#install-linux-debian-fedora) 
 - [Other distribution](#install-linux-other)
 
-### Linux. Debian, Ubuntu, Fedora {#install-linux-debian-fedora}
+### Linux. Debian, Ubuntu and Fedora distributions {#install-linux-debian-fedora}
 
 Debian with all derivatives (Ubuntu, Raspbian etc.), Ubuntu with derivatives (Mint, etc.), 
 and Fedora with derivatives are supported out of the box with automatic installation. 
@@ -153,7 +143,7 @@ In case your distribution in not compatible with [get.docker.com](https://get.do
 latest stable Docker for your distribution first, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
 
-### Windows Docker installation options {#install-windows} 
+### Windows installation options {#install-windows} 
 
 Click the preferred option to proceed to option-specific docs.
 
@@ -190,25 +180,25 @@ Click the preferred option to proceed to option-specific docs.
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
-1. Install **Ubuntu 18.04** app from Microsoft Store
+2. Install **Ubuntu 18.04** app from Microsoft Store
 
     [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
-1. Install Docker Desktop for Windows
+3. Install Docker Desktop for Windows
 
     [![Docker Desktop for Windows](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
     
-1. Configure Docker Desktop on Windows
+4. Configure Docker Desktop on Windows
 
-    1.1. Share your local drives with Docker for Windows:
+    4.1. Share your local drives with Docker for Windows:
     
     ![Share your Windows drives with Docker Desktop](/images/docker-for-win-share-drives.png)
     
-    1.2. Share Docker Desktop port to the local network:
+    4.2. Share Docker Desktop port to the local network:
     
     ![Expose Docker daemon on tcp://localhost:2375 without TLS](/images/docker-for-win-expose-network.png)
 
-1. Install Docksal
+5. Install Docksal
 
     Open **Ubuntu** shell and run:
 
@@ -238,7 +228,7 @@ rm -f /usr/local/bin/fin
 
 Optionally, remove VirtualBox application.
 
-### If you used Docker for Mac / Docker for Windows
+### If you used Docker Desktop
 
 The steps below will remove Docksal project containers (files untouched) 
 and stop Docksal system services.
@@ -250,7 +240,7 @@ rm -rf "$HOME/.docksal"
 rm -f /usr/local/bin/fin
 ```
 
-Optionally, remove Docker for Mac / Docker for Windows application.
+Optionally, uninstall Docker Desktop.
 
 ### If you used Linux
 
