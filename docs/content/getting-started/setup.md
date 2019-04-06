@@ -72,7 +72,7 @@ With this method, Docker will run inside a VM in VirtualBox.
 
 1. Install VirtualBox
 
-    [![Download VirtualBox 5.2.26](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge)](http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg)
+    [![Download VirtualBox 5.2.26](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg)
 
 1. Enable Kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
 
@@ -95,7 +95,7 @@ With this method, Docker will run inside a VM in VirtualBox.
 
 1. Install Docker Desktop for Mac
 
-    [![Docker Desktop for Mac](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge)](https://download.docker.com/mac/stable/Docker.dmg)
+    [![Docker Desktop for Mac](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/Docker.dmg)
 
 1. Start Docker Desktop
 
@@ -158,19 +158,19 @@ latest stable Docker for your distribution first, and then [follow the steps for
 Click the preferred option to proceed to option-specific docs.
 
 - [VirtualBox](#install-windows-virtualbox) ![Recommended](https://img.shields.io/badge/✔-Recommended-brightgreen.svg?classes=inline)
-    - Use if your other VMs are in VirtualBox/Vagrant.
+    - Faster, allows launching Vagrant alongside.
 - [Docker Desktop](#install-windows-docker-for-windows)
-    - Can be faster, but not compatible with VirtualBox (don't use if you have existing VMs in VirtualBox/Vagrant)  
+    - Easier to use. Do not use if you have existing Vagrant projects or VirtualBox VMs  
 
 ### Windows and VirtualBox {#install-windows-virtualbox} 
 
 1. Enable Windows Subsystem for Linux (WSL) support
 
-    [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+    [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
 1. Install **Ubuntu 18.04** app from Microsoft Store 
 
-    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
 1. Install Docksal (VirtualBox will be installed automatically if necessary)
 
@@ -188,15 +188,15 @@ Click the preferred option to proceed to option-specific docs.
 
 1. Enable Windows Subsystem for Linux (WSL) support
 
-    [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+    [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
 1. Install **Ubuntu 18.04** app from Microsoft Store
 
-    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
 1. Install Docker Desktop for Windows
 
-    [![Docker Desktop for Windows](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge)](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
+    [![Docker Desktop for Windows](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
     
 1. Configure Docker Desktop on Windows
 
