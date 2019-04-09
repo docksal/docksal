@@ -2452,6 +2452,7 @@ docker_machine_remove ()
 		"$vboxmanage" hostonlyif remove "$vboxifname" 2>/dev/null
 		# Remove old DHCP leases because VirtualBox 6 retains then which breaks docker machine IP re-creation
 		is_mac && rm -f "$HOME/Library/VirtualBox/HostInterfaceNetworking-${vboxifname}-Dhcpd.leases"
+		is_wsl && rm -f "$WIN_HOME/.VirtualBox/HostInterfaceNetworking-${vboxifname}-Dhcpd.leases"
 	fi
 }
 
