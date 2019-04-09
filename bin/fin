@@ -3770,12 +3770,15 @@ detect_dns ()
 		# Not an ideal check as it might pick the wrong one if there are several, but better than nothing
 		if [[ "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
 			dns_addresses=""
+			# We need IFS to only be newline for the next for loop
 			local _IFS=${IFS}
 			IFS=$'\n'
 			for dns_found in $(netsh.exe interface ip show config | grep DNS | grep -v None | grep -v $DOCKSAL_IP); do
 				# Trim \r from output (necessary on Windows)
-				dns_addresses=${dns_addresses}$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '\r' | xargs)
+				dns_addresses="${dns_addresses} "$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '\r' | xargs)
 			done
+			# Restore IFS back to default
+			IFS=${_IFS}
 
 			for dns in $dns_addresses; do
 				if [[ ! "$dns" =~ "127.0."* ]]; then
@@ -3783,7 +3786,6 @@ detect_dns ()
 					break
 				fi
 			done
-			IFS=${_IFS}
 		fi
 	fi
 
