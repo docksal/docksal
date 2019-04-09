@@ -106,7 +106,7 @@ Click your repo to proceed to docs.
 - [CentOS](#install-linux-debian-fedora) 
 - [Other distribution](#install-linux-other)
 
-### Linux. Debian, Ubuntu and Fedora distributions {#install-linux-debian-fedora}
+### Linux. Debian, Ubuntu, and Fedora distributions {#install-linux-debian-fedora}
 
 Debian with all derivatives (Ubuntu, Raspbian etc.), Ubuntu with derivatives (Mint, etc.), 
 and Fedora with derivatives are supported out of the box with automatic installation. 
