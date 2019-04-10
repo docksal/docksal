@@ -1,5 +1,36 @@
 # Changelog
 
+# 1.12.1 (2019-04-09)
+
+**RELEASE CONTAINS BREAKING CHANGES**
+
+There was a breaking change in Docker 18.09.0.  
+If you are using VirtualBox mode (Boot2Docker), your VM will need to be reset during the update.  
+See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-update/) for more information.
+
+**DEPRECATION NOTICE**
+
+- Versions of Windows prior to Windows 10 are no longer supported
+- Babun (Windows) is deprecated and is no longer supported
+- WSL is now the default and the only supported installation mode on Windows
+
+## New software versions
+
+- fin v1.85.1
+
+## Changes and improvements
+
+- Added missing `stack-pantheon.yml` file to the list of stacks to download during update/install
+- Fixed VirtualBox 6.0 compatibility in `fin vm rm`
+  - Note: The official latest stable and supported VirtualBox version is still 5.2.26.
+- Fixed DNS detection on Windows
+
+## Documentation
+
+- Updated installation docs
+- Made Docker Desktop the recommended option for Mac users (to match the info on docksal.io)
+
+
 # 1.12.0 (2019-04-04)
 
 **RELEASE CONTAINS BREAKING CHANGES**

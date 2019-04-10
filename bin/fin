@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.85.0
+FIN_VERSION=1.85.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -279,6 +279,7 @@ STACKS_STACK_ACQUIA="stack-acquia.yml"
 STACKS_STACK_DEFAULT="stack-default.yml"
 STACKS_STACK_DEFAULT_NODB="stack-default-nodb.yml"
 STACKS_STACK_NODE="stack-node.yml"
+STACKS_STACK_PANTHEON="stack-pantheon.yml"
 STACKS_VOLUMES_BIND="volumes-bind.yml"
 STACKS_VOLUMES_NFS="volumes-nfs.yml"
 STACKS_VOLUMES_NONE="volumes-none.yml"
@@ -2449,6 +2450,9 @@ docker_machine_remove ()
 		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" 2>/dev/null
 		# Killing the network interface also helps to avoid issues when VM is recreated.
 		"$vboxmanage" hostonlyif remove "$vboxifname" 2>/dev/null
+		# Remove old DHCP leases because VirtualBox 6 retains then which breaks docker machine IP re-creation
+		is_mac && rm -f "$HOME/Library/VirtualBox/HostInterfaceNetworking-${vboxifname}-Dhcpd.leases"
+		is_wsl && rm -f "$WIN_HOME/.VirtualBox/HostInterfaceNetworking-${vboxifname}-Dhcpd.leases"
 	fi
 }
 
@@ -3766,12 +3770,15 @@ detect_dns ()
 		# Not an ideal check as it might pick the wrong one if there are several, but better than nothing
 		if [[ "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
 			dns_addresses=""
+			# We need IFS to only be newline for the next for loop
 			local _IFS=${IFS}
 			IFS=$'\n'
 			for dns_found in $(netsh.exe interface ip show config | grep DNS | grep -v None | grep -v $DOCKSAL_IP); do
 				# Trim \r from output (necessary on Windows)
-				dns_addresses=${dns_addresses}$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '\r' | xargs)
+				dns_addresses="${dns_addresses} "$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '\r' | xargs)
 			done
+			# Restore IFS back to default
+			IFS=${_IFS}
 
 			for dns in $dns_addresses; do
 				if [[ ! "$dns" =~ "127.0."* ]]; then
@@ -3779,7 +3786,6 @@ detect_dns ()
 					break
 				fi
 			done
-			IFS=${_IFS}
 		fi
 	fi
 
@@ -4541,6 +4547,7 @@ update_config_files ()
 			$STACKS_STACK_DEFAULT
 			$STACKS_STACK_DEFAULT_NODB
 			$STACKS_STACK_NODE
+			$STACKS_STACK_PANTHEON
 			$STACKS_VOLUMES_BIND
 			$STACKS_VOLUMES_NFS
 			$STACKS_VOLUMES_NONE
