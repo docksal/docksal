@@ -89,7 +89,7 @@ the `fin pull` command by setting the `HOSTING_PLATFORM` and
 file.
 
 ```bash
-fin config set HOSTING_PROVIDER=[provider]
+fin config set HOSTING_PLATFORM=[provider]
 
 fin config set HOSTING_SITE="[remote name]"
 
