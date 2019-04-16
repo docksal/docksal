@@ -2151,7 +2151,7 @@ show_help_pull ()
 
 	echo
 	echo "Options:"
-	printh "--hosting-provider=<provider>" "Provider to interact with."
+	printh "--hosting-platform=<provider>" "Platform to interact with."
 	printh "" "Options: acquia, pantheon, platform.sh, drush, wp"
 	printh "--hosting-site=<id>" "Site ID on Provider"
 	printh "--hosting-env=<env>" "Site Env on Provider"
