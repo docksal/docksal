@@ -2424,6 +2424,9 @@ docker_machine_start ()
 			exit 1
 		fi
 	fi
+
+	# After docker machine is restarted, we should reset the system to make sure everything is in a sane state.
+	system_reset
 }
 
 docker_machine_remove ()
