@@ -35,7 +35,7 @@ This can also be set with `fin config set`.
 ```bash
 fin config set WEB_IMAGE='docksal/web:2.1-apache2.2'
 ```
-Remember to run `fin project start` (`fin p start`) to apply the configuration.
+Remember to run `fin project restart web` (`fin p restart web`) to apply the configuration.
 
 Available images:
 
