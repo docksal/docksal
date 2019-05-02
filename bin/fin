@@ -5473,7 +5473,7 @@ ngrok_share ()
 		echo-error "Could not find running ${container} container in this project"
 		exit 1
 	fi
-	local ngrok_container_name=${container_name}_ngrok
+	local ngrok_container_name="${COMPOSE_PROJECT_NAME_SAFE}_ngrok_1"
 
 	if ( fin docker ps --format '{{.Names}}' | grep ^${ngrok_container_name}$ >/dev/null ); then
 		docker stop ${ngrok_container_name} >/dev/null
@@ -5553,16 +5553,16 @@ ngrok_share ()
 	local ngrok_conf_path="$(get_project_path_dc)/.docksal/etc/ngrok"
 	local ngrok_conf="${ngrok_conf_path}/ngrok.yml"
 	if [[ -f "$ngrok_conf" ]]; then
-    		CONF_ARGS="-config /var/www/.docksal/etc/ngrok/ngrok.yml"
-  	fi
+		CONF_ARGS="-config /var/www/.docksal/etc/ngrok/ngrok.yml"
+	fi
 
 	local local_ngrok_conf="${ngrok_conf_path}/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
 	if [[ -f "$local_ngrok_conf" ]]; then
-    		CONF_ARGS="$CONF_ARGS -config /var/www/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
-  	fi
+		CONF_ARGS="$CONF_ARGS -config /var/www/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
+	fi
 
-  	if [[ -f "$ngrok_conf" ]] || [[ -f "$local_ngrok_conf" ]]; then
-	  	ARGS="ngrok start ${CONF_ARGS} -all"
+	if [[ -f "$ngrok_conf" ]] || [[ -f "$local_ngrok_conf" ]]; then
+		ARGS="ngrok start ${CONF_ARGS} -all"
 		# Overwrite settings with a configuration if its available
 		NGROK_VOLUME="-v $(get_project_path_dc)/.docksal:/var/www/.docksal"
 	fi
@@ -5574,14 +5574,18 @@ ngrok_share ()
 
 	# If no configuration was used we append main container.
 	if [[ -z $CONF_ARGS ]]; then
-		ARGS="${ARGS} ${container_name}.${network}:${NGROK_PORT}"
+		ARGS="${ARGS} ${container}:${NGROK_PORT}"
 	fi
 
 	${winpty} docker run --rm ${NGROK_VOLUME} -it \
 		--publish 4040 \
-		--net ${network} \
-		--link ${container_name} \
-		--name ${ngrok_container_name} \
+		--network ${network} \
+		--name=${ngrok_container_name} \
+		--label="io.docksal.virtual-host=ngrok.${VIRTUAL_HOST},ngrok.${VIRTUAL_HOST}.*" \
+		--label="io.docksal.project-root=${PROJECT_ROOT}" \
+		--label="io.docksal.virtual-port=4040" \
+		--dns="${DOCKSAL_DNS1}" \
+		--dns="${DOCKSAL_DNS2}" \
 		wernight/ngrok \
 		sh -c "${ARGS}"
 }
