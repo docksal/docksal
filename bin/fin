@@ -5466,7 +5466,7 @@ ngrok_share ()
 	eval $(parse_params "$@")
 
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-	local container=${container:-web}
+	local container=${container:-${NGROK_CONTAINER:-web}}
 	local container_name=$(docker-compose ps ${container} | grep Up | grep _${container}_ | cut -d " " -f 1)
 
 	if [[ "$container_name" == "" ]]; then
