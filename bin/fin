@@ -2708,14 +2708,14 @@ smb_share_mount()
 		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
 		sudo mkdir -p $mount_point && \
 		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=3.02,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKSAL_HOST_IP}/$share_name $mount_point"
-	docker-machine ssh ${DEFAULT_MACHINE_NAME} "$command_mount"
+	docker-machine --native-ssh ssh ${DEFAULT_MACHINE_NAME} "$command_mount"
 
 	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
 	if [[ $? != 0 ]]; then
 		echo-yellow "Mount command failed... Trying an alternative method..."
 		# Switch sec to ntlm and try again
 		command_mount=$(echo $command_mount | sed 's/sec=.*,/sec=ntlm,/')
-		docker-machine ssh ${DEFAULT_MACHINE_NAME} "$command_mount"
+		docker-machine --native-ssh ssh ${DEFAULT_MACHINE_NAME} "$command_mount"
 
 		if [[ $? == 0 ]]; then
 			echo-green 'Success!'
