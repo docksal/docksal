@@ -1278,7 +1278,7 @@ cleanup ()
 	local projects=$(docker ps --all \
 		--filter 'label=io.docksal.project-root' \
 		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
-	for project in "$projects"; do
+	for project in ${projects}; do
 		IFS=':' read project_name project_root <<< "$project"
 		if [[ ! -d "$project_root" ]]; then
 			echo "Directory for project \"$project_name\" does not exist. Removing project containers and volumes..."
