@@ -1283,7 +1283,7 @@ cleanup ()
 		if [[ ! -d "$project_root" ]]; then
 			echo "Directory for project \"$project_name\" does not exist. Removing project containers and volumes..."
 			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
-			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker volume rm -f
+			docker volume ls -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker volume rm -f
 		fi
 	done
 
