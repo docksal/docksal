@@ -1267,7 +1267,7 @@ _remove_containers ()
 	fi
 }
 
-# Cleanup unused resources
+# Remove unused Docker images, and unused Docksal related volumes and containers
 cleanup ()
 {
 	check_docker_running
