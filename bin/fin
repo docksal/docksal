@@ -1268,7 +1268,6 @@ _remove_containers ()
 }
 
 # Cleanup unused resources
-# @param $1 --hard if set removes all stopped containers and dangling volumes
 cleanup ()
 {
 	check_docker_running
