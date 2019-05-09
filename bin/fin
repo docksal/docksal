@@ -1267,65 +1267,99 @@ _remove_containers ()
 	fi
 }
 
-# Cleanup unused resources
-# @param $1 --hard if set removes all stopped containers
+# Remove unused Docker images, and unused Docksal related volumes and containers
 cleanup ()
 {
 	check_docker_running
-	if [[ "$1" == "--hard" ]] && [[ "$(docker ps -aqf status=exited)" != "" ]]; then
+	# Orphaned project stacks are containers/volumes that map to non-existing codebases on the host
+	# E.g., the codebase was removed without doing proper "fin project rm" first
+	echo-green "Checking for orphaned Docksal project stacks..."
+	local projects=$(docker ps --all \
+		--filter 'label=io.docksal.project-root' \
+		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
+	for project in ${projects}; do
+		IFS=':' read project_name project_root <<< "$project"
+		if [[ ! -d "$project_root" ]]; then
+			echo "Directory for project \"$project_name\" does not exist. Removing project containers and volumes..."
+			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+			docker volume ls -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker volume rm -f
+		fi
+	done
+
+	# Most dangling volumes should be cleaned up by the orphaned stacks cleanup.
+	# Cleanup any leftover dangling volumes created by Docksal.
+	echo-green "Removing dangling Docksal volumes..."
+	docker volume prune -f --filter "label=io.docksal" 2>/dev/null
+
+	echo-green "Removing dangling images..."
+	docker image prune -f 2>/dev/null
+	# TODO: use the filter once we have the filter added to all Docksal images (will take a while)
+	#docker image prune -f --filter "label=io.docksal" 2>/dev/null
+}
+
+# Image cleanup wizard
+cleanup_images ()
+{
+	check_docker_running
+	echo-green "Docker images cleanup Wizard"
+	echo
+	sleep 1
+	# Print all images first
+	echo "Printing all existing images:"
+	sleep 1
+	docker images --format="{{.Repository}}:{{.Tag}}" | sort
+	echo "---------------------------------------------------"
+	echo "|      Use the list above to help you cleanup     |"
+	echo "---------------------------------------------------"
+	# Declare an arary of names and fill it with the output from the docker command
+	declare -a images
+	images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
+	# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
+	local image_name; local image_id;
+	for image in "${images[@]}"; do
+		image_name=$(echo "$image" | cut -d "+" -f 1)
+		image_id=$(echo "$image" | cut -d "+" -f 2)
+		if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
+			docker image remove "$image_id"
+		fi
+	done
+}
+
+# Cleans up ANY (not only Docksal managed):
+# - stopped containers
+# - dangling volumes
+cleanup_hard ()
+{
+	check_docker_running
+	if [[ "$(docker ps -aqf status=exited)" != "" ]]; then
 		echo -e "${red}WARNING: ${yellow}Preparing to delete the following stopped containers:${NC}"
 		docker ps -af status=exited --format "{{.Names}}\t{{.Status}}\t{{.Image}}"
 		printf '–%.0s' $(seq 1 40)
 		echo -e "${yellow}"
-		_confirm "Continue?"
-		echo -e "${NC}"
-		#--
-		echo-green "Removing stopped containers..."
-		docker container prune -f 2>/dev/null
-	fi
-
-	if [[ "$1" == "--images" ]]; then
-		echo-green "Docker images cleanup Wizard."
-		echo
-		sleep 1
-		# Print all images first
-		echo "Printing all existing images:"
-		sleep 1
-		docker images --format="{{.Repository}}:{{.Tag}}" | sort
-		echo "---------------------------------------------------"
-		echo "|      Use the list above to help you cleanup     |"
-		echo "---------------------------------------------------"
-		# Declare an arary of names and fill it with the output from the docker command
-		declare -a images
-		images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
-		# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
-		local image_name; local image_id;
-		for image in "${images[@]}"; do
-			image_name=$(echo "$image" | cut -d "+" -f 1)
-			image_id=$(echo "$image" | cut -d "+" -f 2)
-			if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
-				docker image remove "$image_id"
-			fi
-		done
-		return
-	fi
-
-	echo-green "Checking for orphaned projects..."
-	local projects=$(docker ps --all \
-		--filter 'label=io.docksal.project-root' \
-		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
-	for project in $projects; do
-		IFS=':' read project_name project_root <<< "$project"
-		if [[ ! -d "$project_root" ]]; then
-			echo "Directory for project \"$project_name\" does not exist. Removing containers..."
-			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+		if _confirm "Continue?" --no-exit; then
+			echo -e "${NC}"
+			echo-green "Removing stopped containers..."
+			docker container prune -f 2>/dev/null
 		fi
-	done
+		echo -e "${NC}"
+	fi
 
-	echo-green "Removing dangling images..."
+	dangling_volumes="$(docker volume ls -qf dangling=true)"
+	if [[ "$dangling_volumes" != "" ]]; then
+		echo -e "${red}WARNING: ${yellow}Preparing to delete the following dangling volumes:${NC}"
+		echo "$dangling_volumes"
+		printf '–%.0s' $(seq 1 40)
+		echo -e "${yellow}"
+		if _confirm "Continue?" --no-exit; then
+			echo -e "${NC}"
+			echo-green "Removing dangling volumes..."
+			echo "$dangling_volumes" | xargs docker volume rm -f 2>/dev/null
+		fi
+		echo -e "${NC}"
+	fi
+
+	echo-green "Removing all dangling images..."
 	docker image prune -f 2>/dev/null
-	echo-green "Removing dangling volumes..."
-	docker volume prune -f 2>/dev/null
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -1477,7 +1511,7 @@ show_help ()
 	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [options]" "Remove unused Docker images and projects (saves disk space)"
+	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
 	printh "share" "Create temporary public url for current project using ngrok"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
@@ -2059,9 +2093,9 @@ show_help_init ()
 show_help_cleanup ()
 {
 	echo
-	echo "Remove unused docker images and orphaned containers to save disk space."
-	echo "Orphaned are containers which folders were deleted from the filesystem,"
-	echo "but their containers still linger in the Docker."
+	echo "Remove all unused Docker images, and Docksal related volumes and orphaned containers to save disk space."
+	echo "Orphaned are those containers which project folders were deleted from the filesystem,"
+	echo "but the containers still linger in the Docker."
 
 	echo
 	echo "Usage: cleanup [options]"
@@ -2069,13 +2103,13 @@ show_help_cleanup ()
 	echo
 	echo "Options:"
 	printh "--images" "Docker images cleanup Wizard"
-	printh "--hard" "Also remove ALL stopped containers (potentially destructive operation)"
+	printh "--hard" "Remove ALL stopped containers even unrelated to Docksal (potentially destructive operation)"
 
 	echo
 	echo "Examples:"
 	printh "fin cleanup" "Regular cleanup"
 	printh "fin cleanup --images" "Docker Images cleanup wizard, helping to navigate and delete unused ones"
-	printh "fin cleanup --hard" "Run hard cleanup removing all stopped containers"
+	printh "fin cleanup --hard" "Run hard cleanup removing all stopped Docker containers"
 }
 
 show_help_hosts ()
@@ -7936,7 +7970,19 @@ case "$1" in
 		# no load_configuration
 		check_for_updates
 		shift
-		cleanup $1
+		# Regular cleanup (Docksal stuff only)
+		if [[ "$1" == "" ]]; then
+			cleanup
+		fi
+		# Regular + hard cleanup (max cleanup to free up space - Docksal and non-Docksal dangling stuff)
+		if [[ "$1" == "--hard" ]]; then
+			cleanup
+			cleanup_hard
+		fi
+		# Image cleanup wizard
+		if [[ "$1" == "--images" ]]; then
+			cleanup_images
+		fi
 		;;
 	-v | v)
 		# no load_configuration
