@@ -1,8 +1,8 @@
 ---
 title: "Advanced Use Cases"
 chapter: true
-weight: 9
-pre: "<b>9. </b>"
+weight: 8
+pre: "<b>8. </b>"
 ---
 
 # Advanced Use Cases

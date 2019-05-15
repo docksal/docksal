@@ -49,7 +49,7 @@ Below is an example of extending the `cli` image with additional configs, apt, a
 
 ```Dockerfile
 # Use a stock Docksal image as the base
-FROM docksal/cli:php7.2
+FROM docksal/cli:2-php7.2
 
 # Install addtional apt packages
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -70,8 +70,8 @@ USER docker
 
 # Install additional global npm dependencies
 RUN \
-	# Initialize nvm environment
-	. $NVM_DIR/nvm.sh && \
+	# Initialize the user environment (this loads nvm)
+	. $HOME/.profile && \
 	# Install node packages
 	npm install -g node-sass
 

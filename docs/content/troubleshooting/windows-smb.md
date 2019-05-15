@@ -44,7 +44,7 @@ In that case, Docker also will not be able to access your files.
 
 ## Troubleshooting
 
-### 1. Windows 7 and Minimized Elevated Prompts
+### 1. Windows and Minimized Elevated Prompts
 
 When Docksal VM is being created, VirtualBox needs to configure network adapter and requires
 administrative permissions for that. Those elevated prompts are sometimes appear minimized on the taskbar.
@@ -85,14 +85,13 @@ might fail to work.
 The most usual case is "Files and Printer sharing" being not enabled. Enable it in network settings and
 try opening that IP again.
 
-If after enabling files sharing you still can not access your IP via explorer,
+If after enabling files sharing you still can not access your IP via Explorer,
 then see this [elaborate post on superuser about issues with File/Printer sharing on Windows](https://superuser.com/a/446500/140872).
 Hopefully it helps. Do not proceed to next steps if you have not fixed the issue
 because they will fail too.
 
 Friendly reminder: if everything fails to make it working, then you might be limited to
-re-installing Windows. We test Docksal on clean Windows 7 and Windows 10 installations and
-make sure it works.
+re-installing Windows. We test Docksal on a clean Windows 10 installation and make sure it works.
 
 
 ### 3. Check that Docksal IP is Working {#smb-ip}

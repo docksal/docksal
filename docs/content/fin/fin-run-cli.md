@@ -1,5 +1,5 @@
 ---
-title: "fin run-cli (rc)"
+title: "On-demand disposable cli"
 weight: 3
 aliases:
   - /en/master/fin/fin-run-cli/
@@ -11,17 +11,17 @@ With this command you can launch a standalone `cli` container within the scope o
 The directory is mapped into `/var/www` in the container.
 
 This gives you access to all of the tools available in `docksal/cli` without launching an entire Docksal stack.
-This also eliminates the need of having any of the console tools installed locally on the host.
+This also eliminates the need of having any of the console tools present in `docksal/cli` installed locally on the host.
 
 
 ## Example Uses
 
 ### Run a Script in a Disposable Environment
 
-You can run any scripts (PHP, Python, Ruby, Nodejs, Bash, etc.) in a safe, disposable environment:
+You can run any Linux command or script (Bash, PHP, Python, Ruby, Nodejs, etc.) in a safe, disposable environment:
 
 ```bash
-fin run-cli <script-file-name>
+fin run-cli <command or script>
 ```
 
 The container will only have access to the current directory scope on the host.

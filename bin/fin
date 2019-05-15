@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.81.0
+FIN_VERSION=1.85.1
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
 	red='\033[0;91m'
 	red_bg='\033[101m'
-	yellow_bg='\033[43;90m'
+	yellow_bg='\033[43m'
+	lightmagenta_bg='\033[0;105m'
 	green='\033[0;32m'
 	green_bg='\033[42m'
 	yellow='\033[0;33m'
@@ -15,6 +16,7 @@ if [[ "$TERM" != "dumb" ]]; then
 	lime='\033[0;92m'
 	acqua='\033[0;96m'
 	magenta='\033[0;35m'
+	lightmagenta='\033[0;95m'
 	NC='\033[0m'
 fi
 
@@ -98,6 +100,29 @@ is_travis () {
 
 #------------------------------------------------------------------------------
 
+# Returns absolute path to a file/folder in a Unix notation under cygwin on Windows.
+# cygpath -m returns something like C:/Users/user/...
+# This function converts that into something like /c/Users/user/...
+# @param $1 file/folder
+cygpath_abs_unix ()
+{
+	echo "/$(cygpath -m $1 | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
+}
+
+# Returns the value of Windows environment var in WSL
+# @param $1 var name
+wsl_env ()
+{
+	# Trim \r from output (necessary on Windows)
+	echo $(cmd.exe /c "echo %$1%" | tr -d '\r')
+}
+
+# Unfortunately wslpath output contains \r that has to be cleaned
+wsl_path ()
+{
+	# Trim \r from output (necessary on Windows)
+	echo $(wslpath "$@" | tr -d '\r')
+}
 
 #---------------------------- Global Constants --------------------------------
 
@@ -113,46 +138,59 @@ REQUIREMENTS_DOCKER_MACHINE='0.16.1'
 REQUIREMENTS_VBOX='5.2.26'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
+REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
 URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg"
 URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-Win.exe"
 
-# Self Paths
-FIN_PATH="/usr/local/bin/fin"
-FIN_PATH_UPDATED="/usr/local/bin/fin.updated"
-FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
 if is_windows; then
-	BABUN_WIN_HOME="$HOME"
-	# Cannot use cygpath_abs_unix here as it's being defined much later
-	HOME="/$(cygpath -m $HOME | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
+	BABUN_WIN_HOME=${HOME}
+	HOME=$(cygpath_abs_unix ${HOME})
 fi
+# Windows user home directory
+# WIN_HOME is a Unix path, e.g. /c/Users/user
+if is_windows; then
+	WIN_HOME=$(cygpath -u ${USERPROFILE})
+elif is_wsl; then
+	WIN_HOME=$(wsl_path -u $(wsl_env "USERPROFILE"))
+fi
+
+# Directory structure in ~/.docksal
 CONFIG_DIR="$HOME/.docksal"
-CONFIG_ENV="$CONFIG_DIR/docksal.env"
+CONFIG_DOWNLOADS_DIR="$CONFIG_DIR/downloads"
+CONFIG_BIN_DIR="$CONFIG_DIR/bin"
+CONFIG_STACKS_DIR="$CONFIG_DIR/stacks"
+CONFIG_DOCKER_MACHINE_DIR="$CONFIG_DIR/machine"
 CONFIG_ALIASES="$CONFIG_DIR/alias"
+mkdir -p "$CONFIG_DOWNLOADS_DIR"
+mkdir -p "$CONFIG_BIN_DIR"
+mkdir -p "$CONFIG_STACKS_DIR"
+mkdir -p "$CONFIG_DOCKER_MACHINE_DIR"
+mkdir -p "$CONFIG_ALIASES"
+# Custom certs folder for vhost-proxy (overridable, expected to be created by the user manually)
+CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
+
+# File/binary paths
+FIN_PATH="/usr/local/bin/fin"
+FIN_PATH_UPDATED="$CONFIG_DOWNLOADS_DIR/fin.updated"
+FIN_AUTOCOMPLETE_PATH="/usr/local/bin/fin-bash-autocomplete"
+CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
-CONFIG_MACHINES="$CONFIG_DIR/machines"
-CONFIG_MACHINES_ENV="$CONFIG_DIR/machines/.env"
-CONFIG_MACHINE_ACTIVE="$CONFIG_MACHINES/.active"
-mkdir -p "$CONFIG_PROJECTS" >/dev/null 2>&1
-# BIN folder
-CONFIG_BIN_DIR="$CONFIG_DIR/bin"
-CONFIG_DOWNLOADS_DIR="$CONFIG_BIN_DIR/downloads"
+CONFIG_LAST_UPDATE="$CONFIG_DIR/.last_update"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
-DOCKER_COMPOSE_BIN_NIX="/usr/local/bin/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
-DOCKER_MACHINE_BIN_NIX="/usr/local/bin/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
-# Stacks folder
-CONFIG_STACKS_DIR="$HOME/.docksal/stacks"
-mkdir -p "$CONFIG_STACKS_DIR" >/dev/null 2>&1
+is_wsl && vboxmanage="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
+CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DOCKER_MACHINE_DIR/machine.env"
+
 # Custom certs folder for vhost-proxy (overridable)
 CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 
@@ -182,6 +220,9 @@ DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
 DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
 # Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
 DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
+
+# Docker for Windows
+DOCKER_WIN_NETWORK="vEthernet (DockerNAT)"
 
 # Declaring possible vhost-proxy settings overrides
 DOCKSAL_VHOST_PROXY_IP="${DOCKSAL_VHOST_PROXY_IP}"
@@ -238,17 +279,19 @@ STACKS_STACK_ACQUIA="stack-acquia.yml"
 STACKS_STACK_DEFAULT="stack-default.yml"
 STACKS_STACK_DEFAULT_NODB="stack-default-nodb.yml"
 STACKS_STACK_NODE="stack-node.yml"
+STACKS_STACK_PANTHEON="stack-pantheon.yml"
 STACKS_VOLUMES_BIND="volumes-bind.yml"
 STACKS_VOLUMES_NFS="volumes-nfs.yml"
 STACKS_VOLUMES_NONE="volumes-none.yml"
 STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
+URL_DOCKER_COM="https://get.docker.com/"
 URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
-URL_DOCKER_NIX="https://get.docker.com/"
-# Until there is an official standalone docker.exe binary available, use the one pulled from Docker for Windows
-# See https://github.com/docker/for-win/issues/1460#issuecomment-390045959
-#URL_DOCKER_WIN="https://download.docker.com/win/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.zip"
-URL_DOCKER_WIN="https://github.com/docksal/docksal/releases/download/v1.11.0/docker-${REQUIREMENTS_DOCKER}.zip"
+URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
+# Docker stopped publishing docker client binaries for Windows. They are now available from Microsoft.
+# See https://github.com/docker/for-win/issues/1460#issuecomment-442585850
+# MS uses a different naming convention, e.g. "docker-18-09-2.zip" instead of "docker-18.09.2.zip".
+URL_DOCKER_WIN="https://dockermsft.blob.core.windows.net/dockercontainer/docker-${REQUIREMENTS_DOCKER//./-}.zip"
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
@@ -260,7 +303,7 @@ URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v$
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.2}
-IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.4}
+IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.5}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 
 #---------------------------- Helper functions --------------------------------
@@ -292,7 +335,7 @@ echo-error ()
 
 echo-alert ()
 {
-	echo -e "${red_bg} ALERT: ${NC} ${red}$1${NC}"
+	echo -e "${lightmagenta_bg} ALERT: ${NC} ${lightmagenta}$1${NC}"
 	shift
 	for arg in "$@"; do
 		echo -e "         $arg"
@@ -366,15 +409,6 @@ docker-compose ()
 	# Call regular docker-compose.
 	# We can use `which` here, since it does not care about functions (but `type` does).
 	"$(which docker-compose)" "$@"
-}
-
-# Returns absolute path to a file/folder in a Unix notation under cygwin on Windows.
-# cygpath -m returns something like C:/Users/user/...
-# This function converts that into something like /c/Users/user/...
-# @param $1 file/folder
-cygpath_abs_unix ()
-{
-	echo "/$(cygpath -m $1 | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -490,8 +524,12 @@ get_command_script ()
 	COMMANDS_ROOT="$(get_project_path)/$DOCKSAL_COMMANDS_PATH"
 	# First search project commands folder for the command
 	command_script="$COMMANDS_ROOT/$1"
+	# Then search for a default command in a group
+	[ ! -f "$command_script" ] && command_script="$COMMANDS_ROOT/$1/$1"
 	# Then search global docksal commands directory for the command
 	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1"
+	# Then search for a default command in a global command group
+	[ ! -f "$command_script" ] && command_script="$HOME/$DOCKSAL_COMMANDS_PATH/$1/$1"
 	# If command was found then return it
 	[ -f "$command_script" ] && echo "$command_script"
 }
@@ -509,20 +547,44 @@ get_mysql_connect ()
 # @return docker container id
 get_container_id ()
 {
-	# Trim any control characters from the output, otherwise there will be issues passing it to the docker binary on Windows.
-	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '[:cntrl:]')
+	# Trim \r from output (necessary on Windows)
+	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '\r')
 }
 
 # Run command on Windows with elevated privileges
 winsudo ()
 {
-	cygstart --action=runas cmd /c "$@"
+	if is_wsl; then
+		# TODO: WIP
+		# Starting an elevated cmd.exe and passing command(s) to it.
+		# Make sure to enclose them in quotes like this:
+		# winsudo "'<command(s) to execute in elevated cmd.exe>'"
+		powershell.exe Start-Process -Wait -Verb RunAs cmd.exe -Args "'/C', '$@'"
+	else
+		# Backward compatibility wth Babun/Cygwin
+		cygstart --action=runas cmd.exe /C "$@"
+	fi
 }
 
+# Run command on Windows and WSL with elevated privileges
 sudowin ()
 {
-	# left for future use
-	powershell.exe Start-Process -Verb runAs -FilePath "cmd.exe" -Args '/c','dir','/?'
+	local command="$1"
+	local arguments=""
+	shift
+	while [[ "$1" != "" ]]; do
+		if [[ "$arguments" == "" ]]; then
+			arguments="'\"$1\"'"
+		else
+			arguments="$arguments,'\"$1\"'"
+		fi
+		shift
+	done
+	if [[ "$arguments" != "" ]]; then
+		powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command" -Args "$arguments"
+	else
+		powershell.exe Start-Process -Wait -Verb runAs -FilePath "$command"
+	fi
 }
 
 # Universal Bash parameter parsing
@@ -671,18 +733,37 @@ check_winpty_found ()
 	winpty='winpty -Xallow-non-tty'
 }
 
+# Checks if docker is accessible
+# DOCKER_HOST, set at the beginning of runtime, defines how we talk to the docker daemon
+# Returns 0 - we can successfully reach the docker daemon
+# Returns 1 - docker daemon is inaccessible
+# Returns 255 - docker-machine is down
 is_docker_running ()
 {
-	if ! is_linux && ! is_docker_native && ! is_wsl; then
-		if ! is_docker_machine_running; then return 255; fi
-	fi
-	# Check if docker is running via docker info.
+	# Running "docker version" is sufficient to check if docker is running in any host environment setup.
 	# This operation is instant even if docker is not running (assuming a socket is used).
-	which docker >/dev/null 2>&1 && docker info >/dev/null || return 1
+	# However, if DOCKER_HOST is an HTTP/TLS endpoint and it is down, then this check will take over a minute to fail.
+	# To mitigate this case, we first check for is_docker_machine_running when in docker-machine mode.
+	if ! is_linux && ! is_docker_native; then
+		# Return a distinct code if the machine is down.
+		# This is checked down the road.
+		is_docker_machine_running || return 255
+	fi
+	docker version &>/dev/null || return 1
 }
 
 is_docksal_running ()
 {
+	# Verify DOCKSAL_IP is assigned to the appropriate network interface.
+	# Applicable to Docker Desktop (Mac/Windows) and Linux only.
+	# This check is redundant, since if the IP is not assigned, Docksal system services won't start and the check below
+	# will fail. However, there could be cases, when system services have been already started and after that hosts
+	# network settings are adjusted/corrupted externally.
+	is_mac && is_docker_native && ! check_network_mac && return 1
+	is_linux && ! check_network_alpine && return 1
+	is_windows && is_docker_native && ! check_network_windows && return 1
+	is_wsl && is_docker_native && ! check_network_wsl && return 1
+
 	local system_services=$(docker ps --filter "label=io.docksal.group=system" --format '{{.Names}}' 2>/dev/null)
 	# Assume Docksal is running when the following system services are running
 	(echo "$system_services" | grep 'docksal-vhost-proxy' >/dev/null 2>&1) || return 1
@@ -747,20 +828,40 @@ check_docksal_environment ()
 	check_project_root && check_docksal_running
 }
 
-check_docker_running ()
+check_docker_server_version ()
 {
-	# Immediately break on upgrade
-	[[ "$UPGRADE_IN_PROGRESS" == "1" ]] && return 0
+	# Prevent multiple alerts
+	[[ ${DOCKER_VERSION_ALERT_SUPPRESS} == 1 ]] && return
 
-	# Check docker versions in this function
-	if ! is_docker_version && [[ -z $DOCKER_VERSION_ALERT_SUPPRESS ]]; then
-		echo-alert "Required Docker version is $REQUIREMENTS_DOCKER" \
-			"Run ${yellow}fin update${NC} to update to the required version." \ ""
-		DOCKER_VERSION_ALERT_SUPPRESS=1 # prevent multiple alerts
+	if ! is_docker_server_version; then
+		# Since we do not control Docker Desktop, ask user to update manually when necessary
+		if is_docker_native; then
+			echo-alert "Please update Docker Desktop to the latest version manually." \
+				"Expected Docker Desktop version: ${REQUIREMENTS_DOCKER_DESKTOP}"
+		else
+			echo-alert "Required Docker server version is $REQUIREMENTS_DOCKER" \
+				"Run ${yellow}fin update${NC} to update to the required version." \ ""
+		fi
 	fi
 
-	# Check cached value
-	[[ "$DOCKER_RUNNING" == "true" ]] && return 0
+	# Prevent multiple alerts
+	DOCKER_VERSION_ALERT_SUPPRESS=1
+}
+
+# @param --quiet - don't ask for confirmation to start the machine
+check_docker_running ()
+{
+	eval $(parse_params "$@")
+
+	# Check cached value (saves ~200ms)
+	if [[ "$DOCKER_RUNNING" == "true" ]]; then
+		# If docker is running, perform docker server / docker desktop version checks
+		# --quiet is used during update to suppress this check until the end of the update process
+		[[ "$quiet" == "" ]] && check_docker_server_version
+
+		# Since Docker is running and we can talk to it, no more checks are necessary. Return here.
+		return
+	fi
 
 	# If we got here then cached value is not true
 	local docker_status
@@ -771,24 +872,24 @@ check_docker_running ()
 	is_docker_running
 	docker_status=$?
 	# Last chance to return non-error code
-	[[ ${docker_status} -eq 0 ]] && return
+	[[ ${docker_status} == 0 ]] && return
 
-	if [[ ${docker_status} -eq 255 ]] && (! is_docker_native && ! is_wsl); then
-		echo-yellow "It looks like '$DOCKER_MACHINE_NAME' docker machine is not running."
-		_confirm "Run 'fin vm start' to start it now?"
+	# Status code 255 is returned only for docker-machine mode, when the machine exists, but it is not running.
+	if [[ ${docker_status} == 255 ]]; then
+		if [[ "$quiet" == "" ]]; then
+			echo-yellow "It looks like '$DEFAULT_MACHINE_NAME' docker machine is not running."
+			_confirm "Start it now?"
+		fi
+		# docker_machine_start will quit here if something fails.
 		docker_machine_start
-		if_failed "Could not start Docksal docker machine properly"
-		# re-check status
-		eval $(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
-		docker info >/dev/null
-		docker_status=$?
+		return $?
 	fi
 
 	if is_linux; then
 		# Remind the user about running 'newgrp docker' after install.
-		if ! (id -nG | grep docker >/dev/null 2>&1) && ! is_root ; then
+		if ! (id -nG | grep docker &>/dev/null) && ! is_root ; then
 			echo-error "Current user is not part of the docker group." \
-				"Re-login to enable permanent Docker support."
+				"Re-login to enable permanent Docker support." \
 				"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
 			exit 1
 		fi
@@ -798,8 +899,9 @@ check_docker_running ()
 			sudo service docker start
 		fi
 	else # MacOS, Windows
+		# Docker machine mode
 		# Check for certificates error
-		if (docker-machine env "$DOCKER_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
+		if ! is_docker_native && (docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME" 2>&1 | grep "Error checking TLS connection" >/dev/null); then
 			echo-error "Error connecting to Docker due to certificates error" \
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
@@ -808,14 +910,22 @@ check_docker_running ()
 			exit 1
 		fi
 
-		# Other generic errors
+		# Docker Desktop may not be running
 		if is_docker_native; then
-			echo-error "Your Docker client is unable to talk to the Docker server." \
-				"WHAT TO DO?" \
-				"Check that your Docker for Mac/Win app is running."
-			exit 1
+			if is_wsl; then
+				echo-error "Docker Desktop is not running or cannot be accessed" \
+					"WHAT TO DO?" \
+					"1. Start Docker Desktop, wait for Docker to start." \
+					"2. Make sure 'Expose daemon on tcp://localhost:2375 without TLS' in Docker Desktop settings is set."
+				exit 1
+			else
+				echo-error "Docker Desktop is not running" \
+					"WHAT TO DO?" \
+					"Start Docker Desktop, wait for Docker to start, and try again."
+				exit 1
+			fi
 		else
-			echo-error "Your Docker client is unable to talk to the Docker server." \
+			echo-error "Unable to talk to docker daemon." \
 				"WHAT TO DO?" \
 				"1. Try ${yellow}fin vm restart${NC}." \
 				"2. If #1 did not help, run ${yellow}fin update${NC} to update." \
@@ -854,54 +964,104 @@ is_docker_path ()
 {
 	local _path="${1}"
 	[[ "$_path" == "" ]] && return 1
-	(cd "$_path" 2>/dev/null && docker run -v "$_path":"$_path" docksal/empty 2>/dev/null)
+	(cd "$_path" 2>/dev/null && docker run --rm -v "$_path":"$_path" docksal/empty 2>/dev/null)
 }
 
+# Check VirtualBox version
+# Return value 0: VirtualBox installed and the version is OK
+# Return value 1: VirtualBox not installed
+# Return value 2: VirtualBox installed, but needs to be updated
 is_vbox_version ()
 {
 	! which "$vboxmanage" >/dev/null 2>&1 && return 1
 
-	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null)
+	# Trim \r from output (necessary on Windows)
+	local virtualbox_version=$("$vboxmanage" -v | sed "s/r.*//" 2>/dev/null | tr -d '\r')
 	[[ $(ver_to_int "$virtualbox_version") < $(ver_to_int "$REQUIREMENTS_VBOX") ]] && \
 		return 2
 
 	return 0
 }
 
+# Print Docker Desktop version
+# @param $1 --short - prints short version instead of full
+# Example output (--short): 2.0.0.3
+docker_desktop_version ()
+{
+	local short=${1}
+
+	if is_mac; then
+		echo $(defaults read /Applications/Docker.app/Contents/Info.plist CFBundleShortVersionString) 2>/dev/null
+	fi
+
+	if is_windows || is_wsl; then
+		# Calling these should be done in quotes and via "bash -c" to expand arguments properly
+		local DockerCli=''
+		is_windows && DockerCli='/cygdrive/c/Program Files/Docker/Docker/DockerCli.exe'
+		is_wsl && DockerCli='/mnt/c/Program Files/Docker/Docker/DockerCli.exe'
+
+		if [[ ${short} ]]; then
+			"${DockerCli}" -Version | tr -d '\r' | grep 'Version: ' | sed 's/.* \(.*\) .*/\1/g'
+		else
+			"${DockerCli}" -Version
+		fi
+	fi
+}
+
 is_docker_version ()
 {
-	! which docker >/dev/null 2>&1 && return 1
-	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null)
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
+	# Skip the check on Play-with-Docker and Katacoda
+	(is_pwd || is_katacoda) && return
+
+	# Rely on our own docker binary, except on Linux
+	if is_linux; then
+		! which docker &>/dev/null && return 1
+	else
+		! [[ -x ${DOCKER_BIN} ]] && return 1
+	fi
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker version --format '{{.Client.Version}}' 2>/dev/null | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
 }
 
 is_docker_server_version ()
 {
-	! which docker >/dev/null 2>&1 && return 1
-	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER") -le $(ver_to_int "$version") ]]
+	# Skip the check on Play-with-Docker and Katacoda
+	(is_pwd || is_katacoda) && return
+
+	# Rely on our own docker binary, except on Linux
+	if is_linux; then
+		! which docker &>/dev/null && return 1
+	else
+		! [[ -x ${DOCKER_BIN} ]] && return 1
+	fi
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
 }
 
 is_docker_compose_version ()
 {
-	! which docker-compose >/dev/null 2>&1 && return 1
-	# Trim any control characters from docker-compose output (necessary on Windows)
-	local version=$(docker-compose version --short | tr -d '[:cntrl:]')
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") -le $(ver_to_int "$version") ]]
+	! [[ -x ${DOCKER_COMPOSE_BIN} ]] && return 1
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker-compose version --short | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") <= $(ver_to_int "$version") ))
 }
 
 is_docker_machine_version ()
 {
-	! which docker-machine >/dev/null 2>&1 && return 1
-	local version=$(docker-machine -v | sed "s/.*version \(.*\),.*/\1/")
-	[[ $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") -le $(ver_to_int "$version") ]]
+	! [[ -x ${DOCKER_MACHINE_BIN} ]] && return 1
+	# Trim \r from output (necessary on Windows)
+	local version=$(docker-machine -v  | sed "s/.*version \(.*\),.*/\1/")
+	(( $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") <= $(ver_to_int "$version") ))
 }
 
 is_winpty_version ()
 {
-	! which "$WINPTY_BIN" >/dev/null 2>&1 && return 2
-	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/")
-	[[ $(ver_to_int "$REQUIREMENTS_WINPTY") -le $(ver_to_int "$version") ]]
+	! [[ -x ${WINPTY_BIN} ]] && return 2
+	# Trim \r from output (necessary on Windows)
+	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/" | tr -d '\r')
+	(( $(ver_to_int "$REQUIREMENTS_WINPTY") <= $(ver_to_int "$version") ))
 }
 
 wants_rc_version ()
@@ -909,6 +1069,9 @@ wants_rc_version ()
 	[[ "${DOCKSAL_USE_RC}" == 1 ]] || [[ "${DOCKSAL_USE_RC}" == "true" ]]
 }
 
+# Verbal counterpart to vbox_version
+# Checks VirtualBox version and prints a message to user if the check failed and why.
+# Supports skipping version check via SKIP_VBOX_VERSION_CHECK=1
 check_vbox_version ()
 {
 	# Provide ability to skip checking for vbox version
@@ -916,8 +1079,8 @@ check_vbox_version ()
 
 	is_vbox_version
 	local res=$?
-	[[ "$res" == "1" ]] && echo-error "$vboxmanage binary was not found" && exit 1
-	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be $REQUIREMENTS_VBOX or higher" && exit 1
+	[[ "$res" == "1" ]] && echo-error "${vboxmanage} binary was not found" && exit 1
+	[[ "$res" == "2" ]] && echo-error "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher" && exit 1
 }
 
 # Check that .docksal is present
@@ -1104,65 +1267,99 @@ _remove_containers ()
 	fi
 }
 
-# Cleanup unused resources
-# @param $1 --hard if set removes all stopped containers
+# Remove unused Docker images, and unused Docksal related volumes and containers
 cleanup ()
 {
 	check_docker_running
-	if [[ "$1" == "--hard" ]] && [[ "$(docker ps -aqf status=exited)" != "" ]]; then
+	# Orphaned project stacks are containers/volumes that map to non-existing codebases on the host
+	# E.g., the codebase was removed without doing proper "fin project rm" first
+	echo-green "Checking for orphaned Docksal project stacks..."
+	local projects=$(docker ps --all \
+		--filter 'label=io.docksal.project-root' \
+		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
+	for project in ${projects}; do
+		IFS=':' read project_name project_root <<< "$project"
+		if [[ ! -d "$project_root" ]]; then
+			echo "Directory for project \"$project_name\" does not exist. Removing project containers and volumes..."
+			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+			docker volume ls -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker volume rm -f
+		fi
+	done
+
+	# Most dangling volumes should be cleaned up by the orphaned stacks cleanup.
+	# Cleanup any leftover dangling volumes created by Docksal.
+	echo-green "Removing dangling Docksal volumes..."
+	docker volume prune -f --filter "label=io.docksal" 2>/dev/null
+
+	echo-green "Removing dangling images..."
+	docker image prune -f 2>/dev/null
+	# TODO: use the filter once we have the filter added to all Docksal images (will take a while)
+	#docker image prune -f --filter "label=io.docksal" 2>/dev/null
+}
+
+# Image cleanup wizard
+cleanup_images ()
+{
+	check_docker_running
+	echo-green "Docker images cleanup Wizard"
+	echo
+	sleep 1
+	# Print all images first
+	echo "Printing all existing images:"
+	sleep 1
+	docker images --format="{{.Repository}}:{{.Tag}}" | sort
+	echo "---------------------------------------------------"
+	echo "|      Use the list above to help you cleanup     |"
+	echo "---------------------------------------------------"
+	# Declare an arary of names and fill it with the output from the docker command
+	declare -a images
+	images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
+	# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
+	local image_name; local image_id;
+	for image in "${images[@]}"; do
+		image_name=$(echo "$image" | cut -d "+" -f 1)
+		image_id=$(echo "$image" | cut -d "+" -f 2)
+		if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
+			docker image remove "$image_id"
+		fi
+	done
+}
+
+# Cleans up ANY (not only Docksal managed):
+# - stopped containers
+# - dangling volumes
+cleanup_hard ()
+{
+	check_docker_running
+	if [[ "$(docker ps -aqf status=exited)" != "" ]]; then
 		echo -e "${red}WARNING: ${yellow}Preparing to delete the following stopped containers:${NC}"
 		docker ps -af status=exited --format "{{.Names}}\t{{.Status}}\t{{.Image}}"
 		printf '–%.0s' $(seq 1 40)
 		echo -e "${yellow}"
-		_confirm "Continue?"
-		echo -e "${NC}"
-		#--
-		echo-green "Removing stopped containers..."
-		docker container prune -f 2>/dev/null
-	fi
-
-	if [[ "$1" == "--images" ]]; then
-		echo-green "Docker images cleanup Wizard."
-		echo
-		sleep 1
-		# Print all images first
-		echo "Printing all existing images:"
-		sleep 1
-		docker images --format="{{.Repository}}:{{.Tag}}" | sort
-		echo "---------------------------------------------------"
-		echo "|      Use the list above to help you cleanup     |"
-		echo "---------------------------------------------------"
-		# Declare an arary of names and fill it with the output from the docker command
-		declare -a images
-		images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
-		# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
-		local image_name; local image_id;
-		for image in "${images[@]}"; do
-			image_name=$(echo "$image" | cut -d "+" -f 1)
-			image_id=$(echo "$image" | cut -d "+" -f 2)
-			if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
-				docker image remove "$image_id"
-			fi
-		done
-		return
-	fi
-
-	echo-green "Checking for orphaned projects..."
-	local projects=$(docker ps --all \
-		--filter 'label=io.docksal.project-root' \
-		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
-	for project in $projects; do
-		IFS=':' read project_name project_root <<< "$project"
-		if [[ ! -d "$project_root" ]]; then
-			echo "Directory for project \"$project_name\" does not exist. Removing containers..."
-			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+		if _confirm "Continue?" --no-exit; then
+			echo -e "${NC}"
+			echo-green "Removing stopped containers..."
+			docker container prune -f 2>/dev/null
 		fi
-	done
+		echo -e "${NC}"
+	fi
 
-	echo-green "Removing dangling images..."
+	dangling_volumes="$(docker volume ls -qf dangling=true)"
+	if [[ "$dangling_volumes" != "" ]]; then
+		echo -e "${red}WARNING: ${yellow}Preparing to delete the following dangling volumes:${NC}"
+		echo "$dangling_volumes"
+		printf '–%.0s' $(seq 1 40)
+		echo -e "${yellow}"
+		if _confirm "Continue?" --no-exit; then
+			echo -e "${NC}"
+			echo-green "Removing dangling volumes..."
+			echo "$dangling_volumes" | xargs docker volume rm -f 2>/dev/null
+		fi
+		echo -e "${NC}"
+	fi
+
+	echo-green "Removing all dangling images..."
 	docker image prune -f 2>/dev/null
-	echo-green "Removing dangling volumes..."
-	docker volume prune -f 2>/dev/null
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -1276,7 +1473,8 @@ show_help ()
 			fi
 	fi
 
-	echo "Docksal control cli utility v$FIN_VERSION"
+	echo
+	echo "Docksal command line utility v$FIN_VERSION"
 	echo
 	echo "Usage: fin <command>"
 	echo
@@ -1285,7 +1483,7 @@ show_help ()
 	printh "db <command>" "Manage databases (${yellow}fin help db${NC})" "yellow"
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
-	printh "system <command>" "Manage Docksal (${yellow}fin help system${NC})" "yellow"
+	printh "system <command>" "Manage Docksal state (${yellow}fin help system${NC})" "yellow"
 	if [[ ! is_linux && ! is_docker_native ]] || [[ "$TERM" == "dumb" ]]; then
 		printh "vm <command>" "Manage Docksal VM (${yellow}fin help vm${NC})" "yellow"
 	fi
@@ -1299,21 +1497,21 @@ show_help ()
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
 
 	echo
-	printh "pull [options]" "Commands for interacting with Hosting Provider. (${yellow}fin help pull${NC})"
+	printh "pull [options]" "Commands for interacting with Hosting Provider (${yellow}fin help pull${NC})"
 	printh "drush [command]" "Drush command (requires Drupal)"
 	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
 	printh "platform [command]" "Platform.sh's CLI (requires docksal/cli 2.3+)"
 	printh "terminus [command]" "Pantheon's Terminus (requires docksal/cli 2.1+)"
 	printh "wp [command]" "WordPress CLI command (requires WordPress)"
 	printh "composer [command]" "Run Composer commands"
-	printh "docker [command]" "Run Docker commands directly"
-	printh "docker-compose [command]" "Run docker-compose commands directly"
+	printh "docker (d) [command]" "Run Docker commands directly"
+	printh "docker-compose (dc) [cmd]" "Run Docker Compose commands directly"
 
 	echo
-	printh "init" "Initialize a project (override it with your own automation ${yellow}fin help init${NC})"
+	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [options]" "Remove unused Docker images and projects (saves disk space)"
+	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
 	printh "share" "Create temporary public url for current project using ngrok"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
@@ -1323,6 +1521,11 @@ show_help ()
 	printh "diagnose" "Show diagnostic information for troubleshooting and bug reporting"
 	printh "version (--version, v, -v)" "Print fin version. [v, -v] prints short version"
 	printh "update" "${yellow}Update Docksal${NC}" "yellow"
+
+	# Do not show addons and custom commands if help for fin only ie requested (needed for docs generation)
+	if [[ "$1" == "fin" ]]; then
+		return;
+	fi
 
 	# Show list of custom commands and their help if available
 	load_global_configuration
@@ -1367,7 +1570,7 @@ show_help_list_commands_in_help ()
 	local executable="-executable"
 	is_mac && executable="-perm +100"
 
-	local addons_list=$(find "$addons_path" -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
+	local addons_list=$(find -L "$addons_path" -maxdepth 2 -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
 	if [[ "$addons_list" != "" ]]; then
 		local scope
 		for cmd_name in ${addons_list}
@@ -1375,8 +1578,12 @@ show_help_list_commands_in_help ()
 			local g
 			[[ "$1" == 'global' ]] && g=' [g]'
                         cmd_name=${cmd_name/${addons_path}\//}
+			local cmd_path=${cmd_name}
+                        local cmd_short=${cmd_name##*/}
+                        local cmd_regex="${cmd_short}/${cmd_short}$"
+                        [[ ${cmd_name} =~ $cmd_regex ]] && cmd_name=${cmd_name/${cmd_short}\/${cmd_short}/${cmd_short}}
 			# command description is lines that start with ##
-			local filename="$addons_path/$cmd_name"
+			local filename="$addons_path/$cmd_path"
 			local cmd_desc
 			[[ ! -f "$filename" ]] && continue
 			cmd_desc=$(cat "$filename" | grep '^##' | sed "s/^##[ ]*//g" | head -1 --)
@@ -1419,11 +1626,13 @@ show_help_list_addons_in_help ()
 show_help_exec ()
 {
 	echo
-	echo "Execute command or file in \`cli\` service container."
+	echo "Execute commands or script in \`cli\` service container,"
+	echo "or execute commands in other containers when specified in params."
 	echo "fin exec will automatically cd into the same folder inside \`cli\`."
 
 	echo
 	echo "Usage: exec [-T] [--in=name] <command | file>"
+	echo "  [!] Parameters order matters."
 
 	echo
 	echo "Options:"
@@ -1769,7 +1978,6 @@ show_help_vm ()
 	printh "ssh [command]" "Log into ssh or run a command via ssh"
 	printh "remove" "Remove Docksal machine and cleanup after it"
 	printh "ip" "Show the machine IP address"
-	# printh "ip [new ip]" "Set machine IP address (requires vm restart)"
 	printh "ls" "List all docker machines"
 	printh "env" "Display the commands to set up the shell for direct use of Docker client"
 	printh "mount" "Try remounting host filesystem (NFS on macOS, SMB on Windows)"
@@ -1879,15 +2087,15 @@ show_help_init ()
 	echo "Examples:"
 	printh "- https://github.com/docksal/drupal8/tree/master/.docksal/commands" "	Automation example"
 	printh "- https://github.com/docksal/example-gatsby/tree/master/.docksal/commands" "Automation example"
-	printh "- https://github.com/docksal/addons" "					Addon repo"
+	printh "- https://github.com/docksal/addons" "					Addons repo"
 }
 
 show_help_cleanup ()
 {
 	echo
-	echo "Remove unused docker images and orphaned containers to save disk space."
-	echo "Orphaned are containers which folders were deleted from the filesystem,"
-	echo "but their containers still linger in the Docker."
+	echo "Remove all unused Docker images, and Docksal related volumes and orphaned containers to save disk space."
+	echo "Orphaned are those containers which project folders were deleted from the filesystem,"
+	echo "but the containers still linger in the Docker."
 
 	echo
 	echo "Usage: cleanup [options]"
@@ -1895,13 +2103,13 @@ show_help_cleanup ()
 	echo
 	echo "Options:"
 	printh "--images" "Docker images cleanup Wizard"
-	printh "--hard" "Also remove ALL stopped containers (potentially destructive operation)"
+	printh "--hard" "Remove ALL stopped containers even unrelated to Docksal (potentially destructive operation)"
 
 	echo
 	echo "Examples:"
 	printh "fin cleanup" "Regular cleanup"
 	printh "fin cleanup --images" "Docker Images cleanup wizard, helping to navigate and delete unused ones"
-	printh "fin cleanup --hard" "Run hard cleanup removing all stopped containers"
+	printh "fin cleanup --hard" "Run hard cleanup removing all stopped Docker containers"
 }
 
 show_help_hosts ()
@@ -1977,40 +2185,40 @@ show_help_pull ()
 
 	echo
 	echo "Options:"
-	printh "--HOSTING_PROVIDER=<provider>" "Provider to interact with."
+	printh "--hosting-platform=<provider>" "Platform to interact with."
 	printh "" "Options: acquia, pantheon, platform.sh, drush, wp"
-	printh "--HOSTING_SITE=<id>" "Site ID on Provider"
-	printh "--HOSTING_ENV=<env>" "Site Env on Provider"
+	printh "--hosting-site=<id>" "Site ID on Provider"
+	printh "--hosting-env=<env>" "Site Env on Provider"
 
 	echo
 	echo "Extra Options for Code"
-	printh "--SYNC_GIT_REMOTE" "The GIT Remote to pull from. (Defaults to origin)"
-	printh "--SYNC_GIT_BRANCH" "The GIT Branch to pull from. (Defaults to current branch)"
+	printh "--sync-git-remote" "The GIT Remote to pull from. (Defaults to origin)"
+	printh "--sync-git-branch" "The GIT Branch to pull from. (Defaults to current branch)"
 
 	echo
 	echo "Extra Options for DB"
-	printh "--DBUSER=<user>" "Specify the DB User (Defaults to root)"
-	printh "--DBPASS=<pass>" "Specify the DB Password (Defaults to root)"
-	printh "--DBNAME=<dbname>" "Specify the DB Name to import into. (Defaults to default)"
-	printh "--FORCE" "Force a new database file to be pulled"
-	printh "--REMOTE_DB=<remote_db>" "Specify the remote DB name to pull. (Used with Acquia)"
+	printh "--db-user=<user>" "Specify the DB User (Defaults to root)"
+	printh "--db-pass=<pass>" "Specify the DB Password (Defaults to root)"
+	printh "--db-name=<dbname>" "Specify the DB Name to import into. (Defaults to default)"
+	printh "--force" "Generate and pull a new db dump, rather than using locally cached in /tmp"
+	printh "--remote-db=<remotedb>" "Specify the remote DB name to pull. (Used with Acquia)"
 
 	echo
 	echo "Extra Options for Files"
-	printh "--RSYNC_OPTIONS=<options>" "Rsync Options to append."
-	printh "--FILES_DIR=<dir>" "Directory to sync files with."
+	printh "--rsync-options=<options>" "Rsync Options to append."
+	printh "--files-dir=<dir>" "Directory to sync files with."
 	printh "" "Default Drupal: {DOCROOT}/sites/default/files/"
 	printh "" "Wordpress Default: {DOCROOT}/wp-content/uploads/"
 
 	echo
 	echo "Examples:"
 	printh "fin pull init" "Start a project by pulling the repo from the provider."
-	printh "    --HOSTING_PLATFORM=acquia" "Provide the Platform Name."
-	printh "    --HOSTING_SITE=testsiteid" "Provide the Site ID."
+	printh "    --hosting-platform=acquia" "Provide the Platform Name."
+	printh "    --hosting-site=testsiteid" "Provide the Site ID."
 	printh "    test_project_directory" "Specify the directory to clone the project in."
 	printh "fin pull" "Pull all items from provider"
 	printh "fin pull db" "Pull only the db from the provider"
-	printh "fin pull db --REMOTE_DB=dbname" "Pull the db name dbname from the provider. (Acquia Cloud Only)"
+	printh "fin pull db --remote-db=dbname" "Pull the db name dbname from the provider. (Acquia Cloud Only)"
 }
 
 #---------- END HELP FUNCTIONS
@@ -2100,8 +2308,28 @@ bash_comp_words ()
 
 #------------------------------- Docker-Machine -----------------------------------
 
+# Get machine status from docker machine.
+# This is an expensive operation (~1.5s) and should be used when relying on the cached status is not good enough.
+# DOCKER_MACHINE_STATUS is set at the beginning of runtime using this function.
+docker_machine_status ()
+{
+	echo $(docker-machine status "$DEFAULT_MACHINE_NAME" 2>/dev/null || echo 'Defunct' )
+}
+
+is_docker_machine_exist ()
+{
+	is_docker_machine_version || return 1
+
+	# Refresh machine status
+	# This is necessary to make sure we don't get the cached value after operations with the VM.
+	DOCKER_MACHINE_STATUS=$(docker_machine_status)
+
+	[[ "$DOCKER_MACHINE_STATUS" != "Defunct" ]]
+}
+
 is_docker_machine_running ()
 {
+	# Check the cached value set when docker-machine state is altered
 	[[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]
 }
 
@@ -2112,55 +2340,46 @@ docker_machine_create ()
 	check_vbox_version
 	check_binary_found 'docker-machine'
 
-	local machine_name="${1:-$DEFAULT_MACHINE_NAME}"
-
-	if is_docker_machine_exist "$machine_name"; then
-		echo-error "Docker Machine '$machine_name' already exists"
+	if is_docker_machine_exist; then
+		echo-error "Docker Machine '$DEFAULT_MACHINE_NAME' already exists"
 		return 1
 	fi
 
-	echo-green "Creating docker machine '$machine_name'..."
+	echo-green "Creating docker machine '$DEFAULT_MACHINE_NAME'..."
 
 	# Use a local boot2docker.iso copy when available
 	ISO_FILE=${ISO_FILE:-boot2docker.iso}
-	if [[ -f "$ISO_FILE" ]]; then
-		echo "Found $ISO_FILE. Using it..."
-		URL_BOOT2DOCKER="$ISO_FILE"
+	if [[ -f "${ISO_FILE}" ]]; then
+		echo "Found ${ISO_FILE}. Using it..."
+		URL_BOOT2DOCKER="${ISO_FILE}"
+	fi
+
+	# Use 2 CPUs in case of 4 or more CPUs/cores on host
+	# This tremendously helps with network files sytem operations in some cases
+	local VIRTUALBOX_CPU_COUNT=1
+	system_cpu_count=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
+	# process possible failure as 1 cpu
+	system_cpu_count=${system_cpu_count:-1}
+	if (( ${system_cpu_count} > 3 )); then
+		VIRTUALBOX_CPU_COUNT=2
 	fi
 
 	docker-machine create \
  		--driver=virtualbox \
-		--virtualbox-boot2docker-url "$URL_BOOT2DOCKER" \
+		--virtualbox-boot2docker-url "${URL_BOOT2DOCKER}" \
+		--virtualbox-cpu-count "$VIRTUALBOX_CPU_COUNT" \
 		--virtualbox-disk-size "${VBOX_HDD:-$DEFAULT_MACHINE_VBOX_HDD}" \
 		--virtualbox-memory "$DEFAULT_MACHINE_VBOX_RAM" \
 		--virtualbox-hostonly-cidr "$DOCKSAL_SUBNET" \
 		--virtualbox-no-share \
-		"$machine_name"
+		"$DEFAULT_MACHINE_NAME"
 
-	if [[ $? -eq 0 ]]; then
-		DOCKER_MACHINE_NAME="$machine_name"
-		DOCKER_MACHINE_STATUS='Running'
-		vm active "$machine_name"
+	if [[ $? == 0 ]]; then
+		# Update cached values
+		DOCKER_MACHINE_STATUS="Running"
+		# Note docker is not yet accessible here until docker_machine_env is called later
 	else
 		return 1
-	fi
-}
-
-# Param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
-# Param $2 refresh machine status true|false (defaults to false)
-is_docker_machine_exist ()
-{
-	local refresh="${2:-false}"
-
-	! which 'docker-machine' >/dev/null 2>&1 && return 1
-	if [[ "$1" != "" ]] && [[ "$1" != "$DOCKER_MACHINE_NAME" ]]; then
-		docker-machine ls | grep "$1" >/dev/null 2>&1
-	else
-		if [[ "$refresh" == "true" ]]; then
-			# Refresh VM status in case it changed while the script was running.
-			DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
-		fi
-		[[ "$DOCKER_MACHINE_STATUS" == *"not exist"* ]] && return 1 || return 0
 	fi
 }
 
@@ -2170,10 +2389,15 @@ docker_machine_env ()
 	local res
 
 	#remove cache
-	rm -f "$CONFIG_MACHINES_ENV" 2>/dev/null
+	rm -f "$CONFIG_DOCKER_MACHINE_ENV" 2>/dev/null
 
 	# get the env
-	_env=$(docker-machine env --shell=bash "$DOCKER_MACHINE_NAME")
+	if is_wsl; then
+		# In WSL, docker-machine is a Windows binary, but WSL does not understand Windows paths
+		_env=$(docker-machine env --shell=bash docksal | sed "s/\\\\/\//g" | sed "s/C:/\/c/")
+	else
+		_env=$(docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME")
+	fi
 	res=$?
 
 	# apply the env
@@ -2185,113 +2409,85 @@ docker_machine_env ()
 	fi
 
 	# Save to file for reuse during subsequent fin runs to avoid running env which is expensive
-	echo "${_env}" | tee "$CONFIG_MACHINES_ENV" >/dev/null
+	echo "${_env}" | tee "$CONFIG_DOCKER_MACHINE_ENV" >/dev/null
 }
 
 # Stop docker machine
 docker_machine_stop ()
 {
 	check_binary_found 'docker-machine'
-	docker-machine stop "$DOCKER_MACHINE_NAME"
-}
-
-docker_machine_change_ip ()
-{
-	echo "(docksal) Applying IP address $DOCKER_MACHINE_IP"
-	# extract first three parts of IP and append 255 to get broadcast mask
-	local BROADCAST_MASK=`expr "$DOCKER_MACHINE_IP" : '\([0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.\)'`'255';
-	docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo cat /var/run/udhcpc.eth1.pid | xargs sudo kill" && \
-		docker-machine ssh "$DOCKER_MACHINE_NAME" "sudo ifconfig eth1 $DOCKER_MACHINE_IP netmask 255.255.255.0 broadcast $BROADCAST_MASK up" && \
-		sleep 2 && \
-		docker-machine regenerate-certs "$DOCKER_MACHINE_NAME" -f
-	sleep 2
-	local i=0
-	local _logs=""
-	for i in `seq 20`; do
-		_logs=$(docker-machine env "$DOCKER_MACHINE_NAME" 2>&1)
-		if [[ $? -eq 0 ]]; then return; fi
-		echo "IP validation (attempt #${i})..."
-		sleep 3
-	done
-	echo "$_logs"
-	return 1
+	docker-machine stop "$DEFAULT_MACHINE_NAME"
+	# Manually update cached values
+	DOCKER_MACHINE_STATUS="Stopped"
+	DOCKER_RUNNING="false"
 }
 
 docker_machine_start ()
 {
 	check_binary_found 'docker-machine'
 
-	if is_docker_machine_exist; then
-		docker-machine start "$DOCKER_MACHINE_NAME"
+	if [[ "$DOCKER_MACHINE_STATUS" == "Stopped" ]]; then
+		docker-machine start "$DEFAULT_MACHINE_NAME"
 		if_failed_error "Failed starting virtual machine"
-		DOCKER_MACHINE_STATUS='Running'
-		# Disable IP change for now
-		#docker_machine_change_ip &&
+
 		docker_machine_env
-		if_failed_error "Failed starting virtual machine" \
-			"In case you see certificates problem, reboot your local host." \
+		if_failed_error "Failed to properly access virtual machine" \
+			"In case you see certificates problem, try rebooting your local host." \
 			"Common issues: https://docs.docksal.io/troubleshooting/common-issues/"
-		configure_resolver
-		configure_mounts
-	else
-		# only auto-create default machine
-		if [[ "$DOCKER_MACHINE_NAME" != "$DEFAULT_MACHINE_NAME" ]]; then
-			echo-error "Machine '$DOCKER_MACHINE_NAME' does not exist"
-			echo-yellow "Removing reference to non-existent machine... Run your command again."
-			rm -f "$CONFIG_MACHINE_ACTIVE"
-			exit 1
-		fi
 
+		# Update cached values
+		# We would not get here if something above failed, so a blind update is fine (saves 1.5s)
+		DOCKER_MACHINE_STATUS="Running"
+		# Once machine is up, is_docker_running check should be instant (no savings in doing a blind update)
+		# docker_machine_env has to happen before this check or the check will fail
+		is_docker_running && DOCKER_RUNNING="true"
+	elif [[ "$DOCKER_MACHINE_STATUS" == "Defunct" ]]; then
 		docker_machine_create &&
-			# Disable IP change for now
-			#docker_machine_change_ip &&
 			docker_machine_env
-		[[ $? != 0 ]] && _docker_machine_start_exception
 
-		echo-green "Pulling Docksal system images..."
-		update_system_images
-		configure_mounts
-	fi
+		# Once machine is up, is_docker_running check should be instant (no savings in doing a blind update)
+		# docker_machine_env has to happen before this check or the check will fail
+		is_docker_running && DOCKER_RUNNING="true"
 
-	# Catch the return code from docker_machine_mounts
-	# TODO: figure out a more reliable implementation, as this may break if the code above gets reordered
-	local _err=$?
-	if [[ ${_err} -eq 0 ]]; then
-		echo-green "Importing ssh keys..."
-		ssh_key add
-	fi
-
-	return ${_err}
-}
-
-# Displays an error message and offers to remove the vm if something failed
-_docker_machine_start_exception ()
-{
-	echo-error "Proper creation of virtual machine has failed" \
+		# Displays an error message and offers to remove the vm if something failed
+		if [[ $? != 0 ]]; then
+			echo-error "Proper creation of virtual machine has failed" \
 				"For details please refer to the log above." \
 				"${yellow}It is recommended to remove malfunctioned virtual machine.${NC}"
-	docker_machine_remove
-	exit 1
+			docker_machine_remove
+			exit 1
+		fi
+	fi
 }
 
-# param $1 machine name (defaults to $DOCKER_MACHINE_NAME)
 docker_machine_remove ()
 {
-	local machine_name="${1:-$DOCKER_MACHINE_NAME}"
+	# Do not check for machine existence here.
+	# In certain cases (e.g. machine create failed), the VirtualBox VM may not exist, but there would be a broken
+	# machine record in docker-machine (dm ls).
 
-	_confirm "Remove $machine_name?"
-	# Store host-only interface name before removing the VM.
-	local vboxifname=$("$vboxmanage" showvminfo "$machine_name" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
-	docker-machine rm -f "$machine_name"
-	if ! is_docker_machine_exist "$machine_name" "true"; then
-		# If the VM was removed, remove the DHCP server associated with its network interface.
-		# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
-		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" >/dev/null 2>&1
-		# Killing the network interface also helps to avoid issues when VM is recreated.
-		"$vboxmanage" hostonlyif remove "$vboxifname" >/dev/null 2>&1
+	_confirm "Remove $DEFAULT_MACHINE_NAME?"
+
+	if is_docker_machine_exist; then
+		# Store host-only interface name before removing the VM.
+		local vboxifname=$("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" 2>/dev/null | grep "Host-only" | sed "s/.*Host-only.*'\(.*\)'.*/\1/g")
 	fi
 
-	configure_mounts off
+	docker-machine rm -f "$DEFAULT_MACHINE_NAME" 2>/dev/null
+	# Manually update cached values
+	DOCKER_MACHINE_STATUS="Defunct"
+	DOCKER_RUNNING="false"
+
+	if [[ "${vboxifname}" != "" ]]; then
+		# After VM is removed, remove the DHCP server associated with its network interface.
+		# This ensures that we always get the lower bound IP address from the DHCP address pool (i.e., ".100").
+		"$vboxmanage" dhcpserver remove --netname "HostInterfaceNetworking-${vboxifname}" 2>/dev/null
+		# Killing the network interface also helps to avoid issues when VM is recreated.
+		"$vboxmanage" hostonlyif remove "$vboxifname" 2>/dev/null
+		# Remove old DHCP leases because VirtualBox 6 retains then which breaks docker machine IP re-creation
+		is_mac && rm -f "$HOME/Library/VirtualBox/HostInterfaceNetworking-${vboxifname}-Dhcpd.leases"
+		is_wsl && rm -f "$WIN_HOME/.VirtualBox/HostInterfaceNetworking-${vboxifname}-Dhcpd.leases"
+	fi
 }
 
 # Create a NFS export
@@ -2300,11 +2496,10 @@ nfs_share_add ()
 {
 	[[ "$@" = "" ]] && return 1
 
-	local machine_name="${DOCKER_MACHINE_NAME:-docksal}"
 	eval $(parse_params "$@")
 
 	# Remove our own old exports
-	local exports_open="# <ds-nfs $machine_name"
+	local exports_open="# <ds-nfs $DEFAULT_MACHINE_NAME"
 	local exports_close="# ds-nfs>"
 	local exports=$(cat /etc/exports 2>/dev/null | \
 		tr "\n" "\r" | \
@@ -2337,11 +2532,17 @@ nfs_share_add ()
 
 		# Do not write /etc/exports if there are config check errors
 		if [[ "$exports_errors" != '' ]]; then
-			echo-error "$exports_errors"
-			echo "-----------------"
-			echo -e "$exports"
-			echo "-----------------"
-			return 2
+			if [[ "$exports_errors" =~ "conflicts" ]]; then
+				return 2 # conflict error
+			else
+				echo-error "There is an error in /etc/exports file" \
+					"Read through the error message(s) below and fix errors in ${yellow}/etc/exports${NC} manually" \
+					"Then run ${yellow}fin system reset${NC}"
+				echo "-----------------"
+				echo "$exports_errors"
+				echo "-----------------"
+				return 1 # other error
+			fi
 		fi
 
 		echo "Writing /etc/exports..."
@@ -2381,9 +2582,8 @@ nfs_share_add ()
 # Removes all Docksal NFS exports
 nfs_share_remove ()
 {
-	local machine_name="${DOCKER_MACHINE_NAME:-docksal}"
 	# Remove our own old exports
-	local exports_open="# <ds-nfs $machine_name"
+	local exports_open="# <ds-nfs $DEFAULT_MACHINE_NAME"
 	local exports_close="# ds-nfs>"
 	local exports=$(cat /etc/exports 2>/dev/null)
 	local exports_new=$(cat /etc/exports 2>/dev/null | \
@@ -2419,14 +2619,13 @@ nfs_share_remove ()
 # Unnamed params - shares in format "$LOCAL_FOLDER:$MOUNT_POINT_NAME"
 docker_machine_mount_nfs ()
 {
-	local machine_name="$DOCKER_MACHINE_NAME"
 	local nfs_ip="$DOCKSAL_HOST_IP"
 	eval $(parse_params "$@")
 
 	# Mount exported folders
 	echo-green "Mounting NFS shares..."
 	# Start NFS client on docker-machine
-	docker-machine ssh "$machine_name" "sudo /usr/local/etc/init.d/nfs-client start"
+	docker-machine ssh "$DEFAULT_MACHINE_NAME" "sudo /usr/local/etc/init.d/nfs-client start" >/dev/null
 	for share in ${ARGV[@]}; do
 		local share_=(${share//:/ });
 		local share_export="${share_[0]}"
@@ -2435,16 +2634,16 @@ docker_machine_mount_nfs ()
 		# [!!] Think twice about performance before changing nfs settings
 		nfs_mount_command="sudo mount -t nfs -o vers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1 $nfs_ip:$share_export $share_mount"
 		# Timeout will break mount command, that can freeze if connection to host is blocked by firewall
-		docker-machine ssh "$machine_name" \
+		docker-machine ssh "$DEFAULT_MACHINE_NAME" \
 			"sudo mkdir -p $share_mount;
 			timeout -t 5 sudo umount $share_mount 2>/dev/null;
 			timeout -t 20 $nfs_mount_command"
 		if [[ $? != 0 ]]; then
 			echo "Retrying mounting local $share_export to $share_mount"
 			sleep 5
-			docker-machine ssh "$machine_name" "timeout -t 20 $nfs_mount_command"
+			docker-machine ssh "$DEFAULT_MACHINE_NAME" "timeout -t 20 $nfs_mount_command"
 			if [[ $? != 0 ]]; then
-				echo-error "NFS share mount failed." "Try ${yellow}fin vm restart${NC}."
+				echo-error "NFS share mount failed." "Try ${yellow}fin vm mount${NC} or ${yellow}fin vm restart${NC}."
 				return 1
 			fi
 		fi
@@ -2453,7 +2652,9 @@ docker_machine_mount_nfs ()
 
 # Fix/optimize Windows network settings for file sharing.
 # See http://serverfault.com/a/236393 for details.
-smb_windows_fix()
+# TODO: Deprecated and soon to be removed.
+# This was applicable to Windows 7. Most likely irrelevant at this point.
+smb_windows_fix ()
 {
 	! is_windows && return
 
@@ -2464,10 +2665,8 @@ smb_windows_fix()
 	local tmpfile="/tmp/fix-smb.reg"
 	cat <<EOF > $tmpfile
 Windows Registry Editor Version 5.00
-
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management]
 "LargeSystemCache"=dword:00000001
-
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters]
 "Size"=dword:00000003
 EOF
@@ -2482,12 +2681,18 @@ smb_share_add()
 	local share_name=$1
 	local share_path=$2
 
+	is_wsl && USERNAME="$(wsl_env USERNAME)"
+	is_wsl && USERDOMAIN="$(wsl_env USERDOMAIN)"
+
 	# Add SMB share if it does not exist.
-	if [[ "$(net share)" != *"${share_name}"*"Docksal ${share_path} drive"* ]];
-	then
-		command_share="net share ${share_name}=${share_path} /grant:${USERNAME},FULL /REMARK:\"Docksal ${share_path} drive\""
-		echo-green "Adding docker SMB share..."
-		winsudo "$command_share"
+	if [[ "$(net.exe share)" != *"${share_name}"* ]]; then
+		echo-green "Adding docker SMB share ${share_name}..."
+		if is_wsl; then
+			sudowin net.exe share "${share_name}=${share_path}" "/grant:${USERDOMAIN}\\${USERNAME},FULL" "/REMARK:Docksal"
+		else
+			command_share="net.exe share ${share_name}=${share_path} /grant:${USERDOMAIN}\\${USERNAME},FULL /REMARK:Docksal"
+			winsudo "$command_share"
+		fi
 
 		if [[ $? != 0 ]]; then
 			echo-error "SMB share creation failed." \
@@ -2501,13 +2706,18 @@ smb_share_add()
 # Removes Docksal SMB shares
 smb_share_remove ()
 {
-	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
+	local drives
+	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
+
 	for drive in ${drives}; do
-		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
-		# Avoid conflicts with existing drive shares buy using a unique share name
-		local share_name="docksal-$mount_point"
-		command_share="net share ${share_name} /DELETE"
-		winsudo "$command_share"
+		# Avoid conflicts with existing drive shares by using a unique share name
+		local share_name="docksal-$drive"
+		if is_wsl; then
+			sudowin net share ${share_name} /DELETE
+		else
+			command_share="net.exe share ${share_name} /DELETE"
+			winsudo "$command_share"
+		fi
 	done
 }
 
@@ -2520,6 +2730,8 @@ smb_share_mount()
 	local password=$3
 	# single quotes are banned from being used in password
 	password=${password//\'/}
+	is_wsl && USERNAME="$(wsl_env USERNAME)"
+	is_wsl && USERDOMAIN="$(wsl_env USERDOMAIN)"
 
 	# User ntlmssp by default. For some Windows machines ntlm should be used instead
 	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
@@ -2529,21 +2741,21 @@ smb_share_mount()
 	command_mount="
 		(sudo umount $mount_point >/dev/null 2>&1 || true) && \
 		sudo mkdir -p $mount_point && \
-		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=2.1,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKSAL_HOST_IP}/$share_name $mount_point"
-	docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+		sudo mount -t cifs -o username='${USERNAME}',pass='${password}',domain='${USERDOMAIN}',sec='${SMB_SEC}',vers=3.02,nobrl,mfsymlinks,noperm,actimeo=1,dir_mode=0777,file_mode=0777 //${DOCKSAL_HOST_IP}/$share_name $mount_point"
+	docker-machine ssh ${DEFAULT_MACHINE_NAME} "$command_mount"
 
 	# Perform a second attenpt with sec=ntlm if the first one (with ntslssp or custom override via SMB_SEC=) failed.
 	if [[ $? != 0 ]]; then
 		echo-yellow "Mount command failed... Trying an alternative method..."
 		# Switch sec to ntlm and try again
 		command_mount=$(echo $command_mount | sed 's/sec=.*,/sec=ntlm,/')
-		docker-machine ssh ${DOCKER_MACHINE_NAME} "$command_mount"
+		docker-machine ssh ${DEFAULT_MACHINE_NAME} "$command_mount"
 
 		if [[ $? == 0 ]]; then
 			echo-green 'Success!'
 		else
 			echo-error "SMB share mount failed." \
- 				"Make sure your Windows password is correct and run ${yellow}fin vm restart${NC} to try again." \
+ 				"Make sure your Windows password is correct and run ${yellow}fin vm mount${NC} to try again." \
  				"For troubleshooting instructions see ${yellow}https://docs.docksal.io/troubleshooting/windows-smb/${NC}"
 			return 1
 		fi
@@ -2555,40 +2767,42 @@ docker_machine_mount_smb ()
 	# add share \\hostname\c writable to current user
 	# ask user for his password
 	# use his password for mount -t cifs ...
-
-	# Get a list of logical drives (type 3 = Local disk).
-	local drives=$(wmic logicaldisk get drivetype,name | grep 3 | awk '{print $2}' | sed 's/\r//g')
 	read -s -p "Enter your Windows account password: " password
 	echo # Add a new line after user input.
 
 	if ([[ "$password" =~ \' ]] || [[ "$password" =~ , ]] || [[ "$password" =~ \\ ]]); then
 		echo-error "Password contains illegal characters" \
 			"Your password contains a single quote ('), a comma (,) or a back slash (\\)" \
-			"Please change you password and run ${yellow}fin vm restart${NC}"
+			"Please change you password and run ${yellow}fin vm mount${NC}"
 		return 1
 	fi
 
+	local drives
+	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
+
 	for drive in ${drives}; do
-		local mount_point=$(cygpath -u "$drive" | sed 's/^\/cygdrive\///')
+		# Mount point is lowercase drive letter with no slash
 		# Avoid conflicts with existing drive shares buy using a unique share name
-		local share_name="docksal-$mount_point"
-		smb_share_add "$share_name" "$drive" &&
-			smb_share_mount "$share_name" "/$mount_point" "$password"
+		local share_name="docksal-$drive"
+		# echo smb_share_add "$share_name" "$drive"
+		smb_share_add "$share_name" "$drive:" &&
+			smb_share_mount "$share_name" "/$drive" "$password"
 	done
 }
 
-# Creates bind mounts on WSL from /mnt/c to /c so that docker-compose pth would match path inside docker
+# Creates bind mounts on WSL from /mnt/c to /c so that docker-compose path would match path inside docker
 # See overridden pwd function too
 wsl_mount_drives ()
 {
 	! is_wsl && return;
 	local mounts=$(mount)
 	# Create mnt point binds if they don't exist
-	for drive in $(ls "/mnt"); do
-		! (echo "$mounts" | grep "on /$drive" >/dev/null) && \
-			echo "Creating bind mount /mnt/$drive -> /$drive" && \
-			sudo mkdir -p "/$drive" && \
+	for drive in $(ls /mnt); do
+		if ! (echo "$mounts" | grep " on /$drive " >/dev/null); then
+			echo "Creating bind mount /mnt/$drive -> /$drive"
+			sudo mkdir -p "/$drive"
 			sudo mount --bind "/mnt/$drive" "/$drive"
+		fi
 	done
 }
 
@@ -2597,7 +2811,9 @@ wsl_mount_drives ()
 vm ()
 {
 	if is_docker_native; then
-		echo "Docksal VM cannot be used with Docker for Mac/Docker for Windows"
+		echo-error "Docksal VM cannot be used in Docker Desktop mode" \
+			"You have DOCKER_NATIVE set to 1. VM functions should not be used in this mode." \
+			"See https://docs.docksal.io/getting-started/docker-modes/ for details"
 		return 1
 	fi
 	if is_linux; then
@@ -2608,98 +2824,58 @@ vm ()
 	check_binary_found 'docker-machine'
 
 	if ! is_docker_machine_exist && [[ "$1" != "" ]] && [[ "$1" != "start" ]] && [[ "$1" != "create" ]] && [[ "$1" != "ls" ]] && [[ "$1" != "remove" ]] && [[ "$1" != "rm" ]] && [[ "$1" != "active" ]] ; then
-		 echo-yellow "Docker machine $DOCKER_MACHINE_NAME does not exist. Use 'fin vm start' or 'fin up'."
+		 echo-yellow "Docker machine $DEFAULT_MACHINE_NAME does not exist. Use 'fin system start'."
 		 return 1
 	fi
 
 	case $1 in
-		create)
-			# usage: fin vm create <machine_name>
-			shift
-			# errors handling
-			[[ "$1" == "" ]] && echo "Please provide a name for a new vm." && return 1
-			is_docker_machine_exist "$1" && echo "Machine ${1} already exists." && return 1
-			# create
-			docker_machine_create "$1"
-			;;
-		active)
-			# Get/Set active vm
-			shift
-			if [[ "$1" == "" ]]; then
-				echo "$DOCKER_MACHINE_NAME"
-			else
-				[[ "$1" == "$DOCKER_MACHINE_NAME" ]] && echo "$1 is already active" && return 0
-				! is_docker_machine_exist "$1" && echo "No docker machine with name $1" && return 1
-				mkdir -p "$CONFIG_MACHINES" || return 1
-				echo "$1" | tee "$CONFIG_MACHINE_ACTIVE" >/dev/null && echo "$1 is set active"
-			fi
-			;;
 		start)
-			if is_docker_machine_running; then
-				echo "Machine \"$DOCKER_MACHINE_NAME\" is already running."
-			else
-				docker_machine_start
-			fi
+			# Show a message and pause for input.
+			echo -e "Deprecated. Please use ${yellow}fin system start${NC} instead."
+			read -p "Press any key to continue..."
+			system_start
 			;;
 		restart)
-			docker_machine_stop; docker_machine_start
+			system_stop
+			system_start
 			;;
 		status)
-			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			docker-machine status "$machine_name"
+			docker-machine status ${DEFAULT_MACHINE_NAME}
 			;;
 		stop)
-			# Disable resolver configuration before machine is turned off
-			configure_resolver off
-			docker_machine_stop
+			# Show a message and pause for input.
+			echo -e "Deprecated. Please use ${yellow}fin system stop${NC} instead."; read -p "Press any key to continue..."
+			system_stop
 			;;
 		ssh)
 			shift
-			docker-machine ssh "$DOCKER_MACHINE_NAME" "$@"
+			docker-machine ssh ${DEFAULT_MACHINE_NAME} "$@"
 			;;
 		stats)
 			vm-stats
 			;;
 		kill)
-			# Disable resolver configuration before machine is turned off
-			configure_resolver off
-			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			docker-machine kill "$machine_name"
+			system_stop
+			docker-machine kill ${DEFAULT_MACHINE_NAME}
+			# Manually update cached values
+			DOCKER_MACHINE_STATUS="Defunct"
+			DOCKER_RUNNING="false"
 			;;
 		ls|list)
 			docker-machine ls
 			;;
 		remove|rm)
-			# Disable resolver configuration before machine is turned off
-			configure_resolver off
-			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			docker_machine_remove "$machine_name"
+			system_stop
+			docker_machine_remove ${DEFAULT_MACHINE_NAME}
 			;;
 		mount)
 			configure_mounts
 			;;
 		ip)
-			shift
-			local machine_name="${1:-$DOCKER_MACHINE_NAME}"
-			if [[ "$1" =~ [0-9][0-9]*[0-9]*.[0-9][0-9]*[0-9]*\.[0-9][0-9]*[0-9]*\.[0-9] ]]; then
-				# set ip
-				echo-green "Setting ip to $1..."
-#				echo "$1" > "$DOCKER_MACHINE_FOLDER/ip"
-#				echo-yellow "IP change will take effect on next machine start."
-				DOCKER_MACHINE_IP="$1"
-				docker_machine_change_ip
-			else
-				docker-machine ip "$machine_name"
-			fi
-
+			docker-machine ip ${DEFAULT_MACHINE_NAME}
 			;;
 		env)
-			shift
-			DOCKER_MACHINE_NAME="${1:-$DOCKER_MACHINE_NAME}"
-			docker-machine env "$DOCKER_MACHINE_NAME"
+			docker-machine env --shell=bash ${DEFAULT_MACHINE_NAME}
 			;;
 		ram)
 			shift
@@ -2713,7 +2889,7 @@ vm ()
 			show_help_vm
 			;;
 		regenerate-certs)
-			docker-machine regenerate-certs -f "$DOCKER_MACHINE_NAME"
+			docker-machine regenerate-certs -f ${DEFAULT_MACHINE_NAME}
 			vm restart
 			;;
 		*)
@@ -2729,19 +2905,19 @@ vm-stats ()
 	check_docker_running # should be running
 	check_vbox_version
 	metrics="CPU/Load/User,CPU/Load/Kernel,Net/Rate/Rx,Net/Rate/Tx"
-	"$vboxmanage" metrics setup --period 1 --samples 1 "$DOCKER_MACHINE_NAME"
+	"$vboxmanage" metrics setup --period 1 --samples 1 "$DEFAULT_MACHINE_NAME"
 	sleep 1
-	"$vboxmanage" metrics query "$DOCKER_MACHINE_NAME" "$metrics"
+	"$vboxmanage" metrics query "$DEFAULT_MACHINE_NAME" "$metrics"
 }
 
 vm-ram () {
-	echo "Total $("$vboxmanage" showvminfo "$DOCKER_MACHINE_NAME" | grep Memory)"
+	echo "Total $("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
 		local running
 		is_docker_machine_running && running=1
 		_confirm "Continue changing Memory size to ${1}MB?"
 		[[ ${running} == 1 ]] && docker_machine_stop
-		"$vboxmanage" modifyvm "$DOCKER_MACHINE_NAME" --memory "$1" && \
+		"$vboxmanage" modifyvm "$DEFAULT_MACHINE_NAME" --memory "$1" && \
 			echo "Memory size updated."
 		[[ ${running} == 1 ]] && docker_machine_start
 	else
@@ -2754,7 +2930,7 @@ vm-ram () {
 }
 
 vm-hdd () {
-	docker-machine ssh "$DOCKER_MACHINE_NAME" df -h /mnt/sda1
+	docker-machine ssh "$DEFAULT_MACHINE_NAME" df -h /mnt/sda1
 }
 
 #------------------------------- Other Commands -----------------------------------
@@ -3103,13 +3279,13 @@ system_reset ()
 	if [[ "$1" == "" ]] ; then
 		configure_network
 		configure_mounts
-		echo-green 'Resetting Docksal services...'
-		echo ' ➔ proxy'
+		echo-green 'Resetting Docksal system services...'
+		echo ' * proxy'
 		install_proxy_service
-		echo ' ➔ dns'
+		echo ' * dns'
 		install_dns_service
 		configure_resolver
-		echo ' ➔ ssh-agent'
+		echo ' * ssh-agent'
 		install_sshagent_service
 		return
 	fi
@@ -3153,35 +3329,39 @@ system_status ()
 }
 
 # Starts all Docksal related things
-# TODO: add projects, network, /etc/exports, etc. here for a complete shutdown of Docksal
 system_start ()
 {
-	if ! is_linux && ! is_docker_native && ! is_wsl; then
-		echo "Starting Docksal VM..."
-		vm start
-		system_reset
-	else
-		echo "Starting Docksal system services..."
-		system_reset
-	fi
+	# Reset network settings before doing anything else (just in case)
+	# (May happen if switching modes native vs not).
+	system_reset network
+
+	# This will instruct the user what to do if Docker daemon is not accessible
+	check_docker_running --quiet
+
+	# This will do the rest of the configuration, assuming the VM/Docker are already running.
+	system_reset
 }
 
 # Stops/disables all Docksal things
 system_stop ()
 {
-	if ! is_linux && ! is_docker_native && ! is_wsl; then
-		echo-green "Stopping Docksal VM..."
-		# VM stop will perform configure_resolver off
-		vm stop
+	if ! is_linux && ! is_docker_native; then
+		# Stop the docker-machine VM.
+		if is_docker_machine_running; then
+			echo-green "Stopping Docksal VM..."
+			docker_machine_stop
+		fi
 	else
+		# Stop all Docksal project and system containers.
 		# keep in a subshell so that exit during that command would not stop other command in system stop
 		(_stop_containers --all)
 		echo-green "Stopping Docksal system services..."
-		docker ps -q --filter "label=io.docksal.group=system" | xargs docker rm -vf >/dev/null
-		configure_resolver off
-		configure_mounts off
-		configure_network off
+		docker ps -q --filter "label=io.docksal.group=system" 2>/dev/null | xargs docker rm -vf >/dev/null
 	fi
+
+	configure_resolver off
+	configure_mounts off
+	configure_network off
 }
 
 # Helper function to run ssh-key inside the ssh-agent container
@@ -3190,13 +3370,13 @@ _ssh_key ()
 	# Return if no key or option passed
 	[[ "$@" == "" ]] && return
 
-	if is_tty; then
-		# Run ssh-key interactively to allow entering a passphrase for ssh keys (if set)
-		${winpty} docker exec -it docksal-ssh-agent ssh-key "$@"
-	else
+	if ! is_tty || is_travis ; then
 		# In a non-interactive environment (e.g., CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 		docker exec docksal-ssh-agent ssh-key "$@"
+	else
+		# Run ssh-key interactively to allow entering a passphrase for ssh keys (if set)
+		${winpty} docker exec -it docksal-ssh-agent ssh-key "$@"
 	fi
 }
 
@@ -3254,12 +3434,12 @@ ssh_key ()
 
 	# If the user does not have any SSH keys (no ~/.ssh folder), offer to generate a default key
 	if [[ ! -d "$ssh_path" ]]; then
-		echo-yellow "You don't seem to have any SSH keys in the default location (${ssh_path})."
+		echo-yellow "You don't seem to have any SSH keys in the default location ('${ssh_path}')."
 		_confirm "Would you like to generate a default SSH key pair now?" --no-exit || return
 		# Ensure ssh_path exists
 		mkdir -p "$ssh_path"
 		# Generate a default id_rsa key
-		_ssh_key_generate id_rsa
+		ssh_key_generate id_rsa
 	fi
 
 	# Copy all keys from the host to the ssh-agent container.
@@ -3315,7 +3495,7 @@ ssh_key ()
 
 	# Remove copied keys from the ssh-agent container after loading into the ssh-agent.
 	# Commented out in favor of passing individual keys on stdin of the agent container.
-	docker exec docksal-ssh-agent bash -c 'rm -rf /.ssh/*'
+	docker exec docksal-ssh-agent rm -rf '/.ssh/*'
 }
 
 #----- Installations and updates -----
@@ -3348,13 +3528,19 @@ stats_ping ()
 	return 0
 }
 
+# Checks whether local network interface is configured for Docksal
+check_network_alpine ()
+{
+	grep -q "lo:docksal" <<< "$(ip addr show dev lo)"
+}
+
 # Configure Docksal network settings on Alpine via ip addr
 configure_network_alpine ()
 {
 	local mode="${1:-on}"
 	# Determine current status
 	local status
-	(grep -q "lo:docksal" <<< "$(ip addr show dev lo)") && status="enabled" || status="disabled"
+	check_network_alpine && status="enabled" || status="disabled"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add an IP address alias to the loopback interface
@@ -3366,13 +3552,22 @@ configure_network_alpine ()
 	fi
 }
 
+# Checks whether the local network interface is configured for Docksal.
+# Applicable to Docker Desktop only.
+check_network_mac ()
+{
+	local settings=$(ifconfig lo0)
+	grep -q "${DOCKSAL_IP} netmask" <<< ${settings}  || return 1
+	grep -q "${DOCKSAL_HOST_IP} netmask" <<< ${settings} || return 1
+}
+
 # Configure Docksal network settings on Mac
 configure_network_mac ()
 {
 	local mode="${1:-on}"
 	# Determine current status
 	local status
-	(grep -q "$DOCKSAL_IP" <<< "$(ifconfig lo0)") && status="enabled" || status="disabled"
+	check_network_mac && status="enabled" || status="disabled"
 
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add Docksal IP aliases on the local loopback adapter
@@ -3385,35 +3580,67 @@ configure_network_mac ()
 	fi
 }
 
+# Checks whether DOCKER_WIN_NETWORK network interface is configured for Docksal
+# Applicable to Docker Desktop only.
+check_network_windows ()
+{
+	# Trim \r from output (necessary on Windows)
+	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
+	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
+	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
+}
+
 # Configure Docksal network settings on Windows
 configure_network_windows ()
 {
 	local mode="${1:-on}"
+	# Determine current status
+	local status
+	check_network_windows && status="enabled" || status="disabled"
 
 	# Docker for Win
-	if [[ "$mode" == "on" ]]; then
+	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add Docksal IP aliases on the DockerNAT adapter
-		local command1="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_IP} mask=255.255.255.0"
-		local command2="netsh interface ip add address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_HOST_IP} mask=255.255.255.0"
-		winsudo "$command1 && $command2"
-	elif [[ "$mode" == "off" ]]; then
+		local command1="netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr=${DOCKSAL_IP} mask=255.255.255.0"
+		local command2="netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr=${DOCKSAL_HOST_IP} mask=255.255.255.0"
+		winsudo "$command1 & $command2"
+	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove Docksal IP aliases on the DockerNAT adapter
-		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_IP}"
-		local command1="netsh interface ip delete address name=\"vEthernet (DockerNAT)\" addr=${DOCKSAL_HOST_IP}"
-		winsudo "$command1 && $command2"
+		local command1="netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr=${DOCKSAL_IP}"
+		local command2="netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr=${DOCKSAL_HOST_IP}"
+		winsudo "$command1 & $command2"
 	fi
 	# Wait 5s for network configuration to apply
 	sleep 5
 }
 
+# Checks whether DOCKER_WIN_NETWORK network interface is configured for Docksal
+# Applicable to Docker Desktop only.
+check_network_wsl ()
+{
+	# Trim \r from output (necessary on Windows)
+	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
+	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
+	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
+}
+
 # Configure Docksal network settings on WSL
 configure_network_wsl ()
 {
-	# TODO: implement on/off modes
 	local mode="${1:-on}"
+	local status
+	check_network_wsl && status="enabled" || status="disabled"
 
-	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_IP}" mask="255.255.255.0"
-	cmd.exe /c netsh interface ip add address name=\"vEthernet \(DockerNAT\)\" address="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
+	# Docker for Win
+	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
+		# Add Docksal IP aliases on the DockerNAT adapter
+		sudowin netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_IP}" mask="255.255.255.0"
+		sudowin netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
+	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
+		# Remove Docksal IP aliases on the DockerNAT adapter
+		sudowin netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_IP}"
+		sudowin netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_HOST_IP}"
+	fi
 	# Wait 5s for network configuration to apply
 	sleep 5
 }
@@ -3423,17 +3650,13 @@ configure_network ()
 {
 	local mode="${1:-on}"
 
-	# Set mode to off for Mac and Windows when not running in "native" mode
-	if ! is_docker_native && (is_mac || is_windows); then
+	# Always set mode to "off" when running on Mac/Windows/WSL in VirtualBox mode.
+	# Mode "on" is only applicable to Linux and Docker for Mac/Windows.
+	if ! is_docker_native && (is_mac || is_windows || is_wsl); then
 		mode="off"
 	fi
 
-	if [[ "$mode" == "on" ]]; then
-		echo-green "Configuring network settings..."
-	else
-		echo-green "Restoring network settings..."
-	fi
-
+	echo-green "Configuring network settings..."
 	is_linux && configure_network_alpine "$mode" && return $?
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
@@ -3450,25 +3673,42 @@ configure_mounts ()
 		if is_mac; then
 			echo-green "Configuring NFS shares..."
 			nfs_share_add "${DOCKSAL_NFS_PATH}"
-			# Exit 2 = conflict in /etc/exports. Try to auto-resolve it.
-			if [[ $? == 2 ]]; then
+			res=$?
+			# Exit 2 = conflict or other error in /etc/exports. Try to auto-resolve it.
+			if [[ $res == 2 ]]; then
 				# TODO: possibly, print a note that anything above the configured DOCKSAL_NFS_PATH is invisible to the VM.
-				echo-green "Conflict detected. Attempting auto-fix:"
-				_confirm "Suggested path for Docksal projects: ${yellow}${HOME}/Projects${NC}. Use it?"
+				echo-green "Possible NFS conflict detected. Attempting auto-fix:"
+				_confirm "Suggested path for Docksal projects: ${yellow}${HOME}/Projects${NC}. Try it?"
 				DOCKSAL_NFS_PATH="${HOME}/Projects"
 				mkdir -p "${DOCKSAL_NFS_PATH}"
 				# Write proposed value to the global Docksal config
 				config_set --global DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH}"
 				# Configure exports using the new value
 				nfs_share_add "${DOCKSAL_NFS_PATH}"
+				res=$?
+				if [[ $res == 2 ]]; then
+					echo-error "There is still an NFS conflict" \
+						"With ${yellow}${DOCKSAL_NFS_PATH}${NC} your ${yellow}/etc/exports${NC} would still contain a conflict." \
+						"You need to manually review your ${yellow}/etc/exports${NC} and resolve conflicts." \
+						"Most likely remove the lines that export folders under ${yellow}${DOCKSAL_NFS_PATH}${NC}" \
+						"Then run ${yellow}fin system reset${NC}"
+					exit 1
+				elif [[ $res != 0 ]]; then
+					echo-error "NFS sharing has failed"
+					exit 1
+				fi
+			elif [[ $res != 0 ]]; then
+				echo-error "NFS sharing has failed"
+				exit 1
 			fi
+
 			# Mount the share in VirtualBox
 			if ! is_docker_native; then
 				docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
 			fi
 		fi
 		# Create, then mount shares in VirtualBox
-		if is_windows && ! is_docker_native; then
+		if (is_wsl || is_windows) && ! is_docker_native; then
 			echo-green "Configuring SMB shares..."
 			docker_machine_mount_smb
 		fi
@@ -3477,7 +3717,7 @@ configure_mounts ()
 			echo-green "Removing NFS exports..."
 			nfs_share_remove
 		fi
-		if is_windows && ! is_docker_native; then
+		if (is_wsl || is_windows) && ! is_docker_native; then
 			echo-green "Removing SMB shares..."
 			smb_share_remove
 		fi
@@ -3553,19 +3793,38 @@ detect_dns ()
 			# In case no name servers found, fall back to the default
 			DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 		fi
-	elif is_windows; then
+	elif is_windows || is_wsl; then
 		# Look for Primary WINS server, it represents DNS whe WINS services is in use
-		local primary_wins=$(ipconfig /all | grep "Primary WINS")
+		local primary_wins=$(ipconfig.exe /all | grep "Primary WINS")
 		if [[ "$primary_wins" =~ ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) ]]; then
 			DOCKSAL_DNS_UPSTREAM=${BASH_REMATCH[0]}
-		else
-			# In case nothing was found, fall back to the default
-			DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
+		fi
+
+		# If previous detection failed, try another one. Lists all DNS addresses. Uses first non-localhost
+		# Not an ideal check as it might pick the wrong one if there are several, but better than nothing
+		if [[ "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
+			dns_addresses=""
+			# We need IFS to only be newline for the next for loop
+			local _IFS=${IFS}
+			IFS=$'\n'
+			for dns_found in $(netsh.exe interface ip show config | grep DNS | grep -v None | grep -v $DOCKSAL_IP); do
+				# Trim \r from output (necessary on Windows)
+				dns_addresses="${dns_addresses} "$(echo "$dns_found" | cut -d ":" -f 2 | tr -d '\r' | xargs)
+			done
+			# Restore IFS back to default
+			IFS=${_IFS}
+
+			for dns in $dns_addresses; do
+				if [[ ! "$dns" =~ "127.0."* ]]; then
+					DOCKSAL_DNS_UPSTREAM="${dns}"
+					break
+				fi
+			done
 		fi
 	fi
 
-	# If localhost address was detected as upstream, fall back to the default
-	if [[ "$DOCKSAL_DNS_UPSTREAM" =~ "127.0."* ]]; then
+	# If detected upstream points to localhost or is empty, then fall back to the default
+	if [[ "$DOCKSAL_DNS_UPSTREAM" =~ "127.0."* || "$DOCKSAL_DNS_UPSTREAM" == "" ]]; then
 		DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 	fi
 
@@ -3655,22 +3914,21 @@ configure_resolver_windows () {
 	local network_id
 	if is_docker_native; then
 		# Use the default DockerNAT adapter
-		network_id="vEthernet (DockerNAT)"
-	else
+		network_id="${DOCKER_WIN_NETWORK}"
+	elif is_docker_machine_exist; then
+		# Need to check whether machine exists, otherwise we cannot get its info
 		# Figure out the name of the network (not the name of the adapter) the VM is using
-		network_id=$("$vboxmanage" showvminfo ${DOCKER_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
-	fi
-
-	if [[ "$network_id" == "" ]]; then
-		echo-error "DNS resolver configuration failed"
-		return 1
+		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+	else
+		# There is nothing to configure (machine and thus its network interface does not exist)
+		return
 	fi
 
 	# Set DNS server to Docksal IP on the VM's VBox adapter
 	local command1="netsh interface ip set dnsservers \"${network_id}\" static ${dns_ip} none"
 	# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
 	local command2="netsh interface ip set interface \"${network_id}\" metric=${metric}"
-	winsudo "$command1 && $command2"
+	winsudo "$command1 & $command2"
 
 	# Flush DNS cache
 	echo-green "Clearing DNS cache..."
@@ -3692,12 +3950,22 @@ configure_resolver_wsl () {
 	fi
 
 	local network_id
-	network_id="vEthernet (DockerNAT)"
+	if is_docker_native; then
+		# Use the default DockerNAT adapter
+		network_id="${DOCKER_WIN_NETWORK}"
+	elif is_docker_machine_exist; then
+		# Need to check whether machine exists, otherwise we cannot get its info
+		# Figure out the name of the network (not the name of the adapter) the VM is using
+		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
+	else
+		# There is nothing to configure (machine and thus its network interface does not exist)
+		return
+	fi
 
 	# Set DNS server to Docksal IP on the VM's VBox adapter
-	cmd.exe /c netsh interface ip set dnsservers "${network_id}" static ${dns_ip} none
+	sudowin netsh.exe interface ip set dnsservers "${network_id}" static ${dns_ip} none
 	# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
-	cmd.exe /c netsh interface ip set interface "${network_id}" metric=${metric}
+	sudowin netsh.exe interface ip set interface "${network_id}" metric=${metric}
 
 	# Flush DNS cache
 	echo-green "Clearing DNS cache..."
@@ -3768,9 +4036,6 @@ install_sshagent_service ()
 # Install Mac dependencies
 install_tools_mac ()
 {
-	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
-	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
-
 	# Install Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_MAC")
@@ -3831,34 +4096,11 @@ install_tools_mac ()
 			if_failed "Check file permissions."
 		fi
 	fi
-
-	# Cleanup
-	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
-
-	# If it was an upgrade
-	[[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]] && \
-		is_docker_machine_running && \
-		echo-green "Preparing to update virtual machine..." && \
-		docker_machine_stop && \
-		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-		curl -fL# "$URL_BOOT2DOCKER" -o "$HOME/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
-		docker_machine_start
-
-	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local server_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Update Docker for Mac to the latest version manually"
-			sleep 2
-		fi
-	fi
 }
 
 # Install Windows dependencies
 install_tools_windows ()
 {
-	mkdir -p "$CONFIG_DOWNLOADS_DIR" 2>/dev/null
-	if_failed "Could not create $CONFIG_DOWNLOADS_DIR"
-
 	# Remove old incorrect line
 	sed -i~ "s/^\\\\nexport.*$//" "$HOME/.babunrc"
 	# Disable Babun update checks as they often bring problems
@@ -3882,11 +4124,13 @@ install_tools_windows ()
 		fi
 
 		# Run in sub-shell so we don't have to cd back
+		# docker client binary downloaded from MS (e.g. docker-18-09-2.zip) is dynamically linked and needs DLLs from
+		# the archive. So unpacking everything below, not just docker.exe
 		(
 			cd "$CONFIG_DOWNLOADS_DIR" && \
-			unzip ${docker_pkg} && \
-			mv -f "docker/docker.exe" "$DOCKER_BIN.exe" && \
-			chmod +x "$DOCKER_BIN"
+			unzip -qq ${docker_pkg} && \
+			mv -f ./docker/* ${CONFIG_BIN_DIR}/ && \
+			chmod +x ${DOCKER_BIN}.exe
 		)
 		if_failed "Check file permissions."
 	fi
@@ -3951,37 +4195,16 @@ install_tools_windows ()
 		if_failed "Check file permissions."
 	fi
 
-	# Cleanup
-	rm -rf "$CONFIG_DOWNLOADS_DIR" >/dev/null 2>&1
-
 	# Run one-time adjustments during install only.
-	if [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		# Optimize SMB sharing
+	if ! is_update; then
+		# Optimize SMB sharing (deprecated)
 		smb_windows_fix
-		[ ! $? -eq 0 ] && echo-red "Failed. Windows shares might not work properly with Docksal."
 		# Git settings
 		echo-green "Adjusting git defaults..."
 		echo "git config --global core.autocrlf input"
 		git config --global core.autocrlf input # do not convert line breaks. treat as is
 		echo "git config --system core.longpaths true"
 		git config --system core.longpaths true # support long paths
-	fi
-
-	if ! is_docker_native && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" == "1" ]]; then
-		is_docker_machine_running && \
-		echo-green "Preparing to update virtual machine..." && \
-		docker_machine_stop && \
-		echo "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}" && \
-		curl -fL# "$URL_BOOT2DOCKER" -o "$(cygpath $USERPROFILE)/.docker/machine/machines/$DOCKER_MACHINE_NAME/boot2docker.iso" && \
-		docker_machine_start
-	fi
-
-	if is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local server_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$server_version") ]]; then
-			echo-alert "Update Docker for Windows to the latest version manually"
-			sleep 2
-		fi
 	fi
 }
 
@@ -3999,7 +4222,7 @@ install_tools_debian ()
 		fi
 
 		# Pin docker version
-		curl -fsSL "${URL_DOCKER_NIX}" | VERSION=${REQUIREMENTS_DOCKER} sh
+		curl -fsSL "${URL_DOCKER_COM}" | VERSION=${REQUIREMENTS_DOCKER} sh
 		# Using $LOGNAME, not $(whoami). See http://stackoverflow.com/a/4598126/4550880.
 		sudo usermod -aG docker "$LOGNAME"
 		sudo service docker start 2>/dev/null
@@ -4010,8 +4233,8 @@ install_tools_debian ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			chmod +x "$DOCKER_COMPOSE_BIN" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
@@ -4031,7 +4254,7 @@ install_tools_fedora ()
 		fi
 
 		# Install stable Docker version
-		curl -fsSL "${URL_DOCKER_NIX}" | CHANNEL=stable sh
+		curl -fsSL "${URL_DOCKER_COM}" | CHANNEL=stable sh
 		if_failed "Docker installation/upgrade has failed."
 
 		# Have to create group here to add user to it
@@ -4044,8 +4267,8 @@ install_tools_fedora ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			chmod +x "$DOCKER_COMPOSE_BIN" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
@@ -4069,6 +4292,10 @@ install_tools_alpine ()
 		# docker-compose has to be install via pip on Alpine
 		# See https://github.com/docker/compose/issues/3465
 		apk add --no-cache python3 >/dev/null && \
+			# Update pip to avoid warnings like:
+			# - "Cache entry deserialization failed, entry ignored"
+			# - "You are using pip version 10.0.1, however version 19.0.3 is available."
+			pip3 install --upgrade --no-cache-dir pip >/dev/null && \
 			pip3 install "docker-compose==${REQUIREMENTS_DOCKER_COMPOSE}" >/dev/null && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
@@ -4089,8 +4316,8 @@ install_tools_generic_linux ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
+		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			chmod +x "$DOCKER_COMPOSE_BIN" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
@@ -4099,35 +4326,80 @@ install_tools_generic_linux ()
 # Install WSL dependencies
 install_tools_wsl ()
 {
-	# Install Docker client
+	# Install Linux Docker client
 	if ! is_docker_version; then
-		echo-green "Installing Docker..."
-		# Install packages to allow apt to use a repository over HTTPS
-		sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
-		# Add Docker's official GPG key
-		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-		# Set up the repository
-		sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-		# Update source lists
-		sudo apt-get update
-		# Install Docker
-		sudo apt-get install docker-ce -y --allow-unauthenticated
-		if_failed "Docker installation/upgrade has failed."
+		local docker_pkg=$(basename "$URL_DOCKER_NIX")
+		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		if [[ ! -f "$docker_pkg" ]]; then
+			echo-green "Downloading ${docker_pkg}..."
+			curl -fL# "$URL_DOCKER_NIX" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
+			if_failed "Check internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${docker_pkg}. Using it..."
+			cp -f "$docker_pkg" "$CONFIG_DOWNLOADS_DIR"
+			if_failed "Check file permissions."
+		fi
+
+		# Run in sub-shell so we don't have to cd back
+		(
+			cd "$CONFIG_DOWNLOADS_DIR" && \
+			tar zxf "$docker_pkg" && \
+			mv -f "docker/docker" "$CONFIG_BIN_DIR/" && \
+			chmod +x "$DOCKER_BIN"
+		)
+		if_failed "Check file permissions."
 	fi
 
-	# Install Docker Compose
+	# Install Linux Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
-		sudo curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN_NIX" && \
-			sudo chmod +x "$DOCKER_COMPOSE_BIN_NIX" && \
-			docker-compose --version
-		if_failed "Docker Compose installation/upgrade has failed."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		if [[ ! -f "$dc_pkg" ]]; then
+			echo-green "Downloading ${dc_pkg}..."
+			curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+				chmod +x "$DOCKER_COMPOSE_BIN"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${dc_pkg}. Using it..."
+			cp -f "$dc_pkg" "$DOCKER_COMPOSE_BIN" && \
+				chmod +x "$DOCKER_COMPOSE_BIN"
+			if_failed "Check file permissions."
+		fi
 	fi
 
-	system_reset
+	# Install Windows Docker Machine client.
+	# The Linux one cannot correctly interact with the Windows VirtualBox cli, eventually resulting in something like:
+	# "Error creating machine: Error in driver during machine creation: write |1: broken pipe"
+	# The Windows binary has to be run from the Windows FS (e.g. from Windows user's profile).
+	local USERPROFILE=$(wsl_path -u $(wsl_env USERPROFILE))
+	local DOCKER_MACHINE_BIN_WSL="${USERPROFILE}/.docksal/bin/docker-machine.exe"
+	mkdir -p "${USERPROFILE}/.docksal/bin"
+	# Keeping the rest of the logic below very similar to other host environments.
+	if ! is_docker_machine_version; then
+		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
+		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		if [[ ! -f "$dm_pkg" ]]; then
+			echo-green "Downloading ${dm_pkg}..."
+			curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN_WSL" && \
+				chmod +x "$DOCKER_MACHINE_BIN_WSL"
+			if_failed "Check file permissions and internet connection."
+		# Use a local/portable copy if available
+		else
+			echo "Found a local copy of ${dm_pkg}. Using it..."
+			cp -f "$dm_pkg" "$DOCKER_MACHINE_BIN_WSL" && \
+				chmod +x "$DOCKER_MACHINE_BIN_WSL"
+			if_failed "Check file permissions."
+		fi
+	fi
+	# Create a symlink to the Windows docker-machine binary inside the WSL FS.
+	ln -sf "$DOCKER_MACHINE_BIN_WSL" "$DOCKER_MACHINE_BIN"
 }
 
-update_virtualbox () {
+# Installs VirtualBox on Mac/Windows
+# Picks up a matching vbox version package from ~/Downloads or current directory (preferred).
+install_virtualbox () {
 	local url
 	local vbox_pkg
 
@@ -4135,6 +4407,12 @@ update_virtualbox () {
 	if is_windows; then
  		url="$URL_VBOX_WIN"
 		vbox_pkg=$(cygpath -u "$USERPROFILE/Downloads")/$(basename "$url")
+	fi
+
+	if is_wsl; then
+		url="$URL_VBOX_WIN"
+		local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
+		vbox_pkg="$USERPROFILE/Downloads"/$(basename "$url")
 	fi
 
 	if is_mac; then
@@ -4161,9 +4439,9 @@ update_virtualbox () {
 	fi
 
 	# Stop VM
-	fin vm stop >/dev/null 2>&1
+	docker_machine_stop >/dev/null 2>&1
 
-	# Download and install Mac
+	# Install Mac
 	is_mac && (
 		echo "Attaching ${vbox_pkg}"
 		hdiutil detach "/Volumes/VirtualBox" >/dev/null 2>&1
@@ -4173,8 +4451,8 @@ update_virtualbox () {
 			open "/Volumes/VirtualBox/VirtualBox.pkg"
 	)
 
-	# Download and install Win
-	is_windows && (
+	# Install Win/WSL
+	(is_windows || is_wsl) && (
 		chmod +x "$vbox_pkg"
 		"$vbox_pkg"
 	)
@@ -4189,6 +4467,75 @@ update_virtualbox () {
 		read -p "Please finish VirtualBox installation and press ENTER to continue (Ctrl+C to exit)..."
 		sleep 1
 	done
+}
+
+# Checks VirtualBox version and runs an install if necessary
+update_virtualbox ()
+{
+	# Install or update VirtualBox
+	if ! is_linux && ! is_docker_native; then
+		# Check current VirtualBox version
+		is_vbox_version
+		local res=$?
+		if [[ "$res" != "0" ]]; then
+			[[ "$res" == "2" ]] && echo-alert "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
+			# Note: install_virtualbox automatically stops the machine if necessary, but will not automatically start it.
+			install_virtualbox
+		fi
+	fi
+}
+
+# Downloads boot2docker.iso, updates existing machine.
+# Does not automatically create a new machine and starts the updated one.
+# Dependency: update_tools, update_boot2docker
+# @option --force-download - forces the boot2docker.iso download
+update_boot2docker ()
+{
+	# Only applicable to Mac/Windows using VirtualBox/Boot2Docker
+	if is_linux || is_docker_native; then return; fi
+
+	if is_docker_machine_exist; then
+		# We need the machine up to get it's version
+		if ! is_docker_machine_running; then
+			echo "Starting the existing machine to determine its version..."
+			docker_machine_start
+		fi
+
+		local b2d_version=$(docker version --format '{{.Server.Version}}')
+		if (( $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") )); then
+			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
+				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
+				echo-alert "This update will destroy and recreate the VM!" \
+					"You can skip the VM update for now, create DB backups/etc., then restart the update to complete it." \
+					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
+				if _confirm "Do you want to update the VM now?" --no-exit; then
+					# Machine is removed here, but not recreated.
+					# It will be started/recreated later in the update process.
+					docker_machine_remove
+				fi
+			else
+				# Perform an upgrade without a rebuild for boot2docker versions 18.09+
+				docker_machine_stop &>/dev/null
+
+				# Path to boot2docker.iso for the machine
+				local DEFAULT_MACHINE_ISO_PATH=".docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
+				# On Windows (Babun and WSL) machines are stores in the Windows user profile
+				if is_windows || is_wsl; then
+					DEFAULT_MACHINE_ISO_PATH="${WIN_HOME}/${DEFAULT_MACHINE_ISO_PATH}"
+				else
+					# Mac - straightforward
+					DEFAULT_MACHINE_ISO_PATH="${HOME}/${DEFAULT_MACHINE_ISO_PATH}"
+				fi
+
+				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
+				# Download to temporary location, then move to the permanent location.
+				# This minimizes the chance of getting a corrupt file if the download fails or is interrupted.
+				curl -fL# "${URL_BOOT2DOCKER}" -o "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso"
+				if_failed_error "boot2docker.iso download failed"
+				mv "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso" ${DEFAULT_MACHINE_ISO_PATH}
+			fi
+		fi
+	fi
 }
 
 update_tools ()
@@ -4234,6 +4581,7 @@ update_config_files ()
 			$STACKS_STACK_DEFAULT
 			$STACKS_STACK_DEFAULT_NODB
 			$STACKS_STACK_NODE
+			$STACKS_STACK_PANTHEON
 			$STACKS_VOLUMES_BIND
 			$STACKS_VOLUMES_NFS
 			$STACKS_VOLUMES_NONE
@@ -4242,7 +4590,7 @@ update_config_files ()
 	(
 		cd "$CONFIG_STACKS_DIR" || exit 1;
 		# Cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
-		rm -f "$CONFIG_STACKS_DIR/*"
+		rm -f "$CONFIG_STACKS_DIR/*" &>/dev/null
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
@@ -4290,8 +4638,6 @@ EOF
 # Update system service images
 update_system_images ()
 {
-	check_docker_running
-
 	IMAGE_FILE=${IMAGE_FILE:-docksal-system-images.tar}
 	if [[ -f "$IMAGE_FILE" ]]; then
 		# Load system images from the current directory when available
@@ -4303,7 +4649,7 @@ update_system_images ()
 		docker pull "${IMAGE_DNS}"
 		docker pull "${IMAGE_SSH_AGENT}"
 	fi
-	system_reset
+	# no system_reset here, just the image pull
 }
 
 # Update project images
@@ -4316,208 +4662,151 @@ update_project_images ()
 	up
 }
 
+# Updates all docksal images present on the host
+update_docksal_images ()
+{
+	check_docker_running
+
+	for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal/ | sort | uniq); do
+		docker pull "$_image"
+	done
+}
+
+# Downloads a version of fin to FIN_PATH_UPDATED
+# Return value 0: new fin version downloaded to FIN_PATH_UPDATED
+# Return value 2: new fin version is the same as the current version
+get_fin_updated ()
+{
+	local fin_url=$(get_fin_url)
+	local new_fin
+	new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
+	if_failed_error "fin download failed."
+
+	# Check if fin update is required and whether it is a major version
+	local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
+
+	local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
+	local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
+	if [[ "$current_major_version" != "$new_major_version" ]]; then
+		echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
+		echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
+		echo "You may not be able to use you current Docksal environment if you proceed."
+		echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
+		_confirm "Continue with the update?"
+	fi
+
+	# saving to file
+	echo "$new_fin" | sudo tee "$FIN_PATH_UPDATED" > /dev/null
+	if_failed_error "Could not write $FIN_PATH_UPDATED"
+	sudo chmod +x "$FIN_PATH_UPDATED"
+	local new_version=$(${FIN_PATH_UPDATED} v)
+	echo "fin $new_version downloaded..."
+}
+
+# If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
+is_fin_updated ()
+{
+	[[ "$0" == "$FIN_PATH_UPDATED" ]]
+}
+
+# Returns true when running an update
+# Returns false when installing fin for the first time
+is_update ()
+{
+	# If there is a timestamp for the last install/update, then we are updating
+	[[ -f ${CONFIG_LAST_UPDATE} ]]
+}
+
 # Update Docksal
 update ()
 {
-	# If running from $FIN_PATH_UPDATED then it is fin.updated run by old fin and we need to skip some steps
-	[[ "$0" == "$FIN_PATH_UPDATED" ]] && FULL_UPDATE="exit 1"
+	# Suppress alerts until the very end of the update
+	export DOCKER_VERSION_ALERT_SUPPRESS=1
 
-	# Pre-update check #1: check if there is existing but stopped Docksal machine
-	# We need it running to know Docker server version
-	if (${FULL_UPDATE}); then
-		if ! is_linux && ! is_docker_native && ! is_wsl; then
-			# Check VirtualBox
-			is_vbox_version
-			local res=$?
-			if [[ "$res" != "0" ]]; then
-				[[ "$res" == "2" ]] && echo-red "VirtualBox version should be $REQUIREMENTS_VBOX or higher"
-				(which 'docker-machine' >/dev/null 2>&1) && vm stop
-				DOCKER_MACHINE_STATUS="Stopped"
-				update_virtualbox
-				(which 'docker-machine' >/dev/null 2>&1) && vm start
-			fi
-		fi
-
-		if ! is_linux && ! is_docker_native && ! is_wsl && which 'docker-machine' >/dev/null 2>&1; then
-			if is_docker_machine_exist && ! is_docker_machine_running; then
-				echo-error "Docker Machine '$DOCKER_MACHINE_NAME' should be running to perform update" \
-					"Start it with ${yellow}fin vm start${NC} or destroy it with ${yellow}fin vm remove${NC} if you want it re-created."
-				return 1
-			fi
-		fi
-
-		if is_wsl; then
-			# Check Docker for Win running
-			IFS=':' read nc_host nc_port <<< "$DOCKER_HOST"
-			nc -w 1 ${nc_host} ${nc_port}
-			if_failed_error "Docker for Windows is not running" "Start Docker for Windows, wait for Docker to start and run update again."
-
-			# Check for administrative privileges if needed
-			if ! (ipconfig.exe | grep "$DOCKSAL_IP") || ! (ipconfig.exe | grep "$DOCKSAL_HOST_IP"); then
-				cd "/mnt/c"
-				touch "file.tmp"
-				if [[ "$?" != "0" ]]; then
-					echo-error "Docksal needs administrative privileges to set up network preferences." \
-						"--" \
-						"1. Close this bash window (you can't run elevated bash while this one is running)" \
-						"2. Run cmd.exe as an Administrator" \
-						"3. Start bash in that elevated cmd.exe session" \
-						"4. Run fin update in that elevated bash session"
-						# It is not allowed to start elevated and un-elevated bash simultaneously
-					exit 1
-				fi
-				rm -f "file.tmp"
-			fi
-		fi
-	fi
-
-	# Checking docker status
-	if (which 'docker' >/dev/null 2>&1); then
-		is_docker_running
-		RUNNING_CODE=$? # cache status
-		if (exit ${RUNNING_CODE}); then
-			# If docksal services present, then we are doing an upgrade.
-			is_docksal_running && UPGRADE_IN_PROGRESS=1
-		else
-			# Check out the case when current user on Ubuntu does not have access to docker daemon
-			if is_linux; then
-				ps -p $(cat /var/run/docker.pid) 2>&1 >/dev/null
-				[ ! $? -eq 0 ] && LINUX_DAEMON_RUNNING="exit 1"
-				# if daemon is running but docker info does not return 0 then this is the case
-				if (${LINUX_DAEMON_RUNNING}) && ! (exit ${RUNNING_CODE}); then
-					echo-red "Your Docker daemon is running but you don't have access to it."
-					echo-yellow "Please run 'newgrp docker' or reboot."
-					exit 1
-				fi
-			fi
-		fi
-	fi
-
-	# Pre-update check #2: warn if boot2docker will need to be upgraded
-	if (is_mac || is_windows) && ! is_docker_native && [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		local b2d_version=$(docker version --format '{{.Server.Version}}')
-		if [[ $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") ]]; then
-			BOOT2DOCKER_NEEDS_AN_UPGRADE=1
-		fi
-	fi
-
-	# [STEP 0] Define total steps. Upgrade has 2 more steps
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		TOTAL_STEPS=6
-	else
-		TOTAL_STEPS=4
-	fi
-
-	# Pass the version to the newly downloaded fin to run the updates
-	export DOCKSAL_VERSION=$(get_docksal_version_latest)
+	# [STEP 0] Define total steps
+	TOTAL_STEPS=4
 
 	# [STEP 1] Update fin unless already running fin.updated binary
-	if (${FULL_UPDATE}); then
+	if ! is_fin_updated; then
+		# Pass the version to the newly downloaded fin to run the updates
+		export DOCKSAL_VERSION=$(get_docksal_version_latest)
+
+		# Store current fin version
+		export EXISTING_FIN_VERSION=${FIN_VERSION}
+
 		testing_warn
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 
-		local fin_url=$(get_fin_url)
-		local new_fin
-		new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
-		if_failed_error "fin download failed."
-
-		# Check if fin update is required and whether it is a major version
-		local new_version=$(echo "$new_fin" | grep "^FIN_VERSION=" | cut -f 2 -d "=")
-
-		if [[ "$new_version" != "$FIN_VERSION" ]]; then
-			local current_major_version=$(echo "$FIN_VERSION" | cut -d "." -f 1)
-			local new_major_version=$(echo "$new_version" | cut -d "." -f 1)
-			if [[ "$current_major_version" != "$new_major_version" ]]; then
-				echo -e "${red_bg} WARNING ${NC} ${red}Non-backwards compatible version update${NC}"
-				echo -e "Updating from ${yellow}$FIN_VERSION${NC} to ${yellow}$new_version${NC} is not backward compatible."
-				echo "You may not be able to use you current Docksal environment if you proceed."
-				echo -e "Please read update documentation: ${yellow}$URL_REPO_UI#updates${NC}"
-				_confirm "Continue with the update?"
-			fi
-
-			# saving to file
-			echo "$new_fin" | sudo tee "$FIN_PATH_UPDATED" > /dev/null
-			if_failed_error "Could not write $FIN_PATH_UPDATED"
-			sudo chmod +x "$FIN_PATH_UPDATED"
-			local new_version=$(${FIN_PATH_UPDATED} v)
-			echo "fin $new_version downloaded..."
-
-			# Run other Updates 2-5 with newly downloaded fin version
-			( "$FIN_PATH_UPDATED" update )
-
-			# overwrite old fin
-			sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
-			exit
-		else
-			echo "Already at $FIN_VERSION."
-		fi
+		# Download new fin version to FIN_PATH_UPDATED
+		get_fin_updated
+		# Run the rest of the update with the newly downloaded fin version
+		( "$FIN_PATH_UPDATED" update )
+		# Overwrite old fin
+		sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
+		# Must exit here since we've just overwritten the original fin and this may cause bash to choke and through an error.
+		exit
 	fi
 
 	# [STEP 2] Update stacks
 	echo-green "[STEP 2/$TOTAL_STEPS] Updating stack files..."
 	update_config_files
 
+	# Reset network settings before doing anything else (just in case)
+	# (May happen if switching modes native vs not).
+	system_reset network
+
 	# [STEP 3] Update third party tools
 	echo-green "[STEP 3/$TOTAL_STEPS] Updating tools..."
 	update_tools
+	update_virtualbox
+	update_boot2docker
 
-	# [STEP 4] Update system images
-
-	echo-green "[STEP 4/$TOTAL_STEPS] Updating system images..."
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		# [4.1] Always update system images during upgrade
-		# On Win and Mac, update only during upgrade because it is done in docker_machine_start
-		update_system_images
-		# Run cleanup to get rid of outdated images
-		cleanup
-	else
-		# [4.2] On Linux update during install, but use sudo as user will not be in docker group yet.
-		if is_linux; then
-			# Override docker to run it via sudo
-			docker () {
-				sudo "$(which docker)" "$@"
-			}
-			# Install/update Docksal system services
-			update_system_images
-		fi
-
-		# [4.3] With native mode update during install, but no cleanup
-		if is_docker_native; then
-			# Install/update Docksal system services
-			update_system_images
-		fi
+	# If this is the first time installation, then the current user does not yet have access to docker without sudo
+	# TODO: don't run with sudo if not necessary
+	if is_linux; then
+		# Override docker to run it via sudo
+		docker () {
+			sudo "$(which docker)" "$@"
+		}
 	fi
 
-	# [STEP 5] Update project images
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]]; then
-		echo-green "[STEP 5/$TOTAL_STEPS] Updating Docksal images"
-		for _image in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep docksal/ | sort | uniq); do
-			docker pull "$_image"
-		done
-	fi
+	# This will instruct the user what to do if Docker daemon is not accessible
+	# --quiet suppresses the user confirmation when starting the existing docker machine
+	check_docker_running --quiet
 
-	# [STEP 6] Restart running projects if BOOT2DOCKER was not restarted
-	# This is needed to re-append restarted vhost-proxy to containers networks
-	if [[ ${UPGRADE_IN_PROGRESS} == 1 ]] && [[ "$BOOT2DOCKER_NEEDS_AN_UPGRADE" != "1" ]]; then
-		echo-green "[STEP 6/$TOTAL_STEPS] Restarting running projects..."
-		running_projects=$(docker ps \
-			--filter 'label=io.docksal.project-root' \
-			--format '{{.Label "io.docksal.project-root"}}'
-		)
-		for project in ${running_projects}; do
-			# use updated version when updated
-			[[ ! -f "$FIN_PATH_UPDATED" ]] && FIN_PATH_UPDATED="fin"
-			(cd "$project" && NO_UPDATES=1 "$FIN_PATH_UPDATED" start)
-		done
-	fi
+	# From now on, we should have everything we need here to start/restart Docksal
+
+	# [STEP 4] Update Docksal images
+	echo-green "[STEP 4/$TOTAL_STEPS] Updating Docksal images..."
+	# Pull/update system image
+	# While system_reset would also pull images it will do this in a non-interactive way (via docker run).
+	# update_system_images does "docker pull" with does the pull interactively (with a progress indicator), which looks
+	# better.
+	update_system_images
+
+	# Do cleanup before updating images, otherwise we may be updating images that will be dropped anyway.
+	is_update && cleanup
+	# Update existing docksal images
+	is_update && update_docksal_images
+
+	# Reset system services after image updates
+	system_reset
+
+	# Store last successful update timestamp
+	local timestamp=$(date +%s)
+	echo "$timestamp" > "$CONFIG_LAST_UPDATE"
+
+	echo-green "Update finished"
 
 	# [STEP - POST UPDATE]
-	[[ "$?" == "0" ]] && echo-green "Update finished"
+	# Cleanup
+	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
 
-	if is_linux && ! is_root && [[ ${UPGRADE_IN_PROGRESS} != 1 ]]; then
-		echo-alert "Re-login to enable permanent Docker support." \
-			"Run ${yellow}newgrp docker${NC} to enable Docker support for current terminal session only."
-	fi
+	# Rerun docker access/version checks here to inform the users of any issues
+	echo-green "Running post update checks..."
+	# Disabling alert suppression here, since it was likely enabled during earlier calls to check_docker_running
+	unset DOCKER_VERSION_ALERT_SUPPRESS
+	check_docker_running
 }
 
 # Return the latest version
@@ -4646,20 +4935,26 @@ image_registry_list ()
 # @param $1 container name
 _bash ()
 {
-	check_docker_running
 	# Interactive shell requires a tty.
-	# On Windows we assume we run interactively via winpty.
 	if ! is_tty; then
-		echo "not a tty"
+		echo-error "tty is required to start an interactive shell"
 		return 1
 	fi
 
-	# Pass container name to _run
-	CONTAINER_NAME=$1 _exec bash -il
+	# Use sh by default
+	if [[ "$1" != "" ]]; then
+		# Pass container name to _exec
+		_exec --in="$1" sh -il
+	else
+		# Use bash when container is not specified, for it defaults to cli
+		_exec bash -il
+	fi
 }
 
 # Run a command in the cli container changing dir to the same folder
-# @param $* command with its params to run
+# @param [-T] Force no-tty
+# @param [--in=name] Specify container name
+# @param $@ commands to run
 _exec ()
 {
 	[[ $1 == "" ]] &&
@@ -4678,40 +4973,51 @@ _exec ()
 	fi
 
 	# Allow overriding container, where to run
+	local container_name
 	if [[ "$1" =~ "--in" ]]; then
-		CONTAINER_NAME=$(echo "$1" | cut -d "=" -f 2)
+		container_name=$(echo "$1" | cut -d "=" -f 2)
 		shift
+	else
+		container_name="cli"
 	fi
 
-	CONTAINER_NAME=${CONTAINER_NAME:-cli}
-	container_id=$(get_container_id "$CONTAINER_NAME")
+	container_id=$(get_container_id "$container_name")
+
+	# Use sh as default shell
+	local SHELL_INTERACTIVE="sh -ilc"
+	local SHELL_NONINTERACTIVE="sh -lc"
+
+	# For cli and db use bash (complex SQL queries fail when fed from stdin to sh)
+	if [[ "$container_name" == "cli" ]] || [[ "$container_name" == "db" ]]; then
+		SHELL_INTERACTIVE="bash -ilc"
+		SHELL_NONINTERACTIVE="bash -lc"
+	fi
 
 	# ------------------------------------------------ #
 	# 1) cmd
-	local cmd
+	local cmd=""
 
-	local cdir
 	# Only chdir to the same dir in cli container
 	# RUN_NO_CDIR can be used to override this (used in mysql_import)
-	if [[ "$CONTAINER_NAME" == "cli" ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
+	if [[ "$container_name" == "cli" ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
 		local path=$(get_current_relative_path)
 		if [[ "$path" != "" ]] ; then
 			# We are deeper than project root and thus need to do a cd
-			cdir="cd $path &&"
+			cmd="cd $path &&"
 		fi
 	fi
-
-	cmd="$cdir"
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
 	# 2) convert array of parameters into escaped string
+	# Add space if cmd is not empty
+	[[ $cmd != "" ]] && cmd="$cmd "
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
-		cmd="$cmd "$(printf " %q" "$@")
+		cmd="$cmd"$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
 	else
-		cmd="$cmd $@"
+		cmd="${cmd}${@}"
 	fi
 	# ------------------------------------------------ #
 
@@ -4719,25 +5025,23 @@ _exec ()
 	# 3) execute
 	# Allow entering arbitrary containers by name (e.g., system containers like vhost-proxy).
 	if [[ "$container_id" == "" ]]; then
-		${winpty} docker exec -it "$CONTAINER_NAME" sh -i
-		return
+		container_id="$container_name"
 	fi
 
-	if [[ "$CONTAINER_NAME" == "cli" ]]; then
+	if [[ "$container_name" == "cli" ]]; then
 		# Commands in cli should be run using the docker user, not root.
 		local container_user='-u docker'
 	fi
 
 	# Enter project containers
-	# Use the docker user in cli (-u docker) instead of root (default user).
-	# COLUMNS and LINES have to be passed to workaround a bug in Docker. See https://github.com/moby/moby/issues/35407#issuecomment-355753176
+	# COLUMNS and LINES have to be passed to workaround a race condition in Docker. See https://github.com/moby/moby/pull/37172#issuecomment-406844485
 	if is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker exec -e COLUMNS -e LINES -it ${container_user} ${container_id} bash -ilc "$cmd; (exit \$?)"
+		${winpty} docker exec -e COLUMNS -e LINES -it ${container_user} ${container_id} ${SHELL_INTERACTIVE} "$cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec -e COLUMNS -e LINES ${container_user} ${container_id} bash -lc "$cmd"
+		docker exec -e COLUMNS -e LINES ${container_user} ${container_id} ${SHELL_NONINTERACTIVE} "$cmd"
 	fi
 	# ------------------------------------------------ #
 }
@@ -4935,8 +5239,7 @@ mysql_list ()
 	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 
 	# -N parameter suppresses columns header
-	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-		_exec "echo 'SHOW DATABASES' | mysql -N -u ${__dump_user} -p${__dump_password}"
+	_exec --in="db" "echo 'SHOW DATABASES' | mysql -N -u ${__dump_user} -p${__dump_password}"
 }
 
 # Create a database
@@ -5035,8 +5338,7 @@ mysql_db_truncate ()
 		DROP DATABASE \\\`${__database}\\\`;
 		EXECUTE DBCREATE;
 	EOF
-	_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-		_exec "echo -e \"$DBCREATE_COMMAND\"| mysql -u${__dump_user} -p${__dump_password} ${__database} "
+	_exec --in="db" "echo -e \"$DBCREATE_COMMAND\"| mysql -u${__dump_user} -p${__dump_password} ${__database} "
 }
 
 # Truncate db and import from sql dump
@@ -5097,8 +5399,7 @@ mysql_import ()
 			DROP DATABASE \\\`${__database}\\\`;
 			EXECUTE DBCREATE;
 		EOF
-		_RUN_NO_CDIR=1 CONTAINER_NAME="db" \
-			_exec "echo -e \"$DBCREATE_COMMAND\"| mysql -u${__dump_user} -p${__dump_password} ${__database} "
+		_exec --in="db" "echo -e \"$DBCREATE_COMMAND\"| mysql -u${__dump_user} -p${__dump_password} ${__database} "
 
 		if [[ ! $? -eq 0 ]] && (exit ${confirm}); then
 			_confirm "There were errors during truncation. Continue anyways?"
@@ -5346,8 +5647,7 @@ sysinfo ()
 	if is_linux; then
 		echo "Linux Kernel"
 	elif is_docker_native; then
-		is_mac && echo "Docker for Mac"
-		is_windows && echo "Docker for Windows"
+		echo "Docker Desktop"
 	else
 		echo "VirtualBox VM"
 	fi
@@ -5450,6 +5750,13 @@ sysinfo ()
 		fi
 	fi
 
+	if is_docker_native; then
+		echo
+		echo "███  DOCKER DESKTOP"
+		echo "EXPECTED VERSION: ${REQUIREMENTS_DOCKER_DESKTOP}"
+		docker_desktop_version
+	fi
+
 	# Diagnostics information
 	echo
 	echo "███  HDD Usage"
@@ -5460,7 +5767,7 @@ sysinfo ()
 	elif is_mac; then
 		df -h # mac native
 	else
-		wmic logicaldisk get size,freespace,caption # win native
+		wmic.exe logicaldisk get size,freespace,caption # win native
 	fi
 
 	if [[ "$all" == "all" ]]; then
@@ -5775,7 +6082,7 @@ config_generate ()
 		else
 			DOCROOT=docroot
 		fi
-		
+
 		if ! _confirm "DOCROOT has been detected as ${DOCROOT}. Is that correct?" --no-exit; then
 			DOCROOT=""
 			while [[ "$DOCROOT" == "" ]]; do
@@ -6321,8 +6628,9 @@ addon_execute ()
 			cmd="$container_addon_path"
 		fi
 		# Run the command
-		CONTAINER_NAME="$_exec_target" _exec "$cmd"
+		_exec --in="$_exec_target" "$cmd"
 	else
+		export ADDON_SCRIPT=true
 		exec "$addon" "$@"
 	fi
 }
@@ -6363,9 +6671,9 @@ set_project_root_permissions ()
 #	- git url (when ran in with Drush / WP init)
 # $4 -
 #	- git branch (when ran in with Drush / WP init)
-# $HOSTING_PLATFORM - the hosting platform name.
-# $HOSTING_SITE - the site id on the hosting platform.
-# $HOSTING_ENV - the env id on the hosting platform for the site.
+# $hostingplatform - the hosting platform name.
+# $hostingsite - the site id on the hosting platform.
+# $hostingenv - the env id on the hosting platform for the site.
 provider_pull ()
 {
 	# Set Columns to 200 so text wouldn't
@@ -6373,23 +6681,28 @@ provider_pull ()
 	COLUMNS=200
 
 	eval $(parse_params "$@")
-	if [[ "${HOSTING_PLATFORM}" == "" || "${HOSTING_SITE}" == ""  ]]; then
-		echo-error "Hosting Provider not set up. Following variables must be set: HOSTING_PLATFORM and HOSTING_SITE"
+
+	local hostingplatform=${HOSTING_PLATFORM:-${hostingplatform}}
+	local hostingsite=${HOSTING_SITE:-${hostingsite}}
+	local hostingenv=${HOSTING_ENV:-${hostingenv}}
+
+	if [[ "${hostingplatform}" == "" || "${hostingsite}" == ""  ]]; then
+		echo-error "Hosting Provider not set up. Following variables must be set: hostingplatform and hostingsite"
 		exit 1
 	fi
 
-	HOSTING_PLATFORM=$(echo ${HOSTING_PLATFORM} | tr '[:upper:]' '[:lower:]')
+	hostingplatform=$(echo ${hostingplatform} | tr '[:upper:]' '[:lower:]')
 
 	# Check to see if a support platform is supported.
-	if [[ " acquia pantheon platformsh drush wp " != *" ${HOSTING_PLATFORM} "* ]]; then
+	if [[ " acquia pantheon platformsh drush wp " != *" ${hostingplatform} "* ]]; then
 		echo-error "Only the following platforms are supported: Acquia (acquia), Pantheon (pantheon), Platform.sh (platformsh), Drupal (drush), and WordPress (wp)."
 		exit 1
 	fi
 
 	# Run some checks before continuing.
-	provider_pull_find_function ${HOSTING_PLATFORM} 'precheck'
+	provider_pull_find_function ${hostingplatform} 'precheck'
 
-	echo-green "Starting provider pull for ${HOSTING_PLATFORM}"
+	echo-green "Starting provider pull for ${hostingplatform}"
 
 	# Query the provider for the given repo url. Only Pantheon, Platform.sh, and Acquia support this.
 	# All others will need to do a git clone.
@@ -6424,7 +6737,7 @@ provider_pull ()
 provider_pull_init ()
 {
 	echo-green "Starting Pull Init Process."
-	local project_directory=${ARGV[1]:-${HOSTING_SITE}}
+	local project_directory=${ARGV[1]:-${hostingsite}}
 
 	# Check to see if project_directory already exists.
 	if [[ -d ${project_directory} ]]; then
@@ -6432,7 +6745,7 @@ provider_pull_init ()
 		exit 1
 	fi
 
-	provider_pull_find_function ${HOSTING_PLATFORM} 'init' 1 "Init function not currently supported for ${HOSTING_PLATFORM}."
+	provider_pull_find_function ${hostingplatform} 'init' 1 "Init function not currently supported for ${hostingplatform}."
 	echo-green "Pulling code complete."
 
 	# Change into the project directory.
@@ -6447,9 +6760,9 @@ provider_pull_init ()
 	fi
 
 	# Set the Current Hosting Platform and Hosting Site for project.
-	config_set "HOSTING_PLATFORM=${HOSTING_PLATFORM}" > /dev/null
-	config_set "HOSTING_SITE=${HOSTING_SITE}" > /dev/null
-	config_set "HOSTING_ENV=${HOSTING_ENV}" > /dev/null
+	config_set "HOSTING_PLATFORM=${hostingplatform}" > /dev/null
+	config_set "HOSTING_SITE=${hostingsite}" > /dev/null
+	config_set "HOSTING_ENV=${hostingenv}" > /dev/null
 	addon_file_path="$(addon_get_path init)"
 	if [[ ! -z "$addon_file_path" ]] && [[ -x "$addon_file_path" ]]; then
 		if _confirm "Init command found for project run?" --no-exit; then
@@ -6458,12 +6771,12 @@ provider_pull_init ()
 	fi
 }
 
-# Generic Precheck function to check if ${HOSTING_ENV} variable is set.
+# Generic Precheck function to check if ${hostingenv} variable is set.
 provider_pull_precheck ()
 {
-	# After Init Process Let's Check to Make sure HOSTING_ENV has been set.
-	if [[ "${HOSTING_ENV}" == "" ]]; then
-		echo-error "HOSTING_ENV variable is required to continue."
+	# After Init Process Let's Check to Make sure hostingenv has been set.
+	if [[ "${hostingenv}" == "" ]]; then
+		echo-error "hostingenv variable is required to continue."
 		exit 1
 	fi
 }
@@ -6473,8 +6786,8 @@ provider_pull_precheck ()
 provider_pull_code ()
 {
 	echo-green "Pulling code"
-	provider_pull_find_function ${HOSTING_PLATFORM} 'code' 1
-	if_failed_error "Error pulling code from ${HOSTING_PLATFORM}."
+	provider_pull_find_function ${hostingplatform} 'code' 1
+	if_failed_error "Error pulling code from ${hostingplatform}."
 	echo-green "Code Pull Successful"
 }
 
@@ -6490,12 +6803,12 @@ provider_pull_db ()
 	echo-green "Pulling DB"
 
 	# Variables to set for local use.
-	local __db_user="${DBUSER:-root}"
-	local __db_password="${DBPASS:-root}"
-	local __db_database="${DBNAME:-default}"
+	local __db_user="${dbuser:-root}"
+	local __db_password="${dbpass:-root}"
+	local __db_database="${dbname:-default}"
 
 	# Set the db file that will be stored within the cli container
-	local db_file="/tmp/${__db_database}.${HOSTING_ENV}.${HOSTING_SITE}.sql.gz"
+	local db_file="/tmp/${__db_database}.${hostingenv}.${hostingsite}.sql.gz"
 	# Check to see if the file exists in the cli container
 	local file_exists=$(_exec "ls -1 /tmp/**  2> /dev/null | grep \"${db_file}\"\$ | wc -l | tr -d '[:space:]'")
 	# Get the time of that file within the cli container.
@@ -6503,17 +6816,17 @@ provider_pull_db ()
 	# Get the time from 24 hours ago.
 	local yesterday=$(_exec date --date='yesterday' "+%Y-%m-%d %H:%M:%S");
 
-	if [[ "${file_exists}" == "0" ]] || [[ -n "${file_time}" ]] || [[ "$FORCE" == "FORCE" ]]; then
+	if [[ "${file_exists}" == "0" ]] || [[ -n "${file_time}" ]] || [[ "$force" == "force" ]]; then
 		echo -e "${acqua}Cached DB file needs updating${NC}"
 
 		# Check to see if File Is Older than 1 hour
-		if [[ "$file_exists" > "0" ]] && [[ -z "${file_time}" ]] || [[ "$FORCE" == "FORCE" ]]; then
+		if [[ "$file_exists" > "0" ]] && [[ -z "${file_time}" ]] || [[ "$force" == "force" ]]; then
 			echo -e "${acqua}Removing old database file${NC}"
 			_exec rm -f "${db_file}"
 		fi
 
 		echo -e "${acqua}Pulling new database file...${NC}"
-		provider_pull_find_function ${HOSTING_PLATFORM} 'db' 1
+		provider_pull_find_function ${hostingplatform} 'db' 1
 	else
 		echo-green "Cached DB file still valid found and using to import"
 	fi
@@ -6523,7 +6836,7 @@ provider_pull_db ()
 	# Import the Database.
 	# Truncate the existing db.
 	echo -e "${acqua}Truncating Existing Database${NC}"
-	mysql_db_truncate "${DB_NAME}" > /dev/null
+	mysql_db_truncate "${dbname}" > /dev/null
 	# Execute ZCAT on the db file and import into mysql database.
 	_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
 	if_failed_error "Error importing DB"
@@ -6551,11 +6864,11 @@ provider_pull_files ()
 		default_dir=${wordpress_files}
 	fi
 
-	# Allow for this to be modified with the --FILES_DIR option.
-	FILES_DIR=${FILES_DIR:-$default_dir}
-	# Exclude specific items by default. Allow other rsync options to be included using --RSYNC_OPTIONS flag.
-	local rsync_options="${RSYNC_OPTIONS} --exclude='styles' --exclude='css' --exclude='js'"
-	provider_pull_find_function ${HOSTING_PLATFORM} 'files' 1
+	# Allow for this to be modified with the --filesdir option.
+	filesdir=${filesdir:-$default_dir}
+	# Exclude specific items by default. Allow other rsync options to be included using --rsync-options flag.
+	local rsyncoptions="${rsyncoptions} --exclude='styles' --exclude='css' --exclude='js'"
+	provider_pull_find_function ${hostingplatform} 'files' 1
 	echo-green "File Pull Complete"
 }
 
@@ -6589,9 +6902,10 @@ provider_pull_find_function ()
 # Runs a git pull on the project repo.
 provider_pull_generic_git_pull ()
 {
-	local git_remote=${SYNC_GIT_REMOTE:-origin}
+	local git_remote=${syncgitremote:-origin}
+	# Trim \r from output (necessary on Windows)
 	local current_branch=$(_exec "git rev-parse --abbrev-ref HEAD" | tr -d '\r')
-	local git_branch=${SYNC_GIT_BRANCH:-$current_branch}
+	local git_branch=${syncgitbranch:-$current_branch}
 	echo -e "${acqua}Pulling Code From ${git_remote} - ${git_branch}${NC}"
 	_exec -T "git pull -q ${git_remote} ${git_branch} 2>/dev/null"
 	if_failed_error "Error Pulling Code from ${git_remote} - ${git_branch}"
@@ -6601,21 +6915,21 @@ provider_pull_generic_git_pull ()
 provider_pull_generic_drush_rsync ()
 {
 	cd ${PROJECT_ROOT}/${DOCROOT}
-	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
+	echo -e "${acqua}Downloading Files from ${hostingsite} on the ${hostingenv} environment${NC}"
 	local drush_version=$(_exec "drush version --format=string | cut -d'.' -f1" | sed "s/[[:space:]]//")
 	local separator=""
 	if [[ "$drush_version" == "9" ]]; then
 		separator="--"
 	fi
-	local rsync_files_dir
-	rsync_files_dir="/var/www/${DOCROOT}/${FILES_DIR}"
+	local rsync_filesdir
+	rsync_filesdir="/var/www/${DOCROOT}/${filesdir}"
 	_exec drush -q -y rsync \
-		@${HOSTING_SITE}.${HOSTING_ENV}:%files \
-		${rsync_files_dir} \
+		@${hostingsite}.${hostingenv}:%files \
+		${rsync_filesdir} \
 		${separator} \
 		--delete \
-		${rsync_options} 2>/dev/null
-	if_failed_error "Error Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
+		${rsyncoptions} 2>/dev/null
+	if_failed_error "Error Downloading Files from ${hostingsite} on the ${hostingenv} environment"
 }
 
 # Generic Git Clone for Init Function
@@ -6629,7 +6943,7 @@ provider_pull_generic_init ()
 		exit 1
 	fi
 	local repo_checkout=${2:-"master"}
-	echo -e "${acqua}Cloning Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
+	echo -e "${acqua}Cloning Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory} 2>/dev/null"
 	if_failed_error "Error Cloning Repo"
 }
@@ -6658,18 +6972,18 @@ provider_pull_acquia_init ()
 {
 	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
-	# Set HOSTING_ENV to dev if none are set.
-	HOSTING_ENV=${HOSTING_ENV:-dev}
+	# Set hostingenv to dev if none are set.
+	hostingenv=${hostingenv:-dev}
 	# Get the repo url for the specific environment.provider_pull_platformsh_files
 	local repo_url
-	repo_url=$(run_cli -T "${acquia_alias_update}; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
+	repo_url=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
 	local repo_checkout
-	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush @${HOSTING_SITE}.${HOSTING_ENV} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
-	if_failed_error "Error accessing Acquia Cloud API to get ${HOSTING_ENV} info."
+	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	if_failed_error "Error accessing Acquia Cloud API to get ${hostingenv} info."
 
-	echo -e "${acqua}Cloning Acquia Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
+	echo -e "${acqua}Cloning Acquia Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
 	# Run a git clone to get the specific repo.
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}" 2>/dev/null
 	if_failed_error "Error cloning Acquia Project."
@@ -6697,18 +7011,18 @@ provider_pull_acquia_db ()
 
 	# TODO: Allow for all databases to be downloaded. drush ac-database-list will list all databases for a site.
 	# Following will grab all databases for a site.
-	# local acquia_dbs=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-list | awk '{print $3}')
+	# local acquia_dbs=$(_exec drush @${hostingsite}.${hostingenv} ac-database-list | awk '{print $3}')
 
 	# Default Acquia DB Name to project name.
-	local acquia_db_name="${REMOTE_DB:-${HOSTING_SITE}}"
+	local acquia_db_name="${remotedb:-${hostingsite}}"
 	if [[ -z "${acquia_db_name}" ]]; then
 		echo-error "Database name is required."
 		exit 1
 	fi
 
 	local query
-	query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name})
-	if_failed_error "Error retrieving list of backups from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
+	query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+	if_failed_error "Error retrieving list of backups from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 
 	# Returns timestamp of last backup.
 	local last_date
@@ -6719,27 +7033,27 @@ provider_pull_acquia_db ()
 	fi
 
 	# If Last backup was more than 24 hours ago. Create one.
-	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
+	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$force" == "force" ]]; then
 		# Create backup on Acquia through Cloud API.
-		echo -e "${acqua}Creating new backup on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}${NC}"
-		_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup ${acquia_db_name}
+		echo -e "${acqua}Creating new backup on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
+		_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
 		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
-		echo -e "${acqua}Backup queued on Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
+		echo -e "${acqua}Backup queued on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
 		# Sleep for 10 seconds wait for backup to finish.
 		sleep 10
 		# Requery to get a new list of backups.
-		query=$(_exec drush @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-list ${acquia_db_name})
-		if_failed_error "Error retrieving list of backups from Acquia on site ${HOSTING_SITE} on environment ${HOSTING_ENV} for database ${acquia_db_name}"
+		query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+		if_failed_error "Error retrieving list of backups from Acquia on site ${hostingsite} on environment ${hostingenv} for database ${acquia_db_name}"
 	else
-		echo -e "${acqua}Using latest backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}${NC}"
+		echo -e "${acqua}Using latest backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
 	fi
 
 	# Returns id of last backup.
 	local last_id=$(printf "${query}" | grep id | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
-	echo -e "${acqua}Downloading backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}${NC}"
-	_exec drush -q @${HOSTING_SITE}.${HOSTING_ENV} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
-	if_failed_error "Error Downloading backup from Acquia for ${HOSTING_SITE} - ${HOSTING_ENV} for database ${acquia_db_name}"
+	echo -e "${acqua}Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
+	_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
+	if_failed_error "Error Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 }
 
 # Pull process to pull files from Acquia.
@@ -6771,28 +7085,28 @@ provider_pull_pantheon_precheck ()
 # Init process to pull code from Pantheon
 provider_pull_pantheon_init ()
 {
-	# If HOSTING_ENV isn't set default to dev.
-	HOSTING_ENV=${HOSTING_ENV:-dev}
-	# Set the BRANCH to be what the HOSTING_ENV is.
-	local repo_checkout=${HOSTING_ENV}
+	# If hostingenv isn't set default to dev.
+	hostingenv=${hostingenv:-dev}
+	# Set the BRANCH to be what the hostingenv is.
+	local repo_checkout=${hostingenv}
 	# The URL for the repo to clone.
 	local repo_url
-	repo_url=$(run_cli -T "terminus connection:info ${HOSTING_SITE}.dev --field=\"Git Command\" | awk '{print \$3}'")
+	repo_url=$(run_cli -T "terminus connection:info ${hostingsite}.dev --field=\"Git Command\" | awk '{print \$3}'")
 	if_failed_error "Error retrieving Git URL from Pantheon"
 
-	if [[ "${HOSTING_ENV}" == 'dev' ]]; then
-		# If HOSTING_ENV is set to dev set the repo_checkout to be master.
+	if [[ "${hostingenv}" == 'dev' ]]; then
+		# If hostingenv is set to dev set the repo_checkout to be master.
 		repo_checkout='master'
-	elif [[ "${HOSTING_ENV}" == 'test' ]] || [[ "${HOSTING_ENV}" == "live" ]]; then
-		# If HOSTING_ENV is test or live get the latest tag for the repo.
-		repo_checkout=$(run_cli -T "git ls-remote --exit-code -t ${repo_url} | grep 'refs/tags/pantheon_${HOSTING_ENV}_' | awk '{print $2}' | cut -d'/' -f3 | sort -k1.15n | grep '[0-9]$' | tail -1 | tr -d '[:space:]'")
-		if_failed_error "Error getting latest tag for ${HOSTING_ENV} on Pantheon repo"
+	elif [[ "${hostingenv}" == 'test' ]] || [[ "${hostingenv}" == "live" ]]; then
+		# If hostingenv is test or live get the latest tag for the repo.
+		repo_checkout=$(run_cli -T "git ls-remote --exit-code -t ${repo_url} | grep 'refs/tags/pantheon_${hostingenv}_' | awk '{print $2}' | cut -d'/' -f3 | sort -k1.15n | grep '[0-9]$' | tail -1 | tr -d '[:space:]'")
+		if_failed_error "Error getting latest tag for ${hostingenv} on Pantheon repo"
 	fi
 
-	echo -e "${acqua}Cloning Pantheon Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
+	echo -e "${acqua}Cloning Pantheon Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
 	# Run git clone and checkout the provided branch.
 	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
-	if_failed_error "Error cloning Pantheon project ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}"
+	if_failed_error "Error cloning Pantheon project ${hostingsite} - ${hostingenv} in ${project_directory}"
 }
 
 # Pull process to pull files from Pantheon.
@@ -6801,9 +7115,9 @@ provider_pull_pantheon_files ()
 {
 	# Get the SFTP Hostname from Site's Info.
 	local host_url
-	host_url=$(_exec -T "terminus connection:info ${HOSTING_SITE}.${HOSTING_ENV} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
+	host_url=$(_exec -T "terminus connection:info ${hostingsite}.${hostingenv} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
 	if_failed_error "Could not communicate with Pantheon. Check connection and SECRET_TERMINUS_TOKEN is set to an active token."
-	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Pantheon${NC}"
+	echo -e "${acqua}Downloading Files from ${hostingsite} on the ${hostingenv} through Pantheon${NC}"
 	# Execute a rsync using Pantheon recommended Options.
 	_exec "rsync \
 		-rlz \
@@ -6813,9 +7127,9 @@ provider_pull_pantheon_files ()
 		--progress \
 		-e 'ssh -p 2222' \
 		${host_url}:files/ \
-		/var/www/${DOCROOT}/${FILES_DIR} \
+		/var/www/${DOCROOT}/${filesdir} \
 		--delete \
-		${rsync_options}"
+		${rsyncoptions}"
 	if_failed_error "Could not rsync files from Pantheon. Confirm that SSH Key has been added to Pantheon account and added to Docksal SSH-Agent."
 }
 
@@ -6825,18 +7139,18 @@ provider_pull_pantheon_db ()
 {
 	# Get Time of Last Backup In Pantheon.
 	local last_backup
-	last_backup=$(_exec -T "terminus backup:list ${HOSTING_SITE}.${HOSTING_ENV} --element=db --format=list --field=date | head -n 1")
-	if_failed_error "Error retrieving list of backups from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
-	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]] || [[ "$FORCE" == "FORCE" ]]; then
+	last_backup=$(_exec -T "terminus backup:list ${hostingsite}.${hostingenv} --element=db --format=list --field=date | head -n 1")
+	if_failed_error "Error retrieving list of backups from Pantheon for ${hostingsite} on the ${hostingenv} environment"
+	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]] || [[ "$force" == "force" ]]; then
 		# If last backup does not exist or is older than 24 hours create new one.
-		echo -e "${acqua}Creating new backup on Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
-		_exec terminus backup:create ${HOSTING_SITE}.${HOSTING_ENV} --element=db
-		if_failed_error "Error creating backup on Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
+		echo -e "${acqua}Creating new backup on Pantheon for ${hostingsite} on the ${hostingenv} environment${NC}"
+		_exec terminus backup:create ${hostingsite}.${hostingenv} --element=db
+		if_failed_error "Error creating backup on Pantheon for ${hostingsite} on the ${hostingenv} environment"
 	fi
 	# Download backup with Terminus to given location.
-	echo -e "${acqua}Downloading database backup from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
-	_exec terminus backup:get ${HOSTING_SITE}.${HOSTING_ENV} --element="db" --to="${db_file}"
-	if_failed_error "Error Downloading backup from Pantheon for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
+	echo -e "${acqua}Downloading database backup from Pantheon for ${hostingsite} on the ${hostingenv} environment${NC}"
+	_exec terminus backup:get ${hostingsite}.${hostingenv} --element="db" --to="${db_file}"
+	if_failed_error "Error Downloading backup from Pantheon for ${hostingsite} on the ${hostingenv} environment"
 }
 
 # Pull process to pull files from Pantheon.
@@ -6868,10 +7182,10 @@ provider_pull_platformsh_precheck ()
 # Init process to pull code from Platform.sh
 provider_pull_platformsh_init ()
 {
-	# If HOSTING_ENV isn't set use master as default.
-	HOSTING_ENV=${HOSTING_ENV:-master}
-	echo -e "${acqua}Cloning Platform.sh Site Locally: ${HOSTING_SITE} - ${HOSTING_ENV} in ${project_directory}${NC}"
-	run_cli "platform project:get -q --environment=${HOSTING_ENV} ${HOSTING_SITE} ${project_directory}"
+	# If hostingenv isn't set use master as default.
+	hostingenv=${hostingenv:-master}
+	echo -e "${acqua}Cloning Platform.sh Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
+	run_cli "platform project:get -q --environment=${hostingenv} ${hostingsite} ${project_directory}"
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
 }
 
@@ -6879,34 +7193,34 @@ provider_pull_platformsh_init ()
 provider_pull_platformsh_files ()
 {
 	local host_url
-	host_url=$(_exec -T "platform ssh --pipe --project=${HOSTING_SITE} --environment=${HOSTING_ENV} 2>/dev/null");
+	host_url=$(_exec -T "platform ssh --pipe --project=${hostingsite} --environment=${hostingenv} 2>/dev/null");
 	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
-	echo -e "${acqua}Downloading Files from ${HOSTING_SITE} on the ${HOSTING_ENV} through Platform.sh${NC}"
+	echo -e "${acqua}Downloading Files from ${hostingsite} on the ${hostingenv} through Platform.sh${NC}"
 	_exec rsync \
 		-rlz \
 		--copy-unsafe-links \
 		--size-only \
 		--ipv4 \
 		--progress \
-		${host_url}:/app/${DOCROOT}/${FILES_DIR} \
-		/var/www/${DOCROOT}/${FILES_DIR} \
+		${host_url}:/app/${DOCROOT}/${filesdir} \
+		/var/www/${DOCROOT}/${filesdir} \
 		--delete \
-		${rsync_options}
+		${rsyncoptions}
 	if_failed_error "Could not rsync files from Platform.sh. Confirm that SSH Key has been added to Platform.sh account and added to Docksal SSH-Agent."
 }
 
 # Pull process to pull db from Platform.sh
 provider_pull_platformsh_db ()
 {
-	echo -e "${acqua}Downloading database backup from Platform.sh for ${HOSTING_SITE} on the ${HOSTING_ENV} environment${NC}"
-	_exec platform -q db:dump -p ${HOSTING_SITE} -e ${HOSTING_ENV} --gzip -f ${db_file}
-	if_failed_error "Error Downloading backup from Platform.sh for ${HOSTING_SITE} on the ${HOSTING_ENV} environment"
+	echo -e "${acqua}Downloading database backup from Platform.sh for ${hostingsite} on the ${hostingenv} environment${NC}"
+	_exec platform -q db:dump -p ${hostingsite} -e ${hostingenv} --gzip -f ${db_file}
+	if_failed_error "Error Downloading backup from Platform.sh for ${hostingsite} on the ${hostingenv} environment"
 }
 
 # Pull process to pull code from Platform.sh.
 provider_pull_platformsh_code ()
 {
-	SYNC_GIT_REMOTE=${SYNC_GIT_REMOTE:-"platform"}
+	syncgitremote=${syncgitremote:-"platform"}
 	# Execute a generic git pull on code.
 	provider_pull_generic_git_pull
 }
@@ -6943,15 +7257,15 @@ provider_pull_drush_db ()
 {
 	cd ${PROJECT_ROOT}/${DOCROOT}
 	# Execute drush sql-dump on remote host and exclude cache, session, watchdog tables.
-	echo -e "${acqua}Creating database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
+	echo -e "${acqua}Creating database export for @${hostingsite}.${hostingenv}${NC}"
 	# Drush appends a .gz when using the --gzip option. Remove .gz extension.
 	local db_save=$(echo $db_file | sed 's/\.gz//')
-	_exec drush -q -y @${HOSTING_SITE}.${HOSTING_ENV} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_save}.export" 2>/dev/null
-	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to create database export"
+	_exec drush -q -y @${hostingsite}.${hostingenv} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_save}.export" 2>/dev/null
+	if_failed_error "Error accessing Drush Site @${hostingsite}.${hostingenv} to create database export"
 	# Rsync database file locally
-	echo -e "${acqua}Downloading database export for @${HOSTING_SITE}.${HOSTING_ENV}${NC}"
-	_exec drush -q -y rsync @${HOSTING_SITE}.${HOSTING_ENV}:${db_save}.export.gz ${db_file} 2>/dev/null
-	if_failed_error "Error accessing Drush Site @${HOSTING_SITE}.${HOSTING_ENV} to download database export"
+	echo -e "${acqua}Downloading database export for @${hostingsite}.${hostingenv}${NC}"
+	_exec drush -q -y rsync @${hostingsite}.${hostingenv}:${db_save}.export.gz ${db_file} 2>/dev/null
+	if_failed_error "Error accessing Drush Site @${hostingsite}.${hostingenv} to download database export"
 }
 
 # Pull process to pull files from Drush.
@@ -6975,9 +7289,9 @@ provider_pull_wp_init ()
 provider_pull_wp_db ()
 {
 	cd ${PROJECT_ROOT}/${DOCROOT}
-	echo -e "${acqua}Downloading database export for @${HOSTING_SITE}${NC}"
-	_exec "wp @${HOSTING_SITE} db export --add-drop-table - | gzip > ${db_file}"
-	if_failed_error "Error accessing WordPress Site @${HOSTING_SITE} to create database export"
+	echo -e "${acqua}Downloading database export for @${hostingsite}${NC}"
+	_exec "wp @${hostingsite} db export --add-drop-table - | gzip > ${db_file}"
+	if_failed_error "Error accessing WordPress Site @${hostingsite} to create database export"
 }
 
 # Pull process to pull code from WP-CLI.
@@ -7046,6 +7360,9 @@ execute_hook ()
 
 #-------------------------- RUNTIME STARTS HERE ----------------------------
 
+# Debug mode: print all commands
+[[ ${FIN_DEBUG} == 1 ]] && set -x
+
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 if is_tty; then
@@ -7061,9 +7378,13 @@ fi
 
 # Inherit hosts git user.email and user.name settings
 # This happens before the environment variable overrides are sources, thus can be overridden via docksal.env files.
-if ( which git >/dev/null 2>&1 ); then
-	export GIT_USER_EMAIL=$(git config --get --global user.email)
-	export GIT_USER_NAME=$(git config --get --global user.name)
+# On macOS there is a git wrapper even when git is not installed, so we have to check for git differently on mac
+# See https://github.com/docksal/docksal/issues/1003
+if ! is_mac || (xcode_tools_dir=$(xcode-select -p 2>/dev/null) && [[ -x "${xcode_tools_dir}/usr/bin/git}" ]]); then
+	if ( which git &>/dev/null ); then
+		export GIT_USER_EMAIL=$(git config --get --global user.email)
+		export GIT_USER_NAME=$(git config --get --global user.name)
+	fi
 fi
 
 # Load environment variables overrides, use to permanently override some variables
@@ -7139,45 +7460,46 @@ else
 fi
 
 # Create drives bind mounts on wsl
+# E.g. /mnt/c -> /c
 wsl_mount_drives
 
-# Export environment variables to properly reach Docker server
-if [[ "$DOCKSAL_HOST" != "" ]]; then
-	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
+# DOCKER_HOST defines how we talk to the docker daemon
+# Linux - via /var/run/docker.sock (DOCKER_HOST='')
+if is_linux; then
+	export DOCKER_HOST='';
 elif is_docker_native; then
 	if is_wsl; then
-		export DOCKER_HOST="127.0.0.1:2375"
+		# WSL + Docker Desktop => connecting via HTTP
+		# The "legacy" (tcp://localhost:2375) connection option in Docker Desktop settings must be enabled.
+		export DOCKER_HOST='127.0.0.1:2375'
 	else
-		export DOCKER_HOST=""
+		# Mac + Docker Desktop - via /var/run/docker.sock (DOCKER_HOST='')
+		# Windows/Babun + Docker Desktop - via Windows named pipe (DOCKER_HOST='')
+		export DOCKER_HOST=''
 	fi
 else
-	# get active machine and its status
-	__current_active_machine=$(cat "$CONFIG_MACHINE_ACTIVE" 2>/dev/null || echo '')
-	DOCKER_MACHINE_NAME="${__current_active_machine:-$DEFAULT_MACHINE_NAME}"
-	DOCKER_MACHINE_STATUS=$(docker-machine status "$DOCKER_MACHINE_NAME" 2>&1 || echo '')
+	# Mac/Windows + Docker Machine => connecting via tcp://192.168.64.100:2376 (TLS) (DOCKER_HOST='192.168.64.100:2376')
+	# We rely on docker-machine to configure the connection settings
+	# docker_machine_status is an expensive operation (~1.5s), so we cache it here
+	DOCKER_MACHINE_STATUS=$(docker_machine_status)
 	if [[ "$DOCKER_MACHINE_STATUS" == 'Running' ]]; then
 		# Use cached environment variables if possible
-		if [[ -f "$CONFIG_MACHINES_ENV" ]]; then
-			eval $(cat "$CONFIG_MACHINES_ENV")
+		if [[ -f "$CONFIG_DOCKER_MACHINE_ENV" ]]; then
+			eval $(cat "$CONFIG_DOCKER_MACHINE_ENV")
 			# if DOCKER_HOST is still not set then get environment variables once again
 			if [[ DOCKER_HOST == "" ]]; then
 				docker_machine_env
 			fi
 		fi
 	fi
-
-	# current active machine folder
-	DOCKER_MACHINE_FOLDER="$CONFIG_MACHINES/$DOCKER_MACHINE_NAME"
-	mkdir -p "$DOCKER_MACHINE_FOLDER"
-
-	# TODO: revise or remove later. search for DOCKER_MACHINE_IP in the code
-	# get desired ip
-	# if [[ -f "$DOCKER_MACHINE_FOLDER/ip" ]]; then
-	#	DOCKER_MACHINE_IP=$(cat "$DOCKER_MACHINE_FOLDER/ip")
-	#fi
-	#DOCKER_MACHINE_IP=${DOCKER_MACHINE_IP:-$DOCKSAL_IP}
 fi
 
+# Allow overriding DOCKER_HOST externally via DOCKSAL_HOST
+if [[ "$DOCKSAL_HOST" != "" ]]; then
+	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
+fi
+
+# Cache docker status (saves ~200ms)
 if is_docker_running; then
 	export DOCKER_RUNNING="true"
 else
@@ -7211,6 +7533,15 @@ if [[ "$1" == "@"* ]]; then
 	fi
 	[[ "$1" == "" ]] && echo "$_alias_cd" && exit
 	cd "$_alias_cd" 2>/dev/null
+
+	# If ran within a script
+	if [[ -n $ADDON_SCRIPT ]]; then
+		unset COMPOSE_PROJECT_NAME
+		unset COMPOSE_PROJECT_NAME_SAFE
+		unset COMPOSE_PROJECT_VHOST_NAME_SAFE
+		unset VIRTUAL_HOST
+	fi
+
 	if_failed_error "Could not navigate to directory linked by $1 alias"
 fi
 
@@ -7244,7 +7575,7 @@ case "$1" in
 		up
 		;;
 	up)
-		# Force re-reading of configuration files
+		# force re-reading of configuration files
 		COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
 		check_for_updates
 		shift
@@ -7325,7 +7656,7 @@ case "$1" in
 				up
 				;;
 			up)
-				# Force re-reading of configuration files
+				# force re-reading of configuration files
 				COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
 				check_for_updates
 				shift
@@ -7429,7 +7760,9 @@ case "$1" in
 		# no load_configuration
 		shift
 		if [[ "$1" == "--system-images" ]]; then
+			check_docker_running
 			update_system_images
+			system_reset
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
 		elif [[ "$1" == "--self" ]]; then
@@ -7438,7 +7771,7 @@ case "$1" in
 			curl -kfsSL "${fin_url}?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
 			[[ "$2" == "--diff" ]] && diff "$FIN_PATH" "$FIN_PATH_UPDATED"
 			sudo cp "$FIN_PATH_UPDATED" "$FIN_PATH"
-			[ $? -eq 0 ] && echo "Done"
+			[[ $? == 0 ]] && echo "Done"
 			exit
 		elif [[ "$1" == "--tools" ]]; then
 			update_tools
@@ -7460,7 +7793,7 @@ case "$1" in
 		_bash "$@"
 		;;
 	exec|run)
-		DOCKER_VERSION_ALERT_SUPPRESS=1 # prevent version alert for exec
+		DOCKER_VERSION_ALERT_SUPPRESS=1 # prevent docker version alert for exec
 		load_configuration
 		shift
 		if [ -f "$1" ]; then
@@ -7600,20 +7933,17 @@ case "$1" in
 	docker|d)
 		# no load_configuration
 		shift
-		is_docker_running # exports env
 		check_winpty_found
 		${winpty} docker "$@"
 		;;
 	docker-compose|dc)
 		load_configuration
 		shift
-		is_docker_running # exports env
 		docker-compose "$@"
 		;;
 	docker-machine|dm)
 		# no load_configuration
 		shift
-		is_docker_running # exports env
 		docker-machine "$@"
 		;;
 	debug)
@@ -7640,7 +7970,19 @@ case "$1" in
 		# no load_configuration
 		check_for_updates
 		shift
-		cleanup $1
+		# Regular cleanup (Docksal stuff only)
+		if [[ "$1" == "" ]]; then
+			cleanup
+		fi
+		# Regular + hard cleanup (max cleanup to free up space - Docksal and non-Docksal dangling stuff)
+		if [[ "$1" == "--hard" ]]; then
+			cleanup
+			cleanup_hard
+		fi
+		# Image cleanup wizard
+		if [[ "$1" == "--images" ]]; then
+			cleanup_images
+		fi
 		;;
 	-v | v)
 		# no load_configuration
