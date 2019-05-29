@@ -16,11 +16,14 @@ Use `.docksal/etc/apache/httpd-vhosts.conf` to define additional virtual hosts:
 
 ```apacheconfig
 <VirtualHost *:80>
-	ServerName docs.test.docksal
-
-	ProxyPass / http://docs.docksal.io/
-	ProxyPassReverse / http://docs.docksal.io/
+    ServerName ${APACHE_SERVERNAME}
+    ServerAlias styleguide.*
+    DocumentRoot /var/www/styleguide
 </VirtualHost>
+
+<Directory "/var/www/styleguide">
+    Require all granted
+</Directory>
 ```
 
 ## Using Different Apache Versions {#apache-versions}
