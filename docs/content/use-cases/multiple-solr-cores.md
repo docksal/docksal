@@ -8,7 +8,6 @@ weight: 1
 To set up multiple Solr cores for use with the [Drupal Search API Solr module](https://www.drupal.org/project/search_api_solr),
 modify your `.docksal/docksal.yml` or `.docksal/docksal-local.yml` file with the following:
 
-
 ```yaml
 services:
   solr:
@@ -16,7 +15,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: solr
     labels:
-      io.docksal.virtual-host: solr.a.docksal,solr.b.docksal
+      io.docksal.virtual-host: solr-a.${VIRTUAL_HOST},solr-b.${VIRTUAL_HOST}
     volumes:
       - ${PROJECT_ROOT}/.docksal/etc/solr/a:/opt/solr/example/solr/a:ro
       - /var/lib/solr/a/data:rw
