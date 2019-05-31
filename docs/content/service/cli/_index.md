@@ -3,8 +3,8 @@ title: "cli"
 chapter: true
 ---
 
-# docksal/cli Service
+# cli Service
 
-Advanced documentation for `docksal/cli` service 
+Advanced documentation for `cli` service 
 
 {{% children %}}

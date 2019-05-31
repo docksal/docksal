@@ -3,8 +3,8 @@ title: "db"
 chapter: true
 ---
 
-# docksal/db Service
+# db Service
 
-Advanced documentation for `docksal/db` service 
+Advanced documentation for `db` service 
 
 {{% children %}}

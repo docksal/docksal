@@ -1,19 +1,65 @@
 ---
-title: "Multiple Web Containers"
+title: "Multiple Web Servers / Virtual Hosts"
 weight: 1
 ---
 
-For projects that need multiple web containers but need to stay in the same Docksal project (e.g., headless Drupal 
-backend with a node-based frontend), add a second web service to your `docksal.yml` file:
+For projects that need multiple web servers but need to stay in the same Docksal project (e.g., headless/decoupled 
+applications with frontend and backend hosted separately), you have a few options available. 
 
+
+## Extra Virtual Host
+
+Use the primary web container and add a separate virtual host. See web container [configuration overrides](/service/web/settings/).
+
+All subdomains of you project (`*.project.docksal`) are automatically routed to the primary `web` container. 
+Using a subdomain for the extra virtual host is the most straightforward approach. 
+
+```apacheconfig
+<VirtualHost *:80>
+    ServerName ${APACHE_SERVERNAME}
+    ServerAlias styleguide.*
+    DocumentRoot /var/www/styleguide
+</VirtualHost>
+
+<Directory "/var/www/styleguide">
+    Require all granted
+</Directory>
 ```
-# Web 2 (name it anything you want, doesn't have to be "web2")
-web2:
-  extends:
-    file: ${HOME}/.docksal/stacks/services.yml
-    service: apache
-  environment:
-    - APACHE_DOCUMENTROOT=/var/www/your-web2-directory
-  labels:
-    - io.docksal.virtual-host=web2.${VIRTUAL_HOST}
+
+To route and additional custom domain to the primary web container, [see vhost-proxy docs](/core/system-vhost-proxy/#custom-domains). 
+
+
+## Secondary Web Service
+
+Define a secondary web service in your project's `docksal.yml` file:
+
+Apache:
+
+```yaml
+services:
+  ...
+  styleguide:
+    image: docksal/apache:2.4-2.3
+    volumes:
+      - project_root:/var/www:ro,nocopy
+    environment:
+      - APACHE_DOCUMENTROOT=/var/www/styleguide
+    labels:
+      - io.docksal.virtual-host=styleguide.${VIRTUAL_HOST}
+```
+
+Nginx:
+
+```yaml
+services:
+  ...
+  styleguide:
+    image: docksal/nginx:1.14-1.0
+    volumes:
+      - project_root:/var/www:ro,nocopy
+    environment:
+      - NGINX_VHOST_PRESET=html
+      - NGINX_SERVER_ROOT=/var/www/styleguide
+    labels:
+      - io.docksal.virtual-host=styleguide.${VIRTUAL_HOST}
 ```

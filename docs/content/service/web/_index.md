@@ -3,8 +3,8 @@ title: "web"
 chapter: true
 ---
 
-# docksal/web Service
+# web Service
 
-Advanced documentation for `docksal/web` service 
+Advanced documentation for `web` service 
 
 {{% children %}}
