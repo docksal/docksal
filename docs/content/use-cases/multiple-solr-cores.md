@@ -9,7 +9,7 @@ To set up multiple Solr cores for use with the [Drupal Search API Solr module](h
 modify your `.docksal/docksal.yml` or `.docksal/docksal-local.yml` file with the following:
 
 
-```
+```yaml
 services:
   solr:
     extends:
@@ -23,13 +23,17 @@ services:
       - ${PROJECT_ROOT}/.docksal/etc/solr/b:/opt/solr/example/solr/b:ro
       - /var/lib/solr/b/data:rw
 ```
+
 Create the file `.docksal/etc/solr/a/core.properties` for instance a with the contents:
-```
+
+```bash
 name=a
 dataDir=/var/lib/solr/a/data
 ```
+
 Create the file `.docksal/etc/solr/b/core.properties` for instance b with the contents:
-```
+
+```bash
 name=b
 dataDir=/var/lib/solr/b/data
 ```
@@ -39,7 +43,7 @@ dataDir=/var/lib/solr/b/data
 Docksal current has Solr 4 defined in the Docksal images. For users with a need to use Solr 6.x, you can set this in 
 your `docksal.yml` file.
 
-```
+```yaml
   solr:
     volumes:
       - ${PROJECT_ROOT}/.docksal/etc/solr/a:/opt/solr/server/solr/a:ro
@@ -49,11 +53,14 @@ your `docksal.yml` file.
     image: solr:6.6-alpine
 ```
 Create the file `.docksal/etc/solr/a/core.properties` for instance a with the contents:
-```
+
+```bash
 dataDir=/var/solr/a/data
 ```
+
 Create the file `.docksal/etc/solr/b/core.properties` for instance b with the contents:
-```
+
+```bash
 dataDir=/var/solr/b/data
 ```
 

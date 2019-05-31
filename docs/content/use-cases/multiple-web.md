@@ -11,7 +11,7 @@ backend with a node-based frontend), add a second web service to your `docksal.y
 web2:
   extends:
     file: ${HOME}/.docksal/stacks/services.yml
-    service: web
+    service: apache
   environment:
     - APACHE_DOCUMENTROOT=/var/www/your-web2-directory
   labels:

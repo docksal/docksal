@@ -1,9 +1,9 @@
 ---
-title: "Docker Composer Override of the Command for the CLI Container"
+title: "Override of the Command for the CLI Container"
 weight: 1
 ---
 
-Docker Compose has an ability to configure which command to run on `cli` container start.
+You can configure which command to run by default on `cli` container start.
 
 ```yaml
 services:
@@ -12,6 +12,7 @@ services:
 ```
 
 The command can also be in a list:
+
 ```yaml
 services:
   cli:
@@ -19,6 +20,7 @@ services:
 ```
 
 This can be useful for automatic services initialization, such as:
+
 ```yaml
 services:
   cli:

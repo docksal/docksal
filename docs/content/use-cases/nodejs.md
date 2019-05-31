@@ -5,8 +5,8 @@ weight: 1
 
 ## Installing Alternate NodeJS Versions
 
-The Docksal `cli` comes pre-installed with NodeJS 8.11.3. This is the recommended version for most users. If you require
-a newer version, you have options:
+The Docksal `cli` comes pre-installed with NodeJS 8.11.3. This is the recommended version for most users.  
+If you require a newer version, you have options:
 
 **Install the needed version of NodeJS via nvm at runtime**
 
