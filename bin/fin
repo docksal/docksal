@@ -4983,6 +4983,11 @@ _exec ()
 
 	container_id=$(get_container_id "$container_name")
 
+	if [[ $container_id == "" ]]; then
+		echo-error "Container '$container_name' cannot be found" \ "Cannot run fin exec command in that container"
+		exit 1
+	fi
+
 	# Use sh as default shell
 	local SHELL_INTERACTIVE="sh -ilc"
 	local SHELL_NONINTERACTIVE="sh -lc"
