@@ -13,7 +13,7 @@ Take an example: `docksal/mysql:5.7-1.3`.
 
 `5.7` means software version, in this case MySQL 5.7. 
 
-`1.4` means image stability tag. Stability tag is the image version. 
+`1.3` means image stability tag. Stability tag is the image version. 
 Same software version might have several image versions. 
 Let's say we have added something to the MySQL 5.7 image (like a new default configuration), 
 we would increase the stability tag to `1.4` in that case, but the software version `5.7` would remain the same,
