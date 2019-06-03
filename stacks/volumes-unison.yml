@@ -26,8 +26,6 @@ services:
       - SYNC_MAX_INOTIFY_WATCHES=524288
       - SYNC_VERBOSE=1
       - SYNC_NODELETE_SOURCE=0
-      - UNISON_USER=docker
       - UNISON_UID=${HOST_UID:-0}
-      - UNISON_GROUP=dialout
       - UNISON_GID=${HOST_GID:-0}
     privileged: true
