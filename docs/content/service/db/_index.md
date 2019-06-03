@@ -1,9 +1,7 @@
 ---
-title: "db"
+title: "db Service"
 chapter: true
 ---
-
-# db Service
 
 Advanced documentation for `db` service 
 

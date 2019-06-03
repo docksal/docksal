@@ -1,9 +1,7 @@
 ---
-title: "web"
+title: "web Service"
 chapter: true
 ---
-
-# web Service
 
 Advanced documentation for `web` service 
 

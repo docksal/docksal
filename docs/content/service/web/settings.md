@@ -1,5 +1,5 @@
 ---
-title: "Apache Settings"
+title: "web: Settings"
 aliases:
   - /en/master/advanced/web-configuration-overrides/
 ---

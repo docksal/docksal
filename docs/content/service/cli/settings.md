@@ -1,5 +1,5 @@
 ---
-title: "PHP Settings"
+title: "cli: Settings"
 ---
 
 ## PHP Configuration {#configuration}
