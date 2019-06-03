@@ -5875,6 +5875,10 @@ load_configuration ()
 		[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
 		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
 		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+		[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
+			echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
+				"Stack file does not exist: $stack_yml_file" &&
+			exit 1
 
 		# Include both the stack and the project yml files if both exist
 		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
