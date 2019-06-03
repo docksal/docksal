@@ -29,9 +29,9 @@ Note: `cli` is a special case, `cli` itself is seen as software here with `-php.
 | Image| Notes |
 |------|------|
 | `docksal/cli:2.6-php7.3` | PHP 7.3, Nodejs v10.15.0, Ruby 2.6.0, Python 2.7.0, msmtp |
-| `docksal/cli:2-php7.3`   | Latest 2.x image version of PHP 7.3 flavor, convenient when [extending images](/stack/extend-images.md)
+| `docksal/cli:2-php7.3`   | Latest 2.x image version of PHP 7.3 flavor, convenient when [extending images](/stack/extend-images)
 | `docksal/cli:2.6-php7.2` | *Default image*, PHP 7.2, Nodejs v10.15.0, Ruby 2.6.0, Python 2.7.0, msmtp |
-| `docksal/cli:2-php7.2`   | Latest 2.x image version PHP 7.2 flavor, convenient when [extending images](/stack/extend-images.md))
+| `docksal/cli:2-php7.2`   | Latest 2.x image version PHP 7.2 flavor, convenient when [extending images](/stack/extend-images))
 | `docksal/cli:2.6-php7.1` | PHP 7.1, Nodejs v10.15.0, Ruby 2.6.0, Python 2.7.0, msmtp |
 | `docksal/cli:2.5-php7.0` | *Deprecated*, PHP 7.0, mhsendmail |
 | `docksal/cli:2.5-php5.6` | *Deprecated*, PHP 5.6, mhsendmail |
