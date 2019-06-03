@@ -25,13 +25,11 @@ There are several way to extend a stock Docksal image:
 This method is sufficient for many use cases.
 
 Create a [custom command](/fin/custom-commands/) to add the necessary tools to the image, e.g.:
+
 ```
 fin exec sudo apt-get update
 fin exec sudo apt-get install php7.0-redis
 ```
-
-See also the advanced use case of [adding a different NodeJS version](/use-cases/nodejs) with a custom command.
-
 
 ## Configuration: Dockerfile {#docker-file}
 

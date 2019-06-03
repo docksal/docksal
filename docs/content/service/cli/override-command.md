@@ -1,9 +1,10 @@
 ---
-title: "Override of the Command for the CLI Container"
-weight: 1
+title: "Override Command"
 ---
 
-You can configure which command to run by default on `cli` container start.
+By default, `cli` runs `supervisord` which runs `php-fpm`, `crond`, and `sshd` daemons.
+
+You can override which command to run on `cli` container start.
 
 ```yaml
 services:
