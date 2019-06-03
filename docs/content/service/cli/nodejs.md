@@ -5,7 +5,7 @@ title: "cli: NodeJS"
 `docksal/cli` service images ship with an LTS version of NodeJS installed in a persistent volume in `/home/docker`.
 
 When updating the `cli` service image, either from an explicit image tag or through a Docksal upgrade, and the new image 
-use a different NodeJS version, it's necessary to run `fin project reset cli` to update the version in the `docker` 
+uses a different NodeJS version, it's necessary to run `fin project reset cli` to update the version in the `docker` 
 user's profile inside the image.
 
 
