@@ -1293,6 +1293,9 @@ cleanup ()
 
 	echo-green "Removing dangling images..."
 	docker image prune -f 2>/dev/null
+	# Remove dangling emty images. Temporary to address bug introduced in 1.12.0.
+	# TODO: Remove this in December 2019
+	docker ps -a | grep "docksal/empty" | awk '{print $1}' | xargs docker rm
 	# TODO: use the filter once we have the filter added to all Docksal images (will take a while)
 	#docker image prune -f --filter "label=io.docksal" 2>/dev/null
 }
