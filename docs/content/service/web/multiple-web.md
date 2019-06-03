@@ -1,6 +1,5 @@
 ---
-title: "Multiple Web Servers / Virtual Hosts"
-weight: 1
+title: "Multiple Web Servers"
 ---
 
 For projects that need multiple web servers but need to stay in the same Docksal project (e.g., headless/decoupled 
@@ -11,7 +10,7 @@ applications with frontend and backend hosted separately), you have a few option
 
 Use the primary web container and add a separate virtual host. See web container [configuration overrides](/service/web/settings/).
 
-All subdomains of you project (`*.project.docksal`) are automatically routed to the primary `web` container. 
+All subdomains of your project (`*.project.docksal`) are automatically routed to the primary `web` container. 
 Using a subdomain for the extra virtual host is the most straightforward approach. 
 
 ```apacheconfig
