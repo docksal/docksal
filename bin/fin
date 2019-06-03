@@ -2059,21 +2059,23 @@ show_help_config ()
 	printh "    --docroot=mydir" "Set non-default DOCROOT during config generate"
 	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
 	printh "    --global" "Set for global ENV file"
-	printh "    --env=[name]" "Set in environment specific project ENV file (default: local)"
+	printh "    --env=[name]" "Set in environment specific project ENV file"
 	echo
 	printh "remove [options] [VAR]" "Remove variable(s) from project ENV file"
 	printh "rm [options] [VAR]" ""
 	printh "    --global" "Remove from global ENV file"
-	printh "    --env=[name]" "Remove from environment specific project ENV file (default: local)"
+	printh "    --env=[name]" "Remove from environment specific project ENV file"
 	echo
 	printh "get [options] [VAR]" "Get the value of the single variable from project ENV file"
 	printh "    --global" "Get value from global ENV file"
-	printh "    --env=[name]" "Get value from environment specific project ENV file (default: local)"
+	printh "    --env=[name]" "Get value from environment specific project ENV file"
 
 	echo
 	echo "Examples:"
 	printh "fin config set DOCKER_NATIVE=1 --global" "Adds DOCKER_NATIVE=1 into \$HOME/.docksal/docksal.env"
 	printh "fin config rm DOCKER_NATIVE --global" "	Removes DOCKER_NATIVE value from \$HOME/.docksal/docksal.env"
+	printh "fin config set DOCKSAL_STACK=acquia" "	Set different default stack in .docksal/docksal.env"
+	printh "fin config set --env=local XDEBUG_ENABLED=1" "	Enable XDEBUG in .docksal/docksal-local.env"
 }
 
 show_help_init ()
