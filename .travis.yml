@@ -12,6 +12,8 @@ env:
     - PROVIDER=wp
 
 install:
+  # Short a provider build if pull tests are disabled
+  - if [[ "${PROVIDER}" != "none" ]] && [[ "${RUN_PULL_TESTS}" == "0" ]]; then exit; fi
   - echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
   - chmod 400 $HOME/.ssh/project_key
   - git clone https://github.com/docksal/bats.git tests/scripts/bats
