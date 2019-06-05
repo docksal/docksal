@@ -2711,8 +2711,8 @@ smb_share_add()
 # Removes Docksal SMB shares
 smb_share_remove ()
 {
-	local drives
-	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
+	# Get a list of logical drives (type 3 = Local disk).
+	local drives=$(wmic.exe logicaldisk get drivetype,name | grep 3 | awk '{print tolower($2)}' | sed 's/[:\r]//g')
 
 	for drive in ${drives}; do
 		# Avoid conflicts with existing drive shares by using a unique share name
@@ -2782,8 +2782,8 @@ docker_machine_mount_smb ()
 		return 1
 	fi
 
-	local drives
-	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
+	# Get a list of logical drives (type 3 = Local disk).
+	local drives=$(wmic.exe logicaldisk get drivetype,name | grep 3 | awk '{print tolower($2)}' | sed 's/[:\r]//g')
 
 	for drive in ${drives}; do
 		# Mount point is lowercase drive letter with no slash
@@ -5777,7 +5777,8 @@ sysinfo ()
 	elif is_mac; then
 		df -h # mac native
 	else
-		wmic.exe logicaldisk get size,freespace,caption # win native
+		# Get a list of logical drives (type 3 = Local disk).
+		wmic.exe logicaldisk where drivetype=3 get size,freespace,caption # win native
 	fi
 
 	if [[ "$all" == "all" ]]; then
