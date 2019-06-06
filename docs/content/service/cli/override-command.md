@@ -1,9 +1,10 @@
 ---
-title: "Docker Composer Override of the Command for the CLI Container"
-weight: 1
+title: "Override Command"
 ---
 
-Docker Compose has an ability to configure which command to run on `cli` container start.
+By default, `cli` runs `supervisord` which runs `php-fpm`, `crond`, and `sshd` daemons.
+
+You can override which command to run on `cli` container start.
 
 ```yaml
 services:
@@ -12,6 +13,7 @@ services:
 ```
 
 The command can also be in a list:
+
 ```yaml
 services:
   cli:
@@ -19,6 +21,7 @@ services:
 ```
 
 This can be useful for automatic services initialization, such as:
+
 ```yaml
 services:
   cli:

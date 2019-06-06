@@ -1,5 +1,49 @@
 # Changelog
 
+# 1.12.2 (2019-06-05)
+
+**RELEASE CONTAINS BREAKING CHANGES**
+
+There was a breaking change in Docker 18.09.0.  
+If you are using VirtualBox mode (Boot2Docker), your VM will need to be reset during the update.  
+See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-update/) for more information.
+
+**DEPRECATION NOTICE**
+
+- Versions of Windows prior to Windows 10 are no longer supported
+- Babun (Windows) is deprecated and is no longer supported
+- WSL is now the default and the only supported installation mode on Windows
+
+## New software versions
+
+- fin v1.86.0
+
+## Changes and improvements
+
+- Allowed custom commands and addons to be located in symlinked directories (#1036)
+- Added a missing `--rm` in a `docker run` call in `is_docker_path` to cleanup existed containers (#1039, #1064)
+- Refactored `fin cleanup`
+  - Not cleaning up dangling volumes not created/managed under Docksal (#1056)
+- Improve error reporting:
+  - Error out if `DOCKSAL_STACK` definition is incorrect (#1051)
+  - Error out `fin exec` if target container is not found (#1051)
+- Removed `UNISON_USER` and `UNISON_GROUP` from `volumes-unison.yml` (#1049)
+  - They are not needed anymore due to docksal/unison#7
+- Reverted to using `wmic.exe` to get logical drives list on Windows (#1059)
+- Added a trigger to short `fin pull` tests in CI
+
+## Documentation
+
+- Added docs on available Docksal Stock Images https://docs.docksal.io/stack/images-versions/
+- Updated docs on the `DOCKSAL_ENVIRONMENT` variable use cases (#1041)
+- Updated docs for web service settings and multiple webs use case
+  - Added a more meaningful example for additional virtual hosts with Apache
+  - Added Nginx docs
+- Updated docs on NodeJS use case in `cli`
+- Updated Windows SMB Troubleshooting docs with a case when drives are not shared in Docker Desktop (#1040)
+- Update `fin config` docs (#1035)
+
+
 # 1.12.1 (2019-04-09)
 
 **RELEASE CONTAINS BREAKING CHANGES**

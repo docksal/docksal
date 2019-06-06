@@ -42,7 +42,17 @@ When set, suppresses alert about the outdated Docksal version.
 
 `Default: local`
 
-Allow for environment specific YML and ENV files. `fin` will load additional configuration from `docksal-${DOCKSAL_ENVIRONMENT}.yml` and/or `docksal-${DOCKSAL_ENVIRONMENT}.env`. Default usage is creating `docksal-local.yml` and `docksal-local.env` for local overrides that are not intended to be committed.
+Allow for environment specific YML and ENV files. `fin` will load additional configuration from 
+`docksal-${DOCKSAL_ENVIRONMENT}.yml` and `docksal-${DOCKSAL_ENVIRONMENT}.env`. 
+
+Default usage is creating `docksal-local.yml` and/or `docksal-local.env` for local overrides that are not intended 
+to be committed.
+
+In CI, you might set the value via `export DOCKSAL_ENVIRONMENT=ci` in your build script or globally for all projects 
+on a build/sandbox server via `fin config set --global DOCKSAL_ENVIRONMENT=ci`. `fin` will then load
+`docksal-ci.env` and/or `docksal-ci.yml` (these you do commit) on top of the default configuration files.
+
+Note: `DOCKSAL_ENVIRONMENT` should not be set and will not work in the project's `docksal.env` file (this is by design).
 
 ### DOCKSAL_STATS_OPTOUT 
 

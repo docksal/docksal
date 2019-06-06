@@ -1,8 +1,8 @@
 ---
-title: "MySQL Settings"
+title: "db: Settings"
 ---
 
-## MySQL Configuration {#configuration}
+## MySQL Configuration {#mysql-config}
 
 The following settings files in the project codebase can be used to override default MySQL settings:
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.85.1
+FIN_VERSION=1.86.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -329,7 +329,7 @@ echo-error ()
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}"
 	shift
 	for arg in "$@"; do
-		echo -e "         $arg"
+		echo -e "        $arg"
 	done
 }
 
@@ -964,7 +964,7 @@ is_docker_path ()
 {
 	local _path="${1}"
 	[[ "$_path" == "" ]] && return 1
-	(cd "$_path" 2>/dev/null && docker run -v "$_path":"$_path" docksal/empty 2>/dev/null)
+	(cd "$_path" 2>/dev/null && docker run --rm -v "$_path":"$_path" docksal/empty 2>/dev/null)
 }
 
 # Check VirtualBox version
@@ -1267,65 +1267,102 @@ _remove_containers ()
 	fi
 }
 
-# Cleanup unused resources
-# @param $1 --hard if set removes all stopped containers
+# Remove unused Docker images, and unused Docksal related volumes and containers
 cleanup ()
 {
 	check_docker_running
-	if [[ "$1" == "--hard" ]] && [[ "$(docker ps -aqf status=exited)" != "" ]]; then
+	# Orphaned project stacks are containers/volumes that map to non-existing codebases on the host
+	# E.g., the codebase was removed without doing proper "fin project rm" first
+	echo-green "Checking for orphaned Docksal project stacks..."
+	local projects=$(docker ps --all \
+		--filter 'label=io.docksal.project-root' \
+		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
+	for project in ${projects}; do
+		IFS=':' read project_name project_root <<< "$project"
+		if [[ ! -d "$project_root" ]]; then
+			echo "Directory for project \"$project_name\" does not exist. Removing project containers and volumes..."
+			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+			docker volume ls -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker volume rm -f
+		fi
+	done
+
+	# Most dangling volumes should be cleaned up by the orphaned stacks cleanup.
+	# Cleanup any leftover dangling volumes created by Docksal.
+	echo-green "Removing dangling Docksal volumes..."
+	docker volume prune -f --filter "label=io.docksal" 2>/dev/null
+
+	echo-green "Removing dangling images..."
+	docker image prune -f 2>/dev/null
+	# Remove dangling emty images. Temporary to address bug introduced in 1.12.0.
+	# TODO: Remove this in December 2019
+	docker ps -a | grep "docksal/empty" | awk '{print $1}' | xargs docker rm
+	# TODO: use the filter once we have the filter added to all Docksal images (will take a while)
+	#docker image prune -f --filter "label=io.docksal" 2>/dev/null
+}
+
+# Image cleanup wizard
+cleanup_images ()
+{
+	check_docker_running
+	echo-green "Docker images cleanup Wizard"
+	echo
+	sleep 1
+	# Print all images first
+	echo "Printing all existing images:"
+	sleep 1
+	docker images --format="{{.Repository}}:{{.Tag}}" | sort
+	echo "---------------------------------------------------"
+	echo "|      Use the list above to help you cleanup     |"
+	echo "---------------------------------------------------"
+	# Declare an arary of names and fill it with the output from the docker command
+	declare -a images
+	images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
+	# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
+	local image_name; local image_id;
+	for image in "${images[@]}"; do
+		image_name=$(echo "$image" | cut -d "+" -f 1)
+		image_id=$(echo "$image" | cut -d "+" -f 2)
+		if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
+			docker image remove "$image_id"
+		fi
+	done
+}
+
+# Cleans up ANY (not only Docksal managed):
+# - stopped containers
+# - dangling volumes
+cleanup_hard ()
+{
+	check_docker_running
+	if [[ "$(docker ps -aqf status=exited)" != "" ]]; then
 		echo -e "${red}WARNING: ${yellow}Preparing to delete the following stopped containers:${NC}"
 		docker ps -af status=exited --format "{{.Names}}\t{{.Status}}\t{{.Image}}"
 		printf '–%.0s' $(seq 1 40)
 		echo -e "${yellow}"
-		_confirm "Continue?"
-		echo -e "${NC}"
-		#--
-		echo-green "Removing stopped containers..."
-		docker container prune -f 2>/dev/null
-	fi
-
-	if [[ "$1" == "--images" ]]; then
-		echo-green "Docker images cleanup Wizard."
-		echo
-		sleep 1
-		# Print all images first
-		echo "Printing all existing images:"
-		sleep 1
-		docker images --format="{{.Repository}}:{{.Tag}}" | sort
-		echo "---------------------------------------------------"
-		echo "|      Use the list above to help you cleanup     |"
-		echo "---------------------------------------------------"
-		# Declare an arary of names and fill it with the output from the docker command
-		declare -a images
-		images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
-		# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
-		local image_name; local image_id;
-		for image in "${images[@]}"; do
-			image_name=$(echo "$image" | cut -d "+" -f 1)
-			image_id=$(echo "$image" | cut -d "+" -f 2)
-			if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
-				docker image remove "$image_id"
-			fi
-		done
-		return
-	fi
-
-	echo-green "Checking for orphaned projects..."
-	local projects=$(docker ps --all \
-		--filter 'label=io.docksal.project-root' \
-		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
-	for project in $projects; do
-		IFS=':' read project_name project_root <<< "$project"
-		if [[ ! -d "$project_root" ]]; then
-			echo "Directory for project \"$project_name\" does not exist. Removing containers..."
-			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+		if _confirm "Continue?" --no-exit; then
+			echo -e "${NC}"
+			echo-green "Removing stopped containers..."
+			docker container prune -f 2>/dev/null
 		fi
-	done
+		echo -e "${NC}"
+	fi
 
-	echo-green "Removing dangling images..."
+	dangling_volumes="$(docker volume ls -qf dangling=true)"
+	if [[ "$dangling_volumes" != "" ]]; then
+		echo -e "${red}WARNING: ${yellow}Preparing to delete the following dangling volumes:${NC}"
+		echo "$dangling_volumes"
+		printf '–%.0s' $(seq 1 40)
+		echo -e "${yellow}"
+		if _confirm "Continue?" --no-exit; then
+			echo -e "${NC}"
+			echo-green "Removing dangling volumes..."
+			echo "$dangling_volumes" | xargs docker volume rm -f 2>/dev/null
+		fi
+		echo -e "${NC}"
+	fi
+
+	echo-green "Removing all dangling images..."
 	docker image prune -f 2>/dev/null
-	echo-green "Removing dangling volumes..."
-	docker volume prune -f 2>/dev/null
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -1477,7 +1514,7 @@ show_help ()
 	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [options]" "Remove unused Docker images and projects (saves disk space)"
+	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
 	printh "share" "Create temporary public url for current project using ngrok"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
@@ -1536,7 +1573,7 @@ show_help_list_commands_in_help ()
 	local executable="-executable"
 	is_mac && executable="-perm +100"
 
-	local addons_list=$(find "$addons_path" -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
+	local addons_list=$(find -L "$addons_path" -maxdepth 2 -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
 	if [[ "$addons_list" != "" ]]; then
 		local scope
 		for cmd_name in ${addons_list}
@@ -2022,21 +2059,23 @@ show_help_config ()
 	printh "    --docroot=mydir" "Set non-default DOCROOT during config generate"
 	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
 	printh "    --global" "Set for global ENV file"
-	printh "    --env=[name]" "Set in environment specific project ENV file (default: local)"
+	printh "    --env=[name]" "Set in environment specific project ENV file"
 	echo
 	printh "remove [options] [VAR]" "Remove variable(s) from project ENV file"
 	printh "rm [options] [VAR]" ""
 	printh "    --global" "Remove from global ENV file"
-	printh "    --env=[name]" "Remove from environment specific project ENV file (default: local)"
+	printh "    --env=[name]" "Remove from environment specific project ENV file"
 	echo
 	printh "get [options] [VAR]" "Get the value of the single variable from project ENV file"
 	printh "    --global" "Get value from global ENV file"
-	printh "    --env=[name]" "Get value from environment specific project ENV file (default: local)"
+	printh "    --env=[name]" "Get value from environment specific project ENV file"
 
 	echo
 	echo "Examples:"
 	printh "fin config set DOCKER_NATIVE=1 --global" "Adds DOCKER_NATIVE=1 into \$HOME/.docksal/docksal.env"
 	printh "fin config rm DOCKER_NATIVE --global" "	Removes DOCKER_NATIVE value from \$HOME/.docksal/docksal.env"
+	printh "fin config set DOCKSAL_STACK=acquia" "	Set different default stack in .docksal/docksal.env"
+	printh "fin config set --env=local XDEBUG_ENABLED=1" "	Enable XDEBUG in .docksal/docksal-local.env"
 }
 
 show_help_init ()
@@ -2059,9 +2098,9 @@ show_help_init ()
 show_help_cleanup ()
 {
 	echo
-	echo "Remove unused docker images and orphaned containers to save disk space."
-	echo "Orphaned are containers which folders were deleted from the filesystem,"
-	echo "but their containers still linger in the Docker."
+	echo "Remove all unused Docker images, and Docksal related volumes and orphaned containers to save disk space."
+	echo "Orphaned are those containers which project folders were deleted from the filesystem,"
+	echo "but the containers still linger in the Docker."
 
 	echo
 	echo "Usage: cleanup [options]"
@@ -2069,13 +2108,13 @@ show_help_cleanup ()
 	echo
 	echo "Options:"
 	printh "--images" "Docker images cleanup Wizard"
-	printh "--hard" "Also remove ALL stopped containers (potentially destructive operation)"
+	printh "--hard" "Remove ALL stopped containers even unrelated to Docksal (potentially destructive operation)"
 
 	echo
 	echo "Examples:"
 	printh "fin cleanup" "Regular cleanup"
 	printh "fin cleanup --images" "Docker Images cleanup wizard, helping to navigate and delete unused ones"
-	printh "fin cleanup --hard" "Run hard cleanup removing all stopped containers"
+	printh "fin cleanup --hard" "Run hard cleanup removing all stopped Docker containers"
 }
 
 show_help_hosts ()
@@ -2151,7 +2190,7 @@ show_help_pull ()
 
 	echo
 	echo "Options:"
-	printh "--hosting-provider=<provider>" "Provider to interact with."
+	printh "--hosting-platform=<provider>" "Platform to interact with."
 	printh "" "Options: acquia, pantheon, platform.sh, drush, wp"
 	printh "--hosting-site=<id>" "Site ID on Provider"
 	printh "--hosting-env=<env>" "Site Env on Provider"
@@ -2672,8 +2711,8 @@ smb_share_add()
 # Removes Docksal SMB shares
 smb_share_remove ()
 {
-	local drives
-	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
+	# Get a list of logical drives (type 3 = Local disk).
+	local drives=$(wmic.exe logicaldisk get drivetype,name | grep 3 | awk '{print tolower($2)}' | sed 's/[:\r]//g')
 
 	for drive in ${drives}; do
 		# Avoid conflicts with existing drive shares by using a unique share name
@@ -2743,8 +2782,8 @@ docker_machine_mount_smb ()
 		return 1
 	fi
 
-	local drives
-	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
+	# Get a list of logical drives (type 3 = Local disk).
+	local drives=$(wmic.exe logicaldisk get drivetype,name | grep 3 | awk '{print tolower($2)}' | sed 's/[:\r]//g')
 
 	for drive in ${drives}; do
 		# Mount point is lowercase drive letter with no slash
@@ -4949,6 +4988,11 @@ _exec ()
 
 	container_id=$(get_container_id "$container_name")
 
+	if [[ $container_id == "" ]]; then
+		echo-error "Container '$container_name' cannot be found" \ "Cannot run fin exec command in that container"
+		exit 1
+	fi
+
 	# Use sh as default shell
 	local SHELL_INTERACTIVE="sh -ilc"
 	local SHELL_NONINTERACTIVE="sh -lc"
@@ -5733,7 +5777,8 @@ sysinfo ()
 	elif is_mac; then
 		df -h # mac native
 	else
-		wmic.exe logicaldisk get size,freespace,caption # win native
+		# Get a list of logical drives (type 3 = Local disk).
+		wmic.exe logicaldisk where drivetype=3 get size,freespace,caption # win native
 	fi
 
 	if [[ "$all" == "all" ]]; then
@@ -5841,6 +5886,10 @@ load_configuration ()
 		[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
 		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
 		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+		[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
+			echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
+				"Stack file does not exist: $stack_yml_file" &&
+			exit 1
 
 		# Include both the stack and the project yml files if both exist
 		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
@@ -7936,7 +7985,19 @@ case "$1" in
 		# no load_configuration
 		check_for_updates
 		shift
-		cleanup $1
+		# Regular cleanup (Docksal stuff only)
+		if [[ "$1" == "" ]]; then
+			cleanup
+		fi
+		# Regular + hard cleanup (max cleanup to free up space - Docksal and non-Docksal dangling stuff)
+		if [[ "$1" == "--hard" ]]; then
+			cleanup
+			cleanup_hard
+		fi
+		# Image cleanup wizard
+		if [[ "$1" == "--images" ]]; then
+			cleanup_images
+		fi
 		;;
 	-v | v)
 		# no load_configuration
