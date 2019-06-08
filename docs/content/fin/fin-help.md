@@ -8,7 +8,7 @@ aliases:
 ## fin {#fin}
 
 	
-	Docksal command line utility v1.86.1
+	Docksal command line utility v1.86.2
 	
 	Usage: fin <command>
 	
