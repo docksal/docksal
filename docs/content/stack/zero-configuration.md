@@ -24,8 +24,8 @@ DOCKSAL_STACK="acquia"
 
 The following stacks are available:
 
-- `default` - web, db, cli (assumed, when none specified)
-- `default-nodb` - web, cli
+- `default` - web (Apache), db (MySQL), cli (assumed, when none specified)
+- `default-nodb` - web (Apache), cli
  - `acquia` - web (Apache), db (MySQL), cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects)
 - `pantheon` - web (Nginx), db (MariaDB), cli, varnish, redis, solr (used specifically for [Pantheon](https://www.pantheon.io/) hosted projects)
 - `node` - cli
