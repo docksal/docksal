@@ -26,6 +26,6 @@ The following stacks are available:
 
 - `default` - web, db, cli (assumed, when none specified)
 - `default-nodb` - web, cli
-- `acquia` - web, db, cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects)
+ - `acquia` - web (Apache), db (MySQL), cli, varnish, memcached, solr (used specifically for [Acquia](https://www.acquia.com/) hosted projects)
 - `pantheon` - web (Nginx), db (MariaDB), cli, varnish, solr (used specifically for [Pantheon](https://www.pantheon.io/) hosted projects)
 - `node` - cli
