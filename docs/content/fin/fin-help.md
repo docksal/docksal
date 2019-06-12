@@ -8,7 +8,7 @@ aliases:
 ## fin {#fin}
 
 	
-	Docksal command line utility v1.85.0
+	Docksal command line utility v1.86.2
 	
 	Usage: fin <command>
 	
@@ -39,7 +39,7 @@ aliases:
 	  init                     	Initialize a project (override it with your own automation, see fin help init)
 	  addon <command>          	Addons management commands: install, remove (fin help addon)
 	  alias                    	Manage aliases that allow fin @alias execution (fin help alias)
-	  cleanup [options]        	Remove unused Docker images and projects (saves disk space)
+	  cleanup [options]        	Remove all unused Docker images, unused Docksal volumes and containers
 	  share                    	Create temporary public url for current project using ngrok
 	  exec-url <url>           	Download script from URL and run it on host (URL should be public)
 	  image <command>          	Image management commands: registry, save, load (fin help image)
@@ -142,7 +142,7 @@ aliases:
 	  (blank)                  	All (Default)
 	
 	Options:
-	  --hosting-provider=<provider>	Provider to interact with.
+	  --hosting-platform=<provider>	Platform to interact with.
 	                           	Options: acquia, pantheon, platform.sh, drush, wp
 	  --hosting-site=<id>      	Site ID on Provider
 	  --hosting-env=<env>      	Site Env on Provider
@@ -232,20 +232,22 @@ aliases:
 	      --docroot=mydir      	Set non-default DOCROOT during config generate
 	  set [options] [VAR=VAL]  	Set value(s) for the variable(s) in project ENV file
 	      --global             	Set for global ENV file
-	      --env=[name]         	Set in environment specific project ENV file (default: local)
+	      --env=[name]         	Set in environment specific project ENV file
 	
 	  remove [options] [VAR]   	Remove variable(s) from project ENV file
 	  rm [options] [VAR]       	
 	      --global             	Remove from global ENV file
-	      --env=[name]         	Remove from environment specific project ENV file (default: local)
+	      --env=[name]         	Remove from environment specific project ENV file
 	
 	  get [options] [VAR]      	Get the value of the single variable from project ENV file
 	      --global             	Get value from global ENV file
-	      --env=[name]         	Get value from environment specific project ENV file (default: local)
+	      --env=[name]         	Get value from environment specific project ENV file
 	
 	Examples:
 	  fin config set DOCKER_NATIVE=1 --global	Adds DOCKER_NATIVE=1 into $HOME/.docksal/docksal.env
 	  fin config rm DOCKER_NATIVE --global		Removes DOCKER_NATIVE value from $HOME/.docksal/docksal.env
+	  fin config set DOCKSAL_STACK=acquia		Set different default stack in .docksal/docksal.env
+	  fin config set --env=local XDEBUG_ENABLED=1		Enable XDEBUG in .docksal/docksal-local.env
 
 ## addon {#addon}
 
@@ -277,7 +279,7 @@ aliases:
 	  -T                       	Disable pseudo-tty allocation.
 	                           	Useful for non-interactive commands when output is saved into a variable for further comparison.
 	                           	In a TTY mode the output may contain unexpected invisible control symbols.
-	  --in=name                	Name of the service to execute the command in.
+	  --in=name                	Name of the service or container to execute the command in.
 	
 	Examples:
 	  fin exec ls -la          			Current directory listing

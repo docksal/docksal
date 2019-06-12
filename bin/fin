@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.86.0
+FIN_VERSION=1.86.2
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -542,10 +542,10 @@ get_mysql_connect ()
 	echo "$cleaned_string"
 }
 
-# Get container id by service name
+# Get project container id by service name
 # @param $1 docker compose service name (e.g., cli)
 # @return docker container id
-get_container_id ()
+get_project_container_id ()
 {
 	# Trim \r from output (necessary on Windows)
 	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '\r')
@@ -1293,9 +1293,12 @@ cleanup ()
 
 	echo-green "Removing dangling images..."
 	docker image prune -f 2>/dev/null
-	# Remove dangling emty images. Temporary to address bug introduced in 1.12.0.
+	# Remove dangling empty images. Temporary to address bug introduced in 1.12.0.
 	# TODO: Remove this in December 2019
-	docker ps -a | grep "docksal/empty" | awk '{print $1}' | xargs docker rm
+	# GNU xargs (Linux) executes the command even when it receives zero input
+	# To call xargs in a cross-platform compatible way: xargs -I ARG docker rm ARG
+	# See https://stackoverflow.com/a/19038748/4550880
+	docker ps -a | grep "docksal/empty" | awk '{print $1}' | xargs -I ARG docker rm ARG
 	# TODO: use the filter once we have the filter added to all Docksal images (will take a while)
 	#docker image prune -f --filter "label=io.docksal" 2>/dev/null
 }
@@ -1642,7 +1645,7 @@ show_help_exec ()
 	printh "-T" "Disable pseudo-tty allocation."
 	printh "" "Useful for non-interactive commands when output is saved into a variable for further comparison."
 	printh "" "In a TTY mode the output may contain unexpected invisible control symbols."
-	printh "--in=name" "Name of the service to execute the command in."
+	printh "--in=name" "Name of the service or container to execute the command in."
 
 	echo
 	echo "Examples:"
@@ -4986,12 +4989,7 @@ _exec ()
 		container_name="cli"
 	fi
 
-	container_id=$(get_container_id "$container_name")
-
-	if [[ $container_id == "" ]]; then
-		echo-error "Container '$container_name' cannot be found" \ "Cannot run fin exec command in that container"
-		exit 1
-	fi
+	container_id=$(get_project_container_id "$container_name")
 
 	# Use sh as default shell
 	local SHELL_INTERACTIVE="sh -ilc"
@@ -5211,7 +5209,7 @@ _mysql ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5241,7 +5239,7 @@ mysql_list ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5263,7 +5261,7 @@ mysql_db_create ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5296,7 +5294,7 @@ mysql_db_drop ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5324,7 +5322,7 @@ mysql_db_truncate ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5364,7 +5362,7 @@ mysql_import ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5422,7 +5420,7 @@ mysql_import ()
 		echo "Importing from stdin..."
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command directly (no bash wrapper) so that stdin could be received inside that exec
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	__mysql_command=$(echo "${__mysql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
@@ -5450,7 +5448,7 @@ mysql_dump ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5465,7 +5463,7 @@ mysql_dump ()
 		echo-green "Exporting..."
 	fi
 
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	if [[ "${ARGV[0]}" == "" ]]; then
 		docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database}
