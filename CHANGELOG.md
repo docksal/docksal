@@ -1,5 +1,34 @@
 # Changelog
 
+# 1.12.3 (2019-06-12)
+
+**RELEASE CONTAINS BREAKING CHANGES**
+
+There was a breaking change in Docker 18.09.0.  
+If you are using VirtualBox mode (Boot2Docker), your VM will need to be reset during the update.  
+See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-update/) for more information.
+
+**DEPRECATION NOTICE**
+
+- Versions of Windows prior to Windows 10 are no longer supported
+- Babun (Windows) is deprecated and is no longer supported
+- WSL is now the default and the only supported installation mode on Windows
+
+## New software versions
+
+- fin v1.86.2
+
+## Changes and improvements
+
+- Fix condition in `fin exec` that prevented executing a command in an arbitrary container (#1074)
+- Call `xargs` in a cross-platform compatible way in fin cleanup (#1076)
+
+## Documentation
+
+- Updated `fin` command docs
+- Updated stock stacks description
+
+
 # 1.12.2 (2019-06-05)
 
 **RELEASE CONTAINS BREAKING CHANGES**
