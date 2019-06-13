@@ -30,6 +30,23 @@ Docker image to use as the VHOST Proxy. This forwards all requests to the approp
 
 Docker image to use for DNS Routing.
 
+### CI
+
+This is a global variable. Only use on Linux servers. 
+
+When set, enables CI mode:
+
+- Sets `DOCKSAL_VHOST_PROXY_IP="0.0.0.0"`, which opens vhost-proxy to the world.
+- Reports the instance as a CI instance (vs local), so our anonymous usage stats are not skewed.
+- Allows SSH agent forwarding from ci/dev to sandbox server to cli containers (only works on Linux servers). 
+- Enables usage of host's `SSH_AUTH_SOCK` in `cli` containers. Used in conjunction with [SSH agent forwarding](https://developer.github.com/v3/guides/using-ssh-agent-forwarding/).
+
+This should be used on sandbox servers (and in CI) at the time of Docksal installation like this:
+
+```
+curl -fsSL https://get.docksal.io | CI=1 bash
+```
+
 ### DOCKSAL_LOCK_UPDATES 
 
 When set, this will allow for Docksal to no longer accept updates. This is usually good in combination with `CI=true`.
