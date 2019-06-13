@@ -54,11 +54,23 @@ on a build/sandbox server via `fin config set --global DOCKSAL_ENVIRONMENT=ci`. 
 
 Note: `DOCKSAL_ENVIRONMENT` should not be set and will not work in the project's `docksal.env` file (this is by design).
 
+### DOCKSAL_VERSION
+
+`Default: master`
+
+Allows for overriding the Docksal version used for checking for updates.
+
 ### DOCKSAL_STATS_OPTOUT 
 
 `Default: 0` 
 
 Allow for collecting of statistical usage of docksal. When set to `1` this will no longer send statistics.
+
+### DOCKSAL_DISABLE_UPDATES
+
+`Default: 0`
+
+When set to `1`, Docksal will not perform automatic checks for available updates.
 
 ### DOCKER_NATIVE
 
