@@ -4842,10 +4842,6 @@ get_fin_url ()
 
 check_for_updates ()
 {
-	if [ "${DOCKSAL_CHECK_FOR_UPDATES}" != 'true' ]; then
-		return
-	fi
-
 	# Never trigger in scripts
 	if ! is_tty; then return; fi
 	local UPDATE_AVAILABLE=0
@@ -4866,6 +4862,8 @@ check_for_updates ()
 		stats_ping
 		echo "$timestamp" > "$CONFIG_LAST_PING"
 	fi
+
+	[[ "$DOCKSAL_CHECK_FOR_UPDATES" != "true" ]] && return # Do not check for updates if disabled
 
 	if wants_rc_version; then
 		# Check once a day if DOCKSAL_USE_RC is set
