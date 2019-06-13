@@ -247,6 +247,9 @@ DOCKSAL_STATS_TID='UA-93724315-1'
 DOCKSAL_STATS_URL='http://www.google-analytics.com/collect'
 DOCKSAL_STATS_OPTOUT=${DOCKSAL_STATS_OPTOUT:-0}
 
+# Whether to automatically check for Docksal updates
+DOCKSAL_CHECK_FOR_UPDATES="${DOCKSAL_CHECK_FOR_UPDATES:-true}"
+
 # Override PATH to use our utilities
 PATH="$CONFIG_BIN_DIR:$PATH"
 
@@ -4839,6 +4842,10 @@ get_fin_url ()
 
 check_for_updates ()
 {
+	if [ "${DOCKSAL_CHECK_FOR_UPDATES}" != 'true' ]; then
+		return
+	fi
+
 	# Never trigger in scripts
 	if ! is_tty; then return; fi
 	local UPDATE_AVAILABLE=0
