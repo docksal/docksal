@@ -247,8 +247,8 @@ DOCKSAL_STATS_TID='UA-93724315-1'
 DOCKSAL_STATS_URL='http://www.google-analytics.com/collect'
 DOCKSAL_STATS_OPTOUT=${DOCKSAL_STATS_OPTOUT:-0}
 
-# Whether to automatically check for Docksal updates
-DOCKSAL_CHECK_FOR_UPDATES="${DOCKSAL_CHECK_FOR_UPDATES:-true}"
+# Whether to disable the automatic check for Docksal updates
+DOCKSAL_DISABLE_UPDATES="${DOCKSAL_DISABLE_UPDATES:-0}"
 
 # Override PATH to use our utilities
 PATH="$CONFIG_BIN_DIR:$PATH"
@@ -4863,7 +4863,7 @@ check_for_updates ()
 		echo "$timestamp" > "$CONFIG_LAST_PING"
 	fi
 
-	[[ "$DOCKSAL_CHECK_FOR_UPDATES" != "true" ]] && return # Do not check for updates if disabled
+	[[ "$DOCKSAL_DISABLE_UPDATES" == "1" ]] && return # Do not check for updates if disabled
 
 	if wants_rc_version; then
 		# Check once a day if DOCKSAL_USE_RC is set
