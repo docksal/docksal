@@ -32,7 +32,9 @@ Docker image to use for DNS Routing.
 
 ### DOCKSAL_LOCK_UPDATES 
 
-When set, this will allow for Docksal to no longer accept updates. This is usually good in combination with `CI=true`.
+`Default: 0`
+
+When set to `1`, this will prevent Docksal from installing and checking for updates. This is usually good in combination with `CI=true`.
 
 ### DOCKER_VERSION_ALERT_SUPPRESS
 
@@ -53,6 +55,12 @@ on a build/sandbox server via `fin config set --global DOCKSAL_ENVIRONMENT=ci`. 
 `docksal-ci.env` and/or `docksal-ci.yml` (these you do commit) on top of the default configuration files.
 
 Note: `DOCKSAL_ENVIRONMENT` should not be set and will not work in the project's `docksal.env` file (this is by design).
+
+### DOCKSAL_VERSION
+
+`Default: master`
+
+Allows for overriding the Docksal version used for checking for updates.
 
 ### DOCKSAL_STATS_OPTOUT 
 
