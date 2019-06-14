@@ -32,7 +32,9 @@ Docker image to use for DNS Routing.
 
 ### DOCKSAL_LOCK_UPDATES 
 
-When set, this will allow for Docksal to no longer accept updates. This is usually good in combination with `CI=true`.
+`Default: 0`
+
+When set to `1`, this will prevent Docksal from installing and checking for updates. This is usually good in combination with `CI=true`.
 
 ### DOCKER_VERSION_ALERT_SUPPRESS
 
@@ -65,12 +67,6 @@ Allows for overriding the Docksal version used for checking for updates.
 `Default: 0` 
 
 Allow for collecting of statistical usage of docksal. When set to `1` this will no longer send statistics.
-
-### DOCKSAL_DISABLE_UPDATES
-
-`Default: 0`
-
-When set to `1`, Docksal will not perform automatic checks for available updates.
 
 ### DOCKER_NATIVE
 
