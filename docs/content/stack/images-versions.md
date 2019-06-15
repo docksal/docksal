@@ -85,11 +85,11 @@ Note: `cli` is a special case, `cli` itself is seen as software here with `-php.
 
 | Image| Notes |
 |------|------|
-| `docksal/mariabdb:5.5`      | MariaDB 5.5 |
-| `docksal/mariabdb:10.0`     | MariaDB 10.0 |
-| `docksal/mariabdb:10.1`     | MariaDB 10.1 |
-| `docksal/mariabdb:10.2`     | MariaDB 10.2 |
-| `docksal/mariabdb:10.3`     | MariaDB 10.3 (latest) |
+| `docksal/mariadb:5.5`      | MariaDB 5.5 |
+| `docksal/mariadb:10.0`     | MariaDB 10.0 |
+| `docksal/mariadb:10.1`     | MariaDB 10.1 |
+| `docksal/mariadb:10.2`     | MariaDB 10.2 |
+| `docksal/mariadb:10.3`     | MariaDB 10.3 (latest) |
 
 ## Apache Solr
 
