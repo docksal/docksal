@@ -38,14 +38,22 @@ When set, enables CI mode:
 
 - Sets `DOCKSAL_VHOST_PROXY_IP="0.0.0.0"`, which opens vhost-proxy to the world.
 - Reports the instance as a CI instance (vs local), so our anonymous usage stats are not skewed.
-- Allows SSH agent forwarding from ci/dev to sandbox server to cli containers (only works on Linux servers). 
-- Enables usage of host's `SSH_AUTH_SOCK` in `cli` containers. Used in conjunction with [SSH agent forwarding](https://developer.github.com/v3/guides/using-ssh-agent-forwarding/).
+- Sets `DOCKSAL_SSH_AGENT_USE_HOST=1`, which enables reuse of the hosts `SSH_AUTH_SOCK` socket (Linux only).
 
 This should be used on sandbox servers (and in CI) at the time of Docksal installation like this:
 
 ```
 curl -fsSL https://get.docksal.io | CI=1 bash
 ```
+
+### DOCKSAL_SSH_AGENT_USE_HOST
+
+Defaults to `0` for non-CI environments and to `1` for CI environments.
+
+When set to `1`, project's stack will prefer the host's SSH agent (`SSH_AUTH_SOCK` socket) over the built-in docksal-ssh-agent.
+Can be used in conjunction with [SSH agent forwarding](https://developer.github.com/v3/guides/using-ssh-agent-forwarding/).
+
+Only applicable to Linux hosts.
 
 ### DOCKSAL_LOCK_UPDATES 
 

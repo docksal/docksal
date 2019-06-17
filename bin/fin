@@ -253,6 +253,15 @@ PATH="$CONFIG_BIN_DIR:$PATH"
 # Set global variable in case native Docker app is used/not-used
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 
+# SSH agent settings
+if ! is_ci; then
+	# Use the built-in agent in non-CI environments
+	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-0}"
+else
+	# Prefer the hosts' agent in CI environments
+	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-1}"
+fi
+
 #---------------------------- URL references --------------------------------
 GITHUB_API="https://api.github.com"
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
@@ -7519,9 +7528,10 @@ else
 	export DOCKER_RUNNING="false"
 fi
 
-# Only allow SSH key forwarding in a CI/Linux environment, otherwise cli won't be able to start on Mac/Win,
-# since ssh-agent sockets there would be outside of the mounted/accessible projects directory.
-if ! is_ci || ! is_linux; then unset SSH_AUTH_SOCK; fi
+# Reusing host's ssh-agent socket (SSH_AUTH_SOCK) is only supported on Linux.
+# On Mac/Win, SSH_AUTH_SOCK would be outside of the mounted projects directory and thus inaccessible (cli will fail to start).
+# On Linux, we default to the built-in agent, unless DOCKSAL_SSH_AGENT_USE_HOST=1
+if ! is_linux || [[ "${DOCKSAL_SSH_AGENT_USE_HOST}" != "1" ]]; then unset SSH_AUTH_SOCK; fi
 
 # Handle Alias
 if [[ "$1" == "@"* ]]; then
