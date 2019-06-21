@@ -6999,17 +6999,17 @@ provider_pull_acquia_precheck ()
 # Init process to pull code from acquia.
 provider_pull_acquia_init ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Set hostingenv to dev if none are set.
 	hostingenv=${hostingenv:-dev}
 	# Get the repo url for the specific environment.provider_pull_platformsh_files
 	local repo_url
-	repo_url=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
+	repo_url=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
 	local repo_checkout
-	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${hostingenv} info."
 
 	echo -e "${acqua}Cloning Acquia Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
@@ -7021,7 +7021,7 @@ provider_pull_acquia_init ()
 # Pull process to pull files from Acquia.
 provider_pull_acquia_files ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
@@ -7033,7 +7033,7 @@ provider_pull_acquia_files ()
 # Pull process to pull db from Acquia.
 provider_pull_acquia_db ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
@@ -7050,7 +7050,7 @@ provider_pull_acquia_db ()
 	fi
 
 	local query
-	query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+	query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
 	if_failed_error "Error retrieving list of backups from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 
 	# Returns timestamp of last backup.
@@ -7065,13 +7065,13 @@ provider_pull_acquia_db ()
 	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$force" == "force" ]]; then
 		# Create backup on Acquia through Cloud API.
 		echo -e "${acqua}Creating new backup on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-		_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
+		_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
 		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
 		echo -e "${acqua}Backup queued on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
 		# Sleep for 10 seconds wait for backup to finish.
 		sleep 10
 		# Requery to get a new list of backups.
-		query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+		query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
 		if_failed_error "Error retrieving list of backups from Acquia on site ${hostingsite} on environment ${hostingenv} for database ${acquia_db_name}"
 	else
 		echo -e "${acqua}Using latest backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
@@ -7081,7 +7081,7 @@ provider_pull_acquia_db ()
 	local last_id=$(printf "${query}" | grep id | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
 	echo -e "${acqua}Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-	_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
+	_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
 	if_failed_error "Error Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 }
 
