@@ -4056,12 +4056,11 @@ install_sshagent_service ()
 
 	# Switch between built-in agent and auth socket proxying
 	local ssh_service_args
+	stop_sshproxy_daemon
 	if is_proxy_sshagent; then
-		stop_sshproxy_daemon
 		start_sshproxy_daemon
 		ssh_service_args="ssh-proxy $DOCKSAL_HOST_IP $DOCKSAL_SSH_PROXY_PORT"
 	else
-		stop_sshproxy_daemon
 		ssh_service_args="ssh-agent"
 	fi
 
