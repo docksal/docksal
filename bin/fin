@@ -4085,6 +4085,8 @@ start_sshproxy_daemon ()
 		echo-error 'SSH proxy requires the "socat" application to function.'
 		if command -v brew > /dev/null; then
 			echo 'Run `brew install socat` to add this application.'
+		elif command -v apt-get > /dev/null; then
+			echo 'Run `apt-get install socat` to add this application.'
 		fi
 		exit 2
 	elif [[ -z "$DOCKSAL_SSH_AUTH_SOCK" ]]; then
