@@ -53,7 +53,12 @@ Defaults to `0` for non-CI environments and to `1` for CI environments.
 When set to `1`, project's stack will prefer the host's SSH agent (`SSH_AUTH_SOCK` socket) over the built-in docksal-ssh-agent.
 Can be used in conjunction with [SSH agent forwarding](https://developer.github.com/v3/guides/using-ssh-agent-forwarding/).
 
-Only applicable to Linux hosts.
+### DOCKSAL_SSH_PROXY_PORT
+
+Default: `30001`
+
+The TCP port to use to listen on `DOCKSAL_HOST_IP` when proxying SSH authentication to an agent running on the host. Only used
+on Mac / Windows if `DOCKSAL_SSH_AGENT_USE_HOST` is set to `1`.
 
 ### DOCKSAL_LOCK_UPDATES 
 
