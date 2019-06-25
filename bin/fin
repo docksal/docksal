@@ -7593,7 +7593,7 @@ fi
 if [[ -n "$SSH_AUTH_SOCK" ]]; then
 	DOCKSAL_SSH_AUTH_SOCK="$SSH_AUTH_SOCK"
 fi
-if ! is_linux || [[ "${DOCKSAL_SSH_AGENT_USE_HOST}" != "1" ]]; then
+if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
 	unset SSH_AUTH_SOCK
 fi
 
