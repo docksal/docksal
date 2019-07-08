@@ -51,4 +51,4 @@ Available PHP versions: 7.1, 7.2, 7.3 supported, and 7.0, 5.6 deprecated. Check 
 There are also "edge" versions available that contain code from ongoing updates, but may not be stable. Don't switch to an
 edge image unless directed to do so by the Docksal team for testing purposes only.
 
-See documentation for projects using a [custom stack configuration](/stack/config/#php-version).
+See documentation for projects using a [custom stack configuration](/stack/custom-configuration/).
