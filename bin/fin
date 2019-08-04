@@ -322,7 +322,8 @@ IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 CLI_USER=${CLI_USER:-docker}
 
 # Shell to use for CLI commands
-FIN_SHELL=${FIN_SHELL:-sh}
+cli_containers="$CLI_CONTAINERS"
+IFS=' ' read -a bash_cli_containers <<< "$cli_containers"
 #---------------------------- Helper functions --------------------------------
 
 DOCKSAL_PATH='' #docksal path value will be cached here
@@ -687,6 +688,15 @@ empty_dir ()
 {
 	[[ "$2" == "-a" ]] && _all=" -A " || _all=""
 	[[ -z "$(ls ${_all} $1 2>/dev/null)" ]]
+}
+
+check_bash_container ()
+{
+  local match="$1"
+	read -a arr <<< "$CLI_CONTAINERS"
+  for e in ${arr[@]}; do [[ "$e" == "$match" ]] && echo 'bash' && return 0; done
+	echo 'sh'
+  return 1
 }
 
 #------------------------- Basics check functions -----------------------------
@@ -4970,8 +4980,14 @@ _bash ()
 
 	# Use sh by default
 	if [[ "$1" != "" ]]; then
-		# Pass container name to _exec
-		_exec --in="$1" sh -il
+		local use_bash=$(check_bash_container "$1")
+		if [[ $use_bash == "bash" ]]; then
+			# Pass container name to _exec using bash
+			_exec --in="$1" bash -il
+		else
+			# Pass container name to _exec using sh
+			_exec --in="$1" sh -il
+		fi
 	else
 		# Use bash when container is not specified, for it defaults to cli
 		_exec bash -il
@@ -5008,6 +5024,9 @@ _exec ()
 		container_name="cli"
 	fi
 
+
+	local use_bash=$(check_bash_container "$container_name")
+
 	container_id=$(get_project_container_id "$container_name")
 
 	# Use sh as default shell
@@ -5015,7 +5034,7 @@ _exec ()
 	local SHELL_NONINTERACTIVE="sh -lc"
 
 	# For cli and db use bash (complex SQL queries fail when fed from stdin to sh)
-	if [[ "$container_name" == "cli" ]] || [[ "$container_name" == "db" ]] || [[ "$FIN_SHELL" == "bash" ]]; then
+	if [[ "$container_name" == "cli" ]] || [[ "$container_name" == "db" ]] || [[ "$use_bash" == "bash" ]]; then
 		SHELL_INTERACTIVE="bash -ilc"
 		SHELL_NONINTERACTIVE="bash -lc"
 	fi
@@ -5055,7 +5074,7 @@ _exec ()
 		container_id="$container_name"
 	fi
 
-	if [[ "$container_name" == "cli" ]]; then
+	if [[ "$container_name" == "cli" ]] || [[ "$use_bash" == "bash" ]]; then
 		# Commands in cli should be run using the docker user, not root.
 		local container_user="-u $CLI_USER"
 	fi
