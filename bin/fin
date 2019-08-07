@@ -321,9 +321,6 @@ IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 # User to be passed to the CLI container when executing commands.
 CLI_USER=${CLI_USER:-docker}
 
-# Shell to use for CLI commands
-cli_containers="$CLI_CONTAINERS"
-IFS=' ' read -a bash_cli_containers <<< "$cli_containers"
 #---------------------------- Helper functions --------------------------------
 
 DOCKSAL_PATH='' #docksal path value will be cached here
