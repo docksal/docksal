@@ -690,13 +690,17 @@ empty_dir ()
 	[[ -z "$(ls ${_all} $1 2>/dev/null)" ]]
 }
 
-check_bash_container ()
+# Check if there's a different shell set in a label in docksal.yml.
+get_shell_label ()
 {
-  local match="$1"
-	read -a arr <<< "$CLI_CONTAINERS"
-  for e in ${arr[@]}; do [[ "$e" == "$match" ]] && echo 'bash' && return 0; done
-	echo 'sh'
-  return 1
+	local container_id=$(get_project_container_id "$1")
+	local shell_label=$(docker ps -f id=${container_id} --format '{{ .Label "io.docksal.shell" }}' 2>/dev/null)
+	if [[ "$shell_label" != "" ]]; then
+		echo ${shell_label}
+		return 0
+	fi
+	echo ""
+	return 0
 }
 
 #------------------------- Basics check functions -----------------------------
@@ -4978,12 +4982,12 @@ _bash ()
 		return 1
 	fi
 
-	# Use sh by default
+	# Use sh by default or a different shell if another is set
 	if [[ "$1" != "" ]]; then
-		local use_bash=$(check_bash_container "$1")
-		if [[ $use_bash == "bash" ]]; then
-			# Pass container name to _exec using bash
-			_exec --in="$1" bash -il
+		local shell_label=$(get_shell_label "$1")
+		if [[ "$shell_label" != "" ]]; then
+			# Pass container name to _exec using selected shell for container
+			_exec --in="$1" "$shell_label" -il
 		else
 			# Pass container name to _exec using sh
 			_exec --in="$1" sh -il
@@ -5024,8 +5028,7 @@ _exec ()
 		container_name="cli"
 	fi
 
-
-	local use_bash=$(check_bash_container "$container_name")
+	local shell_label=$(get_shell_label "$container_name")
 
 	container_id=$(get_project_container_id "$container_name")
 
@@ -5034,9 +5037,14 @@ _exec ()
 	local SHELL_NONINTERACTIVE="sh -lc"
 
 	# For cli and db use bash (complex SQL queries fail when fed from stdin to sh)
-	if [[ "$container_name" == "cli" ]] || [[ "$container_name" == "db" ]] || [[ "$use_bash" == "bash" ]]; then
+	if [[ "$container_name" == "cli" ]] || [[ "$container_name" == "db" ]] && [[ "$shell_label" == "" ]]; then
 		SHELL_INTERACTIVE="bash -ilc"
 		SHELL_NONINTERACTIVE="bash -lc"
+	fi
+
+	if [[ "$shell_label" != "" ]]; then
+		SHELL_INTERACTIVE="${shell_label} -ilc"
+		SHELL_NONINTERACTIVE="${shell_label} -lc"
 	fi
 
 	# ------------------------------------------------ #
@@ -5074,8 +5082,8 @@ _exec ()
 		container_id="$container_name"
 	fi
 
-	if [[ "$container_name" == "cli" ]] || [[ "$use_bash" == "bash" ]]; then
-		# Commands in cli should be run using the docker user, not root.
+	if [[ "$container_name" == "cli" ]] || [[ "$shell_label" != "" ]]; then
+		# Commands in cli should be run using the docker user, not root. Same with containers using different shells.
 		local container_user="-u $CLI_USER"
 	fi
 
