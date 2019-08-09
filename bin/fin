@@ -4066,7 +4066,6 @@ install_sshagent_service ()
 
 	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=unless-stopped \
-		-e DOCKSAL_SSH_AGENT_USE_HOST \
 		--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent \
 		"${IMAGE_SSH_AGENT}" $ssh_service_args >/dev/null
 	if_failed_error "Failed starting the SSH agent service."
