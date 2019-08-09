@@ -182,6 +182,7 @@ CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
 CONFIG_LAST_UPDATE="$CONFIG_DIR/.last_update"
+CONFIG_SSHPROXY_PID="$CONFIG_DIR/.sshproxy.pid"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
@@ -250,6 +251,9 @@ DOCKSAL_STATS_OPTOUT=${DOCKSAL_STATS_OPTOUT:-0}
 # Whether to prevent (checking for) updates for Docksal
 DOCKSAL_LOCK_UPDATES="${DOCKSAL_LOCK_UPDATES:-0}"
 
+# The TCP listen port on DOCKSAL_HOST_IP for the SSH proxy, if used
+DOCKSAL_SSH_PROXY_PORT="${DOCKSAL_SSH_PROXY_PORT:-30001}"
+
 # Override PATH to use our utilities
 PATH="$CONFIG_BIN_DIR:$PATH"
 
@@ -257,12 +261,12 @@ PATH="$CONFIG_BIN_DIR:$PATH"
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 
 # SSH agent settings
-if ! is_ci; then
+if is_ci; then
+	# Prefer the host's agent in CI environments
+	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-1}"
+else
 	# Use the built-in agent in non-CI environments
 	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-0}"
-else
-	# Prefer the hosts' agent in CI environments
-	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-1}"
 fi
 
 #---------------------------- URL references --------------------------------
@@ -957,6 +961,9 @@ check_docksal_running ()
 		sleep 1
 		system_reset
 	fi
+
+	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add
 }
 
 # Ensures that path is accessible to Docker
@@ -1076,6 +1083,11 @@ is_winpty_version ()
 	# Trim \r from output (necessary on Windows)
 	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/" | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_WINPTY") <= $(ver_to_int "$version") ))
+}
+
+is_proxy_sshagent ()
+{
+	[[ "$DOCKSAL_SSH_AGENT_USE_HOST" == "1" ]] && ! is_linux
 }
 
 wants_rc_version ()
@@ -2962,10 +2974,6 @@ up ()
 {
 	check_docksal_environment
 
-	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
-	( is_linux || is_docker_native ) && ssh_key add
-
 	# Check that project directory is reachable to Docker
 	check_docker_path
 
@@ -3005,10 +3013,6 @@ stop ()
 restart ()
 {
 	check_docksal_environment
-
-	# Run ssh_key add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
-	( is_linux || is_docker_native ) && ssh_key add
 
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
@@ -3060,8 +3064,6 @@ reset ()
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
-	# Run ssh_key add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_key add
 	_start_containers || return 1
 	unison_sync_wait
 }
@@ -3381,6 +3383,7 @@ system_stop ()
 		docker ps -q --filter "label=io.docksal.group=system" 2>/dev/null | xargs docker rm -vf >/dev/null
 	fi
 
+	stop_sshproxy_daemon
 	configure_resolver off
 	configure_mounts off
 	configure_network off
@@ -3431,6 +3434,12 @@ ssh_key_generate ()
 ssh_key ()
 {
 	check_winpty_found
+
+	# Check if we support key management
+	if [[ "$DOCKSAL_SSH_AGENT_USE_HOST" == "1" ]]; then
+		echo-error 'Docksal is currently not managing the SSH keys.'
+		return 1
+	fi
 
 	# Check if ssh-agent container is running
 	# Note: no spaces in format. PWD trips over this when docker is run with sudo (during Docksal install/update).
@@ -4045,14 +4054,56 @@ install_sshagent_service ()
 	docker rm -f docksal-ssh-agent >/dev/null 2>&1 || true
 	docker volume rm docksal_ssh_agent >/dev/null 2>&1 || true
 
+	# Switch between built-in agent and auth socket proxying
+	local ssh_service_args
+	stop_sshproxy_daemon
+	if is_proxy_sshagent; then
+		start_sshproxy_daemon
+		ssh_service_args="ssh-proxy $DOCKSAL_HOST_IP $DOCKSAL_SSH_PROXY_PORT"
+	else
+		ssh_service_args="ssh-agent"
+	fi
+
 	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=unless-stopped \
 		--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent \
-		"${IMAGE_SSH_AGENT}" >/dev/null
+		"${IMAGE_SSH_AGENT}" $ssh_service_args >/dev/null
 	if_failed_error "Failed starting the SSH agent service."
 
 	# Add default keys. Using || true here to suppress errors if there are no keys on the host.
-	ssh_key add || true
+	! is_proxy_sshagent && ssh_key add || true
+}
+
+start_sshproxy_daemon ()
+{
+	if [[ -f "$CONFIG_SSHPROXY_PID" ]]; then
+		echo-error 'SSH proxy is already running.'
+		exit 1
+	elif ! command -v socat > /dev/null; then
+		echo-error 'SSH proxy requires the "socat" application to function.'
+		if command -v brew > /dev/null; then
+			echo 'Run `brew install socat` to add this application.'
+		elif command -v apt-get > /dev/null; then
+			echo 'Run `apt-get install socat` to add this application.'
+		fi
+		exit 2
+	elif [[ -z "$DOCKSAL_SSH_AUTH_SOCK" ]]; then
+		echo-error 'Environment variable SSH_AUTH_SOCK is not set.' \
+			'Is your local SSH agent running correctly?'
+		exit 3
+	fi
+
+	socat TCP-LISTEN:$DOCKSAL_SSH_PROXY_PORT,bind=$DOCKSAL_HOST_IP,reuseaddr,fork UNIX-CLIENT:$DOCKSAL_SSH_AUTH_SOCK &
+	local pid=$!
+	if_failed_error "Failed starting the SSH proxy service."
+	echo "$pid" > "$CONFIG_SSHPROXY_PID"
+}
+
+stop_sshproxy_daemon ()
+{
+	local sshproxy_pid=$(cat "$CONFIG_SSHPROXY_PID" 2>/dev/null || echo 0)
+	[[ "$sshproxy_pid" -ne 0 ]] && kill "$sshproxy_pid" 2>/dev/null
+	rm -f "$CONFIG_SSHPROXY_PID"
 }
 
 # Install Mac dependencies
@@ -7535,10 +7586,15 @@ else
 	export DOCKER_RUNNING="false"
 fi
 
-# Reusing host's ssh-agent socket (SSH_AUTH_SOCK) is only supported on Linux.
-# On Mac/Win, SSH_AUTH_SOCK would be outside of the mounted projects directory and thus inaccessible (cli will fail to start).
-# On Linux, we default to the built-in agent, unless DOCKSAL_SSH_AGENT_USE_HOST=1
-if ! is_linux || [[ "${DOCKSAL_SSH_AGENT_USE_HOST}" != "1" ]]; then unset SSH_AUTH_SOCK; fi
+# By default, we use the built-in SSH agent unless DOCKSAL_SSH_AGENT_USE_HOST=1
+# On Linux, we can directly mount the SSH auth socket into the container.
+# On Mac/Win, we proxy the Unix socket through TCP on Docksal's host IP.
+if [[ -n "$SSH_AUTH_SOCK" ]]; then
+	DOCKSAL_SSH_AUTH_SOCK="$SSH_AUTH_SOCK"
+fi
+if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
+	unset SSH_AUTH_SOCK
+fi
 
 # Handle Alias
 if [[ "$1" == "@"* ]]; then
