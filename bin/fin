@@ -114,7 +114,9 @@ cygpath_abs_unix ()
 wsl_env ()
 {
 	# Trim \r from output (necessary on Windows)
-	echo $(cmd.exe /c "echo %$1%" | tr -d '\r')
+	# "cd /mnt/c" is a workaround to fix a warning message in Windows 10 v1903+
+	# See https://github.com/docksal/docksal/issues/1103#issuecomment-522160146
+	echo $(cd /mnt/c && cmd.exe /c "echo %$1%" | tr -d '\r')
 }
 
 # Unfortunately wslpath output contains \r that has to be cleaned
