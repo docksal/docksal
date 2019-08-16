@@ -426,7 +426,20 @@ docker-compose ()
 
 	# Call regular docker-compose.
 	# We can use `which` here, since it does not care about functions (but `type` does).
-	"$(which docker-compose)" "$@"
+	$(which docker-compose) "$@"
+}
+
+# docker-machine binary wrapper
+# TODO: remove once https://github.com/microsoft/WSL/issues/4078 is resolved
+docker-machine ()
+{
+	# Help WSL resolve the symlinked docker-machine binary on Windows
+	# Only do this if docker-machine is a symlink
+	if [[ -L $(which docker-machine) ]]; then
+		$(readlink $(which docker-machine)) "$@"
+	else
+		$(which docker-machine) "$@"
+	fi
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
