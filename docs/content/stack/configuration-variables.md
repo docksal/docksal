@@ -264,6 +264,8 @@ Token used for logging in to Pantheon's CLI Tool [Terminus](/tools/terminus/).
 
 ### CLI_USER
 
+`DEPRECATED`: use `io.docksal.user` label on container instead.
+
 `Default:  docker`
 
 User to be used for `fin exec`.
