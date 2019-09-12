@@ -60,3 +60,23 @@ In the `cli` service, there is the `volumes` section. You should not remove or c
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
 ```
+{{% notice note %}}
+Allowed [configuration value overrides](/stack/configuration-variables/) are set in the `docksal.env` or `docksal-local.env` file.
+{{% /notice %}} 
+
+### Add Additional Custom Configuration
+
+You may add `environment` variables that you can pass in through the `docksal.env` or `docksal-local.env` file or enter as a static value.
+
+#### docksal.env
+```
+MY_CUSTOM_VARIBLE='test key'
+```
+
+#### docksal.yml
+```yaml
+  cli:
+    environment:
+      - MY_CUSTOM_VARIABLE
+      - MY_STATIC_VARIABLE=api_test_key
+```
