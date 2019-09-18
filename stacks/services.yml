@@ -131,7 +131,7 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.6-php7.2}
+    image: ${CLI_IMAGE:-docksal/cli:2.7-php7.3}
     volumes:
       - project_root:/var/www:rw,nocopy  # Project root volume
       - ${SSH_AUTH_SOCK:-docksal_ssh_agent}:${SSH_AUTH_SOCK:-/.ssh-agent}:ro  # Shared ssh-agent socket/SSH key forwarding support

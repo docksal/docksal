@@ -41,7 +41,7 @@ networks: {}
 services:
   cli:
     hostname: cli
-    image: docksal/cli:2.6-php7.2
+    image: docksal/cli:2.7-php7.3
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
     - project_root:/var/www:rw,nocopy
