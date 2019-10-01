@@ -69,6 +69,8 @@ By default, the virtual host name is equal to the project's folder name sans spa
 with the `.docksal` domain appended to it.  
 `myproject => myproject.docksal`
 {{% /notice %}}
+
+{{% notice warning %}} Project paths that include spaces will cause errors where the project may not be recongnized as unique, e.g., `/Users/username/Development/Company Projects/project`. Removing spaces from path directories with prevent these errors. {{% /notice %}}
     
 ## Automate the initialization process
 
