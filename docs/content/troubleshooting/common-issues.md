@@ -7,7 +7,7 @@ aliases:
 
 {{% notice warning %}}
 Quite often a problem may reside within the 3rd party tools, project code, local configuration, etc., and not the stack.
-To make sure that the Docksal stack works properly, try launching any of the [sample projects](/stack/config/#sample-projects).  
+To make sure that the Docksal stack works properly, try launching any of the [sample projects](https://github.com/docksal?q=boilerplate).  
 If you believe the issue is within the Docksal stack, then read on.
 {{% /notice %}}
 
