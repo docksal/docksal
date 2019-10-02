@@ -3,6 +3,10 @@ dist: xenial
 language: minimal
 
 env:
+  global:
+    # Explicitly disable host's SSH agent usage
+    # TODO: Add test coverage for both ssh-agent modes (built-in and host ssh-agent)
+    - DOCKSAL_SSH_AGENT_USE_HOST=0
   matrix:
     - PROVIDER=none
     - PROVIDER=acquia
