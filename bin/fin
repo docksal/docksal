@@ -6911,11 +6911,11 @@ provider_pull_db ()
 	# Get the time from 24 hours ago.
 	local yesterday=$(_exec date --date='yesterday' "+%Y-%m-%d %H:%M:%S");
 
-        # Check to see if doesn't exist or if file exists and is older or using force flag
-        if ( [[ "${file_exists}" == "0" ]] && [[ "${file_time}" == "" ]] ) || ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
+	# Check to see if file doesn't exist, or if file exists and is older, or using force flag
+	if ( [[ "${file_exists}" == "0" ]] && [[ "${file_time}" == "" ]] ) || ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
 		# Check to see if File Is Older than 1 hour
-		if [[ "$file_exists" > "0" ]] && [[ -z "${file_time}" ]] || [[ "$force" == "force" ]]; then
-                        echo -e "${acqua}Cached DB file needs updating${NC}"
+		if ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
+			echo -e "${acqua}Cached DB file needs updating${NC}"
 			echo -e "${acqua}Removing old database file${NC}"
 			_exec rm -f "${db_file}"
 		fi
