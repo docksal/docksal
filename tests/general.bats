@@ -282,7 +282,8 @@ EOF
 	unset output
 
 	# Check that there are no containers
-	run fin ps
+	# Using "fin docker-compose ps" here to skip additional processing and output added by "fin ps"
+	run fin docker-compose ps
 	[[ "$(echo "$output" | tail -n +3)" == "" ]]
 	unset output
 }
