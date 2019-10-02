@@ -1,54 +1,74 @@
 ---
 title: "Project Setup"
-weight: 3
+weight: 2
 aliases:
   - /en/master/getting-started/project-setup/
 ---
 
-## Configuring a project to use Docksal
+## Launching your first Docksal project
 
-With Docksal you can initialize a basic LAMP stack with no configuration.   
-In this case a default configuration will be used to provision containers and set up a virtual host.
+To make sure Docksal has been installed properly, you can use the boilerplate project wizard.
 
-Initial configuration is done once per project (e.g., by a team lead) and committed to the project repo. 
-Presence of the `.docksal` folder in the project directory is a good indication the project is using Docksal.
-
-
-## Project directory structure
-
-Create a project directory structure:
+Run the following command within your designated "Projects" directory and follow onscreen instructions:
 
 ```bash
-mkdir ~/projects/myproject
-mkdir ~/projects/myproject/docroot
-mkdir ~/projects/myproject/.docksal
-```
+fin project create
+``` 
 
-The `docroot` directory is mounted as the web server document root.  
-The `.docksal` directory is where all Docksal configurations and commands for the project are stored.
+{{% notice note %}}
+For Mac and Linux users, the recommended designated "Projects" directory is `~/Projects`.
 
-{{% notice tip %}}
-Is your Project Root the same as your Document Root? If so, you can accomplish this by running `fin config set DOCROOT=.` which sets the value in the `.docksal/docksal.env` file.
+For Windows users, this directory **must** be within the Windows (not WSL) filesystem.
+This means that you cannot use `~/Projects` in WSL on Windows and use something like `/c/Projects` instead.  
 {{% /notice %}}
 
-## Start containers
+The wizard clones one of the boilerplate Docksal project repos from GitHub and runs `fin init`.
+
+`fin init` is a single command used to bootstrap a project from zero to a fully working application. 
+
+Confirming that a boilerplate project stack works helps verify that your Docksal installation functions properly.  
+
+
+## Configuring Docksal for an existing codebase
+
+The initial configuration is done once per project (e.g., by a team lead) and committed to the project repo. 
+Presence of the `.docksal` folder in the project directory is a good indication the project is already using Docksal.
+
+To configure Docksal for an existing project, run the following command within the project's root directory 
+and follow onscreen instructions:
 
 ```bash
-cd ~/projects/myproject
-fin project start
+fin init
 ```
+
+This will initialize Docksal settings in the project's codebase and start a dedicated default LAMP stack for your project.
 
 You will see output similar to the following:
 
 ```
+$ fin init
+Initialize a project in /path/to/Projects/myproject? [y/n]: y
+DOCROOT has been detected as docroot. Is that correct? [y/n]: y
+Configuration was generated. You can start it with fin project start
+Key 'id_ecdsa' already loaded in the agent. Skipping.
+Key 'id_rsa' already loaded in the agent. Skipping.
 Starting services...
 Creating network "myproject_default" with the default driver
+Creating volume "myproject_cli_home" with default driver
 Creating volume "myproject_project_root" with local driver
-Creating myproject_cli_1
-Creating myproject_db_1
-Creating myproject_web_1
+Creating volume "myproject_db_data" with default driver
+Creating myproject_cli_1 ... done
+Creating myproject_db_1  ... done
+Creating myproject_web_1 ... done
 Connected vhost-proxy to "myproject_default" network.
+Waiting for project stack to become ready...
+Waiting for project stack to become ready...
+Project URL: http://myproject.docksal
 ```
+
+{{% notice tip %}}
+If you project root is the web document root, then use `.` as the `DOCROOT` when asked by the wizard.      
+{{% /notice %}}
 
 {{% notice note %}}
 **Note: SSH key passphrase** 
@@ -64,7 +84,7 @@ which would require an ssh key for access).
 
 Your project stack is now running. Access it in your browser: `http://myproject.docksal`
 
-{{% notice tip %}}
+{{% notice note %}}
 By default, the virtual host name is equal to the project's folder name sans spaces (underscores are converted to hyphens)
 with the `.docksal` domain appended to it.  
 `myproject => myproject.docksal`
@@ -88,6 +108,6 @@ Site provisioning can be automated via a [custom command](/fin/custom-commands/)
 
 For a working example of a Docksal powered project with `fin init` take a look at:
 
-- [Drupal 7 sample project](https://github.com/docksal/drupal7)
-- [Drupal 8 sample project](https://github.com/docksal/drupal8)
-- [WordPress sample project](https://github.com/docksal/wordpress)
+- [Drupal 7 sample project](https://github.com/docksal/boilerplate-drupal7)
+- [Drupal 8 sample project](https://github.com/docksal/boilerplate-drupal8)
+- [WordPress sample project](https://github.com/docksal/boilerplate-wordpress)

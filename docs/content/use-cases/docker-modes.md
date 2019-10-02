@@ -1,8 +1,8 @@
 ---
 title: "Switching Docker Modes"
-weight: 2
 aliases:
   - /en/master/getting-started/docker-modes/
+  - /getting-started/docker-modes/
 ---
 
 
