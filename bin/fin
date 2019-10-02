@@ -3008,7 +3008,11 @@ up ()
 	# If Unisons is used, wait for it to sync
 	unison_sync_wait
 
-	echo-green "Project URL: ${yellow}$PROJECT_URL${NC}"
+	echo-green "Project URL: ${yellow}${PROJECT_URL}${NC}"
+
+	if [[ "${IDE_ENABLED}" == "1" ]]; then
+		echo-green "Web IDE URL: ${yellow}${PROJECT_IDE_URL}${NC}"
+	fi
 }
 
 # Stop containers
@@ -6052,9 +6056,15 @@ load_configuration ()
 	fi
 	# Create project url
 	if [[ "$DOCKSAL_VHOST_PROXY_PORT_HTTP" == "" || "$DOCKSAL_VHOST_PROXY_PORT_HTTP" == "80" ]]; then
-		export PROJECT_URL="http://$VIRTUAL_HOST"
+		export PROJECT_URL="http://${VIRTUAL_HOST}"
+		if [[ "${IDE_ENABLED}" == "1" ]]; then
+			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}"
+		fi
 	else
-		export PROJECT_URL="http://$VIRTUAL_HOST:$DOCKSAL_VHOST_PROXY_PORT_HTTP"
+		export PROJECT_URL="http://${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
+		if [[ "${IDE_ENABLED}" == "1" ]]; then
+			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
+		fi
 	fi
 
 	# Make project root globally available
