@@ -144,8 +144,8 @@ services:
       - DOCROOT
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-      - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}  # Point xdebug to the host IP
-      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
+      - XDEBUG_CONFIG=remote_host=${DOCKSAL_HOST_IP} remote_port=9000 # Point xdebug to <host IP>:9000
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST} # This helps PHPStorm pick the right debug configuration
       - DRUSH_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - BLACKFIRE_CLIENT_ID
       - BLACKFIRE_CLIENT_TOKEN
