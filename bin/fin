@@ -8000,8 +8000,8 @@ case "$1" in
 		[[ "$USED_ALIAS" != "" ]] &&
 			[[ "$(pwd)" == "$PROJECT_ROOT" ]] &&
 			cd "$DOCROOT"
-                [[ "${NO_DRUSH_OPTIONS_URI}" != "" ]] &&
-                        DRUSH_OPTIONS_URI=${DRUSH_OPTIONS_URI:-http://${VIRTUAL_HOST}}
+		[[ "${NO_DRUSH_OPTIONS_URI}" != "" ]] &&
+			DRUSH_OPTIONS_URI=${DRUSH_OPTIONS_URI:-http://${VIRTUAL_HOST}}
 		_exec drush "$@"
 		;;
 	drupal)
