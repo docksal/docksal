@@ -48,7 +48,7 @@ fin project start
 
 ## Data Persistence
 
-Generally, anything you do inside of a `fun run-cli` environment is gone once the container is stopped.
+Generally, anything you do inside of a `fin run-cli` environment is gone once the container is stopped.
 You can install new packages, run scripts, break things, etc., without the risk of damaging your host system.
 The next time you do `fin run-cli`, the `run-cli` environment is started fresh and clean.
 

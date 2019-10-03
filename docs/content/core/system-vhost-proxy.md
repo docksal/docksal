@@ -48,7 +48,7 @@ Note: Use a single domain in `VIRTUAL_HOST`. Wildcards are added automatically. 
 
 Note: Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
 
-## Using Arbitrary Custom Domains
+## Using Arbitrary Custom Domains {#custom-domains}
 
 A completely custom domain(s) can be assigned by extending the `io.docksal.virtual-host` label of the `web` container in 
 either `docksal-local.yml` or `docksal.yml` file in the project.
@@ -68,8 +68,7 @@ Note: `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}
 
 Apply configuration changes with `fin project start` (`fin p start` for short).
 
-Note: non `.docksal` domains (e.g., `example.com`) will not be resolved automatically.
-You can use [fin hosts](/fin/fin-help/#hosts) command to add and manage additional domain names via the system's `hosts` file. 
-See `fin help hosts`.
+Note: non `.docksal` domains (e.g., `example.com`) will not be resolved automatically. You can use [fin hosts](/fin/fin-help/#hosts) 
+command to add and manage additional domain names via the system's `hosts` file. See `fin help hosts`.
 
 Note: Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.

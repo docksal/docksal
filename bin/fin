@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.85.1
+FIN_VERSION=1.90.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -114,7 +114,9 @@ cygpath_abs_unix ()
 wsl_env ()
 {
 	# Trim \r from output (necessary on Windows)
-	echo $(cmd.exe /c "echo %$1%" | tr -d '\r')
+	# "cd /mnt/c" is a workaround to fix a warning message in Windows 10 v1903+
+	# See https://github.com/docksal/docksal/issues/1103#issuecomment-522160146
+	echo $(cd /mnt/c && cmd.exe /c "echo %$1%" | tr -d '\r')
 }
 
 # Unfortunately wslpath output contains \r that has to be cleaned
@@ -132,9 +134,9 @@ wsl_path ()
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='18.09.2'
-REQUIREMENTS_DOCKER_COMPOSE='1.23.2'
-REQUIREMENTS_DOCKER_MACHINE='0.16.1'
+REQUIREMENTS_DOCKER='19.03.2'
+REQUIREMENTS_DOCKER_COMPOSE='1.24.1'
+REQUIREMENTS_DOCKER_MACHINE='0.16.2'
 REQUIREMENTS_VBOX='5.2.26'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
@@ -182,6 +184,7 @@ CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
 CONFIG_LAST_UPDATE="$CONFIG_DIR/.last_update"
+CONFIG_SSHPROXY_PID="$CONFIG_DIR/.sshproxy.pid"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
@@ -247,11 +250,26 @@ DOCKSAL_STATS_TID='UA-93724315-1'
 DOCKSAL_STATS_URL='http://www.google-analytics.com/collect'
 DOCKSAL_STATS_OPTOUT=${DOCKSAL_STATS_OPTOUT:-0}
 
+# Whether to prevent (checking for) updates for Docksal
+DOCKSAL_LOCK_UPDATES="${DOCKSAL_LOCK_UPDATES:-0}"
+
+# The TCP listen port on DOCKSAL_HOST_IP for the SSH proxy, if used
+DOCKSAL_SSH_PROXY_PORT="${DOCKSAL_SSH_PROXY_PORT:-30001}"
+
 # Override PATH to use our utilities
 PATH="$CONFIG_BIN_DIR:$PATH"
 
 # Set global variable in case native Docker app is used/not-used
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
+
+# SSH agent settings
+if is_ci; then
+	# Prefer the host's agent in CI environments
+	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-1}"
+else
+	# Use the built-in agent in non-CI environments
+	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-0}"
+fi
 
 #---------------------------- URL references --------------------------------
 GITHUB_API="https://api.github.com"
@@ -302,10 +320,12 @@ URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v$
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
-IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.2}
+IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.3}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.5}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 
+# User to be passed to the CLI container when executing commands.
+CLI_USER=${CLI_USER:-docker}
 #---------------------------- Helper functions --------------------------------
 
 DOCKSAL_PATH='' #docksal path value will be cached here
@@ -329,7 +349,7 @@ echo-error ()
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}"
 	shift
 	for arg in "$@"; do
-		echo -e "         $arg"
+		echo -e "        $arg"
 	done
 }
 
@@ -408,7 +428,20 @@ docker-compose ()
 
 	# Call regular docker-compose.
 	# We can use `which` here, since it does not care about functions (but `type` does).
-	"$(which docker-compose)" "$@"
+	$(which docker-compose) "$@"
+}
+
+# docker-machine binary wrapper
+# TODO: remove once https://github.com/microsoft/WSL/issues/4078 is resolved
+docker-machine ()
+{
+	# Help WSL resolve the symlinked docker-machine binary on Windows
+	# Only do this if docker-machine is a symlink
+	if [[ -L $(which docker-machine) ]]; then
+		$(readlink $(which docker-machine)) "$@"
+	else
+		$(which docker-machine) "$@"
+	fi
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -542,10 +575,10 @@ get_mysql_connect ()
 	echo "$cleaned_string"
 }
 
-# Get container id by service name
+# Get project container id by service name
 # @param $1 docker compose service name (e.g., cli)
 # @return docker container id
-get_container_id ()
+get_project_container_id ()
 {
 	# Trim \r from output (necessary on Windows)
 	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '\r')
@@ -943,6 +976,9 @@ check_docksal_running ()
 		sleep 1
 		system_reset
 	fi
+
+	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add
 }
 
 # Ensures that path is accessible to Docker
@@ -1062,6 +1098,11 @@ is_winpty_version ()
 	# Trim \r from output (necessary on Windows)
 	local version=$("$WINPTY_BIN" --version | head -1 | sed "s/.*version \(.*\).*/\1/" | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_WINPTY") <= $(ver_to_int "$version") ))
+}
+
+is_proxy_sshagent ()
+{
+	[[ "$DOCKSAL_SSH_AGENT_USE_HOST" == "1" ]] && ! is_linux
 }
 
 wants_rc_version ()
@@ -1267,65 +1308,105 @@ _remove_containers ()
 	fi
 }
 
-# Cleanup unused resources
-# @param $1 --hard if set removes all stopped containers
+# Remove unused Docker images, and unused Docksal related volumes and containers
 cleanup ()
 {
 	check_docker_running
-	if [[ "$1" == "--hard" ]] && [[ "$(docker ps -aqf status=exited)" != "" ]]; then
+	# Orphaned project stacks are containers/volumes that map to non-existing codebases on the host
+	# E.g., the codebase was removed without doing proper "fin project rm" first
+	echo-green "Checking for orphaned Docksal project stacks..."
+	local projects=$(docker ps --all \
+		--filter 'label=io.docksal.project-root' \
+		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
+	for project in ${projects}; do
+		IFS=':' read project_name project_root <<< "$project"
+		if [[ ! -d "$project_root" ]]; then
+			echo "Directory for project \"$project_name\" does not exist. Removing project containers and volumes..."
+			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+			docker volume ls -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker volume rm -f
+		fi
+	done
+
+	# Most dangling volumes should be cleaned up by the orphaned stacks cleanup.
+	# Cleanup any leftover dangling volumes created by Docksal.
+	echo-green "Removing dangling Docksal volumes..."
+	docker volume prune -f --filter "label=io.docksal" 2>/dev/null
+
+	echo-green "Removing dangling images..."
+	docker image prune -f 2>/dev/null
+	# Remove dangling empty images. Temporary to address bug introduced in 1.12.0.
+	# TODO: Remove this in December 2019
+	# GNU xargs (Linux) executes the command even when it receives zero input
+	# To call xargs in a cross-platform compatible way: xargs -I ARG docker rm ARG
+	# See https://stackoverflow.com/a/19038748/4550880
+	docker ps -a | grep "docksal/empty" | awk '{print $1}' | xargs -I ARG docker rm ARG
+	# TODO: use the filter once we have the filter added to all Docksal images (will take a while)
+	#docker image prune -f --filter "label=io.docksal" 2>/dev/null
+}
+
+# Image cleanup wizard
+cleanup_images ()
+{
+	check_docker_running
+	echo-green "Docker images cleanup Wizard"
+	echo
+	sleep 1
+	# Print all images first
+	echo "Printing all existing images:"
+	sleep 1
+	docker images --format="{{.Repository}}:{{.Tag}}" | sort
+	echo "---------------------------------------------------"
+	echo "|      Use the list above to help you cleanup     |"
+	echo "---------------------------------------------------"
+	# Declare an arary of names and fill it with the output from the docker command
+	declare -a images
+	images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
+	# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
+	local image_name; local image_id;
+	for image in "${images[@]}"; do
+		image_name=$(echo "$image" | cut -d "+" -f 1)
+		image_id=$(echo "$image" | cut -d "+" -f 2)
+		if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
+			docker image remove "$image_id"
+		fi
+	done
+}
+
+# Cleans up ANY (not only Docksal managed):
+# - stopped containers
+# - dangling volumes
+cleanup_hard ()
+{
+	check_docker_running
+	if [[ "$(docker ps -aqf status=exited)" != "" ]]; then
 		echo -e "${red}WARNING: ${yellow}Preparing to delete the following stopped containers:${NC}"
 		docker ps -af status=exited --format "{{.Names}}\t{{.Status}}\t{{.Image}}"
 		printf '–%.0s' $(seq 1 40)
 		echo -e "${yellow}"
-		_confirm "Continue?"
-		echo -e "${NC}"
-		#--
-		echo-green "Removing stopped containers..."
-		docker container prune -f 2>/dev/null
-	fi
-
-	if [[ "$1" == "--images" ]]; then
-		echo-green "Docker images cleanup Wizard."
-		echo
-		sleep 1
-		# Print all images first
-		echo "Printing all existing images:"
-		sleep 1
-		docker images --format="{{.Repository}}:{{.Tag}}" | sort
-		echo "---------------------------------------------------"
-		echo "|      Use the list above to help you cleanup     |"
-		echo "---------------------------------------------------"
-		# Declare an arary of names and fill it with the output from the docker command
-		declare -a images
-		images+=($(docker images --format="{{.Repository}}:{{.Tag}}+{{.ID}}" | sort))
-		# Loop over array KEYS ${!array[@]} to be able to use the key to lookup id in array of ids
-		local image_name; local image_id;
-		for image in "${images[@]}"; do
-			image_name=$(echo "$image" | cut -d "+" -f 1)
-			image_id=$(echo "$image" | cut -d "+" -f 2)
-			if _confirm "Remove ${yellow}$image_name${NC} ($image_id) ?" --no-exit; then
-				docker image remove "$image_id"
-			fi
-		done
-		return
-	fi
-
-	echo-green "Checking for orphaned projects..."
-	local projects=$(docker ps --all \
-		--filter 'label=io.docksal.project-root' \
-		--format '{{ .Label "com.docker.compose.project" }}:{{ .Label "io.docksal.project-root" }}')
-	for project in $projects; do
-		IFS=':' read project_name project_root <<< "$project"
-		if [[ ! -d "$project_root" ]]; then
-			echo "Directory for project \"$project_name\" does not exist. Removing containers..."
-			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+		if _confirm "Continue?" --no-exit; then
+			echo -e "${NC}"
+			echo-green "Removing stopped containers..."
+			docker container prune -f 2>/dev/null
 		fi
-	done
+		echo -e "${NC}"
+	fi
 
-	echo-green "Removing dangling images..."
+	dangling_volumes="$(docker volume ls -qf dangling=true)"
+	if [[ "$dangling_volumes" != "" ]]; then
+		echo -e "${red}WARNING: ${yellow}Preparing to delete the following dangling volumes:${NC}"
+		echo "$dangling_volumes"
+		printf '–%.0s' $(seq 1 40)
+		echo -e "${yellow}"
+		if _confirm "Continue?" --no-exit; then
+			echo -e "${NC}"
+			echo-green "Removing dangling volumes..."
+			echo "$dangling_volumes" | xargs docker volume rm -f 2>/dev/null
+		fi
+		echo -e "${NC}"
+	fi
+
+	echo-green "Removing all dangling images..."
 	docker image prune -f 2>/dev/null
-	echo-green "Removing dangling volumes..."
-	docker volume prune -f 2>/dev/null
 }
 
 # Connect vhost-proxy to all bridge networks on the host
@@ -1477,7 +1558,7 @@ show_help ()
 	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
 	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
 	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [options]" "Remove unused Docker images and projects (saves disk space)"
+	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
 	printh "share" "Create temporary public url for current project using ngrok"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
@@ -1536,7 +1617,7 @@ show_help_list_commands_in_help ()
 	local executable="-executable"
 	is_mac && executable="-perm +100"
 
-	local addons_list=$(find -L "$addons_path" -maxdepth 2 -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
+	local addons_list=$(find -L "$addons_path" -maxdepth 4 -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
 	if [[ "$addons_list" != "" ]]; then
 		local scope
 		for cmd_name in ${addons_list}
@@ -1605,7 +1686,7 @@ show_help_exec ()
 	printh "-T" "Disable pseudo-tty allocation."
 	printh "" "Useful for non-interactive commands when output is saved into a variable for further comparison."
 	printh "" "In a TTY mode the output may contain unexpected invisible control symbols."
-	printh "--in=name" "Name of the service to execute the command in."
+	printh "--in=name" "Name of the service or container to execute the command in."
 
 	echo
 	echo "Examples:"
@@ -2022,21 +2103,23 @@ show_help_config ()
 	printh "    --docroot=mydir" "Set non-default DOCROOT during config generate"
 	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
 	printh "    --global" "Set for global ENV file"
-	printh "    --env=[name]" "Set in environment specific project ENV file (default: local)"
+	printh "    --env=[name]" "Set in environment specific project ENV file"
 	echo
 	printh "remove [options] [VAR]" "Remove variable(s) from project ENV file"
 	printh "rm [options] [VAR]" ""
 	printh "    --global" "Remove from global ENV file"
-	printh "    --env=[name]" "Remove from environment specific project ENV file (default: local)"
+	printh "    --env=[name]" "Remove from environment specific project ENV file"
 	echo
 	printh "get [options] [VAR]" "Get the value of the single variable from project ENV file"
 	printh "    --global" "Get value from global ENV file"
-	printh "    --env=[name]" "Get value from environment specific project ENV file (default: local)"
+	printh "    --env=[name]" "Get value from environment specific project ENV file"
 
 	echo
 	echo "Examples:"
 	printh "fin config set DOCKER_NATIVE=1 --global" "Adds DOCKER_NATIVE=1 into \$HOME/.docksal/docksal.env"
 	printh "fin config rm DOCKER_NATIVE --global" "	Removes DOCKER_NATIVE value from \$HOME/.docksal/docksal.env"
+	printh "fin config set DOCKSAL_STACK=acquia" "	Set different default stack in .docksal/docksal.env"
+	printh "fin config set --env=local XDEBUG_ENABLED=1" "	Enable XDEBUG in .docksal/docksal-local.env"
 }
 
 show_help_init ()
@@ -2059,9 +2142,9 @@ show_help_init ()
 show_help_cleanup ()
 {
 	echo
-	echo "Remove unused docker images and orphaned containers to save disk space."
-	echo "Orphaned are containers which folders were deleted from the filesystem,"
-	echo "but their containers still linger in the Docker."
+	echo "Remove all unused Docker images, and Docksal related volumes and orphaned containers to save disk space."
+	echo "Orphaned are those containers which project folders were deleted from the filesystem,"
+	echo "but the containers still linger in the Docker."
 
 	echo
 	echo "Usage: cleanup [options]"
@@ -2069,13 +2152,13 @@ show_help_cleanup ()
 	echo
 	echo "Options:"
 	printh "--images" "Docker images cleanup Wizard"
-	printh "--hard" "Also remove ALL stopped containers (potentially destructive operation)"
+	printh "--hard" "Remove ALL stopped containers even unrelated to Docksal (potentially destructive operation)"
 
 	echo
 	echo "Examples:"
 	printh "fin cleanup" "Regular cleanup"
 	printh "fin cleanup --images" "Docker Images cleanup wizard, helping to navigate and delete unused ones"
-	printh "fin cleanup --hard" "Run hard cleanup removing all stopped containers"
+	printh "fin cleanup --hard" "Run hard cleanup removing all stopped Docker containers"
 }
 
 show_help_hosts ()
@@ -2672,8 +2755,8 @@ smb_share_add()
 # Removes Docksal SMB shares
 smb_share_remove ()
 {
-	local drives
-	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
+	# Get a list of logical drives (type 3 = Local disk).
+	local drives=$(wmic.exe logicaldisk get drivetype,name | grep 3 | awk '{print tolower($2)}' | sed 's/[:\r]//g')
 
 	for drive in ${drives}; do
 		# Avoid conflicts with existing drive shares by using a unique share name
@@ -2743,8 +2826,8 @@ docker_machine_mount_smb ()
 		return 1
 	fi
 
-	local drives
-	if is_wsl; then drives=$(ls /mnt); else drives=$(ls /cygdrive); fi
+	# Get a list of logical drives (type 3 = Local disk).
+	local drives=$(wmic.exe logicaldisk get drivetype,name | grep 3 | awk '{print tolower($2)}' | sed 's/[:\r]//g')
 
 	for drive in ${drives}; do
 		# Mount point is lowercase drive letter with no slash
@@ -2906,10 +2989,6 @@ up ()
 {
 	check_docksal_environment
 
-	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
-	( is_linux || is_docker_native ) && ssh_key add
-
 	# Check that project directory is reachable to Docker
 	check_docker_path
 
@@ -2929,7 +3008,11 @@ up ()
 	# If Unisons is used, wait for it to sync
 	unison_sync_wait
 
-	echo-green "Project URL: ${yellow}$PROJECT_URL${NC}"
+	echo-green "Project URL: ${yellow}${PROJECT_URL}${NC}"
+
+	if [[ "${IDE_ENABLED}" == "1" ]]; then
+		echo-green "Web IDE URL: ${yellow}${PROJECT_IDE_URL}${NC}"
+	fi
 }
 
 # Stop containers
@@ -2949,10 +3032,6 @@ stop ()
 restart ()
 {
 	check_docksal_environment
-
-	# Run ssh_key add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
-	( is_linux || is_docker_native ) && ssh_key add
 
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
@@ -3004,8 +3083,6 @@ reset ()
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
-	# Run ssh_key add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_key add
 	_start_containers || return 1
 	unison_sync_wait
 }
@@ -3325,6 +3402,7 @@ system_stop ()
 		docker ps -q --filter "label=io.docksal.group=system" 2>/dev/null | xargs docker rm -vf >/dev/null
 	fi
 
+	stop_sshproxy_daemon
 	configure_resolver off
 	configure_mounts off
 	configure_network off
@@ -3375,6 +3453,12 @@ ssh_key_generate ()
 ssh_key ()
 {
 	check_winpty_found
+
+	# Check if we support key management
+	if [[ "$DOCKSAL_SSH_AGENT_USE_HOST" == "1" ]]; then
+		echo-error 'Docksal is currently not managing the SSH keys.'
+		return 1
+	fi
 
 	# Check if ssh-agent container is running
 	# Note: no spaces in format. PWD trips over this when docker is run with sudo (during Docksal install/update).
@@ -3989,14 +4073,56 @@ install_sshagent_service ()
 	docker rm -f docksal-ssh-agent >/dev/null 2>&1 || true
 	docker volume rm docksal_ssh_agent >/dev/null 2>&1 || true
 
+	# Switch between built-in agent and auth socket proxying
+	local ssh_service_args
+	stop_sshproxy_daemon
+	if is_proxy_sshagent; then
+		start_sshproxy_daemon
+		ssh_service_args="ssh-proxy $DOCKSAL_HOST_IP $DOCKSAL_SSH_PROXY_PORT"
+	else
+		ssh_service_args="ssh-agent"
+	fi
+
 	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=unless-stopped \
 		--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent \
-		"${IMAGE_SSH_AGENT}" >/dev/null
+		"${IMAGE_SSH_AGENT}" $ssh_service_args >/dev/null
 	if_failed_error "Failed starting the SSH agent service."
 
 	# Add default keys. Using || true here to suppress errors if there are no keys on the host.
-	ssh_key add || true
+	! is_proxy_sshagent && ssh_key add || true
+}
+
+start_sshproxy_daemon ()
+{
+	if [[ -f "$CONFIG_SSHPROXY_PID" ]]; then
+		echo-error 'SSH proxy is already running.'
+		exit 1
+	elif ! command -v socat > /dev/null; then
+		echo-error 'SSH proxy requires the "socat" application to function.'
+		if command -v brew > /dev/null; then
+			echo 'Run `brew install socat` to add this application.'
+		elif command -v apt-get > /dev/null; then
+			echo 'Run `apt-get install socat` to add this application.'
+		fi
+		exit 2
+	elif [[ -z "$DOCKSAL_SSH_AUTH_SOCK" ]]; then
+		echo-error 'Environment variable SSH_AUTH_SOCK is not set.' \
+			'Is your local SSH agent running correctly?'
+		exit 3
+	fi
+
+	socat TCP-LISTEN:$DOCKSAL_SSH_PROXY_PORT,bind=$DOCKSAL_HOST_IP,reuseaddr,fork UNIX-CLIENT:$DOCKSAL_SSH_AUTH_SOCK &
+	local pid=$!
+	if_failed_error "Failed starting the SSH proxy service."
+	echo "$pid" > "$CONFIG_SSHPROXY_PID"
+}
+
+stop_sshproxy_daemon ()
+{
+	local sshproxy_pid=$(cat "$CONFIG_SSHPROXY_PID" 2>/dev/null || echo 0)
+	[[ "$sshproxy_pid" -ne 0 ]] && kill "$sshproxy_pid" 2>/dev/null
+	rm -f "$CONFIG_SSHPROXY_PID"
 }
 
 # Install Mac dependencies
@@ -4818,6 +4944,8 @@ check_for_updates ()
 		echo "$timestamp" > "$CONFIG_LAST_PING"
 	fi
 
+	[[ "$DOCKSAL_LOCK_UPDATES" == "1" ]] && return # Do not check for updates if disabled
+
 	if wants_rc_version; then
 		# Check once a day if DOCKSAL_USE_RC is set
 		next_check=$(( $last_check + $one_day ))
@@ -4947,7 +5075,7 @@ _exec ()
 		container_name="cli"
 	fi
 
-	container_id=$(get_container_id "$container_name")
+	container_id=$(get_project_container_id "$container_name")
 
 	# Use sh as default shell
 	local SHELL_INTERACTIVE="sh -ilc"
@@ -4996,7 +5124,7 @@ _exec ()
 
 	if [[ "$container_name" == "cli" ]]; then
 		# Commands in cli should be run using the docker user, not root.
-		local container_user='-u docker'
+		local container_user="-u $CLI_USER"
 	fi
 
 	# Enter project containers
@@ -5071,7 +5199,7 @@ run_cli ()
 	done
 
 	# Set default image
-	local RUN_IMAGE="${image:-docksal/cli:2.6-php7.2}"
+	local RUN_IMAGE="${image:-docksal/cli:2.7-php7.3}"
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
@@ -5167,7 +5295,7 @@ _mysql ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5197,7 +5325,7 @@ mysql_list ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5219,7 +5347,7 @@ mysql_db_create ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5252,7 +5380,7 @@ mysql_db_drop ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5280,7 +5408,7 @@ mysql_db_truncate ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5320,7 +5448,7 @@ mysql_import ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5378,7 +5506,7 @@ mysql_import ()
 		echo "Importing from stdin..."
 	# We can not use _run here because we need to launch docker exec with only -i param
 	# and only mysql command directly (no bash wrapper) so that stdin could be received inside that exec
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	__mysql_command=$(docker exec "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	__mysql_command=$(echo "${__mysql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
@@ -5406,7 +5534,7 @@ mysql_dump ()
 	eval $(parse_params "$@")
 
 	# Bring in MYSQL env variables from the db container, so that we can use them here
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	container_mysql_vars=$(docker exec "$container_id" env | grep "^MYSQL_")
 	eval ${container_mysql_vars}
 
@@ -5421,7 +5549,7 @@ mysql_dump ()
 		echo-green "Exporting..."
 	fi
 
-	container_id=$(get_container_id "db")
+	container_id=$(get_project_container_id "db")
 	__mysql_command=$(docker exec -i "$container_id" bash -c "echo -u${__dump_user} -p${__dump_password}")
 	if [[ "${ARGV[0]}" == "" ]]; then
 		docker exec -i "$container_id" mysqldump ${__mysql_command} ${__database}
@@ -5744,7 +5872,8 @@ sysinfo ()
 	elif is_mac; then
 		df -h # mac native
 	else
-		wmic.exe logicaldisk get size,freespace,caption # win native
+		# Get a list of logical drives (type 3 = Local disk).
+		wmic.exe logicaldisk where drivetype=3 get size,freespace,caption # win native
 	fi
 
 	if [[ "$all" == "all" ]]; then
@@ -5852,6 +5981,10 @@ load_configuration ()
 		[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
 		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
 		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+		[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
+			echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
+				"Stack file does not exist: $stack_yml_file" &&
+			exit 1
 
 		# Include both the stack and the project yml files if both exist
 		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
@@ -5934,9 +6067,15 @@ load_configuration ()
 	fi
 	# Create project url
 	if [[ "$DOCKSAL_VHOST_PROXY_PORT_HTTP" == "" || "$DOCKSAL_VHOST_PROXY_PORT_HTTP" == "80" ]]; then
-		export PROJECT_URL="http://$VIRTUAL_HOST"
+		export PROJECT_URL="http://${VIRTUAL_HOST}"
+		if [[ "${IDE_ENABLED}" == "1" ]]; then
+			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}"
+		fi
 	else
-		export PROJECT_URL="http://$VIRTUAL_HOST:$DOCKSAL_VHOST_PROXY_PORT_HTTP"
+		export PROJECT_URL="http://${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
+		if [[ "${IDE_ENABLED}" == "1" ]]; then
+			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
+		fi
 	fi
 
 	# Make project root globally available
@@ -6247,14 +6386,17 @@ hosts_add ()
 
 	# Add to hosts
 	echo -e "Adding: ${yellow}$DOCKSAL_IP $hostname${NC}"
+	echo -e "Adding: ${yellow}::2 $hostname${NC}"
 	if is_windows; then
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
 		echo "$DOCKSAL_IP $hostname" | tee -a "$tmp" >/dev/null
+		echo "::2 $hostname" | tee -a "$tmp" >/dev/null
 		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
 		echo "$DOCKSAL_IP $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
+		echo "::2 $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
 	fi
 }
 
@@ -6793,11 +6935,11 @@ provider_pull_db ()
 	# Get the time from 24 hours ago.
 	local yesterday=$(_exec date --date='yesterday' "+%Y-%m-%d %H:%M:%S");
 
-	if [[ "${file_exists}" == "0" ]] || [[ -n "${file_time}" ]] || [[ "$force" == "force" ]]; then
-		echo -e "${acqua}Cached DB file needs updating${NC}"
-
+	# Check to see if file doesn't exist, or if file exists and is older, or using force flag
+	if ( [[ "${file_exists}" == "0" ]] && [[ "${file_time}" == "" ]] ) || ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
 		# Check to see if File Is Older than 1 hour
-		if [[ "$file_exists" > "0" ]] && [[ -z "${file_time}" ]] || [[ "$force" == "force" ]]; then
+		if ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
+			echo -e "${acqua}Cached DB file needs updating${NC}"
 			echo -e "${acqua}Removing old database file${NC}"
 			_exec rm -f "${db_file}"
 		fi
@@ -6947,17 +7089,17 @@ provider_pull_acquia_precheck ()
 # Init process to pull code from acquia.
 provider_pull_acquia_init ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Set hostingenv to dev if none are set.
 	hostingenv=${hostingenv:-dev}
 	# Get the repo url for the specific environment.provider_pull_platformsh_files
 	local repo_url
-	repo_url=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
+	repo_url=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
 	local repo_checkout
-	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${hostingenv} info."
 
 	echo -e "${acqua}Cloning Acquia Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
@@ -6969,7 +7111,7 @@ provider_pull_acquia_init ()
 # Pull process to pull files from Acquia.
 provider_pull_acquia_files ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
@@ -6981,7 +7123,7 @@ provider_pull_acquia_files ()
 # Pull process to pull db from Acquia.
 provider_pull_acquia_db ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
@@ -6998,7 +7140,7 @@ provider_pull_acquia_db ()
 	fi
 
 	local query
-	query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+	query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
 	if_failed_error "Error retrieving list of backups from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 
 	# Returns timestamp of last backup.
@@ -7013,23 +7155,23 @@ provider_pull_acquia_db ()
 	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$force" == "force" ]]; then
 		# Create backup on Acquia through Cloud API.
 		echo -e "${acqua}Creating new backup on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-		_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
+		_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
 		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
 		echo -e "${acqua}Backup queued on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
 		# Sleep for 10 seconds wait for backup to finish.
 		sleep 10
 		# Requery to get a new list of backups.
-		query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+		query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
 		if_failed_error "Error retrieving list of backups from Acquia on site ${hostingsite} on environment ${hostingenv} for database ${acquia_db_name}"
 	else
 		echo -e "${acqua}Using latest backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
 	fi
 
 	# Returns id of last backup.
-	local last_id=$(printf "${query}" | grep id | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
+	local last_id=$(printf "${query}" | grep "^ id" | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
 	echo -e "${acqua}Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-	_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
+	_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
 	if_failed_error "Error Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 }
 
@@ -7357,7 +7499,7 @@ fi
 # This happens before the environment variable overrides are sources, thus can be overridden via docksal.env files.
 # On macOS there is a git wrapper even when git is not installed, so we have to check for git differently on mac
 # See https://github.com/docksal/docksal/issues/1003
-if ! is_mac || (xcode_tools_dir=$(xcode-select -p 2>/dev/null) && [[ -x "${xcode_tools_dir}/usr/bin/git}" ]]); then
+if ! is_mac || (xcode_tools_dir=$(xcode-select -p 2>/dev/null) && [[ -x "${xcode_tools_dir}/usr/bin/git" ]]); then
 	if ( which git &>/dev/null ); then
 		export GIT_USER_EMAIL=$(git config --get --global user.email)
 		export GIT_USER_NAME=$(git config --get --global user.name)
@@ -7481,6 +7623,16 @@ if is_docker_running; then
 	export DOCKER_RUNNING="true"
 else
 	export DOCKER_RUNNING="false"
+fi
+
+# By default, we use the built-in SSH agent unless DOCKSAL_SSH_AGENT_USE_HOST=1
+# On Linux, we can directly mount the SSH auth socket into the container.
+# On Mac/Win, we proxy the Unix socket through TCP on Docksal's host IP.
+if [[ -n "$SSH_AUTH_SOCK" ]]; then
+	DOCKSAL_SSH_AUTH_SOCK="$SSH_AUTH_SOCK"
+fi
+if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
+	unset SSH_AUTH_SOCK
 fi
 
 # Handle Alias
@@ -7730,7 +7882,7 @@ case "$1" in
 		vm "$@"
 		;;
 	update)
-		if [[ "$DOCKSAL_LOCK_UPDATES" != "" ]]; then
+		if [[ "$DOCKSAL_LOCK_UPDATES" == "1" ]]; then
 			echo-error "Updates locked in this environment"
 			exit 1
 		fi
@@ -7947,7 +8099,19 @@ case "$1" in
 		# no load_configuration
 		check_for_updates
 		shift
-		cleanup $1
+		# Regular cleanup (Docksal stuff only)
+		if [[ "$1" == "" ]]; then
+			cleanup
+		fi
+		# Regular + hard cleanup (max cleanup to free up space - Docksal and non-Docksal dangling stuff)
+		if [[ "$1" == "--hard" ]]; then
+			cleanup
+			cleanup_hard
+		fi
+		# Image cleanup wizard
+		if [[ "$1" == "--images" ]]; then
+			cleanup_images
+		fi
 		;;
 	-v | v)
 		# no load_configuration

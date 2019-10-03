@@ -53,14 +53,14 @@ teardown() {
 
 	cd "$TRAVIS_BUILD_DIR/../test-init"
 	run fin init
-	echo "$output" | egrep "http://test-init.docksal"
+	echo "$output" | grep "http://test-init.docksal"
 	unset output
 
 	# Give Travis some time because looks like it needs some time to understand that everything is up
 	sleep 5
 	# Check if site is available and its name is correct
-	run curl -sL http://test-init.docksal
-	echo "$output" | egrep "<title>phpinfo"
+	run curl -sLI http://test-init.docksal
+	echo "$output" | grep "X-Powered-By: PHP"
 	unset output
 }
 
@@ -282,7 +282,8 @@ EOF
 	unset output
 
 	# Check that there are no containers
-	run fin ps
+	# Using "fin docker-compose ps" here to skip additional processing and output added by "fin ps"
+	run fin docker-compose ps
 	[[ "$(echo "$output" | tail -n +3)" == "" ]]
 	unset output
 }

@@ -131,10 +131,10 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.6-php7.2}
+    image: ${CLI_IMAGE:-docksal/cli:2.7-php7.3}
     volumes:
       - project_root:/var/www:rw,nocopy  # Project root volume
-      - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
+      - ${SSH_AUTH_SOCK:-docksal_ssh_agent}:${SSH_AUTH_SOCK:-/.ssh-agent}:ro  # Shared ssh-agent socket/SSH key forwarding support
       - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
     environment:
       - GIT_USER_EMAIL
@@ -144,8 +144,8 @@ services:
       - DOCROOT
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-      - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}  # Point xdebug to the host IP
-      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
+      - XDEBUG_CONFIG=remote_host=${DOCKSAL_HOST_IP} remote_port=9000 # Point xdebug to <host IP>:9000
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST} # This helps PHPStorm pick the right debug configuration
       - DRUSH_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - BLACKFIRE_CLIENT_ID
       - BLACKFIRE_CLIENT_TOKEN
@@ -154,6 +154,7 @@ services:
       - SECRET_ACAPI_KEY
       - SECRET_PLATFORMSH_CLI_TOKEN
       - SECRET_TERMINUS_TOKEN
+      - SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-/.ssh-agent/proxy-socket}  # SSH key forwarding support
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}

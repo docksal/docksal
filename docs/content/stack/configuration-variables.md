@@ -30,9 +30,44 @@ Docker image to use as the VHOST Proxy. This forwards all requests to the approp
 
 Docker image to use for DNS Routing.
 
+### CI
+
+This is a global variable. Only use on Linux servers. 
+
+When set, enables CI mode:
+
+- Sets `DOCKSAL_VHOST_PROXY_IP="0.0.0.0"`, which opens vhost-proxy to the world.
+- Reports the instance as a CI instance (vs local), so our anonymous usage stats are not skewed.
+- Sets `DOCKSAL_SSH_AGENT_USE_HOST=1`, which enables reuse of the hosts `SSH_AUTH_SOCK` socket (Linux only).
+
+This should be used on sandbox servers (and in CI) at the time of Docksal installation like this:
+
+```
+curl -fsSL https://get.docksal.io | CI=1 bash
+```
+
+### DOCKSAL_SSH_AGENT_USE_HOST
+
+Defaults to `0` for non-CI environments and to `1` for CI environments.
+
+When set to `1`, project's stack will prefer the host's SSH agent (`SSH_AUTH_SOCK` socket) over the built-in docksal-ssh-agent.
+Can be used in conjunction with [SSH agent forwarding](https://developer.github.com/v3/guides/using-ssh-agent-forwarding/).
+
+**Warning**: on Mac / Windows, this will open up an SSH proxy over TCP listening on the internal `DOCKSAL_HOST_IP` address.
+Other users on your system are able to connect to this address and use your SSH agent.
+
+### DOCKSAL_SSH_PROXY_PORT
+
+Default: `30001`
+
+The TCP port to use to listen on `DOCKSAL_HOST_IP` when proxying SSH authentication to an agent running on the host. Only used
+on Mac / Windows if `DOCKSAL_SSH_AGENT_USE_HOST` is set to `1`.
+
 ### DOCKSAL_LOCK_UPDATES 
 
-When set, this will allow for Docksal to no longer accept updates. This is usually good in combination with `CI=true`.
+`Default: 0`
+
+When set to `1`, this will prevent Docksal from installing and checking for updates. This is usually good in combination with `CI=true`.
 
 ### DOCKER_VERSION_ALERT_SUPPRESS
 
@@ -53,6 +88,12 @@ on a build/sandbox server via `fin config set --global DOCKSAL_ENVIRONMENT=ci`. 
 `docksal-ci.env` and/or `docksal-ci.yml` (these you do commit) on top of the default configuration files.
 
 Note: `DOCKSAL_ENVIRONMENT` should not be set and will not work in the project's `docksal.env` file (this is by design).
+
+### DOCKSAL_VERSION
+
+`Default: master`
+
+Allows for overriding the Docksal version used for checking for updates.
 
 ### DOCKSAL_STATS_OPTOUT 
 
@@ -208,6 +249,12 @@ Acquia Cloud API Key. See [Acquia Drush Commands](/tools/acquia-drush/).
 ### SECRET_TERMINUS_TOKEN
 
 Token used for logging in to Pantheon's CLI Tool [Terminus](/tools/terminus/).
+
+### CLI_USER
+
+`Default:  docker`
+
+User to be used for `fin exec`.
 
 ## Image Variables
 

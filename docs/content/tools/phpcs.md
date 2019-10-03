@@ -28,6 +28,16 @@ fin phpcs cs docroot/sites/all/modules/custom
 fin phpcs cbf docroot/sites/all/modules/custom
 ```
 
+## Standards currently installed are
+
+- [WordPress](https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards)
+  - WordPress-Core
+  - WordPress-Extra
+  - WordPress-Docs
+- [Drupal](https://www.drupal.org/project/coder)
+  - Drupal
+  - DrupalPractice
+
 # Using Directly
 
 Instead of installing an addon, you can use `phpcs`/`phpcbf` directly every time.

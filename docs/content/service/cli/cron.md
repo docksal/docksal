@@ -1,5 +1,5 @@
 ---
-title: "Cron"
+title: "cli: Scheduled Jobs (cron)"
 aliases:
   - /en/master/advanced/cron/
 ---

@@ -1,5 +1,5 @@
 ---
-title: "Database Sandbox Mode"
+title: "db: Database Sandbox Mode"
 aliases:
   - /en/master/advanced/db-sandbox/
 ---
