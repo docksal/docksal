@@ -1787,6 +1787,8 @@ show_help_project() {
 	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
 	printh "fin project reset db" "Reset only DB service to start with DB from scratch"
 	printh "fin project create" "Start a new project wizard"
+	printh "fin project create --name=myproject --repo=https://github.com/org/project.git"
+	printh ""  "Initialize project from a custom git repo"
 }
 
 show_help_reset ()
@@ -3116,6 +3118,12 @@ project_create ()
 	# Read name from params if available
 	local project_name="$name"
 
+	# Read repo from params if available
+	if [[ "$repo" != "" ]]; then
+		local target_repo="$repo"
+		local choice="0"
+	fi
+
 	# Determine project name
 	if [[ "$project_name" == "" ]]; then
 		while [[ "$project_name" == "" ]]; do
@@ -3159,16 +3167,20 @@ project_create ()
 		echo
 		echo -e "${magenta}  HTML${NC}"
 		echo -e "${green}    14.${NC} Static HTML site"
+		echo
+		echo -e "${red}  Custom${NC}"
+		echo -e "${green}    0.${NC} Custom git repository"
+		echo
 		echo -e ""
 
 		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
 		local choices=14
 
 		while [[ "$choice" == "" ]]; do
-			read -p "Enter your choice (1-$choices): " choice
-			if ! (( "$choice" >= "1" && "$choice" <= $choices )); then
+			read -p "Enter your choice (0-$choices): " choice
+			if ! (( "$choice" >= "0" && "$choice" <= $choices )); then
 				choice=""
-				echo-error "Enter a number between 1 and $choices."
+				echo-error "Enter a number between 0 and $choices."
 			fi
 		done
 	fi
@@ -3223,7 +3235,7 @@ project_create ()
 		10)
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
-			target_repo="${URL_REPO_BACKDROP}"
+			target_repo="$URL_REPO_BACKDROP"
 		;;
 		11)
 			target_cms="Hugo"
@@ -3245,11 +3257,23 @@ project_create ()
 			target_host_name_search_string=""
 			target_repo=""
 			;;
+		0)
+			target_cms="Custom git repository"
+			target_host_name_search_string=""
+			if [[ "$target_repo" == "" ]]; then
+				while true; do
+					read -p "Please enter repository url: " target_repo
+					[[ "${target_repo}" == "" ]] && continue
+					break
+				done
+			fi
+			;;
 	esac
 
 	echo
 	echo -e "Project folder:   ${yellow}$(pwd)/$project_name${NC}"
 	echo -e "Project software: ${yellow}${target_cms}${NC}"
+	echo -e "Source repo:      ${yellow}${target_repo}${NC}"
 	echo -e "Project URL:      ${yellow}http://${project_virtual_host_name}${NC}"
 	echo
 
