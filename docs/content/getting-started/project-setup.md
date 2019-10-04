@@ -16,10 +16,9 @@ fin project create
 ``` 
 
 {{% notice note %}}
-For Mac and Linux users, the recommended designated "Projects" directory is `~/Projects`.
-
-For Windows users, this directory **must** be within the Windows (not WSL) filesystem.
-This means that you cannot use `~/Projects` in WSL on Windows and use something like `/c/Projects` instead.  
+For Mac and Linux users, the recommended designated "Projects" directory is `~/Projects`.  
+For Windows users, this directory **must** be within the Windows (not WSL) filesystem. This means that you cannot 
+use `~/Projects` in WSL on Windows and use something like `/c/Projects` instead.  
 {{% /notice %}}
 
 The wizard clones one of the boilerplate Docksal project repos from GitHub and runs `fin init`.
@@ -71,8 +70,7 @@ If you project root is the web document root, then use `.` as the `DOCROOT` when
 {{% /notice %}}
 
 {{% notice note %}}
-**Note: SSH key passphrase** 
-If you are being asked for an SSH key passphrase for `id_dsa` or `id_rsa`, 
+If you see requests for the SSH key passphrase for `id_dsa` or `id_rsa`, 
 remember, that these are **your** keys loaded from your `~/.ssh` folder into the `ssh-agent` container.  
 That's why their paths look like `/root/.ssh/...`. That is the path **inside the ssh-agent container**.  
 Provide password(s) if you want to use git or drush commands, that require ssh access within Docksal 
