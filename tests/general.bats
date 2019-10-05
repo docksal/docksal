@@ -395,7 +395,7 @@ services:
 	# Clean up kill ngrok session
 	screen -X -S testNgrok quit
 	# Kill Docker Container
-	docker rm -f "$container_name"
+	docker rm -f "drupal8_ngrok_1"
 	# Destroy Project
 	fin rm -f
 }
