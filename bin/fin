@@ -247,11 +247,23 @@ DOCKSAL_STATS_TID='UA-93724315-1'
 DOCKSAL_STATS_URL='http://www.google-analytics.com/collect'
 DOCKSAL_STATS_OPTOUT=${DOCKSAL_STATS_OPTOUT:-0}
 
+# Whether to prevent (checking for) updates for Docksal
+DOCKSAL_LOCK_UPDATES="${DOCKSAL_LOCK_UPDATES:-0}"
+
 # Override PATH to use our utilities
 PATH="$CONFIG_BIN_DIR:$PATH"
 
 # Set global variable in case native Docker app is used/not-used
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
+
+# SSH agent settings
+if ! is_ci; then
+	# Use the built-in agent in non-CI environments
+	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-0}"
+else
+	# Prefer the hosts' agent in CI environments
+	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-1}"
+fi
 
 #---------------------------- URL references --------------------------------
 GITHUB_API="https://api.github.com"
@@ -306,6 +318,8 @@ IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.2}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.5}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 
+# User to be passed to the CLI container when executing commands.
+CLI_USER=${CLI_USER:-docker}
 #---------------------------- Helper functions --------------------------------
 
 DOCKSAL_PATH='' #docksal path value will be cached here
@@ -4860,6 +4874,8 @@ check_for_updates ()
 		echo "$timestamp" > "$CONFIG_LAST_PING"
 	fi
 
+	[[ "$DOCKSAL_LOCK_UPDATES" == "1" ]] && return # Do not check for updates if disabled
+
 	if wants_rc_version; then
 		# Check once a day if DOCKSAL_USE_RC is set
 		next_check=$(( $last_check + $one_day ))
@@ -5038,7 +5054,7 @@ _exec ()
 
 	if [[ "$container_name" == "cli" ]]; then
 		# Commands in cli should be run using the docker user, not root.
-		local container_user='-u docker'
+		local container_user="-u $CLI_USER"
 	fi
 
 	# Enter project containers
@@ -6829,11 +6845,11 @@ provider_pull_db ()
 	# Get the time from 24 hours ago.
 	local yesterday=$(_exec date --date='yesterday' "+%Y-%m-%d %H:%M:%S");
 
-	if [[ "${file_exists}" == "0" ]] || [[ -n "${file_time}" ]] || [[ "$force" == "force" ]]; then
-		echo -e "${acqua}Cached DB file needs updating${NC}"
-
+        # Check to see if doesn't exist or if file exists and is older or using force flag
+        if ( [[ "${file_exists}" == "0" ]] && [[ "${file_time}" == "" ]] ) || ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
 		# Check to see if File Is Older than 1 hour
 		if [[ "$file_exists" > "0" ]] && [[ -z "${file_time}" ]] || [[ "$force" == "force" ]]; then
+                        echo -e "${acqua}Cached DB file needs updating${NC}"
 			echo -e "${acqua}Removing old database file${NC}"
 			_exec rm -f "${db_file}"
 		fi
@@ -6983,17 +6999,17 @@ provider_pull_acquia_precheck ()
 # Init process to pull code from acquia.
 provider_pull_acquia_init ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Set hostingenv to dev if none are set.
 	hostingenv=${hostingenv:-dev}
 	# Get the repo url for the specific environment.provider_pull_platformsh_files
 	local repo_url
-	repo_url=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
+	repo_url=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
 	local repo_checkout
-	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${hostingenv} info."
 
 	echo -e "${acqua}Cloning Acquia Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
@@ -7005,7 +7021,7 @@ provider_pull_acquia_init ()
 # Pull process to pull files from Acquia.
 provider_pull_acquia_files ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
@@ -7017,7 +7033,7 @@ provider_pull_acquia_files ()
 # Pull process to pull db from Acquia.
 provider_pull_acquia_db ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
@@ -7034,7 +7050,7 @@ provider_pull_acquia_db ()
 	fi
 
 	local query
-	query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+	query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
 	if_failed_error "Error retrieving list of backups from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 
 	# Returns timestamp of last backup.
@@ -7049,23 +7065,23 @@ provider_pull_acquia_db ()
 	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$force" == "force" ]]; then
 		# Create backup on Acquia through Cloud API.
 		echo -e "${acqua}Creating new backup on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-		_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
+		_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
 		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
 		echo -e "${acqua}Backup queued on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
 		# Sleep for 10 seconds wait for backup to finish.
 		sleep 10
 		# Requery to get a new list of backups.
-		query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+		query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
 		if_failed_error "Error retrieving list of backups from Acquia on site ${hostingsite} on environment ${hostingenv} for database ${acquia_db_name}"
 	else
 		echo -e "${acqua}Using latest backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
 	fi
 
 	# Returns id of last backup.
-	local last_id=$(printf "${query}" | grep id | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
+	local last_id=$(printf "${query}" | grep "^ id" | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
 	echo -e "${acqua}Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-	_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
+	_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
 	if_failed_error "Error Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 }
 
@@ -7393,7 +7409,7 @@ fi
 # This happens before the environment variable overrides are sources, thus can be overridden via docksal.env files.
 # On macOS there is a git wrapper even when git is not installed, so we have to check for git differently on mac
 # See https://github.com/docksal/docksal/issues/1003
-if ! is_mac || (xcode_tools_dir=$(xcode-select -p 2>/dev/null) && [[ -x "${xcode_tools_dir}/usr/bin/git}" ]]); then
+if ! is_mac || (xcode_tools_dir=$(xcode-select -p 2>/dev/null) && [[ -x "${xcode_tools_dir}/usr/bin/git" ]]); then
 	if ( which git &>/dev/null ); then
 		export GIT_USER_EMAIL=$(git config --get --global user.email)
 		export GIT_USER_NAME=$(git config --get --global user.name)
@@ -7518,6 +7534,11 @@ if is_docker_running; then
 else
 	export DOCKER_RUNNING="false"
 fi
+
+# Reusing host's ssh-agent socket (SSH_AUTH_SOCK) is only supported on Linux.
+# On Mac/Win, SSH_AUTH_SOCK would be outside of the mounted projects directory and thus inaccessible (cli will fail to start).
+# On Linux, we default to the built-in agent, unless DOCKSAL_SSH_AGENT_USE_HOST=1
+if ! is_linux || [[ "${DOCKSAL_SSH_AGENT_USE_HOST}" != "1" ]]; then unset SSH_AUTH_SOCK; fi
 
 # Handle Alias
 if [[ "$1" == "@"* ]]; then
@@ -7766,7 +7787,7 @@ case "$1" in
 		vm "$@"
 		;;
 	update)
-		if [[ "$DOCKSAL_LOCK_UPDATES" != "" ]]; then
+		if [[ "$DOCKSAL_LOCK_UPDATES" == "1" ]]; then
 			echo-error "Updates locked in this environment"
 			exit 1
 		fi
