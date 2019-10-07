@@ -6114,7 +6114,7 @@ init ()
 
 	config_generate
 	# Running like this forces configuration re-read
-	fin up
+	fin init
 }
 
 config_show ()
@@ -6181,19 +6181,18 @@ config_show ()
 config_generate ()
 {
 	eval $(parse_params "$@")
-	if [[ -f ".docksal/docksal.yml" ]] || [[ -f ".docksal/docksal.env" ]]; then
-		echo-yellow ".docksal/docksal.yml or .docksal/docksal.env already exists"
+	if [[ -d ".docksal" ]]; then
+		echo-yellow "A Docksal configuration already exists in this directory"
 		_confirm "Do you want to proceed and overwrite?"
 	fi
 
-	rm -f ".docksal/docksal.env" >/dev/null
-	rm -f ".docksal/docksal.yml" >/dev/null
-	# Create .docksal directory if it does not exist
+	# Create reset Docksal configuration in the current directory
+	rm -f ".docksal" >/dev/null
 	mkdir -p ".docksal"
 
-	# Create docksal.env if it does not exist
+	# Create docksal.env
 	touch ".docksal/docksal.env" && \
-	echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
+		echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
 
 	# Get docroot option value or use default
 	local DOCROOT="${docroot}"
@@ -6226,7 +6225,17 @@ config_generate ()
 	fi
 
 	# Add DOCROOT to docksal.env file
-	echo "DOCROOT=${DOCROOT}" >> ".docksal/docksal.env"
+	echo "DOCROOT=${DOCROOT}" >> .docksal/docksal.env
+
+	# Create a basic init command
+	mkdir -p .docksal/commands && touch .docksal/commands/init && chmod +x .docksal/commands/init
+	cat <<EOF > .docksal/commands/init
+#!/usr/bin/env bash
+
+fin project rm -f
+fin project start
+EOF
+
 	# Create a basic docroot and index.php if not present
 	if [[ ! -d "$DOCROOT" ]] || [[ ! -f "$DOCROOT/index.php" ]]; then
 		# Setup docroot and a basic index.php
