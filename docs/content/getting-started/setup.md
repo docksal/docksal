@@ -40,7 +40,7 @@ Here's why:
 - All systems: `fin` cli tool is written to `/usr/local/bin` (all systems)
 - All systems: `192.168.64.100` (Docksal's canonical IP) is assigned to the host's local network interface (all systems) 
 - macOS: `/etc/exports` and `/etc/resolver/docksal` have to be modified, `nfsd` service has to be restarted
-- Linux: install/updated the Docker service if necessary
+- Linux: install/update the Docker service if necessary
 - Windows: there are additional requests for permissions to create network shares for local drives to share files with 
 Docker and to mount them with the current user's account and password.
 

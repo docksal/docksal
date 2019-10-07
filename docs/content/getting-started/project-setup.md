@@ -146,7 +146,7 @@ Site provisioning can be automated via a [custom command](/fin/custom-commands/)
 
 Every Docksal powered project has at least one custom command - `fin init` (stored in `.docksal/commands/init`). 
 
-The `init` command should facilitates project provisioning from zero to a **fully working application**. 
+The `init` command should facilitate project provisioning from zero to a **fully working application**. 
 It should be used to automate project specific initialization tasks, like: 
 
 - initialize stack configuration
