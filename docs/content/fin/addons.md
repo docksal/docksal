@@ -86,7 +86,7 @@ case "$1" in
 esac
 ```
 
-* Lastly, create a file that is the same name as the addon with the extension `.filelist` at the end of it. For example, if the addon's name was `example`, the file name would be `example/example.filelist`. This file will contain any additional files within the addon folder that should be included at the time of install.
+* Lastly, if you want to include more than a single script file, create a file that is the same name as the addon with the extension `.filelist` at the end of it. For example, if the addon's name was `example`, the file name would be `example/example.filelist`. This file will contain any additional files within the addon folder that should be included at the time of install.
 
 ```bash
 # If you want to include more than a single script file,
