@@ -199,7 +199,7 @@ Here is an an example of what `launch.json` should look like:
   ]
 }
 ```
-- Ensure that your docksal.yml or docksal-local.yml has been updated to include `XDEBUG_ENABLED=1` in the CLI.  This is off by default due to performance.
+- Ensure that your docksal.env or docksal-local.env has been updated to include `XDEBUG_ENABLED=1`.  This is off by default due to performance.
 - If changes were made, be sure to run `fin up` to update your environment.
 
 Here is an an example of what `docksal-local.yml` should include:
