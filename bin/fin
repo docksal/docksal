@@ -3010,11 +3010,11 @@ up ()
 	# If Unisons is used, wait for it to sync
 	unison_sync_wait
 
-	echo-green "Project URL: ${yellow}${PROJECT_URL}${NC}"
-
-	if [[ "${IDE_ENABLED}" == "1" ]]; then
+	# TODO: maybe move these into a function and call in other places - reset/restart.
+	[[ "${PROJECT_URL}" != "" ]] &&
+		echo-green "Project URL: ${yellow}${PROJECT_URL}${NC}"
+	[[ "${IDE_ENABLED}" == "1" ]] &&
 		echo-green "Web IDE URL: ${yellow}${PROJECT_IDE_URL}${NC}"
-	fi
 }
 
 # Stop containers
@@ -7647,6 +7647,13 @@ fi
 if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
 	unset SSH_AUTH_SOCK
 fi
+
+# Default MySQL settings
+# These may be overridden via project level env files (e.g., docksal.env)
+export MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+export MYSQL_USER=${MYSQL_USER:-user}
+export MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
+export MYSQL_DATABASE=${MYSQL_DATABASE:-default}
 
 # Handle Alias
 if [[ "$1" == "@"* ]]; then
