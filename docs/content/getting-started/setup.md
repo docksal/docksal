@@ -1,5 +1,5 @@
 ---
-title: "Installing Docksal"
+title: "Install Docksal"
 weight: 1
 aliases:
   - /en/master/getting-started/setup/

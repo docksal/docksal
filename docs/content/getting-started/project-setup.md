@@ -1,111 +1,171 @@
 ---
-title: "Project Setup"
+title: "Launch a Project Stack"
 weight: 2
 aliases:
   - /en/master/getting-started/project-setup/
 ---
 
-## Launching your first Docksal project
+## "Projects" directory {#projects-directory}
 
-To make sure Docksal has been installed properly, you can use the boilerplate project wizard.
+Pick a directory where you will store all your (Docksal) projects.
 
-Run the following command within your designated "Projects" directory and follow onscreen instructions:
+On Mac and Linux, the recommended "Projects" directory is `~/Projects`.  
+On Mac, the directory must be within `/Users`. There are no restrictions for Linux.
 
-```bash
-fin project create
-``` 
-
-{{% notice note %}}
-For Mac and Linux users, the recommended designated "Projects" directory is `~/Projects`.  
-For Windows users, this directory **must** be within the Windows (not WSL) filesystem. This means that you cannot 
-use `~/Projects` in WSL on Windows and use something like `/c/Projects` instead.  
-{{% /notice %}}
-
-The wizard clones one of the boilerplate Docksal project repos from GitHub and runs `fin init`.
-
-`fin init` is a single command used to bootstrap a project from zero to a fully working application. 
-
-Confirming that a boilerplate project stack works helps verify that your Docksal installation functions properly.  
+On Windows, the recommended "Projects" directory is `C:\Projects`.  
+The directory must be within the Windows (and not WSL) filesystem (i.e., you cannot use `~/Projects` in WSL on Windows).  
 
 
-## Configuring Docksal for an existing codebase
+## Launching your first Docksal stack
 
-The initial configuration is done once per project (e.g., by a team lead) and committed to the project repo. 
-Presence of the `.docksal` folder in the project directory is a good indication the project is already using Docksal.
-
-To configure Docksal for an existing project, run the following command within the project's root directory 
-and follow onscreen instructions:
+Whether you have an existing codebase or want to start from scratch, you can initialize a **dedicated** basic LAMP stack 
+for a project/directory with a **single command**: 
 
 ```bash
 fin init
 ```
 
-This will initialize Docksal settings in the project's codebase and start a dedicated default LAMP stack for your project.
+Run the command within your ["Projects" directory](#projects-directory) and follow onscreen instructions.
 
-You will see output similar to the following:
-
-```
+```bash
+$ mkdir -p ~/Projects/myproject
+$ cd ~/Projects/myproject
 $ fin init
-Initialize a project in /path/to/Projects/myproject? [y/n]: y
+Initialize a project in /Users/leonid/Work/Projects/myproject? [y/n]: y
 DOCROOT has been detected as docroot. Is that correct? [y/n]: y
 Configuration was generated. You can start it with fin project start
-Key 'id_ecdsa' already loaded in the agent. Skipping.
-Key 'id_rsa' already loaded in the agent. Skipping.
 Starting services...
 Creating network "myproject_default" with the default driver
 Creating volume "myproject_cli_home" with default driver
 Creating volume "myproject_project_root" with local driver
 Creating volume "myproject_db_data" with default driver
-Creating myproject_cli_1 ... done
 Creating myproject_db_1  ... done
+Creating myproject_cli_1 ... done
 Creating myproject_web_1 ... done
 Connected vhost-proxy to "myproject_default" network.
-Waiting for project stack to become ready...
 Waiting for project stack to become ready...
 Project URL: http://myproject.docksal
 ```
 
+Open `http://myproject.docksal` in your browser to verify the setup.
+
+The directory name becomes the project name as well as the virtual host name.
+
+{{% notice warning %}}
+Only lowercase alphanumeric, underscore, and hyphen are allowed in the project/directory name.
+{{% /notice %}}
+
 {{% notice tip %}}
-If you project root is the web document root, then use `.` as the `DOCROOT` when asked by the wizard.      
+If your project does not use a sub-directory for the document root, then use `.` as the `DOCROOT` when asked by the wizard.      
 {{% /notice %}}
 
 {{% notice note %}}
-If you see requests for the SSH key passphrase for `id_dsa` or `id_rsa`, 
-remember, that these are **your** keys loaded from your `~/.ssh` folder into the `ssh-agent` container.  
-That's why their paths look like `/root/.ssh/...`. That is the path **inside the ssh-agent container**.  
-Provide password(s) if you want to use git or drush commands, that require ssh access within Docksal 
-(e.g., often a project init script or a composer script contains a repository checkout, 
-which would require an ssh key for access).
+If you see requests for the SSH key passphrase for `id_dsa` or `id_rsa`, those are the keys in your `~/.ssh` folder.  
+SSH keys are automatically loaded into the **ssh-agent** container and can then be used by any Docksal project stack 
+running on your machine. [Read more]((/core/system-ssh-agent/)) about the ssh-agent system service in Docksal.
 {{% /notice %}}
 
-## Your project is ready
+Running `fin init` again will reset your project stack. See `fin help project` for the list of project level commands.
 
-Your project stack is now running. Access it in your browser: `http://myproject.docksal`
+MySQL connection settings are injected via via environment variables. You can access those via [getenv()](https://www.php.net/manual/en/function.getenv.php) in PHP.
 
-{{% notice note %}}
-By default, the virtual host name is equal to the project's folder name sans spaces (underscores are converted to hyphens)
-with the `.docksal` domain appended to it.  
-`myproject => myproject.docksal`
-{{% /notice %}}
+```php
+<?php
 
-{{% notice warning %}} Project paths that include spaces will cause errors where the project may not be recongnized as unique, e.g., `/Users/username/Development/Company Projects/project`. Removing spaces from path directories with prevent these errors. {{% /notice %}}
-    
-## Automate the initialization process
+$host = getenv('MYSQL_HOST');
+$user = getenv('MYSQL_USER');
+$pass = getenv('MYSQL_PASSWORD');
+$db   = getenv('MYSQL_DATABASE');
 
-This is optional, but highly recommended.
+echo "mysql://$user:$pass@$host/$db";
+```  
 
-Site provisioning can be automated via a [custom command](/fin/custom-commands/) (e.g., `fin init`, which will call `.docksal/commands/init`). Put project specific initialization tasks there, like:
 
-- initialize the Docksal configuration
+## Quick start using a boilerplate
+
+You can start from a [boilerplate repo](https://github.com/docksal?q=boilerplate) using the wizard:
+
+```bash
+fin project create
+```
+
+Run the command within your ["Projects" directory](#projects-directory) and follow onscreen instructions.
+
+```
+$ fin project create
+1. Name your project (lowercase alphanumeric, underscore, and hyphen): demo
+
+2. What would you like to install?
+  PHP based
+    1.  Drupal 8
+    2.  Drupal 8 (Composer Version)
+    3.  Drupal 7
+    4.  Wordpress
+    5.  Magento
+    6.  Laravel
+    7.  Symfony Skeleton
+    8.  Symfony WebApp
+    9.  Grav CMS
+    10. Backdrop CMS
+
+  Go based
+    11. Hugo
+
+  JS based
+    12. Gatsby JS
+    13. Angular
+
+  HTML
+    14. Static HTML site
+  ...
+
+Enter your choice (1-14): 1
+
+Project folder:   /Users/username/Projects/demo
+Project software: Drupal 8
+Source repo:      https://github.com/docksal/boilerplate-drupal8.git
+Project URL:      http://demo.docksal
+
+Do you wish to proceed? [y/n]: y
+Cloning repository...
+...
+
+3. Passing execution to fin init...
+...
+
+Open http://demo.docksal in your browser to verify the setup.
+ DONE!  Completed all initialization steps.
+``` 
+
+Open `http://demo.docksal` in your browser to verify the setup.
+
+
+## Automating stack and project initialization
+
+Site provisioning can be automated via a [custom command](/fin/custom-commands/).
+
+Every Docksal powered project has at least one custom command - `fin init` (stored in `.docksal/commands/init`). 
+
+The `init` command should facilitates project provisioning from zero to a **fully working application**. 
+It should be used to automate project specific initialization tasks, like: 
+
+- initialize stack configuration
 - import databases or perform a site install
-- compile SASS
-- run DB updates, special commands, etc.
-- run Behat tests
+- run database updates, special commands, etc.
+- build project dependencies (npm, etc.)
+- run tests
 
-### Sample projects
+It is recommended to break different steps into a dedicated [custom command](/fin/custom-commands/), then invoke 
+them in the `init` command.
 
 For a working example of a Docksal powered project with `fin init` take a look at:
 
-- [Drupal 7 sample project](https://github.com/docksal/boilerplate-drupal7)
-- [Drupal 8 sample project](https://github.com/docksal/boilerplate-drupal8)
-- [WordPress sample project](https://github.com/docksal/boilerplate-wordpress)
+- [Drupal 7](https://github.com/docksal/boilerplate-drupal7)
+- [Drupal 8](https://github.com/docksal/boilerplate-drupal8)
+- [WordPress](https://github.com/docksal/boilerplate-wordpress)
+- [NodeJS](https://github.com/docksal/boilerplate-nodejs)
+- [List of all boilerplate projects](https://github.com/docksal?q=boilerplate)
+
+{{% notice note %}}
+These are the repos used by the `fin project create` wizard.
+{{% /notice %}}
