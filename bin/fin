@@ -7659,6 +7659,7 @@ fi
 
 # Default MySQL settings
 # These may be overridden via project level env files (e.g., docksal.env)
+export MYSQL_HOST=${MYSQL_HOST:-db}
 export MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
 export MYSQL_USER=${MYSQL_USER:-user}
 export MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}

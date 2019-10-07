@@ -156,6 +156,7 @@ services:
       - SECRET_PLATFORMSH_CLI_TOKEN
       - SECRET_TERMINUS_TOKEN
       - SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-/.ssh-agent/proxy-socket}  # SSH key forwarding support
+      - MYSQL_HOST
       - MYSQL_ROOT_PASSWORD
       - MYSQL_USER
       - MYSQL_PASSWORD
