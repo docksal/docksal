@@ -3296,16 +3296,16 @@ project_create ()
 	run_cli git clone -b master "${target_repo}" "${project_name}" --depth=1
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
-	echo -e "${yellow}3. Installing site${NC}"
-
-	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
-		cd "${project_name}/.docksal"
-		# Edit docksal.env to use a custom user-supplied host name
-		sed -i~ "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" docksal.env
-		rm -f docksal.env.bak > /dev/null 2>&1
-	)
-
 	cd "${project_name}"
+
+	# Edit docksal.env to use a custom user-supplied host name
+	if [[ -f ".docksal/docksal.env" ]]; then
+		sed -i~ "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" .docksal/docksal.env
+	fi
+
+	echo
+	echo -e "${yellow}3. Passing execution to ${yellow_bold}fin init${yellow}...${NC}"
+	echo
 	fin init
 }
 
