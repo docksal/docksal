@@ -190,7 +190,7 @@ Click the preferred option to proceed to option-specific docs.
 
 3. Install Docker Desktop for Windows
 
-    [![Docker Desktop for Windows v2.1.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/38240/Docker%20for%20Windows%20Installer.exe)
+    [![Docker Desktop for Windows v2.1.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/38240/Docker%20Desktop%20Installer.exe)
     
 4. Configure Docker Desktop on Windows
 
