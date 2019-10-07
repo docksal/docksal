@@ -47,7 +47,7 @@ The following commands below can be run anywhere from within your project's fold
 
 ```bash
 fin run phpcs \
-    --standards="Drupal,DrupalPractice" -n \
+    --standard="Drupal,DrupalPractice" -n \
     --extensions="php,module,inc,install,test,profile,theme" \
     --ignore="*.features.*,*.pages*.inc" \
     docroot/sites/all/modules/custom
@@ -55,7 +55,7 @@ fin run phpcs \
 
 ```bash
 fin run phpcbf \
-    --standards="Drupal,DrupalPractice" -n \
+    --standard="Drupal,DrupalPractice" -n \
     --extensions="php,module,inc,install,test,profile,theme" \
     --ignore="*.features.*,*.pages*.inc" \
     docroot/sites/all/modules/custom
@@ -65,12 +65,12 @@ fin run phpcbf \
 
 ```bash
 fin run phpcs \
-    --standards="WordPress" -n \
+    --standard="WordPress" -n \
     docroot/wp-content/plugin
 ```
 
 ```bash
 fin run phpcbf \
-    --standards="WordPress" -n \
+    --standard="WordPress" -n \
     docroot/wp-content/plugins
 ```
