@@ -30,4 +30,11 @@ The following stacks are available:
 - `pantheon` - web (Nginx), db (MariaDB), cli, varnish, redis, solr (used specifically for [Pantheon](https://www.pantheon.io/) hosted projects)
 - `node` - cli
 
-{{% notice warning %}} Project must contain an `index.html` or `index.php` page of the `docroot` directory inside your project.{{% /notice %}}
+{{% notice tip %}}
+You can run `fin init` in an empty (or an existing project) folder for a wizard experience. See [getting-started/project-setup](/getting-started/project-setup/)
+for an example.
+{{% /notice %}}
+
+{{% notice warning %}}
+Project must contain an `index.html` or `index.php` page of the `docroot` directory inside your project.
+{{% /notice %}}
