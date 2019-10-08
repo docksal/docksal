@@ -137,15 +137,15 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 REQUIREMENTS_DOCKER='19.03.2'
 REQUIREMENTS_DOCKER_COMPOSE='1.24.1'
 REQUIREMENTS_DOCKER_MACHINE='0.16.2'
-REQUIREMENTS_VBOX='5.2.26'  # Remember to update the download URLs below
+REQUIREMENTS_VBOX='5.2.32'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-Win.exe"
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.32/VirtualBox-5.2.32-132073-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.32/VirtualBox-5.2.32-132073-Win.exe"
 
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
@@ -275,19 +275,19 @@ fi
 GITHUB_API="https://api.github.com"
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
-URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
-URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
+URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
+URL_REPO_DRUPAL8="https://github.com/docksal/boilerplate-drupal8.git"
 URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
-URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
-URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
-URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
-URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
+URL_REPO_WORDPRESS="https://github.com/docksal/boilerplate-wordpress.git"
+URL_REPO_MAGENTO="https://github.com/docksal/boilerplate-magento.git"
+URL_REPO_GRAV="https://github.com/docksal/boilerplate-grav.git"
+URL_REPO_GATSBY="https://github.com/docksal/boilerplate-gatsby.git"
 URL_REPO_ANGULAR="https://github.com/docksal/boilerplate-angular.git"
-URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
-URL_REPO_HUGO="https://github.com/docksal/example-hugo.git"
-URL_REPO_SYMFONY_SKELETON="https://github.com/docksal/example-symfony-skeleton.git"
-URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
-URL_REPO_BACKDROP="https://github.com/docksal/example-backdrop.git"
+URL_REPO_LARAVEL="https://github.com/docksal/boilerplate-laravel.git"
+URL_REPO_HUGO="https://github.com/docksal/boilerplate-hugo.git"
+URL_REPO_SYMFONY_SKELETON="https://github.com/docksal/boilerplate-symfony-skeleton.git"
+URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/boilerplate-symfony-webapp.git"
+URL_REPO_BACKDROP="https://github.com/docksal/boilerplate-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
@@ -3010,11 +3010,11 @@ up ()
 	# If Unisons is used, wait for it to sync
 	unison_sync_wait
 
-	echo-green "Project URL: ${yellow}${PROJECT_URL}${NC}"
-
-	if [[ "${IDE_ENABLED}" == "1" ]]; then
+	# TODO: maybe move these into a function and call in other places - reset/restart.
+	[[ "${PROJECT_URL}" != "" ]] &&
+		echo-green "Project URL: ${yellow}${PROJECT_URL}${NC}"
+	[[ "${IDE_ENABLED}" == "1" ]] &&
 		echo-green "Web IDE URL: ${yellow}${PROJECT_IDE_URL}${NC}"
-	fi
 }
 
 # Stop containers
@@ -3296,16 +3296,16 @@ project_create ()
 	run_cli git clone -b master "${target_repo}" "${project_name}" --depth=1
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
-	echo -e "${yellow}3. Installing site${NC}"
-
-	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
-		cd "${project_name}/.docksal"
-		# Edit docksal.env to use a custom user-supplied host name
-		sed -i~ "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" docksal.env
-		rm -f docksal.env.bak > /dev/null 2>&1
-	)
-
 	cd "${project_name}"
+
+	# Edit docksal.env to use a custom user-supplied host name
+	if [[ -f ".docksal/docksal.env" ]]; then
+		sed -i~ "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" .docksal/docksal.env
+	fi
+
+	echo
+	echo -e "${yellow}3. Passing execution to ${yellow_bold}fin init${yellow}...${NC}"
+	echo
 	fin init
 }
 
@@ -6114,7 +6114,7 @@ init ()
 
 	config_generate
 	# Running like this forces configuration re-read
-	fin up
+	fin init
 }
 
 config_show ()
@@ -6181,19 +6181,18 @@ config_show ()
 config_generate ()
 {
 	eval $(parse_params "$@")
-	if [[ -f ".docksal/docksal.yml" ]] || [[ -f ".docksal/docksal.env" ]]; then
-		echo-yellow ".docksal/docksal.yml or .docksal/docksal.env already exists"
+	if [[ -d ".docksal" ]]; then
+		echo-yellow "A Docksal configuration already exists in this directory"
 		_confirm "Do you want to proceed and overwrite?"
 	fi
 
-	rm -f ".docksal/docksal.env" >/dev/null
-	rm -f ".docksal/docksal.yml" >/dev/null
-	# Create .docksal directory if it does not exist
+	# Create reset Docksal configuration in the current directory
+	rm -f ".docksal" >/dev/null
 	mkdir -p ".docksal"
 
-	# Create docksal.env if it does not exist
+	# Create docksal.env
 	touch ".docksal/docksal.env" && \
-	echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
+		echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
 
 	# Get docroot option value or use default
 	local DOCROOT="${docroot}"
@@ -6226,7 +6225,17 @@ config_generate ()
 	fi
 
 	# Add DOCROOT to docksal.env file
-	echo "DOCROOT=${DOCROOT}" >> ".docksal/docksal.env"
+	echo "DOCROOT=${DOCROOT}" >> .docksal/docksal.env
+
+	# Create a basic init command
+	mkdir -p .docksal/commands && touch .docksal/commands/init && chmod +x .docksal/commands/init
+	cat <<EOF > .docksal/commands/init
+#!/usr/bin/env bash
+
+fin project rm -f
+fin project start
+EOF
+
 	# Create a basic docroot and index.php if not present
 	if [[ ! -d "$DOCROOT" ]] || [[ ! -f "$DOCROOT/index.php" ]]; then
 		# Setup docroot and a basic index.php
@@ -7647,6 +7656,14 @@ fi
 if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
 	unset SSH_AUTH_SOCK
 fi
+
+# Default MySQL settings
+# These may be overridden via project level env files (e.g., docksal.env)
+export MYSQL_HOST=${MYSQL_HOST:-db}
+export MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+export MYSQL_USER=${MYSQL_USER:-user}
+export MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
+export MYSQL_DATABASE=${MYSQL_DATABASE:-default}
 
 # Handle Alias
 if [[ "$1" == "@"* ]]; then

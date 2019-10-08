@@ -77,10 +77,10 @@ services:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
       - db_data:/var/lib/mysql  # Database data volume
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-      - MYSQL_USER=${MYSQL_USER:-user}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_DATABASE
       - MYSQL_ALLOW_EMPTY_PASSWORD
       - MYSQL_RANDOM_ROOT_PASSWORD
       - MYSQL_ONETIME_PASSWORD
@@ -99,10 +99,10 @@ services:
     - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
     - db_data:/var/lib/mysql  # Database data volume
     environment:
-    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-    - MYSQL_USER=${MYSQL_USER:-user}
-    - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
-    - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+    - MYSQL_ROOT_PASSWORD
+    - MYSQL_USER
+    - MYSQL_PASSWORD
+    - MYSQL_DATABASE
     - MYSQL_ALLOW_EMPTY_PASSWORD
     - MYSQL_RANDOM_ROOT_PASSWORD
     - MYSQL_ONETIME_PASSWORD
@@ -156,6 +156,11 @@ services:
       - SECRET_PLATFORMSH_CLI_TOKEN
       - SECRET_TERMINUS_TOKEN
       - SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-/.ssh-agent/proxy-socket}  # SSH key forwarding support
+      - MYSQL_HOST
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_DATABASE
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}

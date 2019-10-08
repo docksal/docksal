@@ -1,8 +1,8 @@
 ---
 title: "Portable Installation"
-weight: 4
 aliases:
   - /en/master/getting-started/portable/
+  - /getting-started/portable/
 ---
 
 Docksal can be installed from a USB drive or a local folder.  
