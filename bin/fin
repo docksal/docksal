@@ -76,6 +76,12 @@ is_mac ()
 	[[ "$OS_TYPE" == "Darwin" ]]
 }
 
+is_mac_catalina ()
+{
+	[[ "$OS_TYPE" == "Darwin" ]] &&
+		[[ "$OS_VERSION" =~ "10.15" ]]
+}
+
 # CI
 is_ci ()
 {
@@ -198,7 +204,13 @@ CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DOCKER_MACHINE_DIR/machine.env"
 CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 
 # Host path to make accessible to the VM (Mac only)
-DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH:-/Users}"
+# macOS Catalina required special treatment
+# See https://github.com/docksal/docksal/issues/1130
+if is_mac_catalina; then
+	DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH:-/System/Volumes/Data/Users}"
+else
+	DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH:-/Users}"
+fi
 
 # Where custom commands live (relative path)
 DOCKSAL_COMMANDS_PATH=".docksal/commands"
@@ -472,7 +484,7 @@ upfind ()
 # Get path to .docksal folder using upfind
 get_project_path ()
 {
-	if [ -z "$DOCKSAL_PATH" ]; then
+	if [[ "$DOCKSAL_PATH" == "" ]]; then
 		DOCKSAL_PATH=$(upfind ".docksal")
 	fi
 	# If we reached $HOME, then we did not find the project root.
@@ -7545,6 +7557,13 @@ if is_tty; then
 		read LINES COLUMNS < <(stty size)
 	fi
 	export LINES COLUMNS
+fi
+
+# Temporary hack for macOS 10.15 Catalina
+# Only switch dirs for the internal Mac drive (/System/Volumes/Data/...), skip external drives (/Volumes/...)
+# See https://github.com/docksal/docksal/issues/1130
+if is_mac_catalina && ! [[ "${PWD}" =~ "/System/Volumes/Data" ]] && ! [[ "${PWD}" =~ "/Volumes" ]]; then
+	cd "/System/Volumes/Data${PWD}"
 fi
 
 # Inherit hosts git user.email and user.name settings
