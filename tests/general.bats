@@ -379,7 +379,7 @@ services:
 	# Run fin share in a emulated terminal
 	screen -S testNgrok -d -m fin share
 	# sleep so ngrok can load
-	sleep 10
+	sleep 20
 	# Query API for information
 	container_name="$(fin docker ps -a --filter "label=com.docker.compose.project=drupal8" --filter "label=com.docker.compose.service=web" --format '{{.Names }}')_ngrok"
 	API=$(docker exec -it "$container_name" sh -c "wget -qO- http://localhost:4040/api/tunnels")
