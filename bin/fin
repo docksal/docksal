@@ -207,7 +207,13 @@ CONFIG_CERTS=${CONFIG_CERTS:-$CONFIG_DIR/certs}
 # macOS Catalina required special treatment
 # See https://github.com/docksal/docksal/issues/1130
 if is_mac_catalina; then
-	DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH:-/System/Volumes/Data/Users}"
+	if [[ "${DOCKSAL_NFS_PATH}" != "" ]] && ! [[ "${DOCKSAL_NFS_PATH}" =~ "/System/Volumes/Data" ]] && ! [[ "${DOCKSAL_NFS_PATH}" =~ "/Volumes" ]]; then
+		# Prefix user provided path with "/System/Volumes/Data" unless the prefix is already there AND the path is NOT on an external drive (/Volumes/...)
+		DOCKSAL_NFS_PATH="/System/Volumes/Data${DOCKSAL_NFS_PATH}"
+	else
+		# Either the default value or the value provided by user
+		DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH:-/System/Volumes/Data/Users}"
+	fi
 else
 	DOCKSAL_NFS_PATH="${DOCKSAL_NFS_PATH:-/Users}"
 fi
