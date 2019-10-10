@@ -11,7 +11,7 @@ volumes:
     driver: local
     driver_opts:
       type: nfs
-      device: :${PROJECT_ROOT}
+      device: :${PROJECT_ROOT_NFS}
       o: addr=${DOCKSAL_HOST_IP},vers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1
   db_data:  # Database data volume (bind)
   docksal_ssh_agent:  # Shared ssh-agent volume

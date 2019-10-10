@@ -3806,9 +3806,11 @@ configure_mounts ()
 			fi
 
 			# Mount the share in VirtualBox
-			if ! is_docker_native; then
-				docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
-			fi
+			# TODO: Disabled. To be removed.
+			# NFS mounts are now handled using NFS volumes - same approach as with Docker Desktop
+			#if ! is_docker_native; then
+			#	docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
+			#fi
 		fi
 		# Create, then mount shares in VirtualBox
 		if (is_wsl || is_windows) && ! is_docker_native; then
@@ -5990,7 +5992,18 @@ alias_list ()
 load_global_configuration ()
 {
 	export DOCROOT=${DOCROOT:-docroot}
+	export DOCKSAL_PATH="$(get_project_path)"
 	export PROJECT_ROOT="$(get_project_path)"
+	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
+
+	# On macOS 10.15 Catalina special treatment
+	# See https://github.com/docksal/docksal/issues/1130
+	# The exported NFS path needs the "/System/Volumes/Data" prefix unless project is on an external drive (/Volumes/...)
+	if is_mac_catalina && ! [[ "${PROJECT_ROOT}" =~ "/Volumes" ]]; then
+		export PROJECT_ROOT_NFS="/System/Volumes/Data${PROJECT_ROOT}"
+	else
+		export PROJECT_ROOT_NFS=${PROJECT_ROOT}
+	fi
 }
 
 load_configuration ()
@@ -6056,7 +6069,13 @@ load_configuration ()
 		fi
 
 		# Include a volumes yml if requested. Use bind mount for volumes by default.
-		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+		if is_mac; then
+			# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
+			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
+		else
+			# Bind mounted volumes on all other systems
+			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+		fi
 		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
 			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 			if [[ -f "$volumes_yml_file" ]]; then
@@ -6104,7 +6123,6 @@ load_configuration ()
 	else
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	fi
-	export DOCROOT=${DOCROOT:-docroot}
 
 	# Make VIRTUAL_HOST lowercase, replace '_' with '-', remove everything non-letter or digit,
 	# make sure it starts with letter or digit
@@ -6127,12 +6145,11 @@ load_configuration ()
 		fi
 	fi
 
-	# Make project root globally available
-	export DOCKSAL_PATH="$(get_project_path)"
-	export PROJECT_ROOT="$(get_project_path)"
-	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
 	# https://docs.docker.com/compose/reference/envvars/#compose_convert_windows_paths
 	export COMPOSE_CONVERT_WINDOWS_PATHS=1
+
+	# Loaded last to allow overrides from env files
+	load_global_configuration
 }
 
 # Default init command. Initializes default config and starts containers
@@ -6197,6 +6214,8 @@ config_show ()
 		echo -e "ENV_FILE:\n$(echo ${ENV_FILE} | tr ${SEPARATOR} '\n')"
 	echo
 	echo "PROJECT_ROOT: ${PROJECT_ROOT}"
+	is_mac &&
+		echo "PROJECT_ROOT_NFS: ${PROJECT_ROOT_NFS}"
 	echo "DOCROOT: ${DOCROOT}"
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
 	echo "VIRTUAL_HOST_ALIASES: *.${VIRTUAL_HOST}"
@@ -7557,13 +7576,6 @@ if is_tty; then
 		read LINES COLUMNS < <(stty size)
 	fi
 	export LINES COLUMNS
-fi
-
-# Temporary hack for macOS 10.15 Catalina
-# Only switch dirs for the internal Mac drive (/System/Volumes/Data/...), skip external drives (/Volumes/...)
-# See https://github.com/docksal/docksal/issues/1130
-if is_mac_catalina && ! [[ "${PWD}" =~ "/System/Volumes/Data" ]] && ! [[ "${PWD}" =~ "/Volumes" ]]; then
-	cd "/System/Volumes/Data${PWD}"
 fi
 
 # Inherit hosts git user.email and user.name settings
