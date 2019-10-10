@@ -7584,6 +7584,14 @@ if is_tty; then
 	export LINES COLUMNS
 fi
 
+# On macOS 10.15 Catalina, ensure we are NOT inside /System/Volumes/Data
+# See https://github.com/docksal/docksal/issues/1130
+# This eliminates the need for checks for this path prefix down the road in multiple places
+if is_mac_catalina && [[ "${PWD}" =~ "/System/Volumes/Data" ]]; then
+	# Remove the prefix from path and switch directories
+	cd $(echo ${PWD} | sed "s|/System/Volumes/Data||")
+fi
+
 # Inherit hosts git user.email and user.name settings
 # This happens before the environment variable overrides are sources, thus can be overridden via docksal.env files.
 # On macOS there is a git wrapper even when git is not installed, so we have to check for git differently on mac
