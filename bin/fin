@@ -323,6 +323,7 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.3}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.5}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:2.8-php7.3}
 
 # User to be passed to the CLI container when executing commands.
 CLI_USER=${CLI_USER:-docker}
@@ -5223,7 +5224,7 @@ run_cli ()
 	done
 
 	# Set default image
-	local RUN_IMAGE="${image:-docksal/cli:2.7-php7.3}"
+	local RUN_IMAGE="${image:-$IMAGE_RUN_CLI}"
 	local HOME_VOLUME_NAME="docksal_run_cli_home"
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
