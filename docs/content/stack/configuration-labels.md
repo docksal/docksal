@@ -1,5 +1,5 @@
 ---
-title: "Configuration Variables"
+title: "Configuration Labels"
 weight: 5
 ---
 ## Configuration Labels

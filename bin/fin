@@ -326,9 +326,6 @@ IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.5}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:2.8-php7.3}
 
-# TODO: deprecate in August 2020 in favor of label io.docksal.user
-# User to be passed to the CLI container when executing commands.
-CLI_USER=${CLI_USER:-docker}
 #---------------------------- Helper functions --------------------------------
 
 DOCKSAL_PATH='' #docksal path value will be cached here
@@ -5175,14 +5172,11 @@ _exec ()
 
 	# User to run commands as. npm and other userspace commands are only available to docker user
 	local container_user;
-	if [[ "$container_name" == "cli" ]]; then
-		# Commands in cli should be run using the docker user, not root.
-		container_user="-u $CLI_USER"
+	container_user=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
+	if [[ "$container_user" != "" ]]; then
+		container_user="-u ${container_user}"
 	else
-		container_user=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
-		if [[ "$container_user" != "" ]]; then
-			container_user="-u ${container_user}"
-		fi
+		container_user="-u docker"
 	fi
 
 	# Enter project containers
