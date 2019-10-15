@@ -7,7 +7,7 @@ aliases:
 ## Zero-configuration {#zero-configuration}
 
 You can simply create a `.docksal` folder in your project root and run `fin project start` (`fin start` for short).
-The default stack (`$HOME/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case.
+The default stack (`$HOME/.docksal/stacks/stack-default.yml`) will be loaded and used to create containers in this case. Default Document Root path where all web-accessible files should be is `docroot/`.
 
 This is a great way to start developing a new project. This approach can also be used on a permanent basis,
 if your needs are simple. `stack-default.yml` extends the configuration from `services.yml`,
