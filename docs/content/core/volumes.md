@@ -198,22 +198,27 @@ The downsides:
 Unprecedented, native-like FS speed on macOS and Windows (Linux is already native). See [docksal/unison](https://github.com/docksal/unison) for details
 
 - [Install Docksal](/getting-started/setup/)
-- Add `DOCKSAL_VOLUMES=unison` in `.docksal/docksal.env` in a project
+- Add `DOCKSAL_VOLUMES=unison` into `.docksal/docksal.env` of a project
 - `fin project reset`
 - Wait until initial sync finishes.
 
 ## None Volumes
 
 This method is similar to the Unison method, but without the actual sync happening at all.  
-Nothing is mounted from the host. An empty `project_root` volume is created and mounted inside containers.
+Nothing is mounted/copied from the host. An empty `project_root` volume is created and mounted inside containers.
 
-This can be used to provision completely blank environments and have all work (code checkout, etc.) done inside cli.
-
-Provides THE BEST file system performance. Combined with Cloud9, can provide a way of provisioning instant blank 
+Provides **the best** file system performance. Combined with Cloud9, can provide a way of provisioning instant blank 
 development environments with the best performance and consistency for Mac and Windows (Linux has the best performance 
 naturally). The only added cost is having to stick with a web based IDE and terminal.
 
 See [stacks/volumes-none.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-none.yml).
+
+## Using None Volumes
+
+- Add `DOCKSAL_VOLUMES=none` into `.docksal/docksal.env` of a project
+- `fin project reset`
+
+Use `fin bash` to log into bash and checkout failes into `/var/www` with git. Or use `docker cp` to copy files into container. 
 
 {{% notice note %}}
 When a project is created, there are a few volumes created for it. One of them is called `<project_name>_project_root`
