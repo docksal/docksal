@@ -132,7 +132,7 @@ Allow disabling the DNS resolver configuration (in case there are issues with it
 
 `Default: 60`
 
-How many seconds to give project containers before `fin project start` stops waiting for them to reach healthy state. (Should divide by 5)
+How many seconds to give project containers to reach `healthy` state before `fin` considers the stack startup as failed. (Should be a multiple of 5)
 
 ### MYSQL_ROOT_PASSWORD
 
