@@ -3233,7 +3233,7 @@ project_create ()
 			target_cms="Symfony WebApp"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_WEBAPP"
-		    ;;
+			;;
 		10)
 			target_cms="Grav CMS"
 			target_host_name_search_string=""
