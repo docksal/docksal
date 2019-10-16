@@ -3243,7 +3243,7 @@ project_create ()
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
 			target_repo="$URL_REPO_BACKDROP"
-		    ;;
+			;;
 		12)
 			target_cms="Hugo"
 			target_host_name_search_string=""
