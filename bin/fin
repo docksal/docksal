@@ -272,7 +272,7 @@ else
 fi
 
 # Healthcheck timeout
-DOCKSAL_HEALTHCHECK_TIMEOUT=${DOCKSAL_HEALTHCHECK_TIMEOUT:60}
+DOCKSAL_HEALTHCHECK_TIMEOUT=${DOCKSAL_HEALTHCHECK_TIMEOUT:-60}
 
 #---------------------------- URL references --------------------------------
 GITHUB_API="https://api.github.com"
