@@ -8,6 +8,12 @@ aliases:
 
 Configuration variables can be specified in the `docksal.env` file or by running the `fin config set` command (e.g., `fin config set --global PROJECT_INACTIVITY_TIMEOUT="0.5h"`). All variables that are changed from their defaults below will require, at minimum, a project restart `fin restart` so that they can take effect. Additional steps may be required.
 
+### DOCROOT
+
+`Default: "docroot"`
+
+Defines a relative path to the Document Root of the web server. Final path will be `/var/www/$DOCROOT`, so by default it is `/var/www/docroot`. Change it to the desired directory (like `http`) or sub-directory as needed, or set to `.` to use the project root as web server Document Root.
+
 ### DOCKSAL_NFS_PATH
 
 The location of the folder on the host machine to mount to VirtualBox. See [file sharing](/core/file-sharing/) for more information.
