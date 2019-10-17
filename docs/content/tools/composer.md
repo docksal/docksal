@@ -30,6 +30,6 @@ project's `composer.json` file.
 {{% /notice %}}
 
 {{% notice warning %}}
-A composer based Drupal site can require 2GB or RAM to install all components. To provide that RAM to composer inside
+A composer based Drupal site can require 2GB of RAM to install all components. To provide that RAM to composer inside
 the container, Virtual Box/Docker Desktop needs 3GB or more.
 {{% /notice %}}
