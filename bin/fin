@@ -3478,6 +3478,10 @@ ssh_key ()
 {
 	check_winpty_found
 
+	# Parse parameters and remove options from parameters line
+	eval $(parse_params "$@")
+	set -- ${ARGV[@]}
+
 	# Check if we support key management
 	if [[ "$DOCKSAL_SSH_AGENT_USE_HOST" == "1" ]]; then
 		echo-error 'Docksal is currently not managing the SSH keys.'
@@ -3550,7 +3554,7 @@ ssh_key ()
 			# TODO: without a public key present, ssh-agent asks for a passphrase (if set) twice.
 			#cat ~/.ssh/${ssh_key_name} | ${winpty} docker exec -i docksal-ssh-agent bash -c "cat /dev/stdin > /.ssh/${ssh_key_name}"
 			# Call "ssh-key add" in the ssh-agent container
-			[[ "${QUIET_SSH_ADD}" == "1" ]] && _ssh_key add ${ssh_key_name} --quiet || _ssh_key add ${ssh_key_name}
+			[[ "${quiet}" == "" ]] &&  _ssh_key add ${ssh_key_name} || _ssh_key add ${ssh_key_name} --quiet
 			# Remove copied key
 			#docker exec docksal-ssh-agent rm -f /.ssh/${ssh_key_name}
 
@@ -8080,17 +8084,6 @@ case "$1" in
 		# no load_configuration
 		shift
 		check_docker_running
-		backup_args=$@
-		while [[ $# -gt 0 ]]; do
-		    case "$1" in
-		      --quiet)
-			backup_args=${backup_args/ --quiet}
-			QUIET_SSH_ADD=1
-			;;
-		    esac
-		    shift
-		done
-		set -- ${backup_args}
 		if [[ "$1" == "" ]]; then
 			show_help_ssh-key
 		elif [[ "$1" == "new" ]]; then
