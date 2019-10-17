@@ -1172,7 +1172,7 @@ check_project_unique ()
 _confirm ()
 {
 	# Skip checks if not running interactively (not a tty or not on Windows)
-	if ! is_tty || is_travis; then return 0; fi
+	if ! is_tty || is_travis || [[ "$DOCKSAL_CONFIRM_YES" == "1" ]]; then return 0; fi
 
 	while true; do
 		echo -en "$1 "
