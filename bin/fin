@@ -8215,7 +8215,7 @@ case "$1" in
 				;;
 			yml|yaml)
 				load_configuration
-				config_show_yml "$@"
+				config_yml "$@"
 				;;
 			*)
 				load_configuration
