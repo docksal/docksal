@@ -52,6 +52,12 @@ This should be used on sandbox servers (and in CI) at the time of Docksal instal
 curl -fsSL https://get.docksal.io | CI=1 bash
 ```
 
+### DOCKSAL_CONFIRM_YES
+
+`Default: 0`
+
+If set to 1 then all yes/no confirms will automatically be answered yes. Useful for CI environments that fake tty and thus "freeze" waiting for user input.
+
 ### DOCKSAL_SSH_AGENT_USE_HOST
 
 Defaults to `0` for non-CI environments and to `1` for CI environments.
