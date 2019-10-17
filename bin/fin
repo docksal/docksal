@@ -2101,9 +2101,12 @@ show_help_config ()
 	printh "show [options]" "Display configuration for the current project"
 	printh "    --show-secrets" "Do not truncate value of SECRET_* environment vars"
 	printh "env" "Display only environment variables section"
+	printh "yml" "Display static YML project config suitable for export (NOTE: SECRET_* values will not be hidden)"
+	echo
 	printh "generate [options]" "Generate empty Docksal configuration for the project"
 	printh "    --stack=acquia" "Set non-default DOCKSAL_STACK during config generate"
 	printh "    --docroot=mydir" "Set non-default DOCROOT during config generate"
+	echo
 	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
 	printh "    --global" "Set for global ENV file"
 	printh "    --env=[name]" "Set in environment specific project ENV file"
@@ -2122,7 +2125,7 @@ show_help_config ()
 	printh "fin config set DOCKER_NATIVE=1 --global" "Adds DOCKER_NATIVE=1 into \$HOME/.docksal/docksal.env"
 	printh "fin config rm DOCKER_NATIVE --global" "	Removes DOCKER_NATIVE value from \$HOME/.docksal/docksal.env"
 	printh "fin config set DOCKSAL_STACK=acquia" "	Set different default stack in .docksal/docksal.env"
-	printh "fin config set --env=local XDEBUG_ENABLED=1" "	Enable XDEBUG in .docksal/docksal-local.env"
+	printh "fin config set --env=local XDEBUG_ENABLED=1" "Enable XDEBUG in .docksal/docksal-local.env"
 }
 
 show_help_init ()
@@ -6178,6 +6181,12 @@ config_show ()
 	echo "---------------------"
 }
 
+config_yml ()
+{
+	check_project_root
+	docker-compose config
+}
+
 # TODO: consider deprecating this, since now fin automatically creates docksal.yml and docksal.env (with default stack)
 config_generate ()
 {
@@ -8203,6 +8212,10 @@ case "$1" in
 				# load_configuration is conditional in function
 				shift
 				config_remove "$@"
+				;;
+			yml|yaml)
+				load_configuration
+				config_show_yml "$@"
 				;;
 			*)
 				load_configuration
