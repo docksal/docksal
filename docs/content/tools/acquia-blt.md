@@ -22,7 +22,7 @@ Use `fin project create` wizard and select `Drupal 8 (BLT Version)` from the lis
 This will download all composer require dependencies, set proper database settings for BLT, include the BLT
 addon command, and install the Drupal site.
 
-### The Manual Setup Process (The Hard Way)
+### The Manual Setup Process
 
 You can [follow the documentation](https://docs.acquia.com/blt/install/alt-env/docksal/) to set up a BLT site with Docksal.
 
