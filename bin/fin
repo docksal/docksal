@@ -5128,7 +5128,7 @@ _exec ()
  	local container_shell=$(docker inspect --format '{{ index .Config.Labels "io.docksal.shell"}}' ${container_id} 2>/dev/null)
  	if [[ "$container_shell" != "" ]]; then
 		SHELL_INTERACTIVE="$container_shell -ilc"
-		SHELL_NONINTERACTIVE="$container_shell -c"
+		SHELL_NONINTERACTIVE="$container_shell -lc"
  	fi
 
 	# ------------------------------------------------ #
