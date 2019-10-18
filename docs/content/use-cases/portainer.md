@@ -40,20 +40,24 @@ The UI can be accessed at [http://poratiner.docksal](http://poratiner.docksal/).
 
 When accessing for the first time, set the username and password.
 
-Portainer understands docker-composer projects/stacks, so it's able to list Docksal projects and their containers. 
-It is not able to control them in the same way it can control its own stacks.
+Portainer understands Docker Composer projects/stacks, so it's able to list Docksal projects and their containers. 
+However, Portainer is not able to control them in the same way it can control its own stacks, as there are various 
+extra steps that Docksal handles behind the scenes in that process. 
 
-Here's are the use cases that work:
+Use cases that work well:
 
-* listing projects
-* listing project containers
-* web console into a specific container
-* view/filter container logs
+* listing project stacks
+* listing project stack containers
+* viewing container configuration
+* **web console into a specific container**
+* **view/filter container logs**
 
-Here's are the use cases that don't fully work or don't work at all:
+Use cases that may not work as expected:
 
-* adding/stopping/starting/removing - projects
-* stopping/starting containers within a project - Portainer will start/stop project containers, however Docksal handles more than just that behind the scenes.
+* adding/stopping/starting/removing project stacks
+
+While using Portainer to start/stop **all** containers in a stack is OK, it is not advised to remove project containers 
+this way. Doing so will result in multiple leftovers on the Docker host and can eventually lead to issues.
 
 
 ## Uninstall
@@ -62,7 +66,3 @@ Here's are the use cases that don't fully work or don't work at all:
 $ docker rm -vf portainer
 $ docker volume rm -f portainer_data
 ```
-
-
-
-
