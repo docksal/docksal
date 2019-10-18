@@ -271,6 +271,9 @@ else
 	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-0}"
 fi
 
+# Healthcheck timeout
+DOCKSAL_HEALTHCHECK_TIMEOUT=${DOCKSAL_HEALTHCHECK_TIMEOUT:-60}
+
 #---------------------------- URL references --------------------------------
 GITHUB_API="https://api.github.com"
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
@@ -1427,11 +1430,10 @@ _vhost_proxy_connect ()
 # Waits for containers to become healthy
 # For reasoning why we are not using  `depends_on` `condition` see here:
 # https://github.com/docksal/docksal/issues/225#issuecomment-306604063
-# TODO: make this universal. Currently hardcoded for cli only.
 _healthcheck_wait ()
 {
 	local delay=5
-	local timeout=60
+	local timeout=$DOCKSAL_HEALTHCHECK_TIMEOUT
 	local elapsed=0
 	local status=""
 	local FILTER="label=com.docker.compose.project=$COMPOSE_PROJECT_NAME"
