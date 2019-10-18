@@ -5175,7 +5175,7 @@ _exec ()
 	container_user=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
 	if [[ "$container_user" != "" ]]; then
 		container_user="-u ${container_user}"
-	elif [[ "$container_user" == "cli" ]]; then # only use docker user for cli by default, others wil use root
+	elif [[ "$container_name" == "cli" ]]; then # only use docker user for cli by default, others wil use root
 		container_user="-u docker"
 	fi
 
