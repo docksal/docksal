@@ -46,9 +46,9 @@ extra steps that Docksal handles behind the scenes in that process.
 
 Use cases that work well:
 
-* listing project stacks
-* listing project stack containers
-* viewing container configuration
+* list project stacks
+* list project stack containers
+* view container configuration
 * **web console into a specific container**
 * **view/filter container logs**
 
