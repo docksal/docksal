@@ -268,12 +268,6 @@ Acquia Cloud API Key. See [Acquia Drush Commands](/tools/acquia-drush/).
 
 Token used for logging in to Pantheon's CLI Tool [Terminus](/tools/terminus/).
 
-### CLI_USER
-
-`Default:  docker`
-
-User to be used for `fin exec`.
-
 ## Image Variables
 
 The following variables are used to set images to a specified version. Using them will prevent the images from being udpated

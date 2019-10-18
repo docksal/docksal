@@ -329,8 +329,6 @@ IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.5}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:2.8-php7.3}
 
-# User to be passed to the CLI container when executing commands.
-CLI_USER=${CLI_USER:-docker}
 #---------------------------- Helper functions --------------------------------
 
 DOCKSAL_PATH='' #docksal path value will be cached here
@@ -5077,13 +5075,11 @@ _bash ()
 		return 1
 	fi
 
-	# Use sh by default
 	if [[ "$1" != "" ]]; then
-		# Pass container name to _exec
-		_exec --in="$1" sh -il
+		# Pass container name to _exec is specified
+		_exec --in="$1" "__SHELL_INTERACTIVE__"
 	else
-		# Use bash when container is not specified, for it defaults to cli
-		_exec bash -il
+		_exec "__SHELL_INTERACTIVE__"
 	fi
 }
 
@@ -5129,6 +5125,12 @@ _exec ()
 		SHELL_NONINTERACTIVE="bash -lc"
 	fi
 
+ 	local container_shell=$(docker inspect --format '{{ index .Config.Labels "io.docksal.shell"}}' ${container_id} 2>/dev/null)
+ 	if [[ "$container_shell" != "" ]]; then
+		SHELL_INTERACTIVE="$container_shell -ilc"
+		SHELL_NONINTERACTIVE="$container_shell -lc"
+ 	fi
+
 	# ------------------------------------------------ #
 	# 1) cmd
 	local cmd=""
@@ -5153,7 +5155,13 @@ _exec ()
 		cmd="$cmd"$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
 	else
-		cmd="${cmd}${@}"
+		if [[ "${@}" == "__SHELL_INTERACTIVE__" ]]; then
+			# Special case for running interactive shell with the selected shell
+			# remove the -c switch from the SHELL_INTERACTIVE call
+			cmd="${cmd}${SHELL_INTERACTIVE/c/}"
+		else
+			cmd="${cmd}${@}"
+		fi
 	fi
 	# ------------------------------------------------ #
 
@@ -5164,9 +5172,13 @@ _exec ()
 		container_id="$container_name"
 	fi
 
-	if [[ "$container_name" == "cli" ]]; then
-		# Commands in cli should be run using the docker user, not root.
-		local container_user="-u $CLI_USER"
+	# User to run commands as. npm and other userspace commands are only available to docker user
+	local container_user;
+	container_user=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
+	if [[ "$container_user" != "" ]]; then
+		container_user="-u ${container_user}"
+	elif [[ "$container_name" == "cli" ]]; then # only use docker user for cli by default, others wil use root
+		container_user="-u docker"
 	fi
 
 	# Enter project containers
