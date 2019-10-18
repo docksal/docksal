@@ -140,6 +140,12 @@ This is the domain to use which is tacked on to the end of the projects url.
 
 Allow disabling the DNS resolver configuration (in case there are issues with it). Set to `true` to activate.
 
+### DOCKSAL_HEALTHCHECK_TIMEOUT
+
+`Default: 60`
+
+How many seconds to give project containers to reach `healthy` state before `fin` considers the stack startup as failed. (Should be a multiple of 5)
+
 ### MYSQL_ROOT_PASSWORD
 
 `Default: root`
