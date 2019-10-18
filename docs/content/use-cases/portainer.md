@@ -1,5 +1,5 @@
 ---
-title: "Portainer as a Web UI Option"
+title: "Docker Web UI: Portainer"
 weight: 1
 ---
 
@@ -38,9 +38,7 @@ $ docker run --name portainer -d -v /var/run/docker.sock:/var/run/docker.sock -v
 
 The UI can be accessed at [http://poratiner.docksal](http://poratiner.docksal/).
 
-When accessing for the first time, set the username and password, then select Local as the Docker environment, click Connect.
-
-![Portainer environments](/images/portainer-environments.png)
+When accessing for the first time, set the username and password.
 
 Portainer understands docker-composer projects/stacks, so it's able to list Docksal projects and their containers. 
 It is not able to control them in the same way it can control its own stacks.
