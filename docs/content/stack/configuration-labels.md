@@ -23,7 +23,7 @@ services:
 
 Specify which shell to use when `fin exec --in=container ...` or `fin bash container` commands are executed for the container.
 
-You must make sure that the shell you specify is installed in the container or command will fail.
+You must make sure that the shell you specify is installed in the container or the command will fail.
 
 ### io.docksal.user
 
@@ -31,7 +31,7 @@ Specify which user to use when `fin exec --in=container ...` or `fin bash contai
 
 ### io.docksal.virtual-host
 
-Assign custom virtual host for a container. Will only make sense if container exposes web interface, e.g., 
+Assign custom virtual host for a container. This will only make sense if the container exposes a web interface, e.g., 
 
 ```yaml
     labels:
@@ -40,7 +40,7 @@ Assign custom virtual host for a container. Will only make sense if container ex
 
 ### io.docksal.virtual-port
 
-Assign to which port on the destination container to route web requests to, e.g. for node app that exposes port 3000
+Assign to which port on the destination container to route web requests, e.g., for node app that exposes port 3000
 
 ```yaml
     labels:
