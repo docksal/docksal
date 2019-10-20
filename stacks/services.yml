@@ -251,3 +251,30 @@ services:
       memlock:
         soft: -1
         hard: -1
+
+  share:
+    hostname: share
+    image: wernight/ngrok
+    command: "ngrok ${NGROK_ARGS:-http}"
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+    volumes:
+      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    ports:
+      - "${NGROK_PORT_MAPPING:-4400}"
+    environment:
+      - NGROK_AUTH
+      - NGROK_SUBDOMAIN
+      - NGROK_HOSTNAME
+      - NGROK_REMOTE_ADDR
+      - NGROK_USERNAME
+      - NGROK_PASSWORD
+      - NGROK_PROTOCOL
+      - NGROK_PORT
+      - NGROK_REGION
+      - NGROK_LOOK_DOMAIN
+      - NGROK_BINDTLS
+    labels:
+      - io.docksal.virtual-host=share.${VIRTUAL_HOST},share.${VIRTUAL_HOST}.*
+      - io.docksal.virtual-port=4040
