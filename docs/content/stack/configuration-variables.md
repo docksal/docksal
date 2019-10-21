@@ -10,13 +10,13 @@ Configuration variables can be specified in the `docksal.env` file or by running
 
 There are 2 scopes of variables: global and project. Global scope variables are supposed to be set in `~/.docksal/docksal.env` while project scope variables should be set in `$PROJECT_ROOT/.docksal/docksal.env`.
 
-### DOCROOT
+### DOCROOT (project)
 
 `Default: "docroot"`
 
 Defines a relative path to the Document Root of the web server. Final path will be `/var/www/$DOCROOT`, so by default it is `/var/www/docroot`. Change it to the desired directory (like `http`) or sub-directory as needed, or set to `.` to use the project root as web server Document Root.
 
-### DOCKSAL_NFS_PATH
+### DOCKSAL_NFS_PATH (global)
 
 `Default: '/Users'`
 
@@ -56,11 +56,11 @@ This should be used on sandbox servers (and in CI) at the time of Docksal instal
 curl -fsSL https://get.docksal.io | CI=1 bash
 ```
 
-### DOCKSAL_CONFIRM_YES
+### DOCKSAL_CONFIRM_YES (global or project)
 
 `Default: 0`
 
-If set to 1 then all yes/no confirms will automatically be answered yes. Useful for CI environments that fake tty and thus "freeze" waiting for user input.
+If set to `1`, all yes/no confirms will automatically be answered yes. Useful for CI environments that fake tty and thus "freeze" waiting for user input.
 
 ### DOCKSAL_SSH_AGENT_USE_HOST (global)
 
@@ -142,7 +142,7 @@ Used to set the IP address for the Docksal reverse proxy to listen on. When `CI`
 
 `Default: docksal`
 
-This is the domain name used for Docksal projects url, i.e. `http://$PROJECT_NAME.$DOCKSAL_DNS_DOMAIN`. Project named `myproject` will result in `http://myproject.docksal` url by default.
+This is the domain name used for Docksal projects url, i.e., `http://$PROJECT_NAME.$DOCKSAL_DNS_DOMAIN`. Project named `myproject` will result in `http://myproject.docksal` url by default.
 
 ### DOCKSAL_NO_DNS_RESOLVER (global)
 
