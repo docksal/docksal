@@ -255,14 +255,12 @@ services:
   share:
     hostname: share
     image: wernight/ngrok
-    command: "ngrok ${NGROK_ARGS:-http}"
+    command: "${NGROK_ARGS}"
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
     volumes:
       - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
-    ports:
-      - "${NGROK_PORT_MAPPING:-4400}"
     environment:
       - NGROK_AUTH
       - NGROK_SUBDOMAIN

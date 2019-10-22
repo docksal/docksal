@@ -3022,6 +3022,10 @@ up ()
 	if [[ "${IDE_ENABLED}" == "1" ]]; then
 		echo-green "Web IDE URL: ${yellow}${PROJECT_IDE_URL}${NC}"
 	fi
+
+	if [[ "${SHARE_ENABLED}" == "1" ]]; then
+	  echo-green "Share URL: ${yellow}${PROJECT_SHARE_URL}${NC}"
+	fi
 }
 
 # Stop containers
@@ -5643,21 +5647,118 @@ logs ()
 }
 
 # Share web container using ngrok service
+# TODO: Deprecate the command line arguments in favor of environment variables.
 ngrok_share ()
 {
 	check_docksal_environment
 	check_winpty_found
 	eval $(parse_params "$@")
 
-	if [[ "${ON}" != "" ]]; then
-	  config_set "SHARE_ENABLED=1"
-  fi
+	if [[ "$1" == "on" ]]; then
+		config_set "SHARE_ENABLED=1" > /dev/null
+		export SHARE_ENABLED=1
+	elif [[ "$1" == "off" ]]; then
+		config_remove "SHARE_ENABLED" > /dev/null
+		export SHARE_ENABLED=0
+	fi
 
-  if [[ "${OFF}" != "" ]]; then
-    config_remove "SHARE_ENABLED"
-  fi
+	if [[ "${SHARE_ENABLED}" == "1" ]]; then
+		local container_name=${container:-web}
 
-  up
+		# Remove possible VIRTUAL_HOST user extensions like "my.docksal,*.my.docksal"
+		local NGROK_VIRTUAL_HOST=$(echo "$VIRTUAL_HOST" | sed "s/\(,.*\)//")
+
+		echo -e "Exposing domain ${yellow}${host:-$NGROK_VIRTUAL_HOST}${NC} via ngrok..."
+		sleep 1
+
+		NGROK_ARGS="ngrok"
+
+		# Set the protocol.
+		if [[ "$protocol" == "TCP" ]]; then
+			NGROK_ARGS="$NGROK_ARGS tcp"
+		else
+			NGROK_ARGS="$NGROK_ARGS http"
+		fi
+
+		port=${port:-${NGROK_PORT:-80}}
+		NGROK_PORT=${port#tcp://}
+
+		# Set the authorization token.
+		if [[ -n "$auth" ]]; then
+			NGROK_ARGS="$NGROK_ARGS -authtoken=${auth} "
+		fi
+
+		# Set the subdomain or hostname, depending on which is set
+		if [[ -n "$hostname" && -n "$auth" ]]; then
+			NGROK_ARGS="$NGROK_ARGS -hostname=${hostname} "
+		elif [[ -n "$subdomain" && -n "$auth" ]]; then
+			NGROK_ARGS="$NGROK_ARGS -subdomain=${subdomain} "
+		fi
+
+		# Set a custom region
+		if [[ -n "$region" ]]; then
+			NGROK_ARGS="$NGROK_ARGS -region=${region} "
+		fi
+
+		if [[ -n "$hostheader" ]]; then
+			NGROK_ARGS="$NGROK_ARGS -host-header=${hostheader} "
+		fi
+
+		if [[ -n "$username" && -n "$password" ]]; then
+			NGROK_ARGS="$NGROK_ARGS -auth=\"${username}:${password}\" "
+		fi
+
+		if [[ -n "$username" ]] || [[ -n "$password" ]] || [[ -n "$hostname" ]] || [[ -n "$subdomain" ]]; then
+			if [[ -z "$auth" ]]; then
+				echo-yellow "You must specify a username, password, and Ngrok authentication token to use the custom HTTP authentication."
+				echo-yellow "Sign up for an authentication token at https://ngrok.com"
+				exit 1
+			fi
+		fi
+
+		if [[ -n "$debug" ]]; then
+			NGROK_ARGS="$NGROK_ARGS ${LOGGING}"
+		fi
+
+		local ngrok_conf_path="$(get_project_path_dc)/.docksal/etc/ngrok"
+		local ngrok_conf="${ngrok_conf_path}/ngrok.yml"
+		if [[ -f "$ngrok_conf" ]]; then
+				CONF_NGROK_ARGS="-config /var/www/.docksal/etc/ngrok/ngrok.yml"
+		fi
+
+		local local_ngrok_conf="${ngrok_conf_path}/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
+		if [[ -f "$local_ngrok_conf" ]]; then
+				CONF_NGROK_ARGS="$CONF_NGROK_ARGS -config /var/www/.docksal/etc/ngrok/ngrok-${DOCKSAL_ENVIRONMENT}.yml"
+		fi
+
+		if [[ -f "$ngrok_conf" ]] || [[ -f "$local_ngrok_conf" ]]; then
+				NGROK_ARGS="ngrok start ${CONF_NGROK_ARGS} -all"
+		fi
+
+		# Add -host-header by default if no arguments are included.
+		if [[ "${NGROK_ARGS}" == "ngrok http" ]]; then
+				NGROK_ARGS="${NGROK_ARGS} -host-header '${NGROK_VIRTUAL_HOST}' ${container_name}:${NGROK_PORT}"
+		fi
+
+		export NGROK_ARGS
+	fi
+
+	if [[ "$1" == "on" ]] || [[ "$1" == "off" ]]; then
+		up > /dev/null
+	fi
+
+	if [[ "${SHARE_ENABLED}" == "1" ]]; then
+		export PROJECT_SHARE_URL="http://share.${VIRTUAL_HOST}"
+		JQ=$(_exec "which jq || true")
+		while [[ "$JQ" == "" ]]; do
+			# Install JQ to get the tunnel URL
+			_exec "sudo apt-get update update > /dev/null && sudo apt-get -y install jq > /dev/null"
+			JQ=$(_exec "which jq || true")
+		done
+
+		export PROJECT_NGROK_URL=$(_exec "wget -qO- http://share:4040/api/tunnels | jq -r '.tunnels[0].public_url'")
+		echo-green "Public URL: ${yellow}${PROJECT_NGROK_URL}${NC}"
+	fi
 }
 
 # Print information required for issue diagnostics
@@ -6020,10 +6121,16 @@ load_configuration ()
 		if [[ "${IDE_ENABLED}" == "1" ]]; then
 			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}"
 		fi
+		if [[ "${SHARE_ENABLED}" == "1" ]]; then
+		  export PROJECT_SHARE_URL="http://share.${VIRTUAL_HOST}"
+		fi
 	else
 		export PROJECT_URL="http://${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
 		if [[ "${IDE_ENABLED}" == "1" ]]; then
 			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
+		fi
+		if [[ "${SHARE_ENABLED}" == "1" ]]; then
+		  export PROJECT_SHARE_URL="http://share.${VIRTUAL_HOST}"
 		fi
 	fi
 
