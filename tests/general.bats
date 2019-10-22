@@ -381,8 +381,7 @@ services:
 	# sleep so ngrok can load
 	sleep 20
 	# Query API for information
-	container_name="$(fin docker ps -a --filter "label=com.docker.compose.project=drupal8" --filter "label=com.docker.compose.service=web" --format '{{.Names }}')_ngrok"
-	API=$(docker exec -it "$container_name" sh -c "wget -qO- http://localhost:4040/api/tunnels")
+	API=$(docker exec -it "drupal8_ngrok_1" sh -c "wget -qO- http://localhost:4040/api/tunnels")
 	# Return Public URL for site.
 	PUBLIC_HTTP_URL=$(echo "${API}" | jq -r '.tunnels[0].public_url')
 	# Run CURL command against $PUBLIC_HTTP_URL
@@ -396,7 +395,7 @@ services:
 	# Clean up kill ngrok session
 	screen -X -S testNgrok quit
 	# Kill Docker Container
-	docker rm -f "$container_name"
+	docker rm -f "drupal8_ngrok_1"
 	# Destroy Project
 	fin rm -f
 }
