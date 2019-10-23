@@ -376,15 +376,16 @@ services:
 	echo "sendmail_path=/bin/true" >> .docksal/etc/php/php.ini
 	# Initialize the Project
 	fin init
-	# Run fin share in a emulated terminal
-	screen -S testNgrok -d -m fin share
-	# sleep so ngrok can load
-	sleep 20
-	# Query API for information
-	container_name="$(fin docker ps -a --filter "label=com.docker.compose.project=drupal8" --filter "label=com.docker.compose.service=web" --format '{{.Names }}')_ngrok"
-	API=$(docker exec -it "$container_name" sh -c "wget -qO- http://localhost:4040/api/tunnels")
+	# Enable Sharing
+	run fin share on
+
+	# Query Ngrok Tunnel
+	API=$(wget -qO- http://share.drupal8.docksal/api/tunnels)
 	# Return Public URL for site.
 	PUBLIC_HTTP_URL=$(echo "${API}" | jq -r '.tunnels[0].public_url')
+	[[ "${output}" =~ "Public URL: ${PUBLIC_HTTP_URL}" ]] &&
+	[[ "${output}" =~ "Share URL: http://share.drupal8.docksal" ]]
+
 	# Run CURL command against $PUBLIC_HTTP_URL
 	run curl -i ${PUBLIC_HTTP_URL}
 	# Confirm site is reachable
@@ -392,9 +393,13 @@ services:
 	[[ "${output}" =~ "My Drupal 8 Site" ]]
 	unset output
 
+	# Confirm Shut off Removes Container
+	run fin share off
+	[[ ! "${output}" =~ "Public URL:" ]] &&
+	[[ ! "${output}" =~ "Share URL: http://share.drupal8.docksal" ]]
+	unset output
+
 	# Clean Up
-	# Clean up kill ngrok session
-	screen -X -S testNgrok quit
 	# Kill Docker Container
 	docker rm -f "$container_name"
 	# Destroy Project

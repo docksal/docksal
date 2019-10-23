@@ -296,7 +296,7 @@ URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
 STACKS_OVERRIDES_OSXFS="overrides-osxfs.yml"
-STACKS_OVERRIDES_SHARE="overrides-share.yml"
+STACKS_SERVICE_SHARE="service-share.yml"
 STACKS_SERVICES="services.yml"
 STACKS_STACK_ACQUIA="stack-acquia.yml"
 STACKS_STACK_DEFAULT="stack-default.yml"
@@ -4713,7 +4713,7 @@ update_config_files ()
 	files_to_download="
 			$STACKS_OVERRIDES_IDE
 			$STACKS_OVERRIDES_OSXFS
-			$STACKS_OVERRIDES_SHARE
+			$STACKS_SERVICE_SHARE
 			$STACKS_SERVICES
 			$STACKS_STACK_ACQUIA
 			$STACKS_STACK_DEFAULT
@@ -6077,9 +6077,9 @@ load_configuration ()
 		fi
 
 		# Enable Sharing
-		overrides_share_file="$(get_config_dir_dc)/stacks/overrides-share.yml"
-		if [[ -f "${overrides_share_file}" ]] && [[ "$SHARE_ENABLED" != "" ]] && [[ "$SHARE_ENABLED" != "0" ]]; then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_share_file}"
+		service_share_file="$(get_config_dir_dc)/${STACKS_SERVICE_SHARE}"
+		if [[ -f "${service_share_file}" ]] && [[ "$SHARE_ENABLED" != "" ]] && [[ "$SHARE_ENABLED" != "0" ]]; then
+			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${service_share_file}"
 		fi
 
 	fi
