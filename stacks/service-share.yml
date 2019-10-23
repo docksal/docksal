@@ -1,0 +1,10 @@
+# Enables Ngrok Sharing
+
+version: "2.1"
+
+services:
+
+  share:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: share
