@@ -9,6 +9,8 @@ env:
     - DOCKSAL_SSH_AGENT_USE_HOST=0
   matrix:
     - PROVIDER=none
+    - PROVIDER=config
+    - PROVIDER=db
     - PROVIDER=acquia
     - PROVIDER=pantheon
     - PROVIDER=platform
@@ -40,7 +42,10 @@ before_script:
       mkdir ../test-config
       mkdir ../test-duplicates
       mkdir ../test-init
+    elif [[ "${PROVIDER}" == "db" ]]; then
       mkdir ../test-db
+    elif [[ "${PROVIDER}" == "config" ]]; then
+      mkdir ../test-config
     else
       mkdir ../test-pull
     fi
@@ -53,9 +58,7 @@ before_script:
 script:
   # Keeping these as separate commands to see individual timing for each in build logs
   - if [[ "${PROVIDER}" == "none" ]]; then run_tests system.bats; fi
-  - if [[ "${PROVIDER}" == "none" ]]; then run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"; fi
   - if [[ "${PROVIDER}" == "none" ]]; then run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8"; fi
-  - if [[ "${PROVIDER}" == "none" ]]; then run_tests db.bats "$TRAVIS_BUILD_DIR/../test-db"; fi
   - if [[ "${PROVIDER}" == "none" ]]; then run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates"; fi
   - if [[ "${PROVIDER}" == "none" ]]; then run_tests quicktest.bats; fi
   - |
@@ -66,15 +69,25 @@ script:
       if [[ "${PROVIDER}" == "acquia" ]]; then
         fin config set --global "SECRET_ACAPI_EMAIL=${SECRET_ACAPI_EMAIL}"
         fin config set --global "SECRET_ACAPI_KEY=${SECRET_ACAPI_KEY}"
+        # Run provider pull tests
+        run_tests pull/${PROVIDER}.bats "$TRAVIS_BUILD_DIR/../test-pull"
       fi
       if [[ "${PROVIDER}" == "pantheon" ]]; then
         fin config set --global "SECRET_TERMINUS_TOKEN=${SECRET_TERMINUS_TOKEN}"
+        # Run provider pull tests
+        run_tests pull/${PROVIDER}.bats "$TRAVIS_BUILD_DIR/../test-pull"
       fi
       if [[ "${PROVIDER}" == "platform" ]]; then
         fin config set --global "SECRET_PLATFORMSH_CLI_TOKEN=${SECRET_PLATFORMSH_CLI_TOKEN}"
+        # Run provider pull tests
+        run_tests pull/${PROVIDER}.bats "$TRAVIS_BUILD_DIR/../test-pull"
       fi
-      # Run provider pull tests
-      run_tests pull/${PROVIDER}.bats "$TRAVIS_BUILD_DIR/../test-pull"
+      if [[ "${PROVIDER}" == "db" ]]; then
+        run_tests db.bats "$TRAVIS_BUILD_DIR/../test-db"
+      fi
+      if [[ "${PROVIDER}" == "config" ]]; then
+        run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"
+      fi
     fi
 
 after_success:
