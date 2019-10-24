@@ -197,8 +197,7 @@ DOCKSAL_IP=192.168.64.100
 @test "DNS: .docksal name resolution inside cli" {
 	[[ $SKIP == 1 ]] && skip
 
-	cd ../drupal8 && fin up
-	run fin exec nslookup anything.docksal
+	run fin rc nslookup anything.docksal
 	[[ "$status" == 0 ]]
 	unset output
 }
@@ -206,8 +205,7 @@ DOCKSAL_IP=192.168.64.100
 @test "DNS: external name resolution inside cli" {
 	[[ $SKIP == 1 ]] && skip
 
-	cd ../drupal8 && fin up
-	run fin exec nslookup google.com
+	run fin rc nslookup google.com
 	[[ "$status" == 0 ]]
 	unset output
 }
