@@ -24,7 +24,7 @@ teardown() {
 
 @test "fin start" {
 	[[ $SKIP == 1 ]] && skip
-	
+
 	run fin start
 	echo "$output" | egrep "Creating network \".*_default\" with the default driver"
 	echo "$output" | egrep "Creating volume \".*_project_root\" with local driver"
@@ -94,7 +94,7 @@ EOF
 
 @test "fin stop" {
 	[[ $SKIP == 1 ]] && skip
-	
+
 	run fin stop
 	echo "$output" | egrep "Stopping .*_web_1"
 	echo "$output" | egrep "Stopping .*_db_1"
@@ -103,24 +103,24 @@ EOF
 
 	# Check that containers are stopped
 	run fin ps
-	# Sometimes containers would not exit with code 0 (graceful stop), but 137 instead (when docker has to kill the process). 
+	# Sometimes containers would not exit with code 0 (graceful stop), but 137 instead (when docker has to kill the process).
 	echo "$output" | egrep ".*_web_1.* .* (Exit 0|Exit 137)"
 	echo "$output" | egrep ".*_db_1.* .* (Exit 0|Exit 137)"
 	echo "$output" | egrep ".*_cli_1.* .* (Exit 0|Exit 137)"
 	unset output
-	
+
 	# Start containers back
 	fin start
 }
 
 @test "fin restart" {
 	[[ $SKIP == 1 ]] && skip
-	
+
 	run fin restart
 	echo "$output" | egrep "Stopping .*_web_1.*"
 	echo "$output" | egrep "Stopping .*_db_1.*"
 	echo "$output" | egrep "Stopping .*_cli_1.*"
-	
+
 	echo "$output" | egrep "Starting .*_web_1.*"
 	echo "$output" | egrep "Starting .*_db_1.*"
 	echo "$output" | egrep "Starting .*_cli_1.*"
@@ -136,7 +136,7 @@ EOF
 
 @test "fin reset -f" {
 	[[ $SKIP == 1 ]] && skip
-	
+
 	run fin reset -f
 	echo "$output" | egrep "Stopping .*_web_1"
 	echo "$output" | egrep "Stopping .*_db_1"
@@ -165,11 +165,11 @@ EOF
 
 @test "fin exec" {
 	[[ $SKIP == 1 ]] && skip
-	
+
 	run fin exec uname -a
 	[[ "$output" =~ "Linux cli" ]]
 	unset output
-	
+
 	# Test output in TTY vs no-TTY mode.
 	[[ "$(fin exec echo)" != "$(fin exec -T echo)" ]]
 
@@ -265,7 +265,7 @@ EOF
 
 @test "fin rm -f" {
 	[[ $SKIP == 1 ]] && skip
-	
+
 	# First run
 	run fin rm -f
 	echo "$output" | egrep "Stopping .*_web_1"
@@ -285,87 +285,6 @@ EOF
 	# Using "fin docker-compose ps" here to skip additional processing and output added by "fin ps"
 	run fin docker-compose ps
 	[[ "$(echo "$output" | tail -n +3)" == "" ]]
-	unset output
-}
-
-@test "fin config" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Check default Drupal 8 config (check if environment variables are used in docksal.yml)
-	run fin config
-	echo "$output" | egrep "VIRTUAL_HOST: drupal8.docksal"
-	echo "$output" | egrep "MYSQL_DATABASE: default"
-	unset output
-}
-
-@test "fin config local env file" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Preparation step - create local env file
-	echo "VIRTUAL_HOST=testenv.docksal" > .docksal/docksal-local.env
-
-	# Check config (check if local environment variables are used in docksal.yml)
-	run fin config
-	echo "$output" | egrep "VIRTUAL_HOST: testenv.docksal"
-	unset output
-}
-
-@test "fin config local yml file" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Preparation step - create local yml file (replace DB)
-	yml="
-version: '2.1'
-
-services:
-  db:
-    environment:
-      - MYSQL_ROOT_PASSWORD=testpass
-  "
-
-	echo "$yml" > .docksal/docksal-local.yml
-
-	# Check config (check if local yml replaces db password in docksal.yml, and other parts are the same)
-	run fin config
-	echo "$output" | egrep "MYSQL_ROOT_PASSWORD: testpass"
-	echo "$output" | egrep "VIRTUAL_HOST: testenv.docksal"
-	echo "$output" | egrep "MYSQL_DATABASE: default"
-	unset output
-}
-
-@test "fin config local yml and local env files" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Preparation step - create local yml and local env files
-	yml="
-version: '2.1'
-
-services:
-  web:
-    environment:
-      - VIRTUAL_HOST=$"
-  yml="$yml{DOCKSAL_HOST}"
-
-	echo "$yml" > .docksal/docksal-local.yml
-	echo "DOCKSAL_HOST=newvariable.docksal" > .docksal/docksal-local.env
-
-	# Check config (check if local yml replaces web virtual host and uses new local variable, old variables must work as previously)
-	run fin config
-	echo "$output" | egrep "VIRTUAL_HOST: newvariable.docksal"
-	echo "$output" | egrep "io.docksal.virtual-host: drupal8.docksal"
-	unset output
-}
-
-@test "fin virtual host with non standard hostname characters" {
-	[[ $SKIP == 1 ]] && skip
-
-	# Preparation step - create local env file
-	echo "VIRTUAL_HOST=feaTures.Alpha-beta_zulu.docksal" > .docksal/docksal-local.env
-
-	# Check config (check if local environment variables are used in docksal.yml)
-	TERM=dumb run fin config
-	[[ $(echo "$output" | grep -c "VIRTUAL_HOST: feaTures.Alpha-beta_zulu.docksal") -eq 0 ]]
-	[[ "${output}" =~ "The VIRTUAL_HOST has been modified from feaTures.Alpha-beta_zulu.docksal to features.alpha-beta-zulu.docksal to comply with browser standards." ]]
 	unset output
 }
 
