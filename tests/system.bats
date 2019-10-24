@@ -58,18 +58,6 @@ DOCKSAL_IP=192.168.64.100
 	unset output
 }
 
-@test "DSN: .docksal name resolution via nslookup" {
-	# TODO: fix this test on Travis
-	skip
-	[[ $SKIP == 1 ]] && skip
-
-	# .docksal domain resolution via nslookup
-	run nslookup anything.docksal
-	#[[ "$(echo \"$output\" | awk '/^Address/ { print $2 }' | tail -1)" == "$DOCKSAL_IP" ]]
-	[[ "$(echo \"$output\" | grep "Address" | tail -1 | tr -d ' ' | awk -F ':' '{print $2}')" == "$DOCKSAL_IP" ]]
-	unset output
-}
-
 @test "VHOST-PROXY: fin system reset vhost-proxy" {
 	[[ $SKIP == 1 ]] && skip
 
