@@ -30,61 +30,16 @@ install:
   - fin sysinfo
 
 before_script:
-  # Function runs tests by file name $1 in dir specified in $2
-  - run_tests() { cd "${2:-$TRAVIS_BUILD_DIR}"; [[ "$TRAVIS_COMMIT_MESSAGE" =~ "[quick-test]" && "$1" != "quicktest.bats" ]] && return; [[ "$1" == "quicktest.bats" ]] && I="-i"; bats ${I} "$TRAVIS_BUILD_DIR/tests/$1"; }
-  # Trigger builds in boilerplate project repos
-  - build_trigger() { [[ "$TRAVIS_BRANCH" == "master" ]] && cd "$TRAVIS_BUILD_DIR" && tests/scripts/travisci-build-trigger "$1"; }
+  - source tests/scripts/travis.sh
 
 script:
-  # Keeping these as separate commands to see individual timing for each in build logs
-  - |
-    if [[ "${PROVIDER}" == "none" ]]; then
-      #################### Running General Tests ####################
-      git clone https://github.com/docksal/drupal8.git ../drupal8
-      mkdir -p ../test-duplicates ../test-init
-      run_tests general.bats "$TRAVIS_BUILD_DIR/../drupal8"
-      run_tests duplicates.bats "$TRAVIS_BUILD_DIR/../test-duplicates"
-      run_tests quicktest.bats
-    fi
-  - |
-    if [[ "${PROVIDER}" == "system" ]]; then
-      #################### Running System Tests ####################
-      run_tests system.bats
-    fi
-  - |
-    if [[ "${PROVIDER}" == "config" ]]; then
-      #################### Running Config Tests ####################
-      mkdir ../test-config
-      run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"
-    fi
-  - |
-    if [[ "${PROVIDER}" == "db" ]]; then
-      #################### Running Database Tests ####################
-      mkdir ../test-db
-      run_tests db.bats "$TRAVIS_BUILD_DIR/../test-db"
-    fi
-  - |
-    if [[ "${PROVIDER}" == "acquia" ]]; then
-      mkdir -p ../test-pull
-      fin ssh-key add project_key
-      fin config set --global "SECRET_ACAPI_EMAIL=${SECRET_ACAPI_EMAIL}"
-      fin config set --global "SECRET_ACAPI_KEY=${SECRET_ACAPI_KEY}"
-      run_tests pull/${PROVIDER}.bats "$TRAVIS_BUILD_DIR/../test-pull"
-    fi
-  - |
-    if [[ "${PROVIDER}" == "pantheon" ]]; then
-      mkdir -p ../test-pull
-      fin ssh-key add project_key
-      fin config set --global "SECRET_TERMINUS_TOKEN=${SECRET_TERMINUS_TOKEN}"
-      run_tests pull/${PROVIDER}.bats "$TRAVIS_BUILD_DIR/../test-pull"
-    fi
-  - |
-    if [[ "${PROVIDER}" == "platform" ]]; then
-      mkdir -p ../test-pull
-      fin ssh-key add project_key
-      fin config set --global "SECRET_PLATFORMSH_CLI_TOKEN=${SECRET_PLATFORMSH_CLI_TOKEN}"
-      run_tests pull/${PROVIDER}.bats "$TRAVIS_BUILD_DIR/../test-pull"
-    fi
+  - if [[ "${PROVIDER}" == "none"   ]]; then tests/scripts/general.sh; fi
+  - if [[ "${PROVIDER}" == "system" ]]; then run_tests system.bats fi
+  - if [[ "${PROVIDER}" == "config" ]]; then run_tests config.bats "$TRAVIS_BUILD_DIR/../test-config"; fi
+  - if [[ "${PROVIDER}" == "db"     ]]; then run_tests db.bats "$TRAVIS_BUILD_DIR/../test-db"; fi
+  - if [[ "${PROVIDER}" == "acquia" ]]; then tests/scripts/acquia.sh; fi
+  - if [[ "${PROVIDER}" == "pantheon" ]]; then tests/scripts/pantheon.sh; fi
+  - if [[ "${PROVIDER}" == "platform" ]]; then tests/scripts/platform.sh; fi
 
 after_success:
   # Trigger boilerplate repo builds to verify nothing breaks there
