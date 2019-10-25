@@ -210,6 +210,6 @@ DOCKSAL_IP=192.168.64.100
 	[[ $SKIP == 1 ]] && skip
 
 	run fin rc drupal --version
-	echo "$output" | egrep "Drupal Console Launcher version 1\..+"
+	echo "$output" | egrep "Drupal Console Launcher version"
 	unset output
 }
