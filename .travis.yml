@@ -41,4 +41,4 @@ script:
 
 after_success:
   # Trigger boilerplate repo builds to verify nothing breaks there
-  - if [[ "${PROVIDER}" == "none" ]]; then tests/scripts/boilerplates.sh; fi
+  - if [[ "${PROVIDER}" == "project" ]]; then tests/scripts/boilerplates.sh; fi
