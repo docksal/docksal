@@ -197,3 +197,19 @@ DOCKSAL_IP=192.168.64.100
 	[[ "$status" == 0 ]]
 	unset output
 }
+
+@test "fin drush" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin rc drush --version
+	echo "$output" | egrep "Drush Version   :  8\..+"
+	unset output
+}
+
+@test "fin drupal" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin rc drupal --version
+	echo "$output" | egrep "Drupal Console Launcher version 1\..+"
+	unset output
+}
