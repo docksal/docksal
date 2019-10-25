@@ -16,6 +16,8 @@ env:
     #- PROVIDER=acquia
     #- PROVIDER=pantheon
     #- PROVIDER=platform
+    #- PROVIDER=drush
+    #- PROVIDER=wp
 
 install:
   - echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
@@ -42,6 +44,8 @@ script:
   - if [[ "${PROVIDER}" == "acquia" ]]; then tests/scripts/acquia.sh; fi
   - if [[ "${PROVIDER}" == "pantheon" ]]; then tests/scripts/pantheon.sh; fi
   - if [[ "${PROVIDER}" == "platform" ]]; then tests/scripts/platform.sh; fi
+  - if [[ "${PROVIDER}" == "drush" ]]; then tests/scripts/drush.sh; fi
+  - if [[ "${PROVIDER}" == "wp" ]]; then tests/scripts/wp.sh; fi
 
 after_success:
   # Trigger boilerplate repo builds to verify nothing breaks there
