@@ -34,9 +34,9 @@ before_script:
 
 script:
   - if [[ "${PROVIDER}" == "none" ]]; then tests/scripts/general.sh; fi
-  - if [[ "${PROVIDER}" == "system" ]]; then tests/scripts/system.sh fi
-  - if [[ "${PROVIDER}" == "config" ]]; then tests/scripts/config.sh fi
-  - if [[ "${PROVIDER}" == "db" ]]; then tests/scripts/db.sh fi
+  - if [[ "${PROVIDER}" == "system" ]]; then tests/scripts/system.sh; fi
+  - if [[ "${PROVIDER}" == "config" ]]; then tests/scripts/config.sh; fi
+  - if [[ "${PROVIDER}" == "db" ]]; then tests/scripts/db.sh; fi
   - if [[ "${PROVIDER}" == "acquia" ]]; then tests/scripts/acquia.sh; fi
   - if [[ "${PROVIDER}" == "pantheon" ]]; then tests/scripts/pantheon.sh; fi
   - if [[ "${PROVIDER}" == "platform" ]]; then tests/scripts/platform.sh; fi
