@@ -8,10 +8,14 @@ env:
     # TODO: Add test coverage for both ssh-agent modes (built-in and host ssh-agent)
     - DOCKSAL_SSH_AGENT_USE_HOST=0
   matrix:
+    #- PROVIDER=quicktest # Uncomment to run
     - PROVIDER=none
     - PROVIDER=config
     - PROVIDER=db
     - PROVIDER=system
+    #- PROVIDER=acquia
+    #- PROVIDER=pantheon
+    #- PROVIDER=platform
 
 install:
   - echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
@@ -30,9 +34,11 @@ install:
   - fin sysinfo
 
 before_script:
-  - source tests/scripts/travis.sh
+  # Trigger builds in boilerplate project repos
+  - build_trigger() { [[ "$TRAVIS_BRANCH" == "master" ]] && cd "$TRAVIS_BUILD_DIR" && tests/scripts/travisci-build-trigger "$1"; }
 
 script:
+  - if [[ "${PROVIDER}" == "quicktest" ]]; then tests/scripts/quicktest.sh; fi
   - if [[ "${PROVIDER}" == "none" ]]; then tests/scripts/general.sh; fi
   - if [[ "${PROVIDER}" == "system" ]]; then tests/scripts/system.sh; fi
   - if [[ "${PROVIDER}" == "config" ]]; then tests/scripts/config.sh; fi
@@ -43,12 +49,4 @@ script:
 
 after_success:
   # Trigger boilerplate repo builds to verify nothing breaks there
-  - |
-    if [[ "${PROVIDER}" == "none" ]]; then
-      build_trigger docksal/boilerplate-drupal7
-      build_trigger docksal/boilerplate-drupal7-advanced
-      build_trigger docksal/boilerplate-drupal8
-      build_trigger docksal/boilerplate-wordpress
-      build_trigger docksal/boilerplate-magento
-      build_trigger docksal/boilerplate-magento-demo
-    fi
+  - if [[ "${PROVIDER}" == "none" ]]; then tests/scripts/boilerplates.sh; fi

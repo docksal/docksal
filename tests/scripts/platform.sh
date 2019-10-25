@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-source travis.sh
 fin ssh-key add project_key
 fin config set --global "SECRET_PLATFORMSH_CLI_TOKEN=${SECRET_PLATFORMSH_CLI_TOKEN}"
-run_tests pull/${PROVIDER}.bats "$TRAVIS_BUILD_DIR/../test-pull"
+
+mkdir "$TRAVIS_BUILD_DIR/../test-pull"
+cd "$TRAVIS_BUILD_DIR/../test-pull"
+bats -i "$TRAVIS_BUILD_DIR/tests/pull/platform.bats"
