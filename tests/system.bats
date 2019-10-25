@@ -71,7 +71,7 @@ DOCKSAL_IP=192.168.64.100
 	unset output
 }
 
-}@test "VHOST-PROXY: fin system reset vhost-proxy" {
+@test "VHOST-PROXY: fin system reset vhost-proxy" {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin system reset vhost-proxy
