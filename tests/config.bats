@@ -18,8 +18,7 @@ teardown() {
 @test "uber cleanup" {
 	[[ $SKIP == 1 ]] && skip
 
-	rm -rf .docksal
-	return 0
+	rm -rf .docksal || true
 }
 
 @test "fin config: empty project" {
@@ -71,8 +70,8 @@ version: '2.1'
 
 services:
   web:
-	environment:
-	  - TEST_VAR=test_val"
+    environment:
+      - TEST_VAR=test_val"
 
 	echo "$yml" > .docksal/docksal.yml
 
@@ -90,19 +89,19 @@ services:
 @test "fin config: docksal.yml" {
 	[[ $SKIP == 1 ]] && skip
 
-	# cleanup here
-	rm -rf .docksal
+	# Start fresh
+	rm -rf .docksal || true
 	mkdir .docksal
 
 	# Add a stack override via docksal.yml
-	yml="
-version: '2.1'
+	yml='
+version: "2.1"
 
 services:
-  web:
-	image: nginx
-	environment:
-	  - TEST_VAR="'${TEST_VAR:-test_val_default}'
+  cli:
+    image: docksal/cli
+    environment:
+      - TEST_VAR=${TEST_VAR:-test_val_default}'
 
 	echo "$yml" > .docksal/docksal.yml
 
@@ -136,15 +135,15 @@ services:
 @test "fin config: docksal-local.yml" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Add a stack override via docksal.yml
-	yml="
-version: '2.1'
+	# Add a stack override via docksal-local.yml
+	yml='
+version: "2.1"
 
 services:
-  web:
-	image: nginx
-	environment:
-	  - TEST_VAR_LOCAL="'${TEST_VAR_LOCAL:-test_val_default}'
+  cli:
+    image: docksal/cli
+    environment:
+      - TEST_VAR_LOCAL=${TEST_VAR_LOCAL:-test_val_default}'
 
 	echo "$yml" > .docksal/docksal-local.yml
 
@@ -180,11 +179,11 @@ services:
 @test "fin config generate: empty project" {
 	[[ $SKIP == 1 ]] && skip
 
-	# cleanup here
-	rm -rf .docksal
-	fin config generate
+	# Start fresh
+	rm -rf .docksal || true
+	echo "fin config generate" | bash
 
-	run fin config env
+	run fin config
 	[[ $status == 0 ]]
 	[[ $output =~ "volumes-bind.yml" ]]
 	[[ $output =~ "stack-default.yml" ]]
@@ -199,7 +198,7 @@ services:
 
 	echo "fin config generate" | bash
 
-	run fin config env
+	run fin config
 	[[ $status == 0 ]]
 	[[ $output =~ "volumes-bind.yml" ]]
 	[[ $output =~ "stack-default.yml" ]]
