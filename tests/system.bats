@@ -184,7 +184,8 @@ DOCKSAL_IP=192.168.64.100
 	unset output
 
 	# Checking "fin ssh-key new"
-	run fin ssh-key new myserver_id_rsa
+	# Run non-interactively to skip configuration prompts
+	run bash -c 'echo "fin ssh-key new myserver_id_rsa" | bash'
 	# Check new key files exist and are valid SSH keys
 	ssh-keygen -lf ~/.ssh/myserver_id_rsa
 	ssh-keygen -lf ~/.ssh/myserver_id_rsa.pub
