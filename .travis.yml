@@ -8,17 +8,17 @@ env:
     # TODO: Add test coverage for both ssh-agent modes (built-in and host ssh-agent)
     - DOCKSAL_SSH_AGENT_USE_HOST=0
   matrix:
-    #- PROVIDER=quicktest # Uncomment to run
-    - PROVIDER=project
-    - PROVIDER=config
-    - PROVIDER=db
-    - PROVIDER=system
-    - PROVIDER=commands
-    #- PROVIDER=acquia
-    #- PROVIDER=pantheon
-    #- PROVIDER=platform
-    #- PROVIDER=drush
-    #- PROVIDER=wp
+    #- SUITE=quicktest # Uncomment to run
+    - SUITE=project
+    - SUITE=config
+    - SUITE=db
+    - SUITE=system
+    - SUITE=commands
+    #- SUITE=acquia
+    #- SUITE=pantheon
+    #- SUITE=platform
+    #- SUITE=drush
+    #- SUITE=wp
 
 install:
   - echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
@@ -37,8 +37,8 @@ install:
   - fin sysinfo
 
 script:
-  - tests/scripts/${PROVIDER}.sh
+  - tests/scripts/${SUITE}.sh
 
 after_success:
   # Trigger boilerplate repo builds to verify nothing breaks there
-  - if [[ "${PROVIDER}" == "project" ]]; then tests/scripts/boilerplates.sh; fi
+  - if [[ "${SUITE}" == "project" ]]; then tests/scripts/boilerplates.sh; fi
