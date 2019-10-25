@@ -5,4 +5,4 @@ fin config set --global "SECRET_TERMINUS_TOKEN=${SECRET_TERMINUS_TOKEN}"
 
 mkdir "$TRAVIS_BUILD_DIR/../test-pull"
 cd "$TRAVIS_BUILD_DIR/../test-pull"
-bats -i "$TRAVIS_BUILD_DIR/tests/pull/pantheon.bats"
+bats "$TRAVIS_BUILD_DIR/tests/pull/pantheon.bats"

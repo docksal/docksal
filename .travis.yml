@@ -33,10 +33,6 @@ install:
   - fin update
   - fin sysinfo
 
-before_script:
-  # Trigger builds in boilerplate project repos
-  - build_trigger() { [[ "$TRAVIS_BRANCH" == "master" ]] && cd "$TRAVIS_BUILD_DIR" && tests/scripts/travisci-build-trigger "$1"; }
-
 script:
   - if [[ "${PROVIDER}" == "quicktest" ]]; then tests/scripts/quicktest.sh; fi
   - if [[ "${PROVIDER}" == "none" ]]; then tests/scripts/general.sh; fi
