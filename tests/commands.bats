@@ -122,7 +122,7 @@ EOF
 	# Run CURL command against $PUBLIC_HTTP_URL
 	run curl -i ${PUBLIC_HTTP_URL}
 	# Confirm site is reachable
-	[[ "${output}" =~ "HTTP/1.1 200 OK" ]] &&
+	[[ "${output}" =~ "HTTP/1.1 200 OK" ]]
 	[[ "${output}" =~ "My Drupal 8 Site" ]]
 	unset output
 
