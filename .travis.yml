@@ -9,7 +9,7 @@ env:
     - DOCKSAL_SSH_AGENT_USE_HOST=0
   matrix:
     #- PROVIDER=quicktest # Uncomment to run
-    - PROVIDER=none
+    - PROVIDER=project
     - PROVIDER=config
     - PROVIDER=db
     - PROVIDER=system
@@ -37,17 +37,7 @@ install:
   - fin sysinfo
 
 script:
-  - if [[ "${PROVIDER}" == "quicktest" ]]; then tests/scripts/quicktest.sh; fi
-  - if [[ "${PROVIDER}" == "none" ]]; then tests/scripts/project.sh; fi
-  - if [[ "${PROVIDER}" == "commands" ]]; then tests/scripts/commands.sh; fi
-  - if [[ "${PROVIDER}" == "system" ]]; then tests/scripts/system.sh; fi
-  - if [[ "${PROVIDER}" == "config" ]]; then tests/scripts/config.sh; fi
-  - if [[ "${PROVIDER}" == "db" ]]; then tests/scripts/db.sh; fi
-  - if [[ "${PROVIDER}" == "acquia" ]]; then tests/scripts/acquia.sh; fi
-  - if [[ "${PROVIDER}" == "pantheon" ]]; then tests/scripts/pantheon.sh; fi
-  - if [[ "${PROVIDER}" == "platform" ]]; then tests/scripts/platform.sh; fi
-  - if [[ "${PROVIDER}" == "drush" ]]; then tests/scripts/drush.sh; fi
-  - if [[ "${PROVIDER}" == "wp" ]]; then tests/scripts/wp.sh; fi
+  - tests/scripts/${PROVIDER}.sh
 
 after_success:
   # Trigger boilerplate repo builds to verify nothing breaks there
