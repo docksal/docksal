@@ -13,6 +13,7 @@ env:
     - PROVIDER=config
     - PROVIDER=db
     - PROVIDER=system
+    - PROVIDER=commands
     #- PROVIDER=acquia
     #- PROVIDER=pantheon
     #- PROVIDER=platform
@@ -37,7 +38,8 @@ install:
 
 script:
   - if [[ "${PROVIDER}" == "quicktest" ]]; then tests/scripts/quicktest.sh; fi
-  - if [[ "${PROVIDER}" == "none" ]]; then tests/scripts/general.sh; fi
+  - if [[ "${PROVIDER}" == "none" ]]; then tests/scripts/project.sh; fi
+  - if [[ "${PROVIDER}" == "commands" ]]; then tests/scripts/commands.sh; fi
   - if [[ "${PROVIDER}" == "system" ]]; then tests/scripts/system.sh; fi
   - if [[ "${PROVIDER}" == "config" ]]; then tests/scripts/config.sh; fi
   - if [[ "${PROVIDER}" == "db" ]]; then tests/scripts/db.sh; fi
