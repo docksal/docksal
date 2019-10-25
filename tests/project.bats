@@ -18,8 +18,10 @@ teardown() {
 @test "uber cleanup" {
 	[[ $SKIP == 1 ]] && skip
 
-	fin rm -f
-	return 0
+	# Setup
+	fin project rm -f
+	rm -rf .docksal docroot
+	echo "fin config generate" | bash
 }
 
 @test "fin project start" {
@@ -85,6 +87,44 @@ teardown() {
 	unset output
 }
 
+# TODO: this should be "fin project exec"
+@test "fin exec" {
+	[[ $SKIP == 1 ]] && skip
+
+	run fin exec uname -a
+	[[ "$output" =~ "Linux cli" ]]
+	unset output
+
+	# Test output in TTY vs no-TTY mode.
+	[[ "$(fin exec echo)" != "$(fin exec -T echo)" ]]
+
+	# Test the no-TTY output is a "clean" string (does not have extra control characters and can be compared)
+	run fin exec -T pwd
+	[[ "$output" == "/var/www" ]]
+	unset output
+
+	# Test that switching directories on host carries over into cli
+	cd docroot
+	run fin exec -T pwd
+	[[ "$output" == "/var/www/docroot" ]]
+	unset output
+
+	# fin exec uses the docker user
+	run fin exec -T id -un
+	[[ "$output" == "docker" ]]
+	unset output
+
+	# docker user uid/gid in cli matches the host user uid/gid
+	run fin exec -T 'echo $(id -u):$(id -g)'
+	[[ "$output" == "$(id -u):$(id -g)" ]]
+	unset output
+
+	# setting target container with --in
+	run fin exec -T --in=web cat /etc/hostname
+	[[ "$output" == "web" ]]
+	unset output
+}
+
 @test "fin project reset -f" {
 	[[ $SKIP == 1 ]] && skip
 
@@ -136,5 +176,24 @@ teardown() {
 	# Using "fin docker-compose ps" here to skip additional processing and output added by "fin ps"
 	run fin docker-compose ps
 	[[ "$(echo "$output" | tail -n +3)" == "" ]]
+	unset output
+}
+
+@test "fin init (built-in)" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Setup
+	rm -rf .docksal docroot
+
+	# Test
+	# Run non-interactively to skip prompts
+	run bash -c "echo 'fin init' | bash"
+	echo "$output" | grep "Configuration was generated."
+	echo "$output" | grep "http://test-project.docksal"
+	unset output
+
+	# Check if site is available and its name is correct
+	run curl -sLI http://test-project.docksal
+	echo "$output" | grep "X-Powered-By: PHP"
 	unset output
 }
