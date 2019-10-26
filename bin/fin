@@ -815,7 +815,7 @@ is_docksal_running ()
 # All other direct checks don't work well in and every environment and scripts.
 is_tty ()
 {
-	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
+	/usr/bin/env tty -s
 
 	# TODO: rewrite this check using [ -t ] test
 	# http://stackoverflow.com/questions/911168/how-to-detect-if-my-shell-script-is-running-through-a-pipe/911213#911213
