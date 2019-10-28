@@ -21,9 +21,8 @@ fin system reset vhost-proxy
 You can then access http://localhost (or https://127.0.0.1) and see the "Project missing" page from Docksal's
 vhost-proxy container.
 
-![project missing](/images/vpn-missing.png)
-
-Now, how do you get http://myproject.docksal working in this setup? <anything>.docksal resolves to 192.168.64.100 by default, and that won't work while connected to a greedy VPN.
+Now, how do you get http://myproject.docksal working in this setup? <anything>.docksal resolves to 192.168.64.100 by 
+default, which won't work while connected to a greedy VPN.
 
 For now, you will have to manually add an DNS override in your hosts file, e.g.:
 ```
