@@ -60,7 +60,7 @@ is_fedora ()
 		[[ "$OS_ID" == "centos" ]]
 }
 
-# TODO: drop this function in August 2020 to complete Babun deprecation
+# TODO: drop this function in May 2020 to complete Babun deprecation
 is_windows ()
 {
 	[[ "$OS_TYPE" == "Cygwin" ]]
@@ -4643,7 +4643,7 @@ update_boot2docker ()
 
 				# Path to boot2docker.iso for the machine
 				local DEFAULT_MACHINE_ISO_PATH=".docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
-				# On Windows machines are stores in the Windows user profile
+				# On Windows machines are stored in the Windows user profile
 				if is_windows || is_wsl; then
 					DEFAULT_MACHINE_ISO_PATH="${WIN_HOME}/${DEFAULT_MACHINE_ISO_PATH}"
 				else
