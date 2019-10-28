@@ -29,8 +29,7 @@ If you ignored these errors and tried to start a project, then it will most like
 
 ```
 ERROR: for cli  Cannot create container for service cli: error while mounting vo
-lume with options: type='none' device='/c/Users/alex/.babun/cygwin/home/
-alex/projects/myproject' o='bind': no such file or directory
+lume with options: type='none' device='/c/Users/alex/projects/myproject' o='bind': no such file or directory
 ERROR: Encountered errors while bringing up the project.
 ```
 
