@@ -6,7 +6,7 @@ aliases:
 ---
 
 Docksal Fin (`fin`) is a command line tool for controlling Docksal.  
-`fin` runs natively on Mac and Linux. Windows users have to use [Babun](http://babun.github.io) shell to run `fin`.
+`fin` runs natively on Mac and Linux. Windows users have to use [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/faq) shell to run `fin`.
 
 
 ## Using fin
