@@ -67,7 +67,7 @@ Manually download Docker for Mac/Windows apps into the portable distribution fol
 ## Installing from a portable source {#install}
 
 {{% notice note %}}
-WSL has to be installed manually before proceeding.
+On Windows, [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/faq) has to be installed manually before proceeding.
 All further commands are expected to be run in WSL shell on Windows.
 {{% /notice %}}
 
