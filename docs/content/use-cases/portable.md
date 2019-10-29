@@ -24,7 +24,6 @@ bash <(curl -fsSL https://get.docksal.io/portable)
 
 Here is what the script will download:
 
-- WSL and winpty (necessary for Windows only)
 - VirtualBox and boot2docker.iso (necessary for macOS and Windows)
 - Docker tools: docker cli, docker-compose, docker-machine (macOS and Windows versions)
 - Docksal system and default stack images (these are cross-platform)
