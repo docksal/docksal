@@ -1325,6 +1325,8 @@ cleanup ()
 		if [[ ! -d "$project_root" ]]; then
 			echo "Directory for project \"$project_name\" does not exist. Removing project containers and volumes..."
 			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+			# Remove project volumes. "docker volume prune" (used below) does not remove the project_root volume.
+			# See https://github.com/moby/moby/issues/40152
 			docker volume ls -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker volume rm -f
 		fi
 	done
