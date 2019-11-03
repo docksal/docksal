@@ -488,7 +488,7 @@ get_project_path ()
 		DOCKSAL_PATH=$(upfind ".docksal")
 	fi
 	# If we reached $HOME, then we did not find the project root.
-	if [[ "$DOCKSAL_PATH" != "$HOME" ]]; then
+	if [[ "$DOCKSAL_PATH" != "$HOME" ]] && [[ "$DOCKSAL_PATH" != "/System/Volumes/Data$HOME" ]]; then
 		echo "$DOCKSAL_PATH"
 	fi
 }
@@ -3353,7 +3353,7 @@ project_erase ()
 
 	# Remove files after some safety checks
 	if [[ "$PROJECT_ROOT" != "" ]] && [[ "$PROJECT_ROOT" != "." ]] && [[ "$PROJECT_ROOT" != "/c" ]] &&
-		[[ "$PROJECT_ROOT" != "/" ]] && [[ "$PROJECT_ROOT" != "$HOME" ]]; then
+		[[ "$PROJECT_ROOT" != "/" ]] && [[ "$PROJECT_ROOT" != "$HOME" ]] && [[ "$PROJECT_ROOT" != "/System/Volumes/Data$HOME" ]]; then
 		echo "Removing $PROJECT_ROOT..."
 		rm -rf "$PROJECT_ROOT/"
 		if [[ "$?" != "0" ]] && [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
