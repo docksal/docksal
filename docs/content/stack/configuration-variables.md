@@ -5,7 +5,7 @@ aliases:
   - /en/master/advanced/stack-config/
 ---
 
-Configuration variables can be specified in the `docksal.env` file or by running the `fin config set` command, e.g.
+Configuration variables can be specified in the `docksal.env` file or by running the `fin config set` command, e.g.:
 
 ```
 fin config set DOCROOT=web
