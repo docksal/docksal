@@ -5,14 +5,21 @@ aliases:
   - /en/master/advanced/stack-config/
 ---
 
-Configuration variables can be specified in the `docksal.env` file or by running the `fin config set` command, e.g.:
-
-```
-fin config set DOCROOT=web
-```
+Configuration variables can be specified in the `docksal.env` file or by running the `fin config set` command.
 
 There are 2 scopes of variables: global and project. Global scope variables are set in `$HOME/.docksal/docksal.env`, 
-while project scope variables are set in `$PROJECT_ROOT/.docksal/docksal.env`.
+while project scope variables are set in `$PROJECT_ROOT/.docksal/docksal.env`. 
+
+```
+# Setting a global scope variable
+$ fin config set --global DOCKER_NATIVE=1
+Added value for DOCKER_NATIVE into /Users/user/.docksal/docksal.env
+
+# Setting a project scope variable
+$ fin config set DOCROOT=web
+Added value for DOCROOT into /Users/user/Projects/project/.docksal/docksal.env
+```
+
 
 ## Global Variables
 
@@ -195,7 +202,7 @@ Note: `DOCKSAL_ENVIRONMENT` should not be set and will not work in the project's
 
 ### DOCROOT
 
-`Default: "docroot"`
+`Default: docroot`
 
 Defines a relative path to the Document Root of the web server. Final path will be `/var/www/$DOCROOT`, so by default it is `/var/www/docroot`. Change it to the desired directory (like `http`) or sub-directory as needed, or set to `.` to use the project root as web server Document Root.
 
@@ -310,7 +317,7 @@ Only use on Linux servers.
 
 When set, enables CI mode:
 
-- Sets `DOCKSAL_VHOST_PROXY_IP="0.0.0.0"`, which opens vhost-proxy to the world.
+- Sets `DOCKSAL_VHOST_PROXY_IP=0.0.0.0`, which opens vhost-proxy to the world.
 - Reports the instance as a CI instance (vs local), so our anonymous usage stats are not skewed.
 - Sets `DOCKSAL_SSH_AGENT_USE_HOST=1`, which enables reuse of the hosts `SSH_AUTH_SOCK` socket (Linux only).
 
