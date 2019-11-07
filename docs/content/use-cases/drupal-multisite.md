@@ -53,6 +53,8 @@ $sites['anothersite.myproject.docksal'] = 'anothersite';
 ```
 Your site will then be accessible through `http://anothersite.myproject.docksal` (substitute your project URL).
 
+You can look at the []Drupal 7 advanced boilerplate project](https://github.com/docksal/boilerplate-drupal7-advanced) to see an example.
+
 {{% notice note %}}
 This page covers how to use the default domain settings in Docksal. It is possible to use arbitrary custom 
 domains in Docksal. Please refer to the documentation on [virtual host proxy](/core/system-vhost-proxy/#using-arbitrary-custom-domains)
