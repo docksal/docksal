@@ -6064,7 +6064,7 @@ load_configuration ()
 			COMPOSE_FILE="${overrides_osxfs_file}${SEPARATOR}${COMPOSE_FILE}"
 		fi
 
-		# Enable Cloud9 IDE
+		# Enable VSCode (Coder) IDE
 		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
 		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
 			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
