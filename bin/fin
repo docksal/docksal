@@ -980,7 +980,8 @@ check_docksal_running ()
 	fi
 
 	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add
+	# Use --quiet here, otherwise this becomes annoying
+	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add --quiet
 }
 
 # Ensures that path is accessible to Docker
