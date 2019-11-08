@@ -102,7 +102,7 @@ DOCKSAL_IP=192.168.64.100
 	run fin system reset ssh-agent
 	echo "$output" | grep "Resetting Docksal ssh-agent service"
 	# Assuming there is at least one default key
-	echo "$output" | egrep "Identity added: id_.+ \(id_.+\)"
+	echo "$output" | egrep "Identity added: id_.+ \(.+\)"
 	unset output
 
 	# Wait 2s to let the service fully initialize
@@ -152,7 +152,7 @@ DOCKSAL_IP=192.168.64.100
 	else
 		run fin ssh-key add
 		# On a real host assuming there is at least one default key
-		echo "$output" | egrep "Identity added: id_.+ \(id_.+\)"
+		echo "$output" | egrep "Identity added: id_.+ \(.+\)"
 		unset output
 
 		# Checking fin ssh-key ls
