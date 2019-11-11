@@ -22,7 +22,7 @@ fin db create 'anothersite'
 
 Each site has its own directory under `docroot/sites` that should contain a `settings.php` file where you have the settings 
 for your live site. You should also have a `local.settings.php` file that includes settings for the local copy of your
-site. Your `settings.php` file should detect and include that file.
+site. `settings.php` should detect and include `local.settings.php`.
 
 ```php
 $databases = [
