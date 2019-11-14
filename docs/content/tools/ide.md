@@ -84,10 +84,10 @@ Similarly, to debug CLI scripts in the IDE:
 
 IDE runs in a dedicated container in the project stack. The `ide` container and the `cli` container use the same image  
 but run different processes inside. They also share the `/home/docker` volume. Changes in the `docker` user's home 
-directory will be in sync in both containers (e.g. installing a different NodeJS version). However, installing global 
+directory will be in sync in both containers (e.g., installing a different NodeJS version). However, installing global 
 packages with `apt-get` or making other system level changes inside one container will not have effect on the other one. 
 
-With IDE enabled, you will not be able to individually reset `cli` and `ide` containers. To workaround this, removed 
+With IDE enabled, you will not be able to individually reset `cli` and `ide` containers. To workaround this, remove 
 both containers, then start/update the project stack:
 
 ```bash
