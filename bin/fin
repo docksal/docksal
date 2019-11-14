@@ -977,10 +977,6 @@ check_docksal_running ()
 		sleep 1
 		system_reset
 	fi
-
-	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	# Use --quiet here, otherwise this becomes annoying
-	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add --quiet
 }
 
 # Ensures that path is accessible to Docker
@@ -3004,6 +3000,11 @@ up ()
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
 
+	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# Use --quiet here, otherwise this becomes annoying
+	# Note: this takes ~1.5s, so we only call it when absolutely necessary
+	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add --quiet
+
 	# Temporary workaround for NFS issues on Mac
 	# See https://github.com/docksal/docksal/issues/265
 	is_mac && find . -type d > /dev/null 2>&1
@@ -3011,7 +3012,7 @@ up ()
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
-	# Start containers
+	# Start project containers
 	_start_containers || return 1
 
 	# If Unisons is used, wait for it to sync
@@ -3045,10 +3046,18 @@ restart ()
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
 
+	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# Use --quiet here, otherwise this becomes annoying
+	# Note: this takes ~1.5s, so we only call it when absolutely necessary
+	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add --quiet
+
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
+	# Restart project containers
 	_restart_containers "$@"
+
+	# If Unisons is used, wait for it to sync
 	unison_sync_wait
 }
 
@@ -3089,10 +3098,18 @@ reset ()
 	local ret=$?
 	[[ "$ret" != 0 ]] && return ${ret}
 
+	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# Use --quiet here, otherwise this becomes annoying
+	# Note: this takes ~1.5s, so we only call it when absolutely necessary
+	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add --quiet
+
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
+	# Start project containers
 	_start_containers || return 1
+
+	# If Unisons is used, wait for it to sync
 	unison_sync_wait
 }
 
