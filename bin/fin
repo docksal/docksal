@@ -3811,9 +3811,11 @@ configure_mounts ()
 			fi
 
 			# Mount the share in VirtualBox
-			if ! is_docker_native; then
-				docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
-			fi
+			# TODO: Disabled. To be removed.
+			# NFS mounts are now handled using NFS volumes - same approach as with Docker Desktop
+			#if ! is_docker_native; then
+			#	docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
+			#fi
 		fi
 		# Create, then mount shares in VirtualBox
 		if (is_wsl || is_windows) && ! is_docker_native; then
@@ -6062,7 +6064,13 @@ load_configuration ()
 		fi
 
 		# Include a volumes yml if requested. Use bind mount for volumes by default.
-		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+		if is_mac; then
+			# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
+			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
+		else
+			# Bind mounted volumes on all other systems
+			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+		fi
 		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
 			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 			if [[ -f "$volumes_yml_file" ]]; then
