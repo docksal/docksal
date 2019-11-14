@@ -471,7 +471,7 @@ upfind ()
 # Get path to .docksal folder using upfind
 get_project_path ()
 {
-	if [ -z "$DOCKSAL_PATH" ]; then
+	if [[ "$DOCKSAL_PATH" == "" ]]; then
 		DOCKSAL_PATH=$(upfind ".docksal")
 	fi
 	# If we reached $HOME, then we did not find the project root.
@@ -5994,7 +5994,9 @@ alias_list ()
 load_global_configuration ()
 {
 	export DOCROOT=${DOCROOT:-docroot}
+	export DOCKSAL_PATH="$(get_project_path)"
 	export PROJECT_ROOT="$(get_project_path)"
+	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
 }
 
 load_configuration ()
@@ -6102,7 +6104,6 @@ load_configuration ()
 	else
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	fi
-	export DOCROOT=${DOCROOT:-docroot}
 
 	# Make VIRTUAL_HOST lowercase, replace '_' with '-', remove everything non-letter or digit,
 	# make sure it starts with letter or digit
@@ -6125,12 +6126,11 @@ load_configuration ()
 		fi
 	fi
 
-	# Make project root globally available
-	export DOCKSAL_PATH="$(get_project_path)"
-	export PROJECT_ROOT="$(get_project_path)"
-	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
 	# https://docs.docker.com/compose/reference/envvars/#compose_convert_windows_paths
 	export COMPOSE_CONVERT_WINDOWS_PATHS=1
+
+	# Loaded last to allow overrides from env files
+	load_global_configuration
 }
 
 # Default init command. Initializes default config and starts containers
