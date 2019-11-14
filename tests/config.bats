@@ -37,7 +37,6 @@ teardown() {
 
 	run fin config env
 	[[ $status == 0 ]]
-	[[ $output =~ "volumes-bind.yml" ]]
 	[[ $output =~ "stack-default.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]]
@@ -53,7 +52,6 @@ teardown() {
 
 	run fin config env
 	[[ $status == 0 ]]
-	[[ $output =~ "volumes-bind.yml" ]]
 	[[ $output =~ "stack-acquia.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]]
@@ -77,7 +75,6 @@ services:
 
 	run fin config
 	[[ $status == 0 ]]
-	[[ $output =~ "volumes-bind.yml" ]]
 	[[ $output =~ "stack-acquia.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]]
@@ -107,7 +104,6 @@ services:
 
 	run fin config
 	[[ $status == 0 ]]
-	[[ $output =~ "volumes-bind.yml" ]]
 	[[ ! $output =~ "stack-default.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]]
@@ -185,7 +181,6 @@ services:
 
 	run fin config
 	[[ $status == 0 ]]
-	[[ $output =~ "volumes-bind.yml" ]]
 	[[ $output =~ "stack-default.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]]
@@ -200,7 +195,6 @@ services:
 
 	run fin config
 	[[ $status == 0 ]]
-	[[ $output =~ "volumes-bind.yml" ]]
 	[[ $output =~ "stack-default.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
 	[[ $output =~ "docksal.yml" ]]
