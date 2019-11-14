@@ -6,4 +6,6 @@ version: "2.1"
 services:
   cli:
     volumes:
+      # "cached" cannot be applied on a named volume, so have to use a host path instead
+      # See https://github.com/docksal/docksal/issues/678
       - ${PROJECT_ROOT}:/var/www:rw,cached
