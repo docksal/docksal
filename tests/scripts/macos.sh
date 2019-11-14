@@ -79,3 +79,4 @@ echo -e "Going to remove: ${yellow}$TESTS_DIR${NC}"
 echo "Press Enter to continue..."
 read -p ""
 rm -rf "$TESTS_DIR"
+fin cleanup
