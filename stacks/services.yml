@@ -10,7 +10,7 @@ services:
     hostname: web
     image: ${WEB_IMAGE:-docksal/apache:2.4-2.3}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -31,7 +31,7 @@ services:
     hostname: web
     image: ${WEB_IMAGE:-docksal/web:2.2-apache2.4}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -51,7 +51,7 @@ services:
     hostname: web
     image: ${WEB_IMAGE:-docksal/nginx:1.14-1.0}
     volumes:
-    - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
     - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
     - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -74,7 +74,7 @@ services:
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
       - db_data:/var/lib/mysql  # Database data volume
     environment:
       - MYSQL_ROOT_PASSWORD
@@ -96,7 +96,7 @@ services:
     ports:
     - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
-    - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     - db_data:/var/lib/mysql  # Database data volume
     environment:
     - MYSQL_ROOT_PASSWORD
@@ -118,7 +118,7 @@ services:
     ports:
       - "${PGSQL_PORT_MAPPING:-5432}"
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
       - db_data:/var/lib/postgresql/data  # Database data volume
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-default}
@@ -133,7 +133,7 @@ services:
     hostname: cli
     image: ${CLI_IMAGE:-docksal/cli:2.9-php7.3}
     volumes:
-      - project_root:/var/www:rw,nocopy  # Project root volume
+      - project_root:/var/www:rw,nocopy,cached  # Project root volume
       - ${SSH_AUTH_SOCK:-docksal_ssh_agent}:${SSH_AUTH_SOCK:-/.ssh-agent}:ro  # Shared ssh-agent socket/SSH key forwarding support
       - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
     environment:
@@ -170,7 +170,7 @@ services:
     hostname: varnish
     image: ${VARNISH_IMAGE:-docksal/varnish:6.1-2.0}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=varnish.${VIRTUAL_HOST},varnish.${VIRTUAL_HOST}.*
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -205,7 +205,7 @@ services:
     hostname: solr
     image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=solr.${VIRTUAL_HOST},solr.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8983
@@ -219,7 +219,7 @@ services:
     hostname: mail
     image: ${MAILHOG_IMAGE:-mailhog/mailhog}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=mail.${VIRTUAL_HOST},mail.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8025
