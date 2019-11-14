@@ -89,7 +89,7 @@ services:
   cli:
     volumes:
       # Project root volume
-      - project_root:/var/www:rw,nocopy
+      - project_root:/var/www:rw,nocopy,cached
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
 ...
@@ -118,7 +118,11 @@ places in the yaml file. We can now swap bind mounting with something else. See 
 As explained above for bind volumes option the files are actually mapped to the VM that Docker runs in
 via `osxfs:cached`. Docksal automatically enables the `osxfs:cached` mode on Docker for Mac.
 
-See [stacks/overrides-osxfs.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-osxfs.yml).
+{{% notice warning %}}
+In custom stacks, make sure to include the `cached` option **anywhere** the `project_root` volume is mounted.  
+While there is no impact on other systems, mixing `cached` and non-`cached` mounts for the same volume in your project 
+stack will lead to issues and errors with Docker for Mac. See [docksal/docksal#678](https://github.com/docksal/docksal/issues/678) for more details.
+{{% /notice %}}
 
 
 ## NFS Volumes
