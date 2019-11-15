@@ -5288,6 +5288,16 @@ run_cli ()
 		docker volume rm -f ${HOME_VOLUME_NAME} >/dev/null 2>&1
 	fi
 
+	local MOUNT_PWD
+	if [[ "${DOCKSAL_VOLUMES}" == "nfs" ]]; then
+		# Mounts options here should match those in volumes-nfs.yml
+		# Also, see https://docs.docker.com/storage/volumes/#choose-the--v-or---mount-flag
+		# and "Escape values from outer CSV parser" section on that page
+		MOUNT_PWD="type=volume,dst=/var/www,volume-driver=local,volume-opt=type=nfs,volume-opt=device=:$(pwd),\"volume-opt=o=addr=${DOCKSAL_HOST_IP},vers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1\""
+	else
+		MOUNT_PWD="type=bind,src=$(pwd),dst=/var/www"
+	fi
+
 	local MOUNT_HOME
 	if [[ "$RUN_CLEAN" != "1" ]]; then
 		docker volume create ${HOME_VOLUME_NAME} >/dev/null 2>&1
@@ -5308,7 +5318,7 @@ run_cli ()
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
 		# COLUMNS and LINES have to be passed to workaround a bug in Docker. See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 		${winpty} docker run --rm -it \
-			--mount type=bind,src=$(pwd),dst=/var/www \
+			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e BLACKFIRE_CLIENT_ID \
@@ -5329,7 +5339,7 @@ run_cli ()
 	else
 		# non-interactive
 		docker run --rm \
-			--mount type=bind,src=$(pwd),dst=/var/www \
+			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e BLACKFIRE_CLIENT_ID \
