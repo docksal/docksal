@@ -114,7 +114,7 @@ macOS Host ==============> Container
 NFS generally works faster than `osxfs`, so this option is default on macOS even for Docker Desktop setup. The downside
 is that NFS does not support fsnotify events.
 
-To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=nfs` see 
+To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=nfs`, see 
 [stacks/volumes-nfs.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-nfs.yml). 
 
 ### unison
@@ -150,7 +150,7 @@ The downsides:
 - Wait until initial sync finishes.
 
 {{% notice note %}}
-Once you set a new `DOCKSAL_VOLUMES` option, you must re-create `cli` container. The easiest way is `fin project reset`,
+Once you set a new `DOCKSAL_VOLUMES` option, you must recreate `cli` container. The easiest way is `fin project reset`,
 but it will also remove all data from the `db` volume. If you want to retain it, remove only `cli` container, and 
 start the project again: `fin project remove cli; fin project start`
 {{% /notice %}}
