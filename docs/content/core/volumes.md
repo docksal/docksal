@@ -60,7 +60,7 @@ issues and errors with Docker Desktop on macOS. See [docksal/docksal#678](https:
 
 With this option, containers access files using **Docker bind** driver option, which basically means direct access. 
 
-While Docker can access files directly on Linux, on macOS and Windows it works inside VM (VirtualBox or xhyve with Docker Desktop), 
+While Docker can access files directly on Linux, on macOS and Windows it works inside the VM (VirtualBox or xhyve with Docker Desktop), 
 which means that Docker cannot directly access files from host. Those files have to be made available inside VM first, 
 and this is achieved in different ways on different operating systems and VMs.
 
