@@ -21,7 +21,7 @@ the project again to recreate it: `fin p remove cli; fin p start`
 | macOS   | Docker Desktop  | nfs  (**default**)   | **Pros:** fast, only 10-15% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
 | macOS   | Docker Desktop  | bind                 | **Pros:** supports filesystem events. <br> **Cons:** pretty slow, 40% slower than native filesystem. |
 | Windows | ANY             | bind (**default**)   | **Pros:** ~20% overhead as compared to native FS. <br> **Cons:** does not support filesystem events (fsnotify). |
-| ANY     | ANY             | unison               | **Pros:** maximum `cli` filesystem performance. <br> **Cons:** initial wait for files to sync into `cli`; additional Docksal disk space use; sync delay when you switch git branches; higher CPU usage during files sync; sometimes Unison might 'break.' |
+| macOS, Windows | ANY             | unison               | **Pros:** maximum `cli` filesystem performance. <br> **Cons:** initial wait for files to sync into `cli`; additional Docksal disk space use; sync delay when you switch git branches; higher CPU usage during files sync; sometimes Unison might 'break.' |
 | ANY     | ANY             | none                 | **Pros:** maximum `cli` filesystem performance and no wait for the initial sync. <br> **Cons:** you have to copy files manually or checkout and edit files inside `cli` container. |
 
 ## Project Volumes
