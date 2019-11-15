@@ -25,6 +25,18 @@ Added value for DOCROOT into /Users/user/Projects/project/.docksal/docksal.env
 
 Changing the default value of a global variable may or may not require additional steps to apply the changes.
 
+### DEFAULT_MACHINE_VBOX_RAM
+
+`Default: 2048`
+
+The default amount of memory allocated to Docksal's VirtualBox machine, in megabytes.
+
+### DEFAULT_MACHINE_VBOX_HDD
+
+`Default: 50000`
+
+The default amount of disk space allocated to Docksal's VirtualBox machine, in megabytes.
+
 ### DOCKER_NATIVE
 
 `Default: 0`
