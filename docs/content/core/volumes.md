@@ -8,11 +8,11 @@ aliases:
 ## Quick Overview of the Volumes Options
 
 If `DOCKSAL_VOLUMES` option is not marked as default, then you need to enable it manually to use it.
-All non-automatic options are enabled by placing `DOCKSAL_VOLUMES="<value from volumes column>"` into the respective
+All non-default options are enabled by placing `DOCKSAL_VOLUMES="<value from volumes column>"` into the respective
 `docksal.env` file or using `fin config set` for the same, e.g., `fin config set DOCKSAL_VOLUMES="none"`.
-Once you set a new volumes option, you must re-create `cli` container. The easiest way is `fin project reset`,
-but it will also remove all the data from `db` volume. If you want to retain it, remove `cli` container and start
-the project again to recreate it: `fin p remove cli; fin p start`
+Once you set a new `DOCKSAL_VOLUMES` option, you must re-create `cli` container. The easiest way is `fin project reset`,
+but it will also remove all data from the `db` volume. If you want to retain it then just remove `cli` container, and 
+start the project again: `fin p remove cli; fin p start`
 
 | OS      | VM              | DOCKSAL_VOLUMES      | Comments  |
 |---------|-----------------|----------------------|------------|
