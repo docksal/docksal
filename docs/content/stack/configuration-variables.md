@@ -297,6 +297,9 @@ This is used to create a user, and the user is granted superuser permissions for
 
 Enables PHP XDebug Service for debugging. See [XDebug](/tools/xdebug/).
 
+### COMPOSER_MEMORY_LIMIT
+
+Allows for the memory limit to be set for composer. See [Composer](/tools/composer).
 
 ## Image Variables (project)
 
