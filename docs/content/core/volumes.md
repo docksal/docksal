@@ -7,15 +7,6 @@ aliases:
 
 ## Quick Overview
 
-If `DOCKSAL_VOLUMES` option is not marked as default, then you need to enable it manually to use it.
-
-All non-default options are enabled by placing `DOCKSAL_VOLUMES="<something>"` into the respective
-`docksal.env` file or using `fin config set` for the same, e.g., `fin config set DOCKSAL_VOLUMES="none"`.
-
-Once you set a new `DOCKSAL_VOLUMES` option, you must re-create `cli` container. The easiest way is `fin project reset`,
-but it will also remove all data from the `db` volume. If you want to retain it then just remove `cli` container, and 
-start the project again: `fin p remove cli; fin p start`
-
 | OS      | VM              | DOCKSAL_VOLUMES      | Comments  |
 |---------|-----------------|----------------------|------------|
 | Linux   | -               | bind (**default**)   | Direct host files access, maximum filesystem speed. |
@@ -157,6 +148,12 @@ The downsides:
 - Add `DOCKSAL_VOLUMES=unison` into `.docksal/docksal.env` of a project
 - `fin project reset`
 - Wait until initial sync finishes.
+
+{{% notice note %}}
+Once you set a new `DOCKSAL_VOLUMES` option, you must re-create `cli` container. The easiest way is `fin project reset`,
+but it will also remove all data from the `db` volume. If you want to retain it then remove only `cli` container, and 
+start the project again: `fin project remove cli; fin project start`
+{{% /notice %}}
 
 To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=unison` see 
 [stacks/volumes-unison.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-unison.yml).
