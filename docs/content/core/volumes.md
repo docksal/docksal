@@ -10,11 +10,11 @@ aliases:
 | OS      | VM              | DOCKSAL_VOLUMES              | Comments  |
 |---------|-----------------|------------------------------|-----------|
 | Linux   | -               | [bind](#bind) (**default**)  | Direct host files access, maximum filesystem speed. |
-| macOS   | VirtualBox      | [nfs](#nfs)  (**default**)   | **Pros:** fast, only 10-15% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
-| macOS   | Docker Desktop  | [nfs](#nfs)  (**default**)   | **Pros:** fast, only 10-15% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
+| macOS   | VirtualBox      | [nfs](#nfs)  (**default**)   | **Pros:** fast, ~20% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
+| macOS   | Docker Desktop  | [nfs](#nfs)  (**default**)   | **Pros:** fast, ~20% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
 | macOS   | Docker Desktop  | [bind](#bind)                | **Pros:** supports filesystem events. <br> **Cons:** pretty slow, 40% slower than native filesystem. |
-| Windows | ANY             | [bind](#bind) (**default**)  | **Pros:** ~20% overhead as compared to native FS. <br> **Cons:** does not support filesystem events (fsnotify). |
-| macOS, Windows | ANY      | [unison](#unison)            | **Pros:** maximum `cli` filesystem performance. <br> **Cons:** initial wait for files to sync into `cli`; additional Docksal disk space use; sync delay when you switch git branches; higher CPU usage during files sync; sometimes Unison might 'break.' |
+| Windows | ANY             | [bind](#bind) (**default**)  | **Pros:** ~50% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
+| macOS, Windows | ANY      | [unison](#unison)            | **Pros:** maximum `cli` filesystem performance. <br> **Cons:** initial wait for files to sync into `cli`; additional Docksal disk space use; sync delay when you switch git branches; higher CPU usage during files sync; sometimes Unison may 'break.' |
 | ANY     | ANY             | [none](#none)                | **Pros:** maximum `cli` filesystem performance and no wait for the initial sync. <br> **Cons:** you have to copy files manually or checkout and edit files inside `cli` container. |
 
 ## Project Volumes
@@ -27,17 +27,17 @@ If you are familiar with Docker Compose, then you must have attached files or di
       - /Users/alex/mysite:/var/www:rw
 ```
 
-It is an unnamed volume with bind driver. However, to support various OS in Docksal, we cannot always rely on the 
-bind driver and should not use unnamed volumes. 
+That is a called a bind mount - mounting a files/folder on the host directly into a container. 
+However, to support various OS in Docksal, we cannot always rely on bind mounts. 
 
-Instead, Docksal defines several named Docker volumes per project for you:
+Docksal defines several named Docker volumes per project for you:
  
-- `project_root` stores your project files (see warnings below about usecases of this volume)
-- `cli_home` to store home folder of your `cli` container independently of the `cli` container
-- `db_data` to store your database data independently of the `db` container 
-- `docksal_ssh_agent` to share SSH keys with containers
+- `project_root` stores your project files (see warnings below about use cases for this volume)
+- `cli_home` stores home folder of your `cli` container independently of the `cli` container
+- `db_data` stores your database data independently of the `db` container 
+- `docksal_ssh_agent` stores SSH keys shared with all project stacks
 
-Docksal made these volumes to function transparently across different operating systems, but their actual definitions 
+Docksal makes these volumes to function transparently across different operating systems, but their actual definitions 
 vary depending on the `DOCKSAL_VOLUMES` option.
 
 {{% notice note %}}
@@ -48,71 +48,69 @@ If you need to move the location of a project on the computer, remove the projec
 
 {{% notice warning %}}
 When customizing `docksal.yml`, make sure to include the `cached` option **anywhere** the `project_root` volume is attached
-to a service. Mixing `cached` and non-`cached` mounts for the same volume in your project stack will lead to 
-issues and errors with Docker Desktop on macOS. See [docksal/docksal#678](https://github.com/docksal/docksal/issues/678) for more details.
+to a service. Mixing `cached` and non-`cached` mounts for the same volume in your project stack will lead to issues 
+and errors with Docker Desktop on macOS. See [docksal/docksal#678](https://github.com/docksal/docksal/issues/678) for more details.
 {{% /notice %}}
 
 ## DOCKSAL_VOLUMES
 
-`DOCKSAL_VOLUMES` value changes the driver option for project volumes mentioned above and also affects some additional `fin` behavior. 
+`DOCKSAL_VOLUMES` value changes the driver option for project volumes mentioned above and also affects `fin` behavior. 
 
 ### bind 
 
-With this option, containers access files using **Docker bind** driver option, which basically means direct access. 
+With this option, containers access files via a [bind mount](https://docs.docker.com/storage/bind-mounts/), which basically means direct access. 
 
-While Docker can access files directly on Linux, on macOS and Windows it works inside the VM (VirtualBox or xhyve with Docker Desktop), 
-which means that Docker cannot directly access files from host. Those files have to be made available inside VM first, 
-and this is achieved in different ways on different operating systems and VMs.
+While Docker can access files directly on Linux, on macOS and Windows it works inside a VM (VirtualBox, xhyve/Hyper-V 
+with Docker Desktop), which means that Docker cannot directly access files from host. Those files have to be made 
+available inside the VM first, and this is achieved in different ways on different operating systems and VMs.
 
-**On macOS with VirtualBox** files are made available from host to Docker by mounting the folder defined 
+**On macOS with VirtualBox**, files are made available from host to Docker by mounting the folder defined 
 in `DOCKSAL_NFS_PATH` into the VM via NFS protocol.
  
 ```
-             NFS mount                       bind
+             NFS mount                     bind mount
 macOS Host ==============> VirtualBox VM =============> Container       
 ```
 
-**On macOS with Docker Desktop** it is Docker Desktop itself that mounts folders defined in Docker Desktop UI via `osxfs` 
-network filesystem.
+**On macOS with Docker Desktop**, it is Docker Desktop itself that mounts folders defined in Docker Desktop UI via 
+[osxfs](https://docs.docker.com/docker-for-mac/osxfs/) file system.
 
 ```
-               osxfs                         bind
+             osxfs mount                    bind mount
 macOS Host ==============> Docker Desktop ==============> Container   
 ``` 
 
-**On Windows with VirtualBox** Docksal mounts all available Windows drives into the VM via SMB protocol.
+**On Windows with VirtualBox**, Docksal mounts **all** physical drives into the VM via SMB protocol.
 
 ```
-               SMB mount                      bind
+               SMB mount                    bind mount
 Windows Host =============> VirtualBox VM ==============> Container   
 ```
 
-**On Windows with Docker Desktop** it is Docker Desktop itself that mounts all configured Windows drives via SMB.
+**On Windows with Docker Desktop**, it is Docker Desktop itself that mounts **only** configured Windows drives via SMB.
 
 ```
-               SMB mount                       bind
+               SMB mount                     bind mount
 Windows Host =============> Docker Desktop ==============> Container   
 ```
 
-To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=bind` see 
+To see how your project's Docker volumes are defined with when `DOCKSAL_VOLUMES=bind`, see 
 [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-bind.yml).
 
-In most cases, you do not need to set `DOCKSAL_VOLUES=bind` option. It is set for you automatically 
-in applicable cases. The only thinkable exception is when you need fsnotify events on macOS with Docker Desktop, 
-but don't want to use `unison` option.
+In most cases, you do not need to set the `DOCKSAL_VOLUES=bind` option. It is set for you automatically. The only 
+exception is when you need `fsnotify` events on macOS with Docker Desktop, but don't want to use the `unison` option.
 
 ### nfs
 
-This option is macOS specific and is used by default on macOS instead of bind. It means that containers will not wait 
-for something to make host files accessible for them first – instead they will reach out to host themselves via NFS protocol.
+This option is macOS specific and is used by default with both VirtualBox and Docker Desktop.  
+Docker mounts the `project_root` volume from the host over NFS, then project containers mount this volume. 
 
 ```
-              NFS mount
-macOS Host ==============> Container  
+            volume mounted via NFS
+macOS Host ========================> Container  
 ```
 
-NFS generally works faster than `osxfs`, so this option is default on macOS even for Docker Desktop setup. The downside
-is that NFS does not support fsnotify events.
+NFS generally works faster than `osxfs`. The downside is that NFS does not support `fsnotify` events.
 
 To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=nfs`, see 
 [stacks/volumes-nfs.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-nfs.yml). 
@@ -134,8 +132,8 @@ Host =================> VM/Docker Desktop < - - - - - - - - - - - - - > Containe
 
 The benefits of this setup:
 
-- Full native container file system performance (reads and writes)
-- `ionitify` event support **when Docker Desktop is used**
+- Native container file system performance (reads and writes)
+- `fsnotify` event support **when Docker Desktop is used**
 
 The downsides:
 
@@ -143,15 +141,18 @@ The downsides:
 - Higher disk space usage (double the size of the codebase)
 - Additional CPU load from the Unison daemon 
 
-#### Using Unison Volumes
+#### Using "unison" Volumes
 
-- Add `DOCKSAL_VOLUMES=unison` into `.docksal/docksal.env` of a project
-- `fin project reset`
-- Wait until initial sync finishes.
+```bash
+fin config set DOCKSAL_VOLUMES=unison
+fin project reset
+````
+
+Wait until the initial unison sync finishes.
 
 {{% notice note %}}
-Once you set a new `DOCKSAL_VOLUMES` option, you must recreate `cli` container. The easiest way is `fin project reset`,
-but it will also remove all data from the `db` volume. If you want to retain it, remove only `cli` container, and 
+Once you set a new `DOCKSAL_VOLUMES` option, you must recreate the `cli` container. The easiest way is `fin project reset`,
+but it will also remove all data from the `db` volume. If you want to retain it, remove only the `cli` container, and 
 start the project again: `fin project remove cli; fin project start`
 {{% /notice %}}
 
@@ -166,15 +167,17 @@ You would have to copy files into container and back manually.
 
 Combined with [VSCode IDE](/tools/ide/), this option can provide a way of provisioning instant blank 
 development environments with the best performance and consistency for Mac and Windows. 
-The only added cost is having to stick with a browser-based IDE and terminal for file operations. 
+The only added cost is having to stick with a browser-based IDE and terminal for developer UX. 
 
 See [stacks/volumes-none.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-none.yml) for
 details on Docker volumes definition with this option.
 
-#### Using None Volumes
+#### Using "none" Volumes
 
-- Add `DOCKSAL_VOLUMES=none` into `.docksal/docksal.env` of a project
-- `fin project reset`
+```bash
+fin config set DOCKSAL_VOLUMES=none
+fin project reset
+```
 
-Use `fin bash` to log into bash and checkout files into `/var/www` with git. Or use `docker cp` to copy 
+Use `fin bash` to log into bash and checkout files into `/var/www` with git. Or use `fin docker cp` to copy 
 files into the `cli` container. 
