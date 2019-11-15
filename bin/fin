@@ -3811,11 +3811,11 @@ configure_mounts ()
 			fi
 
 			# Mount the share in VirtualBox
-			# TODO: Disabled. To be removed.
-			# NFS mounts are now handled using NFS volumes - same approach as with Docker Desktop
-			#if ! is_docker_native; then
-			#	docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
-			#fi
+			# TODO: Drop this default NFS mount? (v2.0)
+			# NFS mounts are now handled using NFS volumes at the project level - same approach as with Docker Desktop.
+			if ! is_docker_native; then
+				docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
+			fi
 		fi
 		# Create, then mount shares in VirtualBox
 		if (is_wsl || is_windows) && ! is_docker_native; then
