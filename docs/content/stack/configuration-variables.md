@@ -29,7 +29,7 @@ Changing the default value of a global variable may or may not require additiona
 
 `Default: 2048`
 
-The default amount of memory allocated to Docksal's machine, in megabytes.
+The default amount of memory allocated to Docksal's VirtualBox machine, in megabytes.
 
 ### DEFAULT_MACHINE_VBOX_HDD
 
