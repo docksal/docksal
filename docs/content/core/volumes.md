@@ -21,7 +21,7 @@ the project again to recreate it: `fin p remove cli; fin p start`
 | macOS   | Docker Desktop  | nfs  (**default**)   | **Pros:** fast, only 10-15% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
 | macOS   | Docker Desktop  | bind                 | **Pros:** supports filesystem events. <br> **Cons:** pretty slow, 40% slower than native filesystem. |
 | Windows | ANY             | bind (**default**)   | **Pros:** ~20% overhead as compared to native FS. <br> **Cons:** does not support filesystem events (fsnotify). |
-| macOS, Windows | ANY             | unison               | **Pros:** maximum `cli` filesystem performance. <br> **Cons:** initial wait for files to sync into `cli`; additional Docksal disk space use; sync delay when you switch git branches; higher CPU usage during files sync; sometimes Unison might 'break.' |
+| macOS, Windows | ANY      | unison               | **Pros:** maximum `cli` filesystem performance. <br> **Cons:** initial wait for files to sync into `cli`; additional Docksal disk space use; sync delay when you switch git branches; higher CPU usage during files sync; sometimes Unison might 'break.' |
 | ANY     | ANY             | none                 | **Pros:** maximum `cli` filesystem performance and no wait for the initial sync. <br> **Cons:** you have to copy files manually or checkout and edit files inside `cli` container. |
 
 ## Project Volumes
@@ -61,7 +61,7 @@ issues and errors with Docker Desktop on macOS. See [docksal/docksal#678](https:
 
 ## DOCKSAL_VOLUMES
 
-`DOCKSAL_VOLUMES` value changes the driver option for Docker volumes mentioned above, and also affects some additional `fin` behavior. 
+`DOCKSAL_VOLUMES` value changes the driver option for project volumes mentioned above, and also affects some additional `fin` behavior. 
 
 ### bind 
 
@@ -71,34 +71,42 @@ While Docker can access files directly on Linux, on macOS and Windows it works i
 which means that Docker cannot directly access files from host. Those files have to be made available inside VM first, 
 and this is achieved in a different ways on different operating systems and VMs.
 
-- On macOS with VirtualBox files are made available from host to Docker by mounting the folder defined 
-in `DOCKSAL_NFS_PATH` into VM via NFS protocol. 
-    ```
-            NFS mount                       bind
-    Host ==============> VirtualBox VM =============> Container       
-    ```
-- On macOS with Docker Desktop it is Docker Desktop itself that mounts folders defined in Docker Desktop UI via `osxfs` 
+**On macOS with VirtualBox** files are made available from host to Docker by mounting the folder defined 
+in `DOCKSAL_NFS_PATH` into VM via NFS protocol.
+ 
+```
+             NFS mount                       bind
+macOS Host ==============> VirtualBox VM =============> Container       
+```
+
+**On macOS with Docker Desktop** it is Docker Desktop itself that mounts folders defined in Docker Desktop UI via `osxfs` 
 network filesystem.
-    ```
-              osxfs                         bind
-    Host ==============> Docker Desktop ==============> Container   
-    ``` 
-- On Windows with VirtualBox Docksal mounts all available Windows drives into VM via SMB protocol.
-    ```
-            SMB mount                       bind
-    Host ==============> VirtualBox VM ==============> Container   
-    ```
-- On Windows with Docker Desktop it is Docker Desktop itself that mounts all configured Windows drives via SMB.
-    ```
-            SMB mount                       bind
-    Host ==============> Docker Desktop ==============> Container   
-    ```
+
+```
+               osxfs                         bind
+macOS Host ==============> Docker Desktop ==============> Container   
+``` 
+
+**On Windows with VirtualBox** Docksal mounts all available Windows drives into VM via SMB protocol.
+
+```
+               SMB mount                      bind
+Windows Host =============> VirtualBox VM ==============> Container   
+```
+
+**On Windows with Docker Desktop** it is Docker Desktop itself that mounts all configured Windows drives via SMB.
+
+```
+               SMB mount                       bind
+Windows Host =============> Docker Desktop ==============> Container   
+```
 
 To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=bind` see 
 [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-bind.yml).
 
-In most cases you do not need to specifically set `DOCKSAL_VOLUES=bind` option. It is set for you automatically 
-in applicable cases.
+In most cases you do not need to set `DOCKSAL_VOLUES=bind` option. It is set for you automatically 
+in applicable cases. The only thinkable exception is when you need fsnotify events on macOS with Docker Desktop, 
+but don't want to use `unison` option.
 
 ### nfs
 
@@ -106,11 +114,12 @@ This option is macOS specific and is used by default on macOS instead of bind. I
 for something to make host files accessible for them first, instead they will reach out to host themselves via NFS protocol.
 
 ```
-        NFS mount
-Host ==============> Container   
+              NFS mount
+macOS Host ==============> Container  
 ```
 
-NFS generally works faster than `osxfs` so this option is default on macOS even for Docker Desktop setup.
+NFS generally works faster than `osxfs` so this option is default on macOS even for Docker Desktop setup. The downside
+is that NFS does not support fsnotify events.
 
 To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=nfs` see 
 [stacks/volumes-nfs.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-nfs.yml). 
@@ -126,12 +135,9 @@ files and the container. Transferrring changes from host to the container and ba
 the files within the container becomes way faster.
 
 ```
-      NFS/SMB/osxfs                       Copy via Unison daemon
-Host ==============> VM/Docker Desktop < - - - - - - - - - - - - > Container
+       NFS/SMB/osxfs                          Copy via Unison daemon
+Host =================> VM/Docker Desktop < - - - - - - - - - - - - - > Container
 ```
-
-To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=nfs` see 
-[stacks/volumes-unison.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-unison.yml).
 
 The benefits of this setup:
 
@@ -149,6 +155,9 @@ The downsides:
 - Add `DOCKSAL_VOLUMES=unison` into `.docksal/docksal.env` of a project
 - `fin project reset`
 - Wait until initial sync finishes.
+
+To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=unison` see 
+[stacks/volumes-unison.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-unison.yml).
 
 ### none
 
