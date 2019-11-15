@@ -35,7 +35,7 @@ The default amount of memory allocated to Docksal's VirtualBox machine, in megab
 
 `Default: 50000`
 
-The default amount of disk space allocated to Docksal's machine, in megabytes.
+The default amount of disk space allocated to Docksal's VirtualBox machine, in megabytes.
 
 ### DOCKER_NATIVE
 
