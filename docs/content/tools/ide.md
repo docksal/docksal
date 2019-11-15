@@ -2,6 +2,7 @@
 title: "Coder Web IDE"
 aliases:
   - /en/master/tools/cloud9/
+  - /en/master/tools/ide/
 ---
 
 [Coder](https://coder.com/) is a free, open-source web IDE based on [Visual Studio Code](https://code.visualstudio.com/) (VS Code).
