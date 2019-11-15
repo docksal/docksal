@@ -124,8 +124,8 @@ that project containers do not access them directly via bind to avoid NFS/SMB pe
 are not connected to the host filesystem at all.   
 
 Instead, `fin` launches a `unison` container with Unison daemon that copies files back and forth between mounted host 
-files and the container. Transferrring changes from host to the container and back becomes slower, but reading and writing 
-the files within the container becomes way faster.
+files and the container. Transferring changes from host to the container and back becomes slower, but reading and writing 
+the files within the container becomes much faster.
 
 ```
        NFS/SMB/osxfs                          Copy via Unison daemon
