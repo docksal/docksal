@@ -54,7 +54,7 @@ and errors with Docker Desktop on macOS. See [docksal/docksal#678](https://githu
 
 ## DOCKSAL_VOLUMES
 
-`DOCKSAL_VOLUMES` value changes the mount type for project volumes mentioned above and also affects `fin` behavior. 
+`DOCKSAL_VOLUMES` value changes the mount type of the project volumes mentioned above and also affects `fin` behavior. 
 
 ### bind 
 
