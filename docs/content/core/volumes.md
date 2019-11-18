@@ -158,7 +158,7 @@ The downsides:
 ```bash
 fin config set DOCKSAL_VOLUMES=unison
 fin project reset
-````
+```
 
 Wait until the initial unison sync finishes.
 
