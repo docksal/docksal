@@ -28,7 +28,7 @@ If you are familiar with Docker Compose, then you must have attached files or di
       - /Users/alex/mysite:/var/www:rw
 ```
 
-That is a called a bind mount - mounting a files/folder on the host directly into a container. 
+That is a called a bind mount - mounting a file/folder directly into a container. 
 However, to support various OS in Docksal, we cannot always rely on bind mounts. 
 
 Docksal defines several named Docker volumes per project for you:
