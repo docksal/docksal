@@ -139,6 +139,9 @@ unison container   -------> osxfs mount from macOS host (w/ fsnotify)
                       ---> project_root volume 
 ```
 
+Project containers do not access files on the host directly, so there is no performance penalty of using osxfs or NFS 
+for containers.
+
 The benefits of this setup:
 
 - Native container file system performance for codebase reads and writes
