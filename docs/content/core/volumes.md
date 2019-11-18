@@ -60,7 +60,7 @@ and errors with Docker Desktop on macOS. See [docksal/docksal#678](https://githu
 
 With this option, containers access files via a [bind mount](https://docs.docker.com/storage/bind-mounts/), which basically means direct access. 
 
-While Docker can access files directly on Linux, on macOS and Windows it works inside a VM (VirtualBox, xhyve/Hyper-V 
+While Docker can access files directly on Linux, on macOS and Windows it works inside the VM (VirtualBox, xhyve/Hyper-V 
 with Docker Desktop), which means that Docker cannot directly access files from host. Those files have to be made 
 available inside the VM first, and this is achieved in different ways on different operating systems and VMs.
 
