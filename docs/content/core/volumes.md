@@ -94,7 +94,7 @@ Windows Host =============> VirtualBox VM ==============> Container
 Windows Host =============> Docker Desktop ==============> Container   
 ```
 
-To see how your project's Docker volumes are defined with when `DOCKSAL_VOLUMES=bind`, see 
+To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=bind`, see 
 [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-bind.yml).
 
 In most cases, you do not need to set the `DOCKSAL_VOLUES=bind` option. It is set for you automatically. The only 
