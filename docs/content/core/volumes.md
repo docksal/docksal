@@ -7,15 +7,16 @@ aliases:
 
 ## Quick Overview
 
-| OS      | VM              | DOCKSAL_VOLUMES              | Comments  |
-|---------|-----------------|------------------------------|-----------|
-| Linux   | -               | [bind](#bind) (**default**)  | Direct host files access, maximum filesystem speed. |
-| macOS   | VirtualBox      | [nfs](#nfs)  (**default**)   | **Pros:** fast, ~20% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
-| macOS   | Docker Desktop  | [nfs](#nfs)  (**default**)   | **Pros:** fast, ~20% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
-| macOS   | Docker Desktop  | [bind](#bind)                | **Pros:** supports filesystem events. <br> **Cons:** pretty slow, 40% slower than native filesystem. |
-| Windows | ANY             | [bind](#bind) (**default**)  | **Pros:** ~50% slower than native filesystem. <br> **Cons:** does not support filesystem events (fsnotify). |
-| macOS, Windows | ANY      | [unison](#unison)            | **Pros:** maximum `cli` filesystem performance. <br> **Cons:** initial wait for files to sync into `cli`; additional Docksal disk space use; sync delay when you switch git branches; higher CPU usage during files sync; sometimes Unison may 'break.' |
-| ANY     | ANY             | [none](#none)                | **Pros:** maximum `cli` filesystem performance and no wait for the initial sync. <br> **Cons:** you have to copy files manually or checkout and edit files inside `cli` container. |
+| OS      | Docker Host VM  | DOCKSAL_VOLUMES             | FS Speed | FS Events | Comments  |
+|---------|-----------------|-----------------------------|-------   |-----------|-----------|
+| Linux   | -               | [bind](#bind) (**default**) | 100%     | Yes       | Direct host files access, maximum filesystem speed. |
+| macOS   | VirtualBox      | [nfs](#nfs) (**default**)   | 80%      |           | Uses `nfs` for best overall for macOS. Stable, lightweight. |
+| macOS   | Docker Desktop  | [nfs](#nfs) (**default**)   | 80%      |           | Uses `nfs` for best overall for macOS. Stable, lightweight. |
+| macOS   | Docker Desktop  | [bind](#bind)               | 60%      | Yes       | Uses `osxfs`. Can cause higher CPU usage. |
+| macOS   | Docker Desktop  | [unison](#unison)           | 100%     | Yes       | Uses `osxfs`. Can be unstable, especially on large codebases. |
+| Windows | ANY             | [bind](#bind) (**default**) | 50%      |           | Uses `SMB` - the only option for Windows. |
+| ANY     | ANY             | [none](#none)               | 100%     |           | Work on the codebase has to be done inside the `cli` container. |
+
 
 ## Project Volumes
 
