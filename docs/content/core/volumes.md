@@ -126,8 +126,8 @@ A `unison` container is added to the project stack with two volumes attached to 
 - a `project_root` named volume - native filesystem performance for containers (empty initially)
 
 ```
-             osxfs mount                    bind mount                       named volume
-macOS Host ==============> Docker Desktop ==============> unison container <============== project_root volume
+            osxfs                   bind                      volume
+macOS Host =======> Docker Desktop ======> unison container <======== project_root
 ```
 
 The Unison daemon is responsible for syncing files between the two volumes.
