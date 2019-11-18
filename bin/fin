@@ -5304,7 +5304,9 @@ run_cli ()
 
 	local MOUNT_HOME
 	if [[ "$RUN_CLEAN" != "1" ]]; then
-		docker volume create ${HOME_VOLUME_NAME} >/dev/null 2>&1
+		# Using "io.docksal" label on the volume ensures the cleanup of run-cli volumes.
+		# Volumes with the "io.docksal" label are dropped by "fin cleanup" (which also runs during updates).
+		docker volume create --label "io.docksal" ${HOME_VOLUME_NAME} >/dev/null 2>&1
 		# By default mount as a *persistent* named volume
 		MOUNT_HOME="dst=/home/docker,src=$HOME_VOLUME_NAME"
 	else
