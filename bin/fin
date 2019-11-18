@@ -5266,7 +5266,11 @@ run_cli ()
 
 	# Set default image
 	local RUN_IMAGE="${image:-$IMAGE_RUN_CLI}"
-	local HOME_VOLUME_NAME="docksal_run_cli_home"
+
+	# Use unique home volumes for run-cli images
+	# Without this, switching images won't update tools installed in the home volume (like nodejs, etc.).
+	local HOME_VOLUME_NAME="docksal_run_cli_home_$(echo ${RUN_IMAGE} | sed -e 's/[^A-Za-z0-9_.]/-/g')"
+
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
