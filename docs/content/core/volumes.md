@@ -7,7 +7,7 @@ aliases:
 
 ## Quick Overview
 
-| OS      | Docker Host VM  | DOCKSAL_VOLUMES             | FS Speed | FS Events | Comments  |
+| OS      | VM              | DOCKSAL_VOLUMES             | FS Speed | FS Events | Comments  |
 |---------|-----------------|-----------------------------|-------   |-----------|-----------|
 | Linux   | -               | [bind](#bind) (**default**) | 100%     | Yes       | Direct host files access, maximum filesystem speed. |
 | macOS   | VirtualBox      | [nfs](#nfs) (**default**)   | 80%      |           | Uses `nfs` for best overall for macOS. Stable, lightweight. |
