@@ -117,23 +117,31 @@ To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=nfs`,
 
 ### unison
 
-This option only works on macOS and Windows. Host files are made accessible to the VM like in a bind mount, but after
-that project containers do not access them directly via bind to avoid NFS/SMB performance penalty. Containers file systems 
-are not connected to the host filesystem at all.   
+This option only makes sense with Docker Desktop on macOS.
 
-Instead, `fin` launches a `unison` container with Unison daemon that copies files back and forth between mounted host 
-files and the container. Transferring changes from host to the container and back becomes slower, but reading and writing 
-the files within the container becomes much faster.
+A `unison` container is added to the project stack with two volumes attached to it:
+
+- a bind mount of the osxfs mount from the host - slow, but supports `fsnotify`
+- a `project_root` named volume - native filesystem performance for containers (empty initially)
 
 ```
-       NFS/SMB/osxfs                          Copy via Unison daemon
-Host =================> VM/Docker Desktop < - - - - - - - - - - - - - > Container
+             osxfs mount                    bind mount                       named volume
+macOS Host ==============> Docker Desktop ==============> unison container <============== project_root volume
+```
+
+The Unison daemon is responsible for syncing files between the two volumes.
+
+```
+unison container   -------> osxfs mount from macOS host (w/ fsnotify)
+  two-way sync     \
+  between volumes   \
+                      ---> project_root volume 
 ```
 
 The benefits of this setup:
 
-- Native container file system performance (reads and writes)
-- `fsnotify` event support **when Docker Desktop is used**
+- Native container file system performance for codebase reads and writes
+- Support for filesystem watchers
 
 The downsides:
 
