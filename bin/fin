@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.91.0
+FIN_VERSION=1.92.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -326,7 +326,7 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.3}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.5}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
-IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:2.9-php7.3}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:2.10-php7.3}
 
 #---------------------------- Helper functions --------------------------------
 
@@ -5266,7 +5266,11 @@ run_cli ()
 
 	# Set default image
 	local RUN_IMAGE="${image:-$IMAGE_RUN_CLI}"
-	local HOME_VOLUME_NAME="docksal_run_cli_home"
+
+	# Use unique home volumes for run-cli images
+	# Without this, switching images won't update tools installed in the home volume (like nodejs, etc.).
+	local HOME_VOLUME_NAME="docksal_run_cli_home_$(echo ${RUN_IMAGE} | sed -e 's/[^A-Za-z0-9_.]/-/g')"
+
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
@@ -5300,7 +5304,9 @@ run_cli ()
 
 	local MOUNT_HOME
 	if [[ "$RUN_CLEAN" != "1" ]]; then
-		docker volume create ${HOME_VOLUME_NAME} >/dev/null 2>&1
+		# Using "io.docksal" label on the volume ensures the cleanup of run-cli volumes.
+		# Volumes with the "io.docksal" label are dropped by "fin cleanup" (which also runs during updates).
+		docker volume create --label "io.docksal" ${HOME_VOLUME_NAME} >/dev/null 2>&1
 		# By default mount as a *persistent* named volume
 		MOUNT_HOME="dst=/home/docker,src=$HOME_VOLUME_NAME"
 	else
