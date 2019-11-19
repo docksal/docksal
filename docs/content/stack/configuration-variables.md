@@ -297,6 +297,7 @@ This is used to create a user, and the user is granted superuser permissions for
 
 Enables PHP XDebug Service for debugging. See [XDebug](/tools/xdebug/).
 
+
 ## Image Variables (project)
 
 The following variables are used to set images to a specified version. Using them will prevent the images from being udpated
