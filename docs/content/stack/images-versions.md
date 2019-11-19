@@ -1,9 +1,9 @@
 ---
-title: "Stock Images versions"
+title: "Stock Images Versions"
 weight: 6
 ---
 
-## Understanding versions
+## Understanding Versions
 
 Image tags follow the next pattern: 
 
