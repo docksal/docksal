@@ -1,5 +1,110 @@
 # Changelog
 
+# 1.13.0 (2019-11-xx)
+
+## New software versions
+
+- Updated stacks:
+  - Use docksal/cli:2.10-php7.3 for cli service, ide mode, and run-cli command
+- Bumped docker dependency versions:
+  - docker v19.03.02 (matches the version shipped in the latest Docker Desktop; 19.03.0+ is required for Ubuntu 19.04 support)
+ - docker-compose v1.24.1
+ - docker-machine v0.16.2
+- Switch to docksal/ssh-agent:1.3
+- IDE mode overhaul
+  - IDE runs in a separate container instead of inside cli
+  - Requires docksal/cli v2.10+ (or edge images)
+  - IDE URL is now http://ide-${VIRTUAL_HOST} (using dash instead of dot separator in the URL)
+  - IDE URL is printed along with Project URL after "fin up" in the console output (when IDE_ENABLED=1)
+- Bumped Docker Desktop and VirtualBox versions …
+  - Docker Desktop v2.1.0.3
+  - VirtualBox v5.2.32
+- Bumped Docker and VirtualBox versions
+  - Docker 19.03.4
+  - VirtualBox 5.2.34
+- Bump fin v1.92.0
+
+## Changes and improvements
+
+- Implemented an SSH proxy over TCP for Mac / Windows
+- Enabled SSH key forwarding in cli
+- Allow disabling checking for updates (#1081)
+  - Repurposed DOCKSAL_LOCK_UPDATES for disabling update checks
+  - Documented DOCKSAL_VERSION variable usage
+- Fixed a regression in git binary detection on Mac (#1084)
+- Added DOCKSAL_SSH_AGENT_USE_HOST variable
+  - This allows controlling which agent to use in Linux environments.
+  - DOCKSAL_SSH_AGENT_USE_HOST=0 (defaut for non-CI) - the built-in agent is used
+  - DOCKSAL_SSH_AGENT_USE_HOST=1 (default to CI) - prefer the host's agent
+- `fin pull`: changed Drush to use Drush8 just for Acquia pull commands
+- `fin pull`: fixed issue where date on cached db isn't checked properly (#1092)
+- `fin pull`: fixed issue in `provider_pull_acquia_db()` (#1093)
+- Increase custom command finding depth from 2 to 4 (#1116)
+- Added `docker-machine` binary wrapper (#1103)
+- Added a workaround for an issue with cmd.exe in WSL in Windows 10 v1903 (#1103)
+- Added IPv6 localhost termination (#1151)
+- Added `DRUSH_OPTIONS_URI` to the cli service (#1115)
+- Allowed creating projects from a custom git repo (#1154)
+  - E.g. `fin project create --name=myproject --repo=https://github.com/org/project.git`
+- Pass MySQL settings to cli
+  - Moved MySQL defaults from services.yml to fin
+  - With MySQL settings visible in cli, they can be assumed from the environment instead of having to hardcode in app code
+- Generating actual default init script file in the init wizard
+- Passing MYSQL_HOST to cli as an env variable …
+  - This way, all MySQL settings can be assumed via env variables
+- Added IMAGE_RUN_CLI variable which can be used to override the image via the global docksal.env
+- Added `fin config yml` as a quick way to export static config (#728)
+- Added `DOCKSAL_CONFIRM_YES` variable to allow auto-answering yes to all yes/no confirms (#1186)
+- Added Drupal 8 BLT version for project create option (#1175)
+- Added `--quiet` option for fin ssh-key add command (#1179)
+- Made health check timeout configurable (#1178)
+- Allow setting shell and user to use when running `fin exec` and `fin bash` commands (#1122)
+  - Introduces 2 new `io.docksal.shell` and `io.docksal.user` labels. Relates to #1107
+- Refactored tests, made them faster, simpler (#1207)
+- Fixed the issue with `osxfs:cached` and named volumes (#1218)
+- Switched to NFS volumes on Mac by default
+  - Setting DOCKSAL_VOLUMES=nfs on Mac (applies to Docker Desktop and VBox)
+- Allowed VM primary and secondary storage capacity to be configurable. (#1222)
+- Switched travis build to ubuntu 18.04 (bionic)
+
+## Documentation
+
+- Documented the CI global variable
+- Added ads.txt in docs
+- Pinned Docker Desktop version in installation instructions
+- Added documentation on passing environment variables (#1128)
+- Docs: Added notice about spaces in project paths (#1134)
+- Changed link of sample projects to the Docksal boilerplate list on Github (#1138, #1139)
+- Added warning about required index page in docroot in zero-config docs section (#1141)
+- Fixed `ngrok.yml` config file documentation (#1100)
+- Documented the cli `startup.sh` script (#751)
+- Fixed xdebug docs (#1158)
+- Fixed phpcs docs (#1160)
+- Removed `fin vm ip` command from documentation and listed the canonical Docksal IP
+- Fixed URL to edit docs
+- Revised the Getting Started section of docs
+- Updated boilerplate repo URLs
+- Getting started docs overhaul
+  - Aiming for a straightforward experience for new users
+  - To paths: 1) from scratch/existing project, 2) from a boilerplate repo
+  - Putting emphasis on `fin init` as a single step to bootstrap a project "from zero to hero"
+- Fixed Docker Desktop for Win download URL in setup.md
+- Added wording about what an addon is, fixes minor typos
+- Updated zero-configuration.md
+- Added usage instructions for `none` volumes
+- Added `DOCROOT` variable description
+- Added message about RAM needed for composer projects (#1189)
+- Added Acquia BLT documentation (#1190)
+- Documentation for Portainer (#1170)
+- Added macOS firewall troubleshooting docs (#1196)
+- Added VPN troubleshooting docs (#1203)
+- Remove Babun mentions (#1204)
+- Added variable scope in configuration variables docs (#1173)
+- Added documentation on multisite setup (#1209)
+- Added VS Code documentation (#1212)
+- Revamp volumes documentation (#1221)
+
+
 # 1.12.3 (2019-06-12)
 
 **RELEASE CONTAINS BREAKING CHANGES**
