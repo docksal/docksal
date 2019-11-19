@@ -11,7 +11,12 @@ theme = "learn"
 
   google_tag_manager = "GTM-58ST6XD"
 
+  version = "v1.13.0"
+
+  [[params.versions]]
   version = "v1.12.3"
+  branch = "v1.12.3"
+  url = "https://v1-12-3.docs.docksal.io"
 
   [[params.versions]]
   version = "v1.12.3"
@@ -27,7 +32,7 @@ theme = "learn"
   version = "v1.12.1"
   branch = "v1.12.1"
   url = "https://v1-12-1.docs.docksal.io"
-  
+
   [[params.versions]]
   version = "v1.12.0"
   branch = "v1.12.0"
