@@ -278,6 +278,7 @@ DOCKSAL_HEALTHCHECK_TIMEOUT=${DOCKSAL_HEALTHCHECK_TIMEOUT:-60}
 GITHUB_API="https://api.github.com"
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
+URL_RELEASE_NOTES="https://docksal.io/updates"
 URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/boilerplate-drupal8.git"
 URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
@@ -4864,6 +4865,14 @@ is_update ()
 # Update Docksal
 update ()
 {
+	if is_mac; then
+		echo-warning "Please take a few minutes to review the release notes:" \
+			"${URL_RELEASE_NOTES}"
+		open "${URL_RELEASE_NOTES}"
+	fi
+	exit
+
+
 	# Suppress alerts until the very end of the update
 	export DOCKER_VERSION_ALERT_SUPPRESS=1
 
@@ -4943,6 +4952,14 @@ update ()
 	echo-green "Update finished"
 
 	# [STEP - POST UPDATE]
+	# Show release notes URL after update
+	if is_update; then
+		echo-warning "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
+		# Open release notes in the browser
+		# TODO: add support for Linux and Windows/WSL
+		is_mac && open "${URL_RELEASE_NOTES}"
+	fi
+
 	# Cleanup
 	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
 
