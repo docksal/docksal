@@ -4865,14 +4865,6 @@ is_update ()
 # Update Docksal
 update ()
 {
-	if is_mac; then
-		echo-warning "Please take a few minutes to review the release notes:" \
-			"${URL_RELEASE_NOTES}"
-		open "${URL_RELEASE_NOTES}"
-	fi
-	exit
-
-
 	# Suppress alerts until the very end of the update
 	export DOCKER_VERSION_ALERT_SUPPRESS=1
 
@@ -4963,14 +4955,14 @@ update ()
 	# Cleanup
 	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
 
-	# Set DOCKSAL_VOLUMES globally for existing and new users on Macs (VirtualBox and Docker Desktop)
-	# Existing users get "bind" to match the previous default behavior.
-	# This ensures we do not break existing project stacks by switching to nfs volumes as the default (1.13.0 release)
-	# New users get "nfs" - the new default
+	# Set DOCKSAL_VOLUMES=bind globally for existing Macs (VirtualBox and Docker Desktop)
+	# This ensures we do not break existing project stacks by switching to nfs volumes as the default (Docksal 1.13.0 / fin 1.92.x)
 	if is_update && is_mac && [[ $(config_get --global DOCKSAL_VOLUMES) == "" ]]; then
-		config_set --global DOCKSAL_VOLUMES=bind
-	else
-		config_set --global DOCKSAL_VOLUMES=nfs
+		# Until the update process is completed, the old fin binary is still in place, so we can access it
+		# "fin -v" returns the version of the old fin here
+		if [[ $(ver_to_int "$(fin -v)") < $(ver_to_int "1.92.0") ]]; then
+			config_set --global DOCKSAL_VOLUMES=bind
+		fi
 	fi
 
 	# Rerun docker access/version checks here to inform the users of any issues
