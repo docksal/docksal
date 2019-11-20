@@ -4946,6 +4946,16 @@ update ()
 	# Cleanup
 	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
 
+	# Set DOCKSAL_VOLUMES globally for existing and new users on Macs (VirtualBox and Docker Desktop)
+	# Existing users get "bind" to match the previous default behavior.
+	# This ensures we do not break existing project stacks by switching to nfs volumes as the default (1.13.0 release)
+	# New users get "nfs" - the new default
+	if is_update && is_mac && [[ $(config_get --global DOCKSAL_VOLUMES) == "" ]]; then
+		config_set --global DOCKSAL_VOLUMES=bind
+	else
+		config_set --global DOCKSAL_VOLUMES=nfs
+	fi
+
 	# Rerun docker access/version checks here to inform the users of any issues
 	echo-green "Running post update checks..."
 	# Disabling alert suppression here, since it was likely enabled during earlier calls to check_docker_running
