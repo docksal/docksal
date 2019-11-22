@@ -4,7 +4,7 @@
 
 ### New software versions
 
-- fin v1.92.0
+- fin v1.92.1
 - docker v19.03.4, docker-compose v1.24.1, docker-machine v0.16.2 
 - VirtualBox v5.2.34
 - System services
