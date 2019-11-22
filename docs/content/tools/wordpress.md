@@ -1,27 +1,17 @@
 ---
-title: "Wordpress settings"
+title: "Wordpress Settings"
 
 ---
 
-Below you will find instructions on configuring your Wordpress project to work with Docksal.
-Some settings are required; others are optional or enhancements. Please review carefully.
+Below you will find instructions on configuring your WordPress project to work with Docksal.
 
-## DB Connection Settings (**required**) {#db}
+## DB Connection Settings {#db}
 
-This command needs to run prior to running `wp core install`:
+Update the DB settings in `wp-config.php` as follows:
 
+```php
+define( 'DB_NAME', getenv('MYSQL_DATABASE') );
+define( 'DB_USER', getenv('MYSQL_USER') );
+define( 'DB_PASSWORD', getenv('MYSQL_PASSWORD') );
+define( 'DB_HOST', getenv('MYSQL_HOST') );
 ```
-wp core config --dbname=${MYSQL_DATABASE} --dbuser=${MYSQL_USER} --dbpass=${MYSQL_PASSWORD} --dbhost=db
-```
-
-## User Settings
-
-Add your user variables to the `.docksal/docksal.env` file:
-
-```
-# Wordpress settings
-WP_ADMIN_USER=admin
-WP_ADMIN_PASS=admin
-WP_ADMIN_EMAIL=info@example.com
-```
-
