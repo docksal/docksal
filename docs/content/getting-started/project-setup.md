@@ -67,7 +67,7 @@ running on your machine. [Read more]((/core/system-ssh-agent/)) about the ssh-ag
 
 Running `fin init` again will reset your project stack. See `fin help project` for the list of project level commands.
 
-MySQL connection settings are injected via via environment variables. You can access those via [getenv()](https://www.php.net/manual/en/function.getenv.php) in PHP.
+MySQL connection settings are injected via environment variables. You can access those via [getenv()](https://www.php.net/manual/en/function.getenv.php) in PHP.
 
 ```php
 <?php
@@ -99,27 +99,31 @@ $ fin project create
   PHP based
     1.  Drupal 8
     2.  Drupal 8 (Composer Version)
-    3.  Drupal 7
-    4.  Wordpress
-    5.  Magento
-    6.  Laravel
-    7.  Symfony Skeleton
-    8.  Symfony WebApp
-    9.  Grav CMS
-    10. Backdrop CMS
+    3.  Drupal 8 (BLT Version)
+    4.  Drupal 7
+    5.  Wordpress
+    6.  Magento
+    7.  Laravel
+    8.  Symfony Skeleton
+    9.  Symfony WebApp
+    10. Grav CMS
+    11. Backdrop CMS
 
   Go based
-    11. Hugo
+    12. Hugo
 
   JS based
-    12. Gatsby JS
-    13. Angular
+    13. Gatsby JS
+    14. Angular
 
   HTML
-    14. Static HTML site
+    15. Static HTML site
+    
+  Custom
+    0.  Custom git repository
   ...
 
-Enter your choice (1-14): 1
+Enter your choice (0-15): 1
 
 Project folder:   /Users/username/Projects/demo
 Project software: Drupal 8
