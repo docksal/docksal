@@ -4,7 +4,7 @@
 
 ### New software versions
 
-- fin v1.92.1
+- fin v1.92.2
 - docker v19.03.4, docker-compose v1.24.1, docker-machine v0.16.2 
 - VirtualBox v5.2.34
 - System services
@@ -25,6 +25,7 @@
 ### Changes and improvements
 
 - Switched Docker Desktop to NFS volumes on Mac by default. See [volumes docs](https://docs.docksal.io/core/volumes/) for more details.
+  - Existing Mac users will need to manually switch to NFS mode. This ensures we do not break existing project stacks as the switch requires a `fin project reset`.
 - IDE mode overhaul
   - IDE runs in a separate container instead of inside `cli`
   - Requires `docksal/cli` v2.10+
@@ -42,6 +43,7 @@
   - fixed issue with backup ID retrieval in `provider_pull_acquia_db()` (#1093)
 - Increased custom command finding depth from 2 to 4 (#1116)
 - Fixed compatibility with WSL in Windows 10 v1903 (#1103)
+- Fixed installation issues on Play-with-Docker / Alpine (#1233)
 - Added IPv6 localhost termination in `fin hosts add` (#766)
 - Added `DRUSH_OPTIONS_URI` to the cli service (#1115)
 - Including MySQL settings in `cli` service definition
@@ -59,6 +61,8 @@
 - Allowed VM primary and secondary storage capacity to be configurable. (#1222)
 - Switched travis build to ubuntu 18.04 (bionic)
 - `DOCKSAL_LOCK_UPDATES=1` now disables checks for updates. Previously, it would check, but not allow an update (#1081)
+- Added a prompt to review release notes after update
+  - Also opening release notes URL in a browser after update on Macs
 
 ### Documentation
 
@@ -74,6 +78,7 @@
 - Added VPN troubleshooting docs (#1203)
 - Added documentation on multisite setup (#1209)
 - Added VS Code documentation (#1212)
+- Added WordPress settings documentation (#1144)
 - Added wording about what an addon is
 - Added documentation on passing environment variables (#1128)
 - Added message about RAM needed for composer projects (#1189)
