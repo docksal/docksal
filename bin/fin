@@ -4434,7 +4434,7 @@ install_tools_alpine ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		echo-green "Installing Docker Compose via pip (this may take a while)..."
 		# docker-compose has to be install via pip on Alpine
 		# See https://github.com/docker/compose/issues/3465
 		apk add --no-cache python3 python3-dev libffi-dev openssl-dev >/dev/null && \
