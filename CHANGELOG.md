@@ -11,7 +11,7 @@
   - [docksal/ssh-agent:1.3](https://github.com/docksal/service-ssh-agent/releases)
     - TCP proxy mode for SSH agent socket
 - Stack services
-  - [docksal/cli:2.10-php7.3](https://github.com/docksal/service-cli/releases)
+  - Switched cli to docksal/cli:2.10-php7.3 - **PHP 7.3 is now the default version in all PHP stacks**
     - Switched to Debian 10 (Buster) based upstream PHP-FPM images
     - PHP 5.6 and 7.0 and no longer supported
       - `docksal/cli:2.6-php5.6` and `docksal/cli:2.6-php7.0` are the last images that included these EOL PHP versions
