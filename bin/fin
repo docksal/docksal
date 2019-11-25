@@ -4099,7 +4099,7 @@ configure_resolver ()
 			# nslookup returns 0 exit code regardless of the results, so have to pipe it to grep
 			if is_alpine; then
 				# nslookup on Alpine does not support the '-timeout' option
-				timeout -t 5 nslookup google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+				timeout 5 nslookup google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
 			else
 				nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
 			fi
@@ -4429,10 +4429,10 @@ install_tools_alpine ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		echo-green "Installing Docker Compose via pip (this may take a while)..."
 		# docker-compose has to be install via pip on Alpine
 		# See https://github.com/docker/compose/issues/3465
-		apk add --no-cache python3 >/dev/null && \
+		apk add --no-cache python3 python3-dev libffi-dev openssl-dev >/dev/null && \
 			# Update pip to avoid warnings like:
 			# - "Cache entry deserialization failed, entry ignored"
 			# - "You are using pip version 10.0.1, however version 19.0.3 is available."
