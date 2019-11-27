@@ -35,7 +35,7 @@ You should not remove or change these values.
   web:
     volumes:
       # Project root volume
-      - project_root:/var/www:ro,nocopy
+      - project_root:/var/www:ro,nocopy,cached
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -56,7 +56,27 @@ In the `cli` service, there is the `volumes` section. You should not remove or c
   cli:
     volumes:
       # Project root volume
-      - project_root:/var/www:rw,nocopy
+      - project_root:/var/www:rw,nocopy,cached
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
+```
+{{% notice note %}}
+Allowed [configuration value overrides](/stack/configuration-variables/) are set in the `docksal.env` or `docksal-local.env` file.
+{{% /notice %}} 
+
+### Add Additional Custom Configuration
+
+You may add `environment` variables that you can pass in through the `docksal.env` or `docksal-local.env` file or enter as a static value.
+
+#### docksal.env
+```
+MY_CUSTOM_VARIBLE='test key'
+```
+
+#### docksal.yml
+```yaml
+  cli:
+    environment:
+      - MY_CUSTOM_VARIABLE
+      - MY_STATIC_VARIABLE=api_test_key
 ```

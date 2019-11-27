@@ -7,7 +7,7 @@ aliases:
 
 {{% notice warning %}}
 Quite often a problem may reside within the 3rd party tools, project code, local configuration, etc., and not the stack.
-To make sure that the Docksal stack works properly, try launching any of the [sample projects](/stack/config/#sample-projects).  
+To make sure that the Docksal stack works properly, try launching any of the [sample projects](https://github.com/docksal?q=boilerplate).  
 If you believe the issue is within the Docksal stack, then read on.
 {{% /notice %}}
 
@@ -221,7 +221,7 @@ Errors like this appear when your Apache is misconfigured. Most often it happens
 Check `docksal.yml` and `.htaccess` files for configuration errors, fix them and run `fin project start` (`fin start` for short).
 
 
-## Issue 10. SMB Share Creation, Share Mounting and Related Issues on Windows {#issue-10}
+## Issue 10. SMB Share Creation, Share Mounting, and Related Issues on Windows {#issue-10}
 
 Please see a separate [troubleshooting document on share creation, share mounting, and related issues](/troubleshooting/windows-smb/).
 
@@ -315,12 +315,28 @@ dism.exe /Online /Disable-Feature:Microsoft-Hyper-V /All
 
 ## Issue 15. Firewall Blocking Access to Docksal
 
+### On Windows
+
 Visiting the project URL in your browser results in a "site can't be reached" message, could be the result
 of a local firewall application blocking access to Docksal's canonical IP address.
 
 Firewall configuration can also cause problems with SMB. See [documentation on troubleshooting Windows SMB](../windows-smb#smb-ip).
 
+### On Mac
+
+If the containers do not mount properly during system start, you might see an error such as:
+
+```
+ERROR: for cli  Cannot create container for service cli: error while mounting volume with options: type='none' device='/Users/alex/Projects/myproject' o='bind': no such file or directory
+ERROR: Encountered errors while bringing up the project.
+```
+
 
 ### How to Resolve
 
 Configure your firewall to allow connections to and from 192.168.64.100 (Docksal's canonical IP address used across all systems and configurations).
+
+On macOS, go to System Preferences -> Security and Privacy -> Firewall and either turn the Firewall off completely or  
+configure it to allow all connections (see image). Then do fin system restart and check if it fixes the issue.
+
+![macOS firewall settings](/images/firewall.png)

@@ -7,9 +7,9 @@ aliases:
 
 
 Docksal has a built-in reverse proxy container that adds support for running multiple projects or using multiple (arbitrary domains).  
-The container binds to `192.168.64.100:80` and routes web requests based on the host name.
+By default, the container binds to `192.168.64.100:80` and routes web requests based on the host name.
 
-DNS resolution and routing for `*.docksal` domains is automatically configured. 
+[DNS resolution](/core/system-dns/) for `*.docksal` domains is automatically configured for your host and project containers. 
 
 
 ## Default Virtual Host / Domain Name
@@ -34,6 +34,8 @@ The default project domain can be set/overridden as follows:
 fin config set VIRTUAL_HOST=custom-domain.docksal
 ```
 
+Use a single domain in `VIRTUAL_HOST`. Wildcards are added automatically.
+
 Check configuration changes:
 
 ````bash
@@ -44,13 +46,12 @@ VIRTUAL_HOST_ALIASES: *.custom-domain.docksal
 
 Apply configuration changes with `fin project start` (`fin p start` for short).
 
-Note: Use a single domain in `VIRTUAL_HOST`. Wildcards are added automatically. For multiple domains, read on.
+Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
 
-Note: Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
 
 ## Using Arbitrary Custom Domains {#custom-domains}
 
-A completely custom domain(s) can be assigned by extending the `io.docksal.virtual-host` label of the `web` container in 
+You can use arbitrary custom domains by extending the `io.docksal.virtual-host` label of the `web` container in 
 either `docksal-local.yml` or `docksal.yml` file in the project.
 
 ```yaml
@@ -64,11 +65,15 @@ services:
       ...
 ```
 
-Note: `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*` is the default value.
+{{% notice note %}}
+The default values is `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*`.
+{{% /notice %}}
 
 Apply configuration changes with `fin project start` (`fin p start` for short).
 
-Note: non `.docksal` domains (e.g., `example.com`) will not be resolved automatically. You can use [fin hosts](/fin/fin-help/#hosts) 
-command to add and manage additional domain names via the system's `hosts` file. See `fin help hosts`.
+Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
 
-Note: Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
+{{% notice warning %}}
+Automatic DNS resolution for non-`.docksal` domains (e.g., `example.com`) is not supported. See [Managing DNS Manually](/core/system-dns#manual) 
+for a workaround.
+{{% /notice %}}

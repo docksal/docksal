@@ -1,6 +1,101 @@
 # Changelog
 
-# 1.12.2 (2019-06-05)
+## 1.13.0 (2019-11-27)
+
+### New software versions
+
+- fin v1.92.2
+- docker v19.03.4, docker-compose v1.24.1, docker-machine v0.16.2 
+- VirtualBox v5.2.34
+- System services
+  - [docksal/ssh-agent:1.3](https://github.com/docksal/service-ssh-agent/releases)
+    - TCP proxy mode for SSH agent socket
+- Stack services
+  - Switched cli to docksal/cli:2.10-php7.3 - **PHP 7.3 is now the default version in all PHP stacks**
+    - Switched to Debian 10 (Buster) based upstream PHP-FPM images
+    - PHP 5.6 and 7.0 and no longer supported
+      - `docksal/cli:2.6-php5.6` and `docksal/cli:2.6-php7.0` are the last images that included these EOL PHP versions
+    - VS Code Server integration
+      - See [Coder Web IDE docs](https://develop.docs.docksal.io/tools/ide/) for more details
+    - Updated versions for cli tools
+    - Updated xdebug (v2.7.2), so it works with PHP 7.3 (docksal/docksal#1105)
+    - Added sqlsrv/pdo_sqlsrv extensions for PHP 7.3
+    - See docksal/cli v2.7.0+ [release notes](https://github.com/docksal/service-cli/releases) for more details
+
+### Changes and improvements
+
+- Switched Docker Desktop to NFS volumes on Mac by default. See [volumes docs](https://docs.docksal.io/core/volumes/) for more details.
+  - Existing Mac users will need to manually switch to NFS mode. This ensures we do not break existing project stacks as the switch requires a `fin project reset`.
+- IDE mode overhaul
+  - IDE runs in a separate container instead of inside `cli`
+  - Requires `docksal/cli` v2.10+
+  - IDE URL is now `http://ide-${VIRTUAL_HOST}` (using dash instead of dot separator in the URL)
+  - IDE URL is printed along with Project URL after "fin up" in the console output (when `IDE_ENABLED=1`)
+- Implemented ssh-agent forwarding on Linux, Mac and Windows
+  - Added `DOCKSAL_SSH_AGENT_USE_HOST` variable to control which ssh-agent is used (host vs docksal) (#1080). See [variables docs](https://docs.docksal.io/stack/configuration-variables/#docksal-ssh-agent-use-host) for usage details.
+  - Implemented an SSH proxy over TCP to support this use case on Mac and Windows (#1088)
+- Allowed creating projects from a custom git repo (#1154)
+  - Example: `fin project create --name=myproject --repo=https://github.com/org/project.git`
+- Fixed a regression in git binary detection on Mac (#1084)
+- Fixes in provider integrations (`fin pull`)
+  - switched to `drush8` for Acquia pull commands (#1087)
+  - fixed issue where date on cached db isn't checked properly (#1092)
+  - fixed issue with backup ID retrieval in `provider_pull_acquia_db()` (#1093)
+- Increased custom command finding depth from 2 to 4 (#1116)
+- Fixed compatibility with WSL in Windows 10 v1903 (#1103)
+- Fixed installation issues on Play-with-Docker / Alpine (#1233)
+- Added IPv6 localhost termination in `fin hosts add` (#766)
+- Added `DRUSH_OPTIONS_URI` to the cli service (#1115)
+- Including MySQL settings in `cli` service definition
+  - With MySQL settings visible in `cli`, they can be assumed from the environment instead of having to hard-code in app code
+- Generating actual default init script file in the init wizard
+- Added `IMAGE_RUN_CLI` variable which can be used to override the image via the global `docksal.env`
+- Added `fin config yml` as a quick way to export static config (#728)
+- Added `DOCKSAL_CONFIRM_YES` variable to allow auto-answering yes to all yes/no confirms (#1186)
+- Added Drupal 8 BLT version for project create option (#1175)
+- Added `--quiet` option for fin ssh-key add command (#1179)
+- Made health check timeout configurable (#1178)
+- Allowed setting shell and user for `fin exec` and `fin bash` commands using `io.docksal.shell` and `io.docksal.user` container labels (#1122)
+- Refactored tests, made them faster, simpler (#1207)
+- Fixed the issue with `osxfs:cached` and named volumes (#1218)
+- Allowed VM primary and secondary storage capacity to be configurable. (#1222)
+- Switched travis build to ubuntu 18.04 (bionic)
+- `DOCKSAL_LOCK_UPDATES=1` now disables checks for updates. Previously, it would check, but not allow an update (#1081)
+- Added a prompt to review release notes after update
+  - Also opening release notes URL in a browser after update on Macs
+
+### Documentation
+
+- "Getting Started" docs overhaul
+  - Aiming for a straightforward experience for new users
+  - Two paths: 1) from scratch/existing project, 2) from a boilerplate repo
+  - Putting emphasis on `fin init` as a single step to bootstrap a project "from zero to hero"
+- Revamped volumes documentation (#1221)
+- Revamped variables documentation, added variable scope (#1173)
+- Added Acquia BLT documentation (#1190)
+- Added documentation for Portainer (#1170)
+- Added macOS firewall troubleshooting docs (#1196)
+- Added VPN troubleshooting docs (#1203)
+- Added documentation on multisite setup (#1209)
+- Added VS Code documentation (#1212)
+- Added WordPress settings documentation (#1144)
+- Added wording about what an addon is
+- Added documentation on passing environment variables (#1128)
+- Added message about RAM needed for composer projects (#1189)
+- Added notice about spaces in project paths (#1134)
+- Changed link of sample projects to the Docksal boilerplate list on Github (#1139)
+- Updated boilerplate repo URLs
+- Added warning about required index page in docroot in zero-config docs section (#1141)
+- Updated `ngrok.yml` config file documentation (#1100)
+- Documented the cli `startup.sh` script (#751)
+- Updated xdebug docs (#1158)
+- Updated phpcs docs (#1160)
+- Removed `fin vm ip` command from documentation and listed the canonical Docksal IP
+- Fixed URL to edit docs
+- Remove Babun mentions (#1204)
+
+
+## 1.12.3 (2019-06-12)
 
 **RELEASE CONTAINS BREAKING CHANGES**
 
@@ -14,11 +109,40 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Babun (Windows) is deprecated and is no longer supported
 - WSL is now the default and the only supported installation mode on Windows
 
-## New software versions
+### New software versions
+
+- fin v1.86.2
+
+### Changes and improvements
+
+- Fix condition in `fin exec` that prevented executing a command in an arbitrary container (#1074)
+- Call `xargs` in a cross-platform compatible way in fin cleanup (#1076)
+
+### Documentation
+
+- Updated `fin` command docs
+- Updated stock stacks description
+
+
+## 1.12.2 (2019-06-05)
+
+**RELEASE CONTAINS BREAKING CHANGES**
+
+There was a breaking change in Docker 18.09.0.  
+If you are using VirtualBox mode (Boot2Docker), your VM will need to be reset during the update.  
+See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-update/) for more information.
+
+**DEPRECATION NOTICE**
+
+- Versions of Windows prior to Windows 10 are no longer supported
+- Babun (Windows) is deprecated and is no longer supported
+- WSL is now the default and the only supported installation mode on Windows
+
+### New software versions
 
 - fin v1.86.0
 
-## Changes and improvements
+### Changes and improvements
 
 - Allowed custom commands and addons to be located in symlinked directories (#1036)
 - Added a missing `--rm` in a `docker run` call in `is_docker_path` to cleanup existed containers (#1039, #1064)
@@ -32,7 +156,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Reverted to using `wmic.exe` to get logical drives list on Windows (#1059)
 - Added a trigger to short `fin pull` tests in CI
 
-## Documentation
+### Documentation
 
 - Added docs on available Docksal Stock Images https://docs.docksal.io/stack/images-versions/
 - Updated docs on the `DOCKSAL_ENVIRONMENT` variable use cases (#1041)
@@ -44,7 +168,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Update `fin config` docs (#1035)
 
 
-# 1.12.1 (2019-04-09)
+## 1.12.1 (2019-04-09)
 
 **RELEASE CONTAINS BREAKING CHANGES**
 
@@ -58,24 +182,24 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Babun (Windows) is deprecated and is no longer supported
 - WSL is now the default and the only supported installation mode on Windows
 
-## New software versions
+### New software versions
 
 - fin v1.85.1
 
-## Changes and improvements
+### Changes and improvements
 
 - Added missing `stack-pantheon.yml` file to the list of stacks to download during update/install
 - Fixed VirtualBox 6.0 compatibility in `fin vm rm`
   - Note: The official latest stable and supported VirtualBox version is still 5.2.26.
 - Fixed DNS detection on Windows
 
-## Documentation
+### Documentation
 
 - Updated installation docs
 - Made Docker Desktop the recommended option for Mac users (to match the info on docksal.io)
 
 
-# 1.12.0 (2019-04-04)
+## 1.12.0 (2019-04-04)
 
 **RELEASE CONTAINS BREAKING CHANGES**
 
@@ -89,7 +213,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Babun (Windows) is deprecated and is no longer supported
 - WSL is now the default and the only supported installation mode on Windows
 
-## New software versions
+### New software versions
 
 - fin v1.85.0
 - Docker v18.09.2
@@ -118,7 +242,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Addons
   - Added [PHPCS and PHPCBF](https://github.com/docksal/addons/tree/master/phpcs) addon
 
-## New features
+### New features
 
 - `fin pull` - New set of commands to interact with hosting providers
 - [Pantheon](https://pantheon.io/) stack (#143)
@@ -133,7 +257,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
   - [Elasticsearch](https://hub.docker.com/_/elasticsearch)
 - Angular boilerplate
 
-## Changes and improvements
+### Changes and improvements
 
 - Refactored Docksal install/update mechanism 
 - `fin run-cli` switched to `docksal/cli:2.6-php7.2`
@@ -155,7 +279,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - `fin exec` and `fin bash` now use `sh` by default and only use `bash` for `cli` and `db` (#993, #942)
 - Refactored Travis tests to run concurrently
 
-## Documentation
+### Documentation
 
 - Added [fin pull (hosting integrations)](https://docs.docksal.io/fin/fin-pull/)
 - Added [Advanced Use Cases](https://docs.docksal.io/fin/fin-pull/use-cases/) section
@@ -168,14 +292,14 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Improved documentation on [switching Docker modes](https://docs.docksal.io/getting-started/docker-modes/)
 
 
-# 1.11.1 (2018-11-27)
+## 1.11.1 (2018-11-27)
 
-## New software versions
+### New software versions
 
 - fin v1.80.1
 - Docker Compose v1.23.1
 
-## Changes and improvements
+### Changes and improvements
 
 - Docker Compose v1.23.0+ compatibility (#819)
   - Ships with the latest versions of Docker for Mac/Windows (v2.0.0.0) and introduces a breaking change (docker/compose#6316)
@@ -183,15 +307,15 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Make SMB share mount more predictable (#842)
 - Fixed "fin ssh-key add <key-name>" compatibility with Bash 3 (#857)
 
-## Documentation
+### Documentation
 
 - Restructured and updated stack configuration docs (#847)
 - Updated SSH agent docs
 
 
-# 1.11.0 (2018-11-15)
+## 1.11.0 (2018-11-15)
 
-## New software versions
+### New software versions
 
 - fin v1.79.4
 - Docker v18.06.1-ce
@@ -215,7 +339,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
     - Refactored Acquia Cloud API authentication
     - and more
 
-## New features
+### New features
 
 - `fin ssh-key` - new set of commands to manage SSH keys and ssh-agent
 - Using SMB 2.1 to mount shares on Windows (#667)
@@ -223,7 +347,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - `DOCKSAL_VOLUMES=none` option
   - Not mounting the codebase from the host and using an empty volume instead. Provides best fs performance, but the code has to be managed inside the container stack.
 
-## Changes and improvements
+### Changes and improvements
 
 - Automatically pass git `user.email` and `user.name` settings from the host to `cli`
 - Exit if system services failed to start (#772)
@@ -246,7 +370,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Removed the ability for global addons to use `run-cli` because we cannot guarantee that `$HOME/.docksal` directory is mapped inside Docker (#771)
 - Updated automated tests
 
-## Documentation
+### Documentation
 
 - Migrated docs to Hugo and Netlify
 - Docs structure overhaul
@@ -258,25 +382,25 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Removed Windows 10 SMB1 mentions
 
 
-# 1.10.1 (2018-08-03)
+## 1.10.1 (2018-08-03)
 
-## New software versions
+### New software versions
 
 - fin 1.69.1
 
-## Changes and improvements
+### Changes and improvements
 
 - Fixed help for project level and global commands on Linux. Custom commands list did not display on Linux.
 - Fixed broken db commands. Some DB commands did not function properly in 1.10.0.
 
-## Documentation
+### Documentation
 
 - Fixed path to crontab in cron.md doc
 - Updated multiple-projects.md regarding virtual host configuration
 
-# 1.10.0 (2018-07-31)
+## 1.10.0 (2018-07-31)
 
-## New software versions
+### New software versions
 
 - fin 1.67.2
 - System service updates
@@ -289,7 +413,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
     - Custom startup script support
     - Cron jobs and more
 
-## New Features
+### New Features
 
 - Support for a wide variety of Linux distributions: Debian, Ubuntu, Mint, Fedora, Centos, Alpine (#629)
 - Ability to use release candidate release for updates. To use: `fin config set --global DOCKSAL_USE_RC=1` (#719)
@@ -307,7 +431,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - `exec_target = run-cli` can be used in custom commands and addons to run them in a standalone run-cli session (#715)
 - [Drupal 8 Composer](https://github.com/docksal/boilerplate-drupal8-composer) boilerplate project (#174)
 
-## Changes and improvements
+### Changes and improvements
 
 - Switched to simplified, non-persistent network configuration on Linux
   - Supporting various Linux flavors (Debian, Ubuntu, Mint, Fedora, Centos) is much simpler now
@@ -346,7 +470,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Fixed project categorization for Hugo in `fin project create`
 - Updated and improved automated tests across different projects (cli, web, fin, etc.)
 
-## Documentation
+### Documentation
 
 - New: Setting up Cron jobs in cli (#671)
 - New: Using Platform.sh CLI tool
@@ -359,23 +483,23 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Updated: Switching PHP versions (#744) 
 
 
-# 1.9.1 (2018-06-07)
+## 1.9.1 (2018-06-07)
 
-## Changes and improvements
+### Changes and improvements
 
 - Fixed an error with setting DB privileges during `fin db create`
 - Disabled network cleanup in `fin cleanup` (triggered during updates) (#582)
   - Check [this fix](https://github.com/docksal/docksal/issues/582#issuecomment-395537109) if you updated to Docksal 1.9.0 and had your stopped project(s) broken
 
-## Documentation
+### Documentation
 
 - Updated 1.9.0 release notes to mention a breaking change in docker-compose 1.21.1
 - Fixed typos here and there
 
 
-# 1.9.0 (2018-06-05)
+## 1.9.0 (2018-06-05)
 
-## New software versions
+### New software versions
 
 - fin 1.60.0
 - Stack updates
@@ -385,7 +509,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
   - **[BREAKING]** Projects with dashes in names need `fin reset` ([Read more](https://blog.docksal.io/breaking-change-in-docker-compose-1-21-1-c00fda7e1b75))
 - VirtualBox 5.2.2
 
-## New Features
+### New Features
 
 - Alpine Linux support.
 - [Play-with-Docker](https://labs.play-with-docker.com/) support
@@ -402,7 +526,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
   - [Symfony WebApp](https://github.com/docksal/example-symfony-webapp)
   - [Backdrop CMS](https://github.com/docksal/example-backdrop)
 
-## Changes and improvements
+### Changes and improvements
 
 - Improved `fin share` to allow for custom ngrok configuration (see [Additional ngrok configuration](https://docs.docksal.io/en/master/tools/ngrok/#additional-ngrok-configuration)).
 - Extended `fin config generate` to allow for `DOCKSAL_STACK` and `DOCROOT` to be set at runtime.
@@ -435,7 +559,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Fixed (workaround) a Docker bug with long commands overlapping on single terminal line (`fin exec` and `fin run-cli`).
 - Add a warning when running `fin` as root.
 
-## Documentation
+### Documentation
 
 - New: [Addons](https://docs.docksal.io/en/v1.9.0/fin/addons) - extending projects with extra commands and integrations.
 - New: [phpMyAdmin](https://docs.docksal.io/en/v1.9.0/tools/phpmyadmin) integration docs.
@@ -455,16 +579,16 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Fixed typos and grammar found within documentation.
 
 
-# 1.8.0 (2018-04-05)
+## 1.8.0 (2018-04-05)
 
-## New software versions
+### New software versions
 
 - fin 1.52.0
 - Stack updates
   - Switched `cli` to [docksal/cli:2.1-php7.1](https://github.com/docksal/service-cli/releases/tag/v2.1.0)
   - Switched `db` to [docksal/db:1.2-mysql-5.6](https://github.com/docksal/service-db/releases/tag/v1.2.0)
 
-## New Features
+### New Features
 
 - Secrets - a way to pass keys/tokens to `cli`
   - Currently supported: `SECRET_SSH_PRIVATE_KEY`, `SECRET_ACAPI_EMAIL`, `SECRET_ACAPI_KEY`, `SECRET_TERMINUS_TOKEN`
@@ -477,7 +601,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
   - Requires `docksal/cli` [v2.1.0+](https://github.com/docksal/service-cli/releases)
 - Added PostgreSQL service definition in `services.yml` (#193)
 
-## Changes and improvements
+### Changes and improvements
 
 - Added support to run `fin debug` with project configuration loading
   - `fin debug -c ...`, `fin debug --load-configuration ...`
@@ -490,7 +614,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Stacks: renamed `db` to `mysql` in `services.yml`
   - Keeping the old `db` service definition for backward compatibility
 
-## Documentation
+### Documentation
 
 - Updated [Drush docs](https://docs.docksal.io/en/v1.8.0/tools/drush)
   - Drush Launcher
@@ -499,9 +623,9 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Changed [macOS installation instructions](https://docs.docksal.io/en/v1.8.0/getting-started/env-setup/#macos) to account for VirtualBox installation issues on macOS High Sierra
 
 
-# 1.7.0 (2018-03-19)
+## 1.7.0 (2018-03-19)
 
-## New software versions
+### New software versions
 
 - fin 1.50.3
 - Docker Compose 1.19.0
@@ -516,7 +640,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
     - [v2 cli images](https://blog.docksal.io/new-docksal-cli-images-2-0-fd88243d79b9), built from official Docker PHP-FPM images
   - Acquia stack now uses `1.1-varnish5` (Varnish 5) image
 
-## New Features
+### New Features
 
 - `fin system` subset of commands (#387)
   - `fin system stop` - removes Docksal system services and stops all Docksal projects (`fin stop --all`)
@@ -524,7 +648,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - New `node` stack and [sample project](https://github.com/docksal/example-nodejs)
 - New project wizards (Grav CMS, Gatsby JS, Laravel, Hugo)
 
-## Changes and improvements
+### Changes and improvements
 
 - `fin cleanup` refactoring
   - Use Docker's `prune` commands where it makes sense
@@ -559,7 +683,7 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Added ability to override the default host value for `fin share` (`fin share --host=example.com`) (#363)
 - Removed old tests and updated existing ones
 
-## Documentation
+### Documentation
 
 - Document installation issues on a fresh macOS High Sierra (#417)
 - Update [PHP settings overrides](https://docs.docksal.io/en/master/advanced/stack-settings) (changed in cli v2.0 images)
@@ -570,23 +694,23 @@ See [Boot2Docker update](https://docs.docksal.io/troubleshooting/boot2docker-upd
 - Updated [ngrok docs](https://docs.docksal.io/en/master/tools/ngrok)
 
 
-# 1.6.1 (2017-12-12)
+## 1.6.1 (2017-12-12)
 
 **IMPORTANT NOTE:** if you use VirtualBox you may have to run `fin update` **twice** for this release.
 
 This release addresses a critical issue in 1.6.0, which breaks new Docksal installations on Mac/Windows using 
 VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
 
-## New software versions
+### New software versions
 
 - fin v1.43.2
 
-## New Features
+### New Features
 
 - Windows: WSL (Windows Subsystem for Linux) support (beta) (#188, #407, #421)
 - Docker for Mac, Unison volumes: `fin logs unison` - show Unison log
 
-## Changes and improvements
+### Changes and improvements
 
 - Check for `docker-machine` binary existence during vm stop on update (#422)
 - Fixed xdebug configuration regression (#420)
@@ -595,17 +719,17 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
 
     Set `DOCKSAL_LOCK_UPDATES` to anything in `$HOME/.docksal/docksal.env` to lock updates. Useful on CI/sandbox servers.
 
-## Documentation
+### Documentation
 
 - Updated: [xdebug docs](https://docs.docksal.io/en/v1.6.0/tools/xdebug/)
 - Updated: Docker for Mac [Unison volumes](https://docs.docksal.io/en/v1.6.1/advanced/volumes/#unison-volumes)
 
 
-# 1.6.0 (2017-12-08)
+## 1.6.0 (2017-12-08)
 
 **IMPORTANT NOTE:** if you use VirtualBox you may have to run `fin update` **twice** for this release.
 
-## New software versions
+### New software versions
 
 - fin v1.41.0
 - docker/boot2docker v17.09.0-ce
@@ -613,7 +737,7 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
 - docker-machine v0.13.0
 - VirtualBox v5.1.28 (the latest boot2docker is using VirtualBox Guest Additions v5.1.28, so we stick with a matching version here as well)
 
-## New Features
+### New Features
 
 - `fin project` command subset replaces the old `fin start/stop/restart/rm` commands.
 
@@ -627,7 +751,7 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
 [Gatsby JS](https://github.com/docksal/example-gatsby) and [Laravel](https://github.com/docksal/example-laravel)
 - New `vhosts` command to show all registered Docksal virtual hosts
 
-## Changes and improvements
+### Changes and improvements
 
 - Docker for Mac/Win: networking setup is now aligned with the VirtualBox mode and Linux:
 
@@ -653,7 +777,7 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
     Requires that container specified as `exec_target` has `project_root` volume defined, just like cli:
     ```
         volumes:
-          # Project root volume
+          ## Project root volume
           - project_root:/var/www:rw,nocopy
     ```
 
@@ -666,7 +790,7 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
 - Ensure `~/.ssh` exists. This prevents errors for users with no ssh keys
 - Increase CLI healthcheck wait timeout to 60 seconds for intensive operations during custom healthchecks
 
-## Documentation
+### Documentation
 
 - New: [Unison volumes](https://docs.docksal.io/en/v1.6.0/advanced/volumes/#unison-volumes)
 - Updated: [SMB troubleshooting](https://docs.docksal.io/en/v1.6.0/troubleshooting-smb/) - SMBv1 issues on Windows 10 Fall Creators Update 1709
@@ -678,38 +802,38 @@ VirtualBox mode. We are also introducing support for WSL on Windows (in beta).
   - Organized instructions per OS
 - Updated: Improved [custom commands](https://docs.docksal.io/en/v1.6.0/fin/custom-commands/) documentation
 
-# 1.5.1 (2017-09-06)
+## 1.5.1 (2017-09-06)
 
 This is a hotfix release aimed to address sporadic issues with TLS certificates caused by a regression between 
 docker-machine 0.12.0 and docker engine 17.06.0.
 
-## New software versions
+### New software versions
 
 - docker-machine v0.12.2
 
 
-# 1.5.0 (2017-08-24)
+## 1.5.0 (2017-08-24)
 
-## New software versions
+### New software versions
 
 - fin v1.26.0
 - Stack images updates
   - `web`: [docksal/web:2.1-apache2.2](https://github.com/docksal/service-web/releases) and [docksal/web:2.1-apache2.4](https://github.com/docksal/service-web/releases)
 
-## New Features
+### New Features
 
 - `--no-truncate` option for `fin db import`
 - `fin db cli` now accepts query as an argument and `--db` parameter to specify the database to run query against
 - `fin db create` and `fin db drop` commands
 - `fin diagnose` command
 
-## Changes and improvements
+### Changes and improvements
 
 - Basic automated test in example repos
 - Removed old icon scripts on for Windows
 - Made `DOCROOT` variable accessing in `cli`
 
-## Documentation
+### Documentation
 
 - New: [Troubleshooting SMB shares creation, mounting and related issues on Windows](http://docs.docksal.io/en/v1.5.0/troubleshooting-smb)
 - New: [Web server: Configuration overrides](http://docs.docksal.io/en/v1.5.0/advanced/web-configuration-overrides) 
@@ -717,9 +841,9 @@ docker-machine 0.12.0 and docker engine 17.06.0.
 - Updated: added recommendations for running custom commands in `cli`
 
 
-# 1.4.0 (2017-08-03)
+## 1.4.0 (2017-08-03)
 
-## Breaking changes
+### Breaking changes
 
 For custom configurations (using `docksal.yml`), if you are getting:
 
@@ -729,7 +853,7 @@ ERROR: Named volume "host_home:/.home:ro" is used in service "cli" but no declar
 
 Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 
-## New software versions
+### New software versions
 
 - docker v17.06.0-ce
 - docker-compose v1.14.0
@@ -743,7 +867,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
   - `db`: [docksal/db:1.1](https://github.com/docksal/service-db/releases)
   - `cli`: [docksal/cli:1.3-php5](https://github.com/docksal/service-cli/releases) and [docksal/cli:1.3-php7](https://github.com/docksal/service-cli/releases)
 
-## New Features
+### New Features
 
 - Implemented a Docker healthcheck for cli
   - Requires docksal/cli v1.3.0+. Falls back to waiting for 10s for the container to become ready for older versions.
@@ -759,7 +883,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Support for executing custom commands in `cli` instead of host
   - Add `#: exec_target = cli` in the header of the custom command to tell fin to execute the command within `cli` via `fin exec`
 
-## Changes and improvements
+### Changes and improvements
 
 - The VM on Mac and Windows will now use 2GB of RAM by default
   - Anyone who's low on RAM (< 8GB) can use `fin vm ram 1024` to limit the VM memory to 1GB
@@ -778,7 +902,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Fixed the install/update process handling when Docker is already installed (#298)
 - Other fixes and improvements 
 
-## Documentation
+### Documentation
 
 - New: [Extending stock images](http://docs.docksal.io/en/v1.4.0/advanced/extend-images)
 - New: [Folder aliases](http://docs.docksal.io/en/v1.4.0/advanced/folder-aliases)
@@ -787,12 +911,12 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Updated: Troubleshooting with mysql memory edge case
 
 
-# 1.3.1 (2017-06-02)
+## 1.3.1 (2017-06-02)
 
-## New software versions 
+### New software versions 
 * **fin 1.10.0**
 
-## Fixes and improvements
+### Fixes and improvements
 
 * Fix retrospective bug that was making `DOCKSAL_DNS2` value empty
 * Fix permissions issues on Windows that were related to improper `uid`/`gid`
@@ -808,9 +932,9 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
   - Updated docs regarding the DNS resolver
 
 
-# 1.3.0 (2017-05-16)
+## 1.3.0 (2017-05-16)
 
-## New Features
+### New Features
 
 * `*.docksal` domain resolver now works on Windows removing the need to edit the `hosts` file! 
 * `fin db <command>` replaces all previously existing mysql related commands (`sqli` is now `db import` etc.). See `fin db help` for details. Old commands still work for compatibility.
@@ -818,7 +942,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 * `fin hosts` - easily add or remove a host to/from OS-dependent `hosts` file (Relates to #113)
 * Override VirtualBox HDD size during VM creation. Set `VBOX_HDD` environment variable to the desired size in megabytes. Default is `50000`. (see https://github.com/docksal/docksal/commit/d50e00367514f64ad0ae4421f6d08cc614d39e2e for details)
 
-## Changes and improvements
+### Changes and improvements
 
 * Windows SMB share creation and mount refactoring
     - Prefix Docksal SMB shares with `docksal-` to avoid conflicts with existing shares. Docksal share names on Windows will now look like `\\computer\docksal-c` instead of `\\computer\c` before. Should address file permissions issues some Windows users had had.
@@ -832,7 +956,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 * Import SSH keys during containers reset on Linux (#180)
 * `vhost-proxy` and `dns` are now binding to `192.168.64.100` on all platforms. This should help to avoid conflicts with local web server instances (assuming they also don't bind to `0.0.0.0`, but use a specific IP instead (e.g., Apache on Linux can now run on `127.0.0.1` in parallel with Docksal)
 
-## Documentation
+### Documentation
 
 * How to increase Docksal VirtualBox VM disk size 
 * Drush site aliases documentation improvements
@@ -841,9 +965,9 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 * Added "Stats and analytics" section
 
 
-## 1.2.0 (2017-04-12)
+### 1.2.0 (2017-04-12)
 
-### New features
+#### New features
 
 - New one-line installer: `curl -fsSL get.docksal.io | sh`
 - Docksal usage stats. Minimal OS/version and fin version tracking via Google Analytics.
@@ -860,7 +984,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
   - `fin vm start` - load system images from a local `docksal-system-images.tar` file
 - Magento support and [sample project repos](https://github.com/docksal/magento)
 
-### Changes and improvements
+#### Changes and improvements
 
 - Version updates:
   - VirtualBox 5.1.18
@@ -882,7 +1006,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Allowing non-tty installation on Mac and Linux (e.g., when used in CI/scripts)
 - Miscellaneous other small fixes and improvements
 
-### Documentation
+#### Documentation
 
 - MySQL DB access for external tools
 - Overriding the default domain name and Using arbitrary custom domains
@@ -894,9 +1018,9 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Added Github issue and pull request templates
 
 
-## 1.1.0 (2017-03-07)
+### 1.1.0 (2017-03-07)
 
-### New features
+#### New features
 
 - Global docksal.env
 - Ability to skip VBox version check via `SKIP_VBOX_VERSION_CHECK=1` (add to `~/.docksal/docksal.env`)
@@ -904,7 +1028,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Added checks for the uniqueness of the project name and virtual host
 - Added Magento sample project repo to `fin create-site`
 
-### Changes and improvements
+#### Changes and improvements
 
 - Update software requirements
   - Docker 1.13.1, Docker Compose 1.11.1, Docker Machine 0.9.0, VirtualBox 5.1.14
@@ -921,7 +1045,7 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Fixed the configuration statements order in `volumes-unison.yml`
 - Fixed documentation search on ReadTheDocs
 
-### Documentation
+#### Documentation
 
 - Restructured docs
 - Updated Xdebug documentation for drush debugging
@@ -929,21 +1053,21 @@ Remove `host_home:/.home:ro` from `docksal.yml` and do a `fin project start`.
 - Added Drupal Console and Drush setup instructions
 
 
-## 1.0.0 (2017-01-27)
+### 1.0.0 (2017-01-27)
 
 First release.
 
 **IMPORTANT:** Anyone switching from Drude please follow the [update steps](/docs/update-dde.md) precisely to avoid conflicts and issues.
 
 
-## 1.0.0-rc2 (2017-01-20)
+### 1.0.0-rc2 (2017-01-20)
 
 First release.
 
 **IMPORTANT:** Anyone switching from Drude please follow the [update steps](/docs/update-dde.md) precisely to avoid conflicts and issues.
 
 
-## 1.0.0-rc1 (2016-11-23)
+### 1.0.0-rc1 (2016-11-23)
 
 First release.
 

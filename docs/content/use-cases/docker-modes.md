@@ -1,8 +1,8 @@
 ---
 title: "Switching Docker Modes"
-weight: 2
 aliases:
   - /en/master/getting-started/docker-modes/
+  - /getting-started/docker-modes/
 ---
 
 
@@ -76,15 +76,13 @@ getting there). See [docksal/docksal#249](https://github.com/docksal/docksal/iss
 
 **Reconfigure Docksal**
 
-Assuming that you have been previously using Docksal with Babun and VirtualBox, installed according to [setup docs](/getting-started/setup/).
-
-1. Stop Docksal VirtualBox VM (run in Babun):
+1. Stop Docksal VirtualBox VM (run in WSL):
 
         fin system stop
 
 2. Install/launch [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/).
 
-3. Start Docksal in Docker Desktop mode (run in Babun):
+3. Start Docksal in Docker Desktop mode (run in WSL):
 
         fin config set --global DOCKER_NATIVE=1
         fin system start
@@ -98,7 +96,7 @@ Share your local drives with Docker for Windows:
 
 ### Switching from Docker Desktop for Windows to VirtualBox 
 
-1. Stop Docksal in Docker Desktop (run in Babun):
+1. Stop Docksal in Docker Desktop (run in WSL):
 
         fin system stop
 
@@ -109,7 +107,7 @@ Share your local drives with Docker for Windows:
     Hyper-V locks the VT-x extension to itself, so other hypervisors are not able to use the hardware virtualization 
     support and cannot run 64bit VMs because of that.
 
-3. Start Docksal in VirtualBox VM mode (run in Babun):
+3. Start Docksal in VirtualBox VM mode (run in WSL):
 
         fin config set --global DOCKER_NATIVE=0
         fin system start

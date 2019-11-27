@@ -8,7 +8,7 @@ aliases:
 ## fin {#fin}
 
 	
-	Docksal command line utility v1.86.2
+	Docksal command line utility v1.92.2
 	
 	Usage: fin <command>
 	
@@ -87,6 +87,8 @@ aliases:
 	  fin pl -a                	List all known Docksal projects, including stopped ones
 	  fin project reset db     	Reset only DB service to start with DB from scratch
 	  fin project create       	Start a new project wizard
+	  fin project create --name=myproject --repo=https://github.com/org/project.git	
+	                           	Initialize project from a custom git repo
 
 ## db {#db}
 
@@ -186,8 +188,9 @@ aliases:
 	Usage: fin ssh-key <command> [params]
 	
 	Commands:
-	  add [key-name]           	Add a private SSH key from $HOME/.ssh by file name
+	  add [key-name] [--quiet] 	Add a private SSH key from $HOME/.ssh by file name
 	                           	Adds all default keys (id_rsa/id_dsa/id_ecdsa/id_ed25519) if no file name is given.
+	                           	Suppress key already loaded notifications if --quiet option specified.
 	  ls                       	List SSH keys loaded in the docksal-ssh-agent
 	  rm                       	Remove all keys from the docksal-ssh-agent
 	  new [key-name]           	Generate a new SSH key pair
@@ -227,9 +230,12 @@ aliases:
 	  show [options]           	Display configuration for the current project
 	      --show-secrets       	Do not truncate value of SECRET_* environment vars
 	  env                      	Display only environment variables section
+	  yml                      	Display static YML project config suitable for export (NOTE: SECRET_* values will not be hidden)
+	
 	  generate [options]       	Generate empty Docksal configuration for the project
 	      --stack=acquia       	Set non-default DOCKSAL_STACK during config generate
 	      --docroot=mydir      	Set non-default DOCROOT during config generate
+	
 	  set [options] [VAR=VAL]  	Set value(s) for the variable(s) in project ENV file
 	      --global             	Set for global ENV file
 	      --env=[name]         	Set in environment specific project ENV file
@@ -247,7 +253,7 @@ aliases:
 	  fin config set DOCKER_NATIVE=1 --global	Adds DOCKER_NATIVE=1 into $HOME/.docksal/docksal.env
 	  fin config rm DOCKER_NATIVE --global		Removes DOCKER_NATIVE value from $HOME/.docksal/docksal.env
 	  fin config set DOCKSAL_STACK=acquia		Set different default stack in .docksal/docksal.env
-	  fin config set --env=local XDEBUG_ENABLED=1		Enable XDEBUG in .docksal/docksal-local.env
+	  fin config set --env=local XDEBUG_ENABLED=1	Enable XDEBUG in .docksal/docksal-local.env
 
 ## addon {#addon}
 

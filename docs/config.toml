@@ -4,19 +4,44 @@ theme = "learn"
 
 [params]
   description = "Official Docksal documentation website"
-  editURL = "https://github.com/docksal/docksal/edit/develop/docs/"
+  editURL = "https://github.com/docksal/docksal/edit/develop/docs/content/"
 
   # Custom CSS => statis/css/theme-docksal.css
   themeVariant = "docksal"
 
   google_tag_manager = "GTM-58ST6XD"
 
-  version = "v1.11.1"
+  version = "v1.13.0"
+
+  [[params.versions]]
+  version = "v1.13.0"
+  branch = "v1.13.0"
+  url = "https://docs.docksal.io"
+
+  [[params.versions]]
+  version = "v1.12.3"
+  branch = "v1.12.3"
+  url = "https://v1-12-3.docs.docksal.io"
+
+  [[params.versions]]
+  version = "v1.12.2"
+  branch = "v1.12.2"
+  url = "https://v1-12-2.docs.docksal.io"
+
+  [[params.versions]]
+  version = "v1.12.1"
+  branch = "v1.12.1"
+  url = "https://v1-12-1.docs.docksal.io"
   
+  [[params.versions]]
+  version = "v1.12.0"
+  branch = "v1.12.0"
+  url = "https://v1-12-0.docs.docksal.io"
+
   [[params.versions]]
   version = "v1.11.1"
   branch = "v1.11.1"
-  url = "https://docs.docksal.io"
+  url = "https://v1-11-1.docs.docksal.io"
 
   [[params.versions]]
   version = "v1.11.0"

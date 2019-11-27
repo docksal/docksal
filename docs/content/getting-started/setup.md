@@ -1,5 +1,5 @@
 ---
-title: "Installing Docksal"
+title: "Install Docksal"
 weight: 1
 aliases:
   - /en/master/getting-started/setup/
@@ -33,13 +33,17 @@ Windows 10 and CPU with hardware virtualization (**VT-x/AMD-V**) supported and [
 
 {{% notice note %}}
 The installer script (`get.docksal.io`) requires administrative privileges to complete the installation. 
-On all operating systems, `fin` cli tool is written to `/usr/local/bin` and Docksal's IP address (`192.168.64.100`) 
-is assigned to the host's local network interface.
-On macOS, `/etc/exports` and `/etc/resolver/docksal` have to be modified, and `nfsd` service has to be restarted. 
-On Linux, installer (re)installs the Docker service if needed.
-On Windows, there are additional requests for permissions to create network shares for local drives to share files with 
-Docker and to mount them with the current user's account and password.
 {{% /notice %}}
+
+Here's why:
+
+- All systems: `fin` cli tool is written to `/usr/local/bin` (all systems)
+- All systems: `192.168.64.100` (Docksal's canonical IP) is assigned to the host's local network interface (all systems) 
+- macOS: `/etc/exports` and `/etc/resolver/docksal` have to be modified, `nfsd` service has to be restarted
+- Linux: install/update the Docker service if necessary
+- Windows: there are additional requests for permissions to create network shares for local drives to share files with 
+Docker and to mount them with the current user's account and password.
+
 
 ### What is your operating system?
 
@@ -64,7 +68,7 @@ With this method, Docker will run inside a VM in VirtualBox.
 
 1. Install VirtualBox
 
-    [![Download VirtualBox 5.2.26](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg)
+    [![Download VirtualBox v5.2.32](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](http://download.virtualbox.org/virtualbox/5.2.32/VirtualBox-5.2.32-132073-OSX.dmg)
 
 1. Enable Kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
 
@@ -85,7 +89,7 @@ With this method, Docker will run inside a VM in VirtualBox.
 
 1. Install Docker Desktop for Mac
 
-    [![Docker Desktop for Mac](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/Docker.dmg)
+    [![Docker Desktop for Mac v2.1.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/38240/Docker.dmg)
 
 1. Start Docker Desktop
 
@@ -186,7 +190,7 @@ Click the preferred option to proceed to option-specific docs.
 
 3. Install Docker Desktop for Windows
 
-    [![Docker Desktop for Windows](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
+    [![Docker Desktop for Windows v2.1.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/38240/Docker%20Desktop%20Installer.exe)
     
 4. Configure Docker Desktop on Windows
 

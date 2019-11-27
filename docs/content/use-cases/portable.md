@@ -1,8 +1,8 @@
 ---
 title: "Portable Installation"
-weight: 4
 aliases:
   - /en/master/getting-started/portable/
+  - /getting-started/portable/
 ---
 
 Docksal can be installed from a USB drive or a local folder.  
@@ -24,7 +24,6 @@ bash <(curl -fsSL https://get.docksal.io/portable)
 
 Here is what the script will download:
 
-- Babun and winpty (necessary for Windows only)
 - VirtualBox and boot2docker.iso (necessary for macOS and Windows)
 - Docker tools: docker cli, docker-compose, docker-machine (macOS and Windows versions)
 - Docksal system and default stack images (these are cross-platform)
@@ -67,8 +66,8 @@ Manually download Docker for Mac/Windows apps into the portable distribution fol
 ## Installing from a portable source {#install}
 
 {{% notice note %}}
-Babun is included in the portable distribution, but has to be installed manually before proceeding.
-All further commands are expected to be run in Babun on Windows.
+On Windows, [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/faq) has to be installed manually before proceeding.
+All further commands are expected to be run in WSL shell on Windows.
 {{% /notice %}}
 
 Docksal's one-line installer supports portable mode installation and will detect and use local files when available.

@@ -40,7 +40,7 @@ services:
   styleguide:
     image: docksal/apache:2.4-2.3
     volumes:
-      - project_root:/var/www:ro,nocopy
+      - project_root:/var/www:ro,nocopy,cached
     environment:
       - APACHE_DOCUMENTROOT=/var/www/styleguide
     labels:
@@ -55,7 +55,7 @@ services:
   styleguide:
     image: docksal/nginx:1.14-1.0
     volumes:
-      - project_root:/var/www:ro,nocopy
+      - project_root:/var/www:ro,nocopy,cached
     environment:
       - NGINX_VHOST_PRESET=html
       - NGINX_SERVER_ROOT=/var/www/styleguide

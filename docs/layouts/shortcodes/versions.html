@@ -1,6 +1,6 @@
 {{ $versions := .Page.Param "versions" }}
 <ul>
     {{ range $versions }}
-    <li><a href="{{ .url }}">{{ .version }}</a></li>
+    <li><a href="{{ .url }}" rel="nofollow">{{ .version }}</a></li>
     {{ end }}
 </ul>

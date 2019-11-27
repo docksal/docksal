@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.86.2
+FIN_VERSION=1.92.2
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -60,6 +60,7 @@ is_fedora ()
 		[[ "$OS_ID" == "centos" ]]
 }
 
+# TODO: drop this function in May 2020 to complete Babun deprecation
 is_windows ()
 {
 	[[ "$OS_TYPE" == "Cygwin" ]]
@@ -114,7 +115,9 @@ cygpath_abs_unix ()
 wsl_env ()
 {
 	# Trim \r from output (necessary on Windows)
-	echo $(cmd.exe /c "echo %$1%" | tr -d '\r')
+	# "cd /mnt/c" is a workaround to fix a warning message in Windows 10 v1903+
+	# See https://github.com/docksal/docksal/issues/1103#issuecomment-522160146
+	echo $(cd /mnt/c && cmd.exe /c "echo %$1%" | tr -d '\r')
 }
 
 # Unfortunately wslpath output contains \r that has to be cleaned
@@ -132,23 +135,22 @@ wsl_path ()
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='18.09.2'
-REQUIREMENTS_DOCKER_COMPOSE='1.23.2'
-REQUIREMENTS_DOCKER_MACHINE='0.16.1'
-REQUIREMENTS_VBOX='5.2.26'  # Remember to update the download URLs below
+REQUIREMENTS_DOCKER='19.03.4'
+REQUIREMENTS_DOCKER_COMPOSE='1.24.1'
+REQUIREMENTS_DOCKER_MACHINE='0.16.2'
+REQUIREMENTS_VBOX='5.2.34'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-Win.exe"
+URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.34/VirtualBox-5.2.34-133893-OSX.dmg"
+URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.34/VirtualBox-5.2.34-133893-Win.exe"
 
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
 if is_windows; then
-	BABUN_WIN_HOME=${HOME}
 	HOME=$(cygpath_abs_unix ${HOME})
 fi
 # Windows user home directory
@@ -182,6 +184,7 @@ CONFIG_ENV="$CONFIG_DIR/docksal.env"
 CONFIG_LAST_CHECK="$CONFIG_DIR/.last_check"
 CONFIG_LAST_PING="$CONFIG_DIR/.last_ping"
 CONFIG_LAST_UPDATE="$CONFIG_DIR/.last_update"
+CONFIG_SSHPROXY_PID="$CONFIG_DIR/.sshproxy.pid"
 DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
@@ -238,8 +241,8 @@ PROJECTS_ROOT="${PROJECTS_ROOT}"
 
 DEFAULT_MACHINE_NAME='docksal'
 DEFAULT_MACHINE_PROVIDER='virtualbox'
-DEFAULT_MACHINE_VBOX_RAM='2048' #mb
-DEFAULT_MACHINE_VBOX_HDD='50000' #mb
+DEFAULT_MACHINE_VBOX_RAM="${DEFAULT_MACHINE_VBOX_RAM:-2048}" #mb
+DEFAULT_MACHINE_VBOX_HDD="${DEFAULT_MACHINE_VBOX_HDD:-50000}" #mb
 
 # Stats
 # fin sends a minimal ping with OS and fin version number
@@ -247,33 +250,52 @@ DOCKSAL_STATS_TID='UA-93724315-1'
 DOCKSAL_STATS_URL='http://www.google-analytics.com/collect'
 DOCKSAL_STATS_OPTOUT=${DOCKSAL_STATS_OPTOUT:-0}
 
+# Whether to prevent (checking for) updates for Docksal
+DOCKSAL_LOCK_UPDATES="${DOCKSAL_LOCK_UPDATES:-0}"
+
+# The TCP listen port on DOCKSAL_HOST_IP for the SSH proxy, if used
+DOCKSAL_SSH_PROXY_PORT="${DOCKSAL_SSH_PROXY_PORT:-30001}"
+
 # Override PATH to use our utilities
 PATH="$CONFIG_BIN_DIR:$PATH"
 
 # Set global variable in case native Docker app is used/not-used
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 
+# SSH agent settings
+if is_ci; then
+	# Prefer the host's agent in CI environments
+	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-1}"
+else
+	# Use the built-in agent in non-CI environments
+	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-0}"
+fi
+
+# Healthcheck timeout
+DOCKSAL_HEALTHCHECK_TIMEOUT=${DOCKSAL_HEALTHCHECK_TIMEOUT:-60}
+
 #---------------------------- URL references --------------------------------
 GITHUB_API="https://api.github.com"
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
-URL_REPO_DRUPAL7="https://github.com/docksal/drupal7.git"
-URL_REPO_DRUPAL8="https://github.com/docksal/drupal8.git"
+URL_RELEASE_NOTES="https://docksal.io/updates"
+URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
+URL_REPO_DRUPAL8="https://github.com/docksal/boilerplate-drupal8.git"
 URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
-URL_REPO_WORDPRESS="https://github.com/docksal/wordpress.git"
-URL_REPO_MAGENTO="https://github.com/docksal/magento.git"
-URL_REPO_GRAV="https://github.com/docksal/example-grav.git"
-URL_REPO_GATSBY="https://github.com/docksal/example-gatsby.git"
+URL_REPO_DRUPAL8BLT="https://github.com/docksal/boilerplate-blt.git"
+URL_REPO_WORDPRESS="https://github.com/docksal/boilerplate-wordpress.git"
+URL_REPO_MAGENTO="https://github.com/docksal/boilerplate-magento.git"
+URL_REPO_GRAV="https://github.com/docksal/boilerplate-grav.git"
+URL_REPO_GATSBY="https://github.com/docksal/boilerplate-gatsby.git"
 URL_REPO_ANGULAR="https://github.com/docksal/boilerplate-angular.git"
-URL_REPO_LARAVEL="https://github.com/docksal/example-laravel.git"
-URL_REPO_HUGO="https://github.com/docksal/example-hugo.git"
-URL_REPO_SYMFONY_SKELETON="https://github.com/docksal/example-symfony-skeleton.git"
-URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/example-symfony-webapp.git"
-URL_REPO_BACKDROP="https://github.com/docksal/example-backdrop.git"
+URL_REPO_LARAVEL="https://github.com/docksal/boilerplate-laravel.git"
+URL_REPO_HUGO="https://github.com/docksal/boilerplate-hugo.git"
+URL_REPO_SYMFONY_SKELETON="https://github.com/docksal/boilerplate-symfony-skeleton.git"
+URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/boilerplate-symfony-webapp.git"
+URL_REPO_BACKDROP="https://github.com/docksal/boilerplate-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
-STACKS_OVERRIDES_OSXFS="overrides-osxfs.yml"
 STACKS_SERVICES="services.yml"
 STACKS_STACK_ACQUIA="stack-acquia.yml"
 STACKS_STACK_DEFAULT="stack-default.yml"
@@ -302,9 +324,10 @@ URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v$
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
-IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.2}
+IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.3}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.5}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:2.10-php7.3}
 
 #---------------------------- Helper functions --------------------------------
 
@@ -408,7 +431,20 @@ docker-compose ()
 
 	# Call regular docker-compose.
 	# We can use `which` here, since it does not care about functions (but `type` does).
-	"$(which docker-compose)" "$@"
+	$(which docker-compose) "$@"
+}
+
+# docker-machine binary wrapper
+# TODO: remove once https://github.com/microsoft/WSL/issues/4078 is resolved
+docker-machine ()
+{
+	# Help WSL resolve the symlinked docker-machine binary on Windows
+	# Only do this if docker-machine is a symlink
+	if [[ -L $(which docker-machine) ]]; then
+		$(readlink $(which docker-machine)) "$@"
+	else
+		$(which docker-machine) "$@"
+	fi
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -436,7 +472,7 @@ upfind ()
 # Get path to .docksal folder using upfind
 get_project_path ()
 {
-	if [ -z "$DOCKSAL_PATH" ]; then
+	if [[ "$DOCKSAL_PATH" == "" ]]; then
 		DOCKSAL_PATH=$(upfind ".docksal")
 	fi
 	# If we reached $HOME, then we did not find the project root.
@@ -561,7 +597,7 @@ winsudo ()
 		# winsudo "'<command(s) to execute in elevated cmd.exe>'"
 		powershell.exe Start-Process -Wait -Verb RunAs cmd.exe -Args "'/C', '$@'"
 	else
-		# Backward compatibility wth Babun/Cygwin
+		# TODO: delete in May 2020, backward compatibility wth Babun/Cygwin
 		cygstart --action=runas cmd.exe /C "$@"
 	fi
 }
@@ -774,17 +810,11 @@ is_docksal_running ()
 }
 
 # Check whether we have a working tty.
-# Otherwise we are running in a non-tty environment ( e.g., Babun on Windows).
 # We assume the environment is interactive if there is a tty.
-# All other direct checks don't work well in and every environment and scripts.
+# See http://stackoverflow.com/questions/911168/how-to-detect-if-my-shell-script-is-running-through-a-pipe/911213#911213
 is_tty ()
 {
-	[[ "$(/usr/bin/tty || true)" != "not a tty" ]]
-
-	# TODO: rewrite this check using [ -t ] test
-	# http://stackoverflow.com/questions/911168/how-to-detect-if-my-shell-script-is-running-through-a-pipe/911213#911213
-	# 0: stdin, 1: stdout, 2: stderr
-	# [ -t 0 -a -t 1 ]
+	[[ -t 0 ]]
 }
 
 # Checks whether fin is run under root privileges
@@ -1064,6 +1094,11 @@ is_winpty_version ()
 	(( $(ver_to_int "$REQUIREMENTS_WINPTY") <= $(ver_to_int "$version") ))
 }
 
+is_proxy_sshagent ()
+{
+	[[ "$DOCKSAL_SSH_AGENT_USE_HOST" == "1" ]] && ! is_linux
+}
+
 wants_rc_version ()
 {
 	[[ "${DOCKSAL_USE_RC}" == 1 ]] || [[ "${DOCKSAL_USE_RC}" == "true" ]]
@@ -1130,7 +1165,7 @@ check_project_unique ()
 _confirm ()
 {
 	# Skip checks if not running interactively (not a tty or not on Windows)
-	if ! is_tty || is_travis; then return 0; fi
+	if ! is_tty || is_travis || [[ "$DOCKSAL_CONFIRM_YES" == "1" ]]; then return 0; fi
 
 	while true; do
 		echo -en "$1 "
@@ -1282,6 +1317,8 @@ cleanup ()
 		if [[ ! -d "$project_root" ]]; then
 			echo "Directory for project \"$project_name\" does not exist. Removing project containers and volumes..."
 			docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs docker rm -f
+			# Remove project volumes. "docker volume prune" (used below) does not remove the project_root volume.
+			# See https://github.com/moby/moby/issues/40152
 			docker volume ls -q --filter "label=com.docker.compose.project=${project_name}" | xargs docker volume rm -f
 		fi
 	done
@@ -1384,11 +1421,10 @@ _vhost_proxy_connect ()
 # Waits for containers to become healthy
 # For reasoning why we are not using  `depends_on` `condition` see here:
 # https://github.com/docksal/docksal/issues/225#issuecomment-306604063
-# TODO: make this universal. Currently hardcoded for cli only.
 _healthcheck_wait ()
 {
 	local delay=5
-	local timeout=60
+	local timeout=$DOCKSAL_HEALTHCHECK_TIMEOUT
 	local elapsed=0
 	local status=""
 	local FILTER="label=com.docker.compose.project=$COMPOSE_PROJECT_NAME"
@@ -1576,7 +1612,7 @@ show_help_list_commands_in_help ()
 	local executable="-executable"
 	is_mac && executable="-perm +100"
 
-	local addons_list=$(find -L "$addons_path" -maxdepth 2 -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
+	local addons_list=$(find -L "$addons_path" -maxdepth 4 -type f ${executable} 2>/dev/null | sort -n 2>/dev/null)
 	if [[ "$addons_list" != "" ]]; then
 		local scope
 		for cmd_name in ${addons_list}
@@ -1746,6 +1782,8 @@ show_help_project() {
 	printh "fin pl -a" "List all known Docksal projects, including stopped ones"
 	printh "fin project reset db" "Reset only DB service to start with DB from scratch"
 	printh "fin project create" "Start a new project wizard"
+	printh "fin project create --name=myproject --repo=https://github.com/org/project.git"
+	printh ""  "Initialize project from a custom git repo"
 }
 
 show_help_reset ()
@@ -1775,8 +1813,9 @@ show_help_ssh-key() {
 
 	echo
 	echo "Commands:"
-	printh "add [key-name]" "Add a private SSH key from \$HOME/.ssh by file name"
+	printh "add [key-name] [--quiet]" "Add a private SSH key from \$HOME/.ssh by file name"
 	printh "" "Adds all default keys (id_rsa/id_dsa/id_ecdsa/id_ed25519) if no file name is given."
+	printh "" "Suppress key already loaded notifications if --quiet option specified."
 
 	printh "ls" "List SSH keys loaded in the docksal-ssh-agent"
 	printh "rm" "Remove all keys from the docksal-ssh-agent"
@@ -2057,9 +2096,12 @@ show_help_config ()
 	printh "show [options]" "Display configuration for the current project"
 	printh "    --show-secrets" "Do not truncate value of SECRET_* environment vars"
 	printh "env" "Display only environment variables section"
+	printh "yml" "Display static YML project config suitable for export (NOTE: SECRET_* values will not be hidden)"
+	echo
 	printh "generate [options]" "Generate empty Docksal configuration for the project"
 	printh "    --stack=acquia" "Set non-default DOCKSAL_STACK during config generate"
 	printh "    --docroot=mydir" "Set non-default DOCROOT during config generate"
+	echo
 	printh "set [options] [VAR=VAL]" "Set value(s) for the variable(s) in project ENV file"
 	printh "    --global" "Set for global ENV file"
 	printh "    --env=[name]" "Set in environment specific project ENV file"
@@ -2078,7 +2120,7 @@ show_help_config ()
 	printh "fin config set DOCKER_NATIVE=1 --global" "Adds DOCKER_NATIVE=1 into \$HOME/.docksal/docksal.env"
 	printh "fin config rm DOCKER_NATIVE --global" "	Removes DOCKER_NATIVE value from \$HOME/.docksal/docksal.env"
 	printh "fin config set DOCKSAL_STACK=acquia" "	Set different default stack in .docksal/docksal.env"
-	printh "fin config set --env=local XDEBUG_ENABLED=1" "	Enable XDEBUG in .docksal/docksal-local.env"
+	printh "fin config set --env=local XDEBUG_ENABLED=1" "Enable XDEBUG in .docksal/docksal-local.env"
 }
 
 show_help_init ()
@@ -2948,15 +2990,16 @@ up ()
 {
 	check_docksal_environment
 
-	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
-	( is_linux || is_docker_native ) && ssh_key add
-
 	# Check that project directory is reachable to Docker
 	check_docker_path
 
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
+
+	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# Use --quiet here, otherwise this becomes annoying
+	# Note: this takes ~1.5s, so we only call it when absolutely necessary
+	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add --quiet
 
 	# Temporary workaround for NFS issues on Mac
 	# See https://github.com/docksal/docksal/issues/265
@@ -2965,13 +3008,17 @@ up ()
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
-	# Start containers
+	# Start project containers
 	_start_containers || return 1
 
 	# If Unisons is used, wait for it to sync
 	unison_sync_wait
 
-	echo-green "Project URL: ${yellow}$PROJECT_URL${NC}"
+	# TODO: maybe move these into a function and call in other places - reset/restart.
+	echo-green "Project URL: ${yellow}${PROJECT_URL}${NC}"
+	if [[ "${IDE_ENABLED}" == "1" ]]; then
+		echo-green "Web IDE URL: ${yellow}${PROJECT_IDE_URL}${NC}"
+	fi
 }
 
 # Stop containers
@@ -2992,17 +3039,21 @@ restart ()
 {
 	check_docksal_environment
 
-	# Run ssh_key add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	# This should not be the last command in a function as it will exit 1 on non Linux/"native" setups.
-	( is_linux || is_docker_native ) && ssh_key add
-
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
+
+	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# Use --quiet here, otherwise this becomes annoying
+	# Note: this takes ~1.5s, so we only call it when absolutely necessary
+	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add --quiet
 
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
+	# Restart project containers
 	_restart_containers "$@"
+
+	# If Unisons is used, wait for it to sync
 	unison_sync_wait
 }
 
@@ -3043,12 +3094,18 @@ reset ()
 	local ret=$?
 	[[ "$ret" != 0 ]] && return ${ret}
 
+	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
+	# Use --quiet here, otherwise this becomes annoying
+	# Note: this takes ~1.5s, so we only call it when absolutely necessary
+	( ! is_proxy_sshagent && ( is_linux || is_docker_native ) ) && ssh_key add --quiet
+
 	# Fix project root permissions if necessary
 	set_project_root_permissions
 
-	# Run ssh_key add here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
-	( is_linux || is_docker_native ) && [[ "$@" == "" ]] && ssh_key add
+	# Start project containers
 	_start_containers || return 1
+
+	# If Unisons is used, wait for it to sync
 	unison_sync_wait
 }
 
@@ -3081,6 +3138,12 @@ project_create ()
 	# Read name from params if available
 	local project_name="$name"
 
+	# Read repo from params if available
+	if [[ "$repo" != "" ]]; then
+		local target_repo="$repo"
+		local choice="0"
+	fi
+
 	# Determine project name
 	if [[ "$project_name" == "" ]]; then
 		while [[ "$project_name" == "" ]]; do
@@ -3106,34 +3169,39 @@ project_create ()
 		echo -e "${blue}  PHP based${NC}"
 		echo -e "${green}    1.${NC}  Drupal 8"
 		echo -e "${green}    2.${NC}  Drupal 8 (Composer Version)"
-		echo -e "${green}    3.${NC}  Drupal 7"
-		echo -e "${green}    4.${NC}  Wordpress"
-		echo -e "${green}    5.${NC}  Magento"
-		echo -e "${green}    6.${NC}  Laravel"
-		echo -e "${green}    7.${NC}  Symfony Skeleton"
-		echo -e "${green}    8.${NC}  Symfony WebApp"
-		echo -e "${green}    9.${NC}  Grav CMS"
-		echo -e "${green}    10.${NC} Backdrop CMS"
+		echo -e "${green}    3.${NC}  Drupal 8 (BLT Version)"
+		echo -e "${green}    4.${NC}  Drupal 7"
+		echo -e "${green}    5.${NC}  Wordpress"
+		echo -e "${green}    6.${NC}  Magento"
+		echo -e "${green}    7.${NC}  Laravel"
+		echo -e "${green}    8.${NC}  Symfony Skeleton"
+		echo -e "${green}    9.${NC}  Symfony WebApp"
+		echo -e "${green}    10.${NC} Grav CMS"
+		echo -e "${green}    11.${NC} Backdrop CMS"
 		echo
 		echo -e "${acqua}  Go based${NC}"
-		echo -e "${green}    11.${NC} Hugo"
+		echo -e "${green}    12.${NC} Hugo"
 		echo
 		echo -e "${lime}  JS based${NC}"
-		echo -e "${green}    12.${NC} Gatsby JS"
-		echo -e "${green}    13.${NC} Angular"
+		echo -e "${green}    13.${NC} Gatsby JS"
+		echo -e "${green}    14.${NC} Angular"
 		echo
 		echo -e "${magenta}  HTML${NC}"
-		echo -e "${green}    14.${NC} Static HTML site"
+		echo -e "${green}    15.${NC} Static HTML site"
+		echo
+		echo -e "${red}  Custom${NC}"
+		echo -e "${green}    0.${NC} Custom git repository"
+		echo
 		echo -e ""
 
 		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
-		local choices=14
+		local choices=15
 
 		while [[ "$choice" == "" ]]; do
-			read -p "Enter your choice (1-$choices): " choice
-			if ! (( "$choice" >= "1" && "$choice" <= $choices )); then
+			read -p "Enter your choice (0-$choices): " choice
+			if ! (( "$choice" >= "0" && "$choice" <= $choices )); then
 				choice=""
-				echo-error "Enter a number between 1 and $choices."
+				echo-error "Enter a number between 0 and $choices."
 			fi
 		done
 	fi
@@ -3151,70 +3219,87 @@ project_create ()
 			target_repo="$URL_REPO_DRUPAL8COMPOSER"
 			;;
 		3)
+			target_cms="Drupal 8 (BLT Version)"
+			target_host_name_search_string="drupal8.docksal"
+			target_repo="$URL_REPO_DRUPAL8BLT"
+			;;
+		4)
 			target_cms="Drupal 7"
 			target_host_name_search_string="drupal7.docksal"
 			target_repo="$URL_REPO_DRUPAL7"
 			;;
-		4)
+		5)
 			target_cms="Wordpress"
 			target_host_name_search_string="wordpress.docksal"
 			target_repo="$URL_REPO_WORDPRESS"
 			;;
-		5)
+		6)
 			target_cms="Magento"
 			target_host_name_search_string="magento.docksal"
 			target_repo="$URL_REPO_MAGENTO"
 			;;
-		6)
+		7)
 			target_cms="Laravel"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_LARAVEL"
 			;;
-		7)
+		8)
 			target_cms="Symfony Skeleton"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_SKELETON"
 			;;
-		8)
+		9)
 			target_cms="Symfony WebApp"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_WEBAPP"
-		;;
-		9)
+			;;
+		10)
 			target_cms="Grav CMS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GRAV"
 			;;
-		10)
+		11)
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
-			target_repo="${URL_REPO_BACKDROP}"
-		;;
-		11)
+			target_repo="$URL_REPO_BACKDROP"
+			;;
+		12)
 			target_cms="Hugo"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_HUGO"
 			;;
-		12)
+		13)
 			target_cms="Gatsby JS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GATSBY"
 			;;
-		13)
+		14)
 			target_cms="Angular"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_ANGULAR"
 			;;
-		14)
+		15)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
+			;;
+		0)
+			target_cms="Custom git repository"
+			target_host_name_search_string=""
+			if [[ "$target_repo" == "" ]]; then
+				while true; do
+					read -p "Please enter repository url: " target_repo
+					[[ "${target_repo}" == "" ]] && continue
+					break
+				done
+			fi
 			;;
 	esac
 
 	echo
 	echo -e "Project folder:   ${yellow}$(pwd)/$project_name${NC}"
 	echo -e "Project software: ${yellow}${target_cms}${NC}"
+	echo -e "Source repo:      ${yellow}${target_repo}${NC}"
 	echo -e "Project URL:      ${yellow}http://${project_virtual_host_name}${NC}"
 	echo
 
@@ -3237,16 +3322,16 @@ project_create ()
 	run_cli git clone -b master "${target_repo}" "${project_name}" --depth=1
 	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
-	echo -e "${yellow}3. Installing site${NC}"
-
-	[[ -f "${project_name}/.docksal/docksal.env" ]] && (
-		cd "${project_name}/.docksal"
-		# Edit docksal.env to use a custom user-supplied host name
-		sed -i~ "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" docksal.env
-		rm -f docksal.env.bak > /dev/null 2>&1
-	)
-
 	cd "${project_name}"
+
+	# Edit docksal.env to use a custom user-supplied host name
+	if [[ -f ".docksal/docksal.env" ]]; then
+		sed -i~ "s/VIRTUAL_HOST=${target_host_name_search_string}/VIRTUAL_HOST=${project_virtual_host_name}/g" .docksal/docksal.env
+	fi
+
+	echo
+	echo -e "${yellow}3. Passing execution to ${yellow_bold}fin init${yellow}...${NC}"
+	echo
 	fin init
 }
 
@@ -3367,6 +3452,7 @@ system_stop ()
 		docker ps -q --filter "label=io.docksal.group=system" 2>/dev/null | xargs docker rm -vf >/dev/null
 	fi
 
+	stop_sshproxy_daemon
 	configure_resolver off
 	configure_mounts off
 	configure_network off
@@ -3417,6 +3503,16 @@ ssh_key_generate ()
 ssh_key ()
 {
 	check_winpty_found
+
+	# Parse parameters and remove options from parameters line
+	eval $(parse_params "$@")
+	set -- ${ARGV[@]}
+
+	# Check if we support key management
+	if [[ "$DOCKSAL_SSH_AGENT_USE_HOST" == "1" ]]; then
+		echo-error 'Docksal is currently not managing the SSH keys.'
+		return 1
+	fi
 
 	# Check if ssh-agent container is running
 	# Note: no spaces in format. PWD trips over this when docker is run with sudo (during Docksal install/update).
@@ -3484,7 +3580,7 @@ ssh_key ()
 			# TODO: without a public key present, ssh-agent asks for a passphrase (if set) twice.
 			#cat ~/.ssh/${ssh_key_name} | ${winpty} docker exec -i docksal-ssh-agent bash -c "cat /dev/stdin > /.ssh/${ssh_key_name}"
 			# Call "ssh-key add" in the ssh-agent container
-			_ssh_key add ${ssh_key_name}
+			[[ "${quiet}" == "" ]] &&  _ssh_key add ${ssh_key_name} || _ssh_key add ${ssh_key_name} --quiet
 			# Remove copied key
 			#docker exec docksal-ssh-agent rm -f /.ssh/${ssh_key_name}
 
@@ -3711,6 +3807,8 @@ configure_mounts ()
 			fi
 
 			# Mount the share in VirtualBox
+			# TODO: Drop this default NFS mount? (v2.0)
+			# NFS mounts are now handled using NFS volumes at the project level - same approach as with Docker Desktop.
 			if ! is_docker_native; then
 				docker_machine_mount_nfs "${DOCKSAL_NFS_PATH}:${DOCKSAL_NFS_PATH}"
 			fi
@@ -4001,7 +4099,7 @@ configure_resolver ()
 			# nslookup returns 0 exit code regardless of the results, so have to pipe it to grep
 			if is_alpine; then
 				# nslookup on Alpine does not support the '-timeout' option
-				timeout -t 5 nslookup google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
+				timeout 5 nslookup google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
 			else
 				nslookup -timeout=1 google.com "$DOCKSAL_DNS_UPSTREAM" 2>/dev/null | grep google.com >/dev/null
 			fi
@@ -4031,14 +4129,56 @@ install_sshagent_service ()
 	docker rm -f docksal-ssh-agent >/dev/null 2>&1 || true
 	docker volume rm docksal_ssh_agent >/dev/null 2>&1 || true
 
+	# Switch between built-in agent and auth socket proxying
+	local ssh_service_args
+	stop_sshproxy_daemon
+	if is_proxy_sshagent; then
+		start_sshproxy_daemon
+		ssh_service_args="ssh-proxy $DOCKSAL_HOST_IP $DOCKSAL_SSH_PROXY_PORT"
+	else
+		ssh_service_args="ssh-agent"
+	fi
+
 	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=unless-stopped \
 		--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent \
-		"${IMAGE_SSH_AGENT}" >/dev/null
+		"${IMAGE_SSH_AGENT}" $ssh_service_args >/dev/null
 	if_failed_error "Failed starting the SSH agent service."
 
 	# Add default keys. Using || true here to suppress errors if there are no keys on the host.
-	ssh_key add || true
+	! is_proxy_sshagent && ssh_key add || true
+}
+
+start_sshproxy_daemon ()
+{
+	if [[ -f "$CONFIG_SSHPROXY_PID" ]]; then
+		echo-error 'SSH proxy is already running.'
+		exit 1
+	elif ! command -v socat > /dev/null; then
+		echo-error 'SSH proxy requires the "socat" application to function.'
+		if command -v brew > /dev/null; then
+			echo 'Run `brew install socat` to add this application.'
+		elif command -v apt-get > /dev/null; then
+			echo 'Run `apt-get install socat` to add this application.'
+		fi
+		exit 2
+	elif [[ -z "$DOCKSAL_SSH_AUTH_SOCK" ]]; then
+		echo-error 'Environment variable SSH_AUTH_SOCK is not set.' \
+			'Is your local SSH agent running correctly?'
+		exit 3
+	fi
+
+	socat TCP-LISTEN:$DOCKSAL_SSH_PROXY_PORT,bind=$DOCKSAL_HOST_IP,reuseaddr,fork UNIX-CLIENT:$DOCKSAL_SSH_AUTH_SOCK &
+	local pid=$!
+	if_failed_error "Failed starting the SSH proxy service."
+	echo "$pid" > "$CONFIG_SSHPROXY_PID"
+}
+
+stop_sshproxy_daemon ()
+{
+	local sshproxy_pid=$(cat "$CONFIG_SSHPROXY_PID" 2>/dev/null || echo 0)
+	[[ "$sshproxy_pid" -ne 0 ]] && kill "$sshproxy_pid" 2>/dev/null
+	rm -f "$CONFIG_SSHPROXY_PID"
 }
 
 # Install Mac dependencies
@@ -4109,13 +4249,6 @@ install_tools_mac ()
 # Install Windows dependencies
 install_tools_windows ()
 {
-	# Remove old incorrect line
-	sed -i~ "s/^\\\\nexport.*$//" "$HOME/.babunrc"
-	# Disable Babun update checks as they often bring problems
-	if ! (grep '^export DISABLE_CHECK_ON_STARTUP="true"' "$HOME/.babunrc" >/dev/null 2>&1); then
-		echo -e "\n"'export DISABLE_CHECK_ON_STARTUP="true"' >> "$HOME/.babunrc"
-	fi
-
 	# Install Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_WIN")
@@ -4296,10 +4429,10 @@ install_tools_alpine ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		echo-green "Installing Docker Compose via pip (this may take a while)..."
 		# docker-compose has to be install via pip on Alpine
 		# See https://github.com/docker/compose/issues/3465
-		apk add --no-cache python3 >/dev/null && \
+		apk add --no-cache python3 python3-dev libffi-dev openssl-dev >/dev/null && \
 			# Update pip to avoid warnings like:
 			# - "Cache entry deserialization failed, entry ignored"
 			# - "You are using pip version 10.0.1, however version 19.0.3 is available."
@@ -4527,7 +4660,7 @@ update_boot2docker ()
 
 				# Path to boot2docker.iso for the machine
 				local DEFAULT_MACHINE_ISO_PATH=".docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
-				# On Windows (Babun and WSL) machines are stores in the Windows user profile
+				# On Windows machines are stored in the Windows user profile
 				if is_windows || is_wsl; then
 					DEFAULT_MACHINE_ISO_PATH="${WIN_HOME}/${DEFAULT_MACHINE_ISO_PATH}"
 				else
@@ -4583,7 +4716,6 @@ update_config_files ()
 {
 	files_to_download="
 			$STACKS_OVERRIDES_IDE
-			$STACKS_OVERRIDES_OSXFS
 			$STACKS_SERVICES
 			$STACKS_STACK_ACQUIA
 			$STACKS_STACK_DEFAULT
@@ -4807,8 +4939,26 @@ update ()
 	echo-green "Update finished"
 
 	# [STEP - POST UPDATE]
+	# Show release notes URL after update
+	if is_update; then
+		echo-warning "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
+		# Open release notes in the browser
+		# TODO: add support for Linux and Windows/WSL
+		is_mac && open "${URL_RELEASE_NOTES}"
+	fi
+
 	# Cleanup
 	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
+
+	# Set DOCKSAL_VOLUMES=bind globally for existing Macs (VirtualBox and Docker Desktop)
+	# This ensures we do not break existing project stacks by switching to nfs volumes as the default (Docksal 1.13.0 / fin 1.92.x)
+	if is_update && is_mac && [[ $(config_get --global DOCKSAL_VOLUMES) == "" ]]; then
+		# Until the update process is completed, the old fin binary is still in place, so we can access it
+		# "fin -v" returns the version of the old fin here
+		if [[ $(ver_to_int "$(fin -v)") < $(ver_to_int "1.92.0") ]]; then
+			config_set --global DOCKSAL_VOLUMES=bind
+		fi
+	fi
 
 	# Rerun docker access/version checks here to inform the users of any issues
 	echo-green "Running post update checks..."
@@ -4859,6 +5009,8 @@ check_for_updates ()
 		stats_ping
 		echo "$timestamp" > "$CONFIG_LAST_PING"
 	fi
+
+	[[ "$DOCKSAL_LOCK_UPDATES" == "1" ]] && return # Do not check for updates if disabled
 
 	if wants_rc_version; then
 		# Check once a day if DOCKSAL_USE_RC is set
@@ -4949,13 +5101,11 @@ _bash ()
 		return 1
 	fi
 
-	# Use sh by default
 	if [[ "$1" != "" ]]; then
-		# Pass container name to _exec
-		_exec --in="$1" sh -il
+		# Pass container name to _exec is specified
+		_exec --in="$1" "__SHELL_INTERACTIVE__"
 	else
-		# Use bash when container is not specified, for it defaults to cli
-		_exec bash -il
+		_exec "__SHELL_INTERACTIVE__"
 	fi
 }
 
@@ -5001,6 +5151,12 @@ _exec ()
 		SHELL_NONINTERACTIVE="bash -lc"
 	fi
 
+ 	local container_shell=$(docker inspect --format '{{ index .Config.Labels "io.docksal.shell"}}' ${container_id} 2>/dev/null)
+ 	if [[ "$container_shell" != "" ]]; then
+		SHELL_INTERACTIVE="$container_shell -ilc"
+		SHELL_NONINTERACTIVE="$container_shell -lc"
+ 	fi
+
 	# ------------------------------------------------ #
 	# 1) cmd
 	local cmd=""
@@ -5025,7 +5181,13 @@ _exec ()
 		cmd="$cmd"$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
 	else
-		cmd="${cmd}${@}"
+		if [[ "${@}" == "__SHELL_INTERACTIVE__" ]]; then
+			# Special case for running interactive shell with the selected shell
+			# remove the -c switch from the SHELL_INTERACTIVE call
+			cmd="${cmd}${SHELL_INTERACTIVE/c/}"
+		else
+			cmd="${cmd}${@}"
+		fi
 	fi
 	# ------------------------------------------------ #
 
@@ -5036,9 +5198,13 @@ _exec ()
 		container_id="$container_name"
 	fi
 
-	if [[ "$container_name" == "cli" ]]; then
-		# Commands in cli should be run using the docker user, not root.
-		local container_user='-u docker'
+	# User to run commands as. npm and other userspace commands are only available to docker user
+	local container_user;
+	container_user=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
+	if [[ "$container_user" != "" ]]; then
+		container_user="-u ${container_user}"
+	elif [[ "$container_name" == "cli" ]]; then # only use docker user for cli by default, others wil use root
+		container_user="-u docker"
 	fi
 
 	# Enter project containers
@@ -5113,8 +5279,12 @@ run_cli ()
 	done
 
 	# Set default image
-	local RUN_IMAGE="${image:-docksal/cli:2.6-php7.2}"
-	local HOME_VOLUME_NAME="docksal_run_cli_home"
+	local RUN_IMAGE="${image:-$IMAGE_RUN_CLI}"
+
+	# Use unique home volumes for run-cli images
+	# Without this, switching images won't update tools installed in the home volume (like nodejs, etc.).
+	local HOME_VOLUME_NAME="docksal_run_cli_home_$(echo ${RUN_IMAGE} | sed -e 's/[^A-Za-z0-9_.]/-/g')"
+
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
 	if [[ $2 != "" ]]; then
 		cmd="$cmd "$(printf " %q" "$@")
@@ -5136,9 +5306,21 @@ run_cli ()
 		docker volume rm -f ${HOME_VOLUME_NAME} >/dev/null 2>&1
 	fi
 
+	local MOUNT_PWD
+	if [[ "${DOCKSAL_VOLUMES}" == "nfs" ]]; then
+		# Mounts options here should match those in volumes-nfs.yml
+		# Also, see https://docs.docker.com/storage/volumes/#choose-the--v-or---mount-flag
+		# and "Escape values from outer CSV parser" section on that page
+		MOUNT_PWD="type=volume,dst=/var/www,volume-driver=local,volume-opt=type=nfs,volume-opt=device=:$(pwd),\"volume-opt=o=addr=${DOCKSAL_HOST_IP},vers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1\""
+	else
+		MOUNT_PWD="type=bind,src=$(pwd),dst=/var/www"
+	fi
+
 	local MOUNT_HOME
 	if [[ "$RUN_CLEAN" != "1" ]]; then
-		docker volume create ${HOME_VOLUME_NAME} >/dev/null 2>&1
+		# Using "io.docksal" label on the volume ensures the cleanup of run-cli volumes.
+		# Volumes with the "io.docksal" label are dropped by "fin cleanup" (which also runs during updates).
+		docker volume create --label "io.docksal" ${HOME_VOLUME_NAME} >/dev/null 2>&1
 		# By default mount as a *persistent* named volume
 		MOUNT_HOME="dst=/home/docker,src=$HOME_VOLUME_NAME"
 	else
@@ -5156,7 +5338,7 @@ run_cli ()
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
 		# COLUMNS and LINES have to be passed to workaround a bug in Docker. See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 		${winpty} docker run --rm -it \
-			--mount type=bind,src=$(pwd),dst=/var/www \
+			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e BLACKFIRE_CLIENT_ID \
@@ -5177,7 +5359,7 @@ run_cli ()
 	else
 		# non-interactive
 		docker run --rm \
-			--mount type=bind,src=$(pwd),dst=/var/www \
+			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
 			-e BLACKFIRE_CLIENT_ID \
@@ -5844,7 +6026,9 @@ alias_list ()
 load_global_configuration ()
 {
 	export DOCROOT=${DOCROOT:-docroot}
+	export DOCKSAL_PATH="$(get_project_path)"
 	export PROJECT_ROOT="$(get_project_path)"
+	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
 }
 
 load_configuration ()
@@ -5910,7 +6094,13 @@ load_configuration ()
 		fi
 
 		# Include a volumes yml if requested. Use bind mount for volumes by default.
-		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+		if is_mac; then
+			# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
+			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
+		else
+			# Bind mounted volumes on all other systems
+			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+		fi
 		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
 			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 			if [[ -f "$volumes_yml_file" ]]; then
@@ -5924,13 +6114,7 @@ load_configuration ()
 		fi
 		export DOCKSAL_VOLUMES
 
-		# Enable osxfs:cached for cli on Docker for Mac
-		overrides_osxfs_file="$(get_config_dir_dc)/stacks/overrides-osxfs.yml"
-		if is_mac && is_docker_native && [[ -f "${overrides_osxfs_file}" ]] && [[ "$DOCKSAL_VOLUMES" == "bind" ]]; then
-			COMPOSE_FILE="${overrides_osxfs_file}${SEPARATOR}${COMPOSE_FILE}"
-		fi
-
-		# Enable Cloud9 IDE
+		# Enable VSCode (Coder) IDE
 		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
 		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
 			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
@@ -5958,7 +6142,6 @@ load_configuration ()
 	else
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	fi
-	export DOCROOT=${DOCROOT:-docroot}
 
 	# Make VIRTUAL_HOST lowercase, replace '_' with '-', remove everything non-letter or digit,
 	# make sure it starts with letter or digit
@@ -5970,17 +6153,22 @@ load_configuration ()
 	fi
 	# Create project url
 	if [[ "$DOCKSAL_VHOST_PROXY_PORT_HTTP" == "" || "$DOCKSAL_VHOST_PROXY_PORT_HTTP" == "80" ]]; then
-		export PROJECT_URL="http://$VIRTUAL_HOST"
+		export PROJECT_URL="http://${VIRTUAL_HOST}"
+		if [[ "${IDE_ENABLED}" == "1" ]]; then
+			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}"
+		fi
 	else
-		export PROJECT_URL="http://$VIRTUAL_HOST:$DOCKSAL_VHOST_PROXY_PORT_HTTP"
+		export PROJECT_URL="http://${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
+		if [[ "${IDE_ENABLED}" == "1" ]]; then
+			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
+		fi
 	fi
 
-	# Make project root globally available
-	export DOCKSAL_PATH="$(get_project_path)"
-	export PROJECT_ROOT="$(get_project_path)"
-	is_windows && export PROJECT_ROOT_WIN="$(get_project_path_dc)"
 	# https://docs.docker.com/compose/reference/envvars/#compose_convert_windows_paths
 	export COMPOSE_CONVERT_WINDOWS_PATHS=1
+
+	# Loaded last to allow overrides from env files
+	load_global_configuration
 }
 
 # Default init command. Initializes default config and starts containers
@@ -5998,7 +6186,7 @@ init ()
 
 	config_generate
 	# Running like this forces configuration re-read
-	fin up
+	fin init
 }
 
 config_show ()
@@ -6061,23 +6249,28 @@ config_show ()
 	echo "---------------------"
 }
 
+config_yml ()
+{
+	check_project_root
+	docker-compose config
+}
+
 # TODO: consider deprecating this, since now fin automatically creates docksal.yml and docksal.env (with default stack)
 config_generate ()
 {
 	eval $(parse_params "$@")
-	if [[ -f ".docksal/docksal.yml" ]] || [[ -f ".docksal/docksal.env" ]]; then
-		echo-yellow ".docksal/docksal.yml or .docksal/docksal.env already exists"
+	if [[ -d ".docksal" ]]; then
+		echo-yellow "A Docksal configuration already exists in this directory"
 		_confirm "Do you want to proceed and overwrite?"
 	fi
 
-	rm -f ".docksal/docksal.env" >/dev/null
-	rm -f ".docksal/docksal.yml" >/dev/null
-	# Create .docksal directory if it does not exist
+	# Create reset Docksal configuration in the current directory
+	rm -f ".docksal" >/dev/null
 	mkdir -p ".docksal"
 
-	# Create docksal.env if it does not exist
+	# Create docksal.env
 	touch ".docksal/docksal.env" && \
-	echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
+		echo "DOCKSAL_STACK=${stack:-default}" > ".docksal/docksal.env"
 
 	# Get docroot option value or use default
 	local DOCROOT="${docroot}"
@@ -6110,7 +6303,17 @@ config_generate ()
 	fi
 
 	# Add DOCROOT to docksal.env file
-	echo "DOCROOT=${DOCROOT}" >> ".docksal/docksal.env"
+	echo "DOCROOT=${DOCROOT}" >> .docksal/docksal.env
+
+	# Create a basic init command
+	mkdir -p .docksal/commands && touch .docksal/commands/init && chmod +x .docksal/commands/init
+	cat <<EOF > .docksal/commands/init
+#!/usr/bin/env bash
+
+fin project rm -f
+fin project start
+EOF
+
 	# Create a basic docroot and index.php if not present
 	if [[ ! -d "$DOCROOT" ]] || [[ ! -f "$DOCROOT/index.php" ]]; then
 		# Setup docroot and a basic index.php
@@ -6283,14 +6486,17 @@ hosts_add ()
 
 	# Add to hosts
 	echo -e "Adding: ${yellow}$DOCKSAL_IP $hostname${NC}"
+	echo -e "Adding: ${yellow}::2 $hostname${NC}"
 	if is_windows; then
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
 		echo "$DOCKSAL_IP $hostname" | tee -a "$tmp" >/dev/null
+		echo "::2 $hostname" | tee -a "$tmp" >/dev/null
 		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
 		echo "$DOCKSAL_IP $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
+		echo "::2 $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
 	fi
 }
 
@@ -6829,11 +7035,11 @@ provider_pull_db ()
 	# Get the time from 24 hours ago.
 	local yesterday=$(_exec date --date='yesterday' "+%Y-%m-%d %H:%M:%S");
 
-	if [[ "${file_exists}" == "0" ]] || [[ -n "${file_time}" ]] || [[ "$force" == "force" ]]; then
-		echo -e "${acqua}Cached DB file needs updating${NC}"
-
+	# Check to see if file doesn't exist, or if file exists and is older, or using force flag
+	if ( [[ "${file_exists}" == "0" ]] && [[ "${file_time}" == "" ]] ) || ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
 		# Check to see if File Is Older than 1 hour
-		if [[ "$file_exists" > "0" ]] && [[ -z "${file_time}" ]] || [[ "$force" == "force" ]]; then
+		if ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
+			echo -e "${acqua}Cached DB file needs updating${NC}"
 			echo -e "${acqua}Removing old database file${NC}"
 			_exec rm -f "${db_file}"
 		fi
@@ -6983,17 +7189,17 @@ provider_pull_acquia_precheck ()
 # Init process to pull code from acquia.
 provider_pull_acquia_init ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Set hostingenv to dev if none are set.
 	hostingenv=${hostingenv:-dev}
 	# Get the repo url for the specific environment.provider_pull_platformsh_files
 	local repo_url
-	repo_url=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
+	repo_url=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
 	# Get the branch for the specific environment.
 	local repo_checkout
-	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
+	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
 	if_failed_error "Error accessing Acquia Cloud API to get ${hostingenv} info."
 
 	echo -e "${acqua}Cloning Acquia Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
@@ -7005,7 +7211,7 @@ provider_pull_acquia_init ()
 # Pull process to pull files from Acquia.
 provider_pull_acquia_files ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
@@ -7017,7 +7223,7 @@ provider_pull_acquia_files ()
 # Pull process to pull db from Acquia.
 provider_pull_acquia_db ()
 {
-	local acquia_alias_update="drush -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
+	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
 	# Update Acquia Drush Aliases in container.
 	_exec "${acquia_alias_update}"
@@ -7034,7 +7240,7 @@ provider_pull_acquia_db ()
 	fi
 
 	local query
-	query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+	query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
 	if_failed_error "Error retrieving list of backups from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 
 	# Returns timestamp of last backup.
@@ -7049,23 +7255,23 @@ provider_pull_acquia_db ()
 	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$force" == "force" ]]; then
 		# Create backup on Acquia through Cloud API.
 		echo -e "${acqua}Creating new backup on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-		_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
+		_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
 		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
 		echo -e "${acqua}Backup queued on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
 		# Sleep for 10 seconds wait for backup to finish.
 		sleep 10
 		# Requery to get a new list of backups.
-		query=$(_exec drush @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
+		query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
 		if_failed_error "Error retrieving list of backups from Acquia on site ${hostingsite} on environment ${hostingenv} for database ${acquia_db_name}"
 	else
 		echo -e "${acqua}Using latest backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
 	fi
 
 	# Returns id of last backup.
-	local last_id=$(printf "${query}" | grep id | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
+	local last_id=$(printf "${query}" | grep "^ id" | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
 	echo -e "${acqua}Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-	_exec drush -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
+	_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
 	if_failed_error "Error Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 }
 
@@ -7393,7 +7599,7 @@ fi
 # This happens before the environment variable overrides are sources, thus can be overridden via docksal.env files.
 # On macOS there is a git wrapper even when git is not installed, so we have to check for git differently on mac
 # See https://github.com/docksal/docksal/issues/1003
-if ! is_mac || (xcode_tools_dir=$(xcode-select -p 2>/dev/null) && [[ -x "${xcode_tools_dir}/usr/bin/git}" ]]); then
+if ! is_mac || (xcode_tools_dir=$(xcode-select -p 2>/dev/null) && [[ -x "${xcode_tools_dir}/usr/bin/git" ]]); then
 	if ( which git &>/dev/null ); then
 		export GIT_USER_EMAIL=$(git config --get --global user.email)
 		export GIT_USER_NAME=$(git config --get --global user.name)
@@ -7485,10 +7691,6 @@ elif is_docker_native; then
 		# WSL + Docker Desktop => connecting via HTTP
 		# The "legacy" (tcp://localhost:2375) connection option in Docker Desktop settings must be enabled.
 		export DOCKER_HOST='127.0.0.1:2375'
-	else
-		# Mac + Docker Desktop - via /var/run/docker.sock (DOCKER_HOST='')
-		# Windows/Babun + Docker Desktop - via Windows named pipe (DOCKER_HOST='')
-		export DOCKER_HOST=''
 	fi
 else
 	# Mac/Windows + Docker Machine => connecting via tcp://192.168.64.100:2376 (TLS) (DOCKER_HOST='192.168.64.100:2376')
@@ -7518,6 +7720,24 @@ if is_docker_running; then
 else
 	export DOCKER_RUNNING="false"
 fi
+
+# By default, we use the built-in SSH agent unless DOCKSAL_SSH_AGENT_USE_HOST=1
+# On Linux, we can directly mount the SSH auth socket into the container.
+# On Mac/Win, we proxy the Unix socket through TCP on Docksal's host IP.
+if [[ -n "$SSH_AUTH_SOCK" ]]; then
+	DOCKSAL_SSH_AUTH_SOCK="$SSH_AUTH_SOCK"
+fi
+if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
+	unset SSH_AUTH_SOCK
+fi
+
+# Default MySQL settings
+# These may be overridden via project level env files (e.g., docksal.env)
+export MYSQL_HOST=${MYSQL_HOST:-db}
+export MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+export MYSQL_USER=${MYSQL_USER:-user}
+export MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
+export MYSQL_DATABASE=${MYSQL_DATABASE:-default}
 
 # Handle Alias
 if [[ "$1" == "@"* ]]; then
@@ -7766,7 +7986,7 @@ case "$1" in
 		vm "$@"
 		;;
 	update)
-		if [[ "$DOCKSAL_LOCK_UPDATES" != "" ]]; then
+		if [[ "$DOCKSAL_LOCK_UPDATES" == "1" ]]; then
 			echo-error "Updates locked in this environment"
 			exit 1
 		fi
@@ -8056,6 +8276,10 @@ case "$1" in
 				# load_configuration is conditional in function
 				shift
 				config_remove "$@"
+				;;
+			yml|yaml)
+				load_configuration
+				config_yml "$@"
 				;;
 			*)
 				load_configuration

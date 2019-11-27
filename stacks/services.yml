@@ -10,7 +10,7 @@ services:
     hostname: web
     image: ${WEB_IMAGE:-docksal/apache:2.4-2.3}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -31,7 +31,7 @@ services:
     hostname: web
     image: ${WEB_IMAGE:-docksal/web:2.2-apache2.4}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -51,7 +51,7 @@ services:
     hostname: web
     image: ${WEB_IMAGE:-docksal/nginx:1.14-1.0}
     volumes:
-    - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
     - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
     - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -74,13 +74,13 @@ services:
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
       - db_data:/var/lib/mysql  # Database data volume
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-      - MYSQL_USER=${MYSQL_USER:-user}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_DATABASE
       - MYSQL_ALLOW_EMPTY_PASSWORD
       - MYSQL_RANDOM_ROOT_PASSWORD
       - MYSQL_ONETIME_PASSWORD
@@ -96,13 +96,13 @@ services:
     ports:
     - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
-    - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+    - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     - db_data:/var/lib/mysql  # Database data volume
     environment:
-    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-    - MYSQL_USER=${MYSQL_USER:-user}
-    - MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
-    - MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+    - MYSQL_ROOT_PASSWORD
+    - MYSQL_USER
+    - MYSQL_PASSWORD
+    - MYSQL_DATABASE
     - MYSQL_ALLOW_EMPTY_PASSWORD
     - MYSQL_RANDOM_ROOT_PASSWORD
     - MYSQL_ONETIME_PASSWORD
@@ -118,7 +118,7 @@ services:
     ports:
       - "${PGSQL_PORT_MAPPING:-5432}"
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
       - db_data:/var/lib/postgresql/data  # Database data volume
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-default}
@@ -131,10 +131,10 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.6-php7.2}
+    image: ${CLI_IMAGE:-docksal/cli:2.10-php7.3}
     volumes:
-      - project_root:/var/www:rw,nocopy  # Project root volume
-      - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
+      - project_root:/var/www:rw,nocopy,cached  # Project root volume
+      - ${SSH_AUTH_SOCK:-docksal_ssh_agent}:${SSH_AUTH_SOCK:-/.ssh-agent}:ro  # Shared ssh-agent socket/SSH key forwarding support
       - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
     environment:
       - GIT_USER_EMAIL
@@ -144,9 +144,10 @@ services:
       - DOCROOT
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-      - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}  # Point xdebug to the host IP
-      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
+      - XDEBUG_CONFIG=remote_host=${DOCKSAL_HOST_IP} remote_port=9000 # Point xdebug to <host IP>:9000
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST} # This helps PHPStorm pick the right debug configuration
       - DRUSH_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
+      - DRUSH_OPTIONS_URI=${VIRTUAL_HOST}
       - BLACKFIRE_CLIENT_ID
       - BLACKFIRE_CLIENT_TOKEN
       - SECRET_SSH_PRIVATE_KEY
@@ -154,6 +155,14 @@ services:
       - SECRET_ACAPI_KEY
       - SECRET_PLATFORMSH_CLI_TOKEN
       - SECRET_TERMINUS_TOKEN
+      - SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-/.ssh-agent/proxy-socket}  # SSH key forwarding support
+      - MYSQL_HOST
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_DATABASE
+      - COMPOSER_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
+      - COMPOSER_DISABLE_XDEBUG_WARN=${XDEBUG_ENABLED:-0}
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
@@ -163,7 +172,7 @@ services:
     hostname: varnish
     image: ${VARNISH_IMAGE:-docksal/varnish:6.1-2.0}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=varnish.${VIRTUAL_HOST},varnish.${VIRTUAL_HOST}.*
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -198,7 +207,7 @@ services:
     hostname: solr
     image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=solr.${VIRTUAL_HOST},solr.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8983
@@ -212,7 +221,7 @@ services:
     hostname: mail
     image: ${MAILHOG_IMAGE:-mailhog/mailhog}
     volumes:
-      - project_root:/var/www:ro,nocopy  # Project root volume (read-only)
+      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
       - io.docksal.virtual-host=mail.${VIRTUAL_HOST},mail.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8025

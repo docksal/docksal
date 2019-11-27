@@ -4,9 +4,8 @@ aliases:
   - /en/master/fin/addons/
 ---
 
-In addition to the custom commands it is possible to extend fin further with addons per project or per host.
-
-Addons by default can be found in the [Docksal Addons Repository](https://github.com/docksal/addons).
+In addition to the [custom commands](../custom-commands), it is possible to extend fin further with addons per project or per host. 
+Addons are community submitted commands and can be found in the [Docksal Addons Repository](https://github.com/docksal/addons).
 In order to use addons, fin version 1.7.0 or higher is required.
 
 ## Installing to Project
@@ -52,7 +51,7 @@ To create an addon the following [example](https://github.com/docksal/addons/tre
 
 Other than that, the bare minimum is necessary.
 
-* A folder that is the name of your addon. **Careful** when choosing a name make sure it is a machine readable name. Meaning
+* A folder that is the name of your addon. **Careful** when choosing a name. Make sure it is a machine readable name using only
 letters, numbers, dashes, and underscores. All other characters should be avoided.
 * Next, create a file within that addon folder that is the same name as the addon. This is where the base of the addon command will
 live. Example if my addon's name was `example`, my folder structure would look like `example/example`.
@@ -87,7 +86,7 @@ case "$1" in
 esac
 ```
 
-* Lastly, create a file that is the same name as the addon with the extension `.filelist` at the end of it. Example if my addon's name was `example`, it would be `example/example.filelist`. This file will contain any additional files within the addon folder that should be included at the time of install.
+* Lastly, if you want to include more than a single script file, create a file that is the same name as the addon with the extension `.filelist` at the end of it. For example, if the addon's name was `example`, the file name would be `example/example.filelist`. This file will contain any additional files within the addon folder that should be included at the time of install.
 
 ```bash
 # If you want to include more than a single script file,
