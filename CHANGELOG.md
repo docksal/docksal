@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.13.0 (2019-11-xx)
+## 1.13.0 (2019-11-27)
 
 ### New software versions
 
