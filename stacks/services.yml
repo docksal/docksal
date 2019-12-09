@@ -144,8 +144,8 @@ services:
       - DOCROOT
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-      - XDEBUG_CONFIG=remote_host=${DOCKSAL_HOST_IP} remote_port=9000 # Point xdebug to <host IP>:9000
-      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST} # This helps PHPStorm pick the right debug configuration
+      - XDEBUG_CONFIG=remote_host=${DOCKSAL_HOST_IP} # Point xdebug to the listener on the host
+      - PHP_IDE_CONFIG # This helps with console scripts debugging in PHPStorm (the values is set in docksal-local.env)
       - DRUSH_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - DRUSH_OPTIONS_URI=${VIRTUAL_HOST}
       - BLACKFIRE_CLIENT_ID
