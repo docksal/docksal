@@ -148,7 +148,7 @@ You can run your scripts in console and debug them in the same way as browser re
 4. Set a breakpoint
 5. Select the **Listen for XDebug** configuration from the dropdown and click **Start Debugging**
 
-You can debug both, web requests and cli scripts, using this configuration. 
+You can debug both web requests and cli scripts using this configuration.
 
 
 ## Debugging with NetBeans {#netbeans}
