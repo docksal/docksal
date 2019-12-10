@@ -8,31 +8,38 @@ Xdebug can be used to debug both web requests as well as cli scripts (e.g., Drus
 
 ## Stack Setup {#setup}
 
-`xdebug` integration is disabled by default since it causes about a 20% performance hit. To enable it:
+Xdebug integration is disabled by default as it causes a roughly 20% performance hit. To enable it:
 
 ```bash
 fin config set --env=local XDEBUG_ENABLED=1
 fin project start
 ``` 
 
-To verify that Xdebug was enabled run:
+To verify that Xdebug was enabled:
 
 ```bash
 $ fin exec php -v | grep -i xdebug
     with Xdebug v2.7.2, Copyright (c) 2002-2019, by Derick Rethans
 ```
 
-Note: Starting with Docksal v1.6.0 (and assuming the default stack is used), installing the companion browser extension 
+{{% notice note %}}
+Starting with Docksal v1.6.0 (and assuming the default stack is used), installing the companion browser extension 
 is no longer necessary. Once Xdebug is enabled, debugging sessions will be started automatically.
+{{% /notice %}}
 
-Next, follow the IDE specific setup steps below.
+Next, follow the IDE specific setup steps:
+
+- [PHPStorm](#phpstorm)
+- [Visual Studio Code](#vscode)
+- [NetBeans](#netbeans)
+- [Atom](#atom)
 
 
 ## Debugging with PHPStorm {#phpstorm}
 
 First, follow the [setup instructions](#setup) to enable the Xdebug integration.
 
-### Web Requests {#phpstorm-web}
+### Automatic Setup {#phpstorm-automatic}
 
 PHPStorm makes debugging setup very easy using the [Incoming Connection Dialog](https://www.jetbrains.com/help/idea/incoming-connection-dialog.html).
 
@@ -52,25 +59,40 @@ PHPStorm makes debugging setup very easy using the [Incoming Connection Dialog](
     PHPStorm automatically configures a server and directory mappings between the host and the server.
 
 Directory mappings are very important, as that's how PHPStorm knows how to map sources on the server to those on
-the host. You will not be able to debug anything above the project's `docroot` folder by default.
+the host. By default, you will not be able to debug anything above the project's `docroot` folder.
 
-If you don't get the **Incoming Connection From Xdebug** dialogue, see the [manual setup steps](#phpstorm-manual).
+If you don't get the **Incoming Connection From Xdebug** dialogue or you need to debug scripts above the `docroot`
+directory, see the [manual setup steps](#phpstorm-manual).
+
+### Manual Setup {#phpstorm-manual}
+
+1. Under **Preferences > Languages & Frameworks > PHP > Servers** add a new server
+2. Set **Name** and **Hostname** to project's virtual host (e.g., `myproject.docksal`)
+3. Configure host to server directory mappings
+    
+    Map the project directory on the host to `/var/www/` on the server:
+    
+    ![PHPStorm Xdebug Manual](/images/xdebug-phpstorm-manual.png)
+
+With this manual setup you will be able to debug scripts within your project's root (`/var/www/` on the server).
 
 ### CLI Scripts {#phpstorm-cli}
 
-First, either follow [Web Requests](#phpstorm-web) or [Manual](#phpstorm-manual) instructions to configure 
-server and path mapping settings in PHPStorm.
+First, follow [automatic](#phpstorm-automatic) or [manual](#phpstorm-manual) instructions to configure server and path 
+mapping settings in PHPStorm.
 
-To debug PHP CLI scripts, we have to tell PHPStorm which **existing** server configuration to use via the `PHP_IDE_CONFIG` 
-variable. This can be done using the following commands:
+To debug PHP CLI scripts, we have to tell PHPStorm which **existing** server configuration to use via the 
+`PHP_IDE_CONFIG` variable. This can be done using the following commands:
 
 ```bash
 fin config set --env=local 'PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}'
 fin project start
 ```
 
-Keep in mind, the script you are trying to debug must reside within the project root folder, otherwise, PHPStorm won't 
-be able to access the scripts's source code (and thus debug it).
+{{% notice warning %}}
+The script you are trying to debug must reside within the project root directory (`/var/www/`on the server) or 
+PHPStorm won't be able to access the scripts's source code and debug it.
+{{% /notice %}}
 
 ### CLI Scripts: Drush {#phpstorm-drush}
 
@@ -84,20 +106,6 @@ To debug custom Drush commands, make the following additional adjustments in PHP
 
 You can run your scripts in console and debug them in the same way as browser requests. For example, you can run 
 `fin drush fl` and debug this Drush command from the Features module.
-
-### Manual Setup {#phpstorm-manual}
-
-1. Under **Preferences > Languages & Frameworks > PHP > Servers** add a new server
-2. Set **Name** and **Hostname** to project's virtual host (e.g., `myproject.docksal`)
-3. Configure host to server directory mappings
-    
-    Map the project directory on the host to `/var/www` on the server:
-    
-    ![PHPStorm Xdebug Manual](/images/xdebug-phpstorm-manual.png)
-
-Additional resources:
-
-- [Zero-configuration Web Application Debugging with Xdebug and PhpStorm](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm)
 
 
 ## Debugging with Visual Studio Code {#vscode}
