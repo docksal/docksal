@@ -22,11 +22,6 @@ $ fin exec php -v | grep -i xdebug
     with Xdebug v2.7.2, Copyright (c) 2002-2019, by Derick Rethans
 ```
 
-{{% notice note %}}
-Starting with Docksal v1.6.0 (and assuming the default stack is used), installing the companion browser extension 
-is no longer necessary. Once Xdebug is enabled, debugging sessions will be started automatically.
-{{% /notice %}}
-
 Next, follow the IDE specific setup steps:
 
 - [PHPStorm](#phpstorm)
