@@ -19,6 +19,7 @@ services:
       - 9000  # dbgp server port for xdebug to connect to
     environment:
       - IDE_ENABLED
+      - IDE_PASSWORD
       # Point xdebug to the dbgp server (started by IDE) in the ide container.
       # This is only necessary for debugging php cli sessions initiated directly in the IDE.
       # Normally, you'd be launching a cli script manually inside the cli container and not inside IDE (ide container).
