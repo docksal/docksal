@@ -1330,12 +1330,6 @@ cleanup ()
 
 	echo-green "Removing dangling images..."
 	docker image prune -f 2>/dev/null
-	# Remove dangling empty images. Temporary to address bug introduced in 1.12.0.
-	# TODO: Remove this in December 2019
-	# GNU xargs (Linux) executes the command even when it receives zero input
-	# To call xargs in a cross-platform compatible way: xargs -I ARG docker rm ARG
-	# See https://stackoverflow.com/a/19038748/4550880
-	docker ps -a | grep "docksal/empty" | awk '{print $1}' | xargs -I ARG docker rm ARG
 	# TODO: use the filter once we have the filter added to all Docksal images (will take a while)
 	#docker image prune -f --filter "label=io.docksal" 2>/dev/null
 }
@@ -2947,17 +2941,6 @@ vm ()
 			return 1
 			;;
 	esac
-}
-
-# TODO: deprecated. Remove as this command is not very useful right now.
-vm-stats ()
-{
-	check_docker_running # should be running
-	check_vbox_version
-	metrics="CPU/Load/User,CPU/Load/Kernel,Net/Rate/Rx,Net/Rate/Tx"
-	"$vboxmanage" metrics setup --period 1 --samples 1 "$DEFAULT_MACHINE_NAME"
-	sleep 1
-	"$vboxmanage" metrics query "$DEFAULT_MACHINE_NAME" "$metrics"
 }
 
 vm-ram () {
@@ -7973,8 +7956,7 @@ case "$1" in
 		check_for_updates
 		project_status
 		;;
-	# TODO: remove "projects" alias in July 2017
-	projects|pl)
+	pl)
 		# no load_configuration
 		check_for_updates
 		shift
@@ -8008,8 +7990,7 @@ case "$1" in
 			exit
 		elif [[ "$1" == "--tools" ]]; then
 			update_tools
-		# TODO: "--config" deprecated, remove at some point
-		elif [[ "$1" == "--config" ]] || [[ "$1" == "--stack" ]] || [[ "$1" == "--stacks" ]]; then
+		elif [[ "$1" == "--stack" ]] || [[ "$1" == "--stacks" ]]; then
 			echo-green "Updating stack files..."
 			update_config_files
 		elif [[ "$1" == "--bash-complete" ]]; then

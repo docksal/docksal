@@ -28,7 +28,7 @@ TERM=dumb
 	fin project reset -f
 	sleep 5
 
-	run fin projects
+	run fin project list
 	[[ "$output" == *"test-db"* ]]
 	unset output
 }
