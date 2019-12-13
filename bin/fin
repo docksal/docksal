@@ -583,8 +583,14 @@ get_mysql_connect ()
 # @return docker container id
 get_project_container_id ()
 {
+	local service=$1
+	local project=$COMPOSE_PROJECT_NAME
+
 	# Trim \r from output (necessary on Windows)
-	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '\r')
+	echo $(docker ps -q --no-trunc \
+		--filter="label=com.docker.compose.project=${project}" \
+		--filter="label=com.docker.compose.service=${service}" \
+		--filter="status=running" 2>/dev/null | tr -d '\r')
 }
 
 # Run command on Windows with elevated privileges
