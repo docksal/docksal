@@ -5168,7 +5168,7 @@ _exec ()
 	# Add space if cmd is not empty
 
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
-	local cmd=""
+	local cmd
 	if [[ $2 != "" ]]; then
 		cmd=$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
