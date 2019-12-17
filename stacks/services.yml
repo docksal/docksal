@@ -144,7 +144,9 @@ services:
       - DOCROOT
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-      - XDEBUG_CONFIG=remote_host=${DOCKSAL_HOST_IP} # Point xdebug to the listener on the host
+      # TODO: remove xdebug.remote_connect_back in June 2020
+      # See https://github.com/docksal/docksal/issues/1238#issuecomment-566779905
+      - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP} # Point xdebug to the listener on the host
       - PHP_IDE_CONFIG # This helps with console scripts debugging in PHPStorm (the values is set in docksal-local.env)
       - DRUSH_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - DRUSH_OPTIONS_URI=${VIRTUAL_HOST}
