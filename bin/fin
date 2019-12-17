@@ -583,8 +583,8 @@ get_mysql_connect ()
 # @return docker container id
 get_project_container_id ()
 {
+	local project=$COMPOSE_PROJECT_NAME_SAFE
 	local service=$1
-	local project=$COMPOSE_PROJECT_NAME
 
 	# Trim \r from output (necessary on Windows)
 	echo $(docker ps -q --no-trunc \
