@@ -5151,12 +5151,11 @@ _exec ()
 	# RUN_NO_CDIR can be used to override this (used in mysql_import)
 	local workdir_arg=""
 	if [[ "$container_name" == 'cli' || "$container_name" == 'web' ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
-		workdir_arg="--workdir /var/www/$(get_current_relative_path)"
+		workdir_arg="-w /var/www/$(get_current_relative_path)"
 	fi
 
 	# User to run commands as. npm and other userspace commands are only available to docker user
-	local user_arg;
-	user_arg=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
+	local user_arg=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
 	if [[ "$user_arg" != "" ]]; then
 		user_arg="-u ${user_arg}"
 	elif [[ "$container_name" == "cli" ]]; then # only use docker user for cli by default, others wil use root
