@@ -136,6 +136,9 @@ services:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
       - ${SSH_AUTH_SOCK:-docksal_ssh_agent}:${SSH_AUTH_SOCK:-/.ssh-agent}:ro  # Shared ssh-agent socket/SSH key forwarding support
       - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
+    labels:
+      - io.docksal.user=docker
+      - io.docksal.shell=bash
     environment:
       - GIT_USER_EMAIL
       - GIT_USER_NAME
