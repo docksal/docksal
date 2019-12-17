@@ -5114,91 +5114,85 @@ _exec ()
 	fi
 
 	# Allow overriding container, where to run
-	local container_name
+	local container_name="cli"
 	if [[ "$1" =~ "--in" ]]; then
 		container_name=$(echo "$1" | cut -d "=" -f 2)
 		shift
+	fi
+
+	# Allow entering arbitrary containers by name (e.g., system containers like vhost-proxy).
+	local container_id=$(get_project_container_id "$container_name")
+	if [[ "$container_id" == "" ]]; then
+		container_id="$container_name"
+	fi
+
+	# Determine shell to run
+	local shell_interactive
+	local shell_noninteractive
+	local container_shell=$(docker inspect --format '{{ index .Config.Labels "io.docksal.shell"}}' ${container_id} 2>/dev/null)
+	if [[ "$container_shell" != "" ]]; then
+		# Use configured shell
+		shell_interactive="$container_shell -ilc"
+		shell_noninteractive="$container_shell -lc"
+	elif [[ "$container_name" == 'cli' ]] || [[ "$container_name" == 'db' ]]; then
+		# For cli and db use bash (complex SQL queries fail when fed from stdin to sh)
+		shell_interactive="bash -ilc"
+		shell_noninteractive="bash -lc"
 	else
-		container_name="cli"
+		# Use sh as default shell
+		shell_interactive="sh -ilc"
+		shell_noninteractive="sh -lc"
 	fi
-
-	container_id=$(get_project_container_id "$container_name")
-
-	# Use sh as default shell
-	local SHELL_INTERACTIVE="sh -ilc"
-	local SHELL_NONINTERACTIVE="sh -lc"
-
-	# For cli and db use bash (complex SQL queries fail when fed from stdin to sh)
-	if [[ "$container_name" == "cli" ]] || [[ "$container_name" == "db" ]]; then
-		SHELL_INTERACTIVE="bash -ilc"
-		SHELL_NONINTERACTIVE="bash -lc"
-	fi
-
- 	local container_shell=$(docker inspect --format '{{ index .Config.Labels "io.docksal.shell"}}' ${container_id} 2>/dev/null)
- 	if [[ "$container_shell" != "" ]]; then
-		SHELL_INTERACTIVE="$container_shell -ilc"
-		SHELL_NONINTERACTIVE="$container_shell -lc"
- 	fi
 
 	# ------------------------------------------------ #
-	# 1) cmd
-	local cmd=""
+	# 1) working directory and user
 
-	# Only chdir to the same dir in cli container
+	# Inside the cli and web containers, start in the same dir
 	# RUN_NO_CDIR can be used to override this (used in mysql_import)
-	if [[ "$container_name" == "cli" ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
-		local path=$(get_current_relative_path)
-		if [[ "$path" != "" ]] ; then
-			# We are deeper than project root and thus need to do a cd
-			cmd="cd $path &&"
-		fi
+	local workdir_arg=""
+	if [[ "$container_name" == 'cli' || "$container_name" == 'web' ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
+		workdir_arg="-w /var/www/$(get_current_relative_path)"
+	fi
+
+	# User to run commands as. npm and other userspace commands are only available to docker user
+	local user_arg=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
+	if [[ "$user_arg" != "" ]]; then
+		user_arg="-u ${user_arg}"
+	elif [[ "$container_name" == "cli" ]]; then # only use docker user for cli by default, others wil use root
+		user_arg="-u docker"
 	fi
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
 	# 2) convert array of parameters into escaped string
 	# Add space if cmd is not empty
-	[[ $cmd != "" ]] && cmd="$cmd "
+
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
+	local cmd
 	if [[ $2 != "" ]]; then
-		cmd="$cmd"$(printf " %q" "$@")
+		cmd=$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
 	else
-		if [[ "${@}" == "__SHELL_INTERACTIVE__" ]]; then
-			# Special case for running interactive shell with the selected shell
-			# remove the -c switch from the SHELL_INTERACTIVE call
-			cmd="${cmd}${SHELL_INTERACTIVE/c/}"
-		else
-			cmd="${cmd}${@}"
-		fi
+		cmd="${@}"
 	fi
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
 	# 3) execute
-	# Allow entering arbitrary containers by name (e.g., system containers like vhost-proxy).
-	if [[ "$container_id" == "" ]]; then
-		container_id="$container_name"
-	fi
-
-	# User to run commands as. npm and other userspace commands are only available to docker user
-	local container_user;
-	container_user=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
-	if [[ "$container_user" != "" ]]; then
-		container_user="-u ${container_user}"
-	elif [[ "$container_name" == "cli" ]]; then # only use docker user for cli by default, others wil use root
-		container_user="-u docker"
-	fi
 
 	# Enter project containers
 	# COLUMNS and LINES have to be passed to workaround a race condition in Docker. See https://github.com/moby/moby/pull/37172#issuecomment-406844485
-	if is_tty && [[ "$no_tty" != true ]]; then
+	if [[ "${@}" == "__SHELL_INTERACTIVE__" ]]; then
+		# Special case for running interactive shell with the selected shell
+		# remove the -c switch from the shell_interactive call
+		${winpty} docker exec -e COLUMNS -e LINES -it ${user_arg} ${workdir_arg} ${container_id} ${shell_interactive/c/}
+	elif is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker exec -e COLUMNS -e LINES -it ${container_user} ${container_id} ${SHELL_INTERACTIVE} "$cmd; (exit \$?)"
+		${winpty} docker exec -e COLUMNS -e LINES -it ${user_arg} ${workdir_arg} ${container_id} ${shell_interactive} "$cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec -e COLUMNS -e LINES ${container_user} ${container_id} ${SHELL_NONINTERACTIVE} "$cmd"
+		docker exec -e COLUMNS -e LINES ${user_arg} ${workdir_arg} ${container_id} ${shell_noninteractive} "$cmd"
 	fi
 	# ------------------------------------------------ #
 }
