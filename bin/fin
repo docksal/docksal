@@ -429,6 +429,13 @@ docker-compose ()
 		COMPOSE_FILE="${docksal_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 	fi
 
+	# By default, we use the built-in SSH agent unless DOCKSAL_SSH_AGENT_USE_HOST=1
+	# On Linux, we can directly mount the SSH auth socket into the container.
+	# On Mac/Win, we proxy the Unix socket through TCP on Docksal's host IP.
+	if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
+		unset SSH_AUTH_SOCK
+	fi
+
 	# Call regular docker-compose.
 	# We can use `which` here, since it does not care about functions (but `type` does).
 	$(which docker-compose) "$@"
@@ -4151,13 +4158,13 @@ start_sshproxy_daemon ()
 			echo 'Run `apt-get install socat` to add this application.'
 		fi
 		exit 2
-	elif [[ -z "$DOCKSAL_SSH_AUTH_SOCK" ]]; then
+	elif [[ -z "$SSH_AUTH_SOCK" ]]; then
 		echo-error 'Environment variable SSH_AUTH_SOCK is not set.' \
 			'Is your local SSH agent running correctly?'
 		exit 3
 	fi
 
-	socat TCP-LISTEN:$DOCKSAL_SSH_PROXY_PORT,bind=$DOCKSAL_HOST_IP,reuseaddr,fork UNIX-CLIENT:$DOCKSAL_SSH_AUTH_SOCK &
+	socat TCP-LISTEN:$DOCKSAL_SSH_PROXY_PORT,bind=$DOCKSAL_HOST_IP,reuseaddr,fork UNIX-CLIENT:$SSH_AUTH_SOCK &
 	local pid=$!
 	if_failed_error "Failed starting the SSH proxy service."
 	echo "$pid" > "$CONFIG_SSHPROXY_PID"
@@ -7702,16 +7709,6 @@ if is_docker_running; then
 	export DOCKER_RUNNING="true"
 else
 	export DOCKER_RUNNING="false"
-fi
-
-# By default, we use the built-in SSH agent unless DOCKSAL_SSH_AGENT_USE_HOST=1
-# On Linux, we can directly mount the SSH auth socket into the container.
-# On Mac/Win, we proxy the Unix socket through TCP on Docksal's host IP.
-if [[ -n "$SSH_AUTH_SOCK" ]]; then
-	DOCKSAL_SSH_AUTH_SOCK="$SSH_AUTH_SOCK"
-fi
-if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
-	unset SSH_AUTH_SOCK
 fi
 
 # Default MySQL settings
