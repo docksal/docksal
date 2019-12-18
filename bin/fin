@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.92.2
+FIN_VERSION=1.93.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -282,7 +282,7 @@ URL_RELEASE_NOTES="https://docksal.io/updates"
 URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/boilerplate-drupal8.git"
 URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
-URL_REPO_DRUPAL8BLT="https://github.com/docksal/boilerplate-blt.git"
+URL_REPO_DRUPAL8BLT="https://github.com/docksal/boilerplate-drupal8-blt.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/boilerplate-wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/boilerplate-magento.git"
 URL_REPO_GRAV="https://github.com/docksal/boilerplate-grav.git"
@@ -427,6 +427,13 @@ docker-compose ()
 		# This is special hack to make docker-compose work in the context of the project root
 		# https://github.com/docksal/docksal/issues/459
 		COMPOSE_FILE="${docksal_yml_file}${SEPARATOR}${COMPOSE_FILE}"
+	fi
+
+	# By default, we use the built-in SSH agent unless DOCKSAL_SSH_AGENT_USE_HOST=1
+	# On Linux, we can directly mount the SSH auth socket into the container.
+	# On Mac/Win, we proxy the Unix socket through TCP on Docksal's host IP.
+	if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
+		unset SSH_AUTH_SOCK
 	fi
 
 	# Call regular docker-compose.
@@ -583,8 +590,14 @@ get_mysql_connect ()
 # @return docker container id
 get_project_container_id ()
 {
+	local project=$COMPOSE_PROJECT_NAME_SAFE
+	local service=$1
+
 	# Trim \r from output (necessary on Windows)
-	echo $(docker-compose ps -q $1 2>/dev/null | tr -d '\r')
+	echo $(docker ps -q --no-trunc \
+		--filter="label=com.docker.compose.project=${project}" \
+		--filter="label=com.docker.compose.service=${service}" \
+		--filter="status=running" 2>/dev/null | tr -d '\r')
 }
 
 # Run command on Windows with elevated privileges
@@ -1330,12 +1343,6 @@ cleanup ()
 
 	echo-green "Removing dangling images..."
 	docker image prune -f 2>/dev/null
-	# Remove dangling empty images. Temporary to address bug introduced in 1.12.0.
-	# TODO: Remove this in December 2019
-	# GNU xargs (Linux) executes the command even when it receives zero input
-	# To call xargs in a cross-platform compatible way: xargs -I ARG docker rm ARG
-	# See https://stackoverflow.com/a/19038748/4550880
-	docker ps -a | grep "docksal/empty" | awk '{print $1}' | xargs -I ARG docker rm ARG
 	# TODO: use the filter once we have the filter added to all Docksal images (will take a while)
 	#docker image prune -f --filter "label=io.docksal" 2>/dev/null
 }
@@ -2949,17 +2956,6 @@ vm ()
 	esac
 }
 
-# TODO: deprecated. Remove as this command is not very useful right now.
-vm-stats ()
-{
-	check_docker_running # should be running
-	check_vbox_version
-	metrics="CPU/Load/User,CPU/Load/Kernel,Net/Rate/Rx,Net/Rate/Tx"
-	"$vboxmanage" metrics setup --period 1 --samples 1 "$DEFAULT_MACHINE_NAME"
-	sleep 1
-	"$vboxmanage" metrics query "$DEFAULT_MACHINE_NAME" "$metrics"
-}
-
 vm-ram () {
 	echo "Total $("$vboxmanage" showvminfo "$DEFAULT_MACHINE_NAME" | grep Memory)"
 	if [[ "$1" != "" ]]; then
@@ -3510,7 +3506,10 @@ ssh_key ()
 
 	# Check if we support key management
 	if [[ "$DOCKSAL_SSH_AGENT_USE_HOST" == "1" ]]; then
-		echo-error 'Docksal is currently not managing the SSH keys.'
+		if [[ "${quiet}" == "" ]]; then
+			echo-warning 'Docksal is currently not managing SSH keys.' \
+				"Please use ${yellow}ssh-add${NC} command to manage SSH keys in the host's ssh-agent."
+		fi
 		return 1
 	fi
 
@@ -4162,13 +4161,13 @@ start_sshproxy_daemon ()
 			echo 'Run `apt-get install socat` to add this application.'
 		fi
 		exit 2
-	elif [[ -z "$DOCKSAL_SSH_AUTH_SOCK" ]]; then
+	elif [[ -z "$SSH_AUTH_SOCK" ]]; then
 		echo-error 'Environment variable SSH_AUTH_SOCK is not set.' \
 			'Is your local SSH agent running correctly?'
 		exit 3
 	fi
 
-	socat TCP-LISTEN:$DOCKSAL_SSH_PROXY_PORT,bind=$DOCKSAL_HOST_IP,reuseaddr,fork UNIX-CLIENT:$DOCKSAL_SSH_AUTH_SOCK &
+	socat TCP-LISTEN:$DOCKSAL_SSH_PROXY_PORT,bind=$DOCKSAL_HOST_IP,reuseaddr,fork UNIX-CLIENT:$SSH_AUTH_SOCK &
 	local pid=$!
 	if_failed_error "Failed starting the SSH proxy service."
 	echo "$pid" > "$CONFIG_SSHPROXY_PID"
@@ -5131,91 +5130,85 @@ _exec ()
 	fi
 
 	# Allow overriding container, where to run
-	local container_name
+	local container_name="cli"
 	if [[ "$1" =~ "--in" ]]; then
 		container_name=$(echo "$1" | cut -d "=" -f 2)
 		shift
+	fi
+
+	# Allow entering arbitrary containers by name (e.g., system containers like vhost-proxy).
+	local container_id=$(get_project_container_id "$container_name")
+	if [[ "$container_id" == "" ]]; then
+		container_id="$container_name"
+	fi
+
+	# Determine shell to run
+	local shell_interactive
+	local shell_noninteractive
+	local container_shell=$(docker inspect --format '{{ index .Config.Labels "io.docksal.shell"}}' ${container_id} 2>/dev/null)
+	if [[ "$container_shell" != "" ]]; then
+		# Use configured shell
+		shell_interactive="$container_shell -ilc"
+		shell_noninteractive="$container_shell -lc"
+	elif [[ "$container_name" == 'cli' ]] || [[ "$container_name" == 'db' ]]; then
+		# For cli and db use bash (complex SQL queries fail when fed from stdin to sh)
+		shell_interactive="bash -ilc"
+		shell_noninteractive="bash -lc"
 	else
-		container_name="cli"
+		# Use sh as default shell
+		shell_interactive="sh -ilc"
+		shell_noninteractive="sh -lc"
 	fi
-
-	container_id=$(get_project_container_id "$container_name")
-
-	# Use sh as default shell
-	local SHELL_INTERACTIVE="sh -ilc"
-	local SHELL_NONINTERACTIVE="sh -lc"
-
-	# For cli and db use bash (complex SQL queries fail when fed from stdin to sh)
-	if [[ "$container_name" == "cli" ]] || [[ "$container_name" == "db" ]]; then
-		SHELL_INTERACTIVE="bash -ilc"
-		SHELL_NONINTERACTIVE="bash -lc"
-	fi
-
- 	local container_shell=$(docker inspect --format '{{ index .Config.Labels "io.docksal.shell"}}' ${container_id} 2>/dev/null)
- 	if [[ "$container_shell" != "" ]]; then
-		SHELL_INTERACTIVE="$container_shell -ilc"
-		SHELL_NONINTERACTIVE="$container_shell -lc"
- 	fi
 
 	# ------------------------------------------------ #
-	# 1) cmd
-	local cmd=""
+	# 1) working directory and user
 
-	# Only chdir to the same dir in cli container
+	# Inside the cli and web containers, start in the same dir
 	# RUN_NO_CDIR can be used to override this (used in mysql_import)
-	if [[ "$container_name" == "cli" ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
-		local path=$(get_current_relative_path)
-		if [[ "$path" != "" ]] ; then
-			# We are deeper than project root and thus need to do a cd
-			cmd="cd $path &&"
-		fi
+	local workdir_arg=""
+	if [[ "$container_name" == 'cli' || "$container_name" == 'web' ]] && [[ "$RUN_NO_CDIR" != 1 ]]; then
+		workdir_arg="-w /var/www/$(get_current_relative_path)"
+	fi
+
+	# User to run commands as. npm and other userspace commands are only available to docker user
+	local user_arg=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
+	if [[ "$user_arg" != "" ]]; then
+		user_arg="-u ${user_arg}"
+	elif [[ "$container_name" == "cli" ]]; then # only use docker user for cli by default, others wil use root
+		user_arg="-u docker"
 	fi
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
 	# 2) convert array of parameters into escaped string
 	# Add space if cmd is not empty
-	[[ $cmd != "" ]] && cmd="$cmd "
+
 	# Escape spaces that are "spaces" and not parameter delimiters (i.e., param1 param2\ with\ spaces param3)
+	local cmd
 	if [[ $2 != "" ]]; then
-		cmd="$cmd"$(printf " %q" "$@")
+		cmd=$(printf " %q" "$@")
 	# Do not escape spaces if there is only one parameter (e.g., fin run "ls -la | grep txt")
 	else
-		if [[ "${@}" == "__SHELL_INTERACTIVE__" ]]; then
-			# Special case for running interactive shell with the selected shell
-			# remove the -c switch from the SHELL_INTERACTIVE call
-			cmd="${cmd}${SHELL_INTERACTIVE/c/}"
-		else
-			cmd="${cmd}${@}"
-		fi
+		cmd="${@}"
 	fi
 	# ------------------------------------------------ #
 
 	# ------------------------------------------------ #
 	# 3) execute
-	# Allow entering arbitrary containers by name (e.g., system containers like vhost-proxy).
-	if [[ "$container_id" == "" ]]; then
-		container_id="$container_name"
-	fi
-
-	# User to run commands as. npm and other userspace commands are only available to docker user
-	local container_user;
-	container_user=$(docker inspect --format '{{ index .Config.Labels "io.docksal.user"}}' ${container_id} 2>/dev/null)
-	if [[ "$container_user" != "" ]]; then
-		container_user="-u ${container_user}"
-	elif [[ "$container_name" == "cli" ]]; then # only use docker user for cli by default, others wil use root
-		container_user="-u docker"
-	fi
 
 	# Enter project containers
 	# COLUMNS and LINES have to be passed to workaround a race condition in Docker. See https://github.com/moby/moby/pull/37172#issuecomment-406844485
-	if is_tty && [[ "$no_tty" != true ]]; then
+	if [[ "${@}" == "__SHELL_INTERACTIVE__" ]]; then
+		# Special case for running interactive shell with the selected shell
+		# remove the -c switch from the shell_interactive call
+		${winpty} docker exec -e COLUMNS -e LINES -it ${user_arg} ${workdir_arg} ${container_id} ${shell_interactive/c/}
+	elif is_tty && [[ "$no_tty" != true ]]; then
 		# interactive
 		# (exit \$?) is a hack to return correct exit codes when docker exec is run with tty (-t).
-		${winpty} docker exec -e COLUMNS -e LINES -it ${container_user} ${container_id} ${SHELL_INTERACTIVE} "$cmd; (exit \$?)"
+		${winpty} docker exec -e COLUMNS -e LINES -it ${user_arg} ${workdir_arg} ${container_id} ${shell_interactive} "$cmd; (exit \$?)"
 	else
 		# non-interactive
-		docker exec -e COLUMNS -e LINES ${container_user} ${container_id} ${SHELL_NONINTERACTIVE} "$cmd"
+		docker exec -e COLUMNS -e LINES ${user_arg} ${workdir_arg} ${container_id} ${shell_noninteractive} "$cmd"
 	fi
 	# ------------------------------------------------ #
 }
@@ -7721,16 +7714,6 @@ else
 	export DOCKER_RUNNING="false"
 fi
 
-# By default, we use the built-in SSH agent unless DOCKSAL_SSH_AGENT_USE_HOST=1
-# On Linux, we can directly mount the SSH auth socket into the container.
-# On Mac/Win, we proxy the Unix socket through TCP on Docksal's host IP.
-if [[ -n "$SSH_AUTH_SOCK" ]]; then
-	DOCKSAL_SSH_AUTH_SOCK="$SSH_AUTH_SOCK"
-fi
-if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
-	unset SSH_AUTH_SOCK
-fi
-
 # Default MySQL settings
 # These may be overridden via project level env files (e.g., docksal.env)
 export MYSQL_HOST=${MYSQL_HOST:-db}
@@ -7973,8 +7956,7 @@ case "$1" in
 		check_for_updates
 		project_status
 		;;
-	# TODO: remove "projects" alias in July 2017
-	projects|pl)
+	pl)
 		# no load_configuration
 		check_for_updates
 		shift
@@ -8008,8 +7990,7 @@ case "$1" in
 			exit
 		elif [[ "$1" == "--tools" ]]; then
 			update_tools
-		# TODO: "--config" deprecated, remove at some point
-		elif [[ "$1" == "--config" ]] || [[ "$1" == "--stack" ]] || [[ "$1" == "--stacks" ]]; then
+		elif [[ "$1" == "--stack" ]] || [[ "$1" == "--stacks" ]]; then
 			echo-green "Updating stack files..."
 			update_config_files
 		elif [[ "$1" == "--bash-complete" ]]; then

@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.13.1 (2019-12-17)
+
+### New software versions
+
+- fin v1.93.0
+
+### Changes and improvements
+
+- Added `IDE_PASSWORD` variable to IDE stack file (#1241)
+- Fixed Xdebug configuration issues (#1242)
+  - Updated `PHP_IDE_CONFIG` variable in `services.yml`
+  - Added back xdebug settings workaround for backward compatibility (https://github.com/docksal/docksal/issues/1238#issuecomment-566779905)
+- Fixed `SSH_AUTH_SOCK` being unset for custom commands (#1248)
+- Improved performance and functionality of `fin bash` (#1247)
+- Added `user` and `shell` labels on `cli` in `sercvice.yml`
+- Improved messaging in `ssh_key()`
+- Cleaned up items pending to be removed as per TODO notes
+
+### Documentation
+
+- Revamped Xdebug docs
+
+
 ## 1.13.0 (2019-11-27)
 
 ### New software versions
