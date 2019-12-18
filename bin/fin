@@ -3506,7 +3506,10 @@ ssh_key ()
 
 	# Check if we support key management
 	if [[ "$DOCKSAL_SSH_AGENT_USE_HOST" == "1" ]]; then
-		echo-error 'Docksal is currently not managing the SSH keys.'
+		if [[ "${quiet}" == "" ]]; then
+			echo-warning 'Docksal is currently not managing SSH keys.' \
+				"Please use ${yellow}ssh-add${NC} command to manage SSH keys in the host's ssh-agent."
+		fi
 		return 1
 	fi
 
