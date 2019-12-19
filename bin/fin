@@ -5345,6 +5345,9 @@ run_cli ()
 			-e GIT_USER_NAME \
 			-e HOST_UID \
 			-e HOST_GID \
+			-e NO_PROXY \
+			-e HTTP_PROXY \
+			-e HTTPS_PROXY \
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
@@ -5366,6 +5369,9 @@ run_cli ()
 			-e GIT_USER_NAME \
 			-e HOST_UID \
 			-e HOST_GID \
+			-e NO_PROXY \
+			-e HTTP_PROXY \
+			-e HTTPS_PROXY \
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
