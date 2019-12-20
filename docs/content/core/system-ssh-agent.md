@@ -11,7 +11,7 @@ SSH keys, which can be shared across multiple projects. It runs an SSH agent pro
 your project's cli container by default.
 
 The default SSH keys (`~/.ssh/id_rsa`, `~/.ssh/id_dsa`, `~/.ssh/id_ecdsa`, `~/.ssh/id_ed25519`) are loaded into the
-agent automatically. On macOS and Windows this happens when the Docksal VM is (re)started, on Linux - whenever
+agent automatically. On macOS and Windows, this happens when the Docksal VM is (re)started, on Linux, whenever
 `fin project start` is used.
 
 Alternatively, you can run the ssh-agent service in a proxy mode, where your host's SSH agent is passed through to all
