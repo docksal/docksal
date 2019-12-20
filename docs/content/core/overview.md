@@ -16,12 +16,12 @@ To see the list, run `fin docker ps --filter "label=io.docksal.group=system"`.
 ### SSH Agent
 
 The [docksal-ssh-agent](https://github.com/docksal/service-ssh-agent) service stores SSH keys and makes them available 
-to other projects and containers.
+to other projects and containers. It can also function as a proxy for your local SSH agent.
 
-SSH agent can handle passphrase protected ssh keys, so you don't have to enter the passphrase every time the key is used. 
-The passphrase is entered one only time, when the key is loaded into the agent.
+SSH agent can handle passphrase protected SSH keys, so you don't have to enter the passphrase every time the key is
+used. The passphrase is entered only one time, when the key is loaded into the agent.
 
-See [Using ssh-agent service](/core/system-ssh-agent/) for more information. 
+See [Using ssh-agent service](/core/system-ssh-agent/) for more information.
 
 ### DNS
 
