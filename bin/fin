@@ -296,6 +296,7 @@ URL_REPO_BACKDROP="https://github.com/docksal/boilerplate-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
+STACKS_OVERRIDES_XHPROF="overrides-xhprof.yml"
 STACKS_SERVICES="services.yml"
 STACKS_STACK_ACQUIA="stack-acquia.yml"
 STACKS_STACK_DEFAULT="stack-default.yml"
@@ -4715,6 +4716,7 @@ update_config_files ()
 {
 	files_to_download="
 			$STACKS_OVERRIDES_IDE
+			$STACKS_OVERRIDES_XHPROF
 			$STACKS_SERVICES
 			$STACKS_STACK_ACQUIA
 			$STACKS_STACK_DEFAULT
@@ -6117,6 +6119,11 @@ load_configuration ()
 		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
 		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
 			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
+		fi
+
+		overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
+		if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
+			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
 		fi
 	fi
 
