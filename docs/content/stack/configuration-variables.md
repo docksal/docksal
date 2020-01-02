@@ -7,8 +7,8 @@ aliases:
 
 Configuration variables can be specified in the `docksal.env` file or by running the `fin config set` command.
 
-There are 2 scopes of variables: global and project. Global scope variables are set in `$HOME/.docksal/docksal.env`,
-while project scope variables are set in `$PROJECT_ROOT/.docksal/docksal.env`.
+There are 2 scopes of variables: global and project. Global scope variables are set in `$HOME/.docksal/docksal.env`, 
+while project scope variables are set in `$PROJECT_ROOT/.docksal/docksal.env`. 
 
 ```
 # Setting a global scope variable
@@ -41,7 +41,7 @@ The default amount of disk space allocated to Docksal's VirtualBox machine, in m
 
 `Default: 0`
 
-Applicable to macOS or Windows.
+Applicable to macOS or Windows.  
 Designates whether to run Docker through VirtualBox or Docker Desktop.
 
 For VirtualBox set to `0`. For Docker Desktop set to `1`.
@@ -58,43 +58,43 @@ Set to `1` to suppresses alerts about the outdated Docksal version.
 
 `Default: 0`
 
-If set to `1`, all yes/no confirms will automatically be answered yes.
+If set to `1`, all yes/no confirms will automatically be answered yes. 
 Useful for CI environments that fake tty and thus "freeze" waiting for user input.
 
 ### DOCKSAL_DNS_DOMAIN
 
 `Default: docksal`
 
-This is the domain name used for Docksal project URLs, i.e., `http://$PROJECT_NAME.$DOCKSAL_DNS_DOMAIN`.
+This is the domain name used for Docksal project URLs, i.e., `http://$PROJECT_NAME.$DOCKSAL_DNS_DOMAIN`. 
 Project named `myproject` will result in `http://myproject.docksal` URL by default.
 
 ### DOCKSAL_DNS_UPSTREAM
 
 `Default: autodetected with fallback to 8.8.8.8`
 
-Override the default DNS server that Docksal uses. For environments where access to Google DNS server (`8.8.8.8`)
+Override the default DNS server that Docksal uses. For environments where access to Google DNS server (`8.8.8.8`) 
 is blocked, it should be set to the LAN DNS server. This is often true for VPN users or users behind a corporate firewall.
 
 ### DOCKSAL_HEALTHCHECK_TIMEOUT
 
 `Default: 60`
 
-How many seconds to give project containers to reach `healthy` state before `fin` considers the stack startup as failed.
+How many seconds to give project containers to reach `healthy` state before `fin` considers the stack startup as failed. 
 The value should be a multiple of `5`.
 
 ### DOCKSAL_LOCK_UPDATES
 
 `Default: 0`
 
-When set to `1`, this will prevent Docksal from installing and checking for updates.
+When set to `1`, this will prevent Docksal from installing and checking for updates. 
 This is usually good in combination with `CI=true`.
 
 ### DOCKSAL_NFS_PATH
 
 `Default: /Users`
 
-**macOS only.**
-Sets the location of the folder on the host machine to mount to VirtualBox.
+**macOS only.**  
+Sets the location of the folder on the host machine to mount to VirtualBox. 
 See [file sharing](/core/file-sharing/) for more information.
 
 ### DOCKSAL_NO_DNS_RESOLVER
@@ -115,12 +115,12 @@ Other users on your system are able to connect to this address and use your SSH 
 
 Default: `30001`
 
-The TCP port to use to listen on `DOCKSAL_HOST_IP` when proxying SSH authentication to an agent running on the host.
+The TCP port to use to listen on `DOCKSAL_HOST_IP` when proxying SSH authentication to an agent running on the host. 
 Only used on Mac and Windows if `DOCKSAL_SSH_AGENT_USE_HOST` is set to `1`.
 
 ### DOCKSAL_STATS_OPTOUT
 
-`Default: 0`
+`Default: 0` 
 
 When set to `1`, `fin` will not send [minimal statistic information](../core/analytics.md).
 
@@ -134,7 +134,7 @@ Allows for overriding the Docksal version used for checking for updates. Can be 
 
 `Default: 192.168.64.100`
 
-Used to set the IP address for the Docksal reverse proxy to listen on.
+Used to set the IP address for the Docksal reverse proxy to listen on. 
 When `CI` variable is set to `true` this will be set to `0.0.0.0`.
 
 ### GIT_USER_EMAIL (global or project)
@@ -200,13 +200,13 @@ Password to use for basic authentication.
 
 `Default: local`
 
-Allow for environment specific YML and ENV files. `fin` will load additional configuration from
-`docksal-${DOCKSAL_ENVIRONMENT}.yml` and `docksal-${DOCKSAL_ENVIRONMENT}.env`.
+Allow for environment specific YML and ENV files. `fin` will load additional configuration from 
+`docksal-${DOCKSAL_ENVIRONMENT}.yml` and `docksal-${DOCKSAL_ENVIRONMENT}.env`. 
 
-Default usage is creating `docksal-local.yml` and/or `docksal-local.env` for local overrides that are not intended
+Default usage is creating `docksal-local.yml` and/or `docksal-local.env` for local overrides that are not intended 
 to be committed.
 
-In CI, you might set the value via `export DOCKSAL_ENVIRONMENT=ci` in your build script or globally for all projects
+In CI, you might set the value via `export DOCKSAL_ENVIRONMENT=ci` in your build script or globally for all projects 
 on a build/sandbox server via `fin config set --global DOCKSAL_ENVIRONMENT=ci`. `fin` will then load
 `docksal-ci.env` and/or `docksal-ci.yml` (these you do commit) on top of the default configuration files.
 
@@ -248,7 +248,7 @@ This is used to set the newly created user's password.
 
 `Default: 3306`
 
-The port mapping to use for MySQL container, e.g., `33061:3306` will expose `3306` port as `33061` on the host.
+The port mapping to use for MySQL container, e.g., `33061:3306` will expose `3306` port as `33061` on the host. 
 
 ### MYSQL_RANDOM_ROOT_PASSWORD
 
@@ -316,17 +316,17 @@ when Docksal is updated.
 
 ### DB_IMAGE
 
-Defaults to the current db image with the default MySQL version defined in `~/.docksal/stacks/services.yml`.
+Defaults to the current db image with the default MySQL version defined in `~/.docksal/stacks/services.yml`. 
 [See usage](/service/db/settings)
 
 ### CLI_IMAGE
 
-Defaults to the current cli image with the default PHP version defined in `~/.docksal/stacks/services.yml`.
+Defaults to the current cli image with the default PHP version defined in `~/.docksal/stacks/services.yml`. 
 [See usage](/service/cli/settings)
 
 ### WEB_IMAGE
 
-Defaults to the current web image with the default Apache version defined in `~/.docksal/stacks/services.yml`.
+Defaults to the current web image with the default Apache version defined in `~/.docksal/stacks/services.yml`. 
 [See usage](/service/web/settings)
 
 
@@ -336,7 +336,7 @@ The following variables are generally only used within a CI system.
 
 ### CI
 
-Only use on Linux servers.
+Only use on Linux servers. 
 
 When set, enables CI mode:
 
@@ -356,7 +356,7 @@ Sets path to the Projects directory on the server. Used in conjunction with `PRO
 
 ### PROJECT_DANGLING_TIMEOUT
 
-Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host
+Defines the timeout of inactivity after which the project stack and code base will be entirely wiped out from the host 
 (e.g., 168h). This requires `PROJECTS_ROOT` to be set.
 
 **WARNING: use at your own risk!**
@@ -371,7 +371,7 @@ If set to `true`, the sandbox environment will not be removed event after the `P
 
 ### VIRTUAL_HOST_CERT_NAME
 
-Tells `vhost-proxy` service which cert to use for the project. Certs are expected in `$HOME/.docksal/certs`.
+Tells `vhost-proxy` service which cert to use for the project. Certs are expected in `$HOME/.docksal/certs`. 
 Project's `VIRTUAL_HOST` setting should match the certificate name.
 
 For `VIRTUAL_HOST=example.com`, the following cert files must be present on the host:
