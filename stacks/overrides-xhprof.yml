@@ -1,4 +1,4 @@
-# Adds Web IDE service to the project
+# Adds XHProf service to the project
 # The XHProf Outputs can be accessed at xhprof.${VIRTUAL_HOST}
 
 version: "2.1"
