@@ -9,13 +9,13 @@ services:
     environment:
       - XHPROF_ENABLED=1
       - XHPROF_OUTPUT_DIR=${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
+    volumes:
+      - xhprof_root:${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
 
   # XHProf Service to review
   xhprof:
     image: ${XHPROF_IMAGE:-wodby/xhprof}
     hostname: xhprof
-    expose:
-      - 8080
     depends_on:
       - cli
     environment:
