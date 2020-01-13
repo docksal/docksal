@@ -5407,7 +5407,7 @@ _mysql ()
 			docker exec "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${ARGV[*]}"
 		fi
 	else
-		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password}
+		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database}
 	fi
 }
 
