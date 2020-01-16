@@ -87,7 +87,7 @@ Some restricted network environments (e.g., corporate networks) may be blocking 
 making `8.8.8.8` inaccessible. In such cases, Docksal will output a warning on `fin project start` with instructions 
 to override the default upstream DNS settings.
 
-Two override the upstream DNS server settings:
+To override the upstream DNS server settings:
 
 ```bash
 fin config set --global DOCKSAL_DNS_UPSTREAM=<dns-server-ip>
