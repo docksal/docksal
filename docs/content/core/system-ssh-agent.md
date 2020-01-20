@@ -86,4 +86,4 @@ On Windows and macOS, the `socat` utility is used to convert your local Unix soc
 To do so, a local port configured by the `DOCKSAL_SSH_PROXY_PORT` environment variable (defaults to `30001`) is opened.
 
 **Caution:** if other users have local access to your system, they could connect to this port and use your keys. The
-port is only opened on an internal network interface and is not accessible from e.g. your LAN. Use with care!
+port is only opened on an internal network interface and is not accessible from your LAN. Use with care!
