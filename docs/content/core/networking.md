@@ -42,7 +42,7 @@ services:
 
 **3.** Run `fin project start` to apply the new configuration.
 
-**4.** Now you can see that your port is exposed.
+**4.** Confirm that your port is exposed.
 
 Note: `0.0.0.0:2222` is pointing to `22`.
 
@@ -54,3 +54,8 @@ netscout_cli_1   /opt/startup.sh gosu root  ...   Up      0.0.0.0:2222->22/tcp, 
 netscout_db_1    /entrypoint.sh mysqld            Up      3306/tcp
 netscout_web_1   /opt/startup.sh apache2 -D ...   Up      443/tcp, 80/tcp
 ```
+
+**5.** Accessing exposed port
+
+To access the exposed port use dedicated Docksal IP `192.168.64.100`, not `localhost`.
+I.e. in the example above access `192.168.64.100:2222`.
