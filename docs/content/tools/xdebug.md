@@ -152,15 +152,15 @@ You can debug both web requests and cli scripts using this configuration.
 
 ### CLI Scripts: Drush {#vscode-drush}
 
-To debug Drush commands using Xdebug and VSCode add the following to your path mappings
+To debug Drush commands using Xdebug and VSCode add the following to your path mappings under the configuration that begins with `"name": "Listen for XDebug",`
 
 **Drush 8.x**
 
-- Add `"/usr/local/bin/drush": "${workspaceRoot}/bin/drush"` to `pathMappings` in your `launch.json` file.
+- Add `"/usr/local/bin/drush": "${workspaceFolder}/bin/drush"` to `pathMappings` in your `launch.json` file.
 
 **Drush 9.x**
 
-- Add `"/usr/local/bin/drush": "${workspaceRoot}/vendor/bin/drush"` to `pathMappings` in your `launch.json` file.
+- Add `"/usr/local/bin/drush": "${workspaceFolder}/vendor/bin/drush"` to `pathMappings` in your `launch.json` file.
 
 
 ## Debugging with NetBeans {#netbeans}
