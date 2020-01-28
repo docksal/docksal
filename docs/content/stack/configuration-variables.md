@@ -297,6 +297,17 @@ This is used to create a user, and the user is granted superuser permissions for
 
 Enables PHP XDebug Service for debugging. See [XDebug](/tools/xdebug/).
 
+### XHPROF_ENABLED
+
+`Default: 0`
+
+Enables PHP Xhprof Service for debugging. See [Xhprof](/tools/xhprof/).
+
+### XHPROF_OUTPUT_DIR
+
+`Default: /tmp/xhprof`
+
+Location where the Xhprof output should be sent to.
 
 ## Image Variables (project)
 
