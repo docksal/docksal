@@ -16,8 +16,8 @@ that were mounting this external volume.
 Run the following fin commands to create the volumes for caches:
 
 ```bash
-fin docker volume create composer-cache
-fin docker volume create npm-cache
+fin docker volume create composer_cache
+fin docker volume create npm_cache
 ```
 
 Update `docksal.yml` respectively:
