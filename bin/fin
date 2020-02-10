@@ -142,6 +142,7 @@ REQUIREMENTS_VBOX='5.2.34'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
+REQUIREMENTS_MKCERT='1.4.1'
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
@@ -189,6 +190,7 @@ DOCKER_BIN="$CONFIG_BIN_DIR/docker"
 DOCKER_COMPOSE_BIN="$CONFIG_BIN_DIR/docker-compose"
 DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
+MKCERT_BIN="/usr/local/bin/mkcert"
 vboxmanage="VBoxManage"
 is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 is_wsl && vboxmanage="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
@@ -321,6 +323,9 @@ URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${RE
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
 URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-x86_64"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
+URL_MKCERT_MAC="https://github.com/FiloSottile/mkcert/releases/download/v${REQUIREMENTS_MKCERT}/mkcert-v${REQUIREMENTS_MKCERT}-darwin-amd64"
+URL_MKCERT_NIX="https://github.com/FiloSottile/mkcert/releases/download/v${REQUIREMENTS_MKCERT}/mkcert-v${REQUIREMENTS_MKCERT}-linux-amd64"
+URL_MKCERT_WIN="https://github.com/FiloSottile/mkcert/releases/download/v${REQUIREMENTS_MKCERT}/mkcert-v${REQUIREMENTS_MKCERT}-windows-amd64.exe"
 URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER}/boot2docker.iso"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
@@ -1100,6 +1105,14 @@ is_docker_machine_version ()
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER_MACHINE") <= $(ver_to_int "$version") ))
 }
 
+is_mkcert_version ()
+{
+	! [[ -x ${MKCERT_BIN} ]] && return 1
+	# Trim \r from output (necessary on Windows) and remove character v[version]
+	local version=$(mkcert --version  | sed "s/.*version \(.*\),.*/\1/" | sed 's/^v\(.*\)/\1/')
+	(( $(ver_to_int "$REQUIREMENTS_MKCERT") <= $(ver_to_int "$version") ))
+}
+
 is_winpty_version ()
 {
 	! [[ -x ${WINPTY_BIN} ]] && return 2
@@ -1171,6 +1184,19 @@ check_project_unique ()
 			exit 1
 		fi
 	done
+}
+
+# Check that project certificate for $VIRTUAL_HOST, else create them
+check_project_certificate ()
+{
+	if [[ ! -f "${CONFIG_CERTS}/${VIRTUAL_HOST}.crt" ]]; then
+		mkcert -key-file ${CONFIG_CERTS}/${VIRTUAL_HOST}.key -cert-file ${CONFIG_CERTS}/${VIRTUAL_HOST}.crt *.${VIRTUAL_HOST} ${VIRTUAL_HOST} &>/dev/null
+		if [[ $? == 0 ]]; then
+		  echo-green "Created ssl certificates for ${VIRTUAL_HOST}"
+		else
+		  echo-stderr "Could not create ssl certificates. Is mkcert still installed?"
+		fi
+	fi
 }
 
 # Yes/no confirmation dialog with an optional message
@@ -2993,6 +3019,9 @@ up ()
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
 
+	# Check that project certificate for $VIRTUAL_HOST, else create them
+	check_project_certificate
+
 	# Run "ssh_key add" here, since there is no better place to get it triggered on Linux and Docker for Mac/Win
 	# Use --quiet here, otherwise this becomes annoying
 	# Note: this takes ~1.5s, so we only call it when absolutely necessary
@@ -3046,6 +3075,9 @@ restart ()
 
 	# Fix project root permissions if necessary
 	set_project_root_permissions
+
+	# Fix project certificate if necessary
+	check_project_certificate
 
 	# Restart project containers
 	_restart_containers "$@"
@@ -4244,6 +4276,15 @@ install_tools_mac ()
 			if_failed "Check file permissions."
 		fi
 	fi
+
+  # Install mkcert ssl tool
+	if ! is_mkcert_version; then
+		echo-green "Installing Mkcert..."
+		sudo -u root -H curl -fL# "$URL_MKCERT_MAC" -o "$MKCERT_BIN" && \
+			sudo chmod +x "$MKCERT_BIN" && \
+			mkcert -install
+		if_failed "Mkcert installation/upgrade has failed."
+	fi
 }
 
 # Install Windows dependencies
@@ -4379,6 +4420,15 @@ install_tools_debian ()
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
+
+  # Install mkcert ssl tool
+	if ! is_mkcert_version; then
+		echo-green "Installing Mkcert..."
+		sudo -u root -H curl -fL# "$URL_MKCERT_NIX" -o "$MKCERT_BIN" && \
+			sudo chmod +x "$MKCERT_BIN" && \
+			mkcert -install
+		if_failed "Mkcert installation/upgrade has failed."
+	fi
 }
 
 # Install tools for Fedora
@@ -4413,6 +4463,15 @@ install_tools_fedora ()
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
+
+  # Install mkcert ssl tool
+	if ! is_mkcert_version; then
+		echo-green "Installing Mkcert..."
+		sudo -u root -H curl -fL# "$URL_MKCERT_NIX" -o "$MKCERT_BIN" && \
+			sudo chmod +x "$MKCERT_BIN" && \
+			mkcert -install
+		if_failed "Mkcert installation/upgrade has failed."
+	fi
 }
 
 # Install Alpine dependencies
@@ -4441,6 +4500,15 @@ install_tools_alpine ()
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
+
+  # Install mkcert ssl tool
+	if ! is_mkcert_version; then
+		echo-green "Installing Mkcert..."
+		sudo -u root -H curl -fL# "$URL_MKCERT_NIX" -o "$MKCERT_BIN" && \
+			sudo chmod +x "$MKCERT_BIN" && \
+			mkcert -install
+		if_failed "Mkcert installation/upgrade has failed."
+	fi
 }
 
 # Install Alpine dependencies
@@ -4461,6 +4529,15 @@ install_tools_generic_linux ()
 			chmod +x "$DOCKER_COMPOSE_BIN" && \
 			docker-compose --version
 		if_failed "Docker Compose installation/upgrade has failed."
+	fi
+
+  # Install mkcert ssl tool
+	if ! is_mkcert_version; then
+		echo-green "Installing Mkcert..."
+		sudo -u root -H curl -fL# "$URL_MKCERT_NIX" -o "$MKCERT_BIN" && \
+			sudo chmod +x "$MKCERT_BIN" && \
+			mkcert -install
+		if_failed "Mkcert installation/upgrade has failed."
 	fi
 }
 
@@ -7587,6 +7664,7 @@ execute_hook ()
 
 # Debug mode: print all commands
 [[ ${FIN_DEBUG} == 1 ]] && set -x
+echo-green "fin script is: $0"
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
