@@ -34,7 +34,7 @@ More information on working with [Docksal with Platform.sh](/tools/platformsh).
 
 ### Drupal / Drush
 
-An alias must be set up within the project and recognized when running the `fin drush sa` command to use 
+A [Drush site alias](/tools/drush/#site-aliases) must be set up within the project and recognized when running the `fin drush sa` command to use 
 the Drush provider integration. An example of a site alias file for [Drush 8](https://github.com/drush-ops/drush/blob/8.x/examples/example.aliases.drushrc.php)
 and [Drush 9](https://github.com/drush-ops/drush/blob/master/examples/example.site.yml) can be
 found within the Drush project.
