@@ -245,7 +245,7 @@ services:
   # Elastic Search
   elasticsearch:
     hostname: elasticsearch
-    image: elasticsearch:6.5.3
+    image: ${ELASTICSEARCH_IMAGE:-elasticsearch:6.5.3}
     ports:
       - "${ELASTICSEARCH_PORT_MAPPING:-9200}"
     dns:
@@ -253,6 +253,7 @@ services:
       - ${DOCKSAL_DNS2}
     environment:
       - bootstrap.memory_lock=true
+      - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
