@@ -365,6 +365,10 @@ Defines the timeout of inactivity after which the project stack and code base wi
 
 Defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h).
 
+### PROJECT_AUTOSTART_DISABLE
+
+Setting this variable to `1` will disable autostart projects by viziting project url. This option is inactive by default (set to `0`).
+
 ### SANDBOX_PERMANENT
 
 If set to `true`, the sandbox environment will not be removed event after the `PROJECT_DANGLING_TIMEOUT` timeout.
