@@ -415,7 +415,7 @@ pwd ()
 uuid_generate ()
 {
 	local hex="$(cat /dev/urandom | env LANG=C tr -dc 'a-f0-9' | head -c32)"
-	echo "${hex:0:8}-${hex:9:4}-${hex:13:4}-${hex:17:4}-${hex:21:12}"
+	echo "${hex:0:8}-${hex:8:4}-${hex:12:4}-${hex:16:4}-${hex:20:12}"
 }
 
 docker-compose ()
