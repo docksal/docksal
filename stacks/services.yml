@@ -16,6 +16,7 @@ services:
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
       - io.docksal.project-root=${PROJECT_ROOT}
       - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
+      - io.docksal.activity-monitoring=true
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
       - APACHE_FCGI_HOST_PORT=cli:9000
@@ -37,6 +38,7 @@ services:
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
       - io.docksal.project-root=${PROJECT_ROOT}
       - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
+      - io.docksal.activity-monitoring=true
     environment:
       - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
       - APACHE_FCGI_HOST_PORT=cli:9000
@@ -57,6 +59,7 @@ services:
     - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
     - io.docksal.project-root=${PROJECT_ROOT}
     - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
+    - io.docksal.activity-monitoring=true
     environment:
     - NGINX_VHOST_PRESET=drupal
     - NGINX_FCGI_HOST_PORT=cli:9000
@@ -139,6 +142,7 @@ services:
     labels:
       - io.docksal.user=docker
       - io.docksal.shell=bash
+      - io.docksal.activity-monitoring=true
     environment:
       - GIT_USER_EMAIL
       - GIT_USER_NAME
