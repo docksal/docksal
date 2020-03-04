@@ -438,7 +438,7 @@ docker-compose ()
 	fi
 
 	# Prepare shared directory
-	export SHARED_DIR="/tmp/docksal/${COMPOSE_PROJECT_NAME_SAFE}"
+	export SHARED_DIR="$CONFIG_DIR/tmp/${COMPOSE_PROJECT_NAME_SAFE}"
 	mkdir -p "$SHARED_DIR"
 
 	# Cleanup shared directory
