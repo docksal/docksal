@@ -437,6 +437,20 @@ docker-compose ()
 		unset SSH_AUTH_SOCK
 	fi
 
+	# Prepare shared directory
+	export SHARED_DIR="/tmp/docksal/${COMPOSE_PROJECT_NAME_SAFE}"
+	mkdir -p "$SHARED_DIR"
+
+	# Cleanup shared directory
+	rm -rf $SHARED_DIR/*
+
+	# Create original socket copy (hardlink) and update SSH_AUTH_SOCK with new socket path
+	if [[ "${SSH_AUTH_SOCK}" != "" ]]; then
+		AGENT_ID=$(basename $SSH_AUTH_SOCK)
+		ln -f $SSH_AUTH_SOCK $SHARED_DIR/$AGENT_ID
+		export SSH_AUTH_SOCK="$SHARED_DIR/$AGENT_ID"
+	fi
+
 	# Call regular docker-compose.
 	# We can use `which` here, since it does not care about functions (but `type` does).
 	$(which docker-compose) "$@"
