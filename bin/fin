@@ -1317,10 +1317,10 @@ _remove_containers ()
 		# Taking the whole docker-compose project down (this removes containers, volumes, and networks)
 		docker-compose down --volumes --remove-orphans
 
-		# Get project orphan volumes
-		project_volumes="$(docker volume ls -q -f "name=${COMPOSE_PROJECT_NAME_SAFE}_")"
+		# Get project orphan cli volumes
+		project_volumes="$(docker volume ls -q -f "name=${COMPOSE_PROJECT_NAME_SAFE}_cli_home")"
 
-		# Remove project orphan volumes
+		# Remove project orphan cli volumes
 		[[ "${project_volumes}" != "" ]] && docker volume rm -f ${project_volumes} >/dev/null || true
 	else
 		# Removing requested containers only
