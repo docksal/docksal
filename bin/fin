@@ -1321,7 +1321,7 @@ _remove_containers ()
 		project_volumes="$(docker volume ls -q -f "name=${COMPOSE_PROJECT_NAME_SAFE}_")"
 
 		# Remove project orphan volumes
-		[[ "${project_volumes}" != "" ]] && docker volume rm -f ${project_volumes} >/dev/null
+		[[ "${project_volumes}" != "" ]] && docker volume rm -f ${project_volumes} >/dev/null || true
 	else
 		# Removing requested containers only
 		docker-compose kill "$@" &&
