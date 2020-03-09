@@ -1298,7 +1298,7 @@ _remove_containers ()
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 
-		# Disconnect proxy from the project network, otherwise network will not be removed.
+		# Disconnect all containers from the project network, otherwise network will not be removed.
 		# Figure out the default project network name
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
 		_disconnect_network "${network}"
