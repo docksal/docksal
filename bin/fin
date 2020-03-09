@@ -1268,7 +1268,7 @@ _stop_containers ()
 		local network_name="${COMPOSE_PROJECT_NAME_SAFE}_default"
 
 		# "docker network inspect" does not list inactive endpoints (stopped containers), so cannot be used here
-		# Instead, we'll assume we should disconnect all project containers + vhost-proxy from the project network.
+		# Instead, we'll assume we should disconnect all project containers + vhost-proxy + docksal-ssh-proxy from the project network.
 		local project_containers=$(docker ps -aq \
 			--filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME_SAFE}" 2>/dev/null)
 		# Note: there should be no quotes around ${network_containers} or it won't be split properly
@@ -1276,6 +1276,7 @@ _stop_containers ()
 			docker network disconnect -f "${network_name}" "${container}" &>/dev/null || true
 		done
 		docker network disconnect -f "${network_name}" docksal-vhost-proxy &>/dev/null || true
+		docker network disconnect -f "${network_name}" docksal-ssh-proxy &>/dev/null || true
 		docker network rm "${network_name}" &>/dev/null || true
 	fi
 
@@ -1298,7 +1299,8 @@ _remove_containers ()
 		# Disconnect proxy from the project network, otherwise network will not be removed.
 		# Figure out the default project network name
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
+		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1 || true
+		docker network disconnect "$network" docksal-ssh-proxy >/dev/null 2>&1 || true
 
 		# Taking the whole docker-compose project down (this removes containers, volumes, and networks)
 		docker-compose down --volumes --remove-orphans
