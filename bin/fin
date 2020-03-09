@@ -1203,8 +1203,8 @@ _confirm ()
 _disconnect_network ()
 {
 	local network=$1
-	# get containers list, attached to network
-	local containers=$(docker container ls -aq --no-trunc -f "network=${network}")
+	# get containers list, attached to the network
+	local containers=$(docker ps -aq --no-trunc -f "network=${network}")
 
 	# disconnect containers from network
 	for container in ${containers}
