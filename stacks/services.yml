@@ -135,7 +135,7 @@ services:
     volumes:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
-      - ${SHARED_DIR}:${SHARED_DIR}:ro # Shared directory for SSH key forwarding support
+      - ${SSH_AUTH_SOCK_DIR}:${SSH_AUTH_SOCK_DIR}:ro # Shared directory for SSH key forwarding support
       - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
     labels:
       - io.docksal.user=docker
