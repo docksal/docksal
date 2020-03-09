@@ -438,17 +438,14 @@ docker-compose ()
 	fi
 
 	# Prepare shared directory
-	export SHARED_DIR="$CONFIG_DIR/tmp/${COMPOSE_PROJECT_NAME_SAFE}"
-	mkdir -p "$SHARED_DIR"
-
-	# Cleanup shared directory
-	rm -rf $SHARED_DIR/*
+	export SSH_AUTH_SOCK_DIR="$CONFIG_DIR/tmp/${COMPOSE_PROJECT_NAME_SAFE}"
+	mkdir -p "$SSH_AUTH_SOCK_DIR"; rm -rf $SSH_AUTH_SOCK_DIR/*
 
 	# Create original socket copy (hardlink) and update SSH_AUTH_SOCK with new socket path
 	if [[ "${SSH_AUTH_SOCK}" != "" ]]; then
 		AGENT_ID=$(basename $SSH_AUTH_SOCK)
-		ln -f $SSH_AUTH_SOCK $SHARED_DIR/$AGENT_ID
-		export SSH_AUTH_SOCK="$SHARED_DIR/$AGENT_ID"
+		ln -f $SSH_AUTH_SOCK $SSH_AUTH_SOCK_DIR/$AGENT_ID
+		export SSH_AUTH_SOCK="$SSH_AUTH_SOCK_DIR/$AGENT_ID"
 	fi
 
 	# Call regular docker-compose.
