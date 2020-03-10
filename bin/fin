@@ -1203,15 +1203,11 @@ _confirm ()
 _disconnect_network ()
 {
 	local network=$1
-	# get containers list, attached to the network
-	local containers=$(docker ps -aq --no-trunc -f "network=${network}")
-
-	# disconnect containers from network
-	for container in ${containers}
-	do
-		docker network disconnect -f "${network}" "${container}" &>/dev/null || true
-	done
+	# disconect all containers, connected to project network
+	# '-I {}' and '{}' can be used to position the argument passed by xargs.
+	xargs -I {} docker network disconnect -f "$network" {} &>/dev/null <<< "$(docker ps -aq --no-trunc -f "network=${network}")"
 }
+
 _start_containers ()
 {
 	check_docker_running
