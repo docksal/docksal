@@ -66,7 +66,7 @@ Click the preferred option to proceed to option-specific docs.
 
 With this method, Docker will run inside a VM in VirtualBox.
 
-1. Install VirtualBox
+1. Install VirtualBox v5.2.32
 
     [![Download VirtualBox v5.2.32](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](http://download.virtualbox.org/virtualbox/5.2.32/VirtualBox-5.2.32-132073-OSX.dmg)
 
@@ -87,7 +87,12 @@ With this method, Docker will run inside a VM in VirtualBox.
 
 ### macOS with Docker Desktop {#install-macos-docker-for-mac}
 
-1. Install Docker Desktop for Mac
+1. Install Docker Desktop for Mac v2.1.0.3
+
+    {{% notice warning %}}
+    Docker Desktop v2.2.0.0+ versions introduced a regression that breaks Docksal. Please refrain from updating and stick 
+    with the version linked below.
+    {{% /notice %}}
 
     [![Docker Desktop for Mac v2.1.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/38240/Docker.dmg)
 
@@ -188,7 +193,12 @@ Click the preferred option to proceed to option-specific docs.
 
     [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
-3. Install Docker Desktop for Windows
+3. Install Docker Desktop for Windows v2.1.0.3
+
+    {{% notice warning %}}
+    Docker Desktop v2.2.0.0+ versions introduced a regression that breaks Docksal. Please refrain from updating and stick 
+    with the version linked below.
+    {{% /notice %}}
 
     [![Docker Desktop for Windows v2.1.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/38240/Docker%20Desktop%20Installer.exe)
     
