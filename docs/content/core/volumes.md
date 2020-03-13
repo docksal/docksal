@@ -5,7 +5,7 @@ aliases:
   - /en/master/advanced/volumes/
 ---
 
-## Quick Overview
+## Quick Overview {#overview}
 
 | OS      | VM              | DOCKSAL_VOLUMES             | FS Speed | FS Events | Comments  |
 |---------|-----------------|-----------------------------|-------   |-----------|-----------|
@@ -60,18 +60,18 @@ and errors with Docker Desktop on macOS. See [docksal/docksal#678](https://githu
 The value can be set globally (all projects)
 
 ```bash
-fin config set --global DOCKSAL_VOLUMES=nfs
+fin config set --global DOCKSAL_VOLUMES=<value>
 fin system reset
 ```
 
 or per project
 
 ```bash
-fin config set DOCKSAL_VOLUMES=bind
+fin config set DOCKSAL_VOLUMES=<value>
 fin project reset
 ```
 
-See the overview table above for appropriate values based on OS/VM environment.
+See the table in the [overview](#overview) section for appropriate values based on OS/VM environment.
 
 To check the current value, run `fin config get DOCKSAL_VOLUMES` / `fin config get --global DOCKSAL_VOLUMES`
 
