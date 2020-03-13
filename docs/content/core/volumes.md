@@ -57,7 +57,25 @@ and errors with Docker Desktop on macOS. See [docksal/docksal#678](https://githu
 
 `DOCKSAL_VOLUMES` value changes the mount type of the project volumes mentioned above and also affects `fin` behavior. 
 
-### bind 
+The value can be set globally (all projects)
+
+```bash
+fin config set --global DOCKSAL_VOLUMES=nfs
+fin system reset
+```
+
+or per project
+
+```bash
+fin config set DOCKSAL_VOLUMES=bind
+fin project reset
+```
+
+See the overview table above for appropriate values based on OS/VM environment.
+
+To check the current value, run `fin config get DOCKSAL_VOLUMES` / `fin config get --global DOCKSAL_VOLUMES`
+
+### DOCKSAL_VOLUMES=bind {#volumes-bind}
 
 With this option, containers access files via a [bind mount](https://docs.docker.com/storage/bind-mounts/), which basically means direct access. 
 
@@ -101,7 +119,7 @@ To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=bind`
 In most cases, you do not need to set the `DOCKSAL_VOLUES=bind` option. It is set for you automatically. The only 
 exception is when you need `fsnotify` events on macOS with Docker Desktop, but don't want to use the `unison` option.
 
-### nfs
+### DOCKSAL_VOLUMES=nfs {#volumes-nfs}
 
 This option is macOS specific and is used by default with both VirtualBox and Docker Desktop.  
 Docker mounts the `project_root` volume from the host over NFS, then project containers mount this volume. 
@@ -116,7 +134,7 @@ NFS generally works faster than `osxfs`. The downside is that NFS does not suppo
 To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=nfs`, see 
 [stacks/volumes-nfs.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-nfs.yml). 
 
-### unison
+### DOCKSAL_VOLUMES=unison {#volumes-unison}
 
 This option only makes sense with Docker Desktop on macOS.
 
@@ -171,7 +189,7 @@ start the project again: `fin project remove cli; fin project start`
 To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=unison` see 
 [stacks/volumes-unison.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-unison.yml).
 
-### none
+### DOCKSAL_VOLUMES=none {#volumes-none}
 
 Advanced option. With this option, host files are made accessible to the VM like in a bind mount, but after that 
 containers do not access them directly via bind, nor files are copied over. 
