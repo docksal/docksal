@@ -1318,7 +1318,7 @@ _remove_containers ()
 		docker-compose down --volumes --remove-orphans
 
 		# Get project orphan cli volumes
-		project_volumes="$(docker volume ls -q -f "name=${COMPOSE_PROJECT_NAME_SAFE}_cli_home")"
+		project_volumes="$(docker volume ls -q -f "name=^${COMPOSE_PROJECT_NAME_SAFE}_cli_home")"
 
 		# Remove project orphan cli volumes
 		[[ "${project_volumes}" != "" ]] && docker volume rm -f ${project_volumes} >/dev/null || true
@@ -1329,7 +1329,7 @@ _remove_containers ()
 			# For cli and db, we have to manually drop the volumes, since named volumes are omitted by the "-v" option above
 			{
 				for i in "$@"; do
-					[[ "$i" == "cli" ]] && docker volume rm -f "$(docker volume ls -q -f "name=${COMPOSE_PROJECT_NAME_SAFE}_cli_home")" >/dev/null
+					[[ "$i" == "cli" ]] && docker volume rm -f "$(docker volume ls -q -f "name=^${COMPOSE_PROJECT_NAME_SAFE}_cli_home")" >/dev/null
 					[[ "$i" == "db" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_db_data" >/dev/null
 				done
 				return 0
