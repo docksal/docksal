@@ -263,6 +263,9 @@ PATH="$CONFIG_BIN_DIR:$PATH"
 # Set global variable in case native Docker app is used/not-used
 DOCKER_NATIVE="${DOCKER_NATIVE:-0}"
 
+# Whether Docker is running - cached value
+DOCKER_RUNNING=""
+
 # SSH agent settings
 if is_ci; then
 	# Prefer the host's agent in CI environments
@@ -791,16 +794,22 @@ check_winpty_found ()
 # Returns 255 - docker-machine is down
 is_docker_running ()
 {
+	[ -n "${DOCKER_RUNNING}" ] && return $DOCKER_RUNNING
+
 	# Running "docker version" is sufficient to check if docker is running in any host environment setup.
 	# This operation is instant even if docker is not running (assuming a socket is used).
 	# However, if DOCKER_HOST is an HTTP/TLS endpoint and it is down, then this check will take over a minute to fail.
 	# To mitigate this case, we first check for is_docker_machine_running when in docker-machine mode.
+	local result=1
 	if ! is_linux && ! is_docker_native; then
-		# Return a distinct code if the machine is down.
-		# This is checked down the road.
-		is_docker_machine_running || return 255
+		# Return a distinct code if the machine is down. This is checked down the road.
+		is_docker_machine_running && result=0 || result=255
+	elif docker version &>/dev/null; then
+		result=0
 	fi
-	docker version &>/dev/null || return 1
+
+	DOCKER_RUNNING=$result
+	return $result
 }
 
 is_docksal_running ()
@@ -898,8 +907,7 @@ check_docker_running ()
 {
 	eval $(parse_params "$@")
 
-	# Check cached value (saves ~200ms)
-	if [[ "$DOCKER_RUNNING" == "true" ]]; then
+	if is_docker_running; then
 		# If docker is running, perform docker server / docker desktop version checks
 		# --quiet is used during update to suppress this check until the end of the update process
 		[[ "$quiet" == "" ]] && check_docker_server_version
@@ -2477,7 +2485,7 @@ docker_machine_stop ()
 	docker-machine stop "$DEFAULT_MACHINE_NAME"
 	# Manually update cached values
 	DOCKER_MACHINE_STATUS="Stopped"
-	DOCKER_RUNNING="false"
+	DOCKER_RUNNING=1
 }
 
 docker_machine_start ()
@@ -2496,16 +2504,12 @@ docker_machine_start ()
 		# Update cached values
 		# We would not get here if something above failed, so a blind update is fine (saves 1.5s)
 		DOCKER_MACHINE_STATUS="Running"
-		# Once machine is up, is_docker_running check should be instant (no savings in doing a blind update)
-		# docker_machine_env has to happen before this check or the check will fail
-		is_docker_running && DOCKER_RUNNING="true"
+		DOCKER_RUNNING=""
 	elif [[ "$DOCKER_MACHINE_STATUS" == "Defunct" ]]; then
 		docker_machine_create &&
 			docker_machine_env
 
-		# Once machine is up, is_docker_running check should be instant (no savings in doing a blind update)
-		# docker_machine_env has to happen before this check or the check will fail
-		is_docker_running && DOCKER_RUNNING="true"
+		DOCKER_RUNNING=""
 
 		# Displays an error message and offers to remove the vm if something failed
 		if [[ $? != 0 ]]; then
@@ -2534,7 +2538,7 @@ docker_machine_remove ()
 	docker-machine rm -f "$DEFAULT_MACHINE_NAME" 2>/dev/null
 	# Manually update cached values
 	DOCKER_MACHINE_STATUS="Defunct"
-	DOCKER_RUNNING="false"
+	DOCKER_RUNNING=1
 
 	if [[ "${vboxifname}" != "" ]]; then
 		# After VM is removed, remove the DHCP server associated with its network interface.
@@ -2917,7 +2921,7 @@ vm ()
 			docker-machine kill ${DEFAULT_MACHINE_NAME}
 			# Manually update cached values
 			DOCKER_MACHINE_STATUS="Defunct"
-			DOCKER_RUNNING="false"
+			DOCKER_RUNNING=1
 			;;
 		ls|list)
 			docker-machine ls
@@ -7720,13 +7724,6 @@ fi
 # Allow overriding DOCKER_HOST externally via DOCKSAL_HOST
 if [[ "$DOCKSAL_HOST" != "" ]]; then
 	export DOCKER_HOST="${DOCKSAL_HOST/tcp:\/\//}"
-fi
-
-# Cache docker status (saves ~200ms)
-if is_docker_running; then
-	export DOCKER_RUNNING="true"
-else
-	export DOCKER_RUNNING="false"
 fi
 
 # Default MySQL settings
