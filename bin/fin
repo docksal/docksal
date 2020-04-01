@@ -5794,8 +5794,10 @@ ngrok_share ()
 
 	# Add -host-header by default if no arguments are included.
 	if [[ "${ARGS}" == "ngrok http" ]]; then
-		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}' ${container_name}.${network}:${NGROK_PORT}"
+		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}'"
 	fi
+	# Add host and port to the command
+	ARGS="${ARGS} ${container_name}.${network}:${NGROK_PORT}"
 
 	${winpty} docker run --rm ${NGROK_VOLUME} -it \
 		--publish 4040 \
