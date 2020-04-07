@@ -134,7 +134,8 @@ services:
     image: ${CLI_IMAGE:-docksal/cli:2.10-php7.3}
     volumes:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
-      - ${SSH_AUTH_SOCK:-docksal_ssh_agent}:${SSH_AUTH_SOCK:-/.ssh-agent}:ro  # Shared ssh-agent socket/SSH key forwarding support
+      - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
+      - ${SSH_AUTH_SOCK_DIR}:${SSH_AUTH_SOCK_DIR}:ro # Shared directory for SSH key forwarding support
       - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
     labels:
       - io.docksal.user=docker
