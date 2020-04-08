@@ -5420,12 +5420,12 @@ _mysql ()
 	# MYSQL_* variable expansion happens here
 	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 	local __database="${db:-$MYSQL_DATABASE}"
-	local ptyCommand=''
-	if is_tty; then
-		ptyCommand="${winpty}"
+	local __pty_command=''
+	if is_tty || [[ -z "${ARGV[*]}" ]]; then
+		__pty_command="${winpty}"
 	fi
 
-	${ptyCommand} docker exec -it "${container_id}" mysql \
+	${__pty_command} docker exec -it "${container_id}" mysql \
 		-u"${__dump_user}" \
 		-p"${__dump_password}" \
 		${__database} \
