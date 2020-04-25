@@ -92,9 +92,9 @@ Docker Desktop v2.2.0.0+ versions introduced a regression that breaks Docksal. P
 with the version linked below.
 {{% /notice %}}
 
-1. Install Docker Desktop for Mac v2.1.0.3
+1. Install Docker Desktop for Mac v2.1.0.4
 
-    [![Docker Desktop for Mac v2.1.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/38240/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Mac v2.1.0.4](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/39773/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 1. Start Docker Desktop
 
