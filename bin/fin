@@ -5903,6 +5903,17 @@ sysinfo ()
 		docker-machine --version
 		echo
 		docker-machine ls
+
+		# Verify the VM IP matches what we expect
+		# If there is a leftover DHCP lease in VritualBox, the VM will be issues a different IP.
+		_vm_ip=$(docker-machine ip ${DEFAULT_MACHINE_NAME})
+		if [[ "${_vm_ip}" != "${DOCKSAL_IP}" ]]; then
+			echo
+			echo-error "Docksal VM IP mismatch" \
+				"Expected IP: ${DOCKSAL_IP}" \
+				"Actual IP  : ${_vm_ip}" \
+				"Try resetting the VM: ${yellow}fin system stop; fin system start${NC}"
+		fi
 	fi
 
 	if is_docker_running; then
