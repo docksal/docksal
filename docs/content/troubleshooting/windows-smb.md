@@ -101,7 +101,7 @@ re-installing Windows. We test Docksal on a clean Windows 10 installation and ma
 
 ### 4. Check that Docksal IP is Working {#smb-ip}
 
-**NOTE:** At this step we assume you had already run `fin vm start` and it had failed
+**NOTE:** At this step we assume you had already run `fin system start` and it had failed
 with error related to shares or mounting. You checked out the first step and there seems to be no
 issues with accessing your local IP via explorer. (If error with vm
 start is not related to mounting or shares, then see regular [troubleshooting guide](/troubleshooting/common-issues/).)

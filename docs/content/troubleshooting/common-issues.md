@@ -80,7 +80,7 @@ Sometimes docker-machine certificates re-generation fails. Perform the following
 
 	```bash
 	fin vm remove
-	fin vm start
+	fin system start
 	```
 
 
@@ -154,7 +154,7 @@ With NFS a single directory can only be exported once. It can not be exported se
 
 ### How to Resolve
 
-Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin vm start` again.
+Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin system start` again.
 
 
 ## Issue 5. Conflicting Ports {#issue-05}
@@ -194,7 +194,7 @@ Re-create vm as a regular user
 
 ```bash
 sudo fin vm remove
-fin vm start
+fin system start
 ```
 
 
