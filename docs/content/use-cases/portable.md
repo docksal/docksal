@@ -86,7 +86,7 @@ Within the portable Docksal distribution folder run:
 
 ```bash
 bash <(curl -fsSL https://get.docksal.io)
-fin vm start
+fin system start
 fin image load docksal-default-images.tar
 ```
 

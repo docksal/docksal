@@ -30,7 +30,7 @@ Use `fin stop --all` to stop all projects, then `fin project start` to restart t
 Involves removing current VM. Your files will not be deleted, but databases will need to be re-imported, containers' images will be re-downloaded.
 
 1. `fin vm remove`
-2. `VBOX_HDD=80000 fin vm start`
+2. `VBOX_HDD=80000 fin system start`
 
 `VBOX_HDD` is disk size in Megabytes. Default is `50000`.
 
