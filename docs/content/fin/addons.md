@@ -107,7 +107,7 @@ example.post-uninstall
 
 ### Install Hooks for an Addon
 
-When adding or removing an addon, it can contain a set of pre and post commands that will be executed. Example use cases would be to add/remove a service to the projects `docksal.yml`. Each use case will vary but they are available for use if necessary. For instance, an addon named `example` that needs to execute a process before it is installed would be be located in the file named `example/example.pre-install`. This file should also be included within the `example/example.filelist` file as noted above.
+When adding or removing an addon, it can contain a set of pre and post commands that will be executed. Example use cases would be to add/remove a service to the projects `docksal.yml`. Each use case will vary but they are available for use if necessary. For instance, an addon named `example` that needs to execute a process before it is installed would be located in the file named `example/example.pre-install`. This file should also be included within the `example/example.filelist` file as noted above.
 
 
 Phase | Process | File Extension
