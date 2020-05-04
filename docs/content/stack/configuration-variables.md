@@ -52,7 +52,7 @@ See [Docker Modes](../use-cases/docker-modes.md) for details instructions on thi
 
 `Default: 0`
 
-Set to `1` to suppresses alerts about the outdated Docksal version.
+Set to `1` to suppress alerts about the outdated Docksal version.
 
 ### DOCKSAL_CONFIRM_YES (global or project)
 
