@@ -39,7 +39,7 @@ For more details on its role, check [loading order](#loading-order).
 
 `docksal.env` is an [Environment file](https://docs.docker.com/compose/env-file/).
 
-It is used to override of some of the default environment variables, without the need for
+It is used to override some of the default environment variables, without the need for
 a full `docksal.yml` file (e.g., to override `MYSQL_ROOT_PASSWORD`) or to provide additional environment
 variables for your automation scripts (see [custom commands](/fin/custom-commands/)).
 
