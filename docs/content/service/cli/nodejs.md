@@ -68,7 +68,7 @@ services:
     command: ["bash", "-lc", "node nodeapp/index.js"]
 ```
 
-The `node nodeapp/index.js` command above is and example and depends on how you run the NodeJS app in your project.  
+The `node nodeapp/index.js` command above is an example and depends on how you run the NodeJS app in your project.  
 The important part above is the `bash -lc` preamble, which is required to initialize the NodeJS environment in `cli`. 
 
 `io.docksal.virtual-host` label tells the [vhost-proxy](/core/system-vhost-proxy/) system service which domain to route to this service.  
