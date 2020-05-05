@@ -199,7 +199,7 @@ Combined with [VSCode IDE](/tools/ide/), this option can provide a way of provis
 development environments with the best performance and consistency for Mac and Windows. 
 The only added cost is having to stick with a browser-based IDE and terminal for developer UX. 
 
-See [stacks/volumes-none.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-none.yml) for
+See [stacks/volumes-none.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-none.yml) for
 details on Docker volumes definition with this option.
 
 #### Using "none" Volumes
