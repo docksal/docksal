@@ -46,7 +46,7 @@ Designates whether to run Docker through VirtualBox or Docker Desktop.
 
 For VirtualBox set to `0`. For Docker Desktop set to `1`.
 
-See [Docker Modes](../use-cases/docker-modes.md) for details instructions on this variable usage.
+See [Docker Modes](/use-cases/docker-modes) for detailed instructions on this variable usage.
 
 ### DOCKER_VERSION_ALERT_SUPPRESS
 
