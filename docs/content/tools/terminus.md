@@ -33,6 +33,6 @@ Note: It is also possible to add/override these values via `.docksal/docksal.env
 
 ## Integration
 
-For easier integration with Pantheon environment use the [pull command](/fin/pull). 
+For easier integration with Pantheon environment use the [pull command](/fin/fin-pull). 
 This allows you to easily bring your assets (db, files, and code) down to your 
 local environment quickly without manually running through the steps.
