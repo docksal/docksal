@@ -27,7 +27,7 @@ If you remove services or volumes you have to remove them with `fin project rm [
 ### docksal.yml {#docksal-yml}
 
 `docksal.yml` is a [Compose file](https://docs.docker.com/compose/compose-file/).
-It's the main configuration file for a project and controls its the settings for each service. Use it to
+It's the main configuration file for a project and controls the settings for each service. Use it to
 modify settings that are needed for anyone that uses your project.
 
 If you don't have this file in your project folder, fin will load the [default stack](#default-configurations), 
