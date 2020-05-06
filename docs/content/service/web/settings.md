@@ -33,7 +33,7 @@ For a complete list of available features and settings see [docksal/service-apac
 
 ### Nginx Advanced Settings {#nginx-settings}
 
-The following settings files in the project codebase can be used to override default Apache settings.
+The following settings files in the project codebase can be used to override default Nginx settings.
 
 
 Use `.docksal/etc/nginx/vhost-overrides.conf` to override the default virtual host configuration:
