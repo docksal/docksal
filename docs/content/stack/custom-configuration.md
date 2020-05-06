@@ -7,7 +7,7 @@ aliases:
 ## Custom Configuration {#custom-configuration}
 
 Custom configurations are useful when you have a larger or more complex project. Once a CI server is involved 
-or many people are on a project team then you have to be careful about maintaining software versions. 
+or many people are on a project team, then you have to be careful about maintaining software versions. 
 Having a custom configuration will protect your project from the updates in `services.yml` when you update Docksal.
 
 ```bash
