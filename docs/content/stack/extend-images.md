@@ -160,7 +160,7 @@ every time Docksal updates the stock image on Docker Hub, your custom image will
 
 ### Configure your project stack to use the custom image
 
-Assuming you project stack is using a stock Docksal services, you can override the service image like this:
+Assuming your project stack is using stock Docksal services, you can override the service image like this:
 
 ```bash
 fin config set <SERVICE>_IMAGE=<custom-image>
