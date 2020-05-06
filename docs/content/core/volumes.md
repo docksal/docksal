@@ -116,7 +116,7 @@ Windows Host =============> Docker Desktop ==============> Container
 To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=bind`, see 
 [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-bind.yml).
 
-In most cases, you do not need to set the `DOCKSAL_VOLUES=bind` option. It is set for you automatically. The only 
+In most cases, you do not need to set the `DOCKSAL_VOLUMES=bind` option. It is set for you automatically. The only 
 exception is when you need `fsnotify` events on macOS with Docker Desktop, but don't want to use the `unison` option.
 
 ### DOCKSAL_VOLUMES=nfs {#volumes-nfs}
