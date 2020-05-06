@@ -30,7 +30,7 @@ docksal/nginx:1.15
 docksal/nginx:1.15-1.0
 ```
 
-As described above `...-1.0` means image version here. `docksal/nginx:1.15` will always refer the latest 
+As described above `...-1.0` means image version here. `docksal/nginx:1.15` will always refer to the latest 
 available image version. Right now `docksal/nginx:1.15` is the same as `docksal/nginx:1.15-1.0`, but should
 we release `docksal/nginx:1.15-1.1`, and `docksal/nginx:1.15` would refer to `docksal/nginx:1.15-1.1`, while
 `docksal/nginx:1.15-1.0` would still exist for backwards compatibility. 
