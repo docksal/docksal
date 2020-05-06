@@ -25,7 +25,7 @@ Using a subdomain for the extra virtual host is the most straightforward approac
 </Directory>
 ```
 
-To route and additional custom domain to the primary web container, [see vhost-proxy docs](/core/system-vhost-proxy/#custom-domains). 
+To route an additional custom domain to the primary web container, [see vhost-proxy docs](/core/system-vhost-proxy/#custom-domains). 
 
 
 ## Secondary Web Service
