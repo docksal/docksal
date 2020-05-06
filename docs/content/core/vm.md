@@ -48,7 +48,7 @@ then here are some steps that you can take:
 1. Running `fin cleanup` is the easiest easiest way to free space. This will clear out any containers of projects that no
 longer exists on your computer. 
 
-1. The next step would be to to look for old projects that do exist, but you may not be working on. Run `fin project list --all`
+1. The next step would be to look for old projects that do exist, but you may not be working on. Run `fin project list --all`
 and look for old, unused projects. You can remove their containers by going to the project directory and running `fin project remove`.
 
 1. You can go even further and delete unused images. Run `fin docker images`, investigate the list of images for unused,
