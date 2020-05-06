@@ -78,7 +78,7 @@ Example of what `wp-cli.yml` would look like:
   url: http://example.com
 ```
 
-More information on working with [Docksal and WP-CLI](/tools/wp).
+More information on working with [Docksal and WP-CLI](/tools/wp-cli).
 
 ## Initializing Project
 
