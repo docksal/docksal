@@ -36,5 +36,5 @@ for an example.
 {{% /notice %}}
 
 {{% notice warning %}}
-Project must contain an `index.html` or `index.php` page of the `docroot` directory inside your project.
+Project must contain an `index.html` or `index.php` page in the `docroot` directory inside your project.
 {{% /notice %}}
