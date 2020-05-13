@@ -68,6 +68,11 @@ Useful for CI environments that fake tty and thus "freeze" waiting for user inpu
 This is the domain name used for Docksal project URLs, i.e., `http://$PROJECT_NAME.$DOCKSAL_DNS_DOMAIN`. 
 Project named `myproject` will result in `http://myproject.docksal` URL by default.
 
+## DOCKSAL_DNS_IP
+
+Can be used to override IP binding for the docksal-dns system service. E.g., `DOCKSAL_DNS_IP=0.0.0.0`.
+Defaults to the value set for `DOCKSAL_VHOST_PROXY_IP` (for simplicity).
+
 ### DOCKSAL_DNS_UPSTREAM
 
 `Default: autodetected with fallback to 8.8.8.8`

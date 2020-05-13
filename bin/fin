@@ -217,6 +217,7 @@ export DOCKSAL_SUBNET="192.168.64.1/24"
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
 DOCKSAL_DEFAULT_DNS="8.8.8.8"
 # For visibility on this variable
+DOCKSAL_DNS_IP="${DOCKSAL_DNS_IP}"
 DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
 # Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
@@ -3965,6 +3966,11 @@ detect_dns ()
 install_dns_service ()
 {
 	detect_dns
+
+	# Match with DOCKSAL_VHOST_PROXY_IP by default for simplicity
+	# E.g, if vhost-proxy is exposed on 0.0.0.0, then do the same for dns
+	DOCKSAL_DNS_IP="${DOCKSAL_DNS_IP:-$DOCKSAL_VHOST_PROXY_IP}"
+
 	# Stop and remove existing container
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	# This container cannot use the host's resolver configuration. The host itself may be configured to use this
@@ -3973,7 +3979,7 @@ install_dns_service ()
 	# When user disconnects from that network, the backup DNS will handle name resolution (assuming it is reachable).
 	echo "   upstream $DOCKSAL_DNS_UPSTREAM"
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=unless-stopped \
-		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="9.9.9.9" \
+		-p "${DOCKSAL_DNS_IP:-$DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="9.9.9.9" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
