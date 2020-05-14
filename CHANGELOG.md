@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.13.3 (2020-05-14)
+
+### New software versions
+
+- fin v1.95.0
+
+### Changes and improvements
+
+- Docker Desktop 2.3.0.2 compatibility fixes (Mac and Windows)
+  - Bind system services to `0.0.0.0` by default in virtualized environments (fixes #1268, fixes #1342)
+  - Dropped the dependency on DockerNAT interface on Windows (fixes #1276) 
+    - Do not configure DNS resolver with Docker Desktop for Windows
+    - Use the external `docksal.site` TLD with Docker Desktop for Windows v2.2.0.0+. This is necessary to have a working setup out of the box without the need to ask the user to manually configure DNS records using "fin hosts".
+
+### Experimental
+
+- Try the new external TDL for your Docksal projects!
+    ```
+    fin config set --global DOCKSAL_DNS_DOMAIN=docksal.site
+    ```
+    Note: This option is enforced with Docker Desktop for Windows 2.2.0.0+
+
+
+## 1.13.2 (2019-03-15)
+
+### Documentation
+
+- Added a section about setting/checking `DOCKSAL_VOLUMES` (#1275, #1296)
+- Added warnings in install docs about Docker Desktop versions (#1268)
+
+
 ## 1.13.1 (2019-12-17)
 
 ### New software versions
