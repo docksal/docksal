@@ -7673,13 +7673,8 @@ fi
 # DOCKSAL_IP - Docker/VM IP
 # DOCKSAL_DNS1 - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
 # DOCKSAL_DNS2 - a backup external DNS server
-if is_docker_native || is_wsl; then
-	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
-else
-	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
-fi
+export DOCKSAL_DNS1=${DOCKSAL_IP}
+export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
 
 # Create drives bind mounts on wsl
 # E.g. /mnt/c -> /c
