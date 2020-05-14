@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.93.0
+FIN_VERSION=1.95.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -217,6 +217,7 @@ export DOCKSAL_SUBNET="192.168.64.1/24"
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
 DOCKSAL_DEFAULT_DNS="8.8.8.8"
 # For visibility on this variable
+DOCKSAL_DNS_IP="${DOCKSAL_DNS_IP}"
 DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
 # Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
@@ -225,7 +226,7 @@ DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
 DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
 
 # Docker for Windows
-DOCKER_WIN_NETWORK="vEthernet (DockerNAT)"
+DOCKER_WIN_NETWORK="Loopback Pseudo-Interface 1"
 
 # Declaring possible vhost-proxy settings overrides
 DOCKSAL_VHOST_PROXY_IP="${DOCKSAL_VHOST_PROXY_IP}"
@@ -1027,27 +1028,14 @@ is_vbox_version ()
 }
 
 # Print Docker Desktop version
-# @param $1 --short - prints short version instead of full
-# Example output (--short): 2.0.0.3
 docker_desktop_version ()
 {
-	local short=${1}
-
 	if is_mac; then
 		echo $(defaults read /Applications/Docker.app/Contents/Info.plist CFBundleShortVersionString) 2>/dev/null
 	fi
 
-	if is_windows || is_wsl; then
-		# Calling these should be done in quotes and via "bash -c" to expand arguments properly
-		local DockerCli=''
-		is_windows && DockerCli='/cygdrive/c/Program Files/Docker/Docker/DockerCli.exe'
-		is_wsl && DockerCli='/mnt/c/Program Files/Docker/Docker/DockerCli.exe'
-
-		if [[ ${short} ]]; then
-			"${DockerCli}" -Version | tr -d '\r' | grep 'Version: ' | sed 's/.* \(.*\) .*/\1/g'
-		else
-			"${DockerCli}" -Version
-		fi
+	if is_wsl; then
+		grep -Po '"Informational":.*?[^\\]"' '/mnt/c/Program Files/Docker/Docker/resources/componentsVersion.json' | cut -d : -f2 | awk -F\" '{print $2}'
 	fi
 }
 
@@ -3845,6 +3833,10 @@ install_proxy_service ()
 		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
 	fi
 
+	# Open up vhost-proxy in virtualized environments
+	# This helps with recurring regressions with binding to an IP in Docker Desktop
+	( ! is_linux ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
 	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
@@ -3941,6 +3933,11 @@ detect_dns ()
 install_dns_service ()
 {
 	detect_dns
+
+	# Open up dns in virtualized environments
+	# This helps with recurring regressions with binding to an IP in Docker Desktop
+	( ! is_linux ) && DOCKSAL_DNS_IP="0.0.0.0"
+
 	# Stop and remove existing container
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
 	# This container cannot use the host's resolver configuration. The host itself may be configured to use this
@@ -3949,7 +3946,7 @@ install_dns_service ()
 	# When user disconnects from that network, the backup DNS will handle name resolution (assuming it is reachable).
 	echo "   upstream $DOCKSAL_DNS_UPSTREAM"
 	docker run -d --name docksal-dns --label "io.docksal.group=system" --restart=unless-stopped \
-		-p "${DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="9.9.9.9" \
+		-p "${DOCKSAL_DNS_IP:-$DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="9.9.9.9" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		"${IMAGE_DNS}" >/dev/null
@@ -5937,7 +5934,7 @@ sysinfo ()
 		echo
 		echo "███  DOCKER DESKTOP"
 		echo "EXPECTED VERSION: ${REQUIREMENTS_DOCKER_DESKTOP}"
-		docker_desktop_version
+		echo "DETECTED VERSION: $(docker_desktop_version)"
 	fi
 
 	# Diagnostics information
@@ -7660,16 +7657,24 @@ if ! is_windows; then
 fi
 
 # Network settings
+
+# Do not configure internal DNS resolver with Docker Desktop for Windows
+# Use the external docksal.site domain instead of the internal one. This is necessary to have a working setup
+# out of the box without the need to ask the user to manually configure DNS records using "fin hosts".
+# See https://github.com/docksal/docksal/issues/1276
+if is_wsl && is_docker_native; then
+	# Limit this to Docker Desktop for Windows 2.2.0.0+, which it is absolutely necessary
+	if (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
+		export DOCKSAL_NO_DNS_RESOLVER=1
+		export DOCKSAL_DNS_DOMAIN=docksal.site
+	fi
+fi
+
 # DOCKSAL_IP - Docker/VM IP
 # DOCKSAL_DNS1 - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
 # DOCKSAL_DNS2 - a backup external DNS server
-if is_docker_native || is_wsl; then
-	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
-else
-	export DOCKSAL_DNS1=${DOCKSAL_IP}
-	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
-fi
+export DOCKSAL_DNS1=${DOCKSAL_IP}
+export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
 
 # Create drives bind mounts on wsl
 # E.g. /mnt/c -> /c
