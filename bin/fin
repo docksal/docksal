@@ -226,7 +226,7 @@ DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
 DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
 
 # Docker for Windows
-DOCKER_WIN_NETWORK="vEthernet (DockerNAT)"
+DOCKER_WIN_NETWORK="Loopback Pseudo-Interface 1"
 
 # Declaring possible vhost-proxy settings overrides
 DOCKSAL_VHOST_PROXY_IP="${DOCKSAL_VHOST_PROXY_IP}"
