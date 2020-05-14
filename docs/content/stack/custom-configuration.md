@@ -60,6 +60,25 @@ In the `cli` service, there is the `volumes` section. You should not remove or c
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
 ```
+
+### Use a Custom Stack
+
+Docksal defines several [default stacks](/stack/zero-configuration/#zero-configuration-stacks) that can be used 
+by setting `DOCKSAL_STACK` in your project's `docksal.env`. But if you want to create a custom stack from services 
+already defined by Docksal, you can declare those services in your `docksal.yml` file.
+
+#### Use PostgreSQL
+
+```yaml
+version: "2.1"
+
+services:
+  db:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: pgsql
+```
+
 {{% notice note %}}
 Allowed [configuration value overrides](/stack/configuration-variables/) are set in the `docksal.env` or `docksal-local.env` file.
 {{% /notice %}} 
