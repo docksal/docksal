@@ -7663,8 +7663,11 @@ fi
 # out of the box without the need to ask the user to manually configure DNS records using "fin hosts".
 # See https://github.com/docksal/docksal/issues/1276
 if ( is_windows || is_wsl ) && is_docker_native; then
-	export DOCKSAL_NO_DNS_RESOLVER=1
-	export DOCKSAL_DNS_DOMAIN=docksal.site
+	# Limit this to Docker Desktop for Windows 2.2.0.0+, which it is absolutely necessary
+	if (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
+		export DOCKSAL_NO_DNS_RESOLVER=1
+		export DOCKSAL_DNS_DOMAIN=docksal.site
+	fi
 fi
 
 # DOCKSAL_IP - Docker/VM IP
