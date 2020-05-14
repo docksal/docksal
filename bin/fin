@@ -466,6 +466,10 @@ docker-compose ()
 		fi
 	fi
 
+	# get cli image version
+	CLI_IMAGE_VER=$(docker-compose --verbose config --hash="cli" 2>&1 | grep 'docker inspect_image <-' | cut -d"'" -f2 | sed 's#/#-#g;s#:#-#g')
+	export CLI_HOME="${COMPOSE_PROJECT_NAME_SAFE}_cli_home_${CLI_IMAGE_VER:-default}"
+
 	# Call regular docker-compose.
 	# We can use `which` here, since it does not care about functions (but `type` does).
 	$(which docker-compose) "$@"
@@ -1227,11 +1231,6 @@ _start_containers ()
 {
 	check_docker_running
 	echo-green "Starting services..."
-
-	# get cli image version
-	CLI_IMAGE_VER=$(docker-compose --verbose config --hash="cli" 2>&1 | grep 'docker inspect_image <-' | cut -d"'" -f2 | sed 's#/#-#g;s#:#-#g')
-	export CLI_HOME="${COMPOSE_PROJECT_NAME_SAFE}_cli_home_${CLI_IMAGE_VER:-default}"
-
 	docker-compose up -d --remove-orphans --build || return 1
 	# TODO: Workaround. Handle this case in docksal/vhost-proxy.
 	# When project stack is started, but vhost-proxy is not yet connected to the stack network, vhost-proxy config breaks.
