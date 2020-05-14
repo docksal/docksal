@@ -2,6 +2,7 @@
 title: "Blackfire"
 aliases:
   - /en/master/tools/blackfire/
+  - /tools/blackfire/
 ---
 
 
