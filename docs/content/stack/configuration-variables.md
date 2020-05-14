@@ -70,7 +70,11 @@ Project named `myproject` will result in `http://myproject.docksal` URL by defau
 
 ## DOCKSAL_DNS_IP
 
-Can be used to override IP binding for the docksal-dns system service, e.g., DOCKSAL_DNS_IP=0.0.0.0.
+Can be used to override IP binding for the docksal-dns system service (Linux only).
+
+This is automatically set to `0.0.0.0` (meaning "listen on all network interfaces") for:
+
+- all virtualized environments (all macOS and Windows installation modes)
 
 ### DOCKSAL_DNS_UPSTREAM
 
@@ -136,10 +140,12 @@ Allows for overriding the Docksal version used for checking for updates. Can be 
 
 ### DOCKSAL_VHOST_PROXY_IP
 
-`Default: 192.168.64.100`
+Can be used to override IP binding for the docksal-vhost-proxy system service (Linux only).
 
-Used to set the IP address for the Docksal reverse proxy to listen on. 
-When `CI` variable is set to `true` this will be set to `0.0.0.0`.
+This is automatically set to `0.0.0.0` (meaning "listen on all network interfaces") for:
+
+- all virtualized environments (all macOS and Windows installation modes)
+- CI environments (`CI` variable is set to `true`)
 
 ### GIT_USER_EMAIL (global or project)
 
