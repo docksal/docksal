@@ -3947,10 +3947,6 @@ install_dns_service ()
 {
 	detect_dns
 
-	# Match with DOCKSAL_VHOST_PROXY_IP by default for simplicity
-	# E.g, if vhost-proxy is exposed on 0.0.0.0, then do the same for dns
-	DOCKSAL_DNS_IP="${DOCKSAL_DNS_IP:-$DOCKSAL_VHOST_PROXY_IP}"
-
 	# Open up dns in virtualized environments
 	# This helps with recurring regressions with binding to an IP in Docker Desktop
 	( ! is_linux ) && DOCKSAL_DNS_IP="0.0.0.0"

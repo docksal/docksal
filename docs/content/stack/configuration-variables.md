@@ -71,7 +71,6 @@ Project named `myproject` will result in `http://myproject.docksal` URL by defau
 ## DOCKSAL_DNS_IP
 
 Can be used to override IP binding for the docksal-dns system service. E.g., `DOCKSAL_DNS_IP=0.0.0.0`.
-Defaults to the value set for `DOCKSAL_VHOST_PROXY_IP` (for simplicity).
 
 ### DOCKSAL_DNS_UPSTREAM
 
