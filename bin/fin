@@ -1028,27 +1028,14 @@ is_vbox_version ()
 }
 
 # Print Docker Desktop version
-# @param $1 --short - prints short version instead of full
-# Example output (--short): 2.0.0.3
 docker_desktop_version ()
 {
-	local short=${1}
-
 	if is_mac; then
 		echo $(defaults read /Applications/Docker.app/Contents/Info.plist CFBundleShortVersionString) 2>/dev/null
 	fi
 
 	if is_windows || is_wsl; then
-		# Calling these should be done in quotes and via "bash -c" to expand arguments properly
-		local DockerCli=''
-		is_windows && DockerCli='/cygdrive/c/Program Files/Docker/Docker/DockerCli.exe'
-		is_wsl && DockerCli='/mnt/c/Program Files/Docker/Docker/DockerCli.exe'
-
-		if [[ ${short} ]]; then
-			"${DockerCli}" -Version | tr -d '\r' | grep 'Version: ' | sed 's/.* \(.*\) .*/\1/g'
-		else
-			"${DockerCli}" -Version
-		fi
+		grep -Po '"Informational":.*?[^\\]"' '/mnt/c/Program Files/Docker/Docker/resources/componentsVersion.json' | cut -d : -f2 | awk -F\" '{print $2}'
 	fi
 }
 
@@ -5947,7 +5934,7 @@ sysinfo ()
 		echo
 		echo "███  DOCKER DESKTOP"
 		echo "EXPECTED VERSION: ${REQUIREMENTS_DOCKER_DESKTOP}"
-		docker_desktop_version
+		echo "DETECTED VERSION: $(docker_desktop_version)"
 	fi
 
 	# Diagnostics information
