@@ -467,7 +467,7 @@ docker-compose ()
 	fi
 
 	# get cli image version
-	CLI_IMAGE_VER=$(docker-compose --verbose config --hash="cli" 2>&1 | grep 'docker inspect_image <-' | cut -d"'" -f2 | sed 's#/#-#g;s#:#-#g')
+	CLI_IMAGE_VER=$($(which docker-compose) --verbose config --hash="cli" 2>&1 | grep 'docker inspect_image <-' | cut -d"'" -f2 | sed 's#/#-#g;s#:#-#g')
 	export CLI_HOME="${COMPOSE_PROJECT_NAME_SAFE}_cli_home_${CLI_IMAGE_VER:-default}"
 
 	# Call regular docker-compose.
