@@ -3846,6 +3846,10 @@ install_proxy_service ()
 		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
 	fi
 
+	# Open up vhost-proxy in virtualized environments
+	# This helps with recurring regressions with binding to an IP in Docker Desktop
+	( ! is_linux ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
 	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
@@ -3946,6 +3950,10 @@ install_dns_service ()
 	# Match with DOCKSAL_VHOST_PROXY_IP by default for simplicity
 	# E.g, if vhost-proxy is exposed on 0.0.0.0, then do the same for dns
 	DOCKSAL_DNS_IP="${DOCKSAL_DNS_IP:-$DOCKSAL_VHOST_PROXY_IP}"
+
+	# Open up dns in virtualized environments
+	# This helps with recurring regressions with binding to an IP in Docker Desktop
+	( ! is_linux ) && DOCKSAL_DNS_IP="0.0.0.0"
 
 	# Stop and remove existing container
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
