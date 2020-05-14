@@ -4,7 +4,7 @@
 
 ### New software versions
 
-- fin v1.94.0
+- fin v1.95.0
 
 ### Changes and improvements
 
