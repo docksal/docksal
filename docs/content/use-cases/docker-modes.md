@@ -45,10 +45,11 @@ Assuming that you have been previously using Docksal with VirtualBox, which was 
 
 **File sharing with Docker for Mac**
 
-Docker for Mac automatically shares most commonly used volumes/directories.
-See [Docker documentation](https://docs.docker.com/docker-for-mac/#file-sharing) for details.
-It is usually not necessary to adjust these settings, but you want to check them if your Home folder
-is not in a usual place.
+Docker for Mac automatically shares most commonly used volumes/directories. As of Docksal 1.13.0, this 
+is done through NFS. See [Docker documentation](https://docs.docker.com/docker-for-mac/#file-sharing) for details.
+It is usually not necessary to adjust these settings, but you want to set the DOCKSAL_NFS_PATH value in the 
+`~/.docksal/docksal.env` file if your Home folder is not in a usual place. See
+ [File Sharing](/core/file-sharing/#macos-virtualbox-mode-only).
 
 Docksal automatically enables the `osxfs:cached` mode on Docker for Mac, which improves the file system read performance 
 substantially. On Mac, `osxfs:cached` mode for Docker for Mac provides a decent read performance (still not as fast as NFS, but 
