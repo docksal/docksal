@@ -2,6 +2,7 @@
 title: "Elastic Search"
 aliases:
   - /en/master/tools/elastic-search/
+  - /tools/elasticsearch/
 ---
 
 

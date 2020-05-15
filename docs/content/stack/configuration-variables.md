@@ -102,7 +102,7 @@ This is usually good in combination with `CI=true`.
 `Default: /Users`
 
 **macOS only.**  
-Sets the location of the folder on the host machine to mount to VirtualBox. 
+Sets the location of the folder on the host machine to mount to VirtualBox or Docker Desktop with NFS. 
 See [file sharing](/core/file-sharing/) for more information.
 
 ### DOCKSAL_NO_DNS_RESOLVER

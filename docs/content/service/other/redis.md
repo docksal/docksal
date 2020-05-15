@@ -2,6 +2,7 @@
 title: "Redis"
 aliases:
   - /en/master/tools/redis/
+  - /tools/redis/
 ---
 
 Docksal does not maintain a Redis image as there are multiple other ways to accomplish integration at this time.

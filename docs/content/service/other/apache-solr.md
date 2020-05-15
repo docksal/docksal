@@ -2,6 +2,7 @@
 title: "Apache Solr"
 aliases:
   - /en/master/tools/apache-solr/
+  - /tools/apache-solr/
 ---
 
 
