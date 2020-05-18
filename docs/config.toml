@@ -11,12 +11,32 @@ theme = "learn"
 
   google_tag_manager = "GTM-58ST6XD"
 
-  version = "v1.13.0"
+  version = "v1.14.0"
+
+  [[params.versions]]
+  version = "v1.14.0"
+  branch = "v1.14.0"
+  url = "https://docs.docksal.io"
+
+  [[params.versions]]
+  version = "v1.13.3"
+  branch = "v1.13.3"
+  url = "https://v1-13-3.docs.docksal.io/"
+
+  [[params.versions]]
+  version = "v1.13.2"
+  branch = "v1.13.2"
+  url = "https://v1-13-2.docs.docksal.io/"
+
+  [[params.versions]]
+  version = "v1.13.1"
+  branch = "v1.13.1"
+  url = "https://v1-13-1.docs.docksal.io/"
 
   [[params.versions]]
   version = "v1.13.0"
   branch = "v1.13.0"
-  url = "https://docs.docksal.io"
+  url = "https://v1-13-0.docs.docksal.io/"
 
   [[params.versions]]
   version = "v1.12.3"
