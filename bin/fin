@@ -3890,8 +3890,8 @@ install_proxy_service ()
 		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		${mount_certs} \
-        --log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
-        --log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
+        	--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
+        	--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 	if_failed_error "Failed starting the proxy service."
 }
