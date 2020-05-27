@@ -6071,6 +6071,11 @@ load_global_configuration ()
 load_configuration ()
 {
 	check_project_root
+	
+	# Export Logging File Variables
+	export DOCKSAL_CONTAINER_LOG_MAX_SIZE
+	export DOCKSAL_CONTAINER_LOG_MAX_FILE
+	
 	# Re-load global env file once again, since 'up' resets some variables to force re-reading config
 	set -a; source "$CONFIG_ENV"; set +a
 
