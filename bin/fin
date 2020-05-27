@@ -219,7 +219,8 @@ DOCKSAL_DEFAULT_DNS="8.8.8.8"
 # For visibility on this variable
 DOCKSAL_DNS_IP="${DOCKSAL_DNS_IP}"
 DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
-DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
+DOCKSAL_DNS_DOMAIN_DEFAULT="docksal"
+DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-$DOCKSAL_DNS_DOMAIN_DEFAULT}"
 # Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
 DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
 # Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
@@ -7709,10 +7710,13 @@ fi
 # out of the box without the need to ask the user to manually configure DNS records using "fin hosts".
 # See https://github.com/docksal/docksal/issues/1276
 if is_wsl && is_docker_native; then
-	# Limit this to Docker Desktop for Windows 2.2.0.0+, which it is absolutely necessary
-	if (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
-		export DOCKSAL_NO_DNS_RESOLVER=1
-		export DOCKSAL_DNS_DOMAIN=docksal.site
+	# Only proceed if DOCKSAL_DNS_DOMAIN was not explicitly set (matches the default)
+	if [[ "${DOCKSAL_DNS_DOMAIN}" == "${DOCKSAL_DNS_DOMAIN_DEFAULT}" ]]; then
+		# Limit this to Docker Desktop for Windows 2.2.0.0+, where it is absolutely necessary
+		if (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
+			export DOCKSAL_NO_DNS_RESOLVER=1
+			export DOCKSAL_DNS_DOMAIN=docksal.site
+		fi
 	fi
 fi
 
