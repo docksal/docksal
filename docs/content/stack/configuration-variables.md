@@ -61,6 +61,18 @@ Set to `1` to suppress alerts about the outdated Docksal version.
 If set to `1`, all yes/no confirms will automatically be answered yes. 
 Useful for CI environments that fake tty and thus "freeze" waiting for user input.
 
+### DOCKSAL_CONTAINER_LOG_MAX_FILE
+
+`Default: 10`
+
+The number of docker log files that should be kept before they are removed.
+
+### DOCKSAL_CONTAINER_LOG_MAX_SIZE
+
+`Default: 1m`
+
+The size of the docker logs before they are rotated.
+
 ### DOCKSAL_DNS_DOMAIN
 
 `Default: docksal`
