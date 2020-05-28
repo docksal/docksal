@@ -24,6 +24,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Web: Apache (DEPRECATED)
   # TODO: remove November 2019
@@ -45,6 +49,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Web: Nginx
   nginx:
@@ -66,6 +74,10 @@ services:
     dns:
     - ${DOCKSAL_DNS1}
     - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # DB: MySQL
   mysql:
@@ -88,6 +100,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # DB: MySQL
   mariadb:
@@ -110,6 +126,10 @@ services:
     dns:
     - ${DOCKSAL_DNS1}
     - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # DB: PostgreSQL
   pgsql:
@@ -127,6 +147,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # CLI - Used for all console commands and tools.
   cli:
@@ -174,6 +198,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Varnish
   varnish:
@@ -189,6 +217,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Memcached
   memcached:
@@ -198,6 +230,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Redis
   redis:
@@ -209,6 +245,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Solr
   solr:
@@ -223,6 +263,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # MailHog
   mail:
@@ -237,6 +281,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Blackfire
   blackfire:
@@ -261,3 +309,8 @@ services:
       memlock:
         soft: -1
         hard: -1
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+
