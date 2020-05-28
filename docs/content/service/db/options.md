@@ -10,8 +10,8 @@ you will need to modify your `docksal.yml` file.
 
 ## MariaDB Configuration {#mariadb-config}
 
-Docksal has defined a db service with a PostreSQL image. To set your db service to use PostreSQL instead of MySQL,
-set the db service in your `docksal.yml` file.
+Docksal has defined a db service with a MariaDB image. To set your db service to use MariaDB
+instead of MySQL, set the db service in your `docksal.yml` file.
 
 ```yaml
 version: "2.1"
