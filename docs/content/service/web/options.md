@@ -10,8 +10,8 @@ if you want to specify the use of nginx, you will need to modify your `docksal.y
 
 ## nginx Configuration {#nginx-config}
 
-Docksal has defined a db service with a PostreSQL image. To set your db service to use PostreSQL instead of MySQL,
-set the db service in your `docksal.yml` file.
+Docksal has defined a web service with an nginx image. To set your db service to use
+nginx instead of Apache, set the db service in your `docksal.yml` file.
 
 ```yaml
 version: "2.1"
