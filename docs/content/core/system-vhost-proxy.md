@@ -91,7 +91,7 @@ $HOME/.docksal/certs/example.com.key
 If you never had `$HOME/.docksal/certs` directory before, you will need to do 
 `fin system reset` for docksal-vhost-proxy to find it.
 
-Set the project environment variable:
+When using a shared cert (multiple domains), you can set the shared cert file name like this:
 
 ```
 fin config set VIRTUAL_HOST_CERT_NAME='example.com'
