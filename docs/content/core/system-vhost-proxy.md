@@ -77,3 +77,24 @@ Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-pro
 Automatic DNS resolution for non-`.docksal` domains (e.g., `example.com`) is not supported. See [Managing DNS Manually](/core/system-dns#manual) 
 for a workaround.
 {{% /notice %}}
+
+## Adding a custom certificate {#custom-certificate}
+
+Put your certificates for your project's virtual host into `$HOME/.docksal/certs`. 
+For example, if your project's virtual host is `example.com`, then put CRT and KEY files as:
+
+```
+$HOME/.docksal/certs/example.com.crt
+$HOME/.docksal/certs/example.com.key
+```
+
+If you never had `$HOME/.docksal/certs` directory before, you will need to do 
+`fin system reset` for docksal-vhost-proxy to find it.
+
+When using a shared cert (multiple domains), you can set the shared cert file name like this:
+
+```
+fin config set VIRTUAL_HOST_CERT_NAME='example.com'
+```
+
+Restart the project with `fin projet restart`
