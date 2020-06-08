@@ -138,15 +138,15 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 REQUIREMENTS_DOCKER='19.03.4'
 REQUIREMENTS_DOCKER_COMPOSE='1.24.1'
 REQUIREMENTS_DOCKER_MACHINE='0.16.2'
-REQUIREMENTS_VBOX='5.2.34'  # Remember to update the download URLs below
+REQUIREMENTS_VBOX='6.1.10'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.34/VirtualBox-5.2.34-133893-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.34/VirtualBox-5.2.34-133893-Win.exe"
+URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.10/VirtualBox-6.1.10-138449-OSX.dmg"
+URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.10/VirtualBox-6.1.10-138449-Win.exe"
 
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
