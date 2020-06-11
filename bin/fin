@@ -136,6 +136,7 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
 REQUIREMENTS_DOCKER='19.03.5'
+REQUIREMENTS_DOCKER_DEBIAN='19.03.9'  # This is the earliest version available for Ubuntu 20.04 (focal) LTS
 REQUIREMENTS_DOCKER_COMPOSE='1.26.0'
 REQUIREMENTS_DOCKER_MACHINE='0.16.2'
 REQUIREMENTS_VBOX='6.1.10'  # Remember to update the download URLs below
@@ -7625,6 +7626,9 @@ execute_hook ()
 
 # Debug mode: print all commands
 [[ ${FIN_DEBUG} == 1 ]] && set -x
+
+# Use newer docker version on debian like systems
+is_debian && REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DEBIAN}
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
