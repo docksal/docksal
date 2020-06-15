@@ -24,6 +24,14 @@ A crontab file has six fields for specifying minute, hour, day of month, month, 
 +------------- min (0 - 59)
 ```
 
+By default, cron runs commands through `/bin/sh` and can sometimes cause issues when trying to run commands that are 
+found within the `$PATH`. One recommendation is to wrap the commands in `bash -l -c` so that the profile can load. An 
+example of this would be using drush to run cron on a drupal website.
+
+```bash
+* * * * * bash -l -c 'drush --root=/var/www/docroot core:cron'
+```
+
 ## Configuring Cron
 
 Cron can be started within a project by creating a `crontab` file within the projects `.docksal/services/cli` folder.
