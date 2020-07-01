@@ -47,9 +47,9 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 
 | Image| Notes |
 |------|------|
-| `docksal/cli:2.10-php7.3` | *Default image* PHP 7.3, Nodejs v12.13.0, Ruby 2.6.5, Python 2.7.16, msmtp |
-| `docksal/cli:2.10-php7.2` | PHP 7.2, Nodejs v12.13.0, Ruby 2.6.5, Python 2.7.16, msmtp |
-| `docksal/cli:2.10-php7.1` | PHP 7.1, Nodejs v12.13.0, Ruby 2.6.5, Python 2.7.16, msmtp |
+| `docksal/cli:2.11-php7.4` | PHP 7.4, Nodejs v12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
+| `docksal/cli:2.11-php7.3` | *Default image* PHP 7.3, Nodejs v12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
+| `docksal/cli:2.11-php7.2` | PHP 7.2, Nodejs v12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
 | `docksal/cli:2-php7.3`   | Latest 2.x image version of PHP 7.3 flavor, convenient when [extending images](/stack/extend-images)
 | `docksal/cli:2-php7.2`   | Latest 2.x image version of PHP 7.2 flavor, convenient when [extending images](/stack/extend-images)
 | `docksal/cli:2-php7.1`   | Latest 2.x image version of PHP 7.1 flavor, convenient when [extending images](/stack/extend-images)
