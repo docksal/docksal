@@ -91,11 +91,11 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 
 | Image| Notes |
 |------|------|
-| `docksal/mysql:5.6-1.4`  | *Default image*, MySQL 5.6 (v. 1.4) |
+| `docksal/mysql:5.6-1.5`  | *Default image*, MySQL 5.6 (v1.5) |
 | `docksal/mysql:5.6`      | MySQL 5.6 (latest image version) |
-| `docksal/mysql:5.7-1.4`  | MySQL 5.7 (v. 1.4) |
+| `docksal/mysql:5.7-1.5`  | MySQL 5.7 (v1.5) |
 | `docksal/mysql:5.7`      | MySQL 5.7 (latest 5.7 image version) |
-| `docksal/mysql:8.0-1.4`  | MySQL 8.0 (v. 1.4) |
+| `docksal/mysql:8.0-1.5`  | MySQL 8.0 (v1.5) |
 | `docksal/mysql:8.0`      | MySQL 8.0 (latest 8.0 image version) |
 
 ## MariaDB
