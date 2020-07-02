@@ -91,12 +91,12 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 
 | Image| Notes |
 |------|------|
-| `docksal/mysql:5.6-1.5`  | *Default image*, MySQL 5.6 (v1.5) |
-| `docksal/mysql:5.6`      | MySQL 5.6 (latest image version) |
-| `docksal/mysql:5.7-1.5`  | MySQL 5.7 (v1.5) |
-| `docksal/mysql:5.7`      | MySQL 5.7 (latest 5.7 image version) |
-| `docksal/mysql:8.0-1.5`  | MySQL 8.0 (v1.5) |
+| `docksal/mysql:8.0-1.5`  | MySQL 8.0 |
 | `docksal/mysql:8.0`      | MySQL 8.0 (latest 8.0 image version) |
+| `docksal/mysql:5.7-1.5`  | MySQL 5.7 |
+| `docksal/mysql:5.7`      | MySQL 5.7 (latest 5.7 image version) |
+| `docksal/mysql:5.6-1.5`  | MySQL 5.6 (default) |
+| `docksal/mysql:5.6`      | MySQL 5.6 (latest image version) |
 
 ## MariaDB
 
@@ -105,15 +105,15 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 
 | Image| Notes |
 |------|------|
-| `docksal/mariadb:10.3-1.0`     | MariaDB 10.3 |
+| `docksal/mariadb:10.3-1.1`     | MariaDB 10.3 (default) |
 | `docksal/mariadb:10.3`         | MariaDB 10.3 (latest image version) |
-| `docksal/mariadb:10.2-1.0`     | MariaDB 10.2 |
+| `docksal/mariadb:10.2-1.1`     | MariaDB 10.2 |
 | `docksal/mariadb:10.2`         | MariaDB 10.2 (latest image version) |
-| `docksal/mariadb:10.1-1.0`     | MariaDB 10.1 |
+| `docksal/mariadb:10.1-1.1`     | MariaDB 10.1 |
 | `docksal/mariadb:10.1`         | MariaDB 10.1 (latest image version) |
-| `docksal/mariadb:10.0-1.0`     | MariaDB 10.0 |
+| `docksal/mariadb:10.0-1.1`     | MariaDB 10.0 |
 | `docksal/mariadb:10.0`         | MariaDB 10.0 (latest image version) |
-| `docksal/mariadb:5.5-1.0`      | MariaDB 5.5 |
+| `docksal/mariadb:5.5-1.1`      | MariaDB 5.5 |
 | `docksal/mariadb:5.5`          | MariaDB 5.5 (latest image version) |
 
 ## Apache Solr

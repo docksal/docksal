@@ -108,7 +108,7 @@ services:
   # DB: MySQL
   mariadb:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.0}
+    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.1}
     ports:
     - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
