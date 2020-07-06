@@ -2631,7 +2631,7 @@ nfs_share_add ()
 	# Many NFS server implementations require this because of
 	# the false belief that this requirement increases security.
 	# Without this, NFS mounts are very likely to fail
-	if ! (cat /etc/nfs.conf | grep -e 'nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
+	if ! (cat /etc/nfs.conf | grep -e '^nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
 		echo "Writing /etc/nfs.conf..."
 		echo "nfs.server.mount.require_resv_port = 0" | sudo tee -a /etc/nfs.conf >/dev/null
 		NFSD_RESTART_REQUIRED="true"
