@@ -362,7 +362,6 @@ ERROR: for cli  Cannot create container for service cli: error while mounting vo
 ERROR: Encountered errors while bringing up the project.
 ```
 
-
 ### How to Resolve
 
 Configure your firewall to allow connections to and from 192.168.64.100 (Docksal's canonical IP address used across all systems and configurations).
@@ -371,3 +370,33 @@ On macOS, go to System Preferences -> Security and Privacy -> Firewall and eithe
 configure it to allow all connections (see image). Then do fin system restart and check if it fixes the issue.
 
 ![macOS firewall settings](/images/firewall.png)
+
+
+## Issue 16. NFS access issues on macOS
+
+Your project's codebase resides under one of the standard user folders in macOS (e.g., Downloads, Documents, 
+Desktop) or on an external drive. Project stack does not start with an error such as:
+
+```
+ERROR:  The path is not accessible in Docker
+        Could not access </path/to/project>
+        It is not shared from your host to Docker or is restricted.
+```
+
+
+### How to Resolve
+
+Grant **Full Disk Access** privileges  to `/sbin/nfsd`:
+
+- Open **System Preferences**
+- Go to **Security & Privacy → Privacy → Full Disk Access**
+- 🔒 Click the lock to make changes
+- Click **+**
+- Press **⌘ command + shift + G**
+- Enter `/sbin/nfsd` and click **Go**, then click **Open**
+
+![macOS TCC nfsd](https://user-images.githubusercontent.com/1205005/86679968-f1cc3f80-bfb2-11ea-9a38-44c2f6768c61.png)
+
+Alternatively, you can move the project's codebase out of the restricted user folder (not helpful for external disks).
+
+See https://blog.docksal.io/nfs-access-issues-on-macos-10-15-catalina-75cd23606913 for more details.
