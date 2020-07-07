@@ -375,7 +375,7 @@ configure it to allow all connections (see image). Then do fin system restart an
 ## Issue 16. NFS access issues on macOS
 
 Your project's codebase resides under one of the standard user folders in macOS (e.g., Downloads, Documents, 
-Desktop) or on an external drive. Project stack does not start with an error such as:
+Desktop) or on an external drive. Project stack does not start and displays an error such as:
 
 ```
 ERROR:  The path is not accessible in Docker
@@ -399,4 +399,4 @@ Grant **Full Disk Access** privileges  to `/sbin/nfsd`:
 
 Alternatively, you can move the project's codebase out of the restricted user folder (not helpful for external disks).
 
-See https://blog.docksal.io/nfs-access-issues-on-macos-10-15-catalina-75cd23606913 for more details.
+See [blog post](https://blog.docksal.io/nfs-access-issues-on-macos-10-15-catalina-75cd23606913) for more details.
