@@ -1026,7 +1026,7 @@ check_docker_path ()
 	if ! is_docker_path "$_path"; then
 		echo-error "The path is not accessible in Docker" \
 			"Could not access ${yellow}$_path${NC}" \
-			"It is not shared from your host to Docker."
+			"It is not shared from your host to Docker or is restricted."
 		exit 2
 	fi
 }
@@ -1226,6 +1226,12 @@ _disconnect_network ()
 _start_containers ()
 {
 	check_docker_running
+
+	# Check that project directory is reachable by Docker.
+	# This helps trace down issues with SMB/NFS file sharing on Mac and Windows.
+	# Note: triggering this check in load_configuration would introduce a blocker for many fin commands.
+	check_docker_path
+
 	echo-green "Starting services..."
 	docker-compose up -d --remove-orphans --build || return 1
 	# TODO: Workaround. Handle this case in docksal/vhost-proxy.
@@ -3001,9 +3007,6 @@ vm-hdd () {
 up ()
 {
 	check_docksal_environment
-
-	# Check that project directory is reachable to Docker
-	check_docker_path
 
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
