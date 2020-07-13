@@ -215,6 +215,8 @@ DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 export DOCKSAL_IP="192.168.64.100"
 export DOCKSAL_HOST_IP="192.168.64.1"
 export DOCKSAL_SUBNET="192.168.64.1/24"
+# Allow turning built-in DNS features on/off. Set to "0" to switch to external DNS (which will be standard in v2)
+DOCKSAL_DNS_ENABLED="${DOCKSAL_DNS_ENABLED:-1}"
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
 DOCKSAL_DEFAULT_DNS="8.8.8.8"
 # For visibility on this variable
@@ -847,7 +849,10 @@ is_docksal_running ()
 	# Assume Docksal is running when the following system services are running
 	(echo "$system_services" | grep 'docksal-vhost-proxy' >/dev/null 2>&1) || return 1
 	(echo "$system_services" | grep 'docksal-ssh-agent' >/dev/null 2>&1) || return 1
-	(echo "$system_services" | grep 'docksal-dns' >/dev/null 2>&1) || return 1
+	# Skip if built-in DNS is disabled
+	if [[ "$DOCKSAL_DNS_ENABLED" != "0" ]]; then
+		(echo "$system_services" | grep 'docksal-dns' >/dev/null 2>&1) || return 1
+	fi
 
 	return 0
 }
@@ -3967,6 +3972,12 @@ detect_dns ()
 # Start system-wide dns service
 install_dns_service ()
 {
+	# Skip/disable if built-in DNS is disabled
+	if [[ "$DOCKSAL_DNS_ENABLED" == "0" ]]; then
+		docker rm -f docksal-dns >/dev/null 2>&1 || true
+		return
+	fi
+
 	detect_dns
 
 	# Open up dns in virtualized environments
@@ -4112,6 +4123,8 @@ configure_resolver_wsl () {
 # Configure system-wide *.docksal resolver (Windows is not supported)
 configure_resolver ()
 {
+	# Skip if built-in DNS is disabled
+	[[ "$DOCKSAL_DNS_ENABLED" == "0" ]] && return
 	# Do not configure the resolver if asked so
 	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "" ]] && return
 
@@ -7718,6 +7731,11 @@ if ! is_windows; then
 fi
 
 # Network settings
+
+# Use external DNS domain if built-in DNS is disabled
+if [[ "$DOCKSAL_DNS_ENABLED" == "0" ]]; then
+	export DOCKSAL_DNS_DOMAIN=docksal.site
+fi
 
 # Do not configure internal DNS resolver with Docker Desktop for Windows
 # Use the external docksal.site domain instead of the internal one. This is necessary to have a working setup
