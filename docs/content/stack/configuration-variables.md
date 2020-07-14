@@ -408,3 +408,5 @@ $HOME/.docksal/certs/example.com.key
 ```
 
 Also see [Default and custom certs for HTTPS](https://github.com/docksal/service-vhost-proxy#default-and-custom-certs-for-https).
+
+For simple locally-trusted HTTPS certs for local development needs see [mkcert integration](/tools/mkcert).
