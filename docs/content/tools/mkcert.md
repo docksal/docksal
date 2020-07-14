@@ -1,43 +1,49 @@
 # mkcert
 
-A [mkcert](https://github.com/FiloSottile/mkcert) generated cert will be trusted locally by:
+[mkcert](https://github.com/FiloSottile/mkcert) is a tool for making locally-trusted HTTPS certificates.
+
+mkcert generated cert will be trusted locally by:
 
 - Firefox (Linux & Mac)
 - Chrome & Chromium
 - curl & wget
 
-The cert is automatically generated for `VIRTUAL_HOST` and `*.VIRTUAL_HOST`.
+## Setup and Usage (manual/advanced)
 
-## Installation
+Follow [mkcert installation steps](https://github.com/FiloSottile/mkcert#installation).
 
-Please see [mkcert system installation requirements](https://github.com/FiloSottile/mkcert#installation) before installing.
-
-The `mkcert` binary is installed in `$HOME/.docksal/bin/mkcert` **except** when `mkcert` is already installed globally. 
-
-## Setup (manual)
+To generate certs for a project, run in a project directory:
 
 ```bash
 # generate cert for a project
-$ fin debug -c 'mkdir -p ${CONFIG_CERTS}; mkcert -key-file ${CONFIG_CERTS}/${VIRTUAL_HOST}.key -cert-file ${CONFIG_CERTS}/${VIRTUAL_HOST}.crt *.${VIRTUAL_HOST} ${VIRTUAL_HOST}'
+fin debug -c 'mkdir -p ${CONFIG_CERTS}; mkcert -key-file ${CONFIG_CERTS}/${VIRTUAL_HOST}.key -cert-file ${CONFIG_CERTS}/${VIRTUAL_HOST}.crt *.${VIRTUAL_HOST} ${VIRTUAL_HOST}'
 # reset vhost-proxy to pick-up the new cert
-$ fin system reset vhost-proxy
+fin system reset vhost-proxy
 ```
 
-## Setup (as a project addon)
+This generates certs based on the project's `VIRTUAL_HOST` (for `VIRTUAL_HOST` and `*.VIRTUAL_HOST`). 
+You can tweak the command to generate and install certs for arbitrary domains.
 
-mkcert can also be installed as a project [addon](https://github.com/docksal/addons/tree/master/mkcert). 
+Open https://[project].docksal to validate.
+
+## Setup and Usage (via addon)
+
+mkcert can also be installed as an [addon](https://github.com/docksal/addons/tree/master/mkcert). 
 
 ```bash
-fin addon install --global mkcert
+fin addon install mkcert
 ```
 
-### Addon Use
+This will download and install `mkcert` binary in `$HOME/.docksal/bin/mkcert` **except** when `mkcert` is already 
+installed globally in the system. 
 
-In a project directory, run:
+To generate certs for a project, run in a project directory:
 
 ```bash
+# generate cert for a project
 fin mkcert create
-fin project restart
+# reset vhost-proxy to pick-up the new cert
+fin system reset vhost-proxy
 ```
 
 Open https://[project].docksal to validate.
