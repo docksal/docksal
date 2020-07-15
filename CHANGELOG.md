@@ -4,7 +4,7 @@
 
 ### New software versions
 
-- fin v1.96.0
+- fin v1.97.0
 - VirtualBox v6.1.10
 - docker v19.03.5 (v19.03.9 on Debian/Ubuntu)
 - docker-compose v1.26.0
@@ -20,6 +20,9 @@
 
 ### Changes and improvements
 
+- Added `DOCKSAL_DNS_DISABLED` global config switch to allow disabling the build-in `docksal-dns` service (#1376)
+  - Use this as a transition to the new `docksal.site` base domain for projects
+  - Helps address the DNS port binding issue on macOS (`listen udp 0.0.0.0:53: bind: address already in use`)
 - Added proxy variables to `fin run-cli` (#1252)
 - Passing the database argument when running `fin db cli` (#1263)
 - Changed uuid generation method (#1287)
@@ -46,6 +49,7 @@
 - Docker container logging
 - Adding a custom certificate for a project (#1359)
 - Accessing environment variables in cron jobs (#1365)
+- Updated DNS settings docs (#1376)
 
 
 ## 1.13.3 (2020-05-14)
