@@ -95,15 +95,30 @@ This is automatically set to `0.0.0.0` (meaning "listen on all network interface
 Override the default DNS server that Docksal uses. For environments where access to Google DNS server (`8.8.8.8`) 
 is blocked, it should be set to the LAN DNS server. This is often true for VPN users or users behind a corporate firewall.
 
+### DOCKSAL_NO_DNS_RESOLVER
+
+`Default: 0`
+
+Set to `1` and run `fin system reset` to disable the DNS resolver configuration.
+
+This can be used if there are issues with DNS resolution on the host machine while running Docksal.
+
+Also check `DOCKSAL_DNS_DISABLED` as it may be a better option than just disabling the host resolver configuration.
+
 ### DOCKSAL_DNS_DISABLED
 
 `Default: 0`
 
-Set to `1` and do `fin system restart` to completely disable `docksal-dns` service on any platform. 
-Useful when `docksal-dns` is conflicting with corporate rules or if some other software restricts it (`0.0.0.0:53: bind: address already in use`). 
+Set to `1` and do `fin system reset` to disable the `docksal-dns` built-in service and switch to using the public 
+`.docksal.site` base domain. This automatically sets `DOCKSAL_DNS_DOMAIN=docksal.site` and  `DOCKSAL_NO_DNS_RESOLVER=1`.
 
-For Docksal projects to work you will need to switch to using `docksal.site` TLD, or use `fin hosts` commands subset to edit 
-OS-wide hosts file in semi-automatic mode, or manually add project host to the OS-wide hosts file.
+Useful when `docksal-dns` is conflicting with corporate rules or if some other software restricts it 
+(`0.0.0.0:53: bind: address already in use`). 
+
+Projects that do not override the `VIRTUAL_HOST` variable will switch to the new `docksal.site` base domain after running 
+`fin project restart`. Projects that hardcode `VIRTUAL_HOST` will either need to update the value 
+(e.g., `VIRTUAL_HOST=myproject.docksal.site`) or use [fin hosts](/fin/fin-help/#hosts) command to manage host records. 
+semi-automatic mode.
 
 ### DOCKSAL_HEALTHCHECK_TIMEOUT
 
@@ -126,10 +141,6 @@ This is usually good in combination with `CI=true`.
 **macOS only.**  
 Sets the location of the folder on the host machine to mount to VirtualBox or Docker Desktop with NFS. 
 See [file sharing](/core/file-sharing/) for more information.
-
-### DOCKSAL_NO_DNS_RESOLVER
-
-Allow disabling the DNS resolver configuration (in case there are issues with it). Set to `true` to activate.
 
 ### DOCKSAL_SSH_AGENT_USE_HOST
 
