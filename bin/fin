@@ -215,8 +215,8 @@ DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 export DOCKSAL_IP="192.168.64.100"
 export DOCKSAL_HOST_IP="192.168.64.1"
 export DOCKSAL_SUBNET="192.168.64.1/24"
-# Allow turning built-in DNS features on/off. Set to "0" to switch to external DNS (which will be standard in v2)
-DOCKSAL_DNS_ENABLED="${DOCKSAL_DNS_ENABLED:-1}"
+# Allow turning built-in DNS features on/off. Set to "1" to switch to external DNS (which will be standard in v2)
+DOCKSAL_DNS_DISABLED="${DOCKSAL_DNS_DISABLED:-0}"
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
 DOCKSAL_DEFAULT_DNS="8.8.8.8"
 # For visibility on this variable
@@ -850,7 +850,7 @@ is_docksal_running ()
 	(echo "$system_services" | grep 'docksal-vhost-proxy' >/dev/null 2>&1) || return 1
 	(echo "$system_services" | grep 'docksal-ssh-agent' >/dev/null 2>&1) || return 1
 	# Skip if built-in DNS is disabled
-	if [[ "$DOCKSAL_DNS_ENABLED" != "0" ]]; then
+	if [[ "$DOCKSAL_DNS_DISABLED" == "0" ]]; then
 		(echo "$system_services" | grep 'docksal-dns' >/dev/null 2>&1) || return 1
 	fi
 
@@ -3973,7 +3973,7 @@ detect_dns ()
 install_dns_service ()
 {
 	# Skip/disable if built-in DNS is disabled
-	if [[ "$DOCKSAL_DNS_ENABLED" == "0" ]]; then
+	if [[ "$DOCKSAL_DNS_DISABLED" == "1" ]]; then
 		docker rm -f docksal-dns >/dev/null 2>&1 || true
 		return
 	fi
@@ -4124,7 +4124,7 @@ configure_resolver_wsl () {
 configure_resolver ()
 {
 	# Skip if built-in DNS is disabled
-	[[ "$DOCKSAL_DNS_ENABLED" == "0" ]] && return
+	[[ "$DOCKSAL_DNS_DISABLED" == "1" ]] && return
 	# Do not configure the resolver if asked so
 	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "" ]] && return
 
@@ -7733,7 +7733,7 @@ fi
 # Network settings
 
 # Use external DNS domain if built-in DNS is disabled
-if [[ "$DOCKSAL_DNS_ENABLED" == "0" ]]; then
+if [[ "$DOCKSAL_DNS_DISABLED" == "1" ]]; then
 	export DOCKSAL_DNS_DOMAIN=docksal.site
 fi
 
