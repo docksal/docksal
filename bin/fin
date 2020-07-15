@@ -225,7 +225,7 @@ DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
 DOCKSAL_DNS_DOMAIN_DEFAULT="docksal"
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-$DOCKSAL_DNS_DOMAIN_DEFAULT}"
 # Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
-DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
+DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER:-0}"
 # Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
 DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
 
@@ -4123,12 +4123,10 @@ configure_resolver_wsl () {
 # Configure system-wide *.docksal resolver (Windows is not supported)
 configure_resolver ()
 {
-	# Skip if built-in DNS is disabled
-	[[ "$DOCKSAL_DNS_DISABLED" == "1" ]] && return
-	# Do not configure the resolver if asked so
-	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "" ]] && return
-
 	local mode="${1:-on}"
+
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode='off'
 
 	if [[ "$mode" == "on" ]]; then
 		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
@@ -4158,8 +4156,6 @@ configure_resolver ()
 				_confirm "Continue?"
 			fi
 		fi
-	elif [[ "$mode" == "off" ]]; then
-		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
 	fi
 
 	is_mac && configure_resolver_mac "$mode" && return $?
@@ -7732,14 +7728,9 @@ fi
 
 # Network settings
 
-# Use external DNS domain if built-in DNS is disabled
-if [[ "$DOCKSAL_DNS_DISABLED" == "1" ]]; then
-	export DOCKSAL_DNS_DOMAIN=docksal.site
-fi
-
-# Do not configure internal DNS resolver with Docker Desktop for Windows
-# Use the external docksal.site domain instead of the internal one. This is necessary to have a working setup
-# out of the box without the need to ask the user to manually configure DNS records using "fin hosts".
+# Disable internal DNS resolver and use external domain with Docker Desktop for Windows
+# This is necessary to have a working setup out of the box without the need to ask the user to manually configure DNS
+# records using "fin hosts".
 # See https://github.com/docksal/docksal/issues/1276
 if is_wsl && is_docker_native; then
 	# Only proceed if DOCKSAL_DNS_DOMAIN was not explicitly set (matches the default)
@@ -7750,6 +7741,12 @@ if is_wsl && is_docker_native; then
 			export DOCKSAL_DNS_DOMAIN=docksal.site
 		fi
 	fi
+fi
+
+# Disable internal DNS resolver and use external domain if docksal-dns is disabled
+if [[ "$DOCKSAL_DNS_DISABLED" == "1" ]]; then
+	export DOCKSAL_NO_DNS_RESOLVER=1
+	export DOCKSAL_DNS_DOMAIN=docksal.site
 fi
 
 # DOCKSAL_IP - Docker/VM IP
