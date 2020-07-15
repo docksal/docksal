@@ -95,6 +95,16 @@ This is automatically set to `0.0.0.0` (meaning "listen on all network interface
 Override the default DNS server that Docksal uses. For environments where access to Google DNS server (`8.8.8.8`) 
 is blocked, it should be set to the LAN DNS server. This is often true for VPN users or users behind a corporate firewall.
 
+### DOCKSAL_DNS_DISABLED
+
+`Default: 0`
+
+Set to `1` and do `fin system restart` to completely disable `docksal-dns` service on any platform. 
+Useful when `docksal-dns` is conflicting with corporate rules or if some other software restricts it (`0.0.0.0:53: bind: address already in use`). 
+
+For Docksal projects to work you will need to switch to using `docksal.site` TLD, or use `fin hosts` commands subset to edit 
+OS-wide hosts file in semi-automatic mode, or manually add project host to the OS-wide hosts file.
+
 ### DOCKSAL_HEALTHCHECK_TIMEOUT
 
 `Default: 60`
