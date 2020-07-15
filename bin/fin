@@ -45,8 +45,9 @@ is_debian ()
 {
 	[[ "$OS_ID" == "ubuntu" ]] ||
 		[[ "$OS_ID" == "debian" ]] ||
-		[[ "$OS_ID_LIKE" == "ubuntu" ]] ||
-		[[ "$OS_ID_LIKE" == "debian" ]]
+		# ID_LIKE is a list of operating system identifiers (e.g., Pop!_OS has ID_LIKE="debian ubuntu")
+		[[ "$OS_ID_LIKE" =~ "ubuntu" ]] ||
+		[[ "$OS_ID_LIKE" =~ "debian" ]]
 }
 
 is_alpine ()
