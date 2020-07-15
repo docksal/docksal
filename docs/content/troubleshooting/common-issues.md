@@ -55,31 +55,62 @@ Sometimes Virtual Box fails to initialize its network interfaces properly.
 
 ## Issue 2. Error checking TLS Connection (VM is not accessible) {#issue-02}
 
+### 2a. Certificate validation, getsockopt connection refused:
+
 ```
 Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
 You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
 Be advised that this will trigger a Docker daemon restart which will stop running containers.
 ```
 
-Sometimes docker-machine certificates re-generation fails.
+#### How to Resolve
 
-### How to Resolve
+Sometimes docker-machine certificates re-generation fails. Perform the following steps to resolve:
 
 1. Perform `fin vm restart`
 2. If above did not help, then reboot your local host
 3. If above did not help, perform commands below and then reboot your host:
 
-```bash
-fin docker-machine regenerate-certs docksal -f
-fin vm restart
-```
+	```bash
+	fin docker-machine regenerate-certs docksal -f
+	fin vm restart
+	```
 
 4. In the rare cases when above did not help the only solution is to delete the existing VM and re-create it.
 
-```bash
-fin vm remove
-fin vm start
+	```bash
+	fin vm remove
+	fin system start
+	```
+
+
+### 2b. Certificate validation, x509 certificate has expired 
+
 ```
+Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": x509: certificate has expired or is not yet valid
+You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
+Be advised that this will trigger a Docker daemon restart which might stop running containers.
+
+ ERROR:  Failed to properly access virtual machine
+        In case you see certificates problem, try rebooting your local host.
+        Common issues: https://docs.docksal.io/troubleshooting/common-issues/
+```
+
+#### How to Resolve
+
+For reference: https://docs.docker.com/machine/reference/regenerate-certs/
+
+If you see the above error where it mentions x509: certificate has expired or is not yet valid, then you need to regenerate your certificates with the added `--client-certs` argument to the regenerate command. Perform the following steps:
+
+1. Run the following command:
+
+	```bash
+	fin docker-machine regenerate-certs -f --client-certs docksal
+	fin vm restart
+	```
+
+2. Verify the docksal machine starts and that you can start your projects.
+
 
 
 ## Issue 3. Out-of-memory Issues {#issue-03}
@@ -123,7 +154,7 @@ With NFS a single directory can only be exported once. It can not be exported se
 
 ### How to Resolve
 
-Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin vm start` again.
+Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin system start` again.
 
 
 ## Issue 5. Conflicting Ports {#issue-05}
@@ -163,7 +194,7 @@ Re-create vm as a regular user
 
 ```bash
 sudo fin vm remove
-fin vm start
+fin system start
 ```
 
 
@@ -331,7 +362,6 @@ ERROR: for cli  Cannot create container for service cli: error while mounting vo
 ERROR: Encountered errors while bringing up the project.
 ```
 
-
 ### How to Resolve
 
 Configure your firewall to allow connections to and from 192.168.64.100 (Docksal's canonical IP address used across all systems and configurations).
@@ -340,3 +370,33 @@ On macOS, go to System Preferences -> Security and Privacy -> Firewall and eithe
 configure it to allow all connections (see image). Then do fin system restart and check if it fixes the issue.
 
 ![macOS firewall settings](/images/firewall.png)
+
+
+## Issue 16. NFS access issues on macOS
+
+Your project's codebase resides under one of the standard user folders in macOS (e.g., Downloads, Documents, 
+Desktop) or on an external drive. Project stack does not start and displays an error such as:
+
+```
+ERROR:  The path is not accessible in Docker
+        Could not access </path/to/project>
+        It is not shared from your host to Docker or is restricted.
+```
+
+
+### How to Resolve
+
+Grant **Full Disk Access** privileges  to `/sbin/nfsd`:
+
+- Open **System Preferences**
+- Go to **Security & Privacy → Privacy → Full Disk Access**
+- 🔒 Click the lock to make changes
+- Click **+**
+- Press **⌘ command + shift + G**
+- Enter `/sbin/nfsd` and click **Go**, then click **Open**
+
+![macOS TCC nfsd](https://user-images.githubusercontent.com/1205005/86679968-f1cc3f80-bfb2-11ea-9a38-44c2f6768c61.png)
+
+Alternatively, you can move the project's codebase out of the restricted user folder (not helpful for external disks).
+
+See [blog post](https://blog.docksal.io/nfs-access-issues-on-macos-10-15-catalina-75cd23606913) for more details.

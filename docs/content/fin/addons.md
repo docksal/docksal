@@ -32,16 +32,24 @@ Here is a list of already created addons that can help extend functionality for 
 
 |   Name	|  Description 	|  Requirements 	|
 |--- |--- |--- |
-|   example	|  A working documentation on what is Docksal addon and how it works 	|  |
-|   adminer | [Adminer](https://www.adminer.org/) database management tool | MySQL |
-|   codeclimate | [CodeClimate](https://codeclimate.com/) code quality tool | |
-|   mailhog | [Mailhog](https://github.com/mailhog/MailHog) e-mail capture service for current project |  |
-|   phpunit | Creates a phpunit.xml file and runs PHPUnit tests | Drupal |
-|   pma | [PhpMyAdmin](https://www.phpmyadmin.net/) database management tool | MySQL |
-|   redis | Add [Redis](https://redis.io/) to current project |  |
-|   sequelpro | Launches [SequelPro](https://www.sequelpro.com) with the connection information for current project. | macOS |
-|   solr | [Apache Solr](http://lucene.apache.org/solr/) search service for current project |  |
-|   uli | Generate one time login url for current site | Drupal |
+|   **[example](example)**	|  A working documentation on what is Docksal addon and how it works 	|  |
+|   [adminer](adminer) | [Adminer](https://www.adminer.org/) database management tool | MySQL |
+|   [andock](andock) | [Andock](https://andock.readthedocs.io/en/latest/) makes it dead simple to get Docksal environments up on your server. | Docksal |
+|   [artisan](artisan) | Runs [Laravel's Artisan](https://laravel.com/docs/artisan) command in `cli`. **Requires** artisan pre-installed inside `cli`. | Laravel, Artisan |
+|   [blt](blt) | Acquia BLT tool launcher (requires [BLT installation](https://blog.docksal.io/docksal-and-acquia-blt-1552540a3b9f)) | Drupal |
+|   [codeclimate](codeclimate) | [CodeClimate](https://codeclimate.com/) code quality tool | |
+|   [mailhog](mailhog) | [Mailhog](https://github.com/mailhog/MailHog) e-mail capture service for current project |  |
+|   [mkcert](mkcert) | [mkcert](https://github.com/FiloSottile/mkcert) addon for Docksal |  |
+|   [phpcs](phpcs) | PHP Code Sniffer and Code Beautifier | |
+|   [phpunit](phpunit) | Creates a phpunit.xml file and runs PHPUnit tests | Drupal |
+|   [pma](pma) | [PhpMyAdmin](https://www.phpmyadmin.net/) database management tool | MySQL |
+|   [redis](redis) | Add [Redis](https://redis.io/) to current project |  |
+|   [sequelpro](sequelpro) | Launches [SequelPro](https://www.sequelpro.com) with the connection information for current project. | macOS |
+|   [simpletest](simpletest) | Runs SimpleTest tests in Drupal 7 and 8 | Drupal |
+|   [solr](solr) | [Apache Solr](http://lucene.apache.org/solr/) search service for current project |  |
+|   [tableplus](tableplus) | Launches [TablePlus](https://www.tableplus.com) with the connection information for current project. | macOS |
+|   [uli](uli) | Generate one time login url for current site | Drupal |
+|   [wkhtmltopdf](wkhtmltopdf) | Installs wkhtmltopdf 0.12.5 with QT compiled in. |  |
 
 __NOTE:__ This list may not be up to date. To see a more comprehensive list consult the [Docksal Addons Repository](https://github.com/docksal/addons). 
 
@@ -107,7 +115,7 @@ example.post-uninstall
 
 ### Install Hooks for an Addon
 
-When adding or removing an addon, it can contain a set of pre and post commands that will be executed. Example use cases would be to add/remove a service to the projects `docksal.yml`. Each use case will vary but they are available for use if necessary. For instance, an addon named `example` that needs to execute a process before it is installed would be be located in the file named `example/example.pre-install`. This file should also be included within the `example/example.filelist` file as noted above.
+When adding or removing an addon, it can contain a set of pre and post commands that will be executed. Example use cases would be to add/remove a service to the projects `docksal.yml`. Each use case will vary but they are available for use if necessary. For instance, an addon named `example` that needs to execute a process before it is installed would be located in the file named `example/example.pre-install`. This file should also be included within the `example/example.filelist` file as noted above.
 
 
 Phase | Process | File Extension
@@ -116,3 +124,7 @@ Before | Install | `.pre-install`
 After | Install | `.post-install`
 Before | Uninstall | `.pre-uninstall`
 After | Uninstall | `.post-install`
+
+## Global Addons
+
+A global addon is similar to a [global custom command](/fin/custom-commands/#global-custom-commands). It is stored in `$HOME/.docksal/addons` and is accessible globally. This is useful for tedious tasks that you need in every project.

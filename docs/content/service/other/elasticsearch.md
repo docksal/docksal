@@ -2,6 +2,7 @@
 title: "Elastic Search"
 aliases:
   - /en/master/tools/elastic-search/
+  - /tools/elasticsearch/
 ---
 
 
@@ -40,3 +41,25 @@ To have a static port assigned, override the `ELASTICSEARCH_PORT_MAPPING` variab
 ELASTICSEARCH_PORT_MAPPING='9200:9200'
 ```
 In this case, the current project elastic search will be accessible at `192.168.64.100:9200`.
+
+## Persistent Settings
+
+If a settings value for elastic search such as `max_map_count` needs to be set and persist
+through project starts, you may need to make modifications for your environment.
+
+### Docker for Mac
+
+Edit then `git commit` the following file:
+
+```
+~/Library/Containers/com.docker.docker/Data/database/com.docker.driver.amd64-linux/etc/sysctl.conf
+```
+
+### Docker Machine (VirtualBox)
+
+```
+fin vm ssh
+sudo touch /var/lib/boot2docker/bootlocal.sh
+sudo chmod +x /var/lib/boot2docker/bootlocal.sh
+echo 'sysctl -w vm.max_map_count=262144' | sudo tee -a /var/lib/boot2docker/bootlocal.sh
+```

@@ -46,13 +46,13 @@ Designates whether to run Docker through VirtualBox or Docker Desktop.
 
 For VirtualBox set to `0`. For Docker Desktop set to `1`.
 
-See [Docker Modes](../use-cases/docker-modes.md) for details instructions on this variable usage.
+See [Docker Modes](/use-cases/docker-modes) for detailed instructions on this variable usage.
 
 ### DOCKER_VERSION_ALERT_SUPPRESS
 
 `Default: 0`
 
-Set to `1` to suppresses alerts about the outdated Docksal version.
+Set to `1` to suppress alerts about the outdated Docksal version.
 
 ### DOCKSAL_CONFIRM_YES (global or project)
 
@@ -60,6 +60,18 @@ Set to `1` to suppresses alerts about the outdated Docksal version.
 
 If set to `1`, all yes/no confirms will automatically be answered yes. 
 Useful for CI environments that fake tty and thus "freeze" waiting for user input.
+
+### DOCKSAL_CONTAINER_LOG_MAX_FILE
+
+`Default: 10`
+
+The number of docker log files that should be kept before they are removed.
+
+### DOCKSAL_CONTAINER_LOG_MAX_SIZE
+
+`Default: 1m`
+
+The size of the docker logs before they are rotated.
 
 ### DOCKSAL_DNS_DOMAIN
 
@@ -83,6 +95,31 @@ This is automatically set to `0.0.0.0` (meaning "listen on all network interface
 Override the default DNS server that Docksal uses. For environments where access to Google DNS server (`8.8.8.8`) 
 is blocked, it should be set to the LAN DNS server. This is often true for VPN users or users behind a corporate firewall.
 
+### DOCKSAL_NO_DNS_RESOLVER
+
+`Default: 0`
+
+Set to `1` and run `fin system reset` to disable the DNS resolver configuration.
+
+This can be used if there are issues with DNS resolution on the host machine while running Docksal.
+
+Also check `DOCKSAL_DNS_DISABLED` as it may be a better option than just disabling the host resolver configuration.
+
+### DOCKSAL_DNS_DISABLED
+
+`Default: 0`
+
+Set to `1` and do `fin system reset` to disable the `docksal-dns` built-in service and switch to using the public 
+`.docksal.site` base domain. This automatically sets `DOCKSAL_DNS_DOMAIN=docksal.site` and  `DOCKSAL_NO_DNS_RESOLVER=1`.
+
+Useful when `docksal-dns` is conflicting with corporate rules or if some other software restricts it 
+(`0.0.0.0:53: bind: address already in use`). 
+
+Projects that do not override the `VIRTUAL_HOST` variable will switch to the new `docksal.site` base domain after running 
+`fin project restart`. Projects that hardcode `VIRTUAL_HOST` will either need to update the value 
+(e.g., `VIRTUAL_HOST=myproject.docksal.site`) or use [fin hosts](/fin/fin-help/#hosts) command to manage host records. 
+semi-automatic mode.
+
 ### DOCKSAL_HEALTHCHECK_TIMEOUT
 
 `Default: 60`
@@ -102,12 +139,8 @@ This is usually good in combination with `CI=true`.
 `Default: /Users`
 
 **macOS only.**  
-Sets the location of the folder on the host machine to mount to VirtualBox. 
+Sets the location of the folder on the host machine to mount to VirtualBox or Docker Desktop with NFS. 
 See [file sharing](/core/file-sharing/) for more information.
-
-### DOCKSAL_NO_DNS_RESOLVER
-
-Allow disabling the DNS resolver configuration (in case there are issues with it). Set to `true` to activate.
 
 ### DOCKSAL_SSH_AGENT_USE_HOST
 
@@ -307,6 +340,17 @@ This is used to create a user, and the user is granted superuser permissions for
 
 Enables PHP XDebug Service for debugging. See [XDebug](/tools/xdebug/).
 
+### XHPROF_ENABLED
+
+`Default: 0`
+
+Enables PHP Xhprof Service for debugging. See [Xhprof](/tools/xhprof/).
+
+### XHPROF_OUTPUT_DIR
+
+`Default: /tmp/xhprof`
+
+Location where the Xhprof output should be sent to.
 
 ## Image Variables (project)
 
@@ -364,6 +408,10 @@ Defines the timeout of inactivity after which the project stack and code base wi
 
 Defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h).
 
+### PROJECT_AUTOSTART
+
+Setting this variable to `0` will disable autostart projects by visiting project url. This option is active by default (set to `1`).
+
 ### SANDBOX_PERMANENT
 
 If set to `true`, the sandbox environment will not be removed event after the `PROJECT_DANGLING_TIMEOUT` timeout.
@@ -381,3 +429,5 @@ $HOME/.docksal/certs/example.com.key
 ```
 
 Also see [Default and custom certs for HTTPS](https://github.com/docksal/service-vhost-proxy#default-and-custom-certs-for-https).
+
+For simple locally-trusted HTTPS certs for local development needs see [mkcert integration](/tools/mkcert).

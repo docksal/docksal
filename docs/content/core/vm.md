@@ -30,7 +30,7 @@ Use `fin stop --all` to stop all projects, then `fin project start` to restart t
 Involves removing current VM. Your files will not be deleted, but databases will need to be re-imported, containers' images will be re-downloaded.
 
 1. `fin vm remove`
-2. `VBOX_HDD=80000 fin vm start`
+2. `VBOX_HDD=80000 fin system start`
 
 `VBOX_HDD` is disk size in Megabytes. Default is `50000`.
 
@@ -48,7 +48,7 @@ then here are some steps that you can take:
 1. Running `fin cleanup` is the easiest easiest way to free space. This will clear out any containers of projects that no
 longer exists on your computer. 
 
-1. The next step would be to to look for old projects that do exist, but you may not be working on. Run `fin project list --all`
+1. The next step would be to look for old projects that do exist, but you may not be working on. Run `fin project list --all`
 and look for old, unused projects. You can remove their containers by going to the project directory and running `fin project remove`.
 
 1. You can go even further and delete unused images. Run `fin docker images`, investigate the list of images for unused,

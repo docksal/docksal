@@ -5,7 +5,7 @@ aliases:
 ---
 
 
-Platform.sh offers a tool that allows for you to manage your projects from the command line. It enables you to do almost everything in a terminal that you can do in the Dashboard, and much more.
+Platform.sh offers a tool that allows you to manage your projects from the command line. It enables you to do almost everything in a terminal that you can do in the Dashboard, and much more.
 
 Platform.sh's CLI is pre-installed in the `cli` container. Note: required `docksal/cli` version: 2.3.0+.
 
@@ -37,6 +37,6 @@ Note: It is also possible to add/override these values via `.docksal/docksal.env
 
 ## Integration
 
-For easier integration with Platform.sh environment use the [pull command](/fin/pull). 
+For easier integration with Platform.sh environment use the [pull command](/fin/fin-pull).
 This allows you to easily bring your assets (db, files, and code) down to your 
 local environment quickly without manually running through the steps.

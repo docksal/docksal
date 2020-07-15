@@ -2,6 +2,7 @@
 title: "MailHog"
 aliases:
   - /en/master/tools/mailhog/
+  - /tools/mailhog/
 ---
 
 

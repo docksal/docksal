@@ -24,6 +24,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Web: Apache (DEPRECATED)
   # TODO: remove November 2019
@@ -45,6 +49,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Web: Nginx
   nginx:
@@ -66,11 +74,15 @@ services:
     dns:
     - ${DOCKSAL_DNS1}
     - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # DB: MySQL
   mysql:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mysql:5.6-1.4}
+    image: ${DB_IMAGE:-docksal/mysql:5.6-1.5}
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -88,11 +100,15 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # DB: MySQL
   mariadb:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.0}
+    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.1}
     ports:
     - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -110,6 +126,10 @@ services:
     dns:
     - ${DOCKSAL_DNS1}
     - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # DB: PostgreSQL
   pgsql:
@@ -127,14 +147,19 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.10-php7.3}
+    image: ${CLI_IMAGE:-docksal/cli:2.11-php7.3}
     volumes:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
-      - ${SSH_AUTH_SOCK:-docksal_ssh_agent}:${SSH_AUTH_SOCK:-/.ssh-agent}:ro  # Shared ssh-agent socket/SSH key forwarding support
+      - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
+      - ${SSH_AUTH_SOCK_DIR}:${SSH_AUTH_SOCK_DIR}:ro # Shared directory for SSH key forwarding support
       - cli_home:/home/docker  # Write-heavy directories should be in volumes. See https://github.com/docksal/docksal/issues/325
     labels:
       - io.docksal.user=docker
@@ -160,6 +185,8 @@ services:
       - SECRET_ACAPI_KEY
       - SECRET_PLATFORMSH_CLI_TOKEN
       - SECRET_TERMINUS_TOKEN
+      - SECRET_ACQUIACLI_KEY
+      - SECRET_ACQUIACLI_SECRET
       - SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-/.ssh-agent/proxy-socket}  # SSH key forwarding support
       - MYSQL_HOST
       - MYSQL_ROOT_PASSWORD
@@ -171,6 +198,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Varnish
   varnish:
@@ -186,6 +217,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Memcached
   memcached:
@@ -195,6 +230,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Redis
   redis:
@@ -206,6 +245,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Solr
   solr:
@@ -220,6 +263,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # MailHog
   mail:
@@ -234,6 +281,10 @@ services:
     dns:
       - ${DOCKSAL_DNS1}
       - ${DOCKSAL_DNS2}
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
   # Blackfire
   blackfire:
@@ -258,3 +309,8 @@ services:
       memlock:
         soft: -1
         hard: -1
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+

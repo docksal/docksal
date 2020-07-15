@@ -116,7 +116,7 @@ Windows Host =============> Docker Desktop ==============> Container
 To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=bind`, see 
 [stacks/volumes-bind.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-bind.yml).
 
-In most cases, you do not need to set the `DOCKSAL_VOLUES=bind` option. It is set for you automatically. The only 
+In most cases, you do not need to set the `DOCKSAL_VOLUMES=bind` option. It is set for you automatically. The only 
 exception is when you need `fsnotify` events on macOS with Docker Desktop, but don't want to use the `unison` option.
 
 ### DOCKSAL_VOLUMES=nfs {#volumes-nfs}
@@ -199,7 +199,7 @@ Combined with [VSCode IDE](/tools/ide/), this option can provide a way of provis
 development environments with the best performance and consistency for Mac and Windows. 
 The only added cost is having to stick with a browser-based IDE and terminal for developer UX. 
 
-See [stacks/volumes-none.yml](https://github.com/docksal/docksal/blob/master/stacks/overrides-none.yml) for
+See [stacks/volumes-none.yml](https://github.com/docksal/docksal/blob/master/stacks/volumes-none.yml) for
 details on Docker volumes definition with this option.
 
 #### Using "none" Volumes

@@ -27,7 +27,7 @@ If you remove services or volumes you have to remove them with `fin project rm [
 ### docksal.yml {#docksal-yml}
 
 `docksal.yml` is a [Compose file](https://docs.docker.com/compose/compose-file/).
-It's the main configuration file for a project and controls its the settings for each service. Use it to
+It's the main configuration file for a project and controls the settings for each service. Use it to
 modify settings that are needed for anyone that uses your project.
 
 If you don't have this file in your project folder, fin will load the [default stack](#default-configurations), 
@@ -39,7 +39,7 @@ For more details on its role, check [loading order](#loading-order).
 
 `docksal.env` is an [Environment file](https://docs.docker.com/compose/env-file/).
 
-It is used to override of some of the default environment variables, without the need for
+It is used to override some of the default environment variables, without the need for
 a full `docksal.yml` file (e.g., to override `MYSQL_ROOT_PASSWORD`) or to provide additional environment
 variables for your automation scripts (see [custom commands](/fin/custom-commands/)).
 
@@ -83,7 +83,7 @@ The list below goes from the earliest to the latest in this queue.
 Loading order:
 
 1. `$HOME/.docksal/stacks/volumes-*.yml` - only `volumes-bind.yml` loads at the moment ([volumes in Docksal](/core/volumes/))
-2. `$HOME/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by settings the `DOCKSAL_STACK` variable in `docksal.env`
+2. `$HOME/.docksal/stacks/stack-*.yml` - only loads if there is no `docksal.yml` in the project or if forced by setting the `DOCKSAL_STACK` variable in `docksal.env`
 3. `docksal.yml` - extends the stack if `DOCKSAL_STACK` is set in `docksal.env` or completely overrides it otherwise
 4. `docksal.env` - sets or modifies environment variables
 5. `docksal-local.yml` - extends the loaded stack or `docksal.yml`

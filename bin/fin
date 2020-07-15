@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.95.0
+FIN_VERSION=1.97.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -135,18 +135,19 @@ wsl_path ()
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='19.03.4'
-REQUIREMENTS_DOCKER_COMPOSE='1.24.1'
+REQUIREMENTS_DOCKER='19.03.5'
+REQUIREMENTS_DOCKER_DEBIAN='19.03.9'  # This is the earliest version available for Ubuntu 20.04 (focal) LTS
+REQUIREMENTS_DOCKER_COMPOSE='1.26.0'
 REQUIREMENTS_DOCKER_MACHINE='0.16.2'
-REQUIREMENTS_VBOX='5.2.34'  # Remember to update the download URLs below
+REQUIREMENTS_VBOX='6.1.10'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
 REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
-URL_VBOX_MAC="http://download.virtualbox.org/virtualbox/5.2.34/VirtualBox-5.2.34-133893-OSX.dmg"
-URL_VBOX_WIN="http://download.virtualbox.org/virtualbox/5.2.34/VirtualBox-5.2.34-133893-Win.exe"
+URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.10/VirtualBox-6.1.10-138449-OSX.dmg"
+URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.10/VirtualBox-6.1.10-138449-Win.exe"
 
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
@@ -214,14 +215,17 @@ DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 export DOCKSAL_IP="192.168.64.100"
 export DOCKSAL_HOST_IP="192.168.64.1"
 export DOCKSAL_SUBNET="192.168.64.1/24"
+# Allow turning built-in DNS features on/off. Set to "1" to switch to external DNS (which will be standard in v2)
+DOCKSAL_DNS_DISABLED="${DOCKSAL_DNS_DISABLED:-0}"
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
 DOCKSAL_DEFAULT_DNS="8.8.8.8"
 # For visibility on this variable
 DOCKSAL_DNS_IP="${DOCKSAL_DNS_IP}"
 DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
-DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-docksal}"
+DOCKSAL_DNS_DOMAIN_DEFAULT="docksal"
+DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-$DOCKSAL_DNS_DOMAIN_DEFAULT}"
 # Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
-DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER}"
+DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER:-0}"
 # Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
 DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
 
@@ -238,6 +242,7 @@ DOCKSAL_VHOST_PROXY_DEBUG_LOG="${DOCKSAL_VHOST_PROXY_DEBUG_LOG}"
 DOCKSAL_VHOST_PROXY_DEFAULT_CERT="${DOCKSAL_VHOST_PROXY_DEFAULT_CERT}"
 PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT}"
 PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT}"
+PROJECT_AUTOSTART="${PROJECT_AUTOSTART}"
 PROJECTS_ROOT="${PROJECTS_ROOT}"
 
 DEFAULT_MACHINE_NAME='docksal'
@@ -275,6 +280,10 @@ fi
 # Healthcheck timeout
 DOCKSAL_HEALTHCHECK_TIMEOUT=${DOCKSAL_HEALTHCHECK_TIMEOUT:-60}
 
+# Logging settings
+DOCKSAL_CONTAINER_LOG_MAX_SIZE=${DOCKSAL_CONTAINER_LOG_MAX_SIZE:-1m}
+DOCKSAL_CONTAINER_LOG_MAX_FILE=${DOCKSAL_CONTAINER_LOG_MAX_FILE:-10}
+
 #---------------------------- URL references --------------------------------
 GITHUB_API="https://api.github.com"
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
@@ -297,6 +306,7 @@ URL_REPO_BACKDROP="https://github.com/docksal/boilerplate-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
+STACKS_OVERRIDES_XHPROF="overrides-xhprof.yml"
 STACKS_SERVICES="services.yml"
 STACKS_STACK_ACQUIA="stack-acquia.yml"
 STACKS_STACK_DEFAULT="stack-default.yml"
@@ -326,9 +336,9 @@ URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v$
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.3}
-IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.5}
+IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.6}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
-IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:2.10-php7.3}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:2.11-php7.3}
 
 #---------------------------- Helper functions --------------------------------
 
@@ -414,7 +424,7 @@ pwd ()
 
 uuid_generate ()
 {
-	od -x /dev/urandom | head -1 | awk '{OFS="-"; print $2$3,$4,$5,$6,$7$8$9}'
+	od -x -N16 /dev/urandom | head -1 | awk '{OFS="-"; print $2$3,$4,$5,$6,$7$8$9}'
 }
 
 docker-compose ()
@@ -435,6 +445,27 @@ docker-compose ()
 	# On Mac/Win, we proxy the Unix socket through TCP on Docksal's host IP.
 	if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
 		unset SSH_AUTH_SOCK
+	fi
+
+	# always create directory for socket
+	export SSH_AUTH_SOCK_DIR="$CONFIG_DIR/tmp/${COMPOSE_PROJECT_NAME_SAFE}"
+	mkdir -p "$SSH_AUTH_SOCK_DIR"
+
+	# Create original socket copy (hardlink) and update SSH_AUTH_SOCK with new socket path
+	if [[ "${SSH_AUTH_SOCK}" != "" ]]; then
+		# find project ssh sockets and delete unused
+		for SOCK in $(find $SSH_AUTH_SOCK_DIR -type s)
+		do
+		    # remove unused socket
+		    (SSH_AUTH_SOCK=${SOCK} && ssh-add -L >/dev/null 2>&1) || rm -f ${SOCK}
+		done
+		AGENT_ID=$(basename $SSH_AUTH_SOCK)
+		# skip creation socket copy if already exists
+		if [[ ! -S $SSH_AUTH_SOCK_DIR/$AGENT_ID ]]
+		then
+		    ln -f $SSH_AUTH_SOCK $SSH_AUTH_SOCK_DIR/$AGENT_ID
+		    export SSH_AUTH_SOCK="$SSH_AUTH_SOCK_DIR/$AGENT_ID"
+		fi
 	fi
 
 	# Call regular docker-compose.
@@ -818,7 +849,10 @@ is_docksal_running ()
 	# Assume Docksal is running when the following system services are running
 	(echo "$system_services" | grep 'docksal-vhost-proxy' >/dev/null 2>&1) || return 1
 	(echo "$system_services" | grep 'docksal-ssh-agent' >/dev/null 2>&1) || return 1
-	(echo "$system_services" | grep 'docksal-dns' >/dev/null 2>&1) || return 1
+	# Skip if built-in DNS is disabled
+	if [[ "$DOCKSAL_DNS_DISABLED" == "0" ]]; then
+		(echo "$system_services" | grep 'docksal-dns' >/dev/null 2>&1) || return 1
+	fi
 
 	return 0
 }
@@ -997,7 +1031,7 @@ check_docker_path ()
 	if ! is_docker_path "$_path"; then
 		echo-error "The path is not accessible in Docker" \
 			"Could not access ${yellow}$_path${NC}" \
-			"It is not shared from your host to Docker."
+			"It is not shared from your host to Docker or is restricted."
 		exit 2
 	fi
 }
@@ -1186,10 +1220,23 @@ _confirm ()
 }
 
 #-------------------------- Containers management -----------------------------
+_disconnect_network ()
+{
+	local network=$1
+	# disconect all containers, connected to project network
+	# '-I {}' and '{}' can be used to position the argument passed by xargs.
+	xargs -I {} docker network disconnect -f "$network" {} &>/dev/null <<< "$(docker ps -aq --no-trunc -f "network=${network}")"
+}
 
 _start_containers ()
 {
 	check_docker_running
+
+	# Check that project directory is reachable by Docker.
+	# This helps trace down issues with SMB/NFS file sharing on Mac and Windows.
+	# Note: triggering this check in load_configuration would introduce a blocker for many fin commands.
+	check_docker_path
+
 	echo-green "Starting services..."
 	docker-compose up -d --remove-orphans --build || return 1
 	# TODO: Workaround. Handle this case in docksal/vhost-proxy.
@@ -1251,18 +1298,10 @@ _stop_containers ()
 		echo-green "Disconnecting project network..."
 		# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
 		# The project network will be automatically recreated by docker-compose up.
-		local network_name="${COMPOSE_PROJECT_NAME_SAFE}_default"
+		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+		_disconnect_network "${network}"
 
-		# "docker network inspect" does not list inactive endpoints (stopped containers), so cannot be used here
-		# Instead, we'll assume we should disconnect all project containers + vhost-proxy from the project network.
-		local project_containers=$(docker ps -aq \
-			--filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME_SAFE}" 2>/dev/null)
-		# Note: there should be no quotes around ${network_containers} or it won't be split properly
-		for container in ${project_containers}; do
-			docker network disconnect -f "${network_name}" "${container}" &>/dev/null || true
-		done
-		docker network disconnect -f "${network_name}" docksal-vhost-proxy &>/dev/null || true
-		docker network rm "${network_name}" &>/dev/null || true
+		docker network rm "${network}" &>/dev/null || true
 	fi
 
 	echo-green "Stopping services..."
@@ -1281,10 +1320,10 @@ _remove_containers ()
 	if [[ $1 == "" ]]; then
 		echo-yellow "Removing containers..."
 
-		# Disconnect proxy from the project network, otherwise network will not be removed.
+		# Disconnect all containers from the project network, otherwise network will not be removed.
 		# Figure out the default project network name
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-		docker network disconnect "$network" docksal-vhost-proxy >/dev/null 2>&1
+		_disconnect_network "${network}"
 
 		# Taking the whole docker-compose project down (this removes containers, volumes, and networks)
 		docker-compose down --volumes --remove-orphans
@@ -2603,7 +2642,7 @@ nfs_share_add ()
 	# Many NFS server implementations require this because of
 	# the false belief that this requirement increases security.
 	# Without this, NFS mounts are very likely to fail
-	if ! (cat /etc/nfs.conf | grep -e 'nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
+	if ! (cat /etc/nfs.conf | grep -e '^nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
 		echo "Writing /etc/nfs.conf..."
 		echo "nfs.server.mount.require_resv_port = 0" | sudo tee -a /etc/nfs.conf >/dev/null
 		NFSD_RESTART_REQUIRED="true"
@@ -2973,9 +3012,6 @@ vm-hdd () {
 up ()
 {
 	check_docksal_environment
-
-	# Check that project directory is reachable to Docker
-	check_docker_path
 
 	# Check that project name is unique since non-unique names will give problems with docker-compose
 	check_project_unique
@@ -3851,6 +3887,7 @@ install_proxy_service ()
 	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h)
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
 	# entirely wiped out from the host (e.g., 168h). WARNING: use at your own risk!
+	# setting PROJECT_AUTOSTART to 0 will disable project start by visiting project url
 	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=unless-stopped \
 		-p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
 		-e ACCESS_LOG="${DOCKSAL_VHOST_PROXY_ACCESS_LOG:-0}" \
@@ -3858,10 +3895,13 @@ install_proxy_service ()
 		-e STATS_LOG="${DOCKSAL_VHOST_PROXY_STATS_LOG:-0}" \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
+		-e PROJECT_AUTOSTART="${PROJECT_AUTOSTART:-1}" \
 		-e DEFAULT_CERT="${DOCKSAL_VHOST_PROXY_DEFAULT_CERT:-docksal}" \
 		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		${mount_certs} \
+        	--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
+        	--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 	if_failed_error "Failed starting the proxy service."
 }
@@ -3932,6 +3972,12 @@ detect_dns ()
 # Start system-wide dns service
 install_dns_service ()
 {
+	# Skip/disable if built-in DNS is disabled
+	if [[ "$DOCKSAL_DNS_DISABLED" == "1" ]]; then
+		docker rm -f docksal-dns >/dev/null 2>&1 || true
+		return
+	fi
+
 	detect_dns
 
 	# Open up dns in virtualized environments
@@ -4077,10 +4123,10 @@ configure_resolver_wsl () {
 # Configure system-wide *.docksal resolver (Windows is not supported)
 configure_resolver ()
 {
-	# Do not configure the resolver if asked so
-	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "" ]] && return
-
 	local mode="${1:-on}"
+
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode='off'
 
 	if [[ "$mode" == "on" ]]; then
 		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
@@ -4110,8 +4156,6 @@ configure_resolver ()
 				_confirm "Continue?"
 			fi
 		fi
-	elif [[ "$mode" == "off" ]]; then
-		echo-green "Disabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
 	fi
 
 	is_mac && configure_resolver_mac "$mode" && return $?
@@ -4712,6 +4756,7 @@ update_config_files ()
 {
 	files_to_download="
 			$STACKS_OVERRIDES_IDE
+			$STACKS_OVERRIDES_XHPROF
 			$STACKS_SERVICES
 			$STACKS_STACK_ACQUIA
 			$STACKS_STACK_DEFAULT
@@ -5342,6 +5387,9 @@ run_cli ()
 			-e GIT_USER_NAME \
 			-e HOST_UID \
 			-e HOST_GID \
+			-e NO_PROXY \
+			-e HTTP_PROXY \
+			-e HTTPS_PROXY \
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
@@ -5363,6 +5411,9 @@ run_cli ()
 			-e GIT_USER_NAME \
 			-e HOST_UID \
 			-e HOST_GID \
+			-e NO_PROXY \
+			-e HTTP_PROXY \
+			-e HTTPS_PROXY \
 			-e COLUMNS \
 			-e LINES \
 			-e DEBUG \
@@ -5389,17 +5440,16 @@ _mysql ()
 	# MYSQL_* variable expansion happens here
 	local __dump_password="${dbpassword:-$MYSQL_ROOT_PASSWORD}"
 	local __database="${db:-$MYSQL_DATABASE}"
-
-	if [[ "${ARGV[*]}" != "" ]]; then
-		# Some arguments were passwed, allow non-interactive run
-		if is_tty; then
-			${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${ARGV[*]}"
-		else
-			docker exec "$container_id" mysql -u${__dump_user} -p${__dump_password} ${__database} -e "${ARGV[*]}"
-		fi
-	else
-		${winpty} docker exec -it "$container_id" mysql -u${__dump_user} -p${__dump_password}
+	local __pty_command=''
+	if is_tty || [[ -z "${ARGV[*]}" ]]; then
+		__pty_command="${winpty}"
 	fi
+
+	${__pty_command} docker exec -it "${container_id}" mysql \
+		-u"${__dump_user}" \
+		-p"${__dump_password}" \
+		${__database} \
+		${ARGV:+-e "${ARGV[*]}"}
 }
 
 # Show databases list
@@ -5869,6 +5919,17 @@ sysinfo ()
 		docker-machine --version
 		echo
 		docker-machine ls
+
+		# Verify the VM IP matches what we expect
+		# If there is a leftover DHCP lease in VritualBox, the VM will be issues a different IP.
+		_vm_ip=$(docker-machine ip ${DEFAULT_MACHINE_NAME})
+		if [[ "${_vm_ip}" != "${DOCKSAL_IP}" ]]; then
+			echo
+			echo-error "Docksal VM IP mismatch" \
+				"Expected IP: ${DOCKSAL_IP}" \
+				"Actual IP  : ${_vm_ip}" \
+				"Try resetting the VM: ${yellow}fin system stop; fin system start${NC}"
+		fi
 	fi
 
 	if is_docker_running; then
@@ -6024,6 +6085,7 @@ load_global_configuration ()
 load_configuration ()
 {
 	check_project_root
+
 	# Re-load global env file once again, since 'up' resets some variables to force re-reading config
 	set -a; source "$CONFIG_ENV"; set +a
 
@@ -6108,6 +6170,11 @@ load_configuration ()
 		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
 		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
 			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
+		fi
+
+		overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
+		if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
+			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
 		fi
 	fi
 
@@ -7572,6 +7639,9 @@ execute_hook ()
 # Debug mode: print all commands
 [[ ${FIN_DEBUG} == 1 ]] && set -x
 
+# Use newer docker version on debian like systems
+is_debian && REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DEBIAN}
+
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 if is_tty; then
@@ -7658,16 +7728,25 @@ fi
 
 # Network settings
 
-# Do not configure internal DNS resolver with Docker Desktop for Windows
-# Use the external docksal.site domain instead of the internal one. This is necessary to have a working setup
-# out of the box without the need to ask the user to manually configure DNS records using "fin hosts".
+# Disable internal DNS resolver and use external domain with Docker Desktop for Windows
+# This is necessary to have a working setup out of the box without the need to ask the user to manually configure DNS
+# records using "fin hosts".
 # See https://github.com/docksal/docksal/issues/1276
 if is_wsl && is_docker_native; then
-	# Limit this to Docker Desktop for Windows 2.2.0.0+, which it is absolutely necessary
-	if (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
-		export DOCKSAL_NO_DNS_RESOLVER=1
-		export DOCKSAL_DNS_DOMAIN=docksal.site
+	# Only proceed if DOCKSAL_DNS_DOMAIN was not explicitly set (matches the default)
+	if [[ "${DOCKSAL_DNS_DOMAIN}" == "${DOCKSAL_DNS_DOMAIN_DEFAULT}" ]]; then
+		# Limit this to Docker Desktop for Windows 2.2.0.0+, where it is absolutely necessary
+		if (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
+			export DOCKSAL_NO_DNS_RESOLVER=1
+			export DOCKSAL_DNS_DOMAIN=docksal.site
+		fi
 	fi
+fi
+
+# Disable internal DNS resolver and use external domain if docksal-dns is disabled
+if [[ "$DOCKSAL_DNS_DISABLED" == "1" ]]; then
+	export DOCKSAL_NO_DNS_RESOLVER=1
+	export DOCKSAL_DNS_DOMAIN=docksal.site
 fi
 
 # DOCKSAL_IP - Docker/VM IP
@@ -7726,6 +7805,10 @@ export MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
 export MYSQL_USER=${MYSQL_USER:-user}
 export MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
 export MYSQL_DATABASE=${MYSQL_DATABASE:-default}
+
+# Container logging settings
+export DOCKSAL_CONTAINER_LOG_MAX_SIZE
+export DOCKSAL_CONTAINER_LOG_MAX_FILE
 
 # Handle Alias
 if [[ "$1" == "@"* ]]; then
@@ -8024,7 +8107,8 @@ case "$1" in
 			else
 				script_to_run="$1"
 			fi
-			_exec "PROJECT_ROOT=/var/www DOCROOT=$DOCROOT VIRTUAL_HOST=$VIRTUAL_HOST /bin/bash -c $script_to_run" "$@"
+			shift
+			_exec "$script_to_run" "$@"
 		else
 			_exec "$@"
 		fi

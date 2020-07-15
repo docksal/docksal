@@ -36,7 +36,7 @@ $ docker run --name portainer -d -v /var/run/docker.sock:/var/run/docker.sock -v
 
 ## Usage
 
-The UI can be accessed at [http://poratiner.docksal](http://poratiner.docksal/).
+The UI can be accessed at [http://portainer.docksal](http://portainer.docksal/).
 
 When accessing for the first time, set the username and password.
 

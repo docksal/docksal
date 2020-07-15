@@ -46,11 +46,11 @@ Below is an example of extending the `cli` image with additional configs, apt, a
 **File `.docksal/services/cli/Dockerfile`**
 
 ```Dockerfile
-# Note how we use cli:2 here, which refers the latest available 2.x version
+# Note how we use cli:2 here, which refers to the latest available 2.x version
 # So that we wouldn't need to update this every time new version of Docksal cli releases
 FROM docksal/cli:2-php7.3
 
-# Install addtional apt packages
+# Install additional apt packages
 RUN apt-get update && apt-get -y --no-install-recommends install \
     netcat-openbsd \
     # Cleanup
@@ -160,7 +160,7 @@ every time Docksal updates the stock image on Docker Hub, your custom image will
 
 ### Configure your project stack to use the custom image
 
-Assuming you project stack is using a stock Docksal services, you can override the service image like this:
+Assuming your project stack is using stock Docksal services, you can override the service image like this:
 
 ```bash
 fin config set <SERVICE>_IMAGE=<custom-image>

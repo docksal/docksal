@@ -30,7 +30,7 @@ docksal/nginx:1.15
 docksal/nginx:1.15-1.0
 ```
 
-As described above `...-1.0` means image version here. `docksal/nginx:1.15` will always refer the latest 
+As described above `...-1.0` means image version here. `docksal/nginx:1.15` will always refer to the latest 
 available image version. Right now `docksal/nginx:1.15` is the same as `docksal/nginx:1.15-1.0`, but should
 we release `docksal/nginx:1.15-1.1`, and `docksal/nginx:1.15` would refer to `docksal/nginx:1.15-1.1`, while
 `docksal/nginx:1.15-1.0` would still exist for backwards compatibility. 
@@ -47,9 +47,9 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 
 | Image| Notes |
 |------|------|
-| `docksal/cli:2.10-php7.3` | *Default image* PHP 7.3, Nodejs v12.13.0, Ruby 2.6.5, Python 2.7.16, msmtp |
-| `docksal/cli:2.10-php7.2` | PHP 7.2, Nodejs v12.13.0, Ruby 2.6.5, Python 2.7.16, msmtp |
-| `docksal/cli:2.10-php7.1` | PHP 7.1, Nodejs v12.13.0, Ruby 2.6.5, Python 2.7.16, msmtp |
+| `docksal/cli:2.11-php7.4` | PHP 7.4, Nodejs v12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
+| `docksal/cli:2.11-php7.3` | *Default image* PHP 7.3, Nodejs v12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
+| `docksal/cli:2.11-php7.2` | PHP 7.2, Nodejs v12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
 | `docksal/cli:2-php7.3`   | Latest 2.x image version of PHP 7.3 flavor, convenient when [extending images](/stack/extend-images)
 | `docksal/cli:2-php7.2`   | Latest 2.x image version of PHP 7.2 flavor, convenient when [extending images](/stack/extend-images)
 | `docksal/cli:2-php7.1`   | Latest 2.x image version of PHP 7.1 flavor, convenient when [extending images](/stack/extend-images)
@@ -91,12 +91,12 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 
 | Image| Notes |
 |------|------|
-| `docksal/mysql:5.6-1.4`  | *Default image*, MySQL 5.6 (v. 1.4) |
-| `docksal/mysql:5.6`      | MySQL 5.6 (latest image version) |
-| `docksal/mysql:5.7-1.4`  | MySQL 5.7 (v. 1.4) |
-| `docksal/mysql:5.7`      | MySQL 5.7 (latest 5.7 image version) |
-| `docksal/mysql:8.0-1.4`  | MySQL 8.0 (v. 1.4) |
+| `docksal/mysql:8.0-1.5`  | MySQL 8.0 |
 | `docksal/mysql:8.0`      | MySQL 8.0 (latest 8.0 image version) |
+| `docksal/mysql:5.7-1.5`  | MySQL 5.7 |
+| `docksal/mysql:5.7`      | MySQL 5.7 (latest 5.7 image version) |
+| `docksal/mysql:5.6-1.5`  | MySQL 5.6 (default) |
+| `docksal/mysql:5.6`      | MySQL 5.6 (latest image version) |
 
 ## MariaDB
 
@@ -105,15 +105,15 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 
 | Image| Notes |
 |------|------|
-| `docksal/mariadb:10.3-1.0`     | MariaDB 10.3 |
+| `docksal/mariadb:10.3-1.1`     | MariaDB 10.3 (default) |
 | `docksal/mariadb:10.3`         | MariaDB 10.3 (latest image version) |
-| `docksal/mariadb:10.2-1.0`     | MariaDB 10.2 |
+| `docksal/mariadb:10.2-1.1`     | MariaDB 10.2 |
 | `docksal/mariadb:10.2`         | MariaDB 10.2 (latest image version) |
-| `docksal/mariadb:10.1-1.0`     | MariaDB 10.1 |
+| `docksal/mariadb:10.1-1.1`     | MariaDB 10.1 |
 | `docksal/mariadb:10.1`         | MariaDB 10.1 (latest image version) |
-| `docksal/mariadb:10.0-1.0`     | MariaDB 10.0 |
+| `docksal/mariadb:10.0-1.1`     | MariaDB 10.0 |
 | `docksal/mariadb:10.0`         | MariaDB 10.0 (latest image version) |
-| `docksal/mariadb:5.5-1.0`      | MariaDB 5.5 |
+| `docksal/mariadb:5.5-1.1`      | MariaDB 5.5 |
 | `docksal/mariadb:5.5`          | MariaDB 5.5 (latest image version) |
 
 ## Apache Solr
@@ -124,8 +124,8 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 | Image| Notes |
 |------|------|
 | `docksal/solr:8.1-2.1`      | Apache Solr 8.1 |
-| `docksal/solr:8-2.1`        | Apache Solr 8.1 (latest image version) |
-| `docksal/solr:8.1`          | Apache Solr 8 (latest image version) |
+| `docksal/solr:8-2.1`        | Apache Solr 8.1 |
+| `docksal/solr:8.1`          | Apache Solr 8.1 (latest image version) |
 | `docksal/solr:7.7-2.1`      | Apache Solr 7.7 |
 | `docksal/solr:7-2.1`        | Apache Solr 7.7 |
 | `docksal/solr:7.7`          | Apache Solr 7.7 (latest image version) |
