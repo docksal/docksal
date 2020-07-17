@@ -452,12 +452,13 @@ docker-compose ()
 		unset SSH_AUTH_SOCK
 	fi
 
-	# always create directory for socket
-	export SSH_AUTH_SOCK_DIR="$CONFIG_DIR/tmp/${COMPOSE_PROJECT_NAME_SAFE}"
-	mkdir -p "$SSH_AUTH_SOCK_DIR"
-
-	# Create original socket copy (hardlink) and update SSH_AUTH_SOCK with new socket path
-	if [[ "${SSH_AUTH_SOCK}" != "" ]]; then
+	if is_ci && [[ "${SSH_AUTH_SOCK}" != "" ]]; then
+		# use new ssh socket path based on original ssh socket
+		export SSH_AUTH_SOCK_DIR="/$(echo ${SSH_AUTH_SOCK} | cut -d'/' -f2)/.docksal/${COMPOSE_PROJECT_NAME_SAFE}"
+		# we should create socket directory from current user, overwise docker will create it from root user
+		mkdir -p "$SSH_AUTH_SOCK_DIR"
+		# fix permissions. it required in cases when volume directory created by docker (root user)
+		sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 		# find project ssh sockets and delete unused
 		for SOCK in $(find $SSH_AUTH_SOCK_DIR -type s)
 		do
@@ -471,6 +472,13 @@ docker-compose ()
 		    ln -f $SSH_AUTH_SOCK $SSH_AUTH_SOCK_DIR/$AGENT_ID
 		    export SSH_AUTH_SOCK="$SSH_AUTH_SOCK_DIR/$AGENT_ID"
 		fi
+	else
+		# set default ssh socket directory for project
+		export SSH_AUTH_SOCK_DIR="/tmp/.docksal/${COMPOSE_PROJECT_NAME_SAFE}"
+		# we should create socket directory from current user, overwise docker will create it from root user
+		mkdir -p "$SSH_AUTH_SOCK_DIR"
+		# fix permissions. it required in cases when volume directory created by docker (root user)
+		sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 	fi
 
 	# Call regular docker-compose.
