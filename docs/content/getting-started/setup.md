@@ -87,14 +87,9 @@ With this method, Docker will run inside a VM in VirtualBox.
 
 ### macOS with Docker Desktop {#install-macos-docker-for-mac}
 
-{{% notice warning %}}
-Docker Desktop v2.2.0.0+ versions introduced a regression that breaks Docksal. Please refrain from updating and stick 
-with the version linked below.
-{{% /notice %}}
+1. Install Docker Desktop for Mac v2.3.0.3 (or higher)
 
-1. Install Docker Desktop for Mac v2.1.0.4
-
-    [![Docker Desktop for Mac v2.1.0.4](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/39773/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Mac Stable](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 1. Start Docker Desktop
 
@@ -185,11 +180,6 @@ Click the preferred option to proceed to option-specific docs.
 
 ### Windows and Docker Desktop {#install-windows-docker-for-windows} 
 
-{{% notice warning %}}
-Docker Desktop v2.2.0.0+ versions introduced a regression that breaks Docksal. Please refrain from updating and stick 
-with the version linked below.
-{{% /notice %}}
-
 1. Enable Windows Subsystem for Linux (WSL) support
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
@@ -198,9 +188,9 @@ with the version linked below.
 
     [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
-3. Install Docker Desktop for Windows v2.1.0.3
+3. Install Docker Desktop for Windows v2.3.0.3 (or higher)
 
-    [![Docker Desktop for Windows v2.1.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/38240/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Windows Stable](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
     
 4. Configure Docker Desktop on Windows
 
