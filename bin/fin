@@ -1101,6 +1101,15 @@ is_docker_server_version ()
 	else
 		! [[ -x ${DOCKER_BIN} ]] && return 1
 	fi
+
+	if is_docker_native; then
+		# Override version requirement for Docker Desktop
+		REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DD}
+	elif ! is_linux; then
+		# Override version requirement for VirtualBox/boot2docker
+		REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_B2D}
+	fi
+
 	# Trim \r from output (necessary on Windows)
 	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
@@ -5903,7 +5912,14 @@ sysinfo ()
 
 	echo
 	echo "███  DOCKER"
-	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER"
+	echo "EXPECTED CLIENT VERSION: ${REQUIREMENTS_DOCKER}"
+	if is_linux; then
+		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER}"
+	elif is_docker_native; then
+		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_DD}"
+	else
+		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_B2D}"
+	fi
 	echo
 	docker version
 
@@ -7757,14 +7773,6 @@ export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
 # Create drives bind mounts on wsl
 # E.g. /mnt/c -> /c
 wsl_mount_drives
-
-if is_docker_native; then
-	# Override version requirement for Docker Desktop
-	REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DD}
-elif ! is_linux; then
-	# Override version requirement for VirtualBox/boot2docker
-	REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_B2D}
-fi
 
 # DOCKER_HOST defines how we talk to the docker daemon
 # Linux - via /var/run/docker.sock (DOCKER_HOST='')
