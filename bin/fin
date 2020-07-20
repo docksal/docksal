@@ -136,8 +136,9 @@ wsl_path ()
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='19.03.5'
-REQUIREMENTS_DOCKER_DEBIAN='19.03.9'  # This is the earliest version available for Ubuntu 20.04 (focal) LTS
+REQUIREMENTS_DOCKER='19.03.9'  # This is the earliest version available for Ubuntu 20.04 (focal) LTS
+REQUIREMENTS_DOCKER_DD='19.03.8'  # This is the latest version available with Docker Desktop
+REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
 REQUIREMENTS_DOCKER_COMPOSE='1.26.0'
 REQUIREMENTS_DOCKER_MACHINE='0.16.2'
 REQUIREMENTS_VBOX='6.1.10'  # Remember to update the download URLs below
@@ -335,7 +336,7 @@ URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${RE
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
 URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-x86_64"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
-URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER}/boot2docker.iso"
+URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER_B2D}/boot2docker.iso"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
@@ -765,6 +766,11 @@ is_docker_native ()
 	[[ "$DOCKER_NATIVE" == "1" ]]
 }
 
+is_boot2docker ()
+{
+	! is_linux && ! is_docker_native
+}
+
 # Check if file has crlf endings
 # param $1 filename
 is_crlf ()
@@ -829,7 +835,7 @@ is_docker_running ()
 	# This operation is instant even if docker is not running (assuming a socket is used).
 	# However, if DOCKER_HOST is an HTTP/TLS endpoint and it is down, then this check will take over a minute to fail.
 	# To mitigate this case, we first check for is_docker_machine_running when in docker-machine mode.
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		# Return a distinct code if the machine is down.
 		# This is checked down the road.
 		is_docker_machine_running || return 255
@@ -1104,6 +1110,16 @@ is_docker_server_version ()
 	else
 		! [[ -x ${DOCKER_BIN} ]] && return 1
 	fi
+
+	# Override version requirement for Docker Desktop
+	if is_docker_native; then
+		REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DD}
+	fi
+	# Override version requirement for VirtualBox/boot2docker
+	if is_boot2docker; then
+		REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_B2D}
+	fi
+
 	# Trim \r from output (necessary on Windows)
 	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
@@ -1564,7 +1580,7 @@ show_help ()
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal state (${yellow}fin help system${NC})" "yellow"
-	if [[ ! is_linux && ! is_docker_native ]] || [[ "$TERM" == "dumb" ]]; then
+	if is_boot2docker || [[ "$TERM" == "dumb" ]]; then
 		printh "vm <command>" "Manage Docksal VM (${yellow}fin help vm${NC})" "yellow"
 	fi
 	echo
@@ -3480,7 +3496,7 @@ system_start ()
 # Stops/disables all Docksal things
 system_stop ()
 {
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		# Stop the docker-machine VM.
 		if is_docker_machine_running; then
 			echo-green "Stopping Docksal VM..."
@@ -4668,7 +4684,7 @@ install_virtualbox () {
 update_virtualbox ()
 {
 	# Install or update VirtualBox
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		# Check current VirtualBox version
 		is_vbox_version
 		local res=$?
@@ -4697,7 +4713,7 @@ update_boot2docker ()
 		fi
 
 		local b2d_version=$(docker version --format '{{.Server.Version}}')
-		if (( $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") )); then
+		if (( $(ver_to_int "$REQUIREMENTS_DOCKER_B2D") > $(ver_to_int "$b2d_version") )); then
 			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
 				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
 				echo-alert "This update will destroy and recreate the VM!" \
@@ -4722,7 +4738,7 @@ update_boot2docker ()
 					DEFAULT_MACHINE_ISO_PATH="${HOME}/${DEFAULT_MACHINE_ISO_PATH}"
 				fi
 
-				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
+				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER_B2D}"
 				# Download to temporary location, then move to the permanent location.
 				# This minimizes the chance of getting a corrupt file if the download fails or is interrupted.
 				curl -fL# "${URL_BOOT2DOCKER}" -o "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso"
@@ -5920,7 +5936,14 @@ sysinfo ()
 
 	echo
 	echo "███  DOCKER"
-	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER"
+	echo "EXPECTED CLIENT VERSION: ${REQUIREMENTS_DOCKER}"
+	if is_linux; then
+		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER}"
+	elif is_docker_native; then
+		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_DD}"
+	else
+		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_B2D}"
+	fi
 	echo
 	docker version
 
@@ -5930,7 +5953,7 @@ sysinfo ()
 		docker info
 	fi
 
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		echo
 		echo "███  DOCKER MACHINE"
 		echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_MACHINE"
@@ -7671,9 +7694,6 @@ execute_hook ()
 
 # Debug mode: print all commands
 [[ ${FIN_DEBUG} == 1 ]] && set -x
-
-# Use newer docker version on debian like systems
-is_debian && REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DEBIAN}
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
