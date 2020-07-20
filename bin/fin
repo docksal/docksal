@@ -5943,12 +5943,13 @@ sysinfo ()
 
 		echo
 		echo "███  DOCKSAL: DNS"
-		TEST_URL="http://dns-test.docksal"
-		curl --connect-timeout 2 -sS http://dns-test.docksal >/dev/null
+		[[ ${DOCKSAL_DNS_DISABLED} == 0 ]] && echo "Enabled" || echo "Disabled"
+		TEST_URL="http://dns-test.${DOCKSAL_DNS_DOMAIN}"
+		curl --connect-timeout 2 -sS "${TEST_URL}" >/dev/null
 		if [[ $? != 0 ]]; then
-			echo "ERROR: Requesting $TEST_URL failed!"
+			echo "ERROR: Requesting ${TEST_URL} failed!"
 		else
-			echo "Successfully requested $TEST_URL"
+			echo "Successfully requested ${TEST_URL}"
 		fi
 
 		echo
