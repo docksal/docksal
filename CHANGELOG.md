@@ -1,5 +1,39 @@
 # Changelog
 
+## 1.14.1 (2020-07-20)
+
+### New software versions
+
+- fin v1.98.0
+
+### New features
+
+- Updated projects to include Drupal 9 boilerplate projects (#1385)
+
+### Changes and improvements
+
+- Reverted back to using IP binding for system services with VirtualBox/boot2docker
+  - Only use `0.0.0.0` for vhost-proxy and dns with Docker Desktop 2.2.0.0+ on Mac/Windows
+- Bump `REQUIREMENTS_DOCKER_DESKTOP` to 2.1.0.5
+  - This is the last version before networking regressions were introduced (#1268)
+- Split docker versions based on environment (Linux, Docker Desktop, Boo2docker)
+  - `REQUIREMENTS_DOCKER='19.03.9'` - this is the earliest version available for Ubuntu 20.04 (focal) LTS
+  - `REQUIREMENTS_DOCKER_DD='19.03.8'` - this is the latest version available with Docker Desktop
+  - `REQUIREMENTS_DOCKER_B2D='19.03.5'` - this is the final boot2docker version
+  - Removed `REQUIREMENTS_DOCKER_DEBIAN`
+- Better handling of `ID_LIKE` in `is_debian` (#1377)
+- Added "DOCKSAL: NETWORKING" sections in sysinfo …
+  - Replaced "DOCKSAL: DNS"
+  - Prints network config variables
+  - Added check for DNS resolution/connectivity from containers (and not only host)
+- Added dns settings for run-cli
+
+### Documentation
+
+- Updated versions in setup docs
+  - Added a note in setup docs about Docker Desktop version regressions
+
+
 ## 1.14.0 (2020-07-15)
 
 ### New software versions
