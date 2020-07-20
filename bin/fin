@@ -5390,6 +5390,8 @@ run_cli ()
 			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
+			--dns=${DOCKSAL_DNS1} \
+			--dns=${DOCKSAL_DNS2} \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
@@ -5414,6 +5416,8 @@ run_cli ()
 			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
+			--dns=${DOCKSAL_DNS1} \
+			--dns=${DOCKSAL_DNS2} \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
