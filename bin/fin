@@ -135,8 +135,9 @@ wsl_path ()
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='19.03.5'
-REQUIREMENTS_DOCKER_DEBIAN='19.03.9'  # This is the earliest version available for Ubuntu 20.04 (focal) LTS
+REQUIREMENTS_DOCKER='19.03.9'  # This is the earliest version available for Ubuntu 20.04 (focal) LTS
+REQUIREMENTS_DOCKER_DD='19.03.8'  # This is the latest version available with Docker Desktop
+REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
 REQUIREMENTS_DOCKER_COMPOSE='1.26.0'
 REQUIREMENTS_DOCKER_MACHINE='0.16.2'
 REQUIREMENTS_VBOX='6.1.10'  # Remember to update the download URLs below
@@ -331,7 +332,7 @@ URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${RE
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
 URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-x86_64"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
-URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER}/boot2docker.iso"
+URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER_B2D}/boot2docker.iso"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
@@ -4683,7 +4684,7 @@ update_boot2docker ()
 		fi
 
 		local b2d_version=$(docker version --format '{{.Server.Version}}')
-		if (( $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") )); then
+		if (( $(ver_to_int "$REQUIREMENTS_DOCKER_B2D") > $(ver_to_int "$b2d_version") )); then
 			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
 				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
 				echo-alert "This update will destroy and recreate the VM!" \
@@ -4708,7 +4709,7 @@ update_boot2docker ()
 					DEFAULT_MACHINE_ISO_PATH="${HOME}/${DEFAULT_MACHINE_ISO_PATH}"
 				fi
 
-				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
+				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER_B2D}"
 				# Download to temporary location, then move to the permanent location.
 				# This minimizes the chance of getting a corrupt file if the download fails or is interrupted.
 				curl -fL# "${URL_BOOT2DOCKER}" -o "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso"
@@ -7640,9 +7641,6 @@ execute_hook ()
 # Debug mode: print all commands
 [[ ${FIN_DEBUG} == 1 ]] && set -x
 
-# Use newer docker version on debian like systems
-is_debian && REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DEBIAN}
-
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 if is_tty; then
@@ -7759,6 +7757,14 @@ export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
 # Create drives bind mounts on wsl
 # E.g. /mnt/c -> /c
 wsl_mount_drives
+
+if is_docker_native; then
+	# Override version requirement for Docker Desktop
+	REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DD}
+elif ! is_linux; then
+	# Override version requirement for VirtualBox/boot2docker
+	REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_B2D}
+fi
 
 # DOCKER_HOST defines how we talk to the docker daemon
 # Linux - via /var/run/docker.sock (DOCKER_HOST='')
