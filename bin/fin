@@ -3891,10 +3891,6 @@ install_proxy_service ()
 		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
 	fi
 
-	# Open up vhost-proxy in virtualized environments
-	# This helps with recurring regressions with binding to an IP in Docker Desktop
-	( ! is_linux ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
-
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
 	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
@@ -4001,10 +3997,6 @@ install_dns_service ()
 	fi
 
 	detect_dns
-
-	# Open up dns in virtualized environments
-	# This helps with recurring regressions with binding to an IP in Docker Desktop
-	( ! is_linux ) && DOCKSAL_DNS_IP="0.0.0.0"
 
 	# Stop and remove existing container
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
@@ -7764,6 +7756,21 @@ if is_wsl && is_docker_native; then
 			export DOCKSAL_DNS_DOMAIN=docksal.site
 		fi
 	fi
+fi
+
+# Workarounds for Docker Desktop versions 2.2.0.0+, which introduced multiple networking regressions
+if is_docker_native && (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
+	# Open up vhost-proxy and dns services in Docker Desktop environments
+	# This helps with recurring regressions with binding to an IP in Docker Desktop 2.2.0.0+
+	DOCKSAL_VHOST_PROXY_IP=${DOCKSAL_VHOST_PROXY_IP:-0.0.0.0}
+	DOCKSAL_DNS_IP=${DOCKSAL_DNS_IP:-0.0.0.0}
+
+	# Disable internal DNS resolver and use external domain with Docker Desktop for Windows
+	# This is necessary to have a working setup out of the box without the need to ask the user to manually configure DNS
+	# records using "fin hosts".
+	# See https://github.com/docksal/docksal/issues/1276
+	# Do this only if DOCKSAL_DNS_DOMAIN was not explicitly set (matches the default)
+	is_wsl && [[ "${DOCKSAL_DNS_DOMAIN}" == "${DOCKSAL_DNS_DOMAIN_DEFAULT}" ]] && DOCKSAL_DNS_DISABLED=1
 fi
 
 # Disable internal DNS resolver and use external domain if docksal-dns is disabled
