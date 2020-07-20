@@ -3891,10 +3891,6 @@ install_proxy_service ()
 		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
 	fi
 
-	# Open up vhost-proxy in virtualized environments
-	# This helps with recurring regressions with binding to an IP in Docker Desktop
-	( ! is_linux ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
-
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
 	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
@@ -4001,10 +3997,6 @@ install_dns_service ()
 	fi
 
 	detect_dns
-
-	# Open up dns in virtualized environments
-	# This helps with recurring regressions with binding to an IP in Docker Desktop
-	( ! is_linux ) && DOCKSAL_DNS_IP="0.0.0.0"
 
 	# Stop and remove existing container
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
@@ -5398,6 +5390,8 @@ run_cli ()
 			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
+			--dns=${DOCKSAL_DNS1} \
+			--dns=${DOCKSAL_DNS2} \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
@@ -5422,6 +5416,8 @@ run_cli ()
 			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
+			--dns=${DOCKSAL_DNS1} \
+			--dns=${DOCKSAL_DNS2} \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
@@ -5964,15 +5960,29 @@ sysinfo ()
 		vhosts
 
 		echo
-		echo "███  DOCKSAL: DNS"
-		[[ ${DOCKSAL_DNS_DISABLED} == 0 ]] && echo "Enabled" || echo "Disabled"
+		echo "███  DOCKSAL: NETWORKING"
+		echo
+		echo "DOCKSAL_IP: ${DOCKSAL_IP}"
+		echo "DOCKSAL_VHOST_PROXY_IP: ${DOCKSAL_VHOST_PROXY_IP}"
+		echo "DOCKSAL_DNS_IP: ${DOCKSAL_DNS_IP}"
+		echo "DOCKSAL_DNS_DISABLED: ${DOCKSAL_DNS_DISABLED}"
+		echo "DOCKSAL_NO_DNS_RESOLVER: ${DOCKSAL_NO_DNS_RESOLVER}"
+		echo "DOCKSAL_DNS_UPSTREAM: ${DOCKSAL_DNS_UPSTREAM}"
+		echo "DOCKSAL_DNS_DOMAIN: ${DOCKSAL_DNS_DOMAIN}"
+		echo
 		TEST_URL="http://dns-test.${DOCKSAL_DNS_DOMAIN}"
-		curl --connect-timeout 2 -sS "${TEST_URL}" >/dev/null
-		if [[ $? != 0 ]]; then
-			echo "ERROR: Requesting ${TEST_URL} failed!"
-		else
-			echo "Successfully requested ${TEST_URL}"
-		fi
+		#TEST_CMD="wget -O- ${TEST_URL} &>/dev/null"  # Does not work correctly with Alpine's buysbox/wget
+		TEST_CMD="curl --connect-timeout 2 -sS ${TEST_URL}"
+		echo "Checking connectivity to ${TEST_URL}..."
+		# Test DNS resolution on the host
+		echo -n "Host: "
+		eval ${TEST_CMD} &>/dev/null
+		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
+		# Test DNS resolution in a container
+		echo -n "Containers: "
+		# TODO: figure out how to use busybox/wget in docksal/empty or use our own version with full wget/curl instead
+		docker run --rm --dns="${DOCKSAL_DNS1}" --dns="${DOCKSAL_DNS2}" curlimages/curl sh -c "${TEST_CMD}" &>/dev/null
+		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
 
 		echo
 		echo "███  DOCKER: RUNNING CONTAINERS"
@@ -7764,6 +7774,21 @@ if is_wsl && is_docker_native; then
 			export DOCKSAL_DNS_DOMAIN=docksal.site
 		fi
 	fi
+fi
+
+# Workarounds for Docker Desktop versions 2.2.0.0+, which introduced multiple networking regressions
+if is_docker_native && (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
+	# Open up vhost-proxy and dns services in Docker Desktop environments
+	# This helps with recurring regressions with binding to an IP in Docker Desktop 2.2.0.0+
+	DOCKSAL_VHOST_PROXY_IP=${DOCKSAL_VHOST_PROXY_IP:-0.0.0.0}
+	DOCKSAL_DNS_IP=${DOCKSAL_DNS_IP:-0.0.0.0}
+
+	# Disable internal DNS resolver and use external domain with Docker Desktop for Windows
+	# This is necessary to have a working setup out of the box without the need to ask the user to manually configure DNS
+	# records using "fin hosts".
+	# See https://github.com/docksal/docksal/issues/1276
+	# Do this only if DOCKSAL_DNS_DOMAIN was not explicitly set (matches the default)
+	is_wsl && [[ "${DOCKSAL_DNS_DOMAIN}" == "${DOCKSAL_DNS_DOMAIN_DEFAULT}" ]] && DOCKSAL_DNS_DISABLED=1
 fi
 
 # Disable internal DNS resolver and use external domain if docksal-dns is disabled
