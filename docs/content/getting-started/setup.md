@@ -66,9 +66,9 @@ Click the preferred option to proceed to option-specific docs.
 
 With this method, Docker will run inside a VM in VirtualBox.
 
-1. Install VirtualBox v5.2.32
+1. Install VirtualBox v6.1.10
 
-    [![Download VirtualBox v5.2.32](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](http://download.virtualbox.org/virtualbox/5.2.32/VirtualBox-5.2.32-132073-OSX.dmg)
+    [![Download VirtualBox v6.1.10](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](https://download.virtualbox.org/virtualbox/6.1.10/VirtualBox-6.1.10-138449-OSX.dmg)
 
 1. Enable Kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
 
@@ -88,13 +88,14 @@ With this method, Docker will run inside a VM in VirtualBox.
 ### macOS with Docker Desktop {#install-macos-docker-for-mac}
 
 {{% notice warning %}}
-Docker Desktop v2.2.0.0+ versions introduced a regression that breaks Docksal. Please refrain from updating and stick 
-with the version linked below.
+Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal projects had to be changed from `docksal` to 
+`docksal.site`. If this change has adverse effects for your project(s), you can downgrade Docker Desktop 
+to [v2.1.0.5](https://download.docker.com/mac/stable/40693/Docker.dmg) as a temporary measure.
 {{% /notice %}}
 
-1. Install Docker Desktop for Mac v2.1.0.4
+1. Install Docker Desktop for Mac v2.3.0.3
 
-    [![Docker Desktop for Mac v2.1.0.4](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/39773/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Mac v2.3.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/45519/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 1. Start Docker Desktop
 
@@ -186,8 +187,9 @@ Click the preferred option to proceed to option-specific docs.
 ### Windows and Docker Desktop {#install-windows-docker-for-windows} 
 
 {{% notice warning %}}
-Docker Desktop v2.2.0.0+ versions introduced a regression that breaks Docksal. Please refrain from updating and stick 
-with the version linked below.
+Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal projects had to be changed from `docksal` to 
+`docksal.site`. If this change has adverse effects for your project(s), you can downgrade Docker Desktop 
+to [v2.1.0.5](https://download.docker.com/win/stable/40693/Docker%20Desktop%20Installer.exe) as a temporary measure. 
 {{% /notice %}}
 
 1. Enable Windows Subsystem for Linux (WSL) support
@@ -198,9 +200,9 @@ with the version linked below.
 
     [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
-3. Install Docker Desktop for Windows v2.1.0.3
+3. Install Docker Desktop for Windows v2.3.0.3
 
-    [![Docker Desktop for Windows v2.1.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/38240/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Windows v2.3.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/45519/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
     
 4. Configure Docker Desktop on Windows
 
