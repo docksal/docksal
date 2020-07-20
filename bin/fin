@@ -762,6 +762,11 @@ is_docker_native ()
 	[[ "$DOCKER_NATIVE" == "1" ]]
 }
 
+is_boot2docker ()
+{
+	! is_linux && ! is_docker_native
+}
+
 # Check if file has crlf endings
 # param $1 filename
 is_crlf ()
@@ -826,7 +831,7 @@ is_docker_running ()
 	# This operation is instant even if docker is not running (assuming a socket is used).
 	# However, if DOCKER_HOST is an HTTP/TLS endpoint and it is down, then this check will take over a minute to fail.
 	# To mitigate this case, we first check for is_docker_machine_running when in docker-machine mode.
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		# Return a distinct code if the machine is down.
 		# This is checked down the road.
 		is_docker_machine_running || return 255
@@ -1102,11 +1107,12 @@ is_docker_server_version ()
 		! [[ -x ${DOCKER_BIN} ]] && return 1
 	fi
 
+	# Override version requirement for Docker Desktop
 	if is_docker_native; then
-		# Override version requirement for Docker Desktop
 		REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DD}
-	elif ! is_linux; then
-		# Override version requirement for VirtualBox/boot2docker
+	fi
+	# Override version requirement for VirtualBox/boot2docker
+	if is_boot2docker; then
 		REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_B2D}
 	fi
 
@@ -1570,7 +1576,7 @@ show_help ()
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal state (${yellow}fin help system${NC})" "yellow"
-	if [[ ! is_linux && ! is_docker_native ]] || [[ "$TERM" == "dumb" ]]; then
+	if is_boot2docker || [[ "$TERM" == "dumb" ]]; then
 		printh "vm <command>" "Manage Docksal VM (${yellow}fin help vm${NC})" "yellow"
 	fi
 	echo
@@ -3468,7 +3474,7 @@ system_start ()
 # Stops/disables all Docksal things
 system_stop ()
 {
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		# Stop the docker-machine VM.
 		if is_docker_machine_running; then
 			echo-green "Stopping Docksal VM..."
@@ -4664,7 +4670,7 @@ install_virtualbox () {
 update_virtualbox ()
 {
 	# Install or update VirtualBox
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		# Check current VirtualBox version
 		is_vbox_version
 		local res=$?
@@ -5929,7 +5935,7 @@ sysinfo ()
 		docker info
 	fi
 
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		echo
 		echo "███  DOCKER MACHINE"
 		echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_MACHINE"
