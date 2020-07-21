@@ -4,7 +4,7 @@
 
 ### New software versions
 
-- fin v1.98.0
+- fin v1.99.0
 
 ### New features
 
