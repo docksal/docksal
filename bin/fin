@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.97.0
+FIN_VERSION=1.99.0
 
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
@@ -45,8 +45,9 @@ is_debian ()
 {
 	[[ "$OS_ID" == "ubuntu" ]] ||
 		[[ "$OS_ID" == "debian" ]] ||
-		[[ "$OS_ID_LIKE" == "ubuntu" ]] ||
-		[[ "$OS_ID_LIKE" == "debian" ]]
+		# ID_LIKE is a list of operating system identifiers (e.g., Pop!_OS has ID_LIKE="debian ubuntu")
+		[[ "$OS_ID_LIKE" =~ "ubuntu" ]] ||
+		[[ "$OS_ID_LIKE" =~ "debian" ]]
 }
 
 is_alpine ()
@@ -135,14 +136,15 @@ wsl_path ()
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='19.03.5'
-REQUIREMENTS_DOCKER_DEBIAN='19.03.9'  # This is the earliest version available for Ubuntu 20.04 (focal) LTS
+REQUIREMENTS_DOCKER='19.03.9'  # This is the earliest version available for Ubuntu 20.04 (focal) LTS
+REQUIREMENTS_DOCKER_DD='19.03.8'  # This is the latest version available with Docker Desktop
+REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
 REQUIREMENTS_DOCKER_COMPOSE='1.26.0'
 REQUIREMENTS_DOCKER_MACHINE='0.16.2'
 REQUIREMENTS_VBOX='6.1.10'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
-REQUIREMENTS_DOCKER_DESKTOP='2.0.0.3'
+REQUIREMENTS_DOCKER_DESKTOP='2.1.0.5'  # This is the last version before networking regressions were introduced (#1268)
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
@@ -293,6 +295,9 @@ URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/boilerplate-drupal8.git"
 URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
 URL_REPO_DRUPAL8BLT="https://github.com/docksal/boilerplate-drupal8-blt.git"
+URL_REPO_DRUPAL9="https://github.com/docksal/boilerplate-drupal9.git"
+URL_REPO_DRUPAL9COMPOSER="https://github.com/docksal/boilerplate-drupal9-composer.git"
+URL_REPO_DRUPAL9BLT="https://github.com/docksal/boilerplate-drupal9-blt.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/boilerplate-wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/boilerplate-magento.git"
 URL_REPO_GRAV="https://github.com/docksal/boilerplate-grav.git"
@@ -331,7 +336,7 @@ URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${RE
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
 URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-x86_64"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
-URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER}/boot2docker.iso"
+URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER_B2D}/boot2docker.iso"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
@@ -761,6 +766,11 @@ is_docker_native ()
 	[[ "$DOCKER_NATIVE" == "1" ]]
 }
 
+is_boot2docker ()
+{
+	! is_linux && ! is_docker_native
+}
+
 # Check if file has crlf endings
 # param $1 filename
 is_crlf ()
@@ -825,7 +835,7 @@ is_docker_running ()
 	# This operation is instant even if docker is not running (assuming a socket is used).
 	# However, if DOCKER_HOST is an HTTP/TLS endpoint and it is down, then this check will take over a minute to fail.
 	# To mitigate this case, we first check for is_docker_machine_running when in docker-machine mode.
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		# Return a distinct code if the machine is down.
 		# This is checked down the road.
 		is_docker_machine_running || return 255
@@ -1100,6 +1110,16 @@ is_docker_server_version ()
 	else
 		! [[ -x ${DOCKER_BIN} ]] && return 1
 	fi
+
+	# Override version requirement for Docker Desktop
+	if is_docker_native; then
+		REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DD}
+	fi
+	# Override version requirement for VirtualBox/boot2docker
+	if is_boot2docker; then
+		REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_B2D}
+	fi
+
 	# Trim \r from output (necessary on Windows)
 	local version=$(docker version --format '{{.Server.Version}}' 2>/dev/null | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER") <= $(ver_to_int "$version") ))
@@ -1560,7 +1580,7 @@ show_help ()
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal state (${yellow}fin help system${NC})" "yellow"
-	if [[ ! is_linux && ! is_docker_native ]] || [[ "$TERM" == "dumb" ]]; then
+	if is_boot2docker || [[ "$TERM" == "dumb" ]]; then
 		printh "vm <command>" "Manage Docksal VM (${yellow}fin help vm${NC})" "yellow"
 	fi
 	echo
@@ -3187,27 +3207,30 @@ project_create ()
 	if [[ "$choice" == "" ]]; then
 		echo -e "${yellow}2. What would you like to install?${NC}"
 		echo -e "${blue}  PHP based${NC}"
-		echo -e "${green}    1.${NC}  Drupal 8"
-		echo -e "${green}    2.${NC}  Drupal 8 (Composer Version)"
-		echo -e "${green}    3.${NC}  Drupal 8 (BLT Version)"
-		echo -e "${green}    4.${NC}  Drupal 7"
-		echo -e "${green}    5.${NC}  Wordpress"
-		echo -e "${green}    6.${NC}  Magento"
-		echo -e "${green}    7.${NC}  Laravel"
-		echo -e "${green}    8.${NC}  Symfony Skeleton"
-		echo -e "${green}    9.${NC}  Symfony WebApp"
-		echo -e "${green}    10.${NC} Grav CMS"
-		echo -e "${green}    11.${NC} Backdrop CMS"
+		echo -e "${green}    1.${NC}  Drupal 9 (Composer Version)"
+		echo -e "${green}    2.${NC}  Drupal 9 (BLT Version)"
+		echo -e "${green}    3.${NC}  Drupal 9"
+		echo -e "${green}    4.${NC}  Drupal 8"
+		echo -e "${green}    5.${NC}  Drupal 8 (Composer Version)"
+		echo -e "${green}    6.${NC}  Drupal 8 (BLT Version)"
+		echo -e "${green}    7.${NC}  Drupal 7"
+		echo -e "${green}    8.${NC}  Wordpress"
+		echo -e "${green}    9.${NC}  Magento"
+		echo -e "${green}    10.${NC}  Laravel"
+		echo -e "${green}    11.${NC}  Symfony Skeleton"
+		echo -e "${green}    12.${NC}  Symfony WebApp"
+		echo -e "${green}    13.${NC} Grav CMS"
+		echo -e "${green}    14.${NC} Backdrop CMS"
 		echo
 		echo -e "${acqua}  Go based${NC}"
-		echo -e "${green}    12.${NC} Hugo"
+		echo -e "${green}    15.${NC} Hugo"
 		echo
 		echo -e "${lime}  JS based${NC}"
-		echo -e "${green}    13.${NC} Gatsby JS"
-		echo -e "${green}    14.${NC} Angular"
+		echo -e "${green}    16.${NC} Gatsby JS"
+		echo -e "${green}    17.${NC} Angular"
 		echo
 		echo -e "${magenta}  HTML${NC}"
-		echo -e "${green}    15.${NC} Static HTML site"
+		echo -e "${green}    18.${NC} Static HTML site"
 		echo
 		echo -e "${red}  Custom${NC}"
 		echo -e "${green}    0.${NC} Custom git repository"
@@ -3215,7 +3238,7 @@ project_create ()
 		echo -e ""
 
 		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
-		local choices=15
+		local choices=18
 
 		while [[ "$choice" == "" ]]; do
 			read -p "Enter your choice (0-$choices): " choice
@@ -3229,76 +3252,91 @@ project_create ()
 	# Set target repo
 	case ${choice} in
 		1)
+			target_cms="Drupal 9 (Composer Version)"
+			target_host_name_search_string="drupal9.docksal"
+			target_repo="$URL_REPO_DRUPAL9COMPOSER"
+			;;
+		2)
+			target_cms="Drupal 9 (BLT Version)"
+			target_host_name_search_string="drupal9.docksal"
+			target_repo="$URL_REPO_DRUPAL9COMPOSER"
+			;;
+		3)
+			target_cms="Drupal 9 (BLT Version)"
+			target_host_name_search_string="drupal9.docksal"
+			target_repo="$URL_REPO_DRUPAL9BLT"
+			;;
+		4)
 			target_cms="Drupal 8"
 			target_host_name_search_string="drupal8.docksal"
 			target_repo="$URL_REPO_DRUPAL8"
 			;;
-		2)
+		5)
 			target_cms="Drupal 8 (Composer Version)"
 			target_host_name_search_string="drupal8.docksal"
 			target_repo="$URL_REPO_DRUPAL8COMPOSER"
 			;;
-		3)
+		6)
 			target_cms="Drupal 8 (BLT Version)"
 			target_host_name_search_string="drupal8.docksal"
 			target_repo="$URL_REPO_DRUPAL8BLT"
 			;;
-		4)
+		7)
 			target_cms="Drupal 7"
 			target_host_name_search_string="drupal7.docksal"
 			target_repo="$URL_REPO_DRUPAL7"
 			;;
-		5)
+		8)
 			target_cms="Wordpress"
 			target_host_name_search_string="wordpress.docksal"
 			target_repo="$URL_REPO_WORDPRESS"
 			;;
-		6)
+		9)
 			target_cms="Magento"
 			target_host_name_search_string="magento.docksal"
 			target_repo="$URL_REPO_MAGENTO"
 			;;
-		7)
+		10)
 			target_cms="Laravel"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_LARAVEL"
 			;;
-		8)
+		11)
 			target_cms="Symfony Skeleton"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_SKELETON"
 			;;
-		9)
+		12)
 			target_cms="Symfony WebApp"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_WEBAPP"
 			;;
-		10)
+		13)
 			target_cms="Grav CMS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GRAV"
 			;;
-		11)
+		14)
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
 			target_repo="$URL_REPO_BACKDROP"
 			;;
-		12)
+		15)
 			target_cms="Hugo"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_HUGO"
 			;;
-		13)
+		16)
 			target_cms="Gatsby JS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GATSBY"
 			;;
-		14)
+		17)
 			target_cms="Angular"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_ANGULAR"
 			;;
-		15)
+		18)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
@@ -3458,7 +3496,7 @@ system_start ()
 # Stops/disables all Docksal things
 system_stop ()
 {
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		# Stop the docker-machine VM.
 		if is_docker_machine_running; then
 			echo-green "Stopping Docksal VM..."
@@ -3869,10 +3907,6 @@ install_proxy_service ()
 		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
 	fi
 
-	# Open up vhost-proxy in virtualized environments
-	# This helps with recurring regressions with binding to an IP in Docker Desktop
-	( ! is_linux ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
-
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
 	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
@@ -3979,10 +4013,6 @@ install_dns_service ()
 	fi
 
 	detect_dns
-
-	# Open up dns in virtualized environments
-	# This helps with recurring regressions with binding to an IP in Docker Desktop
-	( ! is_linux ) && DOCKSAL_DNS_IP="0.0.0.0"
 
 	# Stop and remove existing container
 	docker rm -f docksal-dns >/dev/null 2>&1 || true
@@ -4654,7 +4684,7 @@ install_virtualbox () {
 update_virtualbox ()
 {
 	# Install or update VirtualBox
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		# Check current VirtualBox version
 		is_vbox_version
 		local res=$?
@@ -4683,7 +4713,7 @@ update_boot2docker ()
 		fi
 
 		local b2d_version=$(docker version --format '{{.Server.Version}}')
-		if (( $(ver_to_int "$REQUIREMENTS_DOCKER") > $(ver_to_int "$b2d_version") )); then
+		if (( $(ver_to_int "$REQUIREMENTS_DOCKER_B2D") > $(ver_to_int "$b2d_version") )); then
 			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
 				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
 				echo-alert "This update will destroy and recreate the VM!" \
@@ -4708,7 +4738,7 @@ update_boot2docker ()
 					DEFAULT_MACHINE_ISO_PATH="${HOME}/${DEFAULT_MACHINE_ISO_PATH}"
 				fi
 
-				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER}"
+				echo-green "Downloading boot2docker.iso v${REQUIREMENTS_DOCKER_B2D}"
 				# Download to temporary location, then move to the permanent location.
 				# This minimizes the chance of getting a corrupt file if the download fails or is interrupted.
 				curl -fL# "${URL_BOOT2DOCKER}" -o "${CONFIG_DOWNLOADS_DIR}/boot2docker.iso"
@@ -5376,6 +5406,8 @@ run_cli ()
 			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
+			--dns=${DOCKSAL_DNS1} \
+			--dns=${DOCKSAL_DNS2} \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
@@ -5400,6 +5432,8 @@ run_cli ()
 			--mount ${MOUNT_PWD} \
 			--mount ${MOUNT_HOME} \
 			--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent,readonly \
+			--dns=${DOCKSAL_DNS1} \
+			--dns=${DOCKSAL_DNS2} \
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
@@ -5902,7 +5936,14 @@ sysinfo ()
 
 	echo
 	echo "███  DOCKER"
-	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER"
+	echo "EXPECTED CLIENT VERSION: ${REQUIREMENTS_DOCKER}"
+	if is_linux; then
+		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER}"
+	elif is_docker_native; then
+		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_DD}"
+	else
+		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_B2D}"
+	fi
 	echo
 	docker version
 
@@ -5912,7 +5953,7 @@ sysinfo ()
 		docker info
 	fi
 
-	if ! is_linux && ! is_docker_native; then
+	if is_boot2docker; then
 		echo
 		echo "███  DOCKER MACHINE"
 		echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_MACHINE"
@@ -5942,14 +5983,29 @@ sysinfo ()
 		vhosts
 
 		echo
-		echo "███  DOCKSAL: DNS"
-		TEST_URL="http://dns-test.docksal"
-		curl --connect-timeout 2 -sS http://dns-test.docksal >/dev/null
-		if [[ $? != 0 ]]; then
-			echo "ERROR: Requesting $TEST_URL failed!"
-		else
-			echo "Successfully requested $TEST_URL"
-		fi
+		echo "███  DOCKSAL: NETWORKING"
+		echo
+		echo "DOCKSAL_IP: ${DOCKSAL_IP}"
+		echo "DOCKSAL_VHOST_PROXY_IP: ${DOCKSAL_VHOST_PROXY_IP}"
+		echo "DOCKSAL_DNS_IP: ${DOCKSAL_DNS_IP}"
+		echo "DOCKSAL_DNS_DISABLED: ${DOCKSAL_DNS_DISABLED}"
+		echo "DOCKSAL_NO_DNS_RESOLVER: ${DOCKSAL_NO_DNS_RESOLVER}"
+		echo "DOCKSAL_DNS_UPSTREAM: ${DOCKSAL_DNS_UPSTREAM}"
+		echo "DOCKSAL_DNS_DOMAIN: ${DOCKSAL_DNS_DOMAIN}"
+		echo
+		TEST_URL="http://dns-test.${DOCKSAL_DNS_DOMAIN}"
+		#TEST_CMD="wget -O- ${TEST_URL} &>/dev/null"  # Does not work correctly with Alpine's buysbox/wget
+		TEST_CMD="curl --connect-timeout 2 -sS ${TEST_URL}"
+		echo "Checking connectivity to ${TEST_URL}..."
+		# Test DNS resolution on the host
+		echo -n "Host: "
+		eval ${TEST_CMD} &>/dev/null
+		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
+		# Test DNS resolution in a container
+		echo -n "Containers: "
+		# TODO: figure out how to use busybox/wget in docksal/empty or use our own version with full wget/curl instead
+		docker run --rm --dns="${DOCKSAL_DNS1}" --dns="${DOCKSAL_DNS2}" curlimages/curl sh -c "${TEST_CMD}" &>/dev/null
+		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
 
 		echo
 		echo "███  DOCKER: RUNNING CONTAINERS"
@@ -7639,9 +7695,6 @@ execute_hook ()
 # Debug mode: print all commands
 [[ ${FIN_DEBUG} == 1 ]] && set -x
 
-# Use newer docker version on debian like systems
-is_debian && REQUIREMENTS_DOCKER=${REQUIREMENTS_DOCKER_DEBIAN}
-
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 if is_tty; then
@@ -7743,17 +7796,36 @@ if is_wsl && is_docker_native; then
 	fi
 fi
 
+# Workarounds for Docker Desktop versions 2.2.0.0+, which introduced multiple networking regressions
+if is_docker_native && (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
+	# Open up vhost-proxy and dns services in Docker Desktop environments
+	# This helps with recurring regressions with binding to an IP in Docker Desktop 2.2.0.0+
+	DOCKSAL_VHOST_PROXY_IP=${DOCKSAL_VHOST_PROXY_IP:-0.0.0.0}
+	DOCKSAL_DNS_IP=${DOCKSAL_DNS_IP:-0.0.0.0}
+
+	# Disable internal DNS resolver and use external domain with Docker Desktop for Windows
+	# This is necessary to have a working setup out of the box without the need to ask the user to manually configure DNS
+	# records using "fin hosts".
+	# See https://github.com/docksal/docksal/issues/1276
+	# Do this only if DOCKSAL_DNS_DOMAIN was not explicitly set (matches the default)
+	is_wsl && [[ "${DOCKSAL_DNS_DOMAIN}" == "${DOCKSAL_DNS_DOMAIN_DEFAULT}" ]] && DOCKSAL_DNS_DISABLED=1
+fi
+
 # Disable internal DNS resolver and use external domain if docksal-dns is disabled
 if [[ "$DOCKSAL_DNS_DISABLED" == "1" ]]; then
 	export DOCKSAL_NO_DNS_RESOLVER=1
 	export DOCKSAL_DNS_DOMAIN=docksal.site
 fi
 
-# DOCKSAL_IP - Docker/VM IP
-# DOCKSAL_DNS1 - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
-# DOCKSAL_DNS2 - a backup external DNS server
-export DOCKSAL_DNS1=${DOCKSAL_IP}
-export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
+# DNS resolution settings for containers
+if [[ "$DOCKSAL_DNS_DISABLED" == "0" ]]; then
+	export DOCKSAL_DNS1=${DOCKSAL_IP} # DNS resolution via docksal-dns (adds support for *.docksal domains)
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS} # Backup external DNS server
+else
+	# TODO: get rid of container DNS settings altogether when docksal-dns is disabled
+	export DOCKSAL_DNS1=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS} # External DNS server
+	export DOCKSAL_DNS2='9.9.9.9' # Backup external DNS
+fi
 
 # Create drives bind mounts on wsl
 # E.g. /mnt/c -> /c
