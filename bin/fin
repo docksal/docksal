@@ -137,7 +137,7 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
 REQUIREMENTS_DOCKER='19.03.9'  # This is the earliest version available for Ubuntu 20.04 (focal) LTS
-REQUIREMENTS_DOCKER_DD='19.03.8'  # This is the latest version available with Docker Desktop
+REQUIREMENTS_DOCKER_DD='19.03.5'  # This is the version that ships with Docker Desktop 2.1.0.5 (see below)
 REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
 REQUIREMENTS_DOCKER_COMPOSE='1.26.0'
 REQUIREMENTS_DOCKER_MACHINE='0.16.2'
@@ -924,7 +924,7 @@ check_docker_server_version ()
 	if ! is_docker_server_version; then
 		# Since we do not control Docker Desktop, ask user to update manually when necessary
 		if is_docker_native; then
-			echo-alert "Please update Docker Desktop to the latest version manually." \
+			echo-alert "Please update Docker Desktop manually." \
 				"Expected Docker Desktop version: ${REQUIREMENTS_DOCKER_DESKTOP}"
 		else
 			echo-alert "Required Docker server version is $REQUIREMENTS_DOCKER" \
