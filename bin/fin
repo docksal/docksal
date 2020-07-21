@@ -469,9 +469,9 @@ docker-compose ()
 		# skip creation socket copy if already exists
 		if [[ ! -S $SSH_AUTH_SOCK_DIR/$AGENT_ID ]]
 		then
-		    ln -f $SSH_AUTH_SOCK $SSH_AUTH_SOCK_DIR/$AGENT_ID
-		    export SSH_AUTH_SOCK="$SSH_AUTH_SOCK_DIR/$AGENT_ID"
+			ln -f $SSH_AUTH_SOCK $SSH_AUTH_SOCK_DIR/$AGENT_ID
 		fi
+		export SSH_AUTH_SOCK="$SSH_AUTH_SOCK_DIR/$AGENT_ID"
 	else
 		# set default ssh socket directory for project
 		export SSH_AUTH_SOCK_DIR="/tmp/.docksal/${COMPOSE_PROJECT_NAME_SAFE}"
