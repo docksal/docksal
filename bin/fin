@@ -7817,11 +7817,15 @@ if [[ "$DOCKSAL_DNS_DISABLED" == "1" ]]; then
 	export DOCKSAL_DNS_DOMAIN=docksal.site
 fi
 
-# DOCKSAL_IP - Docker/VM IP
-# DOCKSAL_DNS1 - IP used for DNS resolution by containers via docksal-dns (adds support for *.docksal domains)
-# DOCKSAL_DNS2 - a backup external DNS server
-export DOCKSAL_DNS1=${DOCKSAL_IP}
-export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS}
+# DNS resolution settings for containers
+if [[ "$DOCKSAL_DNS_DISABLED" == "0" ]]; then
+	export DOCKSAL_DNS1=${DOCKSAL_IP} # DNS resolution via docksal-dns (adds support for *.docksal domains)
+	export DOCKSAL_DNS2=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS} # Backup external DNS server
+else
+	# TODO: get rid of container DNS settings altogether when docksal-dns is disabled
+	export DOCKSAL_DNS1=${DOCKSAL_DNS_UPSTREAM:-$DOCKSAL_DEFAULT_DNS} # External DNS server
+	export DOCKSAL_DNS2='9.9.9.9' # Backup external DNS
+fi
 
 # Create drives bind mounts on wsl
 # E.g. /mnt/c -> /c
