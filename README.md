@@ -4,7 +4,7 @@
 [![Blog](https://img.shields.io/badge/📖-Read%20the%20Blog-orange.svg)](https://blog.docksal.io)
 [![Chat](https://img.shields.io/gitter/room/docksal/community-support.svg)](https://gitter.im/docksal/community-support)
 
-Docker powered environments for web development on macOS, Windows, and Linux.
+Docker powered environments for web development on macOS, Windows, and Linux. Unified development environment for your team regardless of the OS.
 
 Running Drupal, Wordpress, Magento, Laravel, Symfony, Backdrop, Grav, Hugo, Gatsby,
 and others can be one step away with ready-to-use boilerplates.
@@ -13,37 +13,31 @@ and others can be one step away with ready-to-use boilerplates.
 fin project create
 ```
 
-Create your [custom automation](https://docs.docksal.io/fin/custom-commands/) in Bash, PHP or Node
-to spin up your project anywhere where Docksal is with a single command, or to automate regular tasks. A unified
-environment ensures that your automation will work for everyone in your team.
-
-## Better than VMs
-
-"I love my Vagrant box. Why would I want to switch to a Docker based solution?"  
-
-Containers are just [Better than VMs](https://www.youtube.com/watch?v=jev2EW2hzdY): 
-smaller, faster, portable, and more efficient across the board.
-
-Unified development environment for your team regardless of the OS.
-
 Unprecedented ability to automate routine tasks, slashing the time to on-board new team members.
+
+Create your [custom automation](https://docs.docksal.io/fin/custom-commands/) in Bash, PHP or Node
+to spin up your project anywhere where Docksal is with a single command, or automate routine tasks. 
 
 <a name="setup"></a>
 <a name="updates"></a>
 <a name="getting-started"></a>
 ## Getting Started
 
-Follow the [Getting Started](https://docs.docksal.io/getting-started/) steps.
-
-Then simply try
+After following the [Getting Started steps](https://docs.docksal.io/getting-started/) simply try:
 
 ```bash
 fin project create
 ```
 
-If you would like to be in more control, clone one of the pre-configured boilerplate project repos to your local 
-and run `fin init`.
+A wizard will guide you throught new pre-configured project in any CMS below. Wizard will create 
+a proper Docker depending on the project boilerplate choes, and install a working empty project
+preconfigured for Docksal that you can build upon.
 
+In case you want to be have full control, you can clone one the boilerplate projects below and run `fin init`.
+
+- [Drupal 9](https://github.com/docksal/boilerplate-drupal9)
+- [Drupal 9 Composer](https://github.com/docksal/boilerplate-drupal9-composer)
+- [Drupal 9 BLT](https://github.com/docksal/boilerplate-drupal9-blt)
 - [Drupal 8](https://github.com/docksal/boilerplate-drupal8)
 - [Drupal 8 Composer](https://github.com/docksal/boilerplate-drupal8-composer)
 - [Drupal 8 BLT](https://github.com/docksal/boilerplate-drupal8-blt)
