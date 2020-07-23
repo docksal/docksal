@@ -11,7 +11,7 @@ Docker powered web development environments for macOS, Windows, and Linux. Unifi
 - Full power of Docker Compose to suit any project without artificial syntax limitations
 - Unprecedented ability to automate routine tasks, slashing the time to on-board new team members.
 
-    Create your [custom automation](https://docs.docksal.io/fin/custom-commands/) in Bash, PHP or Node
+    Create your [custom automation](https://docs.docksal.io/fin/custom-commands/) in Bash, PHP, or Node
 to spin up your project anywhere where Docksal is with a single command, or automate routine tasks. 
 
 - Best in class filesystem performance
@@ -23,19 +23,19 @@ and others is one step away with ready-to-use boilerplates.
 <a name="getting-started"></a>
 ## Welcome onboard
 
-[Install Docksal](https://docs.docksal.io/getting-started/setup/), cd to the desired directory and run:
+[Install Docksal](https://docs.docksal.io/getting-started/setup/), cd to the desired directory, and run:
 
 ```bash
 fin project create
 ```
 
-The wizard will guide you throught creation of new project using any of Instant Boilerplate Projects below. 
-The wizard will create the proper Docker containers stack depending on the project choice, and install 
-a working empty project preconfigured for running in Docksal, that you can build upon.
+The wizard will guide you throughout the creation of a new project using any of the Instant Boilerplate Projects listed below.
+The wizard will create the proper Docker containers stack, depending on the project choice, and install
+a working empty project preconfigured for running in Docksal that you can build upon.
 
 ## Instant Boilerplate Projects
 
-In case you want to be have full control, you can clone one the boilerplate projects below and run `fin init`.
+In case you want to be in full control, you can clone one the boilerplate projects below and run `fin init`.
 
 - [Drupal 9](https://github.com/docksal/boilerplate-drupal9)
 - [Drupal 9 Composer](https://github.com/docksal/boilerplate-drupal9-composer)
