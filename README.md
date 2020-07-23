@@ -29,9 +29,9 @@ and others is one step away with ready-to-use boilerplates.
 fin project create
 ```
 
-The wizard will guide you throught creation of new project using any of setups below. The wizard will create 
-a proper Docker containers stack, depending on the project choice, and install a working empty project
-preconfigured for running in Docksal, that you can build upon.
+The wizard will guide you throught creation of new project using any of Instant Boilerplate Projects below. 
+The wizard will create the proper Docker containers stack depending on the project choice, and install 
+a working empty project preconfigured for running in Docksal, that you can build upon.
 
 ## Instant Boilerplate Projects
 
