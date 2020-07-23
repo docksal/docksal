@@ -1569,10 +1569,10 @@ show_help ()
 			fi
 	fi
 
+	echo "Docksal command line utility (v$FIN_VERSION)"
+	echo "Docksal docs: https://docs.docksal.io/"
 	echo
-	echo "Docksal command line utility v$FIN_VERSION"
-	echo
-	echo "Usage: fin <command>"
+	echo "Usage: fin [command]"
 	echo
 
 	echo-green "Management Commands:"
@@ -1627,7 +1627,7 @@ show_help ()
 	load_global_configuration
 	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH" || ! empty_dir "$HOME/$DOCKSAL_ADDONS_PATH"; then
 		echo
-		echo-green "Addons:"
+		echo-green "Addons found:"
 	fi
 	if [[ ! -z "$(get_project_path)" ]]; then
 		show_help_list_addons_in_help 'project'
@@ -1639,7 +1639,7 @@ show_help ()
 	# Show list of custom commands and their help if available
 	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_COMMANDS_PATH" || ! empty_dir "$HOME/$DOCKSAL_COMMANDS_PATH"; then
 		echo
-		echo-green "Custom commands:"
+		echo-green "Custom commands found:"
 	fi
 	if [[ ! -z "$(get_project_path)" ]]; then
 		show_help_list_commands_in_help 'project'
