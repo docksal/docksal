@@ -445,32 +445,47 @@ docker-compose ()
 		COMPOSE_FILE="${docksal_yml_file}${SEPARATOR}${COMPOSE_FILE}"
 	fi
 
-	# By default, we use the built-in SSH agent unless DOCKSAL_SSH_AGENT_USE_HOST=1
-	# On Linux, we can directly mount the SSH auth socket into the container.
-	# On Mac/Win, we proxy the Unix socket through TCP on Docksal's host IP.
+	# By default, we use the built-in docksal-ssh-agent unless DOCKSAL_SSH_AGENT_USE_HOST=1
+	# To use host's ssh-agent on Linux, we can directly mount the SSH auth socket into the container.
+	# To use host's ssh-agent on on Mac/Win, we proxy the Unix socket through TCP on DOCKSAL_IP.
 	if ! is_linux || [[ "$DOCKSAL_SSH_AGENT_USE_HOST" != "1" ]]; then
 		unset SSH_AUTH_SOCK
 	fi
 
-	# always create directory for socket
-	export SSH_AUTH_SOCK_DIR="$CONFIG_DIR/tmp/${COMPOSE_PROJECT_NAME_SAFE}"
-	mkdir -p "$SSH_AUTH_SOCK_DIR"
-
-	# Create original socket copy (hardlink) and update SSH_AUTH_SOCK with new socket path
-	if [[ "${SSH_AUTH_SOCK}" != "" ]]; then
+	# Create a "shadow" ssh-agent socket for cli on a Linux server (used for ssh-agent forwarding)
+	# This "black magic" is necessary to avoid issues with ssh-agent forwarding on Linux sandbox servers.
+	# Without this, cli container would start with a forwarded ssh-agent socket mounted from an admin or docksal/ci-agent
+	# session. When the session is disconnected, the mounted socket would be removed, which makes the mount invalid and
+	# thus results in a broken stack when vhost-proxy attempts to start a stopped project.
+	# docksal/vhost-proxy operates with docker commands and cannot update config for containers in the stack automatically.
+	if is_ci && [[ "${SSH_AUTH_SOCK}" != "" ]]; then
+		# Derive a custom ssh-agent socket path from the original value
+		# The socket must reside on the same volume or we'll get "Invalid cross-device link"
+		# Example: SSH_AUTH_SOCK=/tmp/ssh-KweeHCNAIt/agent.1909 => SSH_AUTH_SOCK_DIR /tmp/.docksal/project
+		export SSH_AUTH_SOCK_DIR="/$(echo ${SSH_AUTH_SOCK} | cut -d'/' -f2)/.docksal/${COMPOSE_PROJECT_NAME_SAFE}"
+		# Create socket directory under the current user, otherwise docker will create as root, which will case issues
+		mkdir -p "$SSH_AUTH_SOCK_DIR"
+		# Fix permissions in cases when the volume directory has been already created by docker (root user)
+		sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 		# find project ssh sockets and delete unused
-		for SOCK in $(find $SSH_AUTH_SOCK_DIR -type s)
-		do
-		    # remove unused socket
-		    (SSH_AUTH_SOCK=${SOCK} && ssh-add -L >/dev/null 2>&1) || rm -f ${SOCK}
+		for socket in $(find ${SSH_AUTH_SOCK_DIR} -type s); do
+			# Remove unused socket
+			(SSH_AUTH_SOCK=${socket} && ssh-add -L >/dev/null 2>&1) || rm -f ${socket}
 		done
-		AGENT_ID=$(basename $SSH_AUTH_SOCK)
-		# skip creation socket copy if already exists
-		if [[ ! -S $SSH_AUTH_SOCK_DIR/$AGENT_ID ]]
+		AGENT_ID=$(basename ${SSH_AUTH_SOCK})
+		# Create socket link unless one already exits
+		if [[ ! -S "$SSH_AUTH_SOCK_DIR/$AGENT_ID" ]]
 		then
-		    ln -f $SSH_AUTH_SOCK $SSH_AUTH_SOCK_DIR/$AGENT_ID
-		    export SSH_AUTH_SOCK="$SSH_AUTH_SOCK_DIR/$AGENT_ID"
+			ln -f ${SSH_AUTH_SOCK} "$SSH_AUTH_SOCK_DIR/$AGENT_ID"
 		fi
+		# Override ssh-agent socket with out shadow copy
+		export SSH_AUTH_SOCK="$SSH_AUTH_SOCK_DIR/$AGENT_ID"
+	else
+		# When there's no SSH_AUTH_SOCK, we have to provide a dummy SSH_AUTH_SOCK_DIR,
+		# otherwise cli will have an invalid volume definition (see stacks/services.yml:cli)
+		export SSH_AUTH_SOCK_DIR="/tmp/.docksal/${COMPOSE_PROJECT_NAME_SAFE}"
+		mkdir -p "$SSH_AUTH_SOCK_DIR"
+		sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 	fi
 
 	# Call regular docker-compose.
