@@ -5493,8 +5493,12 @@ _mysql ()
 	if is_tty || [[ -z "${ARGV[*]}" ]]; then
 		__pty_command="${winpty}"
 	fi
+	local __pty_alloc=''
+	if is_tty; then
+		__pty_alloc='-t'
+	fi
 
-	${__pty_command} docker exec -it "${container_id}" mysql \
+	${__pty_command} docker exec -i ${__pty_alloc} "${container_id}" mysql \
 		-u"${__dump_user}" \
 		-p"${__dump_password}" \
 		${__database} \

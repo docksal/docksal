@@ -51,6 +51,16 @@ TERM=dumb
 	unset output
 }
 
+@test "fin db create without tty" {
+	[[ $SKIP == 1 ]] && skip
+
+	dbname="testnotty"
+	echo "fin db create ${dbname}" | bash
+
+	# Cleanup
+	run fin db drop "${dbname}"
+}
+
 @test "fin db drop and recreate default" {
 	[[ $SKIP == 1 ]] && skip
 
