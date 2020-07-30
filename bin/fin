@@ -466,7 +466,7 @@ docker-compose ()
 		# Create socket directory under the current user, otherwise docker will create as root, which will case issues
 		mkdir -p "$SSH_AUTH_SOCK_DIR"
 		# Fix permissions in cases when the volume directory has been already created by docker (root user)
-		sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
+		[[ ! -O "$SSH_AUTH_SOCK_DIR" ]] && sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 		# find project ssh sockets and delete unused
 		for socket in $(find ${SSH_AUTH_SOCK_DIR} -type s); do
 			# Remove unused socket
@@ -485,7 +485,8 @@ docker-compose ()
 		# otherwise cli will have an invalid volume definition (see stacks/services.yml:cli)
 		export SSH_AUTH_SOCK_DIR="/tmp/.docksal/${COMPOSE_PROJECT_NAME_SAFE}"
 		mkdir -p "$SSH_AUTH_SOCK_DIR"
-		sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
+		# Fix permissions in cases when the volume directory has been already created by docker (root user)
+		[[ ! -O "$SSH_AUTH_SOCK_DIR" ]] && sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 	fi
 
 	# Call regular docker-compose.
