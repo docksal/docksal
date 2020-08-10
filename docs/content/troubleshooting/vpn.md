@@ -4,8 +4,8 @@ weight: 2
 ---
 
 {{% notice warning %}}
-The approach described here is only possible on Linux or Docker Desktop (Mac and Windows). It won't work when using 
-Docksal with VirtualBox.
+The approach described here is only possible with Docker Desktop (Mac and Windows). It won't work when using 
+Docksal with VirtualBox on Mac/Windows, nor will it help on Linux.
 {{% /notice %}}
 
 Some VPNs are configured to intercept and re-route all traffic (let's call them "greedy"), thus breaking 
