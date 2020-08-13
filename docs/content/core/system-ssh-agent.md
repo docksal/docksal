@@ -44,7 +44,7 @@ Commands:
 
 Examples:
   fin ssh-key add          	Loads all SSH keys with default names: id_rsa/id_dsa/id_ecdsa from $HOME/.ssh/
-  fin ssh-key server_rsa   	Loads the key stored in $HOME/.ssh/server_id_rsa into the agent
+  fin ssh-key add server_rsa   	Loads the key stored in $HOME/.ssh/server_id_rsa into the agent
   fin ssh-key new server2_rsa	Generates a new SSH key pair in ~/.ssh/server2_id_rsa
 ```
 
