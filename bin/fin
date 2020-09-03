@@ -3275,12 +3275,12 @@ project_create ()
 		2)
 			target_cms="Drupal 9 (BLT Version)"
 			target_host_name_search_string="drupal9.docksal"
-			target_repo="$URL_REPO_DRUPAL9COMPOSER"
+			target_repo="$URL_REPO_DRUPAL9BLT"
 			;;
 		3)
-			target_cms="Drupal 9 (BLT Version)"
+			target_cms="Drupal 9"
 			target_host_name_search_string="drupal9.docksal"
-			target_repo="$URL_REPO_DRUPAL9BLT"
+			target_repo="$URL_REPO_DRUPAL9"
 			;;
 		4)
 			target_cms="Drupal 8"
