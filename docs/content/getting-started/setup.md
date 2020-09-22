@@ -22,6 +22,8 @@ CPU with SSE4.2 instruction set supported (most CPUs). If you get output from th
 cat /proc/cpuinfo | grep sse4_2
 ``` 
 
+If the output is empty, see the [troubleshooting](../troubleshooting/common-issues.md#sse4_2) docs for a workaround.  
+
 ### Windows
 
 Windows 10 and CPU with hardware virtualization (**VT-x/AMD-V**) supported and [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
