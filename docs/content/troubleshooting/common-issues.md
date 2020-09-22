@@ -400,3 +400,31 @@ Grant **Full Disk Access** privileges  to `/sbin/nfsd`:
 Alternatively, you can move the project's codebase out of the restricted user folder (not helpful for external disks).
 
 See [blog post](https://blog.docksal.io/nfs-access-issues-on-macos-10-15-catalina-75cd23606913) for more details.
+
+
+## Issue 17. Host CPU does not support SSE 4.2 instruction set {#sse4_2}
+
+Symptoms:
+
+- `vhost-proxy` won't start
+- `fin docker exet -it docker-vhost-proxy nginx -t` outputs `Illegal instruction (core dumped)`
+- Output from `cat /proc/cpuinfo | grep sse4_2` on the host is empty. 
+
+Docksal's [vhost-proxy](/core/system-vhost-proxy) system service uses [OpenResty](https://github.com/openresty/openresty) 
+under the hood. The official OpenResty binary packages [require](https://github.com/openresty/openresty/issues/267#issuecomment-309296900) 
+SSE4.2 support in the host CPU.
+
+### How to Resolve
+
+As a temporary workaround, vhost-proxy can be downgraded to version 1.2:
+
+```bash
+fin config set --global IMAGE_VHOST_PROXY=docksal/vhost-proxy:1.2
+fin system reset vhost-proxy
+```
+
+{{% notice warning %}}
+There is no guarantee that pinning the vhost-proxy image won't result in incompatibility issues with the latest versions of Docksal.
+{{% /notice %}}
+
+Long term fix: consider switching to a host with a modern CPU with SSE 4.2 support.
