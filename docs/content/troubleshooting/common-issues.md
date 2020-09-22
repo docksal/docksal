@@ -424,8 +424,7 @@ fin system reset vhost-proxy
 ```
 
 {{% notice warning %}}
-There is no guarantee that pinning the vhost-proxy image long term won't result in incompatibility issues with 
-the latest versions of Docksal.
+There is no guarantee that pinning the vhost-proxy image won't result in incompatibility issues with the latest versions of Docksal.
 {{% /notice %}}
 
 Long term fix: consider switching to a host with a modern CPU with SSE 4.2 support.
