@@ -410,7 +410,7 @@ Symptoms:
 - `fin docker exet -it docker-vhost-proxy nginx -t` outputs `Illegal instruction (core dumped)`
 - Output from `cat /proc/cpuinfo | grep sse4_2` on the host is empty. 
 
-Docksal's [vhost-proxy](../core/system-vhost-proxy.md) system service uses [OpenResty](https://github.com/openresty/openresty) 
+Docksal's [vhost-proxy](/core/system-vhost-proxy) system service uses [OpenResty](https://github.com/openresty/openresty) 
 under the hood. The official OpenResty binary packages [require](https://github.com/openresty/openresty/issues/267#issuecomment-309296900) 
 SSE4.2 support in the host CPU.
 

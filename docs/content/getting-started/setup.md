@@ -22,7 +22,7 @@ CPU with SSE4.2 instruction set supported (most CPUs). If you get output from th
 cat /proc/cpuinfo | grep sse4_2
 ``` 
 
-If the output is empty, see the [troubleshooting](../troubleshooting/common-issues.md#sse4_2) docs for a workaround.  
+If the output is empty, see the [troubleshooting](/troubleshooting/common-issues#sse4_2) docs for a workaround.  
 
 ### Windows
 
