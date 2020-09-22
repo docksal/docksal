@@ -163,7 +163,7 @@ Only used on Mac and Windows if `DOCKSAL_SSH_AGENT_USE_HOST` is set to `1`.
 
 `Default: 0` 
 
-When set to `1`, `fin` will not send [minimal statistic information](../core/analytics.md).
+When set to `1`, `fin` will not send [minimal statistic information](/core/analytics).
 
 ### DOCKSAL_VERSION
 
@@ -202,15 +202,15 @@ User ID for the Container User. On MacOS & Linux defaults to current user accoun
 
 ### IMAGE_DNS
 
-Docker image to use for [dns service](../core/system-dns.md).
+Docker image to use for [dns service](/core/system-dns).
 
 ### IMAGE_SSH_AGENT
 
-Docker image to use for [ssh-agent service](../core/system-ssh-agent.md).
+Docker image to use for [ssh-agent service](/core/system-ssh-agent).
 
 ### IMAGE_VHOST_PROXY
 
-Docker image to use as the [vhost-proxy service](../core/system-vhost-proxy.md).
+Docker image to use as the [vhost-proxy service](/core/system-vhost-proxy).
 
 ### SECRET_ACAPI_EMAIL (global or project)
 
