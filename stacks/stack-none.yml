@@ -1,0 +1,5 @@
+# Blank stack
+#
+# Useful for custom docker-compose needs that want to use Docksal DNS and Proxy
+
+version: "2.1"
