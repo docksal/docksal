@@ -97,4 +97,4 @@ When using a shared cert (multiple domains), you can set the shared cert file na
 fin config set VIRTUAL_HOST_CERT_NAME='example.com'
 ```
 
-Restart the project with `fin projet restart`
+Restart the project with `fin project restart`
