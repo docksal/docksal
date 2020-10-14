@@ -906,11 +906,11 @@ testing_warn ()
 		echo-yellow "[!] Using Docksal version: ${DOCKSAL_VERSION}"
 }
 
-# Convert version string like 1.2.3 to integer for comparison
-# param $1 version string of 3 components max (e.g., 1.10.3)
+# Convert version string like 1.2.3.4 to integer for comparison
+# param $1 version string of 4 components max (e.g., 1.10.3.0)
 ver_to_int ()
 {
-	echo "$@" | awk -F. '{ printf("%d%03d%03d", $1,$2,$3); }'
+	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d", $1,$2,$3,$4); }'
 }
 
 #---------------------------- Control functions -------------------------------
