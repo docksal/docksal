@@ -310,6 +310,7 @@ URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/boilerplate-symfony-webapp.g
 URL_REPO_BACKDROP="https://github.com/docksal/boilerplate-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
+STACKS_OVERRIDES_DD_BIND="overrides-dd-bind.yml"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
 STACKS_OVERRIDES_XHPROF="overrides-xhprof.yml"
 STACKS_SERVICES="services.yml"
@@ -905,11 +906,11 @@ testing_warn ()
 		echo-yellow "[!] Using Docksal version: ${DOCKSAL_VERSION}"
 }
 
-# Convert version string like 1.2.3 to integer for comparison
-# param $1 version string of 3 components max (e.g., 1.10.3)
+# Convert version string like 1.2.3.4 to integer for comparison
+# param $1 version string of 4 components max (e.g., 1.10.3.0)
 ver_to_int ()
 {
-	echo "$@" | awk -F. '{ printf("%d%03d%03d", $1,$2,$3); }'
+	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d", $1,$2,$3,$4); }'
 }
 
 #---------------------------- Control functions -------------------------------
@@ -1095,7 +1096,8 @@ docker_desktop_version ()
 	fi
 
 	if is_wsl; then
-		grep -Po '"Informational":.*?[^\\]"' '/mnt/c/Program Files/Docker/Docker/resources/componentsVersion.json' | cut -d : -f2 | awk -F\" '{print $2}'
+		# Query Windows registry for the "Docker Desktop" app "DisplayVersion"
+		powershell.exe 'Get-ItemPropertyValue "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Docker Desktop" DisplayVersion'
 	fi
 }
 
@@ -4801,6 +4803,7 @@ update_tools ()
 update_config_files ()
 {
 	files_to_download="
+			$STACKS_OVERRIDES_DD_BIND
 			$STACKS_OVERRIDES_IDE
 			$STACKS_OVERRIDES_XHPROF
 			$STACKS_SERVICES
@@ -6221,7 +6224,7 @@ load_configuration ()
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 		fi
 
-		# Include a volumes yml if requested. Use bind mount for volumes by default.
+		# Include a volumes yml if requested. Use bind mount volumes by default.
 		if is_mac; then
 			# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
 			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
@@ -6242,12 +6245,24 @@ load_configuration ()
 		fi
 		export DOCKSAL_VOLUMES
 
+		# Fix bind volumes on Docker Desktop v2.3.0.2+
+		# See https://github.com/docksal/docksal/issues/1368
+		overrides_dd_bind_file="$(get_config_dir_dc)/stacks/overrides-dd-bind.yml"
+		if [[ -f "${overrides_dd_bind_file}" ]] && \
+			is_docker_native && \
+			(( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.3.0.2') )) && \
+			[[ "$DOCKSAL_VOLUMES" == "bind" ]];
+		then
+			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_dd_bind_file}"
+		fi
+
 		# Enable VSCode (Coder) IDE
 		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
 		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
 			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
 		fi
 
+		# Enable xhprof integration
 		overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
 		if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
 			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
