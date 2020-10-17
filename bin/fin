@@ -1096,7 +1096,8 @@ docker_desktop_version ()
 	fi
 
 	if is_wsl; then
-		grep -Po '"Informational":.*?[^\\]"' '/mnt/c/Program Files/Docker/Docker/resources/componentsVersion.json' | cut -d : -f2 | awk -F\" '{print $2}'
+		# Query Windows registry for the "Docker Desktop" app "DisplayVersion"
+		powershell.exe 'Get-ItemPropertyValue "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Docker Desktop" DisplayVersion'
 	fi
 }
 
