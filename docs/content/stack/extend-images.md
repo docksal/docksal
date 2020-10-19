@@ -66,6 +66,7 @@ RUN \
 
 # All further commands will be performed as the docker user.
 USER docker
+SHELL ["/bin/bash", "-c"]
 
 # Install additional global npm dependencies
 RUN \
