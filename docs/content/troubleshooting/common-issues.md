@@ -227,7 +227,12 @@ different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`)
 
 #### Windows
 
-TBD
+To check which process uses TCP ports 80/443, run the following in a powershell window:
+
+```
+Get-Process -Id (Get-NetTCPConnection -LocalPort 80).OwningProcess
+Get-Process -Id (Get-NetTCPConnection -LocalPort 443).OwningProcess
+```
 
 ## Issue 6. Config Permissions Issue (VM does not start) {#issue-06}
 
