@@ -6196,19 +6196,13 @@ load_configuration ()
 
 		# Allow to define the stack file via DOCKSAL_STACK
 		# Set it to "default" if empty and there is no project yml file
+		[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
 		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
-
-		# Allow to entirely omit stack config / use custom stack (DOCKSAL_STACK=custom).
-		if [[ "$DOCKSAL_STACK" == "custom" ]]; then
-			true # No stack config loaded in this case.
-		else
-			stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
-			[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
-				echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
-					"Stack file does not exist: $stack_yml_file" &&
-				exit 1
-		fi
-		export DOCKSAL_STACK
+		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+		[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
+			echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
+				"Stack file does not exist: $stack_yml_file" &&
+			exit 1
 
 		# Include both the stack and the project yml files if both exist
 		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
@@ -6238,10 +6232,7 @@ load_configuration ()
 			# Bind mounted volumes on all other systems
 			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
 		fi
-		# Allow to entirely omit volumes config (DOCKSAL_VOLUMES=disabled)
-		if [[ "$DOCKSAL_VOLUMES" == "disabled" ]]; then
-			true # No volumes config loaded in this case.
-		else
+		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
 			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 			if [[ -f "$volumes_yml_file" ]]; then
 				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
