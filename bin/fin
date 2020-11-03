@@ -6232,7 +6232,7 @@ load_configuration ()
 			# Bind mounted volumes on all other systems
 			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
 		fi
-		if [[ "$DOCKSAL_VOLUMES" != "disable" ]]; then
+		if [[ "$DOCKSAL_VOLUMES" != "disabled" ]]; then
 			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
 			if [[ -f "$volumes_yml_file" ]]; then
 				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
