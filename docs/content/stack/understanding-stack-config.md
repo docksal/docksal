@@ -53,22 +53,30 @@ These files are intended for local overrides. They should be added to `.gitignor
 repo. You can always include an example file in the repo, e.g., `example.docksal-local.env`, and instruct users to copy 
 it and adjust as necessary.
 
-## Default Stacks {#default-configurations}
+## Default Configurations {#default-configurations}
 
 Docksal ships with a set of default configurations (stacks), which are `yml` files stored in `$HOME/.docksal/stacks/`.
-These files are a good reference when you begin creating a custom project configuration.
+These files are a good reference when you begin creating a [custom project configuration](/stack/custom-configuration/).
 
 | File name                  | Description |
 |----------------------------|:------------|
-| `volumes-*.yml`            | Different bindings for Docker volumes. The default is `volume-bind.yml`. Always used for binding volumes.  
-| `services.yml`             | Contains default service descriptions. Used for zero-configuration. |
+| `services.yml`             | Contains default service descriptions. |
+| `stack-acquia.yml`         | [Acquia](https://www.acquia.com/) alike stack with Apache, MySQL, PHP-FPM, Solr, Varnish and memcached. |
 | `stack-default.yml`        | The default stack with 3 services that inherits `services.yml`. Used for zero-configuration. |
-| `stack-default-static.yml` | Same configuration as `stack-default.yml` but does not inherit `services.yml`|
-| `stack-acquia.yml`         | Acquia-like stack with Solr, Varnish and memcached|
+| `stack-default-nodb.yml`   | The default stack sans the `db` service. |
+| `stack-node.yml`           | Suitable for NodeJS projects. Consists of the `cli` service only. |
+| `stack-pantheon.yml`       | [Pantheon](https://www.pantheon.io/) alike stack with Nginx, MariaDB, PHP-FPM, Solr, Varnish and Redis. |
+| `volumes-*.yml`            | Different bindings for Docker volumes. Docksal picks the default based on the host OS/hypervisor. |
+
+To enable a particular stack config, use the `DOCKSAL_STACK` configuration variable in your project:
+
+```bash
+fin config set DOCKSAL_STACK="node"
+```
 
 {{% notice warning "DO NOT CHANGE DEFAULT STACKS!" %}}
 Do not change or customize existing default stacks.  
-Use the `.docksal` folder in your project to customize the project configuration.
+See [Custom Configuration](/stack/custom-configuration/) to learn how to manage a custom stack configuration in Docksal. 
 {{% /notice %}}
 
 ## Configuration Files Loading Order {#loading-order}
@@ -102,5 +110,5 @@ fin image registry
 To get all tags of a certain image provide its name with the same command. For example:
 
 ```bash
-fin image registry docksal/db
+fin image registry docksal/cli
 ```
