@@ -8,6 +8,7 @@ version: "2.1"
 
 volumes:
   cli_home:  # /home/docker volume in cli
+    name: ${CLI_HOME}
   project_root: # Project root volume
   db_data:  # Database data volume
   # Shared ssh-agent volume

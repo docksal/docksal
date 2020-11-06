@@ -490,6 +490,10 @@ docker-compose ()
 		[[ ! -O "$SSH_AUTH_SOCK_DIR" ]] && sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 	fi
 
+	# get cli image version
+	CLI_IMAGE_VER=$($(which docker-compose) --verbose config --hash="cli" 2>&1 | grep 'docker inspect_image <-' | cut -d"'" -f2 | sed 's#/#-#g;s#:#-#g')
+	export CLI_HOME="${COMPOSE_PROJECT_NAME_SAFE}_cli_home_${CLI_IMAGE_VER:-default}"
+
 	# Call regular docker-compose.
 	# We can use `which` here, since it does not care about functions (but `type` does).
 	$(which docker-compose) "$@"
@@ -1365,6 +1369,12 @@ _remove_containers ()
 
 		# Taking the whole docker-compose project down (this removes containers, volumes, and networks)
 		docker-compose down --volumes --remove-orphans
+
+		# Get project orphan cli volumes
+		project_volumes="$(docker volume ls -q -f "name=^${COMPOSE_PROJECT_NAME_SAFE}_cli_home")"
+
+		# Remove project orphan cli volumes
+		[[ "${project_volumes}" != "" ]] && docker volume rm -f ${project_volumes} >/dev/null || true
 	else
 		# Removing requested containers only
 		docker-compose kill "$@" &&
@@ -1372,7 +1382,7 @@ _remove_containers ()
 			# For cli and db, we have to manually drop the volumes, since named volumes are omitted by the "-v" option above
 			{
 				for i in "$@"; do
-					[[ "$i" == "cli" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_cli_home" >/dev/null
+					[[ "$i" == "cli" ]] && docker volume rm -f "$(docker volume ls -q -f "name=^${COMPOSE_PROJECT_NAME_SAFE}_cli_home")" >/dev/null
 					[[ "$i" == "db" ]] && docker volume rm -f "${COMPOSE_PROJECT_NAME_SAFE}_db_data" >/dev/null
 				done
 				return 0
@@ -6155,6 +6165,9 @@ alias_list ()
 
 load_global_configuration ()
 {
+	# load default images configuration
+	export CLI_IMAGE="${CLI_IMAGE:-docksal/cli:2.11-php7.3}"
+	export CLI_HOME="cli_home_$(echo ${CLI_IMAGE} | cut -d':' -f2)"
 	export DOCROOT=${DOCROOT:-docroot}
 	export DOCKSAL_PATH="$(get_project_path)"
 	export PROJECT_ROOT="$(get_project_path)"
