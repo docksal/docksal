@@ -134,7 +134,7 @@ services:
   # DB: PostgreSQL
   pgsql:
     hostname: db
-    image: ${DB_IMAGE:-postgres:9.6-alpine}
+    image: ${DB_IMAGE:-postgres:10.14-alpine}
     ports:
       - "${PGSQL_PORT_MAPPING:-5432}"
     volumes:
