@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.15.0 (2020-11-20)
+
+### New software versions
+
+- fin v1.101.0
+- Docker Desktop v2.5.0.1 (49550)
+- Docker v19.03.13 (boot2docker pinned at 19.03.5)
+- Docker Compose v1.27.4
+- VirtualBox v6.1.16
+- Updated default versions of Docker images
+  - `docksal/cli:2.12-php7.3`. See https://github.com/docksal/service-cli/releases/tag/v2.12.0 for details
+  - `postgres:10.14-alpine`
+
+### New features
+
+- macOS Big Sur support
+
+### Changes and improvements
+
+- Update for Elasticsearch 7 compatibility
+- Adjusted approach to mounting ssh-agent socket in cli (#1391)
+- Prevent PTY allocation for mysql when no TTY is available (#1394)
+- Fixed `SSH_AUTH_SOCK_DIR` owner in cases when the volume directory has been already created by docker (root user)
+- Fixed target repositories to match project create selection
+- Increased precision in `ver_to_int` to 4 positions to correctly handle Docker Desktop's a.b.c.d (4 positions) version schema
+- Fixed `docker_desktop_version` check on Windows for recent Docksal Desktop versions
+- Fixed bind mounts on Docker Desktop for Mac/Windows v2.3.0.2+
+- Changed the value for `DOCKASL_VOLUME=disabled` ("DOCKASL_VOLUME=disable" => "DOCKASL_VOLUME=disabled")
+- Removed Acquia drush commands (Acquia Cloud API v1 is EOL)
+
+### Documentation
+
+- Updated troubleshooting docs on conflicting ports (how to identify which process uses a port)
+- Updated VPN troubleshooting docs
+  - Mentioned that the VPN workaround is only possible with Docker Desktop for Mac/Windows (see #1397)
+- Added docs for missing SSE4.2 CPU instruction set (#1414)
+- Fixed Dockerfile example to use proper shell in "Extending Stock Images" docs
+- Fixed ssh-key help message
+- Added documentation for the Acquia CLI tool (#1387)
+- Using entirely custom docker-compose configurations
+- Refactored stack configuration docs
+- Added Composer version docs in service/cli/settings
+- Fixed internal linking in docs
+- Updated project's README on GitHub
+
+
 ## 1.14.1 (2020-07-20)
 
 ### New software versions
