@@ -1844,6 +1844,8 @@ show_help_project() {
 	printh "" "Drupal, Wordpress, Magento, Laravel, Backdrop, Hugo, Gatsby, and others"
 	printh "  --name=name" "Provide project name upfront"
 	printh "  --choice=#" "Provide software choice number upfront"
+	printh "  --repo=name" "Clone from a custom repo: name (--choice is set to '0' automatically)"
+	printh "  --branch=name" "Clone from a custom repo: branch name (optional)"
 	printh "  --yes (-y)" "Avoid confirmation"
 	echo
 	printh "config" "Show project configuration"
@@ -3198,8 +3200,11 @@ project_create ()
 
 	# Read repo from params if available
 	if [[ "$repo" != "" ]]; then
-		local target_repo="$repo"
 		local choice="0"
+		local target_repo="$repo"
+		# Read branch from params if available
+		local target_branch
+		[[ "$branch" != "" ]] && target_branch="$branch"
 	fi
 
 	# Determine project name
@@ -3376,6 +3381,7 @@ project_create ()
 	echo -e "Project folder:   ${yellow}$(pwd)/$project_name${NC}"
 	echo -e "Project software: ${yellow}${target_cms}${NC}"
 	echo -e "Source repo:      ${yellow}${target_repo}${NC}"
+	echo -e "Source branch:    ${yellow}${target_branch:-<default>}${NC}"
 	echo -e "Project URL:      ${yellow}http://${project_virtual_host_name}${NC}"
 	echo
 
@@ -3395,8 +3401,10 @@ project_create ()
 	fi
 
 	echo -e "${green}Cloning repository...${NC}"
-	run_cli git clone -b master "${target_repo}" "${project_name}" --depth=1
-	[ ! $? -eq 0 ] && _confirm "Checkout finished with errors. Do you wish to continue?"
+	run_cli git clone \
+		$( [[ "${target_branch}" != "" ]] && echo "--branch=${target_branch}" ) \
+		"${target_repo}" "${project_name}" --depth=1
+	[[ $? != 0 ]] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
 	cd "${project_name}"
 
