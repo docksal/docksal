@@ -7,7 +7,7 @@ aliases:
 
 ## fin {#fin}
 
-	Docksal command line utility (v1.100.0)
+	Docksal command line utility (v1.101.0)
 	Docksal docs: https://docs.docksal.io/
 	
 	Usage: fin [command]
@@ -363,7 +363,7 @@ aliases:
 	
 	View output from containers.
 	
-	Usage: logs [options] [SERVICE...]
+	Usage: logs [options] [--] [SERVICE...]
 	
 	Options:
 	    --no-color          Produce monochrome output.
