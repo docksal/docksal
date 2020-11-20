@@ -78,6 +78,8 @@ aliases:
 	                           	Drupal, Wordpress, Magento, Laravel, Backdrop, Hugo, Gatsby, and others
 	    --name=name            	Provide project name upfront
 	    --choice=#             	Provide software choice number upfront
+	    --repo=name            	Clone from a custom repo: name (--choice is set to '0' automatically)
+	    --branch=name          	Clone from a custom repo: branch name (optional)
 	    --yes (-y)             	Avoid confirmation
 	
 	  config                   	Show project configuration
