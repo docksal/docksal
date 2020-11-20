@@ -3403,7 +3403,7 @@ project_create ()
 	echo -e "${green}Cloning repository...${NC}"
 	run_cli git clone \
 		$( [[ "${target_branch}" != "" ]] && echo "--branch=${target_branch}" ) \
-		"${target_repo}" "${project_name}" --depth=1
+		"${target_repo}" "${project_name}" --depth=1 --no-tags
 	[[ $? != 0 ]] && _confirm "Checkout finished with errors. Do you wish to continue?"
 
 	cd "${project_name}"
