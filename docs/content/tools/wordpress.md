@@ -18,6 +18,6 @@ define( 'DB_HOST', getenv('MYSQL_HOST') );
 
 ## WordPress Multisite Settings {#wp-multisite}
 
-When converting a single site to a multi-site there can be some issues that occur with 
+When converting a single site to a multi-site, there can be some issues that occur with 
 redirect loops. Make sure to update the `.htaccess` instructions found on the WordPress.org
 site. [Htaccess settings for WordPress multisite](https://wordpress.org/support/article/htaccess/#multisite).
