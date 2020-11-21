@@ -4,14 +4,19 @@
 
 ### New software versions
 
-- fin v1.101.0
+- fin v1.102.0
 - Docker Desktop v2.5.0.1 (49550)
 - Docker v19.03.13 (boot2docker pinned at 19.03.5)
 - Docker Compose v1.27.4
 - VirtualBox v6.1.16
-- Updated default versions of Docker images
-  - `docksal/cli:2.12-php7.3`. See https://github.com/docksal/service-cli/releases/tag/v2.12.0 for details
-  - `postgres:10.14-alpine`
+- Switched `cli` service to `docksal/cli:2.12-php7.3`
+  - Dropped PHP 7.2 (EOL as of 30 Nov 2020)
+  - Added Composer v2 (default) with ability to pin to Composer v1
+  - Updated NodeJs to the latest LTS release v14.15.0
+  - Version bumps for other console tools and runtimes
+  - See https://github.com/docksal/service-cli/releases/tag/v2.12.0 for  more details.
+- Switched `postgres` service to `postgres:10.14-alpine`
+  - Drupal 9 requires PostgreSQL 10+
 
 ### New features
 
@@ -29,6 +34,7 @@
 - Fixed bind mounts on Docker Desktop for Mac/Windows v2.3.0.2+
 - Changed the value for `DOCKASL_VOLUME=disabled` ("DOCKASL_VOLUME=disable" => "DOCKASL_VOLUME=disabled")
 - Removed Acquia drush commands (Acquia Cloud API v1 is EOL)
+- Added support for branch name when using a custom git repo in `fin project create`
 
 ### Documentation
 
@@ -43,6 +49,7 @@
 - Refactored stack configuration docs
 - Added Composer version docs in service/cli/settings
 - Fixed internal linking in docs
+- Wordpress multisite settings
 - Updated project's README on GitHub
 
 
