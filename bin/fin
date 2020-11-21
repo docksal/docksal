@@ -96,8 +96,8 @@ is_katacoda ()
 	[[ "$KATACODA" != "" ]]
 }
 
-is_travis () {
-	[[ "$TRAVIS" == "true" ]]
+is_github_actions () {
+	[[ "$GITHUB_RUN_ID" != "" ]]
 }
 
 #------------------------------------------------------------------------------
@@ -1244,7 +1244,7 @@ check_project_unique ()
 _confirm ()
 {
 	# Skip checks if not running interactively (not a tty or not on Windows)
-	if ! is_tty || is_travis || [[ "$DOCKSAL_CONFIRM_YES" == "1" ]]; then return 0; fi
+	if ! is_tty || is_github_actions || [[ "$DOCKSAL_CONFIRM_YES" == "1" ]]; then return 0; fi
 
 	while true; do
 		echo -en "$1 "
@@ -3561,7 +3561,7 @@ _ssh_key ()
 	# Return if no key or option passed
 	[[ "$@" == "" ]] && return
 
-	if ! is_tty || is_travis ; then
+	if ! is_tty || is_github_actions ; then
 		# In a non-interactive environment (e.g., CI) run non-interactively. Keys with passphrases cannot be used!
 		echo-yellow "Running in a non-interactive environment. SSH keys with passphrases cannot be used."
 		docker exec docksal-ssh-agent ssh-key "$@"
