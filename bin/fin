@@ -2648,6 +2648,13 @@ nfs_share_add ()
 	local new_exports=$(echo -e "$exports")
 	local old_exports=$(cat /etc/exports 2>/dev/null)
 	if [[ "$new_exports" != "$old_exports" ]]; then
+		# Ensure /etc/exports exists
+		# nfsd won't start or even do "checkexports" without the config file
+		if [[ ! -f /etc/exports ]]; then
+			sudo touch /etc/exports # This automatically triggers nfsd start
+			sleep 5 # Give nfsd site time to start
+		fi
+
 		# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
 		local exports_test="/tmp/etc.exports.$RANDOM"
 		echo -e "$exports" | tee "$exports_test" >/dev/null
