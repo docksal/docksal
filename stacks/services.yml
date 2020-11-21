@@ -134,7 +134,7 @@ services:
   # DB: PostgreSQL
   pgsql:
     hostname: db
-    image: ${DB_IMAGE:-postgres:9.6-alpine}
+    image: ${DB_IMAGE:-postgres:10.14-alpine}
     ports:
       - "${PGSQL_PORT_MAPPING:-5432}"
     volumes:
@@ -155,7 +155,7 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.11-php7.3}
+    image: ${CLI_IMAGE:-docksal/cli:2.12-php7.3}
     volumes:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
@@ -296,7 +296,7 @@ services:
   # Elastic Search
   elasticsearch:
     hostname: elasticsearch
-    image: elasticsearch:6.5.3
+    image: ${ELASTICSEARCH_IMAGE:-elasticsearch:6.5.3}
     ports:
       - "${ELASTICSEARCH_PORT_MAPPING:-9200}"
     dns:
@@ -304,6 +304,7 @@ services:
       - ${DOCKSAL_DNS2}
     environment:
       - bootstrap.memory_lock=true
+      - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:

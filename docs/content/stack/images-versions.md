@@ -46,15 +46,15 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 [![CLI on Docker hub](https://img.shields.io/badge/View%20on%20Docker%20Hub-gray.svg?logo=docker&style=flat-square&classes=inline)](https://hub.docker.com/r/docksal/cli/tags)
 
 | Image| Notes |
-|------|------|
-| `docksal/cli:2.11-php7.4` | PHP 7.4, Nodejs v12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
-| `docksal/cli:2.11-php7.3` | *Default image* PHP 7.3, Nodejs v12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
-| `docksal/cli:2.11-php7.2` | PHP 7.2, Nodejs v12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
-| `docksal/cli:2-php7.3`   | Latest 2.x image version of PHP 7.3 flavor, convenient when [extending images](/stack/extend-images)
-| `docksal/cli:2-php7.2`   | Latest 2.x image version of PHP 7.2 flavor, convenient when [extending images](/stack/extend-images)
-| `docksal/cli:2-php7.1`   | Latest 2.x image version of PHP 7.1 flavor, convenient when [extending images](/stack/extend-images)
-| `docksal/cli:2.5-php7.0` | *Deprecated*, PHP 7.0, mhsendmail |
-| `docksal/cli:2.5-php5.6` | *Deprecated*, PHP 5.6, mhsendmail |
+|------|-------|
+| `docksal/cli:2.11-php7.4` | PHP 7.4, Nodejs 14.15.0, Ruby 2.7.2, Python 3.8.3, msmtp |
+| `docksal/cli:2.11-php7.3` | *Default image* PHP 7.3, Nodejs 12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
+| `docksal/cli:2-php7.4`    | Latest 2.x image version of PHP 7.4 flavor, convenient when [extending images](/stack/extend-images)
+| `docksal/cli:2-php7.3`    | Latest 2.x image version of PHP 7.3 flavor, convenient when [extending images](/stack/extend-images)
+| `docksal/cli:2.11-php7.2` | *Deprecated* PHP 7.2, Nodejs 12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
+| `docksal/cli:2.10-php7.1` | *Deprecated* PHP 7.1, Nodejs 12.13.0, Ruby 2.6.5, Python 3.8.3, msmtp |
+| `docksal/cli:2.5-php7.0`  | *Deprecated* PHP 7.0, mhsendmail |
+| `docksal/cli:2.5-php5.6`  | *Deprecated* PHP 5.6, mhsendmail |
 
 ## Apache
 
@@ -62,8 +62,8 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 [![Apache on Docker hub](https://img.shields.io/badge/View%20on%20Docker%20Hub-gray.svg?logo=docker&style=flat-square&classes=inline)](https://hub.docker.com/r/docksal/apache/tags)
 
 | Image| Notes |
-|------|------|
-| `docksal/apache:2.4-2.3` | *Default image*, Apache 2.4 |
+|------|-------|
+| `docksal/apache:2.4-2.3` | *Default* Apache 2.4 |
 | `docksal/apache:2.4`     | Apache 2.4 (latest) |
 
 ## Nginx 
@@ -72,10 +72,10 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 [![Nginx on Docker hub](https://img.shields.io/badge/View%20on%20Docker%20Hub-gray.svg?logo=docker&style=flat-square&classes=inline)](https://hub.docker.com/r/docksal/nginx/tags)
 
 | Image| Notes |
-|------|------|
+|------|-------|
 | `docksal/nginx:1.15-1.0` | Nginx 1.15 (v. 1.0) |
 | `docksal/nginx:1.15`     | Nginx 1.15 (latest 1.15 image version) |
-| `docksal/nginx:1.14-1.0` | *Default image*, Nginx 1.14 (v. 1.0) |
+| `docksal/nginx:1.14-1.0` | *Default* Nginx 1.14 (v. 1.0) |
 | `docksal/nginx:1.14`     | Nginx 1.14 (latest 1.14 image version) |
 | `docksal/nginx:1.13-1.0` | Nginx 1.13 (v. 1.0) |
 | `docksal/nginx:1.13`     | Nginx 1.13 (latest 1.13 image version) |
@@ -90,7 +90,7 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 [![MySQL on Docker hub](https://img.shields.io/badge/View%20on%20Docker%20Hub-gray.svg?logo=docker&style=flat-square&classes=inline)](https://hub.docker.com/r/docksal/mysql/tags)
 
 | Image| Notes |
-|------|------|
+|------|-------|
 | `docksal/mysql:8.0-1.5`  | MySQL 8.0 |
 | `docksal/mysql:8.0`      | MySQL 8.0 (latest 8.0 image version) |
 | `docksal/mysql:5.7-1.5`  | MySQL 5.7 |
@@ -104,7 +104,7 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 [![MariaDB on Docker hub](https://img.shields.io/badge/View%20on%20Docker%20Hub-gray.svg?logo=docker&style=flat-square&classes=inline)](https://hub.docker.com/r/docksal/mariadb/tags)
 
 | Image| Notes |
-|------|------|
+|------|-------|
 | `docksal/mariadb:10.3-1.1`     | MariaDB 10.3 (default) |
 | `docksal/mariadb:10.3`         | MariaDB 10.3 (latest image version) |
 | `docksal/mariadb:10.2-1.1`     | MariaDB 10.2 |
@@ -122,7 +122,7 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 [![Solr on Docker hub](https://img.shields.io/badge/View%20on%20Docker%20Hub-gray.svg?logo=docker&style=flat-square&classes=inline)](https://hub.docker.com/r/docksal/solr/tags)
 
 | Image| Notes |
-|------|------|
+|------|-------|
 | `docksal/solr:8.1-2.1`      | Apache Solr 8.1 |
 | `docksal/solr:8-2.1`        | Apache Solr 8.1 |
 | `docksal/solr:8.1`          | Apache Solr 8.1 (latest image version) |
@@ -144,6 +144,6 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 [![Web on Docker hub](https://img.shields.io/badge/View%20on%20Docker%20Hub-gray.svg?logo=docker&style=flat-square&classes=inline)](https://hub.docker.com/r/docksal/web/tags)
 
 | Image| Notes |
-|------|------|
+|------|-------|
 | `docksal/web:apache2.4`     | Apache 2.4 |
 | `docksal/web:apache2.2`     | Apache 2.2 |

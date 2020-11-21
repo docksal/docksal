@@ -22,6 +22,8 @@ CPU with SSE4.2 instruction set supported (most CPUs). If you get output from th
 cat /proc/cpuinfo | grep sse4_2
 ``` 
 
+If the output is empty, see the [troubleshooting](/troubleshooting/common-issues#sse4_2) docs for a workaround.  
+
 ### Windows
 
 Windows 10 and CPU with hardware virtualization (**VT-x/AMD-V**) supported and [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
@@ -66,9 +68,9 @@ Click the preferred option to proceed to option-specific docs.
 
 With this method, Docker will run inside a VM in VirtualBox.
 
-1. Install VirtualBox v6.1.10
+1. Install VirtualBox v6.1.16
 
-    [![Download VirtualBox v6.1.10](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](https://download.virtualbox.org/virtualbox/6.1.10/VirtualBox-6.1.10-138449-OSX.dmg)
+    [![Download VirtualBox v6.1.16](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](https://download.virtualbox.org/virtualbox/6.1.16/VirtualBox-6.1.16-140961-OSX.dmg)
 
 1. Enable Kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
 
@@ -93,9 +95,9 @@ Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal proje
 to [v2.1.0.5](https://download.docker.com/mac/stable/40693/Docker.dmg) as a temporary measure.
 {{% /notice %}}
 
-1. Install Docker Desktop for Mac v2.3.0.3
+1. Install Docker Desktop for Mac v2.5.0.1
 
-    [![Docker Desktop for Mac v2.3.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/45519/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Mac v2.5.0.1](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/stable/49550/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 1. Start Docker Desktop
 
@@ -200,9 +202,9 @@ to [v2.1.0.5](https://download.docker.com/win/stable/40693/Docker%20Desktop%20In
 
     [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
 
-3. Install Docker Desktop for Windows v2.3.0.3
+3. Install Docker Desktop for Windows v2.5.0.1
 
-    [![Docker Desktop for Windows v2.3.0.3](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/45519/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Windows v2.5.0.1](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/win/stable/49550/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
     
 4. Configure Docker Desktop on Windows
 

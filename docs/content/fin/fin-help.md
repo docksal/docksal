@@ -7,10 +7,10 @@ aliases:
 
 ## fin {#fin}
 
+	Docksal command line utility (v1.101.0)
+	Docksal docs: https://docs.docksal.io/
 	
-	Docksal command line utility v1.99.0
-	
-	Usage: fin <command>
+	Usage: fin [command]
 	
 	Management Commands:
 	  db <command>             	Manage databases (fin help db)
@@ -78,6 +78,8 @@ aliases:
 	                           	Drupal, Wordpress, Magento, Laravel, Backdrop, Hugo, Gatsby, and others
 	    --name=name            	Provide project name upfront
 	    --choice=#             	Provide software choice number upfront
+	    --repo=name            	Clone from a custom repo: name (--choice is set to '0' automatically)
+	    --branch=name          	Clone from a custom repo: branch name (optional)
 	    --yes (-y)             	Avoid confirmation
 	
 	  config                   	Show project configuration
@@ -197,7 +199,7 @@ aliases:
 	
 	Examples:
 	  fin ssh-key add          	Loads all SSH keys with default names: id_rsa/id_dsa/id_ecdsa from $HOME/.ssh/
-	  fin ssh-key server_rsa   	Loads the key stored in $HOME/.ssh/server_id_rsa into the agent
+	  fin ssh-key add server_rsa	Loads the key stored in $HOME/.ssh/server_id_rsa into the agent
 	  fin ssh-key new server2_rsa	Generates a new SSH key pair in ~/.ssh/server2_id_rsa
 
 ## system {#system}
@@ -363,7 +365,7 @@ aliases:
 	
 	View output from containers.
 	
-	Usage: logs [options] [SERVICE...]
+	Usage: logs [options] [--] [SERVICE...]
 	
 	Options:
 	    --no-color          Produce monochrome output.

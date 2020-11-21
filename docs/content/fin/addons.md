@@ -4,7 +4,7 @@ aliases:
   - /en/master/fin/addons/
 ---
 
-In addition to the [custom commands](../custom-commands), it is possible to extend fin further with addons per project or per host. 
+In addition to the [custom commands](/fin/custom-commands), it is possible to extend fin further with addons per project or per host. 
 Addons are community submitted commands and can be found in the [Docksal Addons Repository](https://github.com/docksal/addons).
 In order to use addons, fin version 1.7.0 or higher is required.
 

@@ -159,6 +159,11 @@ Remove the conflicting export from `/etc/exports` (remove the non-docksal one), 
 
 ## Issue 5. Conflicting Ports {#issue-05}
 
+### Symptoms
+
+If a port is currently in use or if your computer has ever been configured to forward ports
+locally for development, you may receive one of these errors:
+
 ```
 Resetting Docksal services...
  * proxy
@@ -167,17 +172,67 @@ on endpoint docksal-vhost-proxy (a7addf7797e6b0aec8e3e810c11775eb77508c9079e375c
 Error starting userland proxy: listen tcp 0.0.0.0:443: listen: address already in use.
 ```
 
+```
+docker: Error response from daemon: Ports are not available: listen udp 0.0.0.0:53: bind: address already in use.
+ ERROR:  Failed starting the DNS service.
+```
+
+```
+docker: Error response from daemon: Ports are not available: listen tcp 0.0.0.0:80: bind: address already in use.
+ ERROR:  Failed starting the Failed starting the proxy service.
+```
+
+```
+docker: Error response from daemon: Ports are not available: listen tcp 0.0.0.0:443: bind: address already in use.
+ ERROR:  Failed starting the Failed starting the proxy service.
+```
+
 This usually happens on Linux because the default Apache server bind to `0.0.0.0:80` and `0.0.0.0:443` (all IPs).  
 This prevents Docksal from running properly.
 
-There can also be a port conflict if your computer has ever been configured to forward ports locally for development.
-
 ### How to Resolve
+
+#### macOS
+
+UDP/53
+
+Port 53 will likely be used by a local dnsmasq instance. You may not even remember installing it.
+
+Check which process uses UDP port 53:
+
+```
+$ netstat -vanp udp | awk '$4 ~ /\.53$/' | awk '{print $8}' | xargs ps -p
+  PID TTY           TIME CMD
+  140 ??         0:00.01 /usr/local/opt/dnsmasq/sbin/dnsmasq --keep-in-foreground -C /usr/local/etc/dnsmasq.conf
+```
+
+See the instructions to [install/uninstall dnsmasq](https://gist.github.com/valentinocossar/c92abb39ffa0ba1eaf08466e35b85d11).
+
+TCP/80 and TCP/443
+
+Ports 80/443 are web server ports and will likely be used by a local Apache/etc. instance:
+
+Check which process uses TCP ports 80/443
+
+```
+$ netstat -vanp tcp | awk '$4 ~ /\.80$/' | awk '{print $9}' | xargs ps -p
+$ netstat -vanp tcp | awk '$4 ~ /\.443$/' | awk '{print $9}' | xargs ps -p
+```
+
+#### Linux
 
 1. Stop Apache or
 2. Reconfigure Apache to listen on different ports (e.g., `8080` and `4433`) or
 different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`)
 
+#### Windows
+
+To check which process uses TCP ports 80/443, run the following in a powershell window:
+
+```
+Get-Process -Id (Get-NetTCPConnection -LocalPort 80).OwningProcess
+Get-Process -Id (Get-NetTCPConnection -LocalPort 443).OwningProcess
+```
 
 ## Issue 6. Config Permissions Issue (VM does not start) {#issue-06}
 
@@ -351,7 +406,7 @@ dism.exe /Online /Disable-Feature:Microsoft-Hyper-V /All
 Visiting the project URL in your browser results in a "site can't be reached" message, could be the result
 of a local firewall application blocking access to Docksal's canonical IP address.
 
-Firewall configuration can also cause problems with SMB. See [documentation on troubleshooting Windows SMB](../windows-smb#smb-ip).
+Firewall configuration can also cause problems with SMB. See [documentation on troubleshooting Windows SMB](/troubleshooting/windows-smb#smb-ip).
 
 ### On Mac
 
@@ -400,3 +455,31 @@ Grant **Full Disk Access** privileges  to `/sbin/nfsd`:
 Alternatively, you can move the project's codebase out of the restricted user folder (not helpful for external disks).
 
 See [blog post](https://blog.docksal.io/nfs-access-issues-on-macos-10-15-catalina-75cd23606913) for more details.
+
+
+## Issue 17. Host CPU does not support SSE 4.2 instruction set {#sse4_2}
+
+Symptoms:
+
+- `vhost-proxy` won't start
+- `fin docker exet -it docker-vhost-proxy nginx -t` outputs `Illegal instruction (core dumped)`
+- Output from `cat /proc/cpuinfo | grep sse4_2` on the host is empty. 
+
+Docksal's [vhost-proxy](/core/system-vhost-proxy) system service uses [OpenResty](https://github.com/openresty/openresty) 
+under the hood. The official OpenResty binary packages [require](https://github.com/openresty/openresty/issues/267#issuecomment-309296900) 
+SSE4.2 support in the host CPU.
+
+### How to Resolve
+
+As a temporary workaround, vhost-proxy can be downgraded to version 1.2:
+
+```bash
+fin config set --global IMAGE_VHOST_PROXY=docksal/vhost-proxy:1.2
+fin system reset vhost-proxy
+```
+
+{{% notice warning %}}
+There is no guarantee that pinning the vhost-proxy image won't result in incompatibility issues with the latest versions of Docksal.
+{{% /notice %}}
+
+Long term fix: consider switching to a host with a modern CPU with SSE 4.2 support.
