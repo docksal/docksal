@@ -26,4 +26,4 @@ curl -s -X POST \
 	-H "Accept: application/vnd.github.v3+json" \
 	-H "Authorization: token $GITHUB_API_TOKEN" \
 	-d "$body" \
-	https://api.github.com/repo/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches
+	${GITHUB_API_URL}/repo/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches
