@@ -63,6 +63,7 @@ jobs:
       -
         name: "Install SSH Key Key"
         run: |
+          mkdir $HOME/.ssh || true
           echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
           chmod 400 $HOME/.ssh/project_key
         env:
