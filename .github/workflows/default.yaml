@@ -100,8 +100,9 @@ jobs:
         run: tests/scripts/${SUITE}.sh
         env:
           SUITE: ${{ matrix.suite }}
-      -
-        if: ${{ matrix.suite }} == "project"
-        name: "Execute Boilerplate Tests"
-        run: tests/scripts/boilerplates.sh
+     # Commenting out at the moment until repos are converted over to GithuB Actions
+     #-
+     #   if: ${{ matrix.suite }} == "project"
+     #   name: "Execute Boilerplate Tests"
+     #   run: tests/scripts/boilerplates.sh
 
