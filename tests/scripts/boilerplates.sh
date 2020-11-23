@@ -5,7 +5,7 @@
 build_trigger() {
 	if [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
 		cd "$GITHUB_WORKSPACE"
-		travisci-build-trigger "$1"
+		github-build-trigger "$1"
 	fi
 }
 
