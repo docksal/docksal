@@ -3,8 +3,8 @@
 # Triggers builds for boilerplate-* repos when master branch is tested
 # $1 - repo name, e.g. docksal/boilerplate-drupal7
 build_trigger() {
-	if [[ "$TRAVIS_BRANCH" == "master" ]]; then
-		cd "$TRAVIS_BUILD_DIR"
+	if [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
+		cd "$GITHUB_WORKSPACE"
 		travisci-build-trigger "$1"
 	fi
 }

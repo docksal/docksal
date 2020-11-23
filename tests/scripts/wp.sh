@@ -2,6 +2,6 @@
 
 fin ssh-key add project_key
 
-mkdir "$TRAVIS_BUILD_DIR/../test-pull"
-cd "$TRAVIS_BUILD_DIR/../test-pull"
-bats "$TRAVIS_BUILD_DIR/tests/pull/wp.bats"
+mkdir "$GITHUB_WORKSPACE/../test-pull"
+cd "$GITHUB_WORKSPACE/../test-pull"
+bats "$GITHUB_WORKSPACE/tests/pull/wp.bats"

@@ -21,7 +21,7 @@ DOCKSAL_IP=192.168.64.100
 # run `export SKIP=1` locally, then comment skip in the test you want to debug
 
 # Add default sample keys on Travis only. We don't want to mess with a real host ssh key.
-[[ "$TRAVIS" == "true" ]] && cp tests/ssh-keys/* ~/.ssh
+[[ "$GITHUB_RUN_ID" != "" ]] && cp tests/ssh-keys/* ~/.ssh
 
 @test "IP: ($DOCKSAL_IP) is reachable" {
 	[[ $SKIP == 1 ]] && skip
@@ -123,7 +123,7 @@ DOCKSAL_IP=192.168.64.100
 
 	# Adding default keys
 	# Run these tests on Travis only
-	if [[ "$TRAVIS" == "true" ]]; then
+	if [[ "$GITHUB_RUN_ID" != "" ]]; then
 		run fin ssh-key add
 		echo "$output" | grep "Identity added: id_dsa (id_dsa)"
 		echo "$output" | grep "Identity added: id_ecdsa (id_ecdsa)"
