@@ -63,8 +63,10 @@ jobs:
       -
         name: "Install SSH Key Key"
         run: |
-          echo "${{ env.SSH_KEY }}" | base64 --decode > $HOME/.ssh/project_key
+          echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
           chmod 400 $HOME/.ssh/project_key
+        env:
+          SSH_KEY: ${{ env.SSH_KEY }}
       -
         name: "Install modified version of BATS"
         run: |
@@ -101,3 +103,4 @@ jobs:
         if: ${{ matrix.suite }} == "project"
         name: "Execute Boilerplate Tests"
         run: tests/scripts/boilerplates.sh
+
