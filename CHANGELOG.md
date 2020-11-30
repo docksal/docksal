@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.15.1 (2020-11-30)
+
+### New software versions
+
+- fin v1.102.1
+
+### Changes and improvements
+
+- Added `COMPOSER_DEFAULT_VERSION` in `services.yml` to support Composer version switching instructions in docs
+
+### Documentation
+
+- Moved Composer version docs to tools/composer
+
+
 ## 1.15.0 (2020-11-20)
 
 ### New software versions
