@@ -4082,8 +4082,11 @@ configure_resolver_mac () {
 
 	# Flush DNS cache
 	echo-green "Clearing DNS cache..."
-	sudo dscacheutil -flushcache
-	# to check: scutil --dns
+	# On macOS clearing DNS cache is a bit tricky and needs to be done in several places.
+	# Note: sometimes neither is needed, other times - one or both.
+	sudo dscacheutil -flushcache # Flush DNS cache
+	sudo killall -HUP mDNSResponder # Reload mDNSResponder config
+	# to check: run "scutil --dns" and look for the "docksal" domain resolver at the bottom of the list.
 }
 
 # Configure system-wide *.docksal resolver via /etc/resolv.conf on Alpine
