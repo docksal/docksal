@@ -5940,6 +5940,11 @@ sysinfo ()
 {
 	eval $(parse_params "$@")
 
+	echo
+	echo "███  FIN" &&
+	version
+
+	echo
 	echo "███  OS"
 	# OS version
 	echo "${OS_TYPE} ${OS_NAME} ${OS_VERSION}"
@@ -5957,23 +5962,13 @@ sysinfo ()
 		echo "VirtualBox VM"
 	fi
 
-	if ! is_docker_native; then
-		echo "DOCKER_HOST : $DOCKER_HOST"
-		is_mac && echo "DOCKSAL_NFS_PATH : $DOCKSAL_NFS_PATH"
-		if is_mac; then
-			echo "NFS EXPORTS:"
-			cat /etc/exports
-		fi
+	echo "DOCKER_HOST : $DOCKER_HOST"
+	if is_mac; then
+		echo "DOCKSAL_NFS_PATH : $DOCKSAL_NFS_PATH"
+		echo
+		echo "NFS EXPORTS:"
+		cat /etc/exports
 	fi
-
-	echo
-	echo "███  FIN" &&
-	version
-
-	echo
-	echo "███  DOCKER COMPOSE"
-	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_COMPOSE"
-	docker-compose version
 
 	echo
 	echo "███  DOCKER"
@@ -5987,6 +5982,11 @@ sysinfo ()
 	fi
 	echo
 	docker version
+
+	echo
+	echo "███  DOCKER COMPOSE"
+	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_COMPOSE"
+	docker-compose version
 
 	if [[ "$all" == "all" ]]; then
 		echo
@@ -6017,7 +6017,7 @@ sysinfo ()
 	if is_docker_running; then
 		echo
 		echo "███  DOCKSAL: PROJECTS"
-		project_list
+		project_list --all
 
 		echo
 		echo "███  DOCKSAL: VIRTUAL HOSTS"
