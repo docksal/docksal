@@ -6027,22 +6027,58 @@ sysinfo ()
 		echo "███  DOCKSAL: NETWORKING"
 		echo
 		echo "DOCKSAL_IP: ${DOCKSAL_IP}"
+		echo "DOCKSAL_HOST_IP: ${DOCKSAL_HOST_IP}"
 		echo "DOCKSAL_VHOST_PROXY_IP: ${DOCKSAL_VHOST_PROXY_IP}"
 		echo "DOCKSAL_DNS_IP: ${DOCKSAL_DNS_IP}"
 		echo "DOCKSAL_DNS_DISABLED: ${DOCKSAL_DNS_DISABLED}"
 		echo "DOCKSAL_NO_DNS_RESOLVER: ${DOCKSAL_NO_DNS_RESOLVER}"
 		echo "DOCKSAL_DNS_UPSTREAM: ${DOCKSAL_DNS_UPSTREAM}"
 		echo "DOCKSAL_DNS_DOMAIN: ${DOCKSAL_DNS_DOMAIN}"
+
+		# Host <> Containers connectivity
 		echo
-		TEST_URL="http://dns-test.${DOCKSAL_DNS_DOMAIN}"
+		echo "███  DOCKSAL: CONNECTIVITY"
+		echo
+		## Check that host can access DOCKSAL_IP
+		# Options that work cross-platform: "-c 1" - one request, "-W 1" - wait up to 1s for the first request
+		local PING="ping -c 1 -W 1"
+		echo -n "Host to ${DOCKSAL_IP}: 	"
+		eval "${PING} ${DOCKSAL_IP}" &>/dev/null
+		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
+		## Check that containers can access DOCKSAL_IP
+		echo -n "Container to ${DOCKSAL_IP}: 	"
+		docker run --rm busybox sh -c "${PING} ${DOCKSAL_IP}" &>/dev/null
+		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
+		## Check that containers can access DOCKSAL_HOST_IP
+		echo -n "Container to ${DOCKSAL_HOST_IP}: 	"
+		docker run --rm busybox sh -c "${PING} ${DOCKSAL_HOST_IP}" &>/dev/null
+		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
+
+		# DNS resolution
+		local TEST_URL="http://dns-test.${DOCKSAL_DNS_DOMAIN}"
 		#TEST_CMD="wget -O- ${TEST_URL} &>/dev/null"  # Does not work correctly with Alpine's buysbox/wget
-		TEST_CMD="curl --connect-timeout 2 -sS ${TEST_URL}"
+		local TEST_CMD="curl --connect-timeout 2 -sS ${TEST_URL}"
+		echo
 		echo "Checking connectivity to ${TEST_URL}..."
-		# Test DNS resolution on the host
+		## Test DNS resolution on the host
 		echo -n "Host: "
 		eval ${TEST_CMD} &>/dev/null
-		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
-		# Test DNS resolution in a container
+		if [[ $? == 0 ]]; then
+			echo "PASS"
+		else
+			echo "FAIL"
+			echo
+			echo "Debug info:"
+			echo "----------"
+			set -x
+			cat /etc/resolv.conf | grep ${DOCKSAL_IP}
+			ping -c 1 -W 1 dns-test.docksal
+			nslookup -timeout=1 dns-test.docksal ${DOCKSAL_IP}
+			set +x
+			echo "----------"
+			echo
+		fi
+		## Test DNS resolution in a container
 		echo -n "Containers: "
 		# TODO: figure out how to use busybox/wget in docksal/empty or use our own version with full wget/curl instead
 		docker run --rm --dns="${DOCKSAL_DNS1}" --dns="${DOCKSAL_DNS2}" curlimages/curl sh -c "${TEST_CMD}" &>/dev/null
