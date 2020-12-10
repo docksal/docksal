@@ -26,11 +26,10 @@ DOCKSAL_IP=192.168.64.100
 @test "IP: ($DOCKSAL_IP) is reachable" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Check up is up
-	run ping -c 1 -t 1 $DOCKSAL_IP
-	[ "$status" -eq 0 ]
+	# Check DOCKSAL_IP is up
+	run ping -c 1 -W 1 ${DOCKSAL_IP}
+	[[ "$status" == 0 ]]
 	unset output
-
 }
 
 @test "DNS: fin system reset dns" {
@@ -53,7 +52,7 @@ DOCKSAL_IP=192.168.64.100
 	[[ $SKIP == 1 ]] && skip
 
 	# .docksal domain resolution via ping
-	run ping -c 1 -t 1 anything.docksal
+	run ping -c 1 -W 1 anything.docksal
 	[[ "$(echo \"$output\" | awk -F'[()]' '/PING/{print $2}')" == "$DOCKSAL_IP" ]]
 	unset output
 }
