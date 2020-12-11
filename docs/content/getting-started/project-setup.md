@@ -62,7 +62,7 @@ If your project does not use a sub-directory for the document root, then use `.`
 {{% notice note %}}
 If you see requests for the SSH key passphrase for `id_dsa` or `id_rsa`, those are the keys in your `~/.ssh` folder.  
 SSH keys are automatically loaded into the **ssh-agent** container and can then be used by any Docksal project stack 
-running on your machine. [Read more]((/core/system-ssh-agent/)) about the ssh-agent system service in Docksal.
+running on your machine. [Read more](/core/system-ssh-agent/) about the ssh-agent system service in Docksal.
 {{% /notice %}}
 
 Running `fin init` again will reset your project stack. See `fin help project` for the list of project level commands.
