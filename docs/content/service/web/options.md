@@ -10,7 +10,7 @@ if you want to specify the use of nginx, you will need to modify your `docksal.y
 
 ## nginx Configuration {#nginx-config}
 
-Docksal has defined a web service with an nginx image. To set your db service to use
+Docksal has defined a web service with an nginx image. To set your web service to use
 nginx instead of Apache, set the db service in your `docksal.yml` file.
 
 ```yaml
