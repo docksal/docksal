@@ -33,7 +33,7 @@ services:
     # Pin PHP version
     image: ${CLI_IMAGE:=docksal/cli:stable-php7.4}
 
-redis:
+  redis:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: redis
