@@ -119,6 +119,7 @@ jobs:
         run: tests/scripts/${SUITE}.sh
         env:
           SUITE: ${{ matrix.suite }}
+          SERVICE_VHOST_PROXY_VERSION: 'fix-container-id'
       # Commenting out at the moment until repos are converted over to GithuB Actions
       #-
       #   if: ${{ matrix.suite }} == "project"
