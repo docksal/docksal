@@ -279,7 +279,8 @@ else
 	DOCKSAL_SSH_AGENT_USE_HOST="${DOCKSAL_SSH_AGENT_USE_HOST:-0}"
 fi
 
-# Healthcheck timeout
+# Project healthcheck timeout
+# Total time (seconds) before the _project_ healthcheck is considered failed
 DOCKSAL_HEALTHCHECK_TIMEOUT=${DOCKSAL_HEALTHCHECK_TIMEOUT:-60}
 
 # Logging settings
@@ -1495,32 +1496,32 @@ _vhost_proxy_connect ()
 # https://github.com/docksal/docksal/issues/225#issuecomment-306604063
 _healthcheck_wait ()
 {
-	local delay=5
-	local timeout=$DOCKSAL_HEALTHCHECK_TIMEOUT
+	local delay=5 # Delay (seconds) before rerunning the check
+	local timeout=${DOCKSAL_HEALTHCHECK_TIMEOUT} # Total time (seconds) before the healthcheck is considered failed
 	local elapsed=0
 	local status=""
-	local FILTER="label=com.docker.compose.project=$COMPOSE_PROJECT_NAME"
+	local FILTER="label=com.docker.compose.project=${COMPOSE_PROJECT_NAME}"
 
 	sleep 1 # Small sleep to give quick containers time to start
-	status=$(docker ps --filter "$FILTER" --format '{{ .Status }}')
+	status=$(docker ps --filter "${FILTER}" --format '{{ .Status }}')
 
 	# While one or more containers are starting wait for them
-	while [[ "$status" =~ "(health: starting)" ]]; do
+	while [[ "${status}" =~ "(health: starting)" ]]; do
 		echo "Waiting for project stack to become ready..."
-		sleep "$delay";
+		sleep ${delay};
 		elapsed=$((elapsed + delay))
 		if ((elapsed > timeout)); then
 			echo-error "Project heathcheck has timed out" \
-				"One or more containers did not enter a healthy state within $timeout seconds of the project start." \
+				"One or more containers did not enter a healthy state within ${timeout} seconds of the project start." \
 				"See ${yellow}fin project status${NC} for details" \
 				"Check ${yellow}fin logs${NC} for more details"
 			return 1
 		fi
-		status=$(docker ps --filter "$FILTER" --format '{{ .Status }}')
+		status=$(docker ps --filter "${FILTER}" --format '{{ .Status }}')
 	done
 
-	# All contaners have started, check the final status
-	if [[ "$status" =~ "(health: unhealthy)" ]]; then
+	# All containers have started, check the final status
+	if [[ "${status}" =~ "(health: unhealthy)" ]]; then
 		echo-error "One or more containers are not healthy" \
 			"See ${yellow}fin project status${NC} for details"
 			"This is most likely due to a project misconfiguration."
