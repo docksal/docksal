@@ -283,9 +283,14 @@ fi
 # Total time (seconds) before the _project_ healthcheck is considered failed
 DOCKSAL_HEALTHCHECK_TIMEOUT=${DOCKSAL_HEALTHCHECK_TIMEOUT:-60}
 
-# Logging settings
+# Container Logging settings
 DOCKSAL_CONTAINER_LOG_MAX_SIZE=${DOCKSAL_CONTAINER_LOG_MAX_SIZE:-1m}
 DOCKSAL_CONTAINER_LOG_MAX_FILE=${DOCKSAL_CONTAINER_LOG_MAX_FILE:-10}
+
+# Container healthcheck settings
+# Default health-interval option for all containers
+# Note: Setting this too low (<5s) will result in a considerable load with lots of running containers (20+)
+DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL=${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL:-10s}
 
 #---------------------------- URL references --------------------------------
 GITHUB_API="https://api.github.com"
@@ -3970,6 +3975,7 @@ install_proxy_service ()
 		${mount_certs} \
 		--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
 		--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
+		--health-interval=${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 	if_failed_error "Failed starting the proxy service."
 }
@@ -4061,6 +4067,7 @@ install_dns_service ()
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
 		--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
+		--health-interval=${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL} \
 		"${IMAGE_DNS}" >/dev/null
 	if_failed_error "Failed starting the DNS service."
 }
@@ -4253,6 +4260,7 @@ install_sshagent_service ()
 		--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent \
 		--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
 		--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
+		--health-interval=${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL} \
 		"${IMAGE_SSH_AGENT}" $ssh_service_args >/dev/null
 	if_failed_error "Failed starting the SSH agent service."
 
@@ -7975,6 +7983,9 @@ export MYSQL_DATABASE=${MYSQL_DATABASE:-default}
 # Container logging settings
 export DOCKSAL_CONTAINER_LOG_MAX_SIZE
 export DOCKSAL_CONTAINER_LOG_MAX_FILE
+
+# Container healthcheck settings
+export DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL
 
 # Handle Alias
 if [[ "$1" == "@"* ]]; then
