@@ -3968,8 +3968,8 @@ install_proxy_service ()
 		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		${mount_certs} \
-        	--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
-        	--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
+		--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
+		--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
 	if_failed_error "Failed starting the proxy service."
 }
@@ -4059,6 +4059,8 @@ install_dns_service ()
 		-p "${DOCKSAL_DNS_IP:-$DOCKSAL_IP}:53:53/udp" --cap-add=NET_ADMIN --dns="$DOCKSAL_DNS_UPSTREAM" --dns="9.9.9.9" \
 		-e DNS_IP="$DOCKSAL_IP" -e DNS_DOMAIN="$DOCKSAL_DNS_DOMAIN" -e LOG_QUERIES="$DOCKSAL_DNS_DEBUG" \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+		--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
+		--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
 		"${IMAGE_DNS}" >/dev/null
 	if_failed_error "Failed starting the DNS service."
 }
@@ -4249,6 +4251,8 @@ install_sshagent_service ()
 	docker volume create --name docksal_ssh_agent >/dev/null 2>&1
 	docker run -d --name docksal-ssh-agent --label "io.docksal.group=system" --restart=unless-stopped \
 		--mount type=volume,src=docksal_ssh_agent,dst=/.ssh-agent \
+		--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
+		--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
 		"${IMAGE_SSH_AGENT}" $ssh_service_args >/dev/null
 	if_failed_error "Failed starting the SSH agent service."
 
