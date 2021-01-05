@@ -1,6 +1,8 @@
 ---
 title: "Wordpress Settings"
-
+aliases:
+  - /en/master/advanced/drupal-settings/
+  - /tools/wordpress/
 ---
 
 Below you will find instructions on configuring your WordPress project to work with Docksal.
