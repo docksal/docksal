@@ -21,6 +21,8 @@ defaults:
 env:
   REPO: docksal/docksal
   DOCKSAL_SSH_AGENT_USE_HOST: 0
+  DOCKSAL_DNS_DISABLED: 1
+  DOCKSAL_DNS_DOMAIN: docksal.site
 
 jobs:
   test:
