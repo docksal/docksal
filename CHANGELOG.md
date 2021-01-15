@@ -1,18 +1,31 @@
 # Changelog
 
-## 1.15.1 (2020-11-30)
-
-### New software versions
-
-- fin v1.102.1
+## 1.15.1 (2021-01-15)
 
 ### Changes and improvements
 
 - Added `COMPOSER_DEFAULT_VERSION` in `services.yml` to support Composer version switching instructions in docs
+- Improved flushing DNS cache on macOS
+- `fin sysinfo` improvements
+  - rearranged items to be more logical
+  - print NFS settings for macOS regardless of the mode (VBOx or Docker Desktop)
+  - print `DOCKER_HOST` unconditionally (may be helpful in any case)
+  - list all projects, not just active
+  - added connectivity checks
+  - added debug information if host DNS check fails
+- Added container logging options to `docksal-dns` and `docksal-ssh-agent` services
+- Added `DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL` option
+  - Can be used to increase container healthcheck interval and thus help with excessive load produced by healthchecks from many concurrently running containers.
+  - Defaults to 10s
+- Minor improvements in tests
 
 ### Documentation
 
 - Moved Composer version docs to tools/composer
+- Added "Applications" section
+  - Moved Drupal and Wordpress docs to a new section
+  - Added Wordpress HTTPS docs
+- Fixed links and typos in docs
 
 
 ## 1.15.0 (2020-11-20)
