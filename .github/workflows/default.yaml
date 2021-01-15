@@ -44,6 +44,12 @@ jobs:
           #- wp
 
     steps:
+      # This is a hack to work around https://github.com/jwilder/docker-gen/issues/315.
+      # Support ticket is open with Github to make sure that this is okay.
+      - name: Update Docker cgroup and restart service
+        run: |
+          sudo rm /etc/docker/daemon.json
+          sudo service docker restart
       -
         name: Login to DockerHub
         uses: docker/login-action@v1
