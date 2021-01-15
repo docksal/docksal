@@ -2,6 +2,7 @@
 title: "Drupal settings"
 aliases:
   - /en/master/advanced/drupal-settings/
+  - /tools/drupal/
 ---
 
 

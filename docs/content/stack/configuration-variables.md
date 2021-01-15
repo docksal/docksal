@@ -73,6 +73,13 @@ The number of docker log files that should be kept before they are removed.
 
 The size of the docker logs before they are rotated.
 
+### DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL
+
+`Default: 10s`
+
+Can be used to increase container healthcheck interval and thus help with excessive load produced by healthchecks from 
+many concurrently running containers.
+
 ### DOCKSAL_DNS_DOMAIN
 
 `Default: docksal`

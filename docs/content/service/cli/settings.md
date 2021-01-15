@@ -54,30 +54,3 @@ There are also "edge" versions available that contain code from ongoing updates,
 edge image unless directed to do so by the Docksal team for testing purposes only.
 
 See documentation for projects using a [custom stack configuration](/stack/custom-configuration/).
-
-## Using Different Composer versions {#composer}
-
-Starting with v2.12.0 of [docksal/cli](https://github.com/docksal/service-cli), Composer v1 and v2 are both installed 
-in the container. v2 is set as the default version, but while not all projects may be able to work with v2 quite yet, 
-v1 is available by setting the `COMPOSER_DEFAULT_VERSION` variable to `1`.
-
-```bash
-fin config set COMPOSER_DEFAULT_VERSION=1
-fin project reset cli
-```
-
-The following Composer optimization packages are no longer relevant for v2 and have been dropped in docksal/cli v2.12.0+:
-
-- [hirak/prestissimo](https://github.com/hirak/prestissimo)
-- [zaporylie/composer-drupal-optimizations](https://github.com/zaporylie/composer-drupal-optimizations) 
-
-To benefit from both optimizations with Composer v1, you would need to pin the image to an older version:
-
-```bash
-# Pick the required (1) PHP version from the list below
-fin config set CLI_IMAGE='docksal/cli:2.11-php7.2'
-fin config set CLI_IMAGE='docksal/cli:2.11-php7.3'
-fin config set CLI_IMAGE='docksal/cli:2.11-php7.4'
-# Reset cli to apply changes
-fin project reset cli
-```

@@ -28,6 +28,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # Web: Apache (DEPRECATED)
   # TODO: remove November 2019
@@ -53,6 +55,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # Web: Nginx
   nginx:
@@ -78,6 +82,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # DB: MySQL
   mysql:
@@ -104,6 +110,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # DB: MySQL
   mariadb:
@@ -130,6 +138,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # DB: PostgreSQL
   pgsql:
@@ -151,6 +161,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # CLI - Used for all console commands and tools.
   cli:
@@ -193,6 +205,7 @@ services:
       - MYSQL_USER
       - MYSQL_PASSWORD
       - MYSQL_DATABASE
+      - COMPOSER_DEFAULT_VERSION
       - COMPOSER_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - COMPOSER_DISABLE_XDEBUG_WARN=${XDEBUG_ENABLED:-0}
     dns:
@@ -202,6 +215,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # Varnish
   varnish:
@@ -221,6 +236,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # Memcached
   memcached:
@@ -234,6 +251,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # Redis
   redis:
@@ -249,6 +268,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # Solr
   solr:
@@ -267,6 +288,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # MailHog
   mail:
@@ -285,6 +308,8 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # Blackfire
   blackfire:
@@ -292,6 +317,8 @@ services:
     environment:
       - BLACKFIRE_SERVER_ID
       - BLACKFIRE_SERVER_TOKEN
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
   # Elastic Search
   elasticsearch:
@@ -314,4 +341,5 @@ services:
       options:
         max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
         max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
