@@ -21,8 +21,6 @@ defaults:
 env:
   REPO: docksal/docksal
   DOCKSAL_SSH_AGENT_USE_HOST: 0
-  IMAGE_VHOST_PROXY: 'docksal/vhost-proxy:fix-container-id'
-  CI: ''
 
 jobs:
   test:
@@ -62,20 +60,6 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v2
-      - 
-        name: Checkout custom vhost-proxy image source
-        uses: actions/checkout@v2
-        with:
-          repository: docksal/service-vhost-proxy
-          ref: 'bug/github-actions-no-container-id'
-          path: service-vhost-proxy
-      - 
-        name: Build substitute docksal/vhost-proxy image
-        env:
-          BUILD_TAG: 'fix-container-id'
-        run: |
-          cd ${GITHUB_WORKSPACE}/service-vhost-proxy
-          make
       -
         name: "Install SSH Key Key"
         run: |
