@@ -46,6 +46,16 @@ jobs:
           #- wp
 
     steps:
+      - name: Check Docker version
+        run: docker version
+      - name: Install latest Docker
+        run: |
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu  $(lsb_release -cs)  stable"
+          sudo apt-get update
+          sudo apt-get install docker-ce
+      - name: Check Docker version
+        run: docker version
       # This is a hack to work around https://github.com/jwilder/docker-gen/issues/315.
       # Support ticket is open with Github to make sure that this is okay.
       - name: Update Docker cgroup and restart service
