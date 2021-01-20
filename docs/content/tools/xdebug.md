@@ -19,7 +19,7 @@ To verify that Xdebug was enabled:
 
 ```bash
 $ fin exec php -v | grep -i xdebug
-    with Xdebug v2.7.2, Copyright (c) 2002-2019, by Derick Rethans
+    with Xdebug v3.0.1, Copyright (c) 2002-2020, by Derick Rethans
 ```
 
 Next, follow the IDE specific setup steps:
@@ -190,3 +190,16 @@ To debug Drush commands using Xdebug and VSCode, add the following to your path 
     - "Server" can be set to `*`
     - "Server Listen Port" should be set to 9000
     - Make sure "Continue to listen for debug sessions even if the debugger windows are all closed" is checked. This will make the debugger window open automatically.
+
+## Configuring Prior Versions
+
+For versions of XDebug prior to v3.0.0 the following changes will need to be made to the projects `.docksal/docksal.yml`
+
+```
+services:
+    cli:
+        environment:
+            - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}
+
+```
+
