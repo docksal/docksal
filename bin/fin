@@ -5974,13 +5974,22 @@ sysinfo ()
 	else
 		echo "VirtualBox VM"
 	fi
-
 	echo "DOCKER_HOST : $DOCKER_HOST"
+
+	# NFS settings
 	if is_mac; then
+		echo
+		echo "███  NFS"
 		echo "DOCKSAL_NFS_PATH : $DOCKSAL_NFS_PATH"
 		echo
-		echo "NFS EXPORTS:"
+		nfsd status
+		echo
+		echo "NFS EXPORTS"
+		echo "----------"
 		cat /etc/exports
+		echo "----------"
+		echo
+		showmount -e
 	fi
 
 	echo
