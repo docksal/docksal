@@ -7996,6 +7996,11 @@ export DOCKSAL_CONTAINER_LOG_MAX_FILE
 # Container healthcheck settings
 export DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL
 
+# Allow other scripts to source the fin script
+if [[ "${BASH_SOURCE[0]}" != $0 ]]; then
+	return 0
+fi
+
 # Handle Alias
 if [[ "$1" == "@"* ]]; then
 	USED_ALIAS=${1#@}
