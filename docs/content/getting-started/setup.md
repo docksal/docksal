@@ -3,6 +3,7 @@ title: "Install Docksal"
 weight: 1
 aliases:
   - /en/master/getting-started/setup/
+  - /en/master/getting-started/env-setup/
 ---
 
 ## System requirements
