@@ -199,6 +199,20 @@ Commands are ran in the same exact way as normal except include the folder they 
 fin drupal/updb
 ```
 
+## Reusing fin functions
+
+To reuse some of the functionality within the `fin` command like `parse_params`, `is_linux`, or any of the functions it's possible to source the `fin` file.
+
+Including this in your command or addon would look like the following.
+
+```bash
+# Find the fin command
+fin=`which fin`
+
+# Source the file to use functions
+[[ -f ${fin} ]] && source $fin
+```
+
 ## More Examples
 
 Check the commands directory (examples/.docksal/commands) located in the [Docksal project](https://github.com/docksal/docksal) 
