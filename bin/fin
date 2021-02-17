@@ -3252,9 +3252,9 @@ project_create ()
 		echo -e "${green}    7.${NC}  Drupal 7"
 		echo -e "${green}    8.${NC}  Wordpress"
 		echo -e "${green}    9.${NC}  Magento"
-		echo -e "${green}    10.${NC}  Laravel"
-		echo -e "${green}    11.${NC}  Symfony Skeleton"
-		echo -e "${green}    12.${NC}  Symfony WebApp"
+		echo -e "${green}    10.${NC} Laravel"
+		echo -e "${green}    11.${NC} Symfony Skeleton"
+		echo -e "${green}    12.${NC} Symfony WebApp"
 		echo -e "${green}    13.${NC} Grav CMS"
 		echo -e "${green}    14.${NC} Backdrop CMS"
 		echo
