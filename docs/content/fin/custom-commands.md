@@ -201,7 +201,7 @@ fin drupal/updb
 
 ## Reusing fin functions
 
-To reuse some of the functionality within the `fin` command like `parse_params`, `is_linux`, or any of the functions it's possible to source the `fin` file.
+It is possible to source the `fin` file in order to reuse some of the functionality within the `fin` command like `parse_params`, `is_linux`, or any of the functions.
 
 Including this in your command or addon would look like the following.
 
