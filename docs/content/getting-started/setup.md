@@ -167,13 +167,13 @@ Click the preferred option to proceed to option-specific docs.
 
 ### Windows and VirtualBox {#install-windows-virtualbox} 
 
-1. Enable Windows Subsystem for Linux (WSL) support
+1. Enable Windows Subsystem for Linux (WSL 1) support
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
-1. Install **Ubuntu 18.04** app from Microsoft Store 
+1. Install **Ubuntu 20.04** app from Microsoft Store 
 
-    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71)
 
 1. Install Docksal (VirtualBox will be installed automatically if necessary)
 
@@ -195,13 +195,13 @@ Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal proje
 to [v2.1.0.5](https://download.docker.com/win/stable/40693/Docker%20Desktop%20Installer.exe) as a temporary measure. 
 {{% /notice %}}
 
-1. Enable Windows Subsystem for Linux (WSL) support
+1. Enable Windows Subsystem for Linux (WSL 1) support
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
-2. Install **Ubuntu 18.04** app from Microsoft Store
+2. Install **Ubuntu 20.04** app from Microsoft Store
 
-    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71)
 
 3. Install Docker Desktop for Windows v3.1.0
 
