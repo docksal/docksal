@@ -184,16 +184,17 @@ teardown() {
 
 	# Setup
 	rm -rf .docksal docroot
+	vhost="test-project.${DOCKSAL_DNS_DOMAIN}"
 
 	# Test
 	# Run non-interactively to skip prompts
 	run bash -c "echo 'fin init' | bash"
 	echo "$output" | grep "Configuration was generated."
-	echo "$output" | grep "http://test-project.docksal"
+	echo "$output" | grep "http://${vhost}"
 	unset output
 
 	# Check if site is available and its name is correct
-	run curl -sLI http://test-project.docksal
+	run curl -sLI "http://${vhost}"
 	echo "$output" | grep "X-Powered-By: PHP"
 	unset output
 }
