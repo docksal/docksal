@@ -26,6 +26,8 @@ echo -e "Going to work in ${yellow}$TESTS_DIR${NC}"
 echo -n "Press Enter to continue..."
 read -p ""
 
+set -euo pipefail
+
 # Cleanup tests dir
 rm -rf "$TESTS_DIR"
 mkdir -p "$GITHUB_WORKSPACE"

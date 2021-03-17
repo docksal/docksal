@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 # Triggers builds for boilerplate-* repos when master branch is tested
 # $1 - repo name, e.g. docksal/boilerplate-drupal7
 build_trigger() {
