@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 setup () {
-	cd ${TRAVIS_BUILD_DIR}/../test-pull
+	cd ${GITHUB_WORKSPACE}/../test-pull
 }
 
 # Debugging

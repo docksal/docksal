@@ -5,4 +5,4 @@
 # Once build starts, manually cancel other provider jobs in Travis UI to avoid waiting for them
 
 # Runs bats interactively for full output
-bats -i "$TRAVIS_BUILD_DIR/tests/quicktest.bats"
+bats -i "$GITHUB_WORKSPACE/tests/quicktest.bats"
