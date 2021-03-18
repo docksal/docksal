@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 # Used to trigger Github Action builds for the dependent repos
 #
 # Usage: github-build-trigger repo-name

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 mkdir "$GITHUB_WORKSPACE/../test-project"
 cd "$GITHUB_WORKSPACE/../test-project"
 mkdir .docksal
