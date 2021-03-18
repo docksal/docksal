@@ -69,9 +69,9 @@ Click the preferred option to proceed to option-specific docs.
 
 With this method, Docker will run inside a VM in VirtualBox.
 
-1. Install VirtualBox v6.1.16
+1. Install VirtualBox v6.1.18
 
-    [![Download VirtualBox v6.1.16](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](https://download.virtualbox.org/virtualbox/6.1.16/VirtualBox-6.1.16-140961-OSX.dmg)
+    [![Download VirtualBox v6.1.18](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](https://download.virtualbox.org/virtualbox/6.1.18/VirtualBox-6.1.18-142142-OSX.dmg)
 
 1. Enable Kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
 
@@ -96,9 +96,9 @@ Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal proje
 to [v2.1.0.5](https://download.docker.com/mac/stable/40693/Docker.dmg) as a temporary measure.
 {{% /notice %}}
 
-1. Install Docker Desktop for Mac v3.1.0
+1. Install Docker Desktop for Mac v3.2.2
 
-    [![Docker Desktop for Mac v3.1.0](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/stable/51484/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Mac v3.2.2](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/stable/61853/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 1. Start Docker Desktop
 
@@ -167,13 +167,13 @@ Click the preferred option to proceed to option-specific docs.
 
 ### Windows and VirtualBox {#install-windows-virtualbox} 
 
-1. Enable Windows Subsystem for Linux (WSL) support
+1. Enable Windows Subsystem for Linux (WSL 1) support
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
-1. Install **Ubuntu 18.04** app from Microsoft Store 
+1. Install **Ubuntu 20.04** app from Microsoft Store 
 
-    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71)
 
 1. Install Docksal (VirtualBox will be installed automatically if necessary)
 
@@ -195,17 +195,17 @@ Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal proje
 to [v2.1.0.5](https://download.docker.com/win/stable/40693/Docker%20Desktop%20Installer.exe) as a temporary measure. 
 {{% /notice %}}
 
-1. Enable Windows Subsystem for Linux (WSL) support
+1. Enable Windows Subsystem for Linux (WSL 1) support
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
-2. Install **Ubuntu 18.04** app from Microsoft Store
+2. Install **Ubuntu 20.04** app from Microsoft Store
 
-    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71)
 
-3. Install Docker Desktop for Windows v3.1.0
+3. Install Docker Desktop for Windows v3.2.2
 
-    [![Docker Desktop for Windows v3.1.0](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/win/stable/51484/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Windows v3.2.2](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/win/stable/61853/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
     
 4. Configure Docker Desktop on Windows
 
