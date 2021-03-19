@@ -31,33 +31,6 @@ services:
     healthcheck:
       interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
 
-  # Web: Apache (DEPRECATED)
-  # TODO: remove November 2019
-  web:
-    hostname: web
-    image: ${WEB_IMAGE:-docksal/web:2.2-apache2.4}
-    volumes:
-      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
-    labels:
-      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
-      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
-      - io.docksal.project-root=${PROJECT_ROOT}
-      - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
-    environment:
-      - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
-      - APACHE_FCGI_HOST_PORT=cli:9000
-      - APACHE_BASIC_AUTH_USER
-      - APACHE_BASIC_AUTH_PASS
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
-
   # Web: Nginx
   nginx:
     hostname: web
