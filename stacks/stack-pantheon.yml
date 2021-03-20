@@ -7,6 +7,8 @@
 # - Redis 4.0
 # - ApacheSolr 3.6
 
+version: "3.9"
+
 services:
   # http(s)://VIRTUAL_HOST
   web:
