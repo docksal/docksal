@@ -3,8 +3,6 @@
 # - MySQL 5.6
 # - PHP 7.2
 
-version: "2.1"
-
 services:
   # http(s)://VIRTUAL_HOST
   web:

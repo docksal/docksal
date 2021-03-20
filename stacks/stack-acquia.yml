@@ -7,8 +7,6 @@
 # - Memcached 1.4
 # - ApacheSolr 4.5
 
-version: "2.1"
-
 services:
   # http(s)://VIRTUAL_HOST
   web:

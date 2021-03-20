@@ -1,7 +1,5 @@
 # Default stack sans DB
 
-version: "2.1"
-
 services:
   # Web
   web:

@@ -6,8 +6,6 @@
 # - PHP 7.4
 # - Redis 6.0
 
-version: "2.1"
-
 services:
   # http(s)://VIRTUAL_HOST
   web:
