@@ -3,7 +3,7 @@ title: "db: Service Options"
 weight: 1
 ---
 
-The default stack uses MySQL for the db service while the pantheon stack uses MariaDB.
+The default stack uses MySQL for the db service while the pantheon and platformsh stacks use MariaDB.
 Docksal has also defined PostreSQL as a db service option. You do not have to make any
 configuration changes to use MySQL, but if you want to specify the use of MariaDB or PostreSQL,
 you will need to modify your `docksal.yml` file.

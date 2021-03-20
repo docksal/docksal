@@ -3,7 +3,7 @@ title: "web: Service Options"
 weight: 1
 ---
 
-The default stack uses Apache for the db service while the pantheon stack uses nginx.
+The default stack uses Apache for the db service while the pantheon and platformsh stacks use nginx.
 If you use the default stack, you do not have to make any configuration changes to use Apache, but 
 if you want to specify the use of nginx, you will need to modify your `docksal.yml` file.
 

@@ -66,6 +66,7 @@ These files are a good reference when you begin creating a [custom project confi
 | `stack-default-nodb.yml`   | The default stack sans the `db` service. |
 | `stack-node.yml`           | Suitable for NodeJS projects. Consists of the `cli` service only. |
 | `stack-pantheon.yml`       | [Pantheon](https://www.pantheon.io/) alike stack with Nginx, MariaDB, PHP-FPM, Solr, Varnish and Redis. |
+| `stack-platformsh.yml`     | [Platform.sh](https://platform.sh/) alike stack with Nginx, MariaDB, PHP-FPM, and Redis. |
 | `volumes-*.yml`            | Different bindings for Docker volumes. Docksal picks the default based on the host OS/hypervisor. |
 
 To enable a particular stack config, use the `DOCKSAL_STACK` configuration variable in your project:
