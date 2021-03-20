@@ -61,7 +61,7 @@ services:
   # DB: MySQL
   mysql:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mysql:5.6-1.5}
+    image: ${DB_IMAGE:-docksal/mysql:5.7-1.5}
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -140,7 +140,7 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.12-php7.3}
+    image: ${CLI_IMAGE:-docksal/cli:2.13-php7.3}
     volumes:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
