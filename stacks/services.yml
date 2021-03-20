@@ -35,6 +35,9 @@ services:
       - APACHE_FCGI_HOST_PORT=cli:9000
       - APACHE_BASIC_AUTH_USER
       - APACHE_BASIC_AUTH_PASS
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # Web: Nginx
   nginx:
