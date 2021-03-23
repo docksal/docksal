@@ -11,7 +11,7 @@ aliases:
 The [Acquia CLI](https://github.com/typhonius/acquia_cli) tool allows you 
 to use all features of the Acquia Cloud API v2 on the command line.  
 
-The tool is pre-installed in `cli` container. Note: required `docksal/cli` version: 2.11.0+.
+The tool is pre-installed in `cli` container. Note: required `docksal/cli` version: 2.13.0+.
 
 
 ## Configuration
