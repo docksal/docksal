@@ -7447,56 +7447,15 @@ provider_pull_acquia_files ()
 # Pull process to pull db from Acquia.
 provider_pull_acquia_db ()
 {
-	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
-
-	# Update Acquia Drush Aliases in container.
-	_exec "${acquia_alias_update}"
-
-	# TODO: Allow for all databases to be downloaded. drush ac-database-list will list all databases for a site.
-	# Following will grab all databases for a site.
-	# local acquia_dbs=$(_exec drush @${hostingsite}.${hostingenv} ac-database-list | awk '{print $3}')
-
-	# Default Acquia DB Name to project name.
-	local acquia_db_name="${remotedb:-${hostingsite}}"
-	if [[ -z "${acquia_db_name}" ]]; then
-		echo-error "Database name is required."
-		exit 1
-	fi
-
 	local query
-	query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
-	if_failed_error "Error retrieving list of backups from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
-
-	# Returns timestamp of last backup.
-	local last_date
-	last_date=$(printf "${query}" | grep started | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
-	if [[ "${last_date}" != "" ]]; then
-		# Convert Date To Y-m-d H:m:s format
-		last_date=$(_exec date --date=@${last_date} "+%Y-%m-%d %H:%M:%S")
-	fi
-
-	# If Last backup was more than 24 hours ago. Create one.
-	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$force" == "force" ]]; then
-		# Create backup on Acquia through Cloud API.
-		echo -e "${acqua}Creating new backup on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-		_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
-		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
-		echo -e "${acqua}Backup queued on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
-		# Sleep for 10 seconds wait for backup to finish.
-		sleep 10
-		# Requery to get a new list of backups.
-		query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
-		if_failed_error "Error retrieving list of backups from Acquia on site ${hostingsite} on environment ${hostingenv} for database ${acquia_db_name}"
-	else
-		echo -e "${acqua}Using latest backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-	fi
-
-	# Returns id of last backup.
-	local last_id=$(printf "${query}" | grep "^ id" | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
-	# Use Drush to download the latest file using the Acquia Cloud API.
-	echo -e "${acqua}Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-	_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
-	if_failed_error "Error Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
+	# ACE accounts use 'prod' while ACP accounts use 'devcloud'
+	# See https://github.com/typhonius/acquia_cli/blob/master/README.md for
+	# more info on realms.
+	local realm=${ACQUIA_REALM:-prod}
+	query=$(_exec acquiacli database:backup:download ${realm}:${hostingsite} ${hostingenv} ${hostingsite} --filename="${db_file}")
+	if_failed_error "Error retrieving backup from Acquia for ${hostingsite} - ${hostingenv}"
+	db_file=$(echo ${query} | awk 'NF>1{print $NF}' | sed 's/\r//')
+	_exec sudo chmod +x ${db_file}
 }
 
 # Pull process to pull files from Acquia.
