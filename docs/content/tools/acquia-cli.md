@@ -36,7 +36,7 @@ As such, it is best to use `.docksal/docksal-local.env` for any personal keys an
 
 ## Usage
 
-Use `fin acli <command>` from the host or `acli <command>` inside `cli`.
+Use `fin exec acli <command>` from the host or `acli <command>` inside `cli`.
 
 Please refer to the [Acquia CLI readme](https://github.com/acquia/cli) for usage details and
 the [Acquia documentation](https://docs.acquia.com/acquia-cloud/develop/api/) for the options available
