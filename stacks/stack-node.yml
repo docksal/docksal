@@ -1,6 +1,6 @@
 # Node.js stack
 
-version: "2.1"
+version: "3.9"
 
 services:
   cli:
