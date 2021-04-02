@@ -13,6 +13,8 @@ on:
       - feature/*
     tags:
       - v*
+    paths:
+      - '!docs/**'
 
 defaults:
   run:
