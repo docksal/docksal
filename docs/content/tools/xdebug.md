@@ -195,3 +195,14 @@ To debug Drush commands using Xdebug and VSCode, add the following to your path 
 
 For versions of XDebug prior to v3.0.0, the following changes will need to be made to the projects `.docksal/docksal.yml`. To not introduce a breaking change within the CLI service and with IDEs the default port has been set back to 9000.
 
+## Configuring Prior Versions
+
+For versions of XDebug prior to v3.0.0, the following changes will need to be made to the projects `.docksal/docksal.yml`.
+
+```
+services:
+    cli:
+        environment:
+            - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}
+```
+
