@@ -19,7 +19,7 @@ To verify that Xdebug was enabled:
 
 ```bash
 $ fin exec php -v | grep -i xdebug
-    with Xdebug v2.7.2, Copyright (c) 2002-2019, by Derick Rethans
+    with Xdebug v3.0.1, Copyright (c) 2002-2020, by Derick Rethans
 ```
 
 Next, follow the IDE specific setup steps:
@@ -125,7 +125,7 @@ You can run your scripts in console and debug them in the same way as browser re
           "name": "Listen for XDebug",
           "type": "php",
           "request": "launch",
-          "port": 9000,
+          "port": 9003,
           "pathMappings": {
             "/var/www/": "${workspaceFolder}"
           }
@@ -136,7 +136,7 @@ You can run your scripts in console and debug them in the same way as browser re
           "request": "launch",
           "program": "${file}",
           "cwd": "${fileDirname}",
-          "port": 9000,
+          "port": 9003,
           "pathMappings": {
             "/var/www/": "${workspaceFolder}"
           }
@@ -166,7 +166,7 @@ To debug Drush commands using Xdebug and VSCode, add the following to your path 
 ## Debugging with NetBeans {#netbeans}
 
 1. Follow the [setup instructions](#setup) to enable the Xdebug integration
-2. Open NetBeans Debugging configuration ("Tools> Options > PHP > Debugging") and set "DebuggerPort" to 9000
+2. Open NetBeans Debugging configuration ("Tools> Options > PHP > Debugging") and set "DebuggerPort" to 9003
 3. Open your project in NetBeans
 4. Configure project properties:
 
@@ -188,5 +188,21 @@ To debug Drush commands using Xdebug and VSCode, add the following to your path 
     - Search for "php-debug"
     - Click "Settings" button below plugin
     - "Server" can be set to `*`
-    - "Server Listen Port" should be set to 9000
+    - "Server Listen Port" should be set to 9003
     - Make sure "Continue to listen for debug sessions even if the debugger windows are all closed" is checked. This will make the debugger window open automatically.
+
+## Configuring Prior Versions
+
+For versions of XDebug prior to v3.0.0, the following changes will need to be made to the projects `.docksal/docksal.yml`. Additionally, to note the port has changed 
+from 9000 to 9003
+
+```
+services:
+    cli:
+        environment:
+            - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}
+        expose:
+            - 9000
+
+```
+
