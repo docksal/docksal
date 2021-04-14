@@ -191,13 +191,15 @@ To debug Drush commands using Xdebug and VSCode, add the following to your path 
     - "Server Listen Port" should be set to 9000
     - Make sure "Continue to listen for debug sessions even if the debugger windows are all closed" is checked. This will make the debugger window open automatically.
 
-## XDebug Modifications
+## Xdebug 3 and `cli` service backwards compatibility
 
-For versions of XDebug prior to v3.0.0, the following changes will need to be made to the projects `.docksal/docksal.yml`. To not introduce a breaking change within the CLI service and with IDEs the default port has been set back to 9000.
+Xdebug 3 ships in `docksal/cli` versions 2.13 and up. To not introduce a breaking change within the CLI service and IDEs configured to use port 9000 with existing projects, the Xdebug configuration in Docksal has set `client_port` to be 9000.
+
+By default Xdebug 3 ships with the `client_port` set to 9003, which is a change from Xdebug 2 which used port 9000, due to potential port conflicts with php-fpm (which also uses port 9000 by default). However, this is only an issue when the aforementioned services are running on a singular host. This is not an issue with Docksal (or most Docker+ projects for that matter).
 
 ## Configuring Prior Versions
 
-For versions of XDebug prior to v3.0.0, the following changes will need to be made to the projects `.docksal/docksal.yml`.
+For versions of XDebug prior to v3.0.0, the following changes will need to be made to the projects `.docksal/docksal.yml` to get Xdebug to work. Note that Xdebug 3 ships with `docksal/cli` versions 2.13 and up.
 
 ```
 services:
@@ -205,4 +207,3 @@ services:
         environment:
             - XDEBUG_CONFIG=remote_host=${DOCKSAL_HOST_IP}
 ```
-
