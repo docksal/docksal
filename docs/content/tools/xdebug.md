@@ -203,6 +203,6 @@ For versions of XDebug prior to v3.0.0, the following changes will need to be ma
 services:
     cli:
         environment:
-            - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}
+            - XDEBUG_CONFIG=remote_host=${DOCKSAL_HOST_IP}
 ```
 
