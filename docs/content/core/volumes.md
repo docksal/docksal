@@ -71,6 +71,11 @@ fin config set DOCKSAL_VOLUMES=<value>
 fin project reset
 ```
 
+{{% notice warning %}}
+Switching volumes is a destructive operation for the whole project stack. To preserve the current state of the database, 
+it has to be exported before it is changed and then imported back.
+{{% /notice %}}
+
 See the table in the [overview](#overview) section for appropriate values based on OS/VM environment.
 
 To check the current value, run `fin config get DOCKSAL_VOLUMES` / `fin config get --global DOCKSAL_VOLUMES`
