@@ -71,6 +71,11 @@ fin config set DOCKSAL_VOLUMES=<value>
 fin project reset
 ```
 
+{{% notice warning %}}
+Switching volumes is a destructive operation for the whole project stack. To preserve the current state of the database, 
+it has to be exported before it is changed and then imported back.
+{{% /notice %}}
+
 See the table in the [overview](#overview) section for appropriate values based on OS/VM environment.
 
 To check the current value, run `fin config get DOCKSAL_VOLUMES` / `fin config get --global DOCKSAL_VOLUMES`
@@ -180,10 +185,9 @@ fin project reset
 
 Wait until the initial unison sync finishes.
 
-{{% notice note %}}
-Once you set a new `DOCKSAL_VOLUMES` option, you must recreate the `cli` container. The easiest way is `fin project reset`,
-but it will also remove all data from the `db` volume. If you want to retain it, remove only the `cli` container, and 
-start the project again: `fin project remove cli; fin project start`
+{{% notice warning %}}
+Switching volumes is a destructive operation for the whole project stack. To preserve the current state of the database,
+it has to be exported before it is changed and then imported back.
 {{% /notice %}}
 
 To see how your project's Docker volumes are defined with `DOCKSAL_VOLUMES=unison` see 
