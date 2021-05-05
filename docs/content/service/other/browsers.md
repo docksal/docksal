@@ -16,7 +16,7 @@ browser images:
 To include one or more of these browsers with your project, update the 
 `services` section of `.docksal/docksal.yml` by adding:
 
-*Chrome*
+**Chrome**
 
 ```yaml
   chrome:
@@ -25,7 +25,7 @@ To include one or more of these browsers with your project, update the
       service: chrome-browser
 ```
 
-*Firefox*
+**Firefox**
 
 ```yaml
   firefox:
@@ -34,7 +34,7 @@ To include one or more of these browsers with your project, update the
       service: firefox-browser
 ```
 
-*Edge*
+**Edge**
 
 ```yaml
   edge:
