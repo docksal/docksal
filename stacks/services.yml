@@ -257,3 +257,31 @@ services:
     << : *dns
     << : *logging
     << : *healthcheck
+
+  # Browser testing.
+  chrome-browser:
+    hostname: chrome
+    image: ${CHROME_BROWSER_IMAGE:-selenium/standalone-chrome}
+    profiles:
+      - docksal-testing
+    << : *dns
+    << : *logging
+    << : *healthcheck
+
+  firefox-browser:
+    hostname: firefox
+    image: ${FIREFOX_BROWSER_IMAGE:-selenium/standalone-firefox}
+    profiles:
+      - docksal-testing
+    << : *dns
+    << : *logging
+    << : *healthcheck
+
+  edge-browser:
+    hostname: edge
+    image: ${EDGE_BROWSER_IMAGE:-selenium/standalone-edge}
+    profiles:
+      - docksal-testing
+    << : *dns
+    << : *logging
+    << : *healthcheck
