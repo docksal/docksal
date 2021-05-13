@@ -8,10 +8,10 @@ aliases:
 
 ## Using Acquia Cloud CLI Commands
 
-The [Acquia CLI](https://github.com/typhonius/acquia_cli) tool allows you 
+The [Acquia CLI](https://github.com/acquia/cli) tool allows you 
 to use all features of the Acquia Cloud API v2 on the command line.  
 
-The tool is pre-installed in `cli` container. Note: required `docksal/cli` version: 2.11.0+.
+The tool is pre-installed in `cli` container. Note: required `docksal/cli` version: 2.13.0+.
 
 
 ## Configuration
@@ -36,9 +36,9 @@ As such, it is best to use `.docksal/docksal-local.env` for any personal keys an
 
 ## Usage
 
-Use `fin acquiacli <command>` from the host or `acquiacli <command>` inside `cli`.
+Use `fin acli <command>` from the host or `acli <command>` inside `cli`.
 
-Please refer to the [Acquia CLI readme](https://github.com/typhonius/acquia_cli) for usage details and
+Please refer to the [Acquia CLI readme](https://github.com/acquia/cli) for usage details and
 the [Acquia documentation](https://docs.acquia.com/acquia-cloud/develop/api/) for the options available
 in the Acquia Cloud API v2.
 

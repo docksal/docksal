@@ -8393,6 +8393,11 @@ case "$1" in
 		shift
 		_exec platform "$@"
 		;;
+  acli)
+    load_configuration
+		shift
+		_exec acli "$@"
+		;;
 	wp)
 		load_configuration
 		shift
