@@ -6705,22 +6705,26 @@ hosts_add ()
 	fi
 	[[ ! "$hostname" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
 
-	# Always make hosts file backup
-	hosts_backup
+  if ! (cat "$HOSTS_FILE" | grep -e "$DOCKSAL_IP $hostname" >/dev/null); then
+    # Always make hosts file backup
+    hosts_backup
 
-	# Add to hosts
-	echo -e "Adding: ${yellow}$DOCKSAL_IP $hostname${NC}"
-	echo -e "Adding: ${yellow}::2 $hostname${NC}"
-	if is_windows; then
-		local tmp="/tmp/hosts.bak.$RANDOM"
-		cp "$HOSTS_FILE" "$tmp"
-		echo "$DOCKSAL_IP $hostname" | tee -a "$tmp" >/dev/null
-		echo "::2 $hostname" | tee -a "$tmp" >/dev/null
-		unix2dos -q "$tmp"
-		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
-	else
-		echo "$DOCKSAL_IP $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
-		echo "::2 $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
+    # Add to hosts
+    echo -e "Adding: ${yellow}$DOCKSAL_IP $hostname${NC}"
+    echo -e "Adding: ${yellow}::2 $hostname${NC}"
+    if is_windows; then
+      local tmp="/tmp/hosts.bak.$RANDOM"
+      cp "$HOSTS_FILE" "$tmp"
+      echo "$DOCKSAL_IP $hostname" | tee -a "$tmp" >/dev/null
+      echo "::2 $hostname" | tee -a "$tmp" >/dev/null
+      unix2dos -q "$tmp"
+      winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
+    else
+      echo "$DOCKSAL_IP $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
+      echo "::2 $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
+    fi
+  else
+    echo "$hostname exists in hosts file"
 	fi
 }
 
