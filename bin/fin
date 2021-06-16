@@ -6717,31 +6717,35 @@ hosts ()
 hosts_add ()
 {
 	local hostname="$1"
-	# Use VIRTUAL_HOST if no parameters provided
-	if [ "$hostname" == "" ]; then
+	# Use project's VIRTUAL_HOST value if no parameters provided
+	if [[ "$hostname" == "" ]]; then
 		check_project_environment
 		load_configuration
-		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
-		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
+		hostname=$(echo "$VIRTUAL_HOST" | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
+		[[ "$(echo "$hostname" | xargs)" == "" ]] && echo-error "Hostname was not provided" && exit 1
 	fi
 	[[ ! "$hostname" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
 
-	# Always make hosts file backup
-	hosts_backup
+	if ! (cat "$HOSTS_FILE" | grep -e "$DOCKSAL_IP $hostname" >/dev/null); then
+		# Always make hosts file backup
+		hosts_backup
 
-	# Add to hosts
-	echo -e "Adding: ${yellow}$DOCKSAL_IP $hostname${NC}"
-	echo -e "Adding: ${yellow}::2 $hostname${NC}"
-	if is_windows; then
-		local tmp="/tmp/hosts.bak.$RANDOM"
-		cp "$HOSTS_FILE" "$tmp"
-		echo "$DOCKSAL_IP $hostname" | tee -a "$tmp" >/dev/null
-		echo "::2 $hostname" | tee -a "$tmp" >/dev/null
-		unix2dos -q "$tmp"
-		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
+		# Add to hosts
+		echo -e "Adding: ${yellow}$DOCKSAL_IP $hostname${NC}"
+		echo -e "Adding: ${yellow}::2 $hostname${NC}"
+		if is_windows; then
+			local tmp="/tmp/hosts.bak.$RANDOM"
+			cp "$HOSTS_FILE" "$tmp"
+			echo "$DOCKSAL_IP $hostname" | tee -a "$tmp" >/dev/null
+			echo "::2 $hostname" | tee -a "$tmp" >/dev/null
+			unix2dos -q "$tmp"
+			winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
+		else
+			echo "$DOCKSAL_IP $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
+			echo "::2 $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
+		fi
 	else
-		echo "$DOCKSAL_IP $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
-		echo "::2 $hostname" | sudo tee -a "$HOSTS_FILE" >/dev/null
+		echo -e "${yellow}$hostname${NC} already exists in hosts file"
 	fi
 }
 
@@ -6749,32 +6753,35 @@ hosts_add ()
 hosts_remove ()
 {
 	local hostname="$1"
-	if [ "$hostname" == "" ]; then
+	# Use project's VIRTUAL_HOST value if no parameters provided
+	if [[ "$hostname" == "" ]]; then
 		check_project_environment
 		load_configuration
-		hostname=$(echo $VIRTUAL_HOST | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
-		[ "$(echo $hostname | xargs)" == "" ] && echo-error "Hostname was not provided" && exit 1
+		hostname=$(echo "$VIRTUAL_HOST" | sed "s/,/ /") # replace comma with space in case someone used complex VIRTUAL_HOST
+		[[ "$(echo "$hostname" | xargs)" == "" ]] && echo-error "Hostname was not provided" && exit 1
 	fi
 
 	[[ ! "$hostname" =~ "." ]] && echo-error "Hostname should contain '.'" && exit 1
 	# Double insurance from removing lines that may damage system
-	( [[ "$hostname" =~ "localhost" ]] || [[ "$hostname" =~ "loopback" ]] || [[ "$hostname" =~ "localnet" ]] || [[ "$hostname" =~ "allnodes" ]] ) &&
-		echo-error "Cannot remove localhost" && exit 1
+	if [[ "$hostname" =~ "localhost" ]] || [[ "$hostname" =~ "loopback" ]] || [[ "$hostname" =~ "localnet" ]] || [[ "$hostname" =~ "allnodes" ]]; then
+		echo-error "Cannot remove host" "Removing ${yellow}${hostname}${NC} is not allowed" && exit 1
+	fi
 	[[ "$hostname" =~ "broadcasthost" ]] && echo-error "Cannot remove broadcasthost" && exit 1
 
 	# Always make hosts file backup
 	hosts_backup
 
 	# Remove from hosts
-	echo -e "Removing lines containing ${yellow}$hostname${NC}"
+	# Drop any lines that include " $hostname"
+	echo -e "Removing ${yellow}${hostname}${NC} host"
 	if is_windows; then
 		local tmp="/tmp/hosts.bak.$RANDOM"
 		cp "$HOSTS_FILE" "$tmp"
-		cat "$HOSTS_FILE" | grep -v "$hostname" | sudo tee "$tmp" >/dev/null
+		cat "$HOSTS_FILE" | grep -v " $hostname" | sudo tee "$tmp" >/dev/null
 		unix2dos -q "$tmp"
 		winsudo "copy /Y $(cygpath -w ${tmp}) $(cygpath -w ${HOSTS_FILE}) && erase $(cygpath -w ${tmp})"
 	else
-		cat "$HOSTS_FILE" | grep -v "$hostname" | sudo tee "$HOSTS_FILE" >/dev/null
+		cat "$HOSTS_FILE" | grep -v " $hostname" | sudo tee "$HOSTS_FILE" >/dev/null
 	fi
 }
 
