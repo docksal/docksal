@@ -13,10 +13,9 @@ on:
       - feature/*
     tags:
       - v*
-    paths:
-      - '!docs/**'
-  # Allow manually triggering a build
-  workflow_dispatch:
+    paths-ignore:
+      - 'docs/**' # Don't run if there were changes to docs only
+  workflow_dispatch: # Allow manually triggering a build
 
 defaults:
   run:
