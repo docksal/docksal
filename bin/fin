@@ -1128,8 +1128,8 @@ docker_desktop_version ()
 
 is_docker_version ()
 {
-	# Skip the check on Play-with-Docker and Katacoda
-	(is_pwd || is_katacoda) && return
+	# Skip the check on GitHub Actions/Play-with-Docker/Katacoda
+	( is_github_actions || is_pwd || is_katacoda ) && return
 
 	# Rely on our own docker binary, except on Linux
 	if is_linux; then
@@ -1144,8 +1144,8 @@ is_docker_version ()
 
 is_docker_server_version ()
 {
-	# Skip the check on Play-with-Docker and Katacoda
-	(is_pwd || is_katacoda) && return
+	# Skip the check on GitHub Actions/Play-with-Docker/Katacoda
+	( is_github_actions || is_pwd || is_katacoda ) && return
 
 	# Rely on our own docker binary, except on Linux
 	if is_linux; then
@@ -4822,6 +4822,12 @@ update_boot2docker ()
 update_tools ()
 {
 	if is_linux; then
+		# The automated get.docker.com installation method does not work properly in GitHub Actions (ubuntu).
+		# We have to rely on the version preinstalled in the runner.
+		is_github_actions
+			install_tools_generic_linux &&
+			return $?
+
 		is_debian &&
 			install_tools_debian &&
 			return $?
