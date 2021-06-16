@@ -4824,7 +4824,7 @@ update_tools ()
 	if is_linux; then
 		# The automated get.docker.com installation method does not work properly in GitHub Actions (ubuntu).
 		# We have to rely on the version preinstalled in the runner.
-		is_github_actions
+		is_github_actions &&
 			install_tools_generic_linux &&
 			return $?
 
