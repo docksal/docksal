@@ -170,6 +170,19 @@ wsl_path ()
 	echo $(wslpath "$@" | tr -d '\r')
 }
 
+# Convert version string like 1.2.3.4 to integer for comparison
+# param $1 version string of 4 components max (e.g., 1.10.3.0)
+ver_to_int ()
+{
+	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d", $1,$2,$3,$4); }'
+}
+
+# docker-compose v1.x.x vs docker compose v2.x.x
+is_compose_v2 ()
+{
+	(( $(ver_to_int "${REQUIREMENTS_DOCKER_COMPOSE}") >= $(ver_to_int "2.0.0") ))
+}
+
 #---------------------------- Global Constants --------------------------------
 
 # Allow to override Docksal version during install.
@@ -181,7 +194,7 @@ DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 REQUIREMENTS_DOCKER='20.10.12'
 REQUIREMENTS_DOCKER_DD='20.10.12'  # Ships with Docker Desktop 4.4.2 (73305)
 REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
-REQUIREMENTS_DOCKER_COMPOSE='1.29.2'
+REQUIREMENTS_DOCKER_COMPOSE='2.0.0-beta.3' # Docker Compose V2 (arm64/M1 compatible)
 REQUIREMENTS_DOCKER_MACHINE='0.16.2' # This is the final docker-machine version
 REQUIREMENTS_VBOX='6.1.22'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
@@ -381,9 +394,16 @@ URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/$(host_arch)/doc
 # See https://github.com/docker/for-win/issues/1460#issuecomment-442585850
 # MS uses a different naming convention, e.g. "docker-18-09-2.zip" instead of "docker-18.09.2.zip".
 URL_DOCKER_WIN="https://dockermsft.blob.core.windows.net/dockercontainer/docker-${REQUIREMENTS_DOCKER//./-}.zip"
-URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
-URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
-URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
+# docker-compose v1
+URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-$(host_arch)"
+URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-$(host_arch)"
+URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-$(host_arch).exe"
+# docker-compose v2
+if is_compose_v2; then
+	URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose-cli/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-darwin-$(host_arch_new)"
+	URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose-cli/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-linux-$(host_arch_new)"
+	URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose-cli/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-windows-$(host_arch_new).exe"
+fi
 # docker-machine
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-$(host_arch)"
 URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-$(host_arch)"
@@ -542,9 +562,19 @@ docker-compose ()
 		[[ ! -O "$SSH_AUTH_SOCK_DIR" ]] && sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 	fi
 
-	# Call regular docker-compose.
-	# "command <binary>" calls the binary directly ignoring any overriding shell functions
-	command docker-compose "$@"
+	if is_compose_v2; then
+		# Call docker compose (v2)
+		# As a plugin for docker cli, it has to be called as "/path/to/binary compose"
+		# This would not be necessary if the binary was installed in the default location
+		# (~/.docker/cli-plugins/docker-compose). However, we install it in ~/.docksal/bin/docker-copose-v2
+		# to prevent conflicts with system binaries.
+		# "command <binary>" calls the binary directly ignoring any overriding shell functions
+		command docker-compose compose "$@"
+	else
+		# Call regular docker-compose.
+		# "command <binary>" calls the binary directly ignoring any overriding shell functions
+		command docker-compose "$@"
+	fi
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -943,13 +973,6 @@ testing_warn ()
 {
 	[[ "$DOCKSAL_VERSION" != 'master' ]] && is_tty && \
 		echo-yellow "[!] Using Docksal version: ${DOCKSAL_VERSION}"
-}
-
-# Convert version string like 1.2.3.4 to integer for comparison
-# param $1 version string of 4 components max (e.g., 1.10.3.0)
-ver_to_int ()
-{
-	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d", $1,$2,$3,$4); }'
 }
 
 #---------------------------- Control functions -------------------------------
