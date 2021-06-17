@@ -119,8 +119,27 @@ is_katacoda ()
 	[[ "$KATACODA" != "" ]]
 }
 
-is_github_actions () {
+is_github_actions ()
+{
 	[[ "$GITHUB_RUN_ID" != "" ]]
+}
+
+# Returns x86_64 / aarch64 (aka "old school")
+host_arch () {
+	case "$(uname -m)" in
+		x86_64) echo "x86_64" ;;
+		aarch64) echo "aarch64" ;;
+		* ) false;;
+	esac
+}
+
+# Returns amd64 / arm64 (aka "new style")
+host_arch_new () {
+	case "$(uname -m)" in
+		x86_64) echo "amd64" ;;
+		aarch64) echo "arm64" ;;
+		* ) false;;
+	esac
 }
 
 #------------------------------------------------------------------------------
@@ -356,8 +375,8 @@ STACKS_VOLUMES_NONE="volumes-none.yml"
 STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
 URL_DOCKER_COM="https://get.docker.com/"
-URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
-URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/$(host_arch)/docker-${REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/$(host_arch)/docker-${REQUIREMENTS_DOCKER}.tgz"
 # Docker stopped publishing docker client binaries for Windows. They are now available from Microsoft.
 # See https://github.com/docker/for-win/issues/1460#issuecomment-442585850
 # MS uses a different naming convention, e.g. "docker-18-09-2.zip" instead of "docker-18.09.2.zip".
@@ -365,9 +384,11 @@ URL_DOCKER_WIN="https://dockermsft.blob.core.windows.net/dockercontainer/docker-
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
-URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
-URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-x86_64"
-URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
+# docker-machine
+URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-$(host_arch)"
+URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-$(host_arch)"
+URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-$(host_arch).exe"
+# boot2docker
 URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER_B2D}/boot2docker.iso"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
