@@ -6097,21 +6097,23 @@ sysinfo ()
 
 	echo
 	echo "███  DOCKER"
-	echo "EXPECTED CLIENT VERSION: ${REQUIREMENTS_DOCKER}"
+	echo "Expected client version: ${REQUIREMENTS_DOCKER}"
 	if is_linux; then
-		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER}"
+		echo "Expected server version: ${REQUIREMENTS_DOCKER}"
 	elif is_docker_native; then
-		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_DD}"
+		echo "Expected server version: ${REQUIREMENTS_DOCKER_DD}"
 	else
-		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_B2D}"
+		echo "Expected server version: ${REQUIREMENTS_DOCKER_B2D}"
 	fi
 	echo
-	docker version
+	echo "Installed versions:"
+	echo
+	docker version 2>/dev/null
 
 	echo
 	echo "███  DOCKER COMPOSE"
-	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_COMPOSE"
-	docker-compose version
+	echo "Expected version:  $REQUIREMENTS_DOCKER_COMPOSE"
+	echo "Installed version: $(docker-compose version --short 2>/dev/null)"
 
 	if [[ "$all" == "all" ]]; then
 		echo
@@ -6122,8 +6124,10 @@ sysinfo ()
 	if is_boot2docker; then
 		echo
 		echo "███  DOCKER MACHINE"
-		echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_MACHINE"
-		docker-machine --version
+		echo "Expected version: $REQUIREMENTS_DOCKER_MACHINE"
+		echo
+		echo "Installed version:"
+		docker-machine --version 2>/dev/null
 		echo
 		docker-machine ls
 
