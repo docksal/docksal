@@ -4587,10 +4587,11 @@ install_tools_debian ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4621,10 +4622,11 @@ install_tools_fedora ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4643,17 +4645,26 @@ install_tools_alpine ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose via pip (this may take a while)..."
-		# docker-compose has to be install via pip on Alpine
-		# See https://github.com/docker/compose/issues/3465
-		apk add --no-cache python3 python3-dev libffi-dev openssl-dev >/dev/null && \
-			# Update pip to avoid warnings like:
-			# - "Cache entry deserialization failed, entry ignored"
-			# - "You are using pip version 10.0.1, however version 19.0.3 is available."
-			pip3 install --upgrade --no-cache-dir pip >/dev/null && \
-			pip3 install "docker-compose==${REQUIREMENTS_DOCKER_COMPOSE}" >/dev/null && \
-			docker-compose --version
-		if_failed "Docker Compose installation/upgrade has failed."
+		if is_compose_v2; then
+			local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+			echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+			echo-green "Downloading ${dc_pkg}..."
+			curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+				chmod +x "$DOCKER_COMPOSE_BIN"
+			if_failed "Docker Compose installation/upgrade has failed."
+		else
+			echo-green "Installing Docker Compose via pip (this may take a while)..."
+			# docker-compose has to be install via pip on Alpine
+			# See https://github.com/docker/compose/issues/3465
+			apk add --no-cache python3 python3-dev libffi-dev openssl-dev >/dev/null && \
+				# Update pip to avoid warnings like:
+				# - "Cache entry deserialization failed, entry ignored"
+				# - "You are using pip version 10.0.1, however version 19.0.3 is available."
+				pip3 install --upgrade --no-cache-dir pip >/dev/null && \
+				pip3 install "docker-compose==${REQUIREMENTS_DOCKER_COMPOSE}" >/dev/null && \
+				docker-compose version --short
+			if_failed "Docker Compose installation/upgrade has failed."
+		fi
 	fi
 }
 
@@ -4670,10 +4681,11 @@ install_tools_generic_linux ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
