@@ -20,6 +20,7 @@ services:
       - cli
     environment:
       - PHP_XHPROF_OUTPUT_DIR=${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
+      - XHPROF_OUTPUT_DIR=${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
     volumes:
       - xhprof_root:${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
     labels:
