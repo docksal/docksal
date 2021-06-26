@@ -1,11 +1,8 @@
 name: Default (push)
 
 on:
-#  pull_request:
-#    branches:
-#      - master
-#      - develop
-#      - feature/*
+  schedule:
+    - cron: '0 10 * * 0' # Every Sunday at 10AM
   push:
     branches:
       - master
