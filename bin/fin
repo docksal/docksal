@@ -5016,6 +5016,8 @@ update ()
 		get_fin_updated
 		# Run the rest of the update with the newly downloaded fin version
 		( "$FIN_PATH_UPDATED" update )
+		# Catch errors here, otherwise we would exit without errors even "fin update" above failed
+		if_failed_error "Updates failed. fin was not updated."
 		# Overwrite old fin
 		sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
 		# Must exit here since we've just overwritten the original fin and this may cause bash to choke and through an error.
