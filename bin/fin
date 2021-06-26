@@ -5043,7 +5043,9 @@ update ()
 	if is_linux; then
 		# Override docker to run it via sudo
 		docker () {
-			sudo command docker "$@"
+			# "command <binary>" calls the binary directly ignoring any overriding shell functions
+			# "sudo command ..." does not work, so we have to invoke via path to binary ("command -v ...")
+			sudo $(command -v docker) "$@"
 		}
 	fi
 
