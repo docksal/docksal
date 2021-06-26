@@ -9,7 +9,7 @@ on:
       - develop
       - feature/*
     tags:
-      - v*
+      - 'v*.*.*'
     paths-ignore:
       - 'docs/**' # Don't run if there were changes to docs only
   workflow_dispatch: # Allow manually triggering a build
