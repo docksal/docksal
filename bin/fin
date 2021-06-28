@@ -443,13 +443,13 @@ pwd ()
 	# -L option should be used at all times because running pwd via absolute path /bin/pwd
 	# on Linux and Windows forces it to resolve current logical dir to physical dir
 	# (resolves symlink into target dir). -L forces using logical dir just like running pwd alone.
-	# We can use `which` here, since it does not care about functions (but `type` does).
+	# "command <binary>" calls the binary directly ignoring any overriding shell functions
 	if is_windows; then
-		$(which pwd) -L | sed 's/^\/cygdrive//'
+		command pwd -L | sed 's/^\/cygdrive//'
 	elif is_wsl; then
-		$(which pwd) -L | sed 's/^\/mnt//'
+		command pwd -L | sed 's/^\/mnt//'
 	else
-		$(which pwd) -L
+		command pwd -L
 	fi
 }
 
@@ -516,21 +516,8 @@ docker-compose ()
 	fi
 
 	# Call regular docker-compose.
-	# We can use `which` here, since it does not care about functions (but `type` does).
-	$(which docker-compose) "$@"
-}
-
-# docker-machine binary wrapper
-# TODO: remove once https://github.com/microsoft/WSL/issues/4078 is resolved
-docker-machine ()
-{
-	# Help WSL resolve the symlinked docker-machine binary on Windows
-	# Only do this if docker-machine is a symlink
-	if [[ -L $(which docker-machine) ]]; then
-		$(readlink $(which docker-machine)) "$@"
-	else
-		$(which docker-machine) "$@"
-	fi
+	# "command <binary>" calls the binary directly ignoring any overriding shell functions
+	command docker-compose "$@"
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -5029,6 +5016,8 @@ update ()
 		get_fin_updated
 		# Run the rest of the update with the newly downloaded fin version
 		( "$FIN_PATH_UPDATED" update )
+		# Catch errors here, otherwise we would exit without errors even "fin update" above failed
+		if_failed_error "Updates failed. fin was not updated."
 		# Overwrite old fin
 		sudo mv -f "$FIN_PATH_UPDATED" "$FIN_PATH"
 		# Must exit here since we've just overwritten the original fin and this may cause bash to choke and through an error.
@@ -5054,7 +5043,9 @@ update ()
 	if is_linux; then
 		# Override docker to run it via sudo
 		docker () {
-			sudo "$(which docker)" "$@"
+			# "command <binary>" calls the binary directly ignoring any overriding shell functions
+			# "sudo command ..." does not work, so we have to invoke via path to binary ("command -v ...")
+			sudo $(command -v docker) "$@"
 		}
 	fi
 
