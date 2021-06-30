@@ -83,6 +83,12 @@ Legend:
 
 - `<image-repo>:<software-version>[-<image-stability-tag>][-<flavor>]`
 
+To use one of these versions put this variable in your .docksal/docksal.env file. For example to use the latest version put this in your docksal.env file
+
+```bash
+SOLR_IMAGE='docksal/solr:latest'
+```
+And then type `fin reset solr`.
 
 ## Multiple Solr Cores
 
