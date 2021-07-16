@@ -78,7 +78,35 @@ Automatic DNS resolution for non-`.docksal` domains (e.g., `example.com`) is not
 for a workaround.
 {{% /notice %}}
 
-## Adding a custom certificate {#custom-certificate}
+## Using Arbitrary Ports
+
+You can have a virtual-host (my-service.my-project.docksal, HTTP (port 80) and HTTPS (port 443) routed to a service 
+running on an arbitrary port in a container using the io.docksal.virtual-host and io.docksal.virtual-port labels on the 
+service container.
+
+This is how it is set up for the MailHog service definition found in `services.yml`:
+
+```yaml
+ # MailHog
+ mail:
+   hostname: mail
+   image: ${MAILHOG_IMAGE:-mailhog/mailhog}
+   volumes:
+     - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
+   labels:
+     - io.docksal.virtual-host=mail.${VIRTUAL_HOST},mail.${VIRTUAL_HOST}.*
+     - io.docksal.virtual-port=8025
+     - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
+```
+
+Your host machine as well as containers will be able to access that virtual-host endpoint.
+
+{{% notice info %}}
+You may also need to [expose the port on the container](https://docs.docker.com/compose/compose-file/compose-file-v2/#expose)
+if it's not already exposed in the base image.
+{{% /notice %}}
+
+## Adding a Custom Certificate {#custom-certificate}
 
 Put your certificates for your project's virtual host into `$HOME/.docksal/certs`. 
 For example, if your project's virtual host is `example.com`, then put CRT and KEY files as:
