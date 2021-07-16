@@ -23,7 +23,7 @@ Note: `cli` is a special case, `cli` itself is seen as software here with `-php.
 
 ## Latest image version
 
-You may notice that there are two versions of the same, e.g.
+You may notice that there are two versions of the same, e.g.:
 
 ```
 docksal/nginx:1.15
@@ -35,10 +35,16 @@ available image version. Right now `docksal/nginx:1.15` is the same as `docksal/
 we release `docksal/nginx:1.15-1.1`, and `docksal/nginx:1.15` would refer to `docksal/nginx:1.15-1.1`, while
 `docksal/nginx:1.15-1.0` would still exist for backwards compatibility. 
 
-Having this latest image tag is a convenient shortcut, but in stacks that are delivered with Docksal 
-the exact version will always be used to avoid situation when newer image version was not pulled to your local.
+Having this latest image tag is a convenient shortcut, but in stacks that are delivered with Docksal, 
+the exact version will always be used to avoid a situation when the newer image version was not pulled to your local.
 
-In you custom stacks or custom Dockerfiles you can use this latest image tags.   
+In your custom stacks or custom Dockerfiles, you can use these latest image tags.
+
+{{% notice info %}}
+This page may not always show the latest image versions available because newer versions can be tagged between Docksal
+releases. See GitHub image repositories for the list of releases with release notes or run `fin image registry docksal/cli`
+to see list of available CLI images.
+{{% /notice %}}
 
 ## CLI
 
