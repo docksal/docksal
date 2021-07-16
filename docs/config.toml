@@ -14,6 +14,11 @@ theme = "learn"
   version = "v1.16.0"
 
   [[params.versions]]
+  version = "Upcoming"
+  branch = "develop"
+  url = "https://develop.docs.docksal.io/"
+
+  [[params.versions]]
   version = "v1.16.0"
   branch = "v1.16.0"
   url = "https://docs.docksal.io"
