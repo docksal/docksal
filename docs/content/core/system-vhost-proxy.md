@@ -68,7 +68,7 @@ services:
 ```
 
 {{% notice note %}}
-The default values for the `web` servcice is `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*`.
+The default value for the `web` service is `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*`.
 {{% /notice %}}
 
 Apply configuration changes with `fin project start` (`fin p start` for short).
