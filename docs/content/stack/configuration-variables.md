@@ -241,13 +241,13 @@ Docker image to use for [ssh-agent service](/core/system-ssh-agent).
 
 Docker image to use as the [vhost-proxy service](/core/system-vhost-proxy).
 
-### SECRET_ACAPI_EMAIL (global or project)
+### SECRET_ACQUIA_CLI_SECRET (global or project)
 
-Acquia Cloud API Email Address. See [Acquia Drush Commands](/tools/acquia-drush/).
+Acquia CLI Secret. See [Acquia CLI](/tools/acquia-cli/).
 
 ### SECRET_ACAPI_KEY (global or project)
 
-Acquia Cloud API Key. See [Acquia Drush Commands](/tools/acquia-drush/).
+Acquia CLI Key. See [Acquia CLI](/tools/acquia-cli/).
 
 ### SECRET_SSH_PRIVATE_KEY
 

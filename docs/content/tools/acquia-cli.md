@@ -22,8 +22,8 @@ generate your Acquia Cloud API Token.
 Add your secret and key with
 
 ```bash
-fin config set --global SECRET_ACQUIACLI_SECRET="lkjd*sdfl2//23498fwernoiuDHljw3897fsk"
-fin config set --global SECRET_ACQUIACLI_KEY="rSxVZN35bo4jTuncGS+CiKdmhxLPL0BaPuyOv"
+fin config set --global SECRET_ACQUIA_CLI_SECRET="lkjd*sdfl2//23498fwernoiuDHljw3897fsk"
+fin config set --global SECRET_ACQUIA_CLI_KEY="rSxVZN35bo4jTuncGS+CiKdmhxLPL0BaPuyOv"
 ``` 
 
 Refresh `cli` service configuration with `fin project start`. This will inject the values into `cli`
