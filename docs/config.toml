@@ -98,6 +98,43 @@ theme = "learn"
 #  branch = "v1.10.0"
 #  url = "https://v1-10-0.docs.docksal.io"
 
+# Adds a H2 section titled "Feedback" to the bottom of each doc. The responses are sent to Google Analytics as events.
+# This feature depends on [services.googleAnalytics] and will be disabled if "services.googleAnalytics.id" is not set.
+# If you want this feature, but occasionally need to remove the "Feedback" section from a single page,
+# add "hide_feedback: true" to the page's front matter.
+[params.ui.feedback]
+enable = true
+# The responses that the user sees after clicking "yes" (the page was helpful) or "no" (the page was not helpful).
+yes = 'Glad to hear it! Please <a href="https://github.com/docksal/docksal/issues/new">tell us how we can improve</a>.'
+no = 'Sorry to hear that. Please <a href="https://github.com/docksal/docksal/issues/new">tell us how we can improve</a>.'
+
+[feedback_heading]
+other = "Feedback"
+
+[feedback_no]
+other = "No"
+
+[feedback_question]
+other = "Was this page helpful?"
+
+[feedback_yes]
+other = "Yes"
+
+[layouts_docs_partials_feedback_improvement]
+other = "suggest an improvement"
+
+[layouts_docs_partials_feedback_issue]
+other = "Open an issue in the GitHub repo if you want to "
+
+[layouts_docs_partials_feedback_or]
+other = "or"
+
+[layouts_docs_partials_feedback_problem]
+other = "report a problem"
+
+[layouts_docs_partials_feedback_thanks]
+other = "Thanks for the feedback. If you have a specific, answerable question about how to use Docksal, ask it on"
+
 [outputs]
   home = [ "AMP", "HTML", "JSON", "Sitemap"]
 
