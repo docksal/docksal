@@ -49,10 +49,12 @@ Apply configuration changes with `fin project start` (`fin p start` for short).
 Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
 
 
-## Using Arbitrary Custom Domains {#custom-domains}
+## Using Custom Domains {#custom-domains}
 
-You can use arbitrary custom domains by extending the `io.docksal.virtual-host` label of the `web` container in 
+You can use custom domains by overriding the `io.docksal.virtual-host` label of the `web` container in 
 either `docksal-local.yml` or `docksal.yml` file in the project.
+
+Multiple domains have to be separated by comans. Wildcards are supported on the left or right side, but not inbetween.
 
 ```yaml
 version: "2.1"
@@ -66,23 +68,24 @@ services:
 ```
 
 {{% notice note %}}
-The default values is `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*`.
+The default values for the `web` servcice is `io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*`.
 {{% /notice %}}
 
 Apply configuration changes with `fin project start` (`fin p start` for short).
 
 Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-proxy`.
 
+This approach can be used to map custom domains to any other service in the project stack.
+
 {{% notice warning %}}
-Automatic DNS resolution for non-`.docksal` domains (e.g., `example.com`) is not supported. See [Managing DNS Manually](/core/system-dns#manual) 
+Automatic DNS resolution for non-`.docksal`/`.docksal.site` domains (e.g., `example.com`) is not supported. See [Managing DNS Manually](/core/system-dns#manual) 
 for a workaround.
 {{% /notice %}}
 
-## Using Arbitrary Ports
+## Using Custom Ports {#custom-ports}
 
-You can have a virtual-host (my-service.my-project.docksal, HTTP (port 80) and HTTPS (port 443) routed to a service 
-running on an arbitrary port in a container using the io.docksal.virtual-host and io.docksal.virtual-port labels on the 
-service container.
+The `io.docksal.virtual-host` lable allows setting the domain(s) that will be routed to an HTTP service (listening on port 80) in your project stack.
+If the service inside the container listens on a different port, you can use the `io.docksal.virtual-port` lable to override the default port mapping.
 
 This is how it is set up for the MailHog service definition found in `services.yml`:
 
@@ -99,7 +102,10 @@ This is how it is set up for the MailHog service definition found in `services.y
      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
 ```
 
-Your host machine as well as containers will be able to access that virtual-host endpoint.
+In the example above, MailHog application listends on port `8025` inside the `mail` container.
+Docksal's vhost-proxy handles the routing and mapping from `http(s)://mail.${VIRTUAL_HOST}` (e.g., http://mail.myproject.docksal.site) to http://mail:8025 (internal endpoint accessible only between containers in a project stack).
+
+Your host machine as well as containers will be able to access the exposed virtual host endpoint.
 
 {{% notice info %}}
 You may also need to [expose the port on the container](https://docs.docker.com/compose/compose-file/compose-file-v2/#expose)
