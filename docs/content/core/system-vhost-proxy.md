@@ -54,7 +54,7 @@ Use `fin vhosts` to confirm virtual host configuration was applied in `vhost-pro
 You can use custom domains by overriding the `io.docksal.virtual-host` label of the `web` container in 
 either `docksal-local.yml` or `docksal.yml` file in the project.
 
-Multiple domains have to be separated by comans. Wildcards are supported on the left or right side, but not inbetween.
+Multiple domains have to be separated by commas. Wildcards are supported on the left or right side, but not inbetween.
 
 ```yaml
 version: "2.1"
