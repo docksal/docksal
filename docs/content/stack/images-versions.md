@@ -42,8 +42,8 @@ In your custom stacks or custom Dockerfiles, you can use these latest image tags
 
 {{% notice info %}}
 This page may not always show the latest image versions available because newer versions can be tagged between Docksal
-releases. See GitHub image repositories for the list of releases with release notes or run `fin image registry docksal/cli`
-to see list of available CLI images.
+releases. See GitHub image repositories for the list of releases with release notes or run `fin image registry <image>`, 
+e.g., `fin image registry docksal/cli`, to see list of available CLI images. [See image commands](/fin/fin-help/#image)
 {{% /notice %}}
 
 ## CLI
