@@ -5,6 +5,7 @@ weight: 4
 pre: "<b>4. </b>"
 aliases:	
   - /en/master/advanced/stack-config/
+hide_feedback: true
 ---
 
 # Stack Configuration

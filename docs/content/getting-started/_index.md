@@ -5,6 +5,7 @@ aliases:
 chapter: true
 weight: 1
 pre: "<b>1. </b>"
+hide_feedback: true
 ---
 
 # Getting Started
