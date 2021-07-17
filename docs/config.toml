@@ -10,6 +10,7 @@ theme = "learn"
   themeVariant = "docksal"
 
   google_tag_manager = "GTM-58ST6XD"
+  google_analytics = "UA-93724315-3"
 
   version = "v1.16.0"
 
