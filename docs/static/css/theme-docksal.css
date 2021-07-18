@@ -135,3 +135,6 @@ body {
 .feedback--response__hidden {
   display: none;
 }
+.gray {
+  fill: #cccccc;
+}

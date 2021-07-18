@@ -23,7 +23,7 @@ If that did not help, take a look at some of the common problems using Docksal a
 If above did not help, try:
 
 - searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced a similar issue and already found a solution or a workaround.
-- asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
+- asking community for support in [Discussions](https://github.com/docksal/docksal/discussions) on GitHub
 - creating a [new issue](https://github.com/docksal/docksal/issues/new) if your problem is still not resolved.
 
 -----
