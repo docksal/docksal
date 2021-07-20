@@ -155,6 +155,10 @@ then it **is** supported too and you can [follow the steps for compatible distri
 In case your distribution in not compatible with [get.docker.com](https://get.docker.com), you will need to install 
 latest stable Docker for your distribution first, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
+{{% notice note %}}
+If Docksal is unable to automatically install Docker during the install process, you must install it manually. You must
+also complete the [post-install instructions](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
+{{% /notice %}}
 
 ### Windows installation options {#install-windows} 
 
