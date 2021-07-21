@@ -316,6 +316,7 @@ GITHUB_API="https://api.github.com"
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
 URL_RELEASE_NOTES="https://docksal.io/updates"
+URL_GITHUB_SPONSOR="https://github.com/sponsors/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/boilerplate-drupal8.git"
 URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
@@ -1267,6 +1268,26 @@ _confirm ()
 				echo 'Please answer yes or no.'
 		esac
 	done
+}
+
+# Display release notes prompt
+release_notes_message ()
+{
+	echo-warning "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
+	# Open the URL in browser
+	# TODO: add support for Linux and Windows/WSL
+	is_mac && open "${URL_RELEASE_NOTES}"
+}
+
+# Displays sponsorship prompt
+sponsor_message ()
+{
+	echo-warning "Ever thought about how much time (and $) Docksal saves you and your team every month?" \
+		"Consider becoming a GitHub Sponsor ❤ to Docksal️. Any contribution is welcome!" \
+		"${URL_GITHUB_SPONSOR}"
+	# Open the URL in browser
+	# TODO: add support for Linux and Windows/WSL
+	#is_mac && open "${URL_GITHUB_SPONSOR}"
 }
 
 #-------------------------- Containers management -----------------------------
@@ -5079,12 +5100,9 @@ update ()
 
 	# [STEP - POST UPDATE]
 	# Show release notes URL after update
-	if is_update; then
-		echo-warning "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
-		# Open release notes in the browser
-		# TODO: add support for Linux and Windows/WSL
-		is_mac && open "${URL_RELEASE_NOTES}"
-	fi
+	is_update && release_notes_message
+	# Show GitHub Sponsors URL after update
+	is_update && sponsor_message
 
 	# Cleanup
 	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
