@@ -7,7 +7,7 @@ services:
 
   cli:
     environment:
-      - XDEBUG_CONFIG=remote_host=ide remote_port=9000  # Point xdebug to the dbgp client in the ide container
+      - XDEBUG_CONFIG=client_host=ide # Point xdebug (v3) to the dbgp client in the ide container
 
   ide:
     extends:
@@ -20,10 +20,10 @@ services:
     environment:
       - IDE_ENABLED
       - IDE_PASSWORD
-      # Point xdebug to the dbgp server (started by IDE) in the ide container.
+      # Point xdebug (v3) to the dbgp server (started by IDE) in the ide container.
       # This is only necessary for debugging php cli sessions initiated directly in the IDE.
       # Normally, you'd be launching a cli script manually inside the cli container and not inside IDE (ide container).
-      - XDEBUG_CONFIG=remote_host=ide remote_port=9000
+      - XDEBUG_CONFIG=client_host=ide
     labels:
       - io.docksal.virtual-host=ide-${VIRTUAL_HOST},ide-${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8080
