@@ -1082,7 +1082,7 @@ is_docker_path ()
 {
 	local _path="${1}"
 	[[ "$_path" == "" ]] && return 1
-	(cd "$_path" 2>/dev/null && docker run --rm -v "$_path":"$_path" docksal/empty 2>/dev/null)
+	(cd "$_path" 2>/dev/null && docker run --rm -v "$_path":"$_path" busybox 2>/dev/null)
 }
 
 # Check VirtualBox version
