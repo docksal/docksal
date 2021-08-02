@@ -4,11 +4,11 @@ aliases:
   - /en/master/tools/xdebug/
 ---
 
-Xdebug can be used to debug both web requests as well as cli scripts (e.g., Drush commands).
+Xdebug can be used to debug both web requests and cli scripts (e.g., Drush commands).
 
 ## Stack Setup {#setup}
 
-Xdebug integration is disabled by default as it causes a roughly 20% performance hit. To enable it:
+Xdebug integration is disabled by default as it causes a major performance hit. To enable it:
 
 ```bash
 fin config set --env=local XDEBUG_ENABLED=1
@@ -19,7 +19,7 @@ To verify that Xdebug was enabled:
 
 ```bash
 $ fin exec php -v | grep -i xdebug
-    with Xdebug v3.0.1, Copyright (c) 2002-2020, by Derick Rethans
+    with Xdebug v3.0.4, Copyright (c) 2002-2021, by Derick Rethans
 ```
 
 Next, follow the IDE specific setup steps:
@@ -86,7 +86,7 @@ fin project start
 
 {{% notice warning %}}
 The script you are trying to debug must reside within the project root directory (`/var/www/`on the server) or
-PHPStorm won't be able to access the scripts's source code and debug it.
+PHPStorm won't be able to access the script's source code and debug it.
 {{% /notice %}}
 
 ### CLI Scripts: Drush {#phpstorm-drush}
@@ -150,6 +150,10 @@ You can run your scripts in console and debug them in the same way as browser re
 
 You can debug both web requests and cli scripts using this configuration.
 
+{{% notice info %}}
+VS Code fans, try the built-in [Visual Studio Code IDE in Docksal](/tools/ide/) with Xdebug configured out of the box.
+{{% /notice %}}
+
 ### CLI Scripts: Drush {#vscode-drush}
 
 To debug Drush commands using Xdebug and VSCode, add the following to your path mappings under the configuration that begins with `"name": "Listen for XDebug",`
@@ -191,18 +195,10 @@ To debug Drush commands using Xdebug and VSCode, add the following to your path 
     - "Server Listen Port" should be set to 9000
     - Make sure "Continue to listen for debug sessions even if the debugger windows are all closed" is checked. This will make the debugger window open automatically.
 
-## XDebug v2 Modifications
+## XDebug v2 vs v3 Considerations
 
-For versions of XDebug prior to v3.0.0 (prior to docksal/cli [v2.13](https://github.com/docksal/service-cli/releases/tag/v2.13.0)), 
-the following changes will need to be made to the projects `.docksal/docksal.yml`: 
+To avoid introducing breaking changes within the CLI service and with IDEs, Docksal does the following:
 
-```
-services:
-    cli:
-        environment:
-            - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP}
-```
-
-XDebug v3 switched the default IDE listener port (`xdebug.client_port`) from `9000` to `9003`. 
-To avoid introducing a breaking change within the CLI service and with IDEs, Docksal uses port `9000` for both XDebug 
-versions (v2 and v3).
+- overrides `xdebug.client_port` with `9000` for XDebug v3 (which switched to port `9003` by default)
+- sets `XDEBUG_CONFIG=client_host=${DOCKSAL_HOST_IP} remote_host=${DOCKSAL_HOST_IP}` to support both 
+v3 (`xdebug.client_host`) and v2 (`xdebug.remote_host`) configuration variables at the same time 
