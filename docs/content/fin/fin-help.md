@@ -7,7 +7,7 @@ aliases:
 
 ## fin {#fin}
 
-	Docksal command line utility (v1.104.0)
+	Docksal command line utility (v1.106.0)
 	Docksal docs: https://docs.docksal.io/
 	
 	Usage: fin [command]
@@ -368,11 +368,12 @@ aliases:
 	Usage: logs [options] [--] [SERVICE...]
 	
 	Options:
-	    --no-color          Produce monochrome output.
-	    -f, --follow        Follow log output.
-	    -t, --timestamps    Show timestamps.
-	    --tail="all"        Number of lines to show from the end of the logs
-	                        for each container.
+	    --no-color              Produce monochrome output.
+	    -f, --follow            Follow log output.
+	    -t, --timestamps        Show timestamps.
+	    --tail="all"            Number of lines to show from the end of the logs
+	                            for each container.
+	    --no-log-prefix         Don't print prefix in logs.
 	
 	Examples:
 	  fin logs web             	Show web container logs
