@@ -11,8 +11,8 @@ NC='\033[0m'
 SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 # Path of the checked out repo
 DOCKSAL_REPO_PATH="$SCRIPT_PATH/../.."
-# Emulate TRAVIS_BUILD_DIR
-export TRAVIS_BUILD_DIR="$TESTS_DIR/build-dir"
+# Emulate GITHUB_WORKSPACE
+export GITHUB_WORKSPACE="$TESTS_DIR/build-dir"
 
 # Output a message and exit. Analogue of perl's die function
 die () {
@@ -26,10 +26,12 @@ echo -e "Going to work in ${yellow}$TESTS_DIR${NC}"
 echo -n "Press Enter to continue..."
 read -p ""
 
+set -euo pipefail
+
 # Cleanup tests dir
 rm -rf "$TESTS_DIR"
-mkdir -p "$TRAVIS_BUILD_DIR"
-cd "$TRAVIS_BUILD_DIR" || die "[Error] creating $TRAVIS_BUILD_DIR"
+mkdir -p "$GITHUB_WORKSPACE"
+cd "$GITHUB_WORKSPACE" || die "[Error] creating $GITHUB_WORKSPACE"
 
 # Copy over Docksal stacks
 echo -e "Going to ${yellow}overwrite${NC} current branch development stacks over home dir stacks."
@@ -42,7 +44,7 @@ cp "$DOCKSAL_REPO_PATH/stacks/"*".yml" "$HOME/.docksal/stacks" || die "[Error] c
 cat << EOF > "$TESTS_DIR/bats"
 #!/usr/bin/env bash
 # NOTE: To debug tests add -i switch here for interactivity
-"${TRAVIS_BUILD_DIR}/tests/scripts/bats/bin/bats" "\$@"
+"${GITHUB_WORKSPACE}/tests/scripts/bats/bin/bats" "\$@"
 EOF
 chmod +x "$TESTS_DIR/bats"
 export PATH="$TESTS_DIR:$PATH"
@@ -51,7 +53,7 @@ export PATH="$TESTS_DIR:$PATH"
 export PATH="$DOCKSAL_REPO_PATH/bin:$PATH"
 
 # Copy over test files
-cp -R "$DOCKSAL_REPO_PATH/tests" "$TRAVIS_BUILD_DIR/" || die "[Error] copying $DOCKSAL_REPO_PATH/tests to $TRAVIS_BUILD_DIR/"
+cp -R "$DOCKSAL_REPO_PATH/tests" "$GITHUB_WORKSPACE/" || die "[Error] copying $DOCKSAL_REPO_PATH/tests to $GITHUB_WORKSPACE/"
 
 # Install bats
 echo "Installing bats..."

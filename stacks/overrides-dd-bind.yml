@@ -3,7 +3,7 @@
 # See: https://github.com/docksal/docksal/issues/1368
 # Upstream issue: https://github.com/docker/for-win/issues/6628
 
-version: "2.1"
+version: "3.9"
 
 volumes:
   project_root:

@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-bats "$TRAVIS_BUILD_DIR/tests/system.bats"
+set -euo pipefail
+
+bats "$GITHUB_WORKSPACE/tests/system.bats"

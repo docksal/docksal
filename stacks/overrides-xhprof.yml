@@ -1,7 +1,7 @@
 # Adds XHProf service to the project
 # The XHProf Outputs can be accessed at xhprof.${VIRTUAL_HOST}
 
-version: "2.1"
+version: "3.9"
 
 services:
 
@@ -14,12 +14,12 @@ services:
 
   # XHProf Service to review
   xhprof:
-    image: ${XHPROF_IMAGE:-wodby/xhprof}
+    image: ${XHPROF_IMAGE:-wodby/xhprof:3.0.2}
     hostname: xhprof
     depends_on:
       - cli
     environment:
-      - PHP_XHPROF_OUTPUT_DIR=${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
+      - XHPROF_OUTPUT_DIR=${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
     volumes:
       - xhprof_root:${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
     labels:

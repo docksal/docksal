@@ -1,7 +1,7 @@
 # Bind mount project volumes
 # Same as mounting host folders, but via named volumes.
 
-version: "2.1"
+version: "3.9"
 
 volumes:
   cli_home:  # /home/docker volume in cli

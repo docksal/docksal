@@ -96,7 +96,9 @@ teardown() {
 	unset output
 
 	# Test output in TTY vs no-TTY mode.
-	[[ "$(fin exec echo)" != "$(fin exec -T echo)" ]]
+	# This test used to work in Travis CI, since Travis emulated a TTY environment.
+	# It does not pass with Github Actions. Commented out.
+	# [[ "$(fin exec echo)" != "$(fin exec -T echo)" ]]
 
 	# Test the no-TTY output is a "clean" string (does not have extra control characters and can be compared)
 	run fin exec -T pwd
@@ -184,16 +186,17 @@ teardown() {
 
 	# Setup
 	rm -rf .docksal docroot
+	vhost="test-project.${DOCKSAL_DNS_DOMAIN}"
 
 	# Test
 	# Run non-interactively to skip prompts
 	run bash -c "echo 'fin init' | bash"
 	echo "$output" | grep "Configuration was generated."
-	echo "$output" | grep "http://test-project.docksal"
+	echo "$output" | grep "http://${vhost}"
 	unset output
 
 	# Check if site is available and its name is correct
-	run curl -sLI http://test-project.docksal
+	run curl -sLI "http://${vhost}"
 	echo "$output" | grep "X-Powered-By: PHP"
 	unset output
 }

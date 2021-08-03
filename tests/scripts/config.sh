@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-mkdir "$TRAVIS_BUILD_DIR/../test-config"
-cd "$TRAVIS_BUILD_DIR/../test-config"
-bats "$TRAVIS_BUILD_DIR/tests/config.bats"
+set -euo pipefail
+
+mkdir "$GITHUB_WORKSPACE/../test-config"
+cd "$GITHUB_WORKSPACE/../test-config"
+bats "$GITHUB_WORKSPACE/tests/config.bats"

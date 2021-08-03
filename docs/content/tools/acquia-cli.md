@@ -8,22 +8,22 @@ aliases:
 
 ## Using Acquia Cloud CLI Commands
 
-The [Acquia CLI](https://github.com/typhonius/acquia_cli) tool allows you 
+The [Acquia CLI](https://github.com/acquia/cli) tool allows you 
 to use all features of the Acquia Cloud API v2 on the command line.  
 
-The tool is pre-installed in `cli` container. Note: required `docksal/cli` version: 2.11.0+.
+The tool is pre-installed in `cli` container. Note: required `docksal/cli` version: 2.13.0+.
 
 
 ## Configuration
 
-Follow the [official docs](https://cloud.acquia.com/#/profile/tokens) to 
+Follow the [official docs](https://cloud.acquia.com/a/profile/tokens) to 
 generate your Acquia Cloud API Token.  
 
 Add your secret and key with
 
 ```bash
-fin config set --global SECRET_ACQUIACLI_SECRET="lkjd*sdfl2//23498fwernoiuDHljw3897fsk"
-fin config set --global SECRET_ACQUIACLI_KEY="rSxVZN35bo4jTuncGS+CiKdmhxLPL0BaPuyOv"
+fin config set --global SECRET_ACQUIA_CLI_SECRET="i0bvTR9Dhf25Y6FzIK0j8NX//ll+GeAC7t75Jg4y8CE="
+fin config set --global SECRET_ACQUIA_CLI_KEY="8842fd3a-e3f3-47e9-916f-6ff760e26358"
 ``` 
 
 Refresh `cli` service configuration with `fin project start`. This will inject the values into `cli`
@@ -36,9 +36,9 @@ As such, it is best to use `.docksal/docksal-local.env` for any personal keys an
 
 ## Usage
 
-Use `fin acquiacli <command>` from the host or `acquiacli <command>` inside `cli`.
+Use `fin acli <command>` from the host or `acli <command>` inside `cli`.
 
-Please refer to the [Acquia CLI readme](https://github.com/typhonius/acquia_cli) for usage details and
+Please refer to the [Acquia CLI readme](https://github.com/acquia/cli) for usage details and
 the [Acquia documentation](https://docs.acquia.com/acquia-cloud/develop/api/) for the options available
 in the Acquia Cloud API v2.
 

@@ -2,7 +2,21 @@
 # To use any service extend it from this file located at ${HOME}/.docksal/stacks/services.yml.
 # See ${HOME}/.docksal/stacks/default.yml for a basic LAMP stack extending from web, db and cli services in this file.
 
-version: "2.1"
+version: "3.9"
+
+x-common-settings:
+  dns: &dns
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+  healthcheck: &healthcheck
+    healthcheck:
+      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+  logging: &logging
+    logging:
+      options:
+        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
+        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
 
 services:
   # Web: Apache
@@ -21,42 +35,9 @@ services:
       - APACHE_FCGI_HOST_PORT=cli:9000
       - APACHE_BASIC_AUTH_USER
       - APACHE_BASIC_AUTH_PASS
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
-
-  # Web: Apache (DEPRECATED)
-  # TODO: remove November 2019
-  web:
-    hostname: web
-    image: ${WEB_IMAGE:-docksal/web:2.2-apache2.4}
-    volumes:
-      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
-    labels:
-      - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
-      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
-      - io.docksal.project-root=${PROJECT_ROOT}
-      - io.docksal.permanent=${SANDBOX_PERMANENT:-false}
-    environment:
-      - APACHE_DOCUMENTROOT=/var/www/${DOCROOT:-docroot}
-      - APACHE_FCGI_HOST_PORT=cli:9000
-      - APACHE_BASIC_AUTH_USER
-      - APACHE_BASIC_AUTH_PASS
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # Web: Nginx
   nginx:
@@ -75,20 +56,14 @@ services:
     - NGINX_SERVER_ROOT=/var/www/${DOCROOT}
     - NGINX_BASIC_AUTH_USER
     - NGINX_BASIC_AUTH_PASS
-    dns:
-    - ${DOCKSAL_DNS1}
-    - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # DB: MySQL
   mysql:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mysql:5.6-1.5}
+    image: ${DB_IMAGE:-docksal/mysql:5.7-1.5}
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -103,15 +78,9 @@ services:
       - MYSQL_RANDOM_ROOT_PASSWORD
       - MYSQL_ONETIME_PASSWORD
       - MYSQL_INITDB_SKIP_TZINFO
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # DB: MySQL
   mariadb:
@@ -131,15 +100,9 @@ services:
     - MYSQL_RANDOM_ROOT_PASSWORD
     - MYSQL_ONETIME_PASSWORD
     - MYSQL_INITDB_SKIP_TZINFO
-    dns:
-    - ${DOCKSAL_DNS1}
-    - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # DB: PostgreSQL
   pgsql:
@@ -154,20 +117,14 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-default}
       - POSTGRES_USER=${POSTGRES_USER:-user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-user}
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.12-php7.3}
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.0}
     volumes:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
@@ -184,9 +141,10 @@ services:
       - DOCROOT
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-      # TODO: remove xdebug.remote_connect_back in June 2020
-      # See https://github.com/docksal/docksal/issues/1238#issuecomment-566779905
-      - XDEBUG_CONFIG=remote_connect_back=0 remote_host=${DOCKSAL_HOST_IP} # Point xdebug to the listener on the host
+      # Point xdebug to the PHP Debug listener on the host
+      # "client_host" used by xdebug 3 (docksal/cli v2.13+). "remote_host" used by xdebug 2 (prior docksal/cli versions).
+      # TODO: Drop "remote_host" in 2022.
+      - XDEBUG_CONFIG=client_host=${DOCKSAL_HOST_IP} remote_host=${DOCKSAL_HOST_IP}
       - PHP_IDE_CONFIG # This helps with console scripts debugging in PHPStorm (the values is set in docksal-local.env)
       - DRUSH_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - DRUSH_OPTIONS_URI=${VIRTUAL_HOST}
@@ -208,15 +166,9 @@ services:
       - COMPOSER_DEFAULT_VERSION
       - COMPOSER_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - COMPOSER_DISABLE_XDEBUG_WARN=${XDEBUG_ENABLED:-0}
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # Varnish
   varnish:
@@ -229,30 +181,18 @@ services:
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
     environment:
       - VARNISH_BACKEND_HOST=web
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # Memcached
   memcached:
     hostname: memcached
     image: ${MEMCACHED_IMAGE:-memcached:1.4-alpine}
     command: ["-m", "128"]  # Set memcached memory limit to 128 MB by default
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # Redis
   redis:
@@ -261,15 +201,9 @@ services:
     environment:
       - REDIS_MAXMEMORY=${REDIS_MAXMEMORY:-256m}
       # Additional variables can be found https://github.com/wodby/redis
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # Solr
   solr:
@@ -281,15 +215,9 @@ services:
       - io.docksal.virtual-host=solr.${VIRTUAL_HOST},solr.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8983
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # MailHog
   mail:
@@ -301,15 +229,9 @@ services:
       - io.docksal.virtual-host=mail.${VIRTUAL_HOST},mail.${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8025
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # Blackfire
   blackfire:
@@ -317,8 +239,9 @@ services:
     environment:
       - BLACKFIRE_SERVER_ID
       - BLACKFIRE_SERVER_TOKEN
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck
 
   # Elastic Search
   elasticsearch:
@@ -326,9 +249,6 @@ services:
     image: ${ELASTICSEARCH_IMAGE:-elasticsearch:6.5.3}
     ports:
       - "${ELASTICSEARCH_PORT_MAPPING:-9200}"
-    dns:
-      - ${DOCKSAL_DNS1}
-      - ${DOCKSAL_DNS2}
     environment:
       - bootstrap.memory_lock=true
       - discovery.type=single-node
@@ -337,9 +257,6 @@ services:
       memlock:
         soft: -1
         hard: -1
-    logging:
-      options:
-        max-size: ${DOCKSAL_CONTAINER_LOG_MAX_SIZE}
-        max-file: ${DOCKSAL_CONTAINER_LOG_MAX_FILE}
-    healthcheck:
-      interval: ${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL}
+    << : *dns
+    << : *logging
+    << : *healthcheck

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-mkdir "$TRAVIS_BUILD_DIR/../test-db"
-cd "$TRAVIS_BUILD_DIR/../test-db"
-bats "$TRAVIS_BUILD_DIR/tests/db.bats"
+set -euo pipefail
+
+mkdir "$GITHUB_WORKSPACE/../test-db"
+cd "$GITHUB_WORKSPACE/../test-db"
+bats "$GITHUB_WORKSPACE/tests/db.bats"

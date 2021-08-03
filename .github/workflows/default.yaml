@@ -1,0 +1,105 @@
+name: Default (push)
+
+on:
+  schedule:
+    - cron: '0 10 * * 0' # Every Sunday at 10AM
+  push:
+    branches:
+      - master
+      - develop
+      - feature/*
+    tags:
+      - 'v*.*.*'
+    paths-ignore:
+      - 'docs/**' # Don't run if there were changes to docs only
+  workflow_dispatch: # Allow manually triggering a build
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  REPO: docksal/docksal
+  DOCKSAL_SSH_AGENT_USE_HOST: 0
+  DOCKSAL_DNS_DISABLED: 1
+  DOCKSAL_DNS_DOMAIN: docksal.site
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false # Don't cancel other jobs if one fails
+      matrix:
+        suite:
+          #- quicktest # Uncomment to run
+          - project
+          - config
+          - db
+          - system
+          - commands
+          #- acquia
+          #- pantheon
+          #- platform
+          #- drush
+          #- wp
+
+    steps:
+      # Hack to fix docker-gen in Github Actions
+      # Drops docker daemon config with custom cgroup (which docker-gen does not support)
+      # See https://github.com/jwilder/docker-gen/issues/315
+      - name: Fix docker-gen in Github Actions
+        run: |
+          sudo rm /etc/docker/daemon.json
+          sudo service docker restart
+      -
+        name: Install BATS (tests)
+        run: |
+          git clone https://github.com/bats-core/bats-core.git
+          cd bats-core
+          sudo ./install.sh /usr/local
+          bats -v
+      -
+        name: Install SSH key (tests)
+        run: |
+          mkdir -p $HOME/.ssh
+          echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
+          chmod 400 $HOME/.ssh/project_key
+        env:
+          SSH_KEY: ${{ env.SSH_KEY }}
+      -
+        # Calculate branch for Docksal installation
+        # Use develop for 3rd-party PRs
+        name: Calculate branch
+        id: use_branch
+        run: |
+          USE_BRANCH="$(echo ${GITHUB_REF#refs/heads/})"
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" && "${GITHUB_REPOSITORY}" == "${REPO}" ]]; then USE_BRANCH="${PR_BRANCH}"; fi
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" && "${GITHUB_REPOSITORY}" != "${REPO}" ]]; then USE_BRANCH='develop'; fi
+          echo "::set-output name=branch::$(echo ${USE_BRANCH})"
+          echo "branch: ${USE_BRANCH}"
+        env:
+          PR_BRANCH: ${{ github.base_ref }}
+      -
+        name: Install Docksal
+        # This installs Docksal using the passed DOCKSAL_VERSION value
+        run: curl -sSL http://get.docksal.io | bash
+        env:
+          DOCKSAL_VERSION: ${{ steps.use_branch.outputs.branch }}
+      -
+        name: fin sysinfo
+        run: fin sysinfo
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Tests
+        run: tests/scripts/${SUITE}.sh
+        env:
+          SUITE: ${{ matrix.suite }}
+      # Commenting out at the moment until repos are converted over to GithuB Actions
+      #-
+      #   if: ${{ matrix.suite }} == "project"
+      #   name: "Execute Boilerplate Tests"
+      #   run: tests/scripts/boilerplates.sh

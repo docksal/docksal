@@ -87,7 +87,7 @@ many concurrently running containers.
 This is the domain name used for Docksal project URLs, i.e., `http://$PROJECT_NAME.$DOCKSAL_DNS_DOMAIN`. 
 Project named `myproject` will result in `http://myproject.docksal` URL by default.
 
-## DOCKSAL_DNS_IP
+### DOCKSAL_DNS_IP
 
 Can be used to override IP binding for the docksal-dns system service (Linux only).
 
@@ -172,11 +172,33 @@ Only used on Mac and Windows if `DOCKSAL_SSH_AGENT_USE_HOST` is set to `1`.
 
 When set to `1`, `fin` will not send [minimal statistic information](/core/analytics).
 
+### DOCKSAL_USE_RC
+
+When set to `1`, `fin` will check for the availability of release candidate versions. If the newest version available
+is a release candidate, it will be download when you run `fin update`.
+
+```
+fin config set --global DOCKSAL_USE_RC=1
+```
+
 ### DOCKSAL_VERSION
 
 `Default: master`
 
 Allows for overriding the Docksal version used for checking for updates. Can be used to pin Docksal version.
+
+Install or update to a specific version:
+```
+DOCKSAL_VERSION=v1.15.0 bash <(curl -fsSL https://get.docksal.io)
+```
+Switch to a specific version (after Docksal is installed)
+```
+DOCKSAL_VERSION=v1.15.0 fin update
+```
+Pin a specific version for good (no updates)
+```
+fin config set --global DOCKSAL_VERSION=v1.15.0
+```
 
 ### DOCKSAL_VHOST_PROXY_IP
 
@@ -219,13 +241,13 @@ Docker image to use for [ssh-agent service](/core/system-ssh-agent).
 
 Docker image to use as the [vhost-proxy service](/core/system-vhost-proxy).
 
-### SECRET_ACAPI_EMAIL (global or project)
+### SECRET_ACQUIA_CLI_SECRET (global or project)
 
-Acquia Cloud API Email Address. See [Acquia Drush Commands](/tools/acquia-drush/).
+Acquia CLI Secret. See [Acquia CLI](/tools/acquia-cli/).
 
 ### SECRET_ACAPI_KEY (global or project)
 
-Acquia Cloud API Key. See [Acquia Drush Commands](/tools/acquia-drush/).
+Acquia CLI Key. See [Acquia CLI](/tools/acquia-cli/).
 
 ### SECRET_SSH_PRIVATE_KEY
 

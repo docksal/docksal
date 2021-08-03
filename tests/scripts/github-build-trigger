@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Used to trigger Github Action builds for the dependent repos
+#
+# Usage: github-build-trigger repo-name
+#
+# Example: github-build-trigger docksal/drupal8
+
+# Read repo name from the first argument and replace / with %2F
+# The %2F in the request URL is required so that the owner and repository name in the repository slug are interpreted
+# as a single URL segment.
+REPO=${1/\//%2F}
+
+# Read branch from the second argument. Use "master" by default
+BRANCH=${2:-master}
+
+# Read the workflow ID. Use "default" by default
+WORKFLOW_ID=${3:-default}
+
+body='{
+"ref":"'${BRANCH}'"
+}'
+
+curl -s -X POST \
+	-H "Content-Type: application/json" \
+	-H "Accept: application/vnd.github.v3+json" \
+	-H "Authorization: token $GITHUB_API_TOKEN" \
+	-d "$body" \
+	${GITHUB_API_URL}/repo/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches
