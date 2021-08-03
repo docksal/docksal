@@ -3742,7 +3742,7 @@ stats_ping ()
 	local user_agent
 	is_linux && user_agent="fin/${FIN_VERSION} (Linux ${OS_NAME}-${OS_VERSION})"
 	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X ${OS_VERSION})"
-	is_windows && user_agent="fin/${FIN_VERSION} (Windows NT ${OS_VERSION})"
+	(is_wsl || is_windows) && user_agent="fin/${FIN_VERSION} (Windows NT ${OS_VERSION})"
 
 	# Local instances
 	local source='Local'
