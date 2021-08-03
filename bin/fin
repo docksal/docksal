@@ -5195,7 +5195,7 @@ check_for_updates ()
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ]"
-		echo "You can update after this process by running fin update"
+		echo -e "You can update after this process by running ${yellow}fin update${NC}"
 		echo "Press Enter to continue"
 		read -p ''
 	fi
