@@ -96,7 +96,7 @@ is_mac_dd_hk ()
 # TODO: figure out a better/more reliable check
 is_mac_dd_vf ()
 {
-	is_mac && is_docker_native && (ip addr show | grep 192.168.81.1 > /dev/null)
+	is_mac && is_docker_native && (ifconfig | grep 192.168.81.1 > /dev/null)
 }
 
 # CI
