@@ -1276,7 +1276,7 @@ _confirm ()
 # Display release notes prompt
 release_notes_message ()
 {
-	echo-warning "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
+	echo-notice "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
 	# Open the URL in browser
 	# TODO: add support for Linux and Windows/WSL
 	is_mac && open "${URL_RELEASE_NOTES}"
@@ -1285,7 +1285,7 @@ release_notes_message ()
 # Displays sponsorship prompt
 sponsor_message ()
 {
-	echo-warning "Ever thought about how much time (and $) Docksal saves you and your team every month?" \
+	echo-notice "Ever thought about how much time (and $) Docksal saves you and your team every month?" \
 		"Consider becoming a GitHub Sponsor ❤ to Docksal️. Any contribution is welcome!" \
 		"${URL_GITHUB_SPONSOR}"
 	# Open the URL in browser
