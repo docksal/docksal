@@ -398,7 +398,7 @@ echo-error ()
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}"
 	shift
 	for arg in "$@"; do
-		echo -e "        $arg"
+		echo -e "         $arg"
 	done
 }
 
