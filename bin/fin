@@ -404,7 +404,7 @@ echo-error ()
 
 echo-notice ()
 {
-	echo -e "${lightmagenta_bg} ALERT: ${NC} ${lightmagenta}$1${NC}"
+	echo -e "${lightmagenta_bg} NOTICE: ${NC} ${lightmagenta}$1${NC}"
 	shift
 	for arg in "$@"; do
 		echo -e "         $arg"
