@@ -2,22 +2,25 @@
 
 FIN_VERSION=1.106.0
 
+# Predefined terminal colors
+# Format: '\e[<formatting>;<text-color>;<background-color>m'
+# See https://misc.flogisoft.com/bash/tip_colors_and_formatting
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
-	red='\033[0;91m'
-	red_bg='\033[101m'
-	yellow_bg='\033[43m'
-	lightmagenta_bg='\033[0;105m'
-	green='\033[0;32m'
-	green_bg='\033[42m'
-	yellow='\033[0;33m'
-	yellow_bold='\033[1;33m'
-	blue='\033[0;34m'
-	lime='\033[0;92m'
-	acqua='\033[0;96m'
-	magenta='\033[0;35m'
-	lightmagenta='\033[0;95m'
-	NC='\033[0m'
+	green='\e[0;32;49m'
+	green_bg='\e[0;42;30m'
+	yellow='\e[0;33;49m'
+	yellow_bold='\e[1;33;49m'
+	yellow_bg='\e[0;43;30m'
+	red='\e[0;91;49m'
+	red_bg='\e[0;101;30m'
+	blue='\e[0;34;49m'
+	lime='\e[0;92;49m'
+	acqua='\e[0;96;49m'
+	magenta='\e[0;35;49m'
+	lightmagenta='\e[0;95;49m'
+	lightmagenta_bg='\e[0;105;30m'
+	NC='\e[0m'
 fi
 
 #-------------------------------- OS Checks ------------------------------------
