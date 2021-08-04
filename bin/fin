@@ -1546,7 +1546,7 @@ _healthcheck_wait ()
 		sleep ${delay};
 		elapsed=$((elapsed + delay))
 		if ((elapsed > timeout)); then
-			echo-error "Project heathcheck has timed out" \
+			echo-error "Project healthcheck has timed out" \
 				"One or more containers did not enter a healthy state within ${timeout} seconds of the project start." \
 				"See ${yellow}fin project status${NC} for details" \
 				"Check ${yellow}fin logs${NC} for more details"
