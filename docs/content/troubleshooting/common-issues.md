@@ -55,62 +55,43 @@ Sometimes Virtual Box fails to initialize its network interfaces properly.
 
 ## Issue 2. Error checking TLS Connection (VM is not accessible) {#issue-02}
 
-### 2a. Certificate validation, getsockopt connection refused:
+There can be two very similar errors starting with "Error checking TLS connection" and ending with:
 
-```
-Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
-You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
-Be advised that this will trigger a Docker daemon restart which will stop running containers.
-```
+- "getsockopt: connection refused"
 
-#### How to Resolve
+    ```
+    Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
+    You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
+    Be advised that this will trigger a Docker daemon restart which will stop running containers.
+    ```
 
-Sometimes docker-machine certificates re-generation fails. Perform the following steps to resolve:
+- "x509: certificate has expired or is not yet valid"
 
-1. Perform `fin vm restart`
-2. If above did not help, then reboot your local host
-3. If above did not help, perform commands below and then reboot your host:
-
-	```bash
-	fin docker-machine regenerate-certs docksal -f
-	fin vm restart
-	```
-
-4. In the rare cases when above did not help the only solution is to delete the existing VM and re-create it.
-
-	```bash
-	fin vm remove
-	fin system start
-	```
-
-
-### 2b. Certificate validation, x509 certificate has expired 
-
-```
-Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": x509: certificate has expired or is not yet valid
-You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
-Be advised that this will trigger a Docker daemon restart which might stop running containers.
-
- ERROR:  Failed to properly access virtual machine
-        In case you see certificates problem, try rebooting your local host.
-        Common issues: https://docs.docksal.io/troubleshooting/common-issues/
-```
+    ```
+    Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": x509: certificate has expired or is not yet valid
+    You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
+    Be advised that this will trigger a Docker daemon restart which might stop running containers.
+    ```
 
 #### How to Resolve
-
-For reference: https://docs.docker.com/machine/reference/regenerate-certs/
-
-If you see the above error where it mentions x509: certificate has expired or is not yet valid, then you need to regenerate your certificates with the added `--client-certs` argument to the regenerate command. Perform the following steps:
 
 1. Run the following command:
 
 	```bash
-	fin docker-machine regenerate-certs -f --client-certs docksal
+	fin docker-machine regenerate-certs --client-certs --force docksal
 	fin vm restart
 	```
 
-2. Verify the docksal machine starts and that you can start your projects.
+    For reference: https://docs.docker.com/machine/reference/regenerate-certs/
 
+2. Verify the docksal VM starts and that you can start your projects.
+
+In the rare cases when above did not help, the only solution is to delete the existing VM and re-create it:
+
+```bash
+fin vm remove
+fin system start
+```
 
 
 ## Issue 3. Out-of-memory Issues {#issue-03}
