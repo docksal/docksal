@@ -3172,7 +3172,7 @@ remove ()
 
 	# Alert when no containers specified and no force passed
 	if [[ "${ARGV[0]}" == "" ]] && [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
-		echo-notice "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
+		echo-warning "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
 		_confirm "Continue?";
 	fi
 
@@ -3473,7 +3473,7 @@ project_erase ()
 
 	# Alert when force passed
 	if [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
-		echo-notice "DESTRUCTIVE OPERATION" \
+		echo-warning "DESTRUCTIVE OPERATION" \
 			"Removing containers of $COMPOSE_PROJECT_NAME and ${magenta}removing all files in $PROJECT_ROOT${NC}"
 		_confirm "         Continue?";
 	fi
@@ -4797,7 +4797,7 @@ update_boot2docker ()
 		if (( $(ver_to_int "$REQUIREMENTS_DOCKER_B2D") > $(ver_to_int "$b2d_version") )); then
 			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
 				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
-				echo-notice "This update will destroy and recreate the VM!" \
+				echo-warning "This update will destroy and recreate the VM!" \
 					"You can skip the VM update for now, create DB backups/etc., then restart the update to complete it." \
 					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
 				if _confirm "Do you want to update the VM now?" --no-exit; then
