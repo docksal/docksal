@@ -402,7 +402,7 @@ echo-error ()
 	done
 }
 
-echo-alert ()
+echo-notice ()
 {
 	echo -e "${lightmagenta_bg} ALERT: ${NC} ${lightmagenta}$1${NC}"
 	shift
@@ -957,10 +957,10 @@ check_docker_server_version ()
 	if ! is_docker_server_version; then
 		# Since we do not control Docker Desktop, ask user to update manually when necessary
 		if is_docker_native; then
-			echo-alert "Please update Docker Desktop manually." \
+			echo-notice "Please update Docker Desktop manually." \
 				"Expected Docker Desktop version: ${REQUIREMENTS_DOCKER_DESKTOP}"
 		else
-			echo-alert "Required Docker server version is $REQUIREMENTS_DOCKER" \
+			echo-notice "Required Docker server version is $REQUIREMENTS_DOCKER" \
 				"Run ${yellow}fin update${NC} to update to the required version." \ ""
 		fi
 	fi
@@ -1060,7 +1060,7 @@ check_docksal_running ()
 {
 	check_docker_running
 	if ! is_docksal_running; then
-		echo-alert "Some Docksal services were not running" "Restarting Docksal system services..."
+		echo-notice "Some Docksal services were not running" "Restarting Docksal system services..."
 		sleep 1
 		system_reset
 	fi
@@ -3172,7 +3172,7 @@ remove ()
 
 	# Alert when no containers specified and no force passed
 	if [[ "${ARGV[0]}" == "" ]] && [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
-		echo-alert "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
+		echo-notice "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
 		_confirm "Continue?";
 	fi
 
@@ -3473,7 +3473,7 @@ project_erase ()
 
 	# Alert when force passed
 	if [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
-		echo-alert "DESTRUCTIVE OPERATION" \
+		echo-notice "DESTRUCTIVE OPERATION" \
 			"Removing containers of $COMPOSE_PROJECT_NAME and ${magenta}removing all files in $PROJECT_ROOT${NC}"
 		_confirm "         Continue?";
 	fi
@@ -4770,7 +4770,7 @@ update_virtualbox ()
 		is_vbox_version
 		local res=$?
 		if [[ "$res" != "0" ]]; then
-			[[ "$res" == "2" ]] && echo-alert "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
+			[[ "$res" == "2" ]] && echo-notice "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
 			# Note: install_virtualbox automatically stops the machine if necessary, but will not automatically start it.
 			install_virtualbox
 		fi
@@ -4797,7 +4797,7 @@ update_boot2docker ()
 		if (( $(ver_to_int "$REQUIREMENTS_DOCKER_B2D") > $(ver_to_int "$b2d_version") )); then
 			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
 				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
-				echo-alert "This update will destroy and recreate the VM!" \
+				echo-notice "This update will destroy and recreate the VM!" \
 					"You can skip the VM update for now, create DB backups/etc., then restart the update to complete it." \
 					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
 				if _confirm "Do you want to update the VM now?" --no-exit; then
@@ -6438,7 +6438,7 @@ load_configuration ()
 init ()
 {
 	if [[ "$(get_project_path)" != "" ]] ; then
-		echo-alert "The project exists but no init found" \
+		echo-notice "The project exists but no init found" \
 			"Existing Docksal project was found in $(get_project_path)" \
 			"Create your own \`init\` command to tell fin how to re-initialize your project." \
 			"See ${yellow}fin help init${NC} for details"
@@ -7931,7 +7931,7 @@ if ! is_windows; then
 		# Don't display this in PWD and Katacoda since users do not control those environments anyway.
 		# TODO: handle this case better
 		if ! (is_pwd || is_katacoda); then
-			echo-alert "Running as root is not recommended"
+			echo-notice "Running as root is not recommended"
 		fi
 	fi
 fi
