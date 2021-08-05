@@ -260,3 +260,15 @@ services:
     << : *dns
     << : *logging
     << : *healthcheck
+
+  # Cloudflare Argo Tunnel
+  cloudflared:
+    hostname: cloudflared
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:2021.8.1}
+    environment:
+      - TUNNEL_URL=http://web
+      - NO_AUTOUPDATE=true
+    command: ["tunnel"]
+    << : *dns
+    << : *logging
+    << : *healthcheck
