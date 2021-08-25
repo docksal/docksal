@@ -1,8 +1,8 @@
 # Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases/latest) [![Build Status](https://img.shields.io/travis/docksal/docksal.svg?style=flat-square)](https://travis-ci.org/docksal/docksal)
 
-[![Docs](https://img.shields.io/badge/%E2%9A%99-%20Install%20Docksal%20-blue.svg)](https://docs.docksal.io/getting-started/setup/)
-[![Blog](https://img.shields.io/badge/📖-Tips%20and%20Updates-orange.svg)](https://blog.docksal.io)
-[![Chat](https://img.shields.io/gitter/room/docksal/community-support.svg)](https://gitter.im/docksal/community-support)
+[![Documentation](https://img.shields.io/badge/📖-Documentation-blue.svg?style=for-the-badge)](https://docs.docksal.io)
+[![Blog](https://img.shields.io/badge/📰-Tips%20and%20Updates-orange.svg?style=for-the-badge)](https://blog.docksal.io)
+[![GitHub Discussions](https://img.shields.io/github/discussions/docksal/docksal?style=for-the-badge)](https://github.com/docksal/docksal/discussions)
 
 Docker powered web development environments for macOS, Windows, and Linux. Unified environment for your team regardless of the OS.
 
