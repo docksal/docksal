@@ -62,9 +62,9 @@ More advanced use cases and tutorials are available in the [Documentation](https
 
 Ready to give back? Check the [Contributing](CONTRIBUTING.md) docs on how to get involved.
 
-We have chat rooms on GitHub Discussions and Slack where questions can be asked and answered: 
+We have GitHub Discussions and chat rooms on Slack where questions can be asked and answered: 
 
-- [Discussions](https://github.com/docksal/docksal/discussions) on GitHub
+- [GitHub Discussions](https://github.com/docksal/docksal/discussions)
 - [Drupal Slack](https://app.slack.com/client/T06GX3JTS/C6GPEEEV8)
 
 If you have experience with Docksal and Docker, please stick around in the rooms to help others.
