@@ -2362,6 +2362,7 @@ show_help_pull ()
 	printh "--db-name=<dbname>" "Specify the DB Name to import into. (Defaults to default)"
 	printh "--force" "Generate and pull a new db dump, rather than using locally cached in /tmp"
 	printh "--remote-db=<remotedb>" "Specify the remote DB name to pull. (Used with Acquia)"
+	printh "--progress" "Display a progress meter for DB import"
 
 	echo
 	echo "Extra Options for Files"
@@ -7327,7 +7328,12 @@ provider_pull_db ()
 	echo -e "${acqua}Truncating Existing Database${NC}"
 	mysql_db_truncate "${dbname}" > /dev/null
 	# Execute ZCAT on the db file and import into mysql database.
-	_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
+	echo -e "${acqua}Importing DB file...${NC}"
+	if [[ "$progress" == "progress" ]]; then
+		_exec "pv ${db_file} | zcat | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
+	else
+		_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
+	fi
 	if_failed_error "Error importing DB"
 	echo-green "DB Pull Successful"
 }
