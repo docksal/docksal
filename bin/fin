@@ -2362,7 +2362,7 @@ show_help_pull ()
 	printh "--db-name=<dbname>" "Specify the DB Name to import into. (Defaults to default)"
 	printh "--force" "Generate and pull a new db dump, rather than using locally cached in /tmp"
 	printh "--remote-db=<remotedb>" "Specify the remote DB name to pull. (Used with Acquia)"
-	printh "--progress" "Display a progress meter for DB import"
+	printh "--progress" "Show import progress."
 
 	echo
 	echo "Extra Options for Files"
