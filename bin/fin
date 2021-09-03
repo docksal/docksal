@@ -7306,6 +7306,12 @@ provider_pull_db ()
 	# Get the time from 24 hours ago.
 	local yesterday=$(_exec date --date='yesterday' "+%Y-%m-%d %H:%M:%S");
 
+	# Use cli's pv for progress if requested.
+	local progress_pipe='cat'
+	if ( [[ "$progress" == "progress" ]] ); then
+		progress_pipe='pv'
+	fi
+
 	# Check to see if file doesn't exist, or if file exists and is older, or using force flag
 	if ( [[ "${file_exists}" == "0" ]] && [[ "${file_time}" == "" ]] ) || ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
 		# Check to see if File Is Older than 1 hour
@@ -7329,11 +7335,7 @@ provider_pull_db ()
 	mysql_db_truncate "${dbname}" > /dev/null
 	# Execute ZCAT on the db file and import into mysql database.
 	echo -e "${acqua}Importing DB file...${NC}"
-	if [[ "$progress" == "progress" ]]; then
-		_exec "pv ${db_file} | zcat | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
-	else
-		_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
-	fi
+	_exec "${progress_pipe} ${db_file} | zcat | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
 	if_failed_error "Error importing DB"
 	echo-green "DB Pull Successful"
 }
@@ -7547,7 +7549,7 @@ provider_pull_acquia_db ()
 	local last_id=$(printf "${query}" | grep "^ id" | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
 	# Use Drush to download the latest file using the Acquia Cloud API.
 	echo -e "${acqua}Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-	_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
+	_exec "drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} | ${progress_pipe} > ${db_file}"
 	if_failed_error "Error Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 }
 
@@ -7708,7 +7710,7 @@ provider_pull_platformsh_files ()
 provider_pull_platformsh_db ()
 {
 	echo -e "${acqua}Downloading database backup from Platform.sh for ${hostingsite} on the ${hostingenv} environment${NC}"
-	_exec platform -q db:dump -p ${hostingsite} -e ${hostingenv} --gzip -f ${db_file}
+	_exec "platform -q db:dump -p ${hostingsite} -e ${hostingenv} --gzip --stdout | ${progress_pipe} > ${db_file}"
 	if_failed_error "Error Downloading backup from Platform.sh for ${hostingsite} on the ${hostingenv} environment"
 }
 
