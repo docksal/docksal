@@ -1158,7 +1158,7 @@ docker_desktop_version ()
 is_docker_version ()
 {
 	# Skip the check on GitHub Actions/Play-with-Docker/Katacoda
-	( is_github_actions || is_pwd || is_katacoda ) && return
+	( is_github_actions || is_pwd || is_katacoda || is_gitpod ) && return
 
 	# Rely on our own docker binary, except on Linux
 	if is_linux; then
@@ -1174,7 +1174,7 @@ is_docker_version ()
 is_docker_server_version ()
 {
 	# Skip the check on GitHub Actions/Play-with-Docker/Katacoda
-	( is_github_actions || is_pwd || is_katacoda ) && return
+	( is_github_actions || is_pwd || is_katacoda || is_gitpod ) && return
 
 	# Rely on our own docker binary, except on Linux
 	if is_linux; then
@@ -3807,6 +3807,8 @@ stats_ping ()
 	is_pwd && source='PWD'
 	# Katacoda instances
 	is_katacoda && source='Katacoda'
+	# Gitpod instance
+	is_gitpod && source="Gitpod"
 
 	curl -kfsL \
 		--user-agent "$user_agent" \
@@ -4022,7 +4024,7 @@ install_proxy_service ()
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
 
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
-	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+	( is_ci || is_pwd || is_katacoda || is_gitpod ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
 	# Enable auto-start of projects by default in CI environments
 	is_ci && PROJECT_AUTOSTART=${PROJECT_AUTOSTART:-1}
@@ -5536,7 +5538,7 @@ run_cli ()
 
 	# Address an edge case when run-cli is run in the home folder (/root) on PWD/Katacoda
 	# See https://github.com/docksal/docksal/issues/661
-	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda); then
+	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda || is_gitpod); then
 		chown 1000:1000 $HOME
 	fi
 
@@ -6529,7 +6531,7 @@ load_configuration ()
 	export COMPOSE_COMPATIBILITY=true
 
 	# Set defaults
-	if is_pwd || is_katacoda; then
+	if is_pwd || is_katacoda || is_gitpod; then
 		# Don't include .$DOCKSAL_DNS_DOMAIN in Play-with-Docker or Katacoda to keep the URL shorter.
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE}
 	else
@@ -7434,7 +7436,7 @@ if ! is_windows; then
 		# Note: php-fpm inside cli will fail to start as uid=0
 		# Don't display this in PWD and Katacoda since users do not control those environments anyway.
 		# TODO: handle this case better
-		if ! (is_pwd || is_katacoda); then
+		if ! (is_pwd || is_katacoda || is_gitpod); then
 			echo-notice "Running as root is not recommended"
 		fi
 	fi
