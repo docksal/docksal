@@ -129,6 +129,10 @@ is_github_actions ()
 	[[ "$GITHUB_RUN_ID" != "" ]]
 }
 
+is_gitpod () {
+	[[ "$GITPOD_HOST" != "" ]]
+}
+
 # Returns x86_64 / aarch64 (aka "old school")
 host_arch () {
 	case $(uname -m) in
