@@ -157,6 +157,8 @@ Click the preferred option to proceed to option-specific docs.
 1. Enable Windows Subsystem for Linux (WSL 1) support
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+    
+    Note: Do NOT install or upgrade to WSL 2. It is not yet supported in Docksal (see [#1055](https://github.com/docksal/docksal/issues/1055)).
 
 1. Install **Ubuntu 20.04** app from Microsoft Store 
 
@@ -179,6 +181,8 @@ to [v2.1.0.5](https://download.docker.com/win/stable/40693/Docker%20Desktop%20In
 1. Enable Windows Subsystem for Linux (WSL 1) support
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+    
+    Note: Do NOT install or upgrade to WSL 2. It is not yet supported in Docksal (see [#1055](https://github.com/docksal/docksal/issues/1055)).
 
 2. Install **Ubuntu 20.04** app from Microsoft Store
 
