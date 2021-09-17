@@ -241,13 +241,13 @@ Docker image to use for [ssh-agent service](/core/system-ssh-agent).
 
 Docker image to use as the [vhost-proxy service](/core/system-vhost-proxy).
 
-### SECRET_ACAPI_EMAIL (global or project)
+### SECRET_ACQUIA_CLI_SECRET (global or project)
 
-Acquia Cloud API Email Address. See [Acquia Drush Commands](/tools/acquia-drush/).
+Acquia CLI Secret. See [Acquia CLI](/tools/acquia-cli/).
 
 ### SECRET_ACAPI_KEY (global or project)
 
-Acquia Cloud API Key. See [Acquia Drush Commands](/tools/acquia-drush/).
+Acquia CLI Key. See [Acquia CLI](/tools/acquia-cli/).
 
 ### SECRET_SSH_PRIVATE_KEY
 
@@ -289,6 +289,23 @@ Note: `DOCKSAL_ENVIRONMENT` should not be set and will not work in the project's
 `Default: docroot`
 
 Defines a relative path to the Document Root of the web server. Final path will be `/var/www/$DOCROOT`, so by default it is `/var/www/docroot`. Change it to the desired directory (like `http`) or sub-directory as needed, or set to `.` to use the project root as web server Document Root.
+
+### HOSTING_ENV
+
+This variable is part of the hosting integration variable set. Use the environment designation of your hosting provider,
+e.g., `prod`, `test`, `dev`. WordPress is the only provider that doesn't need this. This variable can be overridden by 
+using the `--hosting-env` parameter in the `fin pull` command.
+
+### HOSTING_PLATFORM
+
+This variable is part of the hosting integration variable set. Use the platform hosting provider associated with your
+project `acquia`, `pantheon`, `platform.sh`, or set it to `drush` or `wp`. This variable can be overridden by using the
+`--hosting-platform` parameter in the `fin pull` command.
+
+### HOSTING_SITE
+
+This variable is part of the hosting integration variable set. Use the site id given by your hosting provider. This 
+variable can be overridden by using the `--hosting-env` parameter in the `fin pull` command.
 
 ### MYSQL_ALLOW_EMPTY_PASSWORD
 

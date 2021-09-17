@@ -16,14 +16,14 @@ The tool is pre-installed in `cli` container. Note: required `docksal/cli` versi
 
 ## Configuration
 
-Follow the [official docs](https://cloud.acquia.com/#/profile/tokens) to 
+Follow the [official docs](https://cloud.acquia.com/a/profile/tokens) to 
 generate your Acquia Cloud API Token.  
 
 Add your secret and key with
 
 ```bash
-fin config set --global SECRET_ACQUIACLI_SECRET="lkjd*sdfl2//23498fwernoiuDHljw3897fsk"
-fin config set --global SECRET_ACQUIACLI_KEY="rSxVZN35bo4jTuncGS+CiKdmhxLPL0BaPuyOv"
+fin config set --global SECRET_ACQUIA_CLI_SECRET="i0bvTR9Dhf25Y6FzIK0j8NX//ll+GeAC7t75Jg4y8CE="
+fin config set --global SECRET_ACQUIA_CLI_KEY="8842fd3a-e3f3-47e9-916f-6ff760e26358"
 ``` 
 
 Refresh `cli` service configuration with `fin project start`. This will inject the values into `cli`

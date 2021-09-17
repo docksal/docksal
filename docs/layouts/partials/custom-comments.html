@@ -1,0 +1,3 @@
+{{ if (and (not .Params.hide_feedback) (.Site.Params.ui.feedback.enable) (.Site.Params.google_analytics)) }}
+{{ partial "feedback.html" }}
+{{ end }}

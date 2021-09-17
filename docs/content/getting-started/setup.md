@@ -84,10 +84,6 @@ With this method, Docker will run inside a VM in VirtualBox.
 
         bash <(curl -fsSL https://get.docksal.io)
 
-1. Start Docksal
-
-        fin system start
-
 ### macOS with Docker Desktop {#install-macos-docker-for-mac}
 
 {{% notice warning %}}
@@ -148,13 +144,13 @@ and Fedora with derivatives are supported out of the box with automatic installa
 If you cannot find your distribution in the list above, it does not mean it is not supported! 
 Lesser known Debian, Ubuntu, or Fedora derivatives are most likely supported.
 
-This happens because Docker on Linux is being installed using the official [get.docker.com](https://get.docker.com) script.
+Docksal uses the official [get.docker.com](https://get.docker.com) script to automate the setup of Docker on Linux.
 If your distribution is not in the list above, but [get.docker.com](https://get.docker.com) supports it,
 then it **is** supported too and you can [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
-In case your distribution in not compatible with [get.docker.com](https://get.docker.com), you will need to install 
-latest stable Docker for your distribution first, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
-
+If your Linux distribution is not compatible with [get.docker.com](https://get.docker.com), you will first need 
+to install the latest stable Docker version for your distribution manually, complete the [post-install instructions](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user) 
+to be able to manage Docker as a non-root user, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
 ### Windows installation options {#install-windows} 
 
@@ -180,12 +176,6 @@ Click the preferred option to proceed to option-specific docs.
     Open **Ubuntu** shell and run:
 
         bash <(curl -fsSL https://get.docksal.io)
-
-1. Start Docksal
-
-    In **Ubuntu** shell run:
-
-        fin system start
 
 ### Windows and Docker Desktop {#install-windows-docker-for-windows} 
 

@@ -124,7 +124,7 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.13-php7.3}
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.0}
     volumes:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
@@ -141,7 +141,10 @@ services:
       - DOCROOT
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-      - XDEBUG_CONFIG=client_host=${DOCKSAL_IP} # Point xdebug to the listener on the host
+      # Point xdebug to the PHP Debug listener on the host
+      # "client_host" used by xdebug 3 (docksal/cli v2.13+). "remote_host" used by xdebug 2 (prior docksal/cli versions).
+      # TODO: Drop "remote_host" in 2022.
+      - XDEBUG_CONFIG=client_host=${DOCKSAL_HOST_IP} remote_host=${DOCKSAL_HOST_IP}
       - PHP_IDE_CONFIG # This helps with console scripts debugging in PHPStorm (the values is set in docksal-local.env)
       - DRUSH_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - DRUSH_OPTIONS_URI=${VIRTUAL_HOST}

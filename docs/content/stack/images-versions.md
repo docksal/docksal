@@ -23,7 +23,7 @@ Note: `cli` is a special case, `cli` itself is seen as software here with `-php.
 
 ## Latest image version
 
-You may notice that there are two versions of the same, e.g.
+You may notice that there are two versions of the same, e.g.:
 
 ```
 docksal/nginx:1.15
@@ -35,10 +35,16 @@ available image version. Right now `docksal/nginx:1.15` is the same as `docksal/
 we release `docksal/nginx:1.15-1.1`, and `docksal/nginx:1.15` would refer to `docksal/nginx:1.15-1.1`, while
 `docksal/nginx:1.15-1.0` would still exist for backwards compatibility. 
 
-Having this latest image tag is a convenient shortcut, but in stacks that are delivered with Docksal 
-the exact version will always be used to avoid situation when newer image version was not pulled to your local.
+Having this latest image tag is a convenient shortcut, but in stacks that are delivered with Docksal, 
+the exact version will always be used to avoid a situation when the newer image version was not pulled to your local.
 
-In you custom stacks or custom Dockerfiles you can use this latest image tags.   
+In your custom stacks or custom Dockerfiles, you can use these latest image tags.
+
+{{% notice info %}}
+This page may not always show the latest image versions available because newer versions can be tagged between Docksal
+releases. See [GitHub image repositories](https://github.com/docksal?q=service) for the list of releases with release notes or run `fin image registry <image>`, 
+e.g., `fin image registry docksal/cli`, to see list of available CLI images. [See image commands](/fin/fin-help/#image)
+{{% /notice %}}
 
 ## CLI
 
@@ -47,14 +53,27 @@ In you custom stacks or custom Dockerfiles you can use this latest image tags.
 
 | Image| Notes |
 |------|-------|
+| `docksal/cli:php8.0-3.0` | PHP 8.0, Nodejs 14.17.3, Ruby 2.5.5, Python 2.7.16, msmtp |
+| `docksal/cli:php7.4-3.0` | *Default image* PHP 7.4, Nodejs 14.17.3, Ruby 2.7.2, Python 2.7.16, msmtp |
+| `docksal/cli:php7.3-3.0` | PHP 7.3, Nodejs 14.17.3, Ruby 2.5.5, Python 3.8.3, msmtp |
+| `docksal/cli:php8.0-3`    | Latest 3.x image version of PHP 8.0 flavor, convenient when [extending images](/stack/extend-images)
+| `docksal/cli:php7.4-3`    | Latest 3.x image version of PHP 7.4 flavor, convenient when [extending images](/stack/extend-images)
+| `docksal/cli:php7.3-3`    | Latest 3.x image version of PHP 7.3 flavor, convenient when [extending images](/stack/extend-images)
 | `docksal/cli:2.13-php7.4` | PHP 7.4, Nodejs 14.15.0, Ruby 2.7.2, Python 3.8.3, msmtp |
-| `docksal/cli:2.13-php7.3` | *Default image* PHP 7.3, Nodejs 12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
-| `docksal/cli:2-php7.4`    | Latest 2.x image version of PHP 7.4 flavor, convenient when [extending images](/stack/extend-images)
-| `docksal/cli:2-php7.3`    | Latest 2.x image version of PHP 7.3 flavor, convenient when [extending images](/stack/extend-images)
+| `docksal/cli:2.13-php7.3` | PHP 7.3, Nodejs 14.15.0, Ruby 2.7.2, Python 3.8.3, msmtp |
 | `docksal/cli:2.11-php7.2` | *Deprecated* PHP 7.2, Nodejs 12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
 | `docksal/cli:2.10-php7.1` | *Deprecated* PHP 7.1, Nodejs 12.13.0, Ruby 2.6.5, Python 3.8.3, msmtp |
 | `docksal/cli:2.5-php7.0`  | *Deprecated* PHP 7.0, mhsendmail |
 | `docksal/cli:2.5-php5.6`  | *Deprecated* PHP 5.6, mhsendmail |
+
+{{% notice warning %}}
+v3 images use a new image tag naming convention, which aligns with the rest of the recent Docksal images. 
+"2.13-php7.4" => "php7.4-3.0"
+{{% /notice %}}
+
+{{% notice info %}}
+v3 images bundle stock Debian versions of Ruby and Python, thus there is a version drop for those compared to v2 images.
+{{% /notice %}}
 
 ## Apache
 
