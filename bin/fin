@@ -5500,8 +5500,6 @@ run_cli ()
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
-			-e SECRET_ACAPI_EMAIL \
-			-e SECRET_ACAPI_KEY \
 			-e SECRET_ACQUIA_CLI_KEY \
 			-e SECRET_ACQUIA_CLI_SECRET \
 			-e SECRET_TERMINUS_TOKEN \
@@ -5528,8 +5526,6 @@ run_cli ()
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
-			-e SECRET_ACAPI_EMAIL \
-			-e SECRET_ACAPI_KEY \
 			-e SECRET_ACQUIA_CLI_KEY \
 			-e SECRET_ACQUIA_CLI_SECRET \
 			-e SECRET_TERMINUS_TOKEN \
@@ -7448,8 +7444,8 @@ provider_pull_generic_init ()
 # Check to see if acquia keys have been set.
 provider_pull_acquia_precheck ()
 {
-	if [[ -z "${SECRET_ACAPI_EMAIL}" ]] || [[ -z "${SECRET_ACAPI_KEY}" ]]; then
-		echo-error "SECRET_ACAPI_EMAIL and SECRET_ACAPI_KEY must be set in order to work with Acquia."
+	if [[ -z "${SECRET_ACQUIA_CLI_KEY}" ]] || [[ -z "${SECRET_ACQUIA_CLI_SECRET}" ]]; then
+		echo-error "SECRET_ACQUIA_CLI_KEY and SECRET_ACQUIA_CLI_SECRET must be set in order to work with Acquia."
 		exit 1;
 	fi
 
@@ -7494,8 +7490,27 @@ provider_pull_acquia_files ()
 	provider_pull_generic_drush_rsync
 }
 
+provider_pull_acquia_db()
+{
+  # Verifies you have access to hosting site.
+  #acli api:applications:list | jq -r '.[] | .hosting.id | split(":") | .[1]' | grep "${hostingsite}" > /dev/null
+  # Need to check if ACSF and skip the first database entry if so.
+  # Get first database in list.
+  echo "${remotedb}"
+  local acquia_db_name="${remotedb:-${hostingsite}}"
+  local db_id_command="acli api:environments:database-backup-list ${hostingsite}.${hostingenv} ${acquia_db_name} | jq -j '.[0].id'"
+  db_id=$(_exec "${db_id_command}")
+  local db_download_cmd="acli api:environments:database-backup-download ${hostingsite}.${hostingenv} ${acquia_db_name} ${db_id} | jq -j '.url' | xargs wget -q -O /tmp/acquia-backup-${db_id}.sql.gz --no-check-certificate"
+  echo "${db_download_cmd}"
+#  echo "${db_download_cmd}"
+#  _exec "${db_download_cmd}"
+#  echo "acli api:environments:database-backup-download mandiant.dev mandiant 185437279 | jq -j .url | xargs wget -q -O /tmp/acquia-backup-185437279.sql.gz --no-check-certificate" | docker exec -i -e COLUMNS -e LINES -u docker -w /var/www mandiant-2021-website-drupal_cli_1 bash -l
+  echo $?
+  exit 1
+}
+
 # Pull process to pull db from Acquia.
-provider_pull_acquia_db ()
+provider_pull_d8acquia_db ()
 {
 	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
 
@@ -7548,6 +7563,7 @@ provider_pull_acquia_db ()
 	_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
 	if_failed_error "Error Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
 }
+
 
 # Pull process to pull files from Acquia.
 provider_pull_acquia_code ()
