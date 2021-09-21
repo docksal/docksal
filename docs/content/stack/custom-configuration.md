@@ -15,7 +15,7 @@ You can go from [zero-config](/stack/zeo-configuration/), to [customized](#custo
 Customized configurations are useful whenever you need a bit (or a lot) more from your project stack.
 
 Such configurations rely on a [managed stack](/stack/understanding-stack-config/#default-configurations), but extend it 
-with additional docker-compose overrides and definitions via the `.docksa/docksal.yml` file.
+with additional docker-compose overrides and definitions via the `.docksal/docksal.yml` file.
 
 Examples:
 
