@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.106.0
+FIN_VERSION=1.107.0
 
 # Predefined terminal colors
 # Format: '\e[<formatting>;<text-color>;<background-color>m'
