@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.106.0
+FIN_VERSION=1.107.0
 
+# Predefined terminal colors
+# Format: '\e[<formatting>;<text-color>;<background-color>m'
+# See https://misc.flogisoft.com/bash/tip_colors_and_formatting
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
-	red='\033[0;91m'
-	red_bg='\033[101m'
-	yellow_bg='\033[43m'
-	lightmagenta_bg='\033[0;105m'
-	green='\033[0;32m'
-	green_bg='\033[42m'
-	yellow='\033[0;33m'
-	yellow_bold='\033[1;33m'
-	blue='\033[0;34m'
-	lime='\033[0;92m'
-	acqua='\033[0;96m'
-	magenta='\033[0;35m'
-	lightmagenta='\033[0;95m'
-	NC='\033[0m'
+	green='\e[0;32;49m'
+	green_bg='\e[0;42;30m'
+	yellow='\e[0;33;49m'
+	yellow_bold='\e[1;33;49m'
+	yellow_bg='\e[0;43;30m'
+	red='\e[0;91;49m'
+	red_bg='\e[0;101;30m'
+	blue='\e[0;34;49m'
+	lime='\e[0;92;49m'
+	acqua='\e[0;96;49m'
+	magenta='\e[0;35;49m'
+	lightmagenta='\e[0;95;49m'
+	lightmagenta_bg='\e[0;105;30m'
+	NC='\e[0m'
 fi
 
 #-------------------------------- OS Checks ------------------------------------
@@ -93,7 +96,7 @@ is_mac_dd_hk ()
 # TODO: figure out a better/more reliable check
 is_mac_dd_vf ()
 {
-	is_mac && is_docker_native && (ip addr show | grep 192.168.81.1 > /dev/null)
+	is_mac && is_docker_native && (ifconfig | grep 192.168.81.1 > /dev/null)
 }
 
 # CI
@@ -395,13 +398,13 @@ echo-error ()
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}"
 	shift
 	for arg in "$@"; do
-		echo -e "        $arg"
+		echo -e "         $arg"
 	done
 }
 
-echo-alert ()
+echo-notice ()
 {
-	echo -e "${lightmagenta_bg} ALERT: ${NC} ${lightmagenta}$1${NC}"
+	echo -e "${lightmagenta_bg} NOTICE: ${NC} ${lightmagenta}$1${NC}"
 	shift
 	for arg in "$@"; do
 		echo -e "         $arg"
@@ -954,10 +957,10 @@ check_docker_server_version ()
 	if ! is_docker_server_version; then
 		# Since we do not control Docker Desktop, ask user to update manually when necessary
 		if is_docker_native; then
-			echo-alert "Please update Docker Desktop manually." \
+			echo-notice "Please update Docker Desktop manually." \
 				"Expected Docker Desktop version: ${REQUIREMENTS_DOCKER_DESKTOP}"
 		else
-			echo-alert "Required Docker server version is $REQUIREMENTS_DOCKER" \
+			echo-notice "Required Docker server version is $REQUIREMENTS_DOCKER" \
 				"Run ${yellow}fin update${NC} to update to the required version." \ ""
 		fi
 	fi
@@ -1057,7 +1060,7 @@ check_docksal_running ()
 {
 	check_docker_running
 	if ! is_docksal_running; then
-		echo-alert "Some Docksal services were not running" "Restarting Docksal system services..."
+		echo-notice "Some Docksal services were not running" "Restarting Docksal system services..."
 		sleep 1
 		system_reset
 	fi
@@ -1273,7 +1276,7 @@ _confirm ()
 # Display release notes prompt
 release_notes_message ()
 {
-	echo-warning "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
+	echo-notice "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
 	# Open the URL in browser
 	# TODO: add support for Linux and Windows/WSL
 	is_mac && open "${URL_RELEASE_NOTES}"
@@ -1282,7 +1285,7 @@ release_notes_message ()
 # Displays sponsorship prompt
 sponsor_message ()
 {
-	echo-warning "Ever thought about how much time (and $) Docksal saves you and your team every month?" \
+	echo-notice "Ever thought about how much time (and $) Docksal saves you and your team every month?" \
 		"Consider becoming a GitHub Sponsor ❤ to Docksal️. Any contribution is welcome!" \
 		"${URL_GITHUB_SPONSOR}"
 	# Open the URL in browser
@@ -1543,7 +1546,7 @@ _healthcheck_wait ()
 		sleep ${delay};
 		elapsed=$((elapsed + delay))
 		if ((elapsed > timeout)); then
-			echo-error "Project heathcheck has timed out" \
+			echo-error "Project healthcheck has timed out" \
 				"One or more containers did not enter a healthy state within ${timeout} seconds of the project start." \
 				"See ${yellow}fin project status${NC} for details" \
 				"Check ${yellow}fin logs${NC} for more details"
@@ -3169,7 +3172,7 @@ remove ()
 
 	# Alert when no containers specified and no force passed
 	if [[ "${ARGV[0]}" == "" ]] && [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
-		echo-alert "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
+		echo-warning "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
 		_confirm "Continue?";
 	fi
 
@@ -3470,7 +3473,7 @@ project_erase ()
 
 	# Alert when force passed
 	if [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
-		echo-alert "DESTRUCTIVE OPERATION" \
+		echo-warning "DESTRUCTIVE OPERATION" \
 			"Removing containers of $COMPOSE_PROJECT_NAME and ${magenta}removing all files in $PROJECT_ROOT${NC}"
 		_confirm "         Continue?";
 	fi
@@ -4767,7 +4770,7 @@ update_virtualbox ()
 		is_vbox_version
 		local res=$?
 		if [[ "$res" != "0" ]]; then
-			[[ "$res" == "2" ]] && echo-alert "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
+			[[ "$res" == "2" ]] && echo-notice "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
 			# Note: install_virtualbox automatically stops the machine if necessary, but will not automatically start it.
 			install_virtualbox
 		fi
@@ -4794,7 +4797,7 @@ update_boot2docker ()
 		if (( $(ver_to_int "$REQUIREMENTS_DOCKER_B2D") > $(ver_to_int "$b2d_version") )); then
 			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
 				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
-				echo-alert "This update will destroy and recreate the VM!" \
+				echo-warning "This update will destroy and recreate the VM!" \
 					"You can skip the VM update for now, create DB backups/etc., then restart the update to complete it." \
 					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
 				if _confirm "Do you want to update the VM now?" --no-exit; then
@@ -5195,7 +5198,7 @@ check_for_updates ()
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ]"
-		echo "You can update after this process by running fin update"
+		echo -e "You can update after this process by running ${yellow}fin update${NC}"
 		echo "Press Enter to continue"
 		read -p ''
 	fi
@@ -6435,7 +6438,7 @@ load_configuration ()
 init ()
 {
 	if [[ "$(get_project_path)" != "" ]] ; then
-		echo-alert "The project exists but no init found" \
+		echo-notice "The project exists but no init found" \
 			"Existing Docksal project was found in $(get_project_path)" \
 			"Create your own \`init\` command to tell fin how to re-initialize your project." \
 			"See ${yellow}fin help init${NC} for details"
@@ -7928,7 +7931,7 @@ if ! is_windows; then
 		# Don't display this in PWD and Katacoda since users do not control those environments anyway.
 		# TODO: handle this case better
 		if ! (is_pwd || is_katacoda); then
-			echo-alert "Running as root is not recommended"
+			echo-notice "Running as root is not recommended"
 		fi
 	fi
 fi

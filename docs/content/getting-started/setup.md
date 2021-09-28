@@ -84,10 +84,6 @@ With this method, Docker will run inside a VM in VirtualBox.
 
         bash <(curl -fsSL https://get.docksal.io)
 
-1. Start Docksal
-
-        fin system start
-
 ### macOS with Docker Desktop {#install-macos-docker-for-mac}
 
 {{% notice warning %}}
@@ -180,12 +176,6 @@ Click the preferred option to proceed to option-specific docs.
     Open **Ubuntu** shell and run:
 
         bash <(curl -fsSL https://get.docksal.io)
-
-1. Start Docksal
-
-    In **Ubuntu** shell run:
-
-        fin system start
 
 ### Windows and Docker Desktop {#install-windows-docker-for-windows} 
 

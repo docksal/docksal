@@ -12,7 +12,7 @@ theme = "learn"
   google_tag_manager = "GTM-58ST6XD"
   google_analytics = "UA-93724315-3"
 
-  version = "v1.16.0"
+  version = "v1.16.1"
 
   [[params.versions]]
   version = "Upcoming"
@@ -20,9 +20,14 @@ theme = "learn"
   url = "https://develop.docs.docksal.io/"
 
   [[params.versions]]
+  version = "v1.16.1"
+  branch = "v1.16.1"
+  url = "https://docs.docksal.io"
+
+  [[params.versions]]
   version = "v1.16.0"
   branch = "v1.16.0"
-  url = "https://docs.docksal.io"
+  url = "https://v1-16-0.docs.docksal.io"
 
   [[params.versions]]
   version = "v1.15.1"

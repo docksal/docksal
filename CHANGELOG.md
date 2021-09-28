@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.16.0 (2021-09-27)
+
+### New software versions
+
+- fin v1.107.0
+
+### Changes and improvements
+
+- Use `ifconfig` command instead of `ip` command on Mac
+- Minor refactoring in Github Actions
+- Minor changes to UI in `fin`
+  - Revised terminal colors and notification types
+
+### Documentation
+
+- Simplified troubleshooting docs around Docker Machine TLS certs
+- Replaced references to Gitter with GitHub Discussions
+- Added documentation for the `HOSTING_*` variables on the configuration variables page
+
+
 ## 1.16.0 (2021-08-03)
 
 ### New software versions
