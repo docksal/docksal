@@ -1,6 +1,17 @@
 # Changelog
 
-## 1.16.0 (2021-09-27)
+## 1.16.2 (2021-09-28)
+
+### New software versions
+
+- fin v1.107.1
+
+### Changes and improvements
+
+- Fixed terminal colors in `fin` broken on some systems after update to v1.16.1
+
+
+## 1.16.1 (2021-09-27)
 
 ### New software versions
 
