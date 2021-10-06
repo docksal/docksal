@@ -79,7 +79,7 @@ docksal/solr:6.6-2.0
 docksal/solr:7.5-2.0
 ```
 
-Legend: 
+Legend:
 
 - `<image-repo>:<software-version>[-<image-stability-tag>][-<flavor>]`
 
@@ -124,7 +124,7 @@ dataDir=/var/lib/solr/b/data
 
 ### Solr 6
 
-Docksal current has Solr 4 defined in the Docksal images. For users with a need to use Solr 6.x, you can set this in 
+Docksal current has Solr 4 defined in the Docksal images. For users with a need to use Solr 6.x, you can set this in
 your `docksal.yml` file.
 
 ```yaml
@@ -148,5 +148,63 @@ Create the file `.docksal/etc/solr/b/core.properties` for instance b with the co
 dataDir=/var/solr/b/data
 ```
 
-The files in .docksal/etc/solr/a/conf and .docksal/etc/solr/b/conf will also need to be updated too. If you are upgrading 
+The files in .docksal/etc/solr/a/conf and .docksal/etc/solr/b/conf will also need to be updated too. If you are upgrading
 from another version of solr, then I suggest that you delete the contents of the data directory and re-index.
+
+### Solr 8
+
+- These instructions are for version 8.1.1 of solr which is composer required package
+  search_api_solr: 4.2.1 (which at this time installs solarium 6.1.5)
+  from the docksal:
+
+.docksal.yml setup (notice different destination mount point)
+```yml
+---
+version: '2.1'
+services:
+  # Solr 8.1.1
+  solr:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: solr
+    volumes:
+      - ${PROJECT_ROOT}/.docksal/etc/solr/:/opt/solr/server/solr/{{your_new_core_name}}/
+```
+- Then `fin project reset` to create this new mount.
+- Generate the core with solr inside the solr container
+- This will place the config files in the mount you setup above.
+  ```
+  docker exec -ti {{project_name}}_solr_1 bash
+
+  solr create_core -c {{your_new_core_name}} -d /opt/solr/server/solr/ -n {{your_new_core_name}}
+  ```
+
+In Drupal inside your search_api_.server.{{server_name}}.yml file it should look similar to this
+
+    ```yml
+    id: solr_8_1_1
+    name: solr
+    description: ''
+    backend: search_api_solr
+    backend_config:
+      connector: standard
+      connector_config:
+        scheme: http
+        host: solr
+        port: 8983
+        path: /
+        core: {{your_new_core_name}}
+        timeout: 10
+        index_timeout: 9
+        optimize_timeout: 10
+        finalize_timeout: 30
+        commit_within: 1000
+        solr_version: ''
+        http_method: AUTO
+        skip_schema_check: false
+        jmx: false
+        jts: false
+        solr_install_dir: ''
+      ```
+Notice the path does NOT have /solr in it.  The search_api_solr php code adds that in there already so if you add in /solr the request will have /solr/solr in the path.
+
