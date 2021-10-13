@@ -153,11 +153,17 @@ from another version of solr, then I suggest that you delete the contents of the
 
 ### Solr 8
 
-- These instructions are for version 8.1.1 of solr which is composer required package
-  search_api_solr: 4.2.1 (which at this time installs solarium 6.1.5)
-  from the docksal:
+- These instructions are for version 8.1.1 of solr which is installed
+  via the docksal specified docker image in the ~/.docksal/stacks/services.yml
+  and the .docksal/docksal.env variable SOLR_IMAGE='docksal/solr:latest'
+  which is currently at [docksal/solr:latest](https://hub.docker.com/layers/docksal/solr/latest/images/sha256-21ba69c5bd4d3c4c328669213bea7fdd4d1743e3936d3c3fde883a5c60d9f088?context=explore)
+  which specifies version 8.1.1 (line 34).
 
-.docksal.yml setup (notice different destination mount point)
+  For Solr 8, the core location changes to /opt/solr/server/solr/{{your_new_core_name}}.
+  [See dockerfile](https://github.com/docksal/service-solr/blob/2466d83b4579464b1b05c7f2e7d7273eb00c1ab0/Dockerfile#L31)
+  Your .docksal.yml setup it can look like this (substituting {{your_new_core_name}} with a string of your
+  choice.
+
 ```yml
 ---
 version: '2.1'
@@ -170,16 +176,28 @@ services:
     volumes:
       - ${PROJECT_ROOT}/.docksal/etc/solr/:/opt/solr/server/solr/{{your_new_core_name}}/
 ```
-- Then `fin project reset` to create this new mount.
-- Generate the core with solr inside the solr container
-- This will place the config files in the mount you setup above.
+
+and your .docksal/docksal.env
+
+```bash
+SOLR_IMAGE='docksal/solr:latest'
+```
+
+- You will need to `fin project reset` to create the new mount (see yml above).
+- Next, generate the core with solr inside the solr container
+  This will place the config files in the mount you setup above.
+  Please note generating the solr core natively (with solr) might work better than the
+  config sets provided [here](https://github.com/docksal/service-solr/tree/develop/configsets/search_api_solr_8.x-3.0/conf)
+
   ```
   docker exec -ti {{project_name}}_solr_1 bash
 
   solr create_core -c {{your_new_core_name}} -d /opt/solr/server/solr/ -n {{your_new_core_name}}
   ```
 
-In Drupal inside your search_api_.server.{{server_name}}.yml file it should look similar to this
+Once you have configured your solr instance in the Drupal Admin, and then
+exported the configuration (via `drush cex`) to a
+search_api.server.{{server_name}}.yml file, then it can look similar to this
 
     ```yml
     id: solr_8_1_1
@@ -206,5 +224,7 @@ In Drupal inside your search_api_.server.{{server_name}}.yml file it should look
         jts: false
         solr_install_dir: ''
       ```
-Notice the path does NOT have /solr in it.  The search_api_solr php code adds that in there already so if you add in /solr the request will have /solr/solr in the path.
+
+Notice the path does NOT have /solr in it.  The search_api_solr php code adds
+that in there already so if you add in /solr the request will have /solr/solr in the path.
 
