@@ -6372,14 +6372,24 @@ load_configuration ()
 			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_dd_bind_file}"
 		fi
 
+		# Read yml file for VSCode (Coder) IDE
+		if [[ -f "$(get_project_path_dc)/.docksal/docksal-ide.yml" ]]; then
+			overrides_ide_file="$(get_project_path_dc)/.docksal/docksal-ide.yml"
+		else
+			overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
+		fi
 		# Enable VSCode (Coder) IDE
-		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
 		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
 			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
 		fi
 
+		# Read yml file for xhprof integration
+		if [[ -f "$(get_project_path_dc)/.docksal/docksal-xhprof.yml" ]]; then
+			overrides_xhprof_file="$(get_project_path_dc)/.docksal/docksal-xhprof.yml"
+		else
+			overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
+		fi
 		# Enable xhprof integration
-		overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
 		if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
 			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
 		fi
@@ -6415,16 +6425,20 @@ load_configuration ()
 	if [[ "$OLD_VHOST" != "$VIRTUAL_HOST" ]]; then
 		echo-warning "The ${yellow_bold}VIRTUAL_HOST${yellow} has been modified from ${yellow_bold}${OLD_VHOST}${yellow} to ${yellow_bold}${VIRTUAL_HOST}${NC} ${yellow}to comply with browser standards."
 	fi
+	# Set IDE_PREFIX if empty
+	if [[ -z $IDE_PREFIX ]]; then
+		IDE_PREFIX="ide-"
+	fi
 	# Create project url
 	if [[ "$DOCKSAL_VHOST_PROXY_PORT_HTTP" == "" || "$DOCKSAL_VHOST_PROXY_PORT_HTTP" == "80" ]]; then
 		export PROJECT_URL="http://${VIRTUAL_HOST}"
 		if [[ "${IDE_ENABLED}" == "1" ]]; then
-			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}"
+			export PROJECT_IDE_URL="http://$IDE_PREFIX${VIRTUAL_HOST}"
 		fi
 	else
 		export PROJECT_URL="http://${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
 		if [[ "${IDE_ENABLED}" == "1" ]]; then
-			export PROJECT_IDE_URL="http://ide-${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
+			export PROJECT_IDE_URL="http://$IDE_PREFIX${VIRTUAL_HOST}:${DOCKSAL_VHOST_PROXY_PORT_HTTP}"
 		fi
 	fi
 
