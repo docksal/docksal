@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.106.0
+FIN_VERSION=1.107.1
 
 # Predefined terminal colors
-# Format: '\e[<formatting>;<text-color>;<background-color>m'
+# Format: '\033[<formatting>;<text-color>;<background-color>m'
 # See https://misc.flogisoft.com/bash/tip_colors_and_formatting
+# Note: Using "\033" (and not "\e") as it seems to have a wider support in different shells.
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
-	green='\e[0;32;49m'
-	green_bg='\e[0;42;30m'
-	yellow='\e[0;33;49m'
-	yellow_bold='\e[1;33;49m'
-	yellow_bg='\e[0;43;30m'
-	red='\e[0;91;49m'
-	red_bg='\e[0;101;30m'
-	blue='\e[0;34;49m'
-	lime='\e[0;92;49m'
-	acqua='\e[0;96;49m'
-	magenta='\e[0;35;49m'
-	lightmagenta='\e[0;95;49m'
-	lightmagenta_bg='\e[0;105;30m'
-	NC='\e[0m'
+	green='\033[0;32;49m'
+	green_bg='\033[0;42;30m'
+	yellow='\033[0;33;49m'
+	yellow_bold='\033[1;33;49m'
+	yellow_bg='\033[0;43;30m'
+	red='\033[0;91;49m'
+	red_bg='\033[0;101;30m'
+	blue='\033[0;34;49m'
+	lime='\033[0;92;49m'
+	acqua='\033[0;96;49m'
+	magenta='\033[0;35;49m'
+	lightmagenta='\033[0;95;49m'
+	lightmagenta_bg='\033[0;105;30m'
+	NC='\033[0m'
 fi
 
 #-------------------------------- OS Checks ------------------------------------
