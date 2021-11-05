@@ -400,9 +400,9 @@ URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${RE
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-$(host_arch).exe"
 # docker-compose v2
 if is_compose_v2; then
-	URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose-cli/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-darwin-$(host_arch_new)"
-	URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose-cli/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-linux-$(host_arch_new)"
-	URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose-cli/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-windows-$(host_arch_new).exe"
+	URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-darwin-$(host_arch)"
+	URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-linux-$(host_arch)"
+	URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-windows-$(host_arch).exe"
 fi
 # docker-machine
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-$(host_arch)"
