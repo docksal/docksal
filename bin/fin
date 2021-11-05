@@ -371,7 +371,7 @@ URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v$
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
-IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.3}
+IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.4}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.7}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
 IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php7.4-3.0}
