@@ -6502,6 +6502,11 @@ load_configuration ()
 		export COMPOSE_PROJECT_VHOST_NAME_SAFE
 	fi
 
+	# Run Docker Compose v2 in compatibility mode.
+	# This forces compose to use underscores instead of hyphens in container names (like in v1).
+	# TODO: Remove this and switch to hyphens in Docksal 2.0.
+	export COMPOSE_COMPATIBILITY=true
+
 	# Set defaults
 	if is_pwd || is_katacoda; then
 		# Don't include .$DOCKSAL_DNS_DOMAIN in Play-with-Docker or Katacoda to keep the URL shorter.
