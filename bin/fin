@@ -3993,7 +3993,7 @@ install_proxy_service ()
 	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h)
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
 	# entirely wiped out from the host (e.g., 168h). WARNING: use at your own risk!
-	# setting PROJECT_AUTOSTART to 0 will disable project start by visiting project url
+	# setting PROJECT_AUTOSTART to 1 will enable project autostart by visiting project url
 	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=unless-stopped \
 		-p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
 		-e ACCESS_LOG="${DOCKSAL_VHOST_PROXY_ACCESS_LOG:-0}" \
@@ -4001,7 +4001,7 @@ install_proxy_service ()
 		-e STATS_LOG="${DOCKSAL_VHOST_PROXY_STATS_LOG:-0}" \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
-		-e PROJECT_AUTOSTART="${PROJECT_AUTOSTART:-1}" \
+		-e PROJECT_AUTOSTART="${PROJECT_AUTOSTART:-0}" \
 		-e DEFAULT_CERT="${DOCKSAL_VHOST_PROXY_DEFAULT_CERT:-docksal}" \
 		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
