@@ -24,8 +24,6 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mariadb
-    # Pin MariaDB version
-    image: ${DB_IMAGE:-docksal/mariadb:10.1-1.1}
 
   cli:
     extends:
