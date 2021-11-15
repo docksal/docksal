@@ -3948,6 +3948,7 @@ configure_network ()
 	fi
 
 	echo-green "Configuring network settings..."
+	is_gitpod && return 0
 	is_linux && configure_network_alpine "$mode" && return $?
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
