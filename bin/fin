@@ -7375,8 +7375,9 @@ if is_gitpod; then
 	export DOCKSAL_NO_DNS_RESOLVER=1
 	export DOCKSAL_DNS_DISABLED=1
 	# Fix the permissions to project directory
-	echo-warning "${yellow}Fixing Gitpod Repo Root Permissions${NC}"
-	chmod +x ${GITPOD_REPO_ROOT}
+	[[ ! -x ${GITPOD_REPO_ROOT} ]] && 
+		echo-warning "${yellow}Fixing Gitpod Repo Root Permissions${NC}" && 
+		chmod +x ${GITPOD_REPO_ROOT}
 fi
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
