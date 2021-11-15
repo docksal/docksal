@@ -6543,10 +6543,6 @@ load_configuration ()
 		# Don't include .$DOCKSAL_DNS_DOMAIN in Play-with-Docker or Katacoda to keep the URL shorter.
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE}
 	elif is_gitpod; then
-		export DOCKSAL_VHOST_PROXY_PORT_HTTP=8080
-		export DOCKSAL_VHOST_PROXY_PORT_HTTPS=4443
-        export DOCKSAL_NO_DNS_RESOLVER=1
-		export DOCKSAL_DNS_DISABLED=1
 		export VIRTUAL_HOST=${DOCKSAL_VHOST_PROXY_PORT_HTTP}-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}
 	else
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
@@ -7561,6 +7557,13 @@ export DOCKSAL_CONTAINER_LOG_MAX_FILE
 
 # Container healthcheck settings
 export DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL
+
+if is_gitpod; then
+	export DOCKSAL_VHOST_PROXY_PORT_HTTP=8080
+	export DOCKSAL_VHOST_PROXY_PORT_HTTPS=4443
+	export DOCKSAL_NO_DNS_RESOLVER=1
+	export DOCKSAL_DNS_DISABLED=1
+fi
 
 # Allow other scripts to source the fin script
 if [[ "${BASH_SOURCE[0]}" != $0 ]]; then
