@@ -930,7 +930,7 @@ is_docksal_running ()
 	# will fail. However, there could be cases, when system services have been already started and after that hosts
 	# network settings are adjusted/corrupted externally.
 	is_mac && is_docker_native && ! check_network_mac && return 1
-	is_linux && ! check_network_alpine && return 1
+	is_linux && ! is_gitpod && ! check_network_alpine && return 1
 	is_windows && is_docker_native && ! check_network_windows && return 1
 	is_wsl && is_docker_native && ! check_network_wsl && return 1
 
@@ -981,7 +981,7 @@ check_docksal_environment ()
 {
 	# Since network configuration is not permanent on Linux we need to restore it when possible
 	# check_docksal_environment is a good place to do it, but we don't need to know the result
-	if is_linux; then
+	if is_linux && ! is_gitpod; then
 		configure_network_alpine "on"
 		configure_resolver_alpine "on"
 	fi
@@ -7366,6 +7366,16 @@ if ! is_supported_arch; then
 		"Only ${yellow}amd64${NC} and ${yellow}arm64${NC} architectures are supported."
 	# Quit here unless were are in debug mode
 	! [[ ${FIN_DEBUG} == 1 || "${1}" == "debug" ]] && exit 1
+
+# Gitpod Configuration
+if is_gitpod; then
+	export DOCKSAL_VHOST_PROXY_PORT_HTTP=8080
+	export DOCKSAL_VHOST_PROXY_PORT_HTTPS=4443
+	export DOCKSAL_NO_DNS_RESOLVER=1
+	export DOCKSAL_DNS_DISABLED=1
+	# Fix the permissions to project directory
+	echo-warning "${yellow}Fixing Gitpod Repo Root Permissions${NC}"
+	chmod +x ${GITPOD_REPO_ROOT}
 fi
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
@@ -7557,16 +7567,6 @@ export DOCKSAL_CONTAINER_LOG_MAX_FILE
 
 # Container healthcheck settings
 export DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL
-
-if is_gitpod; then
-	export DOCKSAL_VHOST_PROXY_PORT_HTTP=8080
-	export DOCKSAL_VHOST_PROXY_PORT_HTTPS=4443
-	export DOCKSAL_NO_DNS_RESOLVER=1
-	export DOCKSAL_DNS_DISABLED=1
-	# Fix the permissions to project directory
-	echo-warning "${yellow}Fixing Gitpod Repo Root Permissions${NC}"
-	chmod +x ${GITPOD_REPO_ROOT}
-fi
 
 # Allow other scripts to source the fin script
 if [[ "${BASH_SOURCE[0]}" != $0 ]]; then
