@@ -376,6 +376,7 @@ URL_REPO_BACKDROP="https://github.com/docksal/boilerplate-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 STACKS_OVERRIDES_CLOUDFLARED="overrides-cloudflared.yml"
+STACKS_OVERRIDES_GITPOD="overrides-gitpod.yml"
 STACKS_OVERRIDES_DD_BIND="overrides-dd-bind.yml"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
 STACKS_OVERRIDES_XHPROF="overrides-xhprof.yml"
@@ -4926,6 +4927,7 @@ update_config_files ()
 {
 	files_to_download="
 			$STACKS_OVERRIDES_CLOUDFLARED
+			$STACKS_OVERRIDES_GITPOD
 			$STACKS_OVERRIDES_DD_BIND
 			$STACKS_OVERRIDES_IDE
 			$STACKS_OVERRIDES_XHPROF
@@ -6512,6 +6514,12 @@ load_configuration ()
 		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_cloudflared_file}"
 	fi
 
+	# Enable gitpod integration
+	overrides_gitpod_file="${get_config_dir_d}/stacks/overrides-gitpod.yml"
+	if [[ -f "${overrides_gitpod_file}" ]] && [[ is_gitpod ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_gitpod_file}"
+	fi
+
 	export COMPOSE_FILE
 
 	# Set project name if it was not set previously
@@ -6531,9 +6539,15 @@ load_configuration ()
 	export COMPOSE_COMPATIBILITY=true
 
 	# Set defaults
-	if is_pwd || is_katacoda || is_gitpod; then
+	if is_pwd || is_katacoda; then
 		# Don't include .$DOCKSAL_DNS_DOMAIN in Play-with-Docker or Katacoda to keep the URL shorter.
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE}
+	elif is_gitpod; then
+		export DOCKSAL_VHOST_PROXY_PORT_HTTP=8080
+		export DOCKSAL_VHOST_PROXY_PORT_HTTPS=4443
+        export DOCKSAL_NO_DNS_RESOLVER=1
+		export DOCKSAL_DNS_DISABLED=1
+		export VIRTUAL_HOST=${DOCKSAL_VHOST_PROXY_PORT_HTTP}-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}
 	else
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	fi
