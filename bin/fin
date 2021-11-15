@@ -7564,7 +7564,7 @@ if is_gitpod; then
 	export DOCKSAL_NO_DNS_RESOLVER=1
 	export DOCKSAL_DNS_DISABLED=1
 	# Fix the permissions to project directory
-	echo "${yellow}Fixing Gitpod Repo Root Permissions${NC}"
+	echo-warning "${yellow}Fixing Gitpod Repo Root Permissions${NC}"
 	chmod +x ${GITPOD_REPO_ROOT}
 fi
 
