@@ -12,8 +12,8 @@ To get started create a `.gitpod.yml` file within your project.
 
 ```yaml
 tasks:
-  - before: |
-        bash <(curl -fsSL https://get.docksal.io)
+  - before: bash <(curl -fsSL https://get.docksal.io)
+    init: fin init
 ```
 
 Once created you are ready to start your project within the [Gitpod Workspace](https://www.gitpod.io/docs/getting-started).
