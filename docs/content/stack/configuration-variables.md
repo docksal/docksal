@@ -452,11 +452,17 @@ Defines the timeout of inactivity after which the project stack and code base wi
 
 ### PROJECT_INACTIVITY_TIMEOUT
 
-Defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h).
+Enables the [auto-stop feature](/use-cases/project-auto-start-stop#auto-stop) and defines the period after which a 
+project stack is considered inactive and is stopped (e.g., 0.5h).
+
+This feature is disabled by default (set to `0`).
 
 ### PROJECT_AUTOSTART
 
-Setting this variable to `0` will disable autostart projects by visiting project url. This option is active by default (set to `1`).
+Toggles the [auto-start feature](/use-cases/project-auto-start-stop#auto-start) for projects (automatic start by 
+visiting project url).
+
+This feature is disabled by default (set to `0`).
 
 ### SANDBOX_PERMANENT
 
