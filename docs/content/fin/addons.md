@@ -132,3 +132,9 @@ After | Uninstall | `.post-install`
 ## Global Addons
 
 A global addon is similar to a [global custom command](/fin/custom-commands/#global-custom-commands). It is stored in `$HOME/.docksal/addons` and is accessible globally. This is useful for tedious tasks that you need in every project.
+
+To install an addon globally:
+
+```bash
+fin addon install --global <name>
+```
