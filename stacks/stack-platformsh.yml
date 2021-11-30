@@ -2,7 +2,7 @@
 # see https://github.com/platformsh-templates/drupal9
 #
 # - Nginx 1.14
-# - MariaDB 10.3
+# - MariaDB 10.4
 # - PHP 7.4
 # - Redis 6.0
 
@@ -24,7 +24,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mariadb
     # Pin MariaDB version
-    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.1}
+    image: ${DB_IMAGE:-docksal/mariadb:10.4}
 
   cli:
     extends:
