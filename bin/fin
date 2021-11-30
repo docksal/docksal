@@ -349,6 +349,7 @@ STACKS_STACK_DEFAULT="stack-default.yml"
 STACKS_STACK_DEFAULT_NODB="stack-default-nodb.yml"
 STACKS_STACK_NODE="stack-node.yml"
 STACKS_STACK_PANTHEON="stack-pantheon.yml"
+STACKS_STACK_PLATFORMSH="stack-platformsh.yml"
 STACKS_VOLUMES_BIND="volumes-bind.yml"
 STACKS_VOLUMES_NFS="volumes-nfs.yml"
 STACKS_VOLUMES_NONE="volumes-none.yml"
@@ -4882,6 +4883,7 @@ update_config_files ()
 			$STACKS_STACK_DEFAULT_NODB
 			$STACKS_STACK_NODE
 			$STACKS_STACK_PANTHEON
+			$STACKS_STACK_PLATFORMSH
 			$STACKS_VOLUMES_BIND
 			$STACKS_VOLUMES_NFS
 			$STACKS_VOLUMES_NONE
