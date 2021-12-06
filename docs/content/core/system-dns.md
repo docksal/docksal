@@ -28,7 +28,7 @@ If you run into issues with DNS resolution, try disabling the automatic resolver
 
 ```bash
 fin system stop
-fin config set --global DOCKSAL_NO_DNS_RESOLVER=1
+fin config set --global DOCKSAL_DNS_DISABLED=1
 fin system start
 ```
 
