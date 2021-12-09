@@ -176,7 +176,7 @@ importing the data.
   --db-name=<dbname>             Specify the DB Name to import into. (Defaults to default)
   --force                       Force a new database file to be pulled
   --remote-db=<remote_db>       Specify the remote DB name to pull. (Used with Acquia)
-  --progress                    Show import progress.
+  --progress                    Show import progress
 ```
 
 {{% notice note %}}
