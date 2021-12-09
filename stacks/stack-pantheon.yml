@@ -1,7 +1,7 @@
 # Pantheon alike stack
 #
 # - Nginx 1.14
-# - MariaDB 10.1
+# - MariaDB 10.4
 # - PHP 7.2
 # - Varnish 4.1
 # - Redis 4.0
@@ -24,6 +24,8 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mariadb
+    # Pantheon supports 10.4
+    image: ${WEB_IMAGE:-docksal/mariadb:10.4}
 
   cli:
     extends:
