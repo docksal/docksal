@@ -1,14 +1,34 @@
-# Enables Cloud9 IDE in cli
-# The IDE can be accessed at ide.${VIRTUAL_HOST}
-# Note: Since vhost-proxy does not support routing more than a single custom port,
-# IDE mode cannot be used in conjunction with the nodejs stack (stack-node.yml)
+# Adds Web IDE service to the project
+# The IDE can be accessed at ide-${VIRTUAL_HOST}
 
-version: "2.1"
+version: "3.9"
 
 services:
+
   cli:
-    image: ${CLI_IMAGE:-docksal/cli:2.5-php7.1}-ide
+    environment:
+      - XDEBUG_CONFIG=client_host=ide # Point xdebug (v3) to the dbgp client in the ide container
+
+  ide:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: cli
+    hostname: ide
+    expose:
+      - 8080  # Web IDE port
+      - 9000  # dbgp server port for xdebug to connect to
+    environment:
+      - IDE_ENABLED
+      - IDE_PASSWORD
+      # Point xdebug to the PHP Debug listener in the ide container.
+      # "client_host" used by xdebug 3 (docksal/cli v2.13+). "remote_host" used by xdebug 2 (prior docksal/cli versions).
+      # TODO: Drop "remote_host" in 2022.
+      - XDEBUG_CONFIG=client_host=ide remote_host=ide
     labels:
-      - io.docksal.virtual-host=ide.${VIRTUAL_HOST},ide.${VIRTUAL_HOST}.*
-      - io.docksal.virtual-port=3000
+      - io.docksal.virtual-host=ide-${VIRTUAL_HOST},ide-${VIRTUAL_HOST}.*
+      - io.docksal.virtual-port=8080
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
+    depends_on:
+      # Avoid race conditions between ide and cli, since they share the same volumes
+      # TODO: handle this better in the entrypoint script
+      - cli

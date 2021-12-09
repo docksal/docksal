@@ -3,7 +3,7 @@
 # Pros: native fs performance, fast file sync, inotify/fs watchers support.
 # Cons: 2x space usage (a mirror of the code base is maintained in a Docker volume), initial sync delay
 
-version: "2.1"
+version: "3.9"
 
 volumes:
   cli_home:  # /home/docker volume in cli
@@ -26,8 +26,6 @@ services:
       - SYNC_MAX_INOTIFY_WATCHES=524288
       - SYNC_VERBOSE=1
       - SYNC_NODELETE_SOURCE=0
-      - UNISON_USER=docker
       - UNISON_UID=${HOST_UID:-0}
-      - UNISON_GROUP=dialout
       - UNISON_GID=${HOST_GID:-0}
     privileged: true

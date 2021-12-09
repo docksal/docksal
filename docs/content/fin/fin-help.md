@@ -7,10 +7,10 @@ aliases:
 
 ## fin {#fin}
 
+	Docksal command line utility (v1.107.1)
+	Docksal docs: https://docs.docksal.io/
 	
-	Docksal command line utility v1.85.0
-	
-	Usage: fin <command>
+	Usage: fin [command]
 	
 	Management Commands:
 	  db <command>             	Manage databases (fin help db)
@@ -39,7 +39,7 @@ aliases:
 	  init                     	Initialize a project (override it with your own automation, see fin help init)
 	  addon <command>          	Addons management commands: install, remove (fin help addon)
 	  alias                    	Manage aliases that allow fin @alias execution (fin help alias)
-	  cleanup [options]        	Remove unused Docker images and projects (saves disk space)
+	  cleanup [options]        	Remove all unused Docker images, unused Docksal volumes and containers
 	  share                    	Create temporary public url for current project using ngrok
 	  exec-url <url>           	Download script from URL and run it on host (URL should be public)
 	  image <command>          	Image management commands: registry, save, load (fin help image)
@@ -78,6 +78,8 @@ aliases:
 	                           	Drupal, Wordpress, Magento, Laravel, Backdrop, Hugo, Gatsby, and others
 	    --name=name            	Provide project name upfront
 	    --choice=#             	Provide software choice number upfront
+	    --repo=name            	Clone from a custom repo: name (--choice is set to '0' automatically)
+	    --branch=name          	Clone from a custom repo: branch name (optional)
 	    --yes (-y)             	Avoid confirmation
 	
 	  config                   	Show project configuration
@@ -87,6 +89,8 @@ aliases:
 	  fin pl -a                	List all known Docksal projects, including stopped ones
 	  fin project reset db     	Reset only DB service to start with DB from scratch
 	  fin project create       	Start a new project wizard
+	  fin project create --name=myproject --repo=https://github.com/org/project.git	
+	                           	Initialize project from a custom git repo
 
 ## db {#db}
 
@@ -142,7 +146,7 @@ aliases:
 	  (blank)                  	All (Default)
 	
 	Options:
-	  --hosting-provider=<provider>	Provider to interact with.
+	  --hosting-platform=<provider>	Platform to interact with.
 	                           	Options: acquia, pantheon, platform.sh, drush, wp
 	  --hosting-site=<id>      	Site ID on Provider
 	  --hosting-env=<env>      	Site Env on Provider
@@ -186,15 +190,16 @@ aliases:
 	Usage: fin ssh-key <command> [params]
 	
 	Commands:
-	  add [key-name]           	Add a private SSH key from $HOME/.ssh by file name
+	  add [key-name] [--quiet] 	Add a private SSH key from $HOME/.ssh by file name
 	                           	Adds all default keys (id_rsa/id_dsa/id_ecdsa/id_ed25519) if no file name is given.
+	                           	Suppress key already loaded notifications if --quiet option specified.
 	  ls                       	List SSH keys loaded in the docksal-ssh-agent
 	  rm                       	Remove all keys from the docksal-ssh-agent
 	  new [key-name]           	Generate a new SSH key pair
 	
 	Examples:
 	  fin ssh-key add          	Loads all SSH keys with default names: id_rsa/id_dsa/id_ecdsa from $HOME/.ssh/
-	  fin ssh-key server_rsa   	Loads the key stored in $HOME/.ssh/server_id_rsa into the agent
+	  fin ssh-key add server_rsa	Loads the key stored in $HOME/.ssh/server_id_rsa into the agent
 	  fin ssh-key new server2_rsa	Generates a new SSH key pair in ~/.ssh/server2_id_rsa
 
 ## system {#system}
@@ -227,25 +232,30 @@ aliases:
 	  show [options]           	Display configuration for the current project
 	      --show-secrets       	Do not truncate value of SECRET_* environment vars
 	  env                      	Display only environment variables section
+	  yml                      	Display static YML project config suitable for export (NOTE: SECRET_* values will not be hidden)
+	
 	  generate [options]       	Generate empty Docksal configuration for the project
 	      --stack=acquia       	Set non-default DOCKSAL_STACK during config generate
 	      --docroot=mydir      	Set non-default DOCROOT during config generate
+	
 	  set [options] [VAR=VAL]  	Set value(s) for the variable(s) in project ENV file
 	      --global             	Set for global ENV file
-	      --env=[name]         	Set in environment specific project ENV file (default: local)
+	      --env=[name]         	Set in environment specific project ENV file
 	
 	  remove [options] [VAR]   	Remove variable(s) from project ENV file
 	  rm [options] [VAR]       	
 	      --global             	Remove from global ENV file
-	      --env=[name]         	Remove from environment specific project ENV file (default: local)
+	      --env=[name]         	Remove from environment specific project ENV file
 	
 	  get [options] [VAR]      	Get the value of the single variable from project ENV file
 	      --global             	Get value from global ENV file
-	      --env=[name]         	Get value from environment specific project ENV file (default: local)
+	      --env=[name]         	Get value from environment specific project ENV file
 	
 	Examples:
 	  fin config set DOCKER_NATIVE=1 --global	Adds DOCKER_NATIVE=1 into $HOME/.docksal/docksal.env
 	  fin config rm DOCKER_NATIVE --global		Removes DOCKER_NATIVE value from $HOME/.docksal/docksal.env
+	  fin config set DOCKSAL_STACK=acquia		Set different default stack in .docksal/docksal.env
+	  fin config set --env=local XDEBUG_ENABLED=1	Enable XDEBUG in .docksal/docksal-local.env
 
 ## addon {#addon}
 
@@ -277,7 +287,7 @@ aliases:
 	  -T                       	Disable pseudo-tty allocation.
 	                           	Useful for non-interactive commands when output is saved into a variable for further comparison.
 	                           	In a TTY mode the output may contain unexpected invisible control symbols.
-	  --in=name                	Name of the service to execute the command in.
+	  --in=name                	Name of the service or container to execute the command in.
 	
 	Examples:
 	  fin exec ls -la          			Current directory listing
@@ -355,14 +365,15 @@ aliases:
 	
 	View output from containers.
 	
-	Usage: logs [options] [SERVICE...]
+	Usage: logs [options] [--] [SERVICE...]
 	
 	Options:
-	    --no-color          Produce monochrome output.
-	    -f, --follow        Follow log output.
-	    -t, --timestamps    Show timestamps.
-	    --tail="all"        Number of lines to show from the end of the logs
-	                        for each container.
+	    --no-color              Produce monochrome output.
+	    -f, --follow            Follow log output.
+	    -t, --timestamps        Show timestamps.
+	    --tail="all"            Number of lines to show from the end of the logs
+	                            for each container.
+	    --no-log-prefix         Don't print prefix in logs.
 	
 	Examples:
 	  fin logs web             	Show web container logs

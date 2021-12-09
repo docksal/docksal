@@ -10,9 +10,9 @@ down to your local environment without manually running through the steps.
 
 ### Acquia
 
-To interact with Acquia through Drush, the `SECRET_ACAPI_EMAIL` and
-`SECRET_ACAPI_KEY` are required. Additionally, access to the Acquia Cloud API
-is required. If access is not allowed, fallback to using the [Drush](/tools/pull/drush/) method.
+To interact with Acquia through Drush, the `SECRET_ACQUIA_CLI_SECRET` and
+`SECRET_ACQUIA_CLI_KEY` are required. Additionally, access to the Acquia Cloud API
+is required. If access is not allowed, fallback to using the [Drush](/fin/fin-pull/#drupal-drush) method.
 
 More information on working with [Docksal with Acquia Drush](/tools/acquia-drush).
 
@@ -34,9 +34,8 @@ More information on working with [Docksal with Platform.sh](/tools/platformsh).
 
 ### Drupal / Drush
 
-An alias must be set up within the project and recognized when running the `fin drush sa` command to use 
-the Drush provider integration. An example of a site alias file for [Drush 8](https://github.com/drush-ops/drush/blob/8.x/examples/example.aliases.drushrc.php)
-and [Drush 9](https://github.com/drush-ops/drush/blob/master/examples/example.site.yml) can be
+A [Drush site alias](/tools/drush/#site-aliases) must be set up within the project and recognized when running the `fin drush sa` command to use 
+the Drush provider integration. An example of a site alias file for [Drush 8](https://github.com/drush-ops/drush/blob/8.x/examples/example.aliases.drushrc.php), [Drush 9](https://github.com/drush-ops/drush/blob/9.x/examples/example.site.yml) and [Drush 10](https://github.com/drush-ops/drush/blob/master/examples/example.site.yml) can be
 found within the Drush project.
 
 An example of what `remote.site.yml` would look like:
@@ -78,7 +77,7 @@ Example of what `wp-cli.yml` would look like:
   url: http://example.com
 ```
 
-More information on working with [Docksal and WP-CLI](/tools/wp).
+More information on working with [Docksal and WP-CLI](/tools/wp-cli).
 
 ## Initializing Project
 

@@ -1,0 +1,14 @@
+# Override project_root volume settings for bind mounts on Docker Desktop (Mac and Windows)
+# Docker Desktop v2.3.0.2+ started adding the /host_mnt prefix to bind mounts
+# See: https://github.com/docksal/docksal/issues/1368
+# Upstream issue: https://github.com/docker/for-win/issues/6628
+
+version: "3.9"
+
+volumes:
+  project_root:
+    driver: local
+    driver_opts:
+      type: none
+      device: /host_mnt${PROJECT_ROOT}
+      o: bind

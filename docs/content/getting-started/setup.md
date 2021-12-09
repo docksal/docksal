@@ -1,8 +1,9 @@
 ---
-title: "Installing Docksal"
+title: "Install Docksal"
 weight: 1
 aliases:
   - /en/master/getting-started/setup/
+  - /en/master/getting-started/env-setup/
 ---
 
 ## System requirements
@@ -22,6 +23,8 @@ CPU with SSE4.2 instruction set supported (most CPUs). If you get output from th
 cat /proc/cpuinfo | grep sse4_2
 ``` 
 
+If the output is empty, see the [troubleshooting](/troubleshooting/common-issues#sse4_2) docs for a workaround.  
+
 ### Windows
 
 Windows 10 and CPU with hardware virtualization (**VT-x/AMD-V**) supported and [enabled in BIOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-Virtualization-Troubleshooting-Enabling_Intel_VT_and_AMD_V_virtualization_hardware_extensions_in_BIOS.html).
@@ -33,13 +36,17 @@ Windows 10 and CPU with hardware virtualization (**VT-x/AMD-V**) supported and [
 
 {{% notice note %}}
 The installer script (`get.docksal.io`) requires administrative privileges to complete the installation. 
-On all operating systems, `fin` cli tool is written to `/usr/local/bin` and Docksal's IP address (`192.168.64.100`) 
-is assigned to the host's local network interface.
-On macOS, `/etc/exports` and `/etc/resolver/docksal` have to be modified, and `nfsd` service has to be restarted. 
-On Linux, installer (re)installs the Docker service if needed.
-On Windows, there are additional requests for permissions to create network shares for local drives to share files with 
-Docker and to mount them with the current user's account and password.
 {{% /notice %}}
+
+Here's why:
+
+- All systems: `fin` cli tool is written to `/usr/local/bin` (all systems)
+- All systems: `192.168.64.100` (Docksal's canonical IP) is assigned to the host's local network interface (all systems) 
+- macOS: `/etc/exports` and `/etc/resolver/docksal` have to be modified, `nfsd` service has to be restarted
+- Linux: install/update the Docker service if necessary
+- Windows: there are additional requests for permissions to create network shares for local drives to share files with 
+Docker and to mount them with the current user's account and password.
+
 
 ### What is your operating system?
 
@@ -62,9 +69,9 @@ Click the preferred option to proceed to option-specific docs.
 
 With this method, Docker will run inside a VM in VirtualBox.
 
-1. Install VirtualBox
+1. Install VirtualBox v6.1.22
 
-    [![Download VirtualBox 5.2.26](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](http://download.virtualbox.org/virtualbox/5.2.26/VirtualBox-5.2.26-128414-OSX.dmg)
+    [![Download VirtualBox v6.1.22](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](https://download.virtualbox.org/virtualbox/6.1.22/VirtualBox-6.1.22-144080-OSX.dmg)
 
 1. Enable Kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
 
@@ -77,15 +84,17 @@ With this method, Docker will run inside a VM in VirtualBox.
 
         bash <(curl -fsSL https://get.docksal.io)
 
-1. Start Docksal
-
-        fin system start
-
 ### macOS with Docker Desktop {#install-macos-docker-for-mac}
 
-1. Install Docker Desktop for Mac
+{{% notice warning %}}
+Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal projects had to be changed from `docksal` to 
+`docksal.site`. If this change has adverse effects for your project(s), you can downgrade Docker Desktop 
+to [v2.1.0.5](https://download.docker.com/mac/stable/40693/Docker.dmg) as a temporary measure.
+{{% /notice %}}
 
-    [![Docker Desktop for Mac](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/mac/stable/Docker.dmg)
+1. Install Docker Desktop for Mac v3.4.0
+
+    [![Docker Desktop for Mac v3.4.0](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/stable/65384/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 1. Start Docker Desktop
 
@@ -135,13 +144,13 @@ and Fedora with derivatives are supported out of the box with automatic installa
 If you cannot find your distribution in the list above, it does not mean it is not supported! 
 Lesser known Debian, Ubuntu, or Fedora derivatives are most likely supported.
 
-This happens because Docker on Linux is being installed using the official [get.docker.com](https://get.docker.com) script.
+Docksal uses the official [get.docker.com](https://get.docker.com) script to automate the setup of Docker on Linux.
 If your distribution is not in the list above, but [get.docker.com](https://get.docker.com) supports it,
 then it **is** supported too and you can [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
-In case your distribution in not compatible with [get.docker.com](https://get.docker.com), you will need to install 
-latest stable Docker for your distribution first, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
-
+If your Linux distribution is not compatible with [get.docker.com](https://get.docker.com), you will first need 
+to install the latest stable Docker version for your distribution manually, complete the [post-install instructions](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user) 
+to be able to manage Docker as a non-root user, and then [follow the steps for compatible distributions](#install-linux-debian-fedora).
 
 ### Windows installation options {#install-windows} 
 
@@ -154,13 +163,13 @@ Click the preferred option to proceed to option-specific docs.
 
 ### Windows and VirtualBox {#install-windows-virtualbox} 
 
-1. Enable Windows Subsystem for Linux (WSL) support
+1. Enable Windows Subsystem for Linux (WSL 1) support
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
-1. Install **Ubuntu 18.04** app from Microsoft Store 
+1. Install **Ubuntu 20.04** app from Microsoft Store 
 
-    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71)
 
 1. Install Docksal (VirtualBox will be installed automatically if necessary)
 
@@ -168,25 +177,25 @@ Click the preferred option to proceed to option-specific docs.
 
         bash <(curl -fsSL https://get.docksal.io)
 
-1. Start Docksal
-
-    In **Ubuntu** shell run:
-
-        fin system start
-
 ### Windows and Docker Desktop {#install-windows-docker-for-windows} 
 
-1. Enable Windows Subsystem for Linux (WSL) support
+{{% notice warning %}}
+Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal projects had to be changed from `docksal` to 
+`docksal.site`. If this change has adverse effects for your project(s), you can downgrade Docker Desktop 
+to [v2.1.0.5](https://download.docker.com/win/stable/40693/Docker%20Desktop%20Installer.exe) as a temporary measure. 
+{{% /notice %}}
+
+1. Enable Windows Subsystem for Linux (WSL 1) support
 
     [![Enabling WSL](https://img.shields.io/badge/Windows%20Subsystem%20for%20Linux-blue.svg?logo=windows&style=for-the-badge&classes=inline)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
-2. Install **Ubuntu 18.04** app from Microsoft Store
+2. Install **Ubuntu 20.04** app from Microsoft Store
 
-    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71)
 
-3. Install Docker Desktop for Windows
+3. Install Docker Desktop for Windows v3.4.0
 
-    [![Docker Desktop for Windows](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
+    [![Docker Desktop for Windows v3.4.0](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Windows-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/win/stable/65384/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
     
 4. Configure Docker Desktop on Windows
 

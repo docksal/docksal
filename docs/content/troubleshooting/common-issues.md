@@ -7,7 +7,7 @@ aliases:
 
 {{% notice warning %}}
 Quite often a problem may reside within the 3rd party tools, project code, local configuration, etc., and not the stack.
-To make sure that the Docksal stack works properly, try launching any of the [sample projects](/stack/config/#sample-projects).  
+To make sure that the Docksal stack works properly, try launching any of the [sample projects](https://github.com/docksal?q=boilerplate).  
 If you believe the issue is within the Docksal stack, then read on.
 {{% /notice %}}
 
@@ -23,7 +23,7 @@ If that did not help, take a look at some of the common problems using Docksal a
 If above did not help, try:
 
 - searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced a similar issue and already found a solution or a workaround.
-- asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
+- asking community for support in [Discussions](https://github.com/docksal/docksal/discussions) on GitHub
 - creating a [new issue](https://github.com/docksal/docksal/issues/new) if your problem is still not resolved.
 
 -----
@@ -55,30 +55,42 @@ Sometimes Virtual Box fails to initialize its network interfaces properly.
 
 ## Issue 2. Error checking TLS Connection (VM is not accessible) {#issue-02}
 
-```
-Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
-You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
-Be advised that this will trigger a Docker daemon restart which will stop running containers.
-```
+There can be two very similar errors starting with "Error checking TLS connection" and ending with:
 
-Sometimes docker-machine certificates re-generation fails.
+- "getsockopt: connection refused"
 
-### How to Resolve
+    ```
+    Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
+    You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
+    Be advised that this will trigger a Docker daemon restart which will stop running containers.
+    ```
 
-1. Perform `fin vm restart`
-2. If above did not help, then reboot your local host
-3. If above did not help, perform commands below and then reboot your host:
+- "x509: certificate has expired or is not yet valid"
 
-```bash
-fin docker-machine regenerate-certs docksal -f
-fin vm restart
-```
+    ```
+    Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": x509: certificate has expired or is not yet valid
+    You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
+    Be advised that this will trigger a Docker daemon restart which might stop running containers.
+    ```
 
-4. In the rare cases when above did not help the only solution is to delete the existing VM and re-create it.
+#### How to Resolve
+
+1. Run the following command:
+
+	```bash
+	fin docker-machine regenerate-certs --client-certs --force docksal
+	fin vm restart
+	```
+
+    For reference: https://docs.docker.com/machine/reference/regenerate-certs/
+
+2. Verify the docksal VM starts and that you can start your projects.
+
+In the rare cases when above did not help, the only solution is to delete the existing VM and re-create it:
 
 ```bash
 fin vm remove
-fin vm start
+fin system start
 ```
 
 
@@ -123,10 +135,15 @@ With NFS a single directory can only be exported once. It can not be exported se
 
 ### How to Resolve
 
-Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin vm start` again.
+Remove the conflicting export from `/etc/exports` (remove the non-docksal one), save the file, and run `fin vm restart` or `fin system start` again.
 
 
 ## Issue 5. Conflicting Ports {#issue-05}
+
+### Symptoms
+
+If a port is currently in use or if your computer has ever been configured to forward ports
+locally for development, you may receive one of these errors:
 
 ```
 Resetting Docksal services...
@@ -136,17 +153,67 @@ on endpoint docksal-vhost-proxy (a7addf7797e6b0aec8e3e810c11775eb77508c9079e375c
 Error starting userland proxy: listen tcp 0.0.0.0:443: listen: address already in use.
 ```
 
+```
+docker: Error response from daemon: Ports are not available: listen udp 0.0.0.0:53: bind: address already in use.
+ ERROR:  Failed starting the DNS service.
+```
+
+```
+docker: Error response from daemon: Ports are not available: listen tcp 0.0.0.0:80: bind: address already in use.
+ ERROR:  Failed starting the Failed starting the proxy service.
+```
+
+```
+docker: Error response from daemon: Ports are not available: listen tcp 0.0.0.0:443: bind: address already in use.
+ ERROR:  Failed starting the Failed starting the proxy service.
+```
+
 This usually happens on Linux because the default Apache server bind to `0.0.0.0:80` and `0.0.0.0:443` (all IPs).  
 This prevents Docksal from running properly.
 
-There can also be a port conflict if your computer has ever been configured to forward ports locally for development.
-
 ### How to Resolve
+
+#### macOS
+
+UDP/53
+
+Port 53 will likely be used by a local dnsmasq instance. You may not even remember installing it.
+
+Check which process uses UDP port 53:
+
+```
+$ netstat -vanp udp | awk '$4 ~ /\.53$/' | awk '{print $8}' | xargs ps -p
+  PID TTY           TIME CMD
+  140 ??         0:00.01 /usr/local/opt/dnsmasq/sbin/dnsmasq --keep-in-foreground -C /usr/local/etc/dnsmasq.conf
+```
+
+See the instructions to [install/uninstall dnsmasq](https://gist.github.com/valentinocossar/c92abb39ffa0ba1eaf08466e35b85d11).
+
+TCP/80 and TCP/443
+
+Ports 80/443 are web server ports and will likely be used by a local Apache/etc. instance:
+
+Check which process uses TCP ports 80/443
+
+```
+$ netstat -vanp tcp | awk '$4 ~ /\.80$/' | awk '{print $9}' | xargs ps -p
+$ netstat -vanp tcp | awk '$4 ~ /\.443$/' | awk '{print $9}' | xargs ps -p
+```
+
+#### Linux
 
 1. Stop Apache or
 2. Reconfigure Apache to listen on different ports (e.g., `8080` and `4433`) or
 different/specific IPs (e.g., `127.0.0.1:80` and `127.0.0.1:443`)
 
+#### Windows
+
+To check which process uses TCP ports 80/443, run the following in a powershell window:
+
+```
+Get-Process -Id (Get-NetTCPConnection -LocalPort 80).OwningProcess
+Get-Process -Id (Get-NetTCPConnection -LocalPort 443).OwningProcess
+```
 
 ## Issue 6. Config Permissions Issue (VM does not start) {#issue-06}
 
@@ -163,7 +230,7 @@ Re-create vm as a regular user
 
 ```bash
 sudo fin vm remove
-fin vm start
+fin system start
 ```
 
 
@@ -221,7 +288,7 @@ Errors like this appear when your Apache is misconfigured. Most often it happens
 Check `docksal.yml` and `.htaccess` files for configuration errors, fix them and run `fin project start` (`fin start` for short).
 
 
-## Issue 10. SMB Share Creation, Share Mounting and Related Issues on Windows {#issue-10}
+## Issue 10. SMB Share Creation, Share Mounting, and Related Issues on Windows {#issue-10}
 
 Please see a separate [troubleshooting document on share creation, share mounting, and related issues](/troubleshooting/windows-smb/).
 
@@ -315,12 +382,85 @@ dism.exe /Online /Disable-Feature:Microsoft-Hyper-V /All
 
 ## Issue 15. Firewall Blocking Access to Docksal
 
+### On Windows
+
 Visiting the project URL in your browser results in a "site can't be reached" message, could be the result
 of a local firewall application blocking access to Docksal's canonical IP address.
 
-Firewall configuration can also cause problems with SMB. See [documentation on troubleshooting Windows SMB](../windows-smb#smb-ip).
+Firewall configuration can also cause problems with SMB. See [documentation on troubleshooting Windows SMB](/troubleshooting/windows-smb#smb-ip).
 
+### On Mac
+
+If the containers do not mount properly during system start, you might see an error such as:
+
+```
+ERROR: for cli  Cannot create container for service cli: error while mounting volume with options: type='none' device='/Users/alex/Projects/myproject' o='bind': no such file or directory
+ERROR: Encountered errors while bringing up the project.
+```
 
 ### How to Resolve
 
 Configure your firewall to allow connections to and from 192.168.64.100 (Docksal's canonical IP address used across all systems and configurations).
+
+On macOS, go to System Preferences -> Security and Privacy -> Firewall and either turn the Firewall off completely or  
+configure it to allow all connections (see image). Then do fin system restart and check if it fixes the issue.
+
+![macOS firewall settings](/images/firewall.png)
+
+
+## Issue 16. NFS access issues on macOS
+
+Your project's codebase resides under one of the standard user folders in macOS (e.g., Downloads, Documents, 
+Desktop) or on an external drive. Project stack does not start and displays an error such as:
+
+```
+ERROR:  The path is not accessible in Docker
+        Could not access </path/to/project>
+        It is not shared from your host to Docker or is restricted.
+```
+
+
+### How to Resolve
+
+Grant **Full Disk Access** privileges  to `/sbin/nfsd`:
+
+- Open **System Preferences**
+- Go to **Security & Privacy → Privacy → Full Disk Access**
+- 🔒 Click the lock to make changes
+- Click **+**
+- Press **⌘ command + shift + G**
+- Enter `/sbin/nfsd` and click **Go**, then click **Open**
+
+![macOS TCC nfsd](https://user-images.githubusercontent.com/1205005/86679968-f1cc3f80-bfb2-11ea-9a38-44c2f6768c61.png)
+
+Alternatively, you can move the project's codebase out of the restricted user folder (not helpful for external disks).
+
+See [blog post](https://blog.docksal.io/nfs-access-issues-on-macos-10-15-catalina-75cd23606913) for more details.
+
+
+## Issue 17. Host CPU does not support SSE 4.2 instruction set {#sse4_2}
+
+Symptoms:
+
+- `vhost-proxy` won't start
+- `fin docker exet -it docker-vhost-proxy nginx -t` outputs `Illegal instruction (core dumped)`
+- Output from `cat /proc/cpuinfo | grep sse4_2` on the host is empty. 
+
+Docksal's [vhost-proxy](/core/system-vhost-proxy) system service uses [OpenResty](https://github.com/openresty/openresty) 
+under the hood. The official OpenResty binary packages [require](https://github.com/openresty/openresty/issues/267#issuecomment-309296900) 
+SSE4.2 support in the host CPU.
+
+### How to Resolve
+
+As a temporary workaround, vhost-proxy can be downgraded to version 1.2:
+
+```bash
+fin config set --global IMAGE_VHOST_PROXY=docksal/vhost-proxy:1.2
+fin system reset vhost-proxy
+```
+
+{{% notice warning %}}
+There is no guarantee that pinning the vhost-proxy image won't result in incompatibility issues with the latest versions of Docksal.
+{{% /notice %}}
+
+Long term fix: consider switching to a host with a modern CPU with SSE 4.2 support.

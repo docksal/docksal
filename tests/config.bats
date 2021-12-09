@@ -18,8 +18,7 @@ teardown() {
 @test "uber cleanup" {
 	[[ $SKIP == 1 ]] && skip
 
-	rm -rf .docksal
-	return 0
+	rm -rf .docksal || true
 }
 
 @test "fin config: empty project" {
@@ -37,11 +36,10 @@ teardown() {
 	mkdir .docksal
 
 	run fin config env
-	[[ $status == 0 ]] && 
-	[[ $output =~ "volumes-bind.yml" ]] &&
-	[[ $output =~ "stack-default.yml" ]] &&
+	[[ $status == 0 ]]
+	[[ $output =~ "stack-default.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
-	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.yml" ]]
 	[[ $output =~ "docksal.env" ]]
 	unset output
 }
@@ -53,11 +51,10 @@ teardown() {
 	echo 'DOCKSAL_STACK=acquia' > .docksal/docksal.env
 
 	run fin config env
-	[[ $status == 0 ]] && 
-	[[ $output =~ "volumes-bind.yml" ]] && 
-	[[ $output =~ "stack-acquia.yml" ]] && 
+	[[ $status == 0 ]]
+	[[ $output =~ "stack-acquia.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
-	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.yml" ]]
 	[[ $output =~ "docksal.env" ]]
 	unset output
 }
@@ -71,18 +68,17 @@ version: '2.1'
 
 services:
   web:
-	environment:
-	  - TEST_VAR=test_val"
+    environment:
+      - TEST_VAR=test_val"
 
 	echo "$yml" > .docksal/docksal.yml
 
 	run fin config
-	[[ $status == 0 ]] && 
-	[[ $output =~ "volumes-bind.yml" ]] && 
-	[[ $output =~ "stack-acquia.yml" ]] && 
+	[[ $status == 0 ]]
+	[[ $output =~ "stack-acquia.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
-	[[ $output =~ "docksal.yml" ]] &&
-	[[ $output =~ "docksal.env" ]] && 
+	[[ $output =~ "docksal.yml" ]]
+	[[ $output =~ "docksal.env" ]]
 	[[ $output =~ "TEST_VAR: test_val" ]]
 	unset output
 }
@@ -90,29 +86,28 @@ services:
 @test "fin config: docksal.yml" {
 	[[ $SKIP == 1 ]] && skip
 
-	# cleanup here
-	rm -rf .docksal
+	# Start fresh
+	rm -rf .docksal || true
 	mkdir .docksal
 
 	# Add a stack override via docksal.yml
-	yml="
-version: '2.1'
+	yml='
+version: "2.1"
 
 services:
-  web:
-	image: nginx
-	environment:
-	  - TEST_VAR="'${TEST_VAR:-test_val_default}'
+  cli:
+    image: docksal/cli
+    environment:
+      - TEST_VAR=${TEST_VAR:-test_val_default}'
 
 	echo "$yml" > .docksal/docksal.yml
 
 	run fin config
-	[[ $status == 0 ]] && 
-	[[ $output =~ "volumes-bind.yml" ]] && 
-	[[ ! $output =~ "stack-default.yml" ]] && 
+	[[ $status == 0 ]]
+	[[ ! $output =~ "stack-default.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
-	[[ $output =~ "docksal.yml" ]] &&
-	[[ $output =~ "docksal.env" ]] &&
+	[[ $output =~ "docksal.yml" ]]
+	[[ $output =~ "docksal.env" ]]
 	[[ $output =~ "TEST_VAR: test_val_default" ]]
 	unset output
 }
@@ -124,10 +119,10 @@ services:
 	echo 'TEST_VAR=my_val' > .docksal/docksal.env
 
 	run fin config
-	[[ $status == 0 ]] && 
+	[[ $status == 0 ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
-	[[ $output =~ "docksal.yml" ]] &&
-	[[ $output =~ "docksal.env" ]] &&
+	[[ $output =~ "docksal.yml" ]]
+	[[ $output =~ "docksal.env" ]]
 	# Test our override is in place
 	[[ $output =~ "TEST_VAR: my_val" ]]
 	unset output
@@ -136,25 +131,25 @@ services:
 @test "fin config: docksal-local.yml" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Add a stack override via docksal.yml
-	yml="
-version: '2.1'
+	# Add a stack override via docksal-local.yml
+	yml='
+version: "2.1"
 
 services:
-  web:
-	image: nginx
-	environment:
-	  - TEST_VAR_LOCAL="'${TEST_VAR_LOCAL:-test_val_default}'
+  cli:
+    image: docksal/cli
+    environment:
+      - TEST_VAR_LOCAL=${TEST_VAR_LOCAL:-test_val_default}'
 
 	echo "$yml" > .docksal/docksal-local.yml
 
 	run fin config
-	[[ $status == 0 ]] && 
+	[[ $status == 0 ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
-	[[ $output =~ "docksal.yml" ]] &&
-	[[ $output =~ "docksal.env" ]] &&
-	[[ $output =~ "docksal-local.yml" ]] &&
-	[[ ! $output =~ "docksal-local.env" ]] && 
+	[[ $output =~ "docksal.yml" ]]
+	[[ $output =~ "docksal.env" ]]
+	[[ $output =~ "docksal-local.yml" ]]
+	[[ ! $output =~ "docksal-local.env" ]]
 	[[ $output =~ "TEST_VAR_LOCAL: test_val_default" ]]
 	unset output
 }
@@ -166,12 +161,12 @@ services:
 	echo 'TEST_VAR_LOCAL=my_val_local' > .docksal/docksal-local.env
 
 	run fin config
-	[[ $status == 0 ]] && 
+	[[ $status == 0 ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
-	[[ $output =~ "docksal.yml" ]] &&
-	[[ $output =~ "docksal.env" ]] &&
-	[[ $output =~ "docksal-local.yml" ]] &&
-	[[ $output =~ "docksal-local.env" ]] && 
+	[[ $output =~ "docksal.yml" ]]
+	[[ $output =~ "docksal.env" ]]
+	[[ $output =~ "docksal-local.yml" ]]
+	[[ $output =~ "docksal-local.env" ]]
 	# Test our override is in place
 	[[ $output =~ "TEST_VAR_LOCAL: my_val" ]]
 	unset output
@@ -180,16 +175,15 @@ services:
 @test "fin config generate: empty project" {
 	[[ $SKIP == 1 ]] && skip
 
-	# cleanup here
-	rm -rf .docksal
-	fin config generate
+	# Start fresh
+	rm -rf .docksal || true
+	echo "fin config generate" | bash
 
-	run fin config env
-	[[ $status == 0 ]] && 
-	[[ $output =~ "volumes-bind.yml" ]] && 
-	[[ $output =~ "stack-default.yml" ]] && 
+	run fin config
+	[[ $status == 0 ]]
+	[[ $output =~ "stack-default.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
-	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.yml" ]]
 	[[ $output =~ "docksal.env" ]]
 	unset output
 }
@@ -199,12 +193,11 @@ services:
 
 	echo "fin config generate" | bash
 
-	run fin config env
-	[[ $status == 0 ]] && 
-	[[ $output =~ "volumes-bind.yml" ]] && 
-	[[ $output =~ "stack-default.yml" ]] && 
+	run fin config
+	[[ $status == 0 ]]
+	[[ $output =~ "stack-default.yml" ]]
 	# fin will automatically create docksal.yml and docksal.env if they do not exist
-	[[ $output =~ "docksal.yml" ]] &&
+	[[ $output =~ "docksal.yml" ]]
 	[[ $output =~ "docksal.env" ]]
 	unset output
 }
@@ -217,7 +210,7 @@ services:
 	cp "${HOME}/.docksal/docksal.env" "${HOME}/.docksal/docksal.env.orig"
 	# Test command can run with --global
 	run fin config set --global TEST_VAR=12345
-	[[ $status == 0 ]] &&
+	[[ $status == 0 ]]
 	[[ $output =~ "Added value for TEST_VAR into ${HOME}/.docksal/docksal.env" ]]
 	source "${HOME}/.docksal/docksal.env"
 	# Testing what value is
@@ -262,7 +255,7 @@ services:
 	[[ $SKIP == 1 ]] && skip
 
 	run fin config remove --global TEST_VAR
-	[[ $status == 0 ]] &&
+	[[ $status == 0 ]]
 	[[ $output =~ "Could not find TEST_VAR in ${HOME}/.docksal/docksal.env" ]]
 
 	unset output
@@ -279,7 +272,7 @@ services:
 
 	run fin config set TEST=23456
 	local project=$(pwd)
-	[[ $status == 0 ]] &&
+	[[ $status == 0 ]]
 	[[ $output =~ "Added value for TEST into ${project}/.docksal/docksal.env" ]]
 
 	source "${project}/.docksal/docksal.env"
@@ -333,7 +326,7 @@ services:
 
 	local project=$(pwd)
 	run fin config remove TEST
-	[[ $status == 0 ]] &&
+	[[ $status == 0 ]]
 	[[ $output =~ "Could not find TEST in ${project}/.docksal/docksal.env" ]]
 	unset output
 }
@@ -349,7 +342,7 @@ services:
 
 	run fin config set --env=local TEST=34567
 	local project=$(pwd)
-	[[ $status == 0 ]] &&
+	[[ $status == 0 ]]
 	[[ $output =~ "Added value for TEST into ${project}/.docksal/docksal-local.env" ]]
 
 	source "${project}/.docksal/docksal-local.env"
@@ -367,7 +360,7 @@ services:
 	local project=$(pwd)
 	echo "TEST=1" >> "${project}/.docksal/docksal-local.env"
 	run fin config set --env=local TEST=76543
-	[[ $status == 0 ]] &&
+	[[ $status == 0 ]]
 	[[ "$output" =~ "Replaced value for TEST in ${project}/.docksal/docksal-local.env" ]]
 
 	source "${project}/.docksal/docksal-local.env"
@@ -386,7 +379,7 @@ services:
 
 	run fin config remove --env=local TEST
 	local project=$(pwd)
-	[[ $status == 0 ]] &&
+	[[ $status == 0 ]]
 	[[ $output =~ "Removing TEST from ${project}/.docksal/docksal-local.env" ]]
 
 	source "${project}/.docksal/docksal-local.env"
@@ -403,7 +396,24 @@ services:
 
 	local project=$(pwd)
 	run fin config remove --env=local TEST
-	[[ $status == 0 ]] &&
+	[[ $status == 0 ]]
 	[[ $output =~ "Could not find TEST in ${project}/.docksal/docksal-local.env" ]]
+	unset output
+}
+
+@test "fin virtual host with non standard hostname characters" {
+	[[ $SKIP == 1 ]] && skip
+
+	# cleanup
+	rm -rf .docksal
+	mkdir .docksal
+
+	# Create local env file
+	echo "VIRTUAL_HOST=feaTures.Alpha-beta_zulu.docksal" > .docksal/docksal-local.env
+
+	# Check config (check if local environment variables are used in docksal.yml)
+	TERM=dumb run fin config
+	[[ $(echo "$output" | grep -c "VIRTUAL_HOST: feaTures.Alpha-beta_zulu.docksal") -eq 0 ]]
+	[[ "${output}" =~ "The VIRTUAL_HOST has been modified from feaTures.Alpha-beta_zulu.docksal to features.alpha-beta-zulu.docksal to comply with browser standards." ]]
 	unset output
 }

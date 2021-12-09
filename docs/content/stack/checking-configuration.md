@@ -41,10 +41,10 @@ networks: {}
 services:
   cli:
     hostname: cli
-    image: docksal/cli:2.6-php7.2
+    image: docksal/cli:2.11-php7.3
     volumes:
     - docksal_ssh_agent:/.ssh-agent:ro
-    - project_root:/var/www:rw,nocopy
+    - project_root:/var/www:rw,nocopy,cached
   db:
     environment:
       MYSQL_DATABASE: default
@@ -59,12 +59,12 @@ services:
     environment:
       APACHE_DOCUMENTROOT: /var/www/docroot
     hostname: web
-    image: docksal/web:2.1-apache2.4
+    image: docksal/apache:2.4-2.3
     labels:
       io.docksal.project-root: /Users/testuser/projects/myproject
       io.docksal.virtual-host: myproject.docksal
     volumes:
-    - project_root:/var/www:ro,nocopy
+    - project_root:/var/www:ro,nocopy,cached
 version: '2.0'
 volumes:
   docksal_ssh_agent:

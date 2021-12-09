@@ -7,7 +7,7 @@
 # - Redis 4.0
 # - ApacheSolr 3.6
 
-version: "2.1"
+version: "3.9"
 
 services:
   # http(s)://VIRTUAL_HOST
@@ -24,8 +24,6 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mariadb
-    # Pin MariaDB version
-    image: ${DB_IMAGE:-docksal/mariadb:10.1-1.0}
 
   cli:
     extends:

@@ -1,5 +1,5 @@
 ---
-title: "Access for External Tools"
+title: "db: Access for External Tools"
 aliases:
   - /en/master/advanced/db-access/
 ---
@@ -9,8 +9,6 @@ The MySQL service in the `db` container is exposed at a random port by default.
 This is done to avoid port conflicts when running several Docksal projects at once.
 
 ```
-$ fin vm ip
-192.168.64.100
 $ fin ps
         Name                      Command               State            Ports
 ---------------------------------------------------------------------------------------
@@ -19,7 +17,7 @@ sitename_db_1    /entrypoint.sh mysqld            Up      0.0.0.0:34567->3306/tc
 sitename_web_1   /opt/startup.sh apache2 -D ...   Up      443/tcp, 80/tcp
 ```
 
-Use the IP for host and the sitename_db_1 port (in this case, `34567`, but it's unique for every site) for port, and then the username and password you've configured (`user`/`user` by default).
+Use the IP `192.168.64.100` for host and the sitename_db_1 port (in this case, `34567`, but it's unique for every site) for port, and then the username and password you've configured (`user`/`user` by default).
 
 It should look like this:
 

@@ -1,9 +1,0 @@
-# Enabled osxfs:cached mode
-# This adjustment makes no difference on non Docker for Mac setups
-
-version: "2.1"
-
-services:
-  cli:
-    volumes:
-      - ${PROJECT_ROOT}:/var/www:rw,cached

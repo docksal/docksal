@@ -1,0 +1,34 @@
+# Adds XHProf service to the project
+# The XHProf Outputs can be accessed at xhprof.${VIRTUAL_HOST}
+
+version: "3.9"
+
+services:
+
+  cli:
+    environment:
+      - XHPROF_ENABLED=1
+      - XHPROF_OUTPUT_DIR=${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
+    volumes:
+      - xhprof_root:${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
+
+  # XHProf Service to review
+  xhprof:
+    image: ${XHPROF_IMAGE:-wodby/xhprof:3.0.2}
+    hostname: xhprof
+    depends_on:
+      - cli
+    environment:
+      - XHPROF_OUTPUT_DIR=${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
+    volumes:
+      - xhprof_root:${XHPROF_OUTPUT_DIR:-/tmp/xhprof}
+    labels:
+      - io.docksal.virtual-host=xhprof.${VIRTUAL_HOST},xhprof.${VIRTUAL_HOST}.*
+      - io.docksal.virtual-port=8080
+    dns:
+      - ${DOCKSAL_DNS1}
+      - ${DOCKSAL_DNS2}
+
+volumes:
+  # Place to store xhprof outputs to
+  xhprof_root:

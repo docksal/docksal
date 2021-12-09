@@ -29,12 +29,11 @@ If you ignored these errors and tried to start a project, then it will most like
 
 ```
 ERROR: for cli  Cannot create container for service cli: error while mounting vo
-lume with options: type='none' device='/c/Users/alex/.babun/cygwin/home/
-alex/projects/myproject' o='bind': no such file or directory
+lume with options: type='none' device='/c/Users/alex/projects/myproject' o='bind': no such file or directory
 ERROR: Encountered errors while bringing up the project.
 ```
 
-## Root Cause
+## Root Causes
 
 During VM start Docksal creates shares for all your local drives, `docksal-c` for `C:`, `docksal-d` for `D:` etc. 
 If share creation fails, Docker will not be able to access your files.
@@ -44,7 +43,13 @@ In that case, Docker also will not be able to access your files.
 
 ## Troubleshooting
 
-### 1. Windows and Minimized Elevated Prompts
+## 1. Docker Desktop
+
+If you use Docker Desktop application check that you have shared the drive with Docker Desktop application.
+
+![Share your Windows drives with Docker Desktop](/images/docker-for-win-share-drives.png)
+
+### 2. Windows and Minimized Elevated Prompts
 
 When Docksal VM is being created, VirtualBox needs to configure network adapter and requires
 administrative permissions for that. Those elevated prompts are sometimes appear minimized on the taskbar.
@@ -63,7 +68,7 @@ or if you accidentally replied **No**, then the adapter fail to set up properly 
 your only option would be to remove vm with `fin vm remove` and start it again.
 
 
-### 2. Check for Windows Network Settings Issues
+### 3. Check for Windows Network Settings Issues
 
 Determine your local IP address. Usually you can do that by running `ipconfig` and
 looking for an active adapter that has "Local Area Connection" in the name.
@@ -94,9 +99,9 @@ Friendly reminder: if everything fails to make it working, then you might be lim
 re-installing Windows. We test Docksal on a clean Windows 10 installation and make sure it works.
 
 
-### 3. Check that Docksal IP is Working {#smb-ip}
+### 4. Check that Docksal IP is Working {#smb-ip}
 
-**NOTE:** At this step we assume you had already run `fin vm start` and it had failed
+**NOTE:** At this step we assume you had already run `fin system start` and it had failed
 with error related to shares or mounting. You checked out the first step and there seems to be no
 issues with accessing your local IP via explorer. (If error with vm
 start is not related to mounting or shares, then see regular [troubleshooting guide](/troubleshooting/common-issues/).)
@@ -123,7 +128,7 @@ If all options fail, you might be limited to re-installing Windows. We had cases
 people had mysterious issues related to shares mounting. They re-installed Windows and everything
 worked like a charm.
 
-### 4. Check that Drives' Shares Exist
+### 5. Check that Drives' Shares Exist
 
 If both IPs are working, then it's not the network access issue.
 
@@ -147,7 +152,7 @@ unless you know which permissions to set.
 Try running `fin vm restart`. If the issue with share creation does not go away and you think
 it not password or policies, then see step 6.
 
-### 5. Check Your Password
+### 6. Check Your Password
 
 For Microsoft Account use Microsoft Account password not the one you use to unlock your PC.
 
@@ -171,7 +176,7 @@ exit status 255
 In this case, try simplifying your password. If it works with a new password,
 then create an issue on GitHub (see step 6), so we could investigate and fix.
 
-### 6. Report an Issue
+### 7. Report an Issue
 
 If you checked all the steps above and it didn't help, then report an
 [issue on GitHub](https://github.com/docksal/docksal/issues) and we will investigate the edge case.

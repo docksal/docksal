@@ -12,29 +12,30 @@ teardown() {
 }
 
 # Global constants
-SERVICE_VHOST_PROXY_VERSION=1.5
-SERVICE_DNS_VERSION=1.1
-SERVICE_SSH_AGENT_VERSION=1.2
-DOCKSAL_IP=192.168.64.100
+SERVICE_VHOST_PROXY_VERSION=${SERVICE_VHOST_PROXY_VERSION:-1.7}
+SERVICE_DNS_VERSION=${SERVICE_DNS_VERSION:-1.2}
+SERVICE_SSH_AGENT_VERSION=${SERVICE_SSH_AGENT_VERSION:-1.4}
+DOCKSAL_IP=${DOCKSAL_IP:-192.168.64.100}
+DOCKSAL_DNS_DOMAIN=${DOCKSAL_DNS_DOMAIN:-docksal}
 
 # To work on a specific test:
 # run `export SKIP=1` locally, then comment skip in the test you want to debug
 
 # Add default sample keys on Travis only. We don't want to mess with a real host ssh key.
-[[ "$TRAVIS" == "true" ]] && cp tests/ssh-keys/* ~/.ssh
+[[ "$GITHUB_RUN_ID" != "" ]] && cp tests/ssh-keys/* ~/.ssh
 
 @test "IP: ($DOCKSAL_IP) is reachable" {
 	[[ $SKIP == 1 ]] && skip
 
-	# Check up is up
-	run ping -c 1 -t 1 $DOCKSAL_IP
-	[ "$status" -eq 0 ]
+	# Check DOCKSAL_IP is up
+	run ping -c 1 -W 1 ${DOCKSAL_IP}
+	[[ "$status" == 0 ]]
 	unset output
-
 }
 
 @test "DNS: fin system reset dns" {
-	[[ $SKIP == 1 ]] && skip
+	[[ ${SKIP} == 1 ]] && skip
+	[[ ${DOCKSAL_DNS_DISABLED} == 1 ]] && skip
 
 	run fin system reset dns
 	echo "$output" | grep "Resetting Docksal DNS service and configuring resolver for .docksal domain"
@@ -51,22 +52,23 @@ DOCKSAL_IP=192.168.64.100
 
 @test "DNS: .docksal name resolution via ping" {
 	[[ $SKIP == 1 ]] && skip
+	[[ ${DOCKSAL_DNS_DISABLED} == 1 ]] && skip
 
 	# .docksal domain resolution via ping
-	run ping -c 1 -t 1 anything.docksal
+	run ping -c 1 -W 1 anything.docksal
 	[[ "$(echo \"$output\" | awk -F'[()]' '/PING/{print $2}')" == "$DOCKSAL_IP" ]]
 	unset output
 }
 
 @test "DSN: .docksal name resolution via nslookup" {
-	# TODO: fix this test on Travis
-	skip
 	[[ $SKIP == 1 ]] && skip
+	[[ ${DOCKSAL_DNS_DISABLED} == 1 ]] && skip
 
 	# .docksal domain resolution via nslookup
-	run nslookup anything.docksal
-	#[[ "$(echo \"$output\" | awk '/^Address/ { print $2 }' | tail -1)" == "$DOCKSAL_IP" ]]
-	[[ "$(echo \"$output\" | grep "Address" | tail -1 | tr -d ' ' | awk -F ':' '{print $2}')" == "$DOCKSAL_IP" ]]
+	# Unfortunately, nslookup does not reliably resolve .docksal.
+	# This test is only verifying that docksal-dns replies to direct nslookup requests.
+	run nslookup anything.docksal ${DOCKSAL_IP}
+	[[ "$status" == 0 ]]
 	unset output
 }
 
@@ -86,10 +88,11 @@ DOCKSAL_IP=192.168.64.100
 	unset output
 
 	# Proxy routes requests properly
-	# Start an nginx container with "nginx.docksal" virtual host assigned
-	fin docker run -d --name bats-nginx --label 'io.docksal.virtual-host=nginx.docksal' -e 'VIRTUAL_HOST=nginx.docksal' nginx:alpine && sleep 2
+	# Start an nginx container with a given virtual host assigned
+	vhost="nginx.${DOCKSAL_DNS_DOMAIN}"
+	fin docker run -d --name bats-nginx --label "io.docksal.virtual-host=${vhost}" -e "VIRTUAL_HOST=${vhost}" nginx:alpine && sleep 2
 	# Actual Test
-	run curl -sL http://nginx.docksal
+	run curl -sL http://${vhost}
 	# Cleanup
 	fin docker rm -vf bats-nginx
 	# Parsing test output
@@ -103,7 +106,7 @@ DOCKSAL_IP=192.168.64.100
 	run fin system reset ssh-agent
 	echo "$output" | grep "Resetting Docksal ssh-agent service"
 	# Assuming there is at least one default key
-	echo "$output" | egrep "Identity added: id_.+ \(id_.+\)"
+	echo "$output" | egrep "Identity added: id_.+ \(.+\)"
 	unset output
 
 	# Wait 2s to let the service fully initialize
@@ -125,7 +128,7 @@ DOCKSAL_IP=192.168.64.100
 
 	# Adding default keys
 	# Run these tests on Travis only
-	if [[ "$TRAVIS" == "true" ]]; then
+	if [[ "$GITHUB_RUN_ID" != "" ]]; then
 		run fin ssh-key add
 		echo "$output" | grep "Identity added: id_dsa (id_dsa)"
 		echo "$output" | grep "Identity added: id_ecdsa (id_ecdsa)"
@@ -153,7 +156,7 @@ DOCKSAL_IP=192.168.64.100
 	else
 		run fin ssh-key add
 		# On a real host assuming there is at least one default key
-		echo "$output" | egrep "Identity added: id_.+ \(id_.+\)"
+		echo "$output" | egrep "Identity added: id_.+ \(.+\)"
 		unset output
 
 		# Checking fin ssh-key ls
@@ -185,7 +188,8 @@ DOCKSAL_IP=192.168.64.100
 	unset output
 
 	# Checking "fin ssh-key new"
-	run fin ssh-key new myserver_id_rsa
+	# Run non-interactively to skip configuration prompts
+	run bash -c 'echo "fin ssh-key new myserver_id_rsa" | bash'
 	# Check new key files exist and are valid SSH keys
 	ssh-keygen -lf ~/.ssh/myserver_id_rsa
 	ssh-keygen -lf ~/.ssh/myserver_id_rsa.pub
@@ -196,9 +200,12 @@ DOCKSAL_IP=192.168.64.100
 
 @test "DNS: .docksal name resolution inside cli" {
 	[[ $SKIP == 1 ]] && skip
+	[[ ${DOCKSAL_DNS_DISABLED} == 1 ]] && skip
 
-	cd ../drupal8 && fin up
-	run fin exec nslookup anything.docksal
+	# .docksal domain resolution via nslookup
+	# Unfortunately, nslookup does not reliably resolve .docksal.
+	# This test is only verifying that docksal-dns replies to direct nslookup requests.
+	run fin rc nslookup anything.docksal ${DOCKSAL_IP}
 	[[ "$status" == 0 ]]
 	unset output
 }
@@ -206,8 +213,71 @@ DOCKSAL_IP=192.168.64.100
 @test "DNS: external name resolution inside cli" {
 	[[ $SKIP == 1 ]] && skip
 
-	cd ../drupal8 && fin up
-	run fin exec nslookup google.com
+	run fin rc nslookup google.com
 	[[ "$status" == 0 ]]
+	unset output
+}
+
+@test "fin run-cli" {
+	[[ $SKIP == 1 ]] && skip
+
+	# Dummy command to pre-pull the image run-cli is using.
+	fin rc uname
+
+	# Test output in TTY vs no-TTY mode.
+	# TODO: Revise as this is failing in Github Actions. Disabled for now.
+	#[[ "$(fin rc echo)" != "$(fin rc -T echo)" ]]
+
+	# fin rc uses the docker user
+	run fin rc -T id -un
+	[[ "$output" == "docker" ]]
+	unset output
+
+	# docker user uid/gid in cli matches the host user uid/gid
+	run fin rc -T 'echo $(id -u):$(id -g)'
+	[[ "$output" == "$(id -u):$(id -g)" ]]
+	unset output
+
+	# check to make sure custom variables are passed into container
+	run fin rc -T -e TEST_VAR="TEST VARIABLES" "echo \$TEST_VAR"
+	[[ "$output" == "TEST VARIABLES" ]]
+	unset output
+
+	# check to make sure a global default variable (from $HOME/.docksal/docksal.env) is passed automatically.
+	# These are SECRET_ and some other variables passed by default.
+	# Note: SECRET_SSH_PRIVATE_KEY must be a valid base64 encoded string
+	echo "SECRET_SSH_PRIVATE_KEY=\"$(echo 'xyz' | base64)\"" >> $HOME/.docksal/docksal.env
+	run fin rc -T "echo \$SECRET_SSH_PRIVATE_KEY | base64 -d"
+	[[ "$output" == "xyz" ]]
+	unset output
+
+	# Check to make sure a global default variable can be overridden
+	# Note: SECRET_SSH_PRIVATE_KEY must be a valid base64 encoded string
+	run fin rc -T -e SECRET_SSH_PRIVATE_KEY="$(echo 'abc' | base64)" "echo \$SECRET_SSH_PRIVATE_KEY | base64 -d"
+	[[ "$output" == "abc" ]]
+	unset output
+
+	# check to make sure a global (non-default) variable can be passed if included in command
+	echo "TEST=1234" >> $HOME/.docksal/docksal.env
+	run fin rc -T -e TEST "echo \$TEST"
+	[[ "$output" == "1234" ]]
+	unset output
+
+	# Check persistent volume
+	fin rc touch /home/docker/test
+	run fin rc -T ls /home/docker/test
+	[[ "$output" == "/home/docker/test" ]]
+	unset output
+
+	# Check one-off volume --clean
+	fin rc touch /home/docker/test
+	run fin rc --clean -T ls /home/docker/test
+	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
+	unset output
+
+	# Check --cleanup persistent volume
+	fin rc touch /home/docker/test
+	run fin rc --cleanup -T ls /home/docker/test
+	[[ "$output" == "ls: cannot access '/home/docker/test': No such file or directory" ]]
 	unset output
 }

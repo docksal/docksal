@@ -28,7 +28,7 @@ TERM=dumb
 	fin project reset -f
 	sleep 5
 
-	run fin projects
+	run fin project list
 	[[ "$output" == *"test-db"* ]]
 	unset output
 }
@@ -49,6 +49,16 @@ TERM=dumb
 	run fin db cli 'show databases like "mysql";'
 	[[ "$output" == *"mysql"* ]]
 	unset output
+}
+
+@test "fin db create without tty" {
+	[[ $SKIP == 1 ]] && skip
+
+	dbname="testnotty"
+	echo "fin db create ${dbname}" | bash
+
+	# Cleanup
+	run fin db drop "${dbname}"
 }
 
 @test "fin db drop and recreate default" {

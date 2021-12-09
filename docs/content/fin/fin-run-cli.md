@@ -1,11 +1,11 @@
 ---
-title: "On-demand disposable cli"
+title: "On-demand Disposable CLI"
 weight: 3
 aliases:
   - /en/master/fin/fin-run-cli/
 ---
 
-## Disposable cli Environments
+## Disposable CLI Environments
 
 With this command you can launch a standalone `cli` container within the scope of the current directory.
 The directory is mapped into `/var/www` in the container.
@@ -33,22 +33,20 @@ Any other changes happen inside of the container only and are reset once the con
 ### Create a Drupal 8 Composer-based Project from Scratch
 
 ```bash
-fin run-cli composer create-project drupal-composer/drupal-project:8.x-dev myproject --stability dev --no-interaction
+fin run-cli composer create-project drupal/recommended-project myproject --no-interaction
 ```
 
 You can then initialize the default Docksal stack (LAMP) for the new project with just a few more steps:
 
 ```bash
 cd myproject
-mkdir .docksal
-fin config set DOCROOT=web
-fin project start
+fin init
 ``` 
 
 
 ## Data Persistence
 
-Generally, anything you do inside of a `fun run-cli` environment is gone once the container is stopped.
+Generally, anything you do inside of a `fin run-cli` environment is gone once the container is stopped.
 You can install new packages, run scripts, break things, etc., without the risk of damaging your host system.
 The next time you do `fin run-cli`, the `run-cli` environment is started fresh and clean.
 

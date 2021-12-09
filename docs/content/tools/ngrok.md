@@ -86,3 +86,40 @@ Note: It is also possible to add/override these values via `.docksal/etc/ngrok/n
 {{% notice note %}}
 If you use the config file, all command line flags will be disregarded.
 {{% /notice %}}
+
+### Tunneling to multiple project sites
+
+1. Add the following to `.docksal/etc/ngrok/ngrok-local.yml` to setup tunnels to multiple sites running in the same project:
+
+    ```yaml
+    authtoken: scrubbed
+    tunnels:
+      site1:
+        addr: project_web_1.project_default:80
+        proto: http
+        host_header: site1.projecthost.docksal
+        hostname: site1.ngrok.customdomain.com
+      site2:
+        addr: project_web_1.project_default:80
+        proto: http
+        host_header: site2.projecthost.docksal
+        hostname: site2.ngrok.customdomain.com
+      site3:
+        addr: project_web_1.project_default:80
+        proto: http
+        host_header: site3.projecthost.docksal
+        hostname: site3.ngrok.customdomain.com
+      site4:
+        addr: project_web_1.project_default:80
+        proto: http
+        host_header: site4.projecthost.docksal
+        hostname: site4.ngrok.customdomain.com
+    ```
+
+2. Run `fin share` to start ngrok and open the tunnels. It will automatically use the configuration file above.
+
+In the above example a wildcard domain is used. In this example that is `*.ngrok.customdomain.com`. Add this as a CNAME DNS entry pointed to the designated ngrok host assigned to it in your dashboard. Additional documentation about adding a wildcard domain to your account can be found at https://ngrok.com/docs#wildcard.
+
+{{% notice info %}}
+The above example leverages a Business account plan with ngrok, which allows for wildcard domains, multiple open tunnels and custom hostname/subdomains. See plans and pricing at https://ngrok.com/pricing.
+{{% /notice %}}

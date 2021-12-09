@@ -25,13 +25,11 @@ There are several way to extend a stock Docksal image:
 This method is sufficient for many use cases.
 
 Create a [custom command](/fin/custom-commands/) to add the necessary tools to the image, e.g.:
+
 ```
 fin exec sudo apt-get update
 fin exec sudo apt-get install php7.0-redis
 ```
-
-See also the advanced use case of [adding a different NodeJS version](/use-cases/nodejs) with a custom command.
-
 
 ## Configuration: Dockerfile {#docker-file}
 
@@ -48,10 +46,11 @@ Below is an example of extending the `cli` image with additional configs, apt, a
 **File `.docksal/services/cli/Dockerfile`**
 
 ```Dockerfile
-# Use a stock Docksal image as the base
-FROM docksal/cli:2-php7.2
+# Note how we use cli:2 here, which refers to the latest available 2.x version
+# So that we wouldn't need to update this every time new version of Docksal cli releases
+FROM docksal/cli:2-php7.3
 
-# Install addtional apt packages
+# Install additional apt packages
 RUN apt-get update && apt-get -y --no-install-recommends install \
     netcat-openbsd \
     # Cleanup
@@ -67,6 +66,7 @@ RUN \
 
 # All further commands will be performed as the docker user.
 USER docker
+SHELL ["/bin/bash", "-c"]
 
 # Install additional global npm dependencies
 RUN \
@@ -83,7 +83,7 @@ Here's another example for `web`:
 
 ```Dockerfile
 # Use a stock Docksal image as the base
-FROM docksal/web:2.1-apache2.4
+FROM docksal/apache:2.4-2.3
 
 RUN set -x \
 	# Enabled extra modules
@@ -139,24 +139,45 @@ no real changes made to images (and output in the console actually says exactly 
 basically just a check if nothing has changed. There is no good way to silence that output as in case there 
 was some error the output would render very useful.
 
-
-
 ## Maintain Your Own Docker Image {#maintain-image}
 
-Of all of the options, this requires the highest level of knowledge of Docker. You may find this method beneficial when
-you are using the same image definition across multiple projects. If you think your changes should be part of the stock 
-image, submit a pull request.
+Of all of the options, this requires the highest level of knowledge of Docker and Docksal. 
+You may find this method beneficial when you are using the same image definition across multiple projects. 
 
-- Create your own Docker image project ([see image examples above](#docker-file))
-- Use whatever version of Docksal's service you want to use in the Dockerfile
-- Make your additions/subtractions ([see the Dockerfile reference](https://docs.docker.com/engine/reference/builder/))
-- Build the image and make sure it's added to Docksal's machine
-- To test and verify that your built image works with Docksal, ([see extending `docksal.yml` file above](#extend-docksal.yml))
- and update the service's image value with the name of your service
+If you think your changes should be part of the stock image, submit a pull request.
+
+### Setup an automated image build on Docker Hub
+
+- Create a separate Docker image project ([see image examples above](#docker-file))
+- Use an official Docksal service image as the base (`FROM` directive in the `Dockerfile`)
+- Make desired adjustments ([see the Dockerfile reference](https://docs.docker.com/engine/reference/builder/))
+- Build the image
+- Test and verify the image works with Docksal ([see extending `docksal.yml` file above](#extend-docksal.yml))
 - Push your image project to Github or Bitbucket as a public repository
-- On Docker Hub, create an Automated Build project and link your Github/Bitbucket account to your image repository
-- Under Build Settings, specify the branch you want to create a build from and what the image tag should be called
-- In the Linked Repositories section, specify `docksal/<service>`. This way, every time Docksal updates that service image 
-on Docker Hub, your image will automatically be rebuilt as well based on the latest changes.
+- On Docker Hub, create an "Automated Build" project and link your image repository
+- Under "Build Settings", specify the branch you want to create a build from and what the image tag should be called
+- In the "Linked Repositories" section, specify the image you used as the base (e.g. `docksal/cli`). This way, 
+every time Docksal updates the stock image on Docker Hub, your custom image will automatically be rebuilt and updated.
 
-See the example use case for [maintaining a custom docker image](/use-cases/docker-image).
+### Configure your project stack to use the custom image
+
+Assuming your project stack is using stock Docksal services, you can override the service image like this:
+
+```bash
+fin config set <SERVICE>_IMAGE=<custom-image>
+```
+
+Example:
+
+```bash
+fin config set CLI_IMAGE='wodby/php:7.1-4.11.12'
+``` 
+
+You can also override the `image` property of a service via `docksal.yml` (advanced users).
+
+Run `fin project start` to update the stack configuration and pull the new image from Docker Hub. 
+
+{{% notice note %}}
+When your custom image is updated, you will need to pull the latest changes from Docker Hub. This can be done with 
+`fin docker pull <custom-image>` or `fin update --project-images`.
+{{% /notice %}}

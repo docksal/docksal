@@ -1,10 +1,10 @@
 ---
 title: "cli"
 chapter: true
+weight: 1
+hide_feedback: true
 ---
 
-# docksal/cli Service
-
-Advanced documentation for `docksal/cli` service 
+Advanced documentation for `cli` service 
 
 {{% children %}}

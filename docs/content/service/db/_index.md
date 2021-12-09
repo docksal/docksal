@@ -1,10 +1,10 @@
 ---
-title: "db"
+title: "db Service"
 chapter: true
+weight: 2
+hide_feedback: true
 ---
 
-# docksal/db Service
-
-Advanced documentation for `docksal/db` service 
+Advanced documentation for `db` service 
 
 {{% children %}}

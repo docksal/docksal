@@ -23,10 +23,11 @@ In Docker for Mac / Docker for Windows shared volumes configuration is not handl
 You may have to manually configure the File Sharing options via Docker UI. See details [here](/getting-started/docker-modes/).    
 {{% /notice %}}
 
-## macOS (VirtualBox mode only)
+## macOS
 
-On macOS `/Users` is configured as an NFS export by default and mounted into `/Users` in the VM. This export can only 
-be accessed by the Docksal VM and the host itself.
+On macOS, `/Users` is configured as an NFS export by default with both VirtualBox and Docker Desktop. The `project_root`
+volume is mounted from the host over NFS, then the project containers mount this volume. This export can only 
+be accessed by the container and the host itself.
 
 When you have other software, like Vagrant, defining NFS exports, there may be conflicts as NFS exports cannot overlap. 
 In such cases the default NFS export can be overridden via the **global** `DOCKSAL_NFS_PATH` variable in 

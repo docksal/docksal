@@ -1,0 +1,41 @@
+# Platform.sh alike stack
+# see https://github.com/platformsh-templates/drupal9
+#
+# - Nginx 1.14
+# - MariaDB 10.3
+# - PHP 7.4
+# - Redis 6.0
+
+version: "3.9"
+
+services:
+  # http(s)://VIRTUAL_HOST
+  web:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: nginx
+    # Pin nginx version
+    image: ${WEB_IMAGE:-docksal/nginx:1.14-edge}
+    depends_on:
+      - cli
+
+  db:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: mariadb
+    # Pin MariaDB version
+    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.1}
+
+  cli:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: cli
+    # Pin PHP version
+    image: ${CLI_IMAGE:=docksal/cli:stable-php7.4}
+
+  redis:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: redis
+    # Pin Redis version
+    image: ${REDIS_IMAGE:-wodby/redis:6.0}

@@ -4,23 +4,82 @@ weight: 3
 aliases:
   - /en/master/advanced/stack-config/
 ---
-## Custom Configuration {#custom-configuration}
 
-Custom configurations are useful when you have a larger or more complex project. One where a CI server is involved 
-or many people are on a project team, and you have to be careful about maintaining software versions. 
-Having a custom configuration will protect your project from the updates in `services.yml` when you update Docksal.
+Docksal provides a lot of flexibility in the way project stacks can be configured.
 
-```bash
-fin config generate
+You can go from [zero-config](/stack/zeo-configuration/), to [customized](#customized-configuration), to entirely 
+[custom](#custom-configuration) stack configurations.
+
+## Customized Configuration {#customized-configuration}
+
+Customized configurations are useful whenever you need a bit (or a lot) more from your project stack.
+
+Such configurations rely on a [managed stack](/stack/understanding-stack-config/#default-configurations), but extend it 
+with additional docker-compose overrides and definitions via the `.docksal/docksal.yml` file.
+
+Examples:
+
+- Extend the default stack with the [MailHog](/service/other/mailhog/) service to capture outbound emails
+- Repurpose the `cli` service to [run a different command](/service/cli/override-command/) on startup 
+(e.g., a node app instead of PHP-FPM).
+- [Pass variables](#pass-variables) from the host/project config inside containers 
+
+### Passing Variables to Containers {#pass-variables}
+
+You may add environment variables that you can pass into containers through the `docksal.env` or `docksal-local.env` files.
+
+Variable values can be statically set or passed from the host. See example below.
+
+```
+# docksal.env
+MY_CUSTOM_VARIBLE='test key'
 ```
 
-This command will create a `docksal.yml` file in the project directory. You can update this file with a fully
-independent description of services so future changes to the default stack(s) will no longer affect the project 
-configuration. This also means that future Docksal updates, bringing new features and changes, will not automatically 
-apply. You might need to append those changes manually in `docksal.yml`.
+```yaml
+# docksal.yml
+  cli:
+    environment:
+      - MY_CUSTOM_VARIABLE # Variable value passed from the host environment (values in docksal.env take precedence)
+      - MY_STATIC_VARIABLE=api_test_key # Variable value statically set
+```
+
+## Custom Configuration {#custom-configuration}
+
+Advanced users can manage their project stack configuration with pure docker-compose. 
+
+Custom configurations do not include a managed stack (this is the key different between custom and customized configurations). 
+The complete docker-compose definition is managed via the `.docksa/docksal.yml` file.
+
+To switch to a custom configuration stack, run this in your project directory:
+
+```bash
+fin config rm DOCKSAL_STACK
+```
+
+Check the resulting docker-compose configuration with `fin config show` and apply with `fin project start` 
+or `fin project reset`.
+
+You may notice that Docksal still includes configuration for managed volumes (which depends on the host OS/hypervisor) 
+to simplify mounting of the host's file system (notably, the `project_root` volume). 
+
+Volumes can also be disabled, if you'd like to have a completely empty starting point for your docker-compose config. 
+To disable managed volumes, run this in the project directory: 
+
+```bash
+fin config set DOCKSAL_VOLUMES=disabled
+```
+
+Check the resulting docker-compose configuration with `fin config show` and apply with `fin project reset`.
+
+You may still utilize a mix of managed services (from `$HOME/.docksal/stacks/services/yml`) and custom services with 
+custom configurations.
+
+{{% notice note %}}
+Support for `docksal.env` and environment specific files (e.g., `docksal-local.env`, `docksal-local.yml`) will still 
+work with custom configurations.
+{{% /notice %}}
 
 ### Don't Break Your Docksal Setup! List of Must Have Values {#warning}
-
 
 {{% notice warning %}}
 Certain configuration settings in yaml files are required for your Docksal stack to function properly.
@@ -35,7 +94,7 @@ You should not remove or change these values.
   web:
     volumes:
       # Project root volume
-      - project_root:/var/www:ro,nocopy
+      - project_root:/var/www:ro,nocopy,cached
     labels:
       - io.docksal.virtual-host=${VIRTUAL_HOST},*.${VIRTUAL_HOST},${VIRTUAL_HOST}.*
       - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
@@ -56,7 +115,7 @@ In the `cli` service, there is the `volumes` section. You should not remove or c
   cli:
     volumes:
       # Project root volume
-      - project_root:/var/www:rw,nocopy
+      - project_root:/var/www:rw,nocopy,cached
       # Shared ssh-agent socket
       - docksal_ssh_agent:/.ssh-agent:ro
 ```

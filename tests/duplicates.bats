@@ -20,7 +20,7 @@ teardown() {
 	mkdir -p 'project1/.docksal'
 	cd 'project1'
 	fin start
-	run fin projects
+	run fin project list
 	echo "$output" | grep 'project1'
 	unset output
 }
