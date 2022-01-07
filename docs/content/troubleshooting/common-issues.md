@@ -464,3 +464,17 @@ There is no guarantee that pinning the vhost-proxy image won't result in incompa
 {{% /notice %}}
 
 Long term fix: consider switching to a host with a modern CPU with SSE 4.2 support.
+
+## Issue 18. Composer Out of Memory
+
+Composer 2 is much improved over Composer 1. However, even Composer 2 can throw the dreaded "exhausted memory" or "cannot allocate memory" message.
+
+### How to Resolve
+
+Run your composer command beginning with...
+
+```bash
+fin exec COMPOSER_MEMORY_LIMIT=-1 composer
+```
+
+If you are still having memory issues, see [Out-of-memory Issues](/troubleshooting/common-issues/#issue-03).
