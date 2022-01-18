@@ -134,6 +134,16 @@ semi-automatic mode.
 How many seconds to give project containers to reach `healthy` state before `fin` considers the stack startup as failed. 
 The value should be a multiple of `5`.
 
+### DOCKSAL_HOST
+
+`Default: "<unset>"`
+
+If set, overrides the internal `DOCKER_HOST` variable used by Docker / Docker Compose.
+
+This allows pointing Docker client to a different/external Docker host and can be useful in CI scenarios.
+
+Note: Consider using [Docker Contexts](https://docs.docker.com/engine/context/working-with-contexts/) instead.
+
 ### DOCKSAL_LOCK_UPDATES
 
 `Default: 0`
