@@ -1625,14 +1625,21 @@ show_help ()
 			fi
 	fi
 
-	echo "Docksal command line utility (v$FIN_VERSION)"
-	echo "Docksal docs: https://docs.docksal.io/"
+	echo-green "Docksal command line utility${NC} (${yellow}v${FIN_VERSION}${NC})"
 	echo
-	echo "Usage: fin [command]"
+	echo -e "${lightmagenta}Docksal Docs:${NC}      https://docs.docksal.io/"
+	echo -e "${lightmagenta}Sponsor ❤ Docksal:${NC} ${URL_GITHUB_SPONSOR}"
+	echo
+
+	echo-green "Usage:"
+	printh "fin [command]"
 	echo
 
 	echo-green "Management Commands:"
+	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})" "yellow"
+	printh "alias <command>" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})" "yellow"
 	printh "db <command>" "Manage databases (${yellow}fin help db${NC})" "yellow"
+	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})" "yellow"
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal state (${yellow}fin help system${NC})" "yellow"
@@ -1643,38 +1650,41 @@ show_help ()
 
 	echo-green "Commands:"
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "logs [service]" "Show service logs (e.g., Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
-	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "config [command]" "Show or change configuration (${yellow}fin help config${NC})"
-	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
-
-	echo
-	printh "pull [options]" "Commands for interacting with Hosting Provider (${yellow}fin help pull${NC})"
-	printh "drush [command]" "Drush command (requires Drupal)"
-	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
-	printh "platform [command]" "Platform.sh's CLI (requires docksal/cli 2.3+)"
-	printh "terminus [command]" "Pantheon's Terminus (requires docksal/cli 2.1+)"
-	printh "wp [command]" "WordPress CLI command (requires WordPress)"
-	printh "composer [command]" "Run Composer commands"
-	printh "docker (d) [command]" "Run Docker commands directly"
-	printh "docker-compose (dc) [cmd]" "Run Docker Compose commands directly"
-
-	echo
-	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
-	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
-	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
-	printh "share" "Create temporary public url for current project using ngrok"
+	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
+	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
-	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
+	printh "logs [service]" "Show service logs (e.g., Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
+	printh "pull [options]" "Commands for interacting with Hosting Providers (${yellow}fin help pull${NC})"
+	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
+	printh "share" "Create temporary public url for current project using ngrok"
 	printh "vhosts" "List all virtual *.docksal hosts registered in Docksal proxy"
-	printh "sysinfo" "Show system information"
-	printh "diagnose" "Show diagnostic information for troubleshooting and bug reporting"
-	printh "version (--version, v, -v)" "Print fin version. [v, -v] prints short version"
-	printh "update" "${yellow}Update Docksal${NC}" "yellow"
+	echo
 
-	# Do not show addons and custom commands if help for fin only ie requested (needed for docs generation)
+	echo-green "Docker command wrappers"
+	printh "docker (d) <command>" "Run Docker commands directly"
+	printh "docker-compose (dc) <command>" "Run Docker Compose commands directly"
+	printh "docker-machine (dm) <command>" "Run Docker Machine commands directly"
+	echo
+
+	echo-green "Misc. command wrappers"
+	printh "composer <command>" "Run Composer commands"
+	printh "drush <command>" "Drush command (requires Drupal)"
+	printh "drupal <command>" "Drupal Console command (requires Drupal 8)"
+	printh "platform <command>" "Platform.sh's CLI (requires docksal/cli 2.3+)"
+	printh "terminus <command>" "Pantheon's Terminus (requires docksal/cli 2.1+)"
+	printh "wp <command>" "WordPress CLI command (requires WordPress)"
+	echo
+
+	echo-green "Diagnostics/maintenance/updates"
+	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
+	printh "diagnose" "Show diagnostic information for troubleshooting and bug reporting"
+	printh "sysinfo" "Show system information"
+	printh "update [options]" "Update Docksal"
+	printh "version (--version, v, -v)" "Print fin version. [v, -v] prints short version"
+
+	# Do not show addons and custom commands if help for fin only is requested (needed for docs generation)
 	if [[ "$1" == "fin" ]]; then
 		return;
 	fi
@@ -1683,7 +1693,7 @@ show_help ()
 	load_global_configuration
 	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH" || ! empty_dir "$HOME/$DOCKSAL_ADDONS_PATH"; then
 		echo
-		echo-green "Addons found:"
+		echo-green "Installed Addons:"
 	fi
 	if [[ ! -z "$(get_project_path)" ]]; then
 		show_help_list_addons_in_help 'project'
@@ -1704,7 +1714,6 @@ show_help ()
 		show_help_list_commands_in_help 'global'
 	fi
 
-	echo
 }
 
 # param $1 - 'project' or 'global'
