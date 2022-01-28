@@ -487,7 +487,7 @@ Out of disk issues may manifest in many ways. One is:
 ERROR 1114 (HY000) at line xxxx: The table 'xxxx' is full
 ```
 
-You can diagnose this issue with `fin exec df -lh`. If a disk shows close to 100% usage it's time to expand it.
+You can diagnose this issue with `fin exec df -lh`. If a disk shows close to 100% usage, you'll need to either [clean up your projects](https://docs.docksal.io/core/vm/#free-up-space-in-virtualbox-vm-docker-for-mac-or-docker-for-windows) or expand the disk.
 
 ### How to Resolve
 
