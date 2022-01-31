@@ -478,3 +478,21 @@ fin exec COMPOSER_MEMORY_LIMIT=-1 composer
 ```
 
 If you are still having memory issues, see [Out-of-memory Issues](/troubleshooting/common-issues/#issue-03).
+
+## Issue 19. Out of disk space
+
+Out of disk issues may manifest in many ways. One is:
+
+```
+ERROR 1114 (HY000) at line xxxx: The table 'xxxx' is full
+```
+
+You can diagnose this issue with `fin exec df -lh`. If a disk shows close to 100% usage, you'll need to either [clean up your projects](https://docs.docksal.io/core/vm/#free-up-space-in-virtualbox-vm-docker-for-mac-or-docker-for-windows) or expand the disk.
+
+### How to Resolve
+
+- [If you are using VirtualBox](https://docs.docksal.io/core/vm/#increasing-docksal-s-virtualbox-vm-disk-size-hdd)
+- If you are using Docker Desktop:
+  - In the UI, go to Preferences > Resources
+  - Increase the "Disk image size"
+  - `fin up` to restart your project
