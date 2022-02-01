@@ -329,15 +329,19 @@ to run the project.
 
 See Issue 3. Lack of memory for resolution.
 
-## Issue 12. VirtualBox Installation Fails on macOS High Sierra 10.13 {#issue-12}
+## Issue 12. VirtualBox Installation Fails on macOS {#issue-12}
 
-New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced
+VirtualBox installation fails on macOS High Sierra v10.13 or later due to the new policy Apple introduced
 around third-party kernel extensions.
 
 ### How to Resolve
 
-- Open System Preferences > Security & Privacy and click the `Allow` button for `Oracle America, Inc.`
-- Restart the VirtualBox installation manually
+- Open `System Preferences > Security & Privacy` and click the `Allow` button for `Oracle America, Inc.`
+- Restart VirtualBox installation manually
+
+If you do not see the "Allow" button, it means the extension is already enabled.
+
+![Allowing VirtualBox kernel extension](/images/virtualbox-kernel-extension-allow.png)
 
 In certain cases you may have to reboot your Mac and then reinstall VirtualBox manually.
 
