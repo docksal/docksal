@@ -2526,7 +2526,7 @@ docker_machine_create ()
 	fi
 
 	# Use 2 CPUs in case of 4 or more CPUs/cores on host
-	# This tremendously helps with network files sytem operations in some cases
+	# This tremendously helps with network files system operations in some cases
 	local VIRTUALBOX_CPU_COUNT=1
 	system_cpu_count=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
 	# process possible failure as 1 cpu
