@@ -2535,6 +2535,14 @@ docker_machine_create ()
 		VIRTUALBOX_CPU_COUNT=2
 	fi
 
+	# Allow Docksal subnet IPs to be assigned to a VirtualBox host-only adapter (VirtualBox v6.1.28+)
+	# https://github.com/docksal/docksal/issues/1596
+	if is_mac && ! (cat /etc/vbox/networks.conf 2>/dev/null | grep -e "^\* ${DOCKSAL_SUBNET}" >/dev/null); then
+		echo "Writing /etc/vbox/networks.conf..."
+		sudo mkdir -p /etc/vbox
+		echo "* ${DOCKSAL_SUBNET}" | sudo tee -a /etc/vbox/networks.conf >/dev/null
+	fi
+
 	docker-machine create \
  		--driver=virtualbox \
 		--virtualbox-boot2docker-url "${URL_BOOT2DOCKER}" \
