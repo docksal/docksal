@@ -77,11 +77,13 @@ First, follow [automatic](#phpstorm-automatic) or [manual](#phpstorm-manual) ins
 mapping settings in PHPStorm.
 
 To debug PHP CLI scripts, we have to tell PHPStorm which **existing** server configuration to use via the
-`PHP_IDE_CONFIG` variable. This can be done using the following commands:
+`PHP_IDE_CONFIG` variable. This must be added to `docksal.yml`:
 
-```bash
-fin config set --env=local 'PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}'
-fin project start
+```yml
+services:
+  cli:
+    environment:
+      - PHP_IDE_CONFIG="serverName=${VIRTUAL_HOST}"
 ```
 
 {{% notice warning %}}
