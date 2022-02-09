@@ -83,7 +83,7 @@ To debug PHP CLI scripts, we have to tell PHPStorm which **existing** server con
 services:
   cli:
     environment:
-      - PHP_IDE_CONFIG="serverName=${VIRTUAL_HOST}"
+      - PHP_IDE_CONFIG=serverName=${VIRTUAL_HOST}
 ```
 
 {{% notice warning %}}
