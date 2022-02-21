@@ -1355,8 +1355,11 @@ _start_containers ()
 	# Note: triggering this check in load_configuration would introduce a blocker for many fin commands.
 	check_docker_path
 
+	# Suppress docker pull details in CI environments otherwise pull prints too much garbage in CI logs.
+	is_ci && quiet_pull="--quiet-pull" || quiet_pull=""
+
 	echo-green "Starting services..."
-	docker-compose up -d --remove-orphans --build --quiet-pull || return 1
+	docker-compose up -d --remove-orphans --build ${quiet_pull} || return 1
 	# TODO: Workaround. Handle this case in docksal/vhost-proxy.
 	# When project stack is started, but vhost-proxy is not yet connected to the stack network, vhost-proxy config breaks.
 	# To mitigate this we should connect vhost-proxy to the project stack network ASAP.
