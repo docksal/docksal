@@ -27,7 +27,15 @@ teardown() {
 @test "fin project start" {
 	[[ $SKIP == 1 ]] && skip
 
-	fin project start
+	run fin project start
+	echo "$output" | egrep "Starting services..."
+	echo "$output" | egrep "Network .*_default \s* Created"
+	echo "$output" | egrep "Volume \".*_project_root\" \s* Created"
+	echo "$output" | egrep "Container .*_web_1 \s* Started"
+	echo "$output" | egrep "Container .*_db_1 \s* Started"
+	echo "$output" | egrep "Container .*_cli_1 \s* Started"
+	echo "$output" | egrep "Connected vhost-proxy to \".*_default\" network"
+	unset output
 
 	# Check that containers are running
 	run fin ps
@@ -40,7 +48,13 @@ teardown() {
 @test "fin project stop" {
 	[[ $SKIP == 1 ]] && skip
 
-	fin project stop
+	run fin project stop
+	echo "$output" | egrep "Disconnecting project network..."
+	echo "$output" | egrep "Stopping services..."
+	echo "$output" | egrep "Container .*_web_1 \s* Stopped"
+	echo "$output" | egrep "Container .*_db_1 \s* Stopped"
+	echo "$output" | egrep "Container .*_cli_1 \s* Stopped"
+	unset output
 
 	# Check that containers are stopped
 	run fin ps
@@ -56,7 +70,19 @@ teardown() {
 @test "fin project restart" {
 	[[ $SKIP == 1 ]] && skip
 
-	fin project restart
+	run fin project restart
+	echo "$output" | egrep "Disconnecting project network..."
+	echo "$output" | egrep "Stopping services..."
+	echo "$output" | egrep "Container .*_web_1 \s* Stopped"
+	echo "$output" | egrep "Container .*_db_1 \s* Stopped"
+	echo "$output" | egrep "Container .*_cli_1 \s* Stopped"
+
+	echo "$output" | egrep "Starting services..."
+	echo "$output" | egrep "Container .*_web_1 \s* Started"
+	echo "$output" | egrep "Container .*_db_1 \s* Started"
+	echo "$output" | egrep "Container .*_cli_1 \s* Started"
+	echo "$output" | egrep "Connected vhost-proxy to \".*_default\" network"
+	unset output
 
 	# Check that containers are running
 	run fin ps
@@ -109,7 +135,21 @@ teardown() {
 @test "fin project reset -f" {
 	[[ $SKIP == 1 ]] && skip
 
-	fin project reset -f
+	run fin project reset -f
+	echo "$output" | egrep "Removing containers..."
+	echo "$output" | egrep "Container .*_web_1 \s* Removed"
+	echo "$output" | egrep "Container .*_db_1 \s* Removed"
+	echo "$output" | egrep "Container .*_cli_1 \s* Removed"
+	echo "$output" | egrep "Volume .*_project_root \s* Removed"
+	echo "$output" | egrep "Network .*_default \s* Removed"
+
+	echo "$output" | egrep "Network .*_default \s* Created"
+	echo "$output" | egrep "Volume \".*_project_root\" \s* Created"
+	echo "$output" | egrep "Container .*_web_1 \s* Started"
+	echo "$output" | egrep "Container .*_db_1 \s* Started"
+	echo "$output" | egrep "Container .*_cli_1 \s* Started"
+	echo "$output" | egrep "Connected vhost-proxy to \".*_default\" network"
+	unset output
 
 	# Check that containers are running
 	run fin ps
@@ -122,7 +162,15 @@ teardown() {
 @test "fin project remove -f" {
 	[[ $SKIP == 1 ]] && skip
 
-	fin project remove -f
+	# First run
+	run fin project remove -f
+	echo "$output" | egrep "Removing containers..."
+	echo "$output" | egrep "Container .*_web_1 \s* Removed"
+	echo "$output" | egrep "Container .*_db_1 \s* Removed"
+	echo "$output" | egrep "Container .*_cli_1 \s* Removed"
+	echo "$output" | egrep "Volume .*_project_root \s* Removed"
+	echo "$output" | egrep "Network .*_default \s* Removed"
+	unset output
 
 	# Check that there are no containers
 	# Using "fin docker-compose ps" here to skip additional processing and output added by "fin ps"
