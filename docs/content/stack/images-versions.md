@@ -26,14 +26,14 @@ Note: `cli` is a special case, `cli` itself is seen as software here with `-php.
 You may notice that there are two versions of the same, e.g.:
 
 ```
-docksal/nginx:1.15
-docksal/nginx:1.15-1.0
+docksal/nginx:1.21
+docksal/nginx:1.21-1.2
 ```
 
-As described above `...-1.0` means image version here. `docksal/nginx:1.15` will always refer to the latest 
-available image version. Right now `docksal/nginx:1.15` is the same as `docksal/nginx:1.15-1.0`, but should
-we release `docksal/nginx:1.15-1.1`, and `docksal/nginx:1.15` would refer to `docksal/nginx:1.15-1.1`, while
-`docksal/nginx:1.15-1.0` would still exist for backwards compatibility. 
+As described above `...-1.2` means image version here. `docksal/nginx:1.21` will always refer to the latest 
+available image version. At some point, `docksal/nginx:1.21` is the same as `docksal/nginx:1.21-1.2`, but should
+we release `docksal/nginx:1.21-1.3`, and `docksal/nginx:1.21` would refer to `docksal/nginx:1.21-1.3`, while
+`docksal/nginx:1.21-1.1` would still exist for backwards compatibility. 
 
 Having this latest image tag is a convenient shortcut, but in stacks that are delivered with Docksal, 
 the exact version will always be used to avoid a situation when the newer image version was not pulled to your local.
@@ -53,14 +53,15 @@ e.g., `fin image registry docksal/cli`, to see list of available CLI images. [Se
 
 | Image| Notes |
 |------|-------|
-| `docksal/cli:php8.0-3.0` | PHP 8.0, Nodejs 14.17.3, Ruby 2.5.5, Python 2.7.16, msmtp |
-| `docksal/cli:php7.4-3.0` | *Default image* PHP 7.4, Nodejs 14.17.3, Ruby 2.7.2, Python 2.7.16, msmtp |
-| `docksal/cli:php7.3-3.0` | PHP 7.3, Nodejs 14.17.3, Ruby 2.5.5, Python 3.8.3, msmtp |
+| `docksal/cli:php8.1-3.1` | PHP 8.1.3, Nodejs 14.17.3, Ruby 2.7.4, Python 3.9.2 |
+| `docksal/cli:php8.0-3.1` | PHP 8.0.16, Nodejs 14.17.3, Ruby 2.7.4, Python 3.9.2 |
+| `docksal/cli:php7.4-3.1` | *Default image* PHP 7.4.28, Nodejs 14.17.3, Ruby 2.7.4, Python 3.9.2 |
+| `docksal/cli:php8.1-3`    | Latest 3.x image version of PHP 8.1 flavor, convenient when [extending images](/stack/extend-images)
 | `docksal/cli:php8.0-3`    | Latest 3.x image version of PHP 8.0 flavor, convenient when [extending images](/stack/extend-images)
 | `docksal/cli:php7.4-3`    | Latest 3.x image version of PHP 7.4 flavor, convenient when [extending images](/stack/extend-images)
-| `docksal/cli:php7.3-3`    | Latest 3.x image version of PHP 7.3 flavor, convenient when [extending images](/stack/extend-images)
-| `docksal/cli:2.13-php7.4` | PHP 7.4, Nodejs 14.15.0, Ruby 2.7.2, Python 3.8.3, msmtp |
-| `docksal/cli:2.13-php7.3` | PHP 7.3, Nodejs 14.15.0, Ruby 2.7.2, Python 3.8.3, msmtp |
+| `docksal/cli:php7.3-3.0` | *Deprecated* PHP 7.3, Nodejs 14.17.3, Ruby 2.5.5, Python 3.8.3, msmtp |
+| `docksal/cli:2.13-php7.4` | *Deprecated* PHP 7.4, Nodejs 14.15.0, Ruby 2.7.2, Python 3.8.3, msmtp |
+| `docksal/cli:2.13-php7.3` | *Deprecated* PHP 7.3, Nodejs 14.15.0, Ruby 2.7.2, Python 3.8.3, msmtp |
 | `docksal/cli:2.11-php7.2` | *Deprecated* PHP 7.2, Nodejs 12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
 | `docksal/cli:2.10-php7.1` | *Deprecated* PHP 7.1, Nodejs 12.13.0, Ruby 2.6.5, Python 3.8.3, msmtp |
 | `docksal/cli:2.5-php7.0`  | *Deprecated* PHP 7.0, mhsendmail |
@@ -82,7 +83,7 @@ v3 images bundle stock Debian versions of Ruby and Python, thus there is a versi
 
 | Image| Notes |
 |------|-------|
-| `docksal/apache:2.4-2.3` | *Default* Apache 2.4 |
+| `docksal/apache:2.4-2.4` | *Default* Apache 2.4 |
 | `docksal/apache:2.4`     | Apache 2.4 (latest) |
 
 ## Nginx 
@@ -92,16 +93,12 @@ v3 images bundle stock Debian versions of Ruby and Python, thus there is a versi
 
 | Image| Notes |
 |------|-------|
-| `docksal/nginx:1.15-1.0` | Nginx 1.15 (v. 1.0) |
-| `docksal/nginx:1.15`     | Nginx 1.15 (latest 1.15 image version) |
-| `docksal/nginx:1.14-1.0` | *Default* Nginx 1.14 (v. 1.0) |
-| `docksal/nginx:1.14`     | Nginx 1.14 (latest 1.14 image version) |
-| `docksal/nginx:1.13-1.0` | Nginx 1.13 (v. 1.0) |
-| `docksal/nginx:1.13`     | Nginx 1.13 (latest 1.13 image version) |
-| `docksal/nginx:1.12-1.0` | Nginx 1.12 (v. 1.0) |
-| `docksal/nginx:1.12`     | Nginx 1.12 (latest 1.12 image version) |
-| `docksal/nginx:1.11-1.0` | Nginx 1.11 (v. 1.0) |
-| `docksal/nginx:1.11`     | Nginx 1.11 (latest 1.11 image version) |
+| `docksal/nginx:1.21-1.2` | Nginx 1.21 (pinned version) |
+| `docksal/nginx:1.21`     | Nginx 1.21 (latest version) |
+| `docksal/nginx:1.20-1.2` | Nginx 1.20 (pinned version, default) |
+| `docksal/nginx:1.20`     | Nginx 1.20 (latest version) |
+| `docksal/nginx:1.15`     | Nginx 1.15 (legacy version) |
+| ...                      | ... |
 
 ## MySQL 
 
@@ -110,12 +107,10 @@ v3 images bundle stock Debian versions of Ruby and Python, thus there is a versi
 
 | Image| Notes |
 |------|-------|
-| `docksal/mysql:8.0-1.5`  | MySQL 8.0 |
-| `docksal/mysql:8.0`      | MySQL 8.0 (latest 8.0 image version) |
-| `docksal/mysql:5.7-1.5`  | MySQL 5.7 |
-| `docksal/mysql:5.7`      | MySQL 5.7 (latest 5.7 image version) |
-| `docksal/mysql:5.6-1.5`  | MySQL 5.6 (default) |
-| `docksal/mysql:5.6`      | MySQL 5.6 (latest image version) |
+| `docksal/mysql:8.0-2.0`  | MySQL 8.0 (pinned version, default) |
+| `docksal/mysql:8.0`      | MySQL 8.0 (latest version) |
+| `docksal/mysql:5.7`      | MySQL 5.7 (legacy version) |
+| ...                      | ... |
 
 ## MariaDB
 
@@ -124,16 +119,16 @@ v3 images bundle stock Debian versions of Ruby and Python, thus there is a versi
 
 | Image| Notes |
 |------|-------|
-| `docksal/mariadb:10.3-1.1`     | MariaDB 10.3 (default) |
-| `docksal/mariadb:10.3`         | MariaDB 10.3 (latest image version) |
-| `docksal/mariadb:10.2-1.1`     | MariaDB 10.2 |
-| `docksal/mariadb:10.2`         | MariaDB 10.2 (latest image version) |
-| `docksal/mariadb:10.1-1.1`     | MariaDB 10.1 |
-| `docksal/mariadb:10.1`         | MariaDB 10.1 (latest image version) |
-| `docksal/mariadb:10.0-1.1`     | MariaDB 10.0 |
-| `docksal/mariadb:10.0`         | MariaDB 10.0 (latest image version) |
-| `docksal/mariadb:5.5-1.1`      | MariaDB 5.5 |
-| `docksal/mariadb:5.5`          | MariaDB 5.5 (latest image version) |
+| `docksal/mariadb:10.6-1.3`     | MariaDB 10.6 (image v1.3, default) |
+| `docksal/mariadb:10.6`         | MariaDB 10.6 (latest version) |
+| `docksal/mariadb:10.5-1.3`     | MariaDB 10.5 (pinned version) |
+| `docksal/mariadb:10.5`         | MariaDB 10.5 (latest version) |
+| `docksal/mariadb:10.4-1.3`     | MariaDB 10.4 (pinned version) |
+| `docksal/mariadb:10.4`         | MariaDB 10.4 (latest version) |
+| `docksal/mariadb:10.3-1.3`     | MariaDB 10.3 (pinned version) |
+| `docksal/mariadb:10.3`         | MariaDB 10.3 (latest version) |
+| `docksal/mariadb:10.2`         | MariaDB 10.2 (legacy version) |
+| ...                            | ... |
 
 ## Apache Solr
 

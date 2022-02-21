@@ -22,7 +22,7 @@ services:
   # Web: Apache
   apache:
     hostname: web
-    image: ${WEB_IMAGE:-docksal/apache:2.4-2.3}
+    image: ${WEB_IMAGE:-docksal/apache:2.4-2.4}
     volumes:
       - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
@@ -42,7 +42,7 @@ services:
   # Web: Nginx
   nginx:
     hostname: web
-    image: ${WEB_IMAGE:-docksal/nginx:1.14-1.0}
+    image: ${WEB_IMAGE:-docksal/nginx:1.20-1.2}
     volumes:
     - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
@@ -63,7 +63,7 @@ services:
   # DB: MySQL
   mysql:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mysql:5.7-1.5}
+    image: ${DB_IMAGE:-docksal/mysql:8.0-2.0}
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -85,7 +85,7 @@ services:
   # DB: MySQL
   mariadb:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.1}
+    image: ${DB_IMAGE:-docksal/mariadb:10.6-1.3}
     ports:
     - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -124,7 +124,7 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.0}
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.1}
     volumes:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket

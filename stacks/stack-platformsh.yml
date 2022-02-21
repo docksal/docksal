@@ -15,7 +15,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: nginx
     # Pin nginx version
-    image: ${WEB_IMAGE:-docksal/nginx:1.14-edge}
+    image: ${WEB_IMAGE:-docksal/nginx:1.20-1.2}
     depends_on:
       - cli
 
@@ -24,14 +24,14 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mariadb
     # Pin MariaDB version
-    image: ${DB_IMAGE:-docksal/mariadb:10.4}
+    image: ${DB_IMAGE:-docksal/mariadb:10.4-1.3}
 
   cli:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
     # Pin PHP version
-    image: ${CLI_IMAGE:-docksal/cli:stable-php7.4}
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.1}
 
   redis:
     extends:
