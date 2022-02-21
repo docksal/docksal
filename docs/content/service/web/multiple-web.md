@@ -38,7 +38,7 @@ Apache:
 services:
   ...
   styleguide:
-    image: docksal/apache:2.4-2.3
+    image: docksal/apache:2.4-2.4
     volumes:
       - project_root:/var/www:ro,nocopy,cached
     environment:
