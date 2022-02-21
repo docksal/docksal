@@ -17,7 +17,7 @@ services:
   db:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
-      service: mysql
+      service: mariadb
 
   cli:
     extends:
