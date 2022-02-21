@@ -177,12 +177,6 @@ ver_to_int ()
 	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d", $1,$2,$3,$4); }'
 }
 
-# docker-compose v1.x.x vs docker compose v2.x.x
-is_compose_v2 ()
-{
-	(( $(ver_to_int "${REQUIREMENTS_DOCKER_COMPOSE}") >= $(ver_to_int "2.0.0") ))
-}
-
 #---------------------------- Global Constants --------------------------------
 
 # Allow to override Docksal version during install.
@@ -394,16 +388,10 @@ URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/$(host_arch)/doc
 # See https://github.com/docker/for-win/issues/1460#issuecomment-442585850
 # MS uses a different naming convention, e.g. "docker-18-09-2.zip" instead of "docker-18.09.2.zip".
 URL_DOCKER_WIN="https://dockermsft.blob.core.windows.net/dockercontainer/docker-${REQUIREMENTS_DOCKER//./-}.zip"
-# docker-compose v1
-URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-$(host_arch)"
-URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-$(host_arch)"
-URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-$(host_arch).exe"
 # docker-compose v2
-if is_compose_v2; then
-	URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-darwin-$(host_arch)"
-	URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-linux-$(host_arch)"
-	URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-windows-$(host_arch).exe"
-fi
+URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-darwin-$(host_arch)"
+URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-linux-$(host_arch)"
+URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-windows-$(host_arch).exe"
 # docker-machine
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-$(host_arch)"
 URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-$(host_arch)"
@@ -562,19 +550,13 @@ docker-compose ()
 		[[ ! -O "$SSH_AUTH_SOCK_DIR" ]] && sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 	fi
 
-	if is_compose_v2; then
-		# Call docker compose (v2)
-		# As a plugin for docker cli, it has to be called as "/path/to/binary compose"
-		# This would not be necessary if the binary was installed in the default location
-		# (~/.docker/cli-plugins/docker-compose). However, we install it in ~/.docksal/bin/docker-copose-v2
-		# to prevent conflicts with system binaries.
-		# "command <binary>" calls the binary directly ignoring any overriding shell functions
-		command docker-compose compose "$@"
-	else
-		# Call regular docker-compose.
-		# "command <binary>" calls the binary directly ignoring any overriding shell functions
-		command docker-compose "$@"
-	fi
+	# Call docker compose (v2)
+	# As a plugin for docker cli, it has to be called as "/path/to/binary compose"
+	# This would not be necessary if the binary was installed in the default location
+	# (~/.docker/cli-plugins/docker-compose). However, we install it in ~/.docksal/bin/docker-copose-v2
+	# to prevent conflicts with system binaries.
+	# "command <binary>" calls the binary directly ignoring any overriding shell functions
+	command docker-compose compose "$@"
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -4669,26 +4651,12 @@ install_tools_alpine ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		if is_compose_v2; then
-			local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
-			echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
-			echo-green "Downloading ${dc_pkg}..."
-			curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-				chmod +x "$DOCKER_COMPOSE_BIN"
-			if_failed "Docker Compose installation/upgrade has failed."
-		else
-			echo-green "Installing Docker Compose via pip (this may take a while)..."
-			# docker-compose has to be install via pip on Alpine
-			# See https://github.com/docker/compose/issues/3465
-			apk add --no-cache python3 python3-dev libffi-dev openssl-dev >/dev/null && \
-				# Update pip to avoid warnings like:
-				# - "Cache entry deserialization failed, entry ignored"
-				# - "You are using pip version 10.0.1, however version 19.0.3 is available."
-				pip3 install --upgrade --no-cache-dir pip >/dev/null && \
-				pip3 install "docker-compose==${REQUIREMENTS_DOCKER_COMPOSE}" >/dev/null && \
-				docker-compose version --short
-			if_failed "Docker Compose installation/upgrade has failed."
-		fi
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
+		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			chmod +x "$DOCKER_COMPOSE_BIN"
+		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
 
