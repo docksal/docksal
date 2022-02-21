@@ -67,22 +67,13 @@ Click the preferred option to proceed to option-specific docs.
 
 ### macOS with VirtualBox {#install-macos-virtualbox}
 
-With this method, Docker will run inside a VM in VirtualBox.
-
-1. Install VirtualBox v6.1.22
-
-    [![Download VirtualBox v6.1.22](https://img.shields.io/badge/download-VirtualBox%20for%20Mac-blue.svg?logo=dropbox&style=for-the-badge&classes=inline)](https://download.virtualbox.org/virtualbox/6.1.22/VirtualBox-6.1.22-144080-OSX.dmg)
-
-1. Enable Kernel extension ([Why?](https://developer.apple.com/library/content/technotes/tn2459/_index.html))
-
-    Go to `System Preferences > Security & Privacy`.  
-    If you do not see the Allow button it means the extension is already enabled.
-
-    ![Allowing VirtualBox kernel extension](/images/virtualbox-kernel-extension-allow.png)
+With this method, Docker will run inside a VirtualBox VM.
 
 1. Open Terminal app and run
 
         bash <(curl -fsSL https://get.docksal.io)
+
+VirtualBox will be installed automatically if necessary. Follow the prompts in the Terminal app.
 
 ### macOS with Docker Desktop {#install-macos-docker-for-mac}
 
