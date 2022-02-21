@@ -26,14 +26,14 @@ Note: `cli` is a special case, `cli` itself is seen as software here with `-php.
 You may notice that there are two versions of the same, e.g.:
 
 ```
-docksal/nginx:1.15
-docksal/nginx:1.15-1.0
+docksal/nginx:1.21
+docksal/nginx:1.21-1.2
 ```
 
-As described above `...-1.0` means image version here. `docksal/nginx:1.15` will always refer to the latest 
-available image version. Right now `docksal/nginx:1.15` is the same as `docksal/nginx:1.15-1.0`, but should
-we release `docksal/nginx:1.15-1.1`, and `docksal/nginx:1.15` would refer to `docksal/nginx:1.15-1.1`, while
-`docksal/nginx:1.15-1.0` would still exist for backwards compatibility. 
+As described above `...-1.2` means image version here. `docksal/nginx:1.21` will always refer to the latest 
+available image version. At some point, `docksal/nginx:1.21` is the same as `docksal/nginx:1.21-1.2`, but should
+we release `docksal/nginx:1.21-1.3`, and `docksal/nginx:1.21` would refer to `docksal/nginx:1.21-1.3`, while
+`docksal/nginx:1.21-1.1` would still exist for backwards compatibility. 
 
 Having this latest image tag is a convenient shortcut, but in stacks that are delivered with Docksal, 
 the exact version will always be used to avoid a situation when the newer image version was not pulled to your local.
@@ -92,16 +92,12 @@ v3 images bundle stock Debian versions of Ruby and Python, thus there is a versi
 
 | Image| Notes |
 |------|-------|
-| `docksal/nginx:1.15-1.0` | Nginx 1.15 (v. 1.0) |
-| `docksal/nginx:1.15`     | Nginx 1.15 (latest 1.15 image version) |
-| `docksal/nginx:1.14-1.0` | *Default* Nginx 1.14 (v. 1.0) |
-| `docksal/nginx:1.14`     | Nginx 1.14 (latest 1.14 image version) |
-| `docksal/nginx:1.13-1.0` | Nginx 1.13 (v. 1.0) |
-| `docksal/nginx:1.13`     | Nginx 1.13 (latest 1.13 image version) |
-| `docksal/nginx:1.12-1.0` | Nginx 1.12 (v. 1.0) |
-| `docksal/nginx:1.12`     | Nginx 1.12 (latest 1.12 image version) |
-| `docksal/nginx:1.11-1.0` | Nginx 1.11 (v. 1.0) |
-| `docksal/nginx:1.11`     | Nginx 1.11 (latest 1.11 image version) |
+| `docksal/nginx:1.21-1.2` | Nginx 1.21 (pinned version) |
+| `docksal/nginx:1.21`     | Nginx 1.21 (latest version) |
+| `docksal/nginx:1.20-1.2` | Nginx 1.20 (pinned version, default) |
+| `docksal/nginx:1.20`     | Nginx 1.20 (latest version) |
+| `docksal/nginx:1.15`     | Nginx 1.15 (legacy version) |
+| ...                      | ... |
 
 ## MySQL 
 

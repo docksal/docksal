@@ -53,7 +53,7 @@ Nginx:
 services:
   ...
   styleguide:
-    image: docksal/nginx:1.14-1.0
+    image: docksal/nginx:1.20-1.2
     volumes:
       - project_root:/var/www:ro,nocopy,cached
     environment:

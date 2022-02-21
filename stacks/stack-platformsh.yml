@@ -15,7 +15,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: nginx
     # Pin nginx version
-    image: ${WEB_IMAGE:-docksal/nginx:1.14-edge}
+    image: ${WEB_IMAGE:-docksal/nginx:1.20-1.2}
     depends_on:
       - cli
 
