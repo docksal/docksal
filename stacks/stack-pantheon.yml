@@ -25,7 +25,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mariadb
     # Pantheon supports 10.4
-    image: ${WEB_IMAGE:-docksal/mariadb:10.4}
+    image: ${DB_IMAGE:-docksal/mariadb:10.4}
 
   cli:
     extends:
