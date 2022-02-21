@@ -106,12 +106,10 @@ v3 images bundle stock Debian versions of Ruby and Python, thus there is a versi
 
 | Image| Notes |
 |------|-------|
-| `docksal/mysql:8.0-1.5`  | MySQL 8.0 |
-| `docksal/mysql:8.0`      | MySQL 8.0 (latest 8.0 image version) |
-| `docksal/mysql:5.7-1.5`  | MySQL 5.7 |
-| `docksal/mysql:5.7`      | MySQL 5.7 (latest 5.7 image version) |
-| `docksal/mysql:5.6-1.5`  | MySQL 5.6 (default) |
-| `docksal/mysql:5.6`      | MySQL 5.6 (latest image version) |
+| `docksal/mysql:8.0-2.0`  | MySQL 8.0 (pinned version, default) |
+| `docksal/mysql:8.0`      | MySQL 8.0 (latest version) |
+| `docksal/mysql:5.7`      | MySQL 5.7 (legacy version) |
+| ...                      | ... |
 
 ## MariaDB
 

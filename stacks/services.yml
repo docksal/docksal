@@ -63,7 +63,7 @@ services:
   # DB: MySQL
   mysql:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mysql:5.7-1.5}
+    image: ${DB_IMAGE:-docksal/mysql:8.0-2.0}
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
