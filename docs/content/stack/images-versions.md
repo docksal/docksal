@@ -118,16 +118,16 @@ v3 images bundle stock Debian versions of Ruby and Python, thus there is a versi
 
 | Image| Notes |
 |------|-------|
-| `docksal/mariadb:10.3-1.1`     | MariaDB 10.3 (default) |
-| `docksal/mariadb:10.3`         | MariaDB 10.3 (latest image version) |
-| `docksal/mariadb:10.2-1.1`     | MariaDB 10.2 |
-| `docksal/mariadb:10.2`         | MariaDB 10.2 (latest image version) |
-| `docksal/mariadb:10.1-1.1`     | MariaDB 10.1 |
-| `docksal/mariadb:10.1`         | MariaDB 10.1 (latest image version) |
-| `docksal/mariadb:10.0-1.1`     | MariaDB 10.0 |
-| `docksal/mariadb:10.0`         | MariaDB 10.0 (latest image version) |
-| `docksal/mariadb:5.5-1.1`      | MariaDB 5.5 |
-| `docksal/mariadb:5.5`          | MariaDB 5.5 (latest image version) |
+| `docksal/mariadb:10.6-1.3`     | MariaDB 10.6 (image v1.3, default) |
+| `docksal/mariadb:10.6`         | MariaDB 10.6 (latest version) |
+| `docksal/mariadb:10.5-1.3`     | MariaDB 10.5 (pinned version) |
+| `docksal/mariadb:10.5`         | MariaDB 10.5 (latest version) |
+| `docksal/mariadb:10.4-1.3`     | MariaDB 10.4 (pinned version) |
+| `docksal/mariadb:10.4`         | MariaDB 10.4 (latest version) |
+| `docksal/mariadb:10.3-1.3`     | MariaDB 10.3 (pinned version) |
+| `docksal/mariadb:10.3`         | MariaDB 10.3 (latest version) |
+| `docksal/mariadb:10.2`         | MariaDB 10.2 (legacy version) |
+| ...                            | ... |
 
 ## Apache Solr
 
