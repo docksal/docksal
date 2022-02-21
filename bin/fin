@@ -4410,7 +4410,7 @@ install_tools_mac ()
 	# Install Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_MAC")
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
 			curl -fL# "$URL_DOCKER_MAC" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
@@ -4435,7 +4435,7 @@ install_tools_mac ()
 	# Install docker-compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_MAC")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		if [[ ! -f "$dc_pkg" ]]; then
 			echo-green "Downloading ${dc_pkg}..."
 			curl -fL# "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
@@ -4453,7 +4453,7 @@ install_tools_mac ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_MAC")
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		if [[ ! -f "$dm_pkg" ]]; then
 			echo-green "Downloading ${dm_pkg}..."
 			curl -fL# "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
@@ -4475,7 +4475,7 @@ install_tools_windows ()
 	# Install Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_WIN")
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
 			curl -fL# "$URL_DOCKER_WIN" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
@@ -4503,7 +4503,7 @@ install_tools_windows ()
 	# Install docker-compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_WIN")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		if [[ ! -f "$dc_pkg" ]]; then
 			echo-green "Downloading ${dc_pkg}..."
 			curl -fL# "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
@@ -4521,7 +4521,7 @@ install_tools_windows ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		if [[ ! -f "$dm_pkg" ]]; then
 			echo-green "Downloading ${dm_pkg}..."
 			curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
@@ -4538,7 +4538,7 @@ install_tools_windows ()
 
 	# Install winpty
 	if ! is_winpty_version; then
-		echo-green "Installing winpty v${REQUIREMENTS_WINPTY}..."
+		echo-green "Downloading winpty v${REQUIREMENTS_WINPTY}..."
 		local winpty_pkg=$(basename "$URL_WINPTY")
 		if [[ ! -f "$winpty_pkg" ]]; then
 			echo-green "Downloading ${winpty_pkg}..."
@@ -4578,7 +4578,7 @@ install_tools_debian ()
 	# Install Docker client
 	sudo service docker start 2>/dev/null
 	if ! is_docker_version || ! is_docker_server_version; then
-		echo-green "Installing Docker..."
+		echo-green "Downloading Docker..."
 		# Stop docker service if it exists
 		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
 			echo "Stopping docker service..."
@@ -4597,7 +4597,7 @@ install_tools_debian ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
 			chmod +x "$DOCKER_COMPOSE_BIN"
@@ -4611,7 +4611,7 @@ install_tools_fedora ()
 	# Install Docker client
 	sudo service docker start 2>/dev/null
 	if ! is_docker_version || ! is_docker_server_version; then
-		echo-green "Installing Docker..."
+		echo-green "Downloading Docker..."
 		# Stop docker service if it exists
 		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
 			echo "Stopping docker service..."
@@ -4632,7 +4632,7 @@ install_tools_fedora ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
 			chmod +x "$DOCKER_COMPOSE_BIN"
@@ -4655,7 +4655,7 @@ install_tools_alpine ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
 			chmod +x "$DOCKER_COMPOSE_BIN"
@@ -4677,7 +4677,7 @@ install_tools_generic_linux ()
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
 			chmod +x "$DOCKER_COMPOSE_BIN"
@@ -4691,7 +4691,7 @@ install_tools_wsl ()
 	# Install Linux Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_NIX")
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
 			curl -fL# "$URL_DOCKER_NIX" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
@@ -4716,7 +4716,7 @@ install_tools_wsl ()
 	# Install Linux Docker Compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		if [[ ! -f "$dc_pkg" ]]; then
 			echo-green "Downloading ${dc_pkg}..."
 			curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
@@ -4741,7 +4741,7 @@ install_tools_wsl ()
 	# Keeping the rest of the logic below very similar to other host environments.
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		if [[ ! -f "$dm_pkg" ]]; then
 			echo-green "Downloading ${dm_pkg}..."
 			curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN_WSL" && \
