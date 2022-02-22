@@ -396,10 +396,10 @@ URL_DOCKER_WIN="https://dockermsft.blob.core.windows.net/dockercontainer/docker-
 URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-darwin-$(host_arch)"
 URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-linux-$(host_arch)"
 URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-windows-$(host_arch).exe"
-# docker-machine
-URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-$(host_arch)"
+# docker-machine (x86_64 only on Mac/Windows)
+URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
 URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-$(host_arch)"
-URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-$(host_arch).exe"
+URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
 # boot2docker
 URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER_B2D}/boot2docker.iso"
 
