@@ -126,24 +126,25 @@ is_github_actions ()
 
 # Returns x86_64 / aarch64 (aka "old school")
 host_arch () {
-	case "$(uname -m)" in
-		x86_64) echo "x86_64" ;;
-		amd64) echo "x86_64" ;;
-		aarch64) echo "aarch64" ;;
-		arm64) echo "aarch64" ;;
-		* ) false;;
+	case $(uname -m) in
+		x86_64|amd64) echo "x86_64" ;;
+		aarch64|arm64) echo "aarch64" ;;
+		* ) uname -m;; # Catch-all for anything else
 	esac
 }
 
 # Returns amd64 / arm64 (aka "new style")
 host_arch_new () {
-	case "$(uname -m)" in
-		x86_64) echo "amd64" ;;
-		amd64) echo "amd64" ;;
-		aarch64) echo "arm64" ;;
-		arm64) echo "arm64" ;;
-		* ) false;;
+	case $(uname -m) in
+		x86_64|amd64) echo "amd64" ;;
+		aarch64|arm64) echo "arm64" ;;
+		* ) uname -m;; # Catch-all for anything else
 	esac
+}
+
+is_supported_arch ()
+{
+	[[ "$(host_arch_new)" =~ ^amd64|arm64$ ]]
 }
 
 #------------------------------------------------------------------------------
@@ -7935,6 +7936,15 @@ execute_hook ()
 
 # Debug mode: print all commands
 [[ ${FIN_DEBUG} == 1 ]] && set -x
+
+# Check host architecture is supported
+if ! is_supported_arch; then
+	echo-error "Host architecture not supported" \
+		"Your host architecture is ${yellow}$(host_arch_new)${NC}." \
+		"Only ${yellow}amd64${NC} and ${yellow}arm64${NC} architectures are supported."
+	# Quit here unless were are in debug mode
+	! [[ ${FIN_DEBUG} == 1 || "${1}" == "debug" ]] && exit 1
+fi
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
