@@ -25,7 +25,7 @@ The following settings have to be overridden using the `php_admin_value` directi
 It is recommended to add PHP settings overrides in both `php.ini` and `php-fpm.conf` at the same time.
 {{% /notice %}}
 
-You can find example settings overrides [here](https://github.com/docksal/docksal/tree/develop/examples/.docksal/etc/php).
+[See example settings overrides](https://github.com/docksal/docksal/tree/develop/examples/.docksal/etc/php).
 
 Once settings are in place, apply changes with `fin project restart` (`fin p restart`).
 
