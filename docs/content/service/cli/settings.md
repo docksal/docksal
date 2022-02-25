@@ -48,7 +48,7 @@ fin config set CLI_IMAGE='docksal/cli:php8.1-3.1'
 
 Run `fin project reset cli` (`fin p reset cli`) to properly reset and update the `cli` service.
 
-Available PHP versions: 7.3, 7.4 supported, and 7.2, 7.1, 7.0, 5.6 deprecated. Check the [list of the available CLI images](/stack/images-versions#cli) for the full list. 
+Available PHP versions: 7.4, 8.0, 8.1 supported, and 7.3, 7.2, 7.1, 7.0, 5.6 deprecated. Check the [list of the available CLI images](/stack/images-versions#cli) for the full list. 
 
 There are also "edge" versions available that contain code from ongoing updates, but may not be stable. Don't switch to an
 edge image unless directed to do so by the Docksal team for testing purposes only.
