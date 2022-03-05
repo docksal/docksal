@@ -3,6 +3,7 @@ title: "Troubleshooting"
 chapter: true
 weight: 9
 pre: "<b>9. </b>"
+hide_feedback: true
 ---
 
 # Troubleshooting

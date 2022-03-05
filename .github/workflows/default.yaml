@@ -1,4 +1,4 @@
-name: Default (push)
+name: Default
 
 on:
   schedule:
@@ -62,31 +62,31 @@ jobs:
           bats -v
       -
         name: Install SSH key (tests)
+        env:
+          SSH_KEY: ${{ env.SSH_KEY }}
         run: |
           mkdir -p $HOME/.ssh
           echo "${SSH_KEY}" | base64 --decode > $HOME/.ssh/project_key
           chmod 400 $HOME/.ssh/project_key
-        env:
-          SSH_KEY: ${{ env.SSH_KEY }}
       -
         # Calculate branch for Docksal installation
         # Use develop for 3rd-party PRs
         name: Calculate branch
         id: use_branch
+        env:
+          PR_BRANCH: ${{ github.base_ref }}
         run: |
           USE_BRANCH="$(echo ${GITHUB_REF#refs/heads/})"
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" && "${GITHUB_REPOSITORY}" == "${REPO}" ]]; then USE_BRANCH="${PR_BRANCH}"; fi
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" && "${GITHUB_REPOSITORY}" != "${REPO}" ]]; then USE_BRANCH='develop'; fi
           echo "::set-output name=branch::$(echo ${USE_BRANCH})"
           echo "branch: ${USE_BRANCH}"
-        env:
-          PR_BRANCH: ${{ github.base_ref }}
       -
         name: Install Docksal
-        # This installs Docksal using the passed DOCKSAL_VERSION value
-        run: curl -sSL http://get.docksal.io | bash
         env:
           DOCKSAL_VERSION: ${{ steps.use_branch.outputs.branch }}
+        # This installs Docksal using the passed DOCKSAL_VERSION value
+        run: curl -fsSL https://get.docksal.io | bash
       -
         name: fin sysinfo
         run: fin sysinfo
@@ -95,9 +95,9 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Tests
-        run: tests/scripts/${SUITE}.sh
         env:
           SUITE: ${{ matrix.suite }}
+        run: tests/scripts/${SUITE}.sh
       # Commenting out at the moment until repos are converted over to GithuB Actions
       #-
       #   if: ${{ matrix.suite }} == "project"

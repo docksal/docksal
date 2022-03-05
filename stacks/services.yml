@@ -22,7 +22,7 @@ services:
   # Web: Apache
   apache:
     hostname: web
-    image: ${WEB_IMAGE:-docksal/apache:2.4-2.3}
+    image: ${WEB_IMAGE:-docksal/apache:2.4-2.4}
     volumes:
       - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
@@ -42,7 +42,7 @@ services:
   # Web: Nginx
   nginx:
     hostname: web
-    image: ${WEB_IMAGE:-docksal/nginx:1.14-1.0}
+    image: ${WEB_IMAGE:-docksal/nginx:1.20-1.2}
     volumes:
     - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
@@ -63,7 +63,7 @@ services:
   # DB: MySQL
   mysql:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mysql:5.7-1.5}
+    image: ${DB_IMAGE:-docksal/mysql:8.0-2.0}
     ports:
       - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -85,7 +85,7 @@ services:
   # DB: MySQL
   mariadb:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.1}
+    image: ${DB_IMAGE:-docksal/mariadb:10.6-1.3}
     ports:
     - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:
@@ -107,7 +107,7 @@ services:
   # DB: PostgreSQL
   pgsql:
     hostname: db
-    image: ${DB_IMAGE:-postgres:10.14-alpine}
+    image: ${DB_IMAGE:-postgres:14.2-alpine}
     ports:
       - "${PGSQL_PORT_MAPPING:-5432}"
     volumes:
@@ -124,7 +124,7 @@ services:
   # CLI - Used for all console commands and tools.
   cli:
     hostname: cli
-    image: ${CLI_IMAGE:-docksal/cli:2.13-php7.3}
+    image: ${CLI_IMAGE:-docksal/cli:php8.1-3.1}
     volumes:
       - project_root:/var/www:rw,nocopy,cached  # Project root volume
       - docksal_ssh_agent:/.ssh-agent:ro  # Shared ssh-agent socket
@@ -141,7 +141,10 @@ services:
       - DOCROOT
       - VIRTUAL_HOST
       - XDEBUG_ENABLED=${XDEBUG_ENABLED:-0}
-      - XDEBUG_CONFIG=client_host=${DOCKSAL_IP} # Point xdebug to the listener on the host
+      # Point xdebug to the PHP Debug listener on the host
+      # "client_host" used by xdebug 3 (docksal/cli v2.13+). "remote_host" used by xdebug 2 (prior docksal/cli versions).
+      # TODO: Drop "remote_host" in 2022.
+      - XDEBUG_CONFIG=client_host=${DOCKSAL_HOST_IP} remote_host=${DOCKSAL_HOST_IP}
       - PHP_IDE_CONFIG # This helps with console scripts debugging in PHPStorm (the values is set in docksal-local.env)
       - DRUSH_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - DRUSH_OPTIONS_URI=${VIRTUAL_HOST}
@@ -170,7 +173,7 @@ services:
   # Varnish
   varnish:
     hostname: varnish
-    image: ${VARNISH_IMAGE:-docksal/varnish:6.1-2.0}
+    image: ${VARNISH_IMAGE:-docksal/varnish:7.0-3.1}
     volumes:
       - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
@@ -185,7 +188,7 @@ services:
   # Memcached
   memcached:
     hostname: memcached
-    image: ${MEMCACHED_IMAGE:-memcached:1.4-alpine}
+    image: ${MEMCACHED_IMAGE:-memcached:1.6-alpine}
     command: ["-m", "128"]  # Set memcached memory limit to 128 MB by default
     << : *dns
     << : *logging
@@ -194,7 +197,7 @@ services:
   # Redis
   redis:
     hostname: redis
-    image: ${REDIS_IMAGE:-wodby/redis:5.0}
+    image: ${REDIS_IMAGE:-wodby/redis:6.2}
     environment:
       - REDIS_MAXMEMORY=${REDIS_MAXMEMORY:-256m}
       # Additional variables can be found https://github.com/wodby/redis
@@ -232,7 +235,7 @@ services:
 
   # Blackfire
   blackfire:
-    image: blackfire/blackfire
+    image: blackfire/blackfire:2
     environment:
       - BLACKFIRE_SERVER_ID
       - BLACKFIRE_SERVER_TOKEN
@@ -243,7 +246,7 @@ services:
   # Elastic Search
   elasticsearch:
     hostname: elasticsearch
-    image: ${ELASTICSEARCH_IMAGE:-elasticsearch:6.5.3}
+    image: ${ELASTICSEARCH_IMAGE:-elasticsearch:8.0}
     ports:
       - "${ELASTICSEARCH_PORT_MAPPING:-9200}"
     environment:

@@ -130,3 +130,11 @@ body {
   right: 0;
 }
 /* --- Carbon Ads*/
+
+/* Feedback */
+.feedback--response__hidden {
+  display: none;
+}
+.gray {
+  fill: #cccccc;
+}

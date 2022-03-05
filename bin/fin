@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.103.0
+FIN_VERSION=1.108.0
 
+# Predefined terminal colors
+# Format: '\033[<formatting>;<text-color>;<background-color>m'
+# See https://misc.flogisoft.com/bash/tip_colors_and_formatting
+# Note: Using "\033" (and not "\e") as it seems to have a wider support in different shells.
 if [[ "$TERM" != "dumb" ]]; then
 	# Console colors
-	red='\033[0;91m'
-	red_bg='\033[101m'
-	yellow_bg='\033[43m'
-	lightmagenta_bg='\033[0;105m'
-	green='\033[0;32m'
-	green_bg='\033[42m'
-	yellow='\033[0;33m'
-	yellow_bold='\033[1;33m'
-	blue='\033[0;34m'
-	lime='\033[0;92m'
-	acqua='\033[0;96m'
-	magenta='\033[0;35m'
-	lightmagenta='\033[0;95m'
+	green='\033[0;32;49m'
+	green_bg='\033[0;42;30m'
+	yellow='\033[0;33;49m'
+	yellow_bold='\033[1;33;49m'
+	yellow_bg='\033[0;43;30m'
+	red='\033[0;91;49m'
+	red_bg='\033[0;101;30m'
+	blue='\033[0;34;49m'
+	lime='\033[0;92;49m'
+	acqua='\033[0;96;49m'
+	magenta='\033[0;35;49m'
+	lightmagenta='\033[0;95;49m'
+	lightmagenta_bg='\033[0;105;30m'
 	NC='\033[0m'
 fi
 
@@ -93,7 +97,7 @@ is_mac_dd_hk ()
 # TODO: figure out a better/more reliable check
 is_mac_dd_vf ()
 {
-	is_mac && is_docker_native && (ip addr show | grep 192.168.81.1 > /dev/null)
+	is_mac && is_docker_native && (ifconfig | grep 192.168.81.1 > /dev/null)
 }
 
 # CI
@@ -115,8 +119,32 @@ is_katacoda ()
 	[[ "$KATACODA" != "" ]]
 }
 
-is_github_actions () {
+is_github_actions ()
+{
 	[[ "$GITHUB_RUN_ID" != "" ]]
+}
+
+# Returns x86_64 / aarch64 (aka "old school")
+host_arch () {
+	case $(uname -m) in
+		x86_64|amd64) echo "x86_64" ;;
+		aarch64|arm64) echo "aarch64" ;;
+		* ) uname -m;; # Catch-all for anything else
+	esac
+}
+
+# Returns amd64 / arm64 (aka "new style")
+host_arch_new () {
+	case $(uname -m) in
+		x86_64|amd64) echo "amd64" ;;
+		aarch64|arm64) echo "arm64" ;;
+		* ) uname -m;; # Catch-all for anything else
+	esac
+}
+
+is_supported_arch ()
+{
+	[[ "$(host_arch_new)" =~ ^amd64|arm64$ ]]
 }
 
 #------------------------------------------------------------------------------
@@ -147,6 +175,13 @@ wsl_path ()
 	echo $(wslpath "$@" | tr -d '\r')
 }
 
+# Convert version string like 1.2.3.4 to integer for comparison
+# param $1 version string of 4 components max (e.g., 1.10.3.0)
+ver_to_int ()
+{
+	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d", $1,$2,$3,$4); }'
+}
+
 #---------------------------- Global Constants --------------------------------
 
 # Allow to override Docksal version during install.
@@ -155,20 +190,20 @@ wsl_path ()
 DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
-REQUIREMENTS_DOCKER='20.10.7'
-REQUIREMENTS_DOCKER_DD='20.10.7'  # Ships with Docker Desktop 3.4.0 (65384)
+REQUIREMENTS_DOCKER='20.10.12'
+REQUIREMENTS_DOCKER_DD='20.10.12'  # Ships with Docker Desktop 4.4.2 (73305)
 REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
-REQUIREMENTS_DOCKER_COMPOSE='1.29.2'
-REQUIREMENTS_DOCKER_MACHINE='0.16.2'
-REQUIREMENTS_VBOX='6.1.16'  # Remember to update the download URLs below
+REQUIREMENTS_DOCKER_COMPOSE='2.1.0' # Docker Compose V2 (arm64/M1 compatible)
+REQUIREMENTS_DOCKER_MACHINE='0.16.2' # This is the final docker-machine version
+REQUIREMENTS_VBOX='6.1.22'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
-REQUIREMENTS_DOCKER_DESKTOP='3.4.0' # Build 65384
+REQUIREMENTS_DOCKER_DESKTOP='4.4.2' # Build 73305
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
-URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.22/VirtualBox-6.1.22-144080-OSX.dmg"
-URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.22/VirtualBox-6.1.22-144080-Win.exe"
+URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.32/VirtualBox-6.1.32-149290-OSX.dmg"
+URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.32/VirtualBox-6.1.32-149290-Win.exe"
 
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
@@ -316,6 +351,7 @@ GITHUB_API="https://api.github.com"
 URL_REPO="https://raw.githubusercontent.com/docksal/docksal"
 URL_REPO_UI="https://github.com/docksal/docksal"
 URL_RELEASE_NOTES="https://docksal.io/updates"
+URL_GITHUB_SPONSOR="https://github.com/sponsors/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
 URL_REPO_DRUPAL8="https://github.com/docksal/boilerplate-drupal8.git"
 URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
@@ -344,32 +380,36 @@ STACKS_STACK_DEFAULT="stack-default.yml"
 STACKS_STACK_DEFAULT_NODB="stack-default-nodb.yml"
 STACKS_STACK_NODE="stack-node.yml"
 STACKS_STACK_PANTHEON="stack-pantheon.yml"
+STACKS_STACK_PLATFORMSH="stack-platformsh.yml"
 STACKS_VOLUMES_BIND="volumes-bind.yml"
 STACKS_VOLUMES_NFS="volumes-nfs.yml"
 STACKS_VOLUMES_NONE="volumes-none.yml"
 STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
 URL_DOCKER_COM="https://get.docker.com/"
-URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
-URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/$(host_arch)/docker-${REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/$(host_arch)/docker-${REQUIREMENTS_DOCKER}.tgz"
 # Docker stopped publishing docker client binaries for Windows. They are now available from Microsoft.
 # See https://github.com/docker/for-win/issues/1460#issuecomment-442585850
 # MS uses a different naming convention, e.g. "docker-18-09-2.zip" instead of "docker-18.09.2.zip".
 URL_DOCKER_WIN="https://dockermsft.blob.core.windows.net/dockercontainer/docker-${REQUIREMENTS_DOCKER//./-}.zip"
-URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
-URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
-URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
+# docker-compose v2
+URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-darwin-$(host_arch)"
+URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-linux-$(host_arch)"
+URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-windows-$(host_arch).exe"
+# docker-machine (x86_64 only on Mac/Windows)
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
-URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-x86_64"
+URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-$(host_arch)"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
+# boot2docker
 URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER_B2D}/boot2docker.iso"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
-IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.3}
-IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.6}
-IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.1}
-IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:2.13-php7.3}
+IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.4}
+IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.7}
+IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.2}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php7.4-3.1}
 
 #---------------------------- Helper functions --------------------------------
 
@@ -394,13 +434,13 @@ echo-error ()
 	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}"
 	shift
 	for arg in "$@"; do
-		echo -e "        $arg"
+		echo -e "         $arg"
 	done
 }
 
-echo-alert ()
+echo-notice ()
 {
-	echo -e "${lightmagenta_bg} ALERT: ${NC} ${lightmagenta}$1${NC}"
+	echo -e "${lightmagenta_bg} NOTICE: ${NC} ${lightmagenta}$1${NC}"
 	shift
 	for arg in "$@"; do
 		echo -e "         $arg"
@@ -515,9 +555,13 @@ docker-compose ()
 		[[ ! -O "$SSH_AUTH_SOCK_DIR" ]] && sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 	fi
 
-	# Call regular docker-compose.
+	# Call docker compose (v2)
+	# As a plugin for docker cli, it has to be called as "/path/to/binary compose"
+	# This would not be necessary if the binary was installed in the default location
+	# (~/.docker/cli-plugins/docker-compose). However, we install it in ~/.docksal/bin/docker-copose-v2
+	# to prevent conflicts with system binaries.
 	# "command <binary>" calls the binary directly ignoring any overriding shell functions
-	command docker-compose "$@"
+	command docker-compose compose "$@"
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -918,13 +962,6 @@ testing_warn ()
 		echo-yellow "[!] Using Docksal version: ${DOCKSAL_VERSION}"
 }
 
-# Convert version string like 1.2.3.4 to integer for comparison
-# param $1 version string of 4 components max (e.g., 1.10.3.0)
-ver_to_int ()
-{
-	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d", $1,$2,$3,$4); }'
-}
-
 #---------------------------- Control functions -------------------------------
 
 # Check that project root exists and Docker is running.
@@ -953,10 +990,10 @@ check_docker_server_version ()
 	if ! is_docker_server_version; then
 		# Since we do not control Docker Desktop, ask user to update manually when necessary
 		if is_docker_native; then
-			echo-alert "Please update Docker Desktop manually." \
+			echo-notice "Please update Docker Desktop manually." \
 				"Expected Docker Desktop version: ${REQUIREMENTS_DOCKER_DESKTOP}"
 		else
-			echo-alert "Required Docker server version is $REQUIREMENTS_DOCKER" \
+			echo-notice "Required Docker server version is $REQUIREMENTS_DOCKER" \
 				"Run ${yellow}fin update${NC} to update to the required version." \ ""
 		fi
 	fi
@@ -1056,7 +1093,7 @@ check_docksal_running ()
 {
 	check_docker_running
 	if ! is_docksal_running; then
-		echo-alert "Some Docksal services were not running" "Restarting Docksal system services..."
+		echo-notice "Some Docksal services were not running" "Restarting Docksal system services..."
 		sleep 1
 		system_reset
 	fi
@@ -1081,7 +1118,7 @@ is_docker_path ()
 {
 	local _path="${1}"
 	[[ "$_path" == "" ]] && return 1
-	(cd "$_path" 2>/dev/null && docker run --rm -v "$_path":"$_path" docksal/empty 2>/dev/null)
+	(cd "$_path" 2>/dev/null && docker run --rm -v "$_path":"$_path" busybox 2>/dev/null)
 }
 
 # Check VirtualBox version
@@ -1269,13 +1306,49 @@ _confirm ()
 	done
 }
 
-#-------------------------- Containers management -----------------------------
-_disconnect_network ()
+# Display release notes prompt
+release_notes_message ()
 {
-	local network=$1
-	# disconect all containers, connected to project network
-	# '-I {}' and '{}' can be used to position the argument passed by xargs.
-	xargs -I {} docker network disconnect -f "$network" {} &>/dev/null <<< "$(docker ps -aq --no-trunc -f "network=${network}")"
+	echo-notice "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
+	# Open the URL in browser
+	# TODO: add support for Linux and Windows/WSL
+	is_mac && open "${URL_RELEASE_NOTES}"
+}
+
+# Displays sponsorship prompt
+sponsor_message ()
+{
+	echo-notice "Ever thought about how much time (and $) Docksal saves you and your team every month?" \
+		"Consider becoming a GitHub Sponsor ❤ to Docksal️. Any contribution is welcome!" \
+		"${URL_GITHUB_SPONSOR}"
+	# Open the URL in browser
+	# TODO: add support for Linux and Windows/WSL
+	#is_mac && open "${URL_GITHUB_SPONSOR}"
+}
+
+#-------------------------- Containers management -----------------------------
+
+# Connects project containers to the project network
+_connect_project_network ()
+{
+	local project="${COMPOSE_PROJECT_NAME_SAFE}"
+	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+	local containers=$(docker ps -aq --no-trunc --filter "label=com.docker.compose.project=${project}")
+
+	for container in ${containers}; do
+		docker network connect ${network} ${container} &>/dev/null
+	done
+}
+
+# Disconnects all containers, connected to project network
+_disconnect_project_network ()
+{
+	local network=${1}
+	local containers=$(docker ps -aq --no-trunc --filter "network=${network}")
+
+	for container in ${containers}; do
+		docker network disconnect -f "$network" ${container} &>/dev/null
+	done
 }
 
 _start_containers ()
@@ -1287,12 +1360,18 @@ _start_containers ()
 	# Note: triggering this check in load_configuration would introduce a blocker for many fin commands.
 	check_docker_path
 
+	# Suppress docker pull details in CI environments otherwise pull prints too much garbage in CI logs.
+	is_ci && quiet_pull="--quiet-pull" || quiet_pull=""
+
 	echo-green "Starting services..."
-	docker-compose up -d --remove-orphans --build || return 1
+	docker-compose up -d --remove-orphans --build ${quiet_pull} || return 1
 	# TODO: Workaround. Handle this case in docksal/vhost-proxy.
 	# When project stack is started, but vhost-proxy is not yet connected to the stack network, vhost-proxy config breaks.
 	# To mitigate this we should connect vhost-proxy to the project stack network ASAP.
 	_vhost_proxy_connect
+	# Workaround for Docker Compose v2
+	# We have to manually reconnect project containers to project network
+	_connect_project_network
 	_healthcheck_wait
 }
 
@@ -1344,12 +1423,17 @@ _stop_containers ()
 	load_configuration
 	check_project_unique
 
+	# TODO: Do we still need this?
+	# While Docker Compose v2 recreates the project network if one does not exist,
+	# it does not reconnect project containers to the project network.
+	# If we delete the project network, we have to then manually reconnect project containers to the project network.
+	# See _connect_project_network
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]] || [[ -z $1 ]]; then
 		echo-green "Disconnecting project network..."
 		# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
 		# The project network will be automatically recreated by docker-compose up.
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-		_disconnect_network "${network}"
+		_disconnect_project_network "${network}"
 
 		docker network rm "${network}" &>/dev/null || true
 	fi
@@ -1373,7 +1457,7 @@ _remove_containers ()
 		# Disconnect all containers from the project network, otherwise network will not be removed.
 		# Figure out the default project network name
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-		_disconnect_network "${network}"
+		_disconnect_project_network "${network}"
 
 		# Taking the whole docker-compose project down (this removes containers, volumes, and networks)
 		docker-compose down --volumes --remove-orphans
@@ -1522,7 +1606,7 @@ _healthcheck_wait ()
 		sleep ${delay};
 		elapsed=$((elapsed + delay))
 		if ((elapsed > timeout)); then
-			echo-error "Project heathcheck has timed out" \
+			echo-error "Project healthcheck has timed out" \
 				"One or more containers did not enter a healthy state within ${timeout} seconds of the project start." \
 				"See ${yellow}fin project status${NC} for details" \
 				"Check ${yellow}fin logs${NC} for more details"
@@ -1599,14 +1683,21 @@ show_help ()
 			fi
 	fi
 
-	echo "Docksal command line utility (v$FIN_VERSION)"
-	echo "Docksal docs: https://docs.docksal.io/"
+	echo-green "Docksal command line utility${NC} (${yellow}v${FIN_VERSION}${NC})"
 	echo
-	echo "Usage: fin [command]"
+	echo -e "${lightmagenta}Docksal Docs:${NC}      https://docs.docksal.io/"
+	echo -e "${lightmagenta}Sponsor ❤ Docksal:${NC} ${URL_GITHUB_SPONSOR}"
+	echo
+
+	echo-green "Usage:"
+	printh "fin [command]"
 	echo
 
 	echo-green "Management Commands:"
+	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})" "yellow"
+	printh "alias <command>" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})" "yellow"
 	printh "db <command>" "Manage databases (${yellow}fin help db${NC})" "yellow"
+	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})" "yellow"
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal state (${yellow}fin help system${NC})" "yellow"
@@ -1617,38 +1708,41 @@ show_help ()
 
 	echo-green "Commands:"
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "logs [service]" "Show service logs (e.g., Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
-	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "config [command]" "Show or change configuration (${yellow}fin help config${NC})"
-	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
-
-	echo
-	printh "pull [options]" "Commands for interacting with Hosting Provider (${yellow}fin help pull${NC})"
-	printh "drush [command]" "Drush command (requires Drupal)"
-	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
-	printh "platform [command]" "Platform.sh's CLI (requires docksal/cli 2.3+)"
-	printh "terminus [command]" "Pantheon's Terminus (requires docksal/cli 2.1+)"
-	printh "wp [command]" "WordPress CLI command (requires WordPress)"
-	printh "composer [command]" "Run Composer commands"
-	printh "docker (d) [command]" "Run Docker commands directly"
-	printh "docker-compose (dc) [cmd]" "Run Docker Compose commands directly"
-
-	echo
-	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
-	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
-	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
-	printh "share" "Create temporary public url for current project using ngrok"
+	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
+	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
-	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
+	printh "logs [service]" "Show service logs (e.g., Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
+	printh "pull [options]" "Commands for interacting with Hosting Providers (${yellow}fin help pull${NC})"
+	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
+	printh "share" "Create temporary public url for current project using ngrok"
 	printh "vhosts" "List all virtual *.docksal hosts registered in Docksal proxy"
-	printh "sysinfo" "Show system information"
-	printh "diagnose" "Show diagnostic information for troubleshooting and bug reporting"
-	printh "version (--version, v, -v)" "Print fin version. [v, -v] prints short version"
-	printh "update" "${yellow}Update Docksal${NC}" "yellow"
+	echo
 
-	# Do not show addons and custom commands if help for fin only ie requested (needed for docs generation)
+	echo-green "Docker command wrappers"
+	printh "docker (d) <command>" "Run Docker commands directly"
+	printh "docker-compose (dc) <command>" "Run Docker Compose commands directly"
+	printh "docker-machine (dm) <command>" "Run Docker Machine commands directly"
+	echo
+
+	echo-green "Misc. command wrappers"
+	printh "composer <command>" "Run Composer commands"
+	printh "drush <command>" "Drush command (requires Drupal)"
+	printh "drupal <command>" "Drupal Console command (requires Drupal 8)"
+	printh "platform <command>" "Platform.sh's CLI (requires docksal/cli 2.3+)"
+	printh "terminus <command>" "Pantheon's Terminus (requires docksal/cli 2.1+)"
+	printh "wp <command>" "WordPress CLI command (requires WordPress)"
+	echo
+
+	echo-green "Diagnostics/maintenance/updates"
+	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
+	printh "diagnose" "Show diagnostic information for troubleshooting and bug reporting"
+	printh "sysinfo" "Show system information"
+	printh "update [options]" "Update Docksal"
+	printh "version (--version, v, -v)" "Print fin version. [v, -v] prints short version"
+
+	# Do not show addons and custom commands if help for fin only is requested (needed for docs generation)
 	if [[ "$1" == "fin" ]]; then
 		return;
 	fi
@@ -1657,7 +1751,7 @@ show_help ()
 	load_global_configuration
 	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH" || ! empty_dir "$HOME/$DOCKSAL_ADDONS_PATH"; then
 		echo
-		echo-green "Addons found:"
+		echo-green "Installed Addons:"
 	fi
 	if [[ ! -z "$(get_project_path)" ]]; then
 		show_help_list_addons_in_help 'project'
@@ -1678,7 +1772,6 @@ show_help ()
 		show_help_list_commands_in_help 'global'
 	fi
 
-	echo
 }
 
 # param $1 - 'project' or 'global'
@@ -2491,13 +2584,21 @@ docker_machine_create ()
 	fi
 
 	# Use 2 CPUs in case of 4 or more CPUs/cores on host
-	# This tremendously helps with network files sytem operations in some cases
+	# This tremendously helps with network files system operations in some cases
 	local VIRTUALBOX_CPU_COUNT=1
 	system_cpu_count=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
 	# process possible failure as 1 cpu
 	system_cpu_count=${system_cpu_count:-1}
 	if (( ${system_cpu_count} > 3 )); then
 		VIRTUALBOX_CPU_COUNT=2
+	fi
+
+	# Allow Docksal subnet IPs to be assigned to a VirtualBox host-only adapter (VirtualBox v6.1.28+)
+	# https://github.com/docksal/docksal/issues/1596
+	if is_mac && ! (cat /etc/vbox/networks.conf 2>/dev/null | grep -e "^\* ${DOCKSAL_SUBNET}" >/dev/null); then
+		echo "Writing /etc/vbox/networks.conf..."
+		sudo mkdir -p /etc/vbox
+		echo "* ${DOCKSAL_SUBNET}" | sudo tee -a /etc/vbox/networks.conf >/dev/null
 	fi
 
 	docker-machine create \
@@ -3148,7 +3249,7 @@ remove ()
 
 	# Alert when no containers specified and no force passed
 	if [[ "${ARGV[0]}" == "" ]] && [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
-		echo-alert "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
+		echo-warning "Removing containers and volumes of ${yellow}$COMPOSE_PROJECT_NAME${NC}"
 		_confirm "Continue?";
 	fi
 
@@ -3449,7 +3550,7 @@ project_erase ()
 
 	# Alert when force passed
 	if [[ "$f" != "f" ]] && [[ "$force" != "force" ]]; then
-		echo-alert "DESTRUCTIVE OPERATION" \
+		echo-warning "DESTRUCTIVE OPERATION" \
 			"Removing containers of $COMPOSE_PROJECT_NAME and ${magenta}removing all files in $PROJECT_ROOT${NC}"
 		_confirm "         Continue?";
 	fi
@@ -3721,7 +3822,7 @@ stats_ping ()
 	local user_agent
 	is_linux && user_agent="fin/${FIN_VERSION} (Linux ${OS_NAME}-${OS_VERSION})"
 	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X ${OS_VERSION})"
-	is_windows && user_agent="fin/${FIN_VERSION} (Windows NT ${OS_VERSION})"
+	(is_wsl || is_windows) && user_agent="fin/${FIN_VERSION} (Windows NT ${OS_VERSION})"
 
 	# Local instances
 	local source='Local'
@@ -3968,7 +4069,7 @@ install_proxy_service ()
 	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h)
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
 	# entirely wiped out from the host (e.g., 168h). WARNING: use at your own risk!
-	# setting PROJECT_AUTOSTART to 0 will disable project start by visiting project url
+	# setting PROJECT_AUTOSTART to 1 will enable project autostart by visiting project url
 	docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --restart=unless-stopped \
 		-p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTP:-80}":80 -p "${DOCKSAL_VHOST_PROXY_IP:-$DOCKSAL_IP}:${DOCKSAL_VHOST_PROXY_PORT_HTTPS:-443}":443 \
 		-e ACCESS_LOG="${DOCKSAL_VHOST_PROXY_ACCESS_LOG:-0}" \
@@ -3976,7 +4077,7 @@ install_proxy_service ()
 		-e STATS_LOG="${DOCKSAL_VHOST_PROXY_STATS_LOG:-0}" \
 		-e PROJECT_INACTIVITY_TIMEOUT="${PROJECT_INACTIVITY_TIMEOUT:-0}" \
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
-		-e PROJECT_AUTOSTART="${PROJECT_AUTOSTART:-1}" \
+		-e PROJECT_AUTOSTART="${PROJECT_AUTOSTART:-0}" \
 		-e DEFAULT_CERT="${DOCKSAL_VHOST_PROXY_DEFAULT_CERT:-docksal}" \
 		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
@@ -4314,7 +4415,7 @@ install_tools_mac ()
 	# Install Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_MAC")
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
 			curl -fL# "$URL_DOCKER_MAC" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
@@ -4339,7 +4440,7 @@ install_tools_mac ()
 	# Install docker-compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_MAC")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		if [[ ! -f "$dc_pkg" ]]; then
 			echo-green "Downloading ${dc_pkg}..."
 			curl -fL# "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
@@ -4357,7 +4458,7 @@ install_tools_mac ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_MAC")
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		if [[ ! -f "$dm_pkg" ]]; then
 			echo-green "Downloading ${dm_pkg}..."
 			curl -fL# "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
@@ -4379,7 +4480,7 @@ install_tools_windows ()
 	# Install Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_WIN")
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
 			curl -fL# "$URL_DOCKER_WIN" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
@@ -4407,7 +4508,7 @@ install_tools_windows ()
 	# Install docker-compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_WIN")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		if [[ ! -f "$dc_pkg" ]]; then
 			echo-green "Downloading ${dc_pkg}..."
 			curl -fL# "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
@@ -4425,7 +4526,7 @@ install_tools_windows ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		if [[ ! -f "$dm_pkg" ]]; then
 			echo-green "Downloading ${dm_pkg}..."
 			curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
@@ -4442,7 +4543,7 @@ install_tools_windows ()
 
 	# Install winpty
 	if ! is_winpty_version; then
-		echo-green "Installing winpty v${REQUIREMENTS_WINPTY}..."
+		echo-green "Downloading winpty v${REQUIREMENTS_WINPTY}..."
 		local winpty_pkg=$(basename "$URL_WINPTY")
 		if [[ ! -f "$winpty_pkg" ]]; then
 			echo-green "Downloading ${winpty_pkg}..."
@@ -4482,7 +4583,7 @@ install_tools_debian ()
 	# Install Docker client
 	sudo service docker start 2>/dev/null
 	if ! is_docker_version || ! is_docker_server_version; then
-		echo-green "Installing Docker..."
+		echo-green "Downloading Docker..."
 		# Stop docker service if it exists
 		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
 			echo "Stopping docker service..."
@@ -4500,10 +4601,11 @@ install_tools_debian ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4514,7 +4616,7 @@ install_tools_fedora ()
 	# Install Docker client
 	sudo service docker start 2>/dev/null
 	if ! is_docker_version || ! is_docker_server_version; then
-		echo-green "Installing Docker..."
+		echo-green "Downloading Docker..."
 		# Stop docker service if it exists
 		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
 			echo "Stopping docker service..."
@@ -4534,10 +4636,11 @@ install_tools_fedora ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4556,16 +4659,11 @@ install_tools_alpine ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose via pip (this may take a while)..."
-		# docker-compose has to be install via pip on Alpine
-		# See https://github.com/docker/compose/issues/3465
-		apk add --no-cache python3 python3-dev libffi-dev openssl-dev >/dev/null && \
-			# Update pip to avoid warnings like:
-			# - "Cache entry deserialization failed, entry ignored"
-			# - "You are using pip version 10.0.1, however version 19.0.3 is available."
-			pip3 install --upgrade --no-cache-dir pip >/dev/null && \
-			pip3 install "docker-compose==${REQUIREMENTS_DOCKER_COMPOSE}" >/dev/null && \
-			docker-compose --version
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
+		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4583,10 +4681,11 @@ install_tools_generic_linux ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4597,7 +4696,7 @@ install_tools_wsl ()
 	# Install Linux Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_NIX")
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
 			curl -fL# "$URL_DOCKER_NIX" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
@@ -4622,7 +4721,7 @@ install_tools_wsl ()
 	# Install Linux Docker Compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		if [[ ! -f "$dc_pkg" ]]; then
 			echo-green "Downloading ${dc_pkg}..."
 			curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
@@ -4647,7 +4746,7 @@ install_tools_wsl ()
 	# Keeping the rest of the logic below very similar to other host environments.
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		if [[ ! -f "$dm_pkg" ]]; then
 			echo-green "Downloading ${dm_pkg}..."
 			curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN_WSL" && \
@@ -4746,7 +4845,7 @@ update_virtualbox ()
 		is_vbox_version
 		local res=$?
 		if [[ "$res" != "0" ]]; then
-			[[ "$res" == "2" ]] && echo-alert "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
+			[[ "$res" == "2" ]] && echo-notice "VirtualBox version should be ${REQUIREMENTS_VBOX} or higher"
 			# Note: install_virtualbox automatically stops the machine if necessary, but will not automatically start it.
 			install_virtualbox
 		fi
@@ -4773,7 +4872,7 @@ update_boot2docker ()
 		if (( $(ver_to_int "$REQUIREMENTS_DOCKER_B2D") > $(ver_to_int "$b2d_version") )); then
 			if (( $(ver_to_int "$b2d_version") < $(ver_to_int "18.09") )); then
 				# Upgrade to 18.09 requires the system to rebuild due to change from AUFS to Overlay2.
-				echo-alert "This update will destroy and recreate the VM!" \
+				echo-warning "This update will destroy and recreate the VM!" \
 					"You can skip the VM update for now, create DB backups/etc., then restart the update to complete it." \
 					"For more information see https://docs.docksal.io/troubleshooting/boot2docker-update/"
 				if _confirm "Do you want to update the VM now?" --no-exit; then
@@ -4857,6 +4956,7 @@ update_config_files ()
 			$STACKS_STACK_DEFAULT_NODB
 			$STACKS_STACK_NODE
 			$STACKS_STACK_PANTHEON
+			$STACKS_STACK_PLATFORMSH
 			$STACKS_VOLUMES_BIND
 			$STACKS_VOLUMES_NFS
 			$STACKS_VOLUMES_NONE
@@ -5079,12 +5179,9 @@ update ()
 
 	# [STEP - POST UPDATE]
 	# Show release notes URL after update
-	if is_update; then
-		echo-warning "Please take a moment to read about what's new in this release:" "${URL_RELEASE_NOTES}"
-		# Open release notes in the browser
-		# TODO: add support for Linux and Windows/WSL
-		is_mac && open "${URL_RELEASE_NOTES}"
-	fi
+	is_update && release_notes_message
+	# Show GitHub Sponsors URL after update
+	is_update && sponsor_message
 
 	# Cleanup
 	rm -f "$CONFIG_DOWNLOADS_DIR/*" &>/dev/null
@@ -5177,7 +5274,7 @@ check_for_updates ()
 		UPDATE_AVAILABLE=1
 		echo-green-bg " UPDATE AVAILABLE "
 		echo -e "${green}fin${NC} [ $FIN_VERSION --> $new_version ]"
-		echo "You can update after this process by running fin update"
+		echo -e "You can update after this process by running ${yellow}fin update${NC}"
 		echo "Press Enter to continue"
 		read -p ''
 	fi
@@ -6012,21 +6109,23 @@ sysinfo ()
 
 	echo
 	echo "███  DOCKER"
-	echo "EXPECTED CLIENT VERSION: ${REQUIREMENTS_DOCKER}"
+	echo "Expected client version: ${REQUIREMENTS_DOCKER}"
 	if is_linux; then
-		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER}"
+		echo "Expected server version: ${REQUIREMENTS_DOCKER}"
 	elif is_docker_native; then
-		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_DD}"
+		echo "Expected server version: ${REQUIREMENTS_DOCKER_DD}"
 	else
-		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_B2D}"
+		echo "Expected server version: ${REQUIREMENTS_DOCKER_B2D}"
 	fi
 	echo
-	docker version
+	echo "Installed versions:"
+	echo
+	docker version 2>/dev/null
 
 	echo
 	echo "███  DOCKER COMPOSE"
-	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_COMPOSE"
-	docker-compose version
+	echo "Expected version:  $REQUIREMENTS_DOCKER_COMPOSE"
+	echo "Installed version: $(docker-compose version --short 2>/dev/null)"
 
 	if [[ "$all" == "all" ]]; then
 		echo
@@ -6037,8 +6136,10 @@ sysinfo ()
 	if is_boot2docker; then
 		echo
 		echo "███  DOCKER MACHINE"
-		echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_MACHINE"
-		docker-machine --version
+		echo "Expected version: $REQUIREMENTS_DOCKER_MACHINE"
+		echo
+		echo "Installed version:"
+		docker-machine --version 2>/dev/null
 		echo
 		docker-machine ls
 
@@ -6377,6 +6478,11 @@ load_configuration ()
 		export COMPOSE_PROJECT_VHOST_NAME_SAFE
 	fi
 
+	# Run Docker Compose v2 in compatibility mode.
+	# This forces compose to use underscores instead of hyphens in container names (like in v1).
+	# TODO: Remove this and switch to hyphens in Docksal 2.0.
+	export COMPOSE_COMPATIBILITY=true
+
 	# Set defaults
 	if is_pwd || is_katacoda; then
 		# Don't include .$DOCKSAL_DNS_DOMAIN in Play-with-Docker or Katacoda to keep the URL shorter.
@@ -6417,7 +6523,7 @@ load_configuration ()
 init ()
 {
 	if [[ "$(get_project_path)" != "" ]] ; then
-		echo-alert "The project exists but no init found" \
+		echo-notice "The project exists but no init found" \
 			"Existing Docksal project was found in $(get_project_path)" \
 			"Create your own \`init\` command to tell fin how to re-initialize your project." \
 			"See ${yellow}fin help init${NC} for details"
@@ -7831,6 +7937,15 @@ execute_hook ()
 # Debug mode: print all commands
 [[ ${FIN_DEBUG} == 1 ]] && set -x
 
+# Check host architecture is supported
+if ! is_supported_arch; then
+	echo-error "Host architecture not supported" \
+		"Your host architecture is ${yellow}$(host_arch_new)${NC}." \
+		"Only ${yellow}amd64${NC} and ${yellow}arm64${NC} architectures are supported."
+	# Quit here unless were are in debug mode
+	! [[ ${FIN_DEBUG} == 1 || "${1}" == "debug" ]] && exit 1
+fi
+
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 if is_tty; then
@@ -7910,7 +8025,7 @@ if ! is_windows; then
 		# Don't display this in PWD and Katacoda since users do not control those environments anyway.
 		# TODO: handle this case better
 		if ! (is_pwd || is_katacoda); then
-			echo-alert "Running as root is not recommended"
+			echo-notice "Running as root is not recommended"
 		fi
 	fi
 fi

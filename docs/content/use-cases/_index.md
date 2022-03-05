@@ -3,6 +3,7 @@ title: "Advanced Use Cases"
 chapter: true
 weight: 8
 pre: "<b>8. </b>"
+hide_feedback: true
 ---
 
 # Advanced Use Cases

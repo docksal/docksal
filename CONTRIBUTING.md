@@ -47,7 +47,7 @@ If your PR does not pass the tests, you either have to fix the code or fix the t
 
 We have chat rooms on Gitter and Slack where questions can be asked and answered: 
 
-- [Gitter](https://gitter.im/docksal/community-support)
+- [Discussions](https://github.com/docksal/docksal/discussions) on GitHub
 - [Drupal Slack](https://app.slack.com/client/T06GX3JTS/C6GPEEEV8)
 
 If you have experience with Docksal and Docker, please stick around in the rooms to help others.

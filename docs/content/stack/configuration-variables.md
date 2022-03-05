@@ -134,6 +134,16 @@ semi-automatic mode.
 How many seconds to give project containers to reach `healthy` state before `fin` considers the stack startup as failed. 
 The value should be a multiple of `5`.
 
+### DOCKSAL_HOST
+
+`Default: "<unset>"`
+
+If set, overrides the internal `DOCKER_HOST` variable used by Docker / Docker Compose.
+
+This allows pointing Docker client to a different/external Docker host and can be useful in CI scenarios.
+
+Note: Consider using [Docker Contexts](https://docs.docker.com/engine/context/working-with-contexts/) instead.
+
 ### DOCKSAL_LOCK_UPDATES
 
 `Default: 0`
@@ -241,13 +251,13 @@ Docker image to use for [ssh-agent service](/core/system-ssh-agent).
 
 Docker image to use as the [vhost-proxy service](/core/system-vhost-proxy).
 
-### SECRET_ACAPI_EMAIL (global or project)
+### SECRET_ACQUIA_CLI_SECRET (global or project)
 
-Acquia Cloud API Email Address. See [Acquia Drush Commands](/tools/acquia-drush/).
+Acquia CLI Secret. See [Acquia CLI](/tools/acquia-cli/).
 
 ### SECRET_ACAPI_KEY (global or project)
 
-Acquia Cloud API Key. See [Acquia Drush Commands](/tools/acquia-drush/).
+Acquia CLI Key. See [Acquia CLI](/tools/acquia-cli/).
 
 ### SECRET_SSH_PRIVATE_KEY
 
@@ -289,6 +299,23 @@ Note: `DOCKSAL_ENVIRONMENT` should not be set and will not work in the project's
 `Default: docroot`
 
 Defines a relative path to the Document Root of the web server. Final path will be `/var/www/$DOCROOT`, so by default it is `/var/www/docroot`. Change it to the desired directory (like `http`) or sub-directory as needed, or set to `.` to use the project root as web server Document Root.
+
+### HOSTING_ENV
+
+This variable is part of the hosting integration variable set. Use the environment designation of your hosting provider,
+e.g., `prod`, `test`, `dev`. WordPress is the only provider that doesn't need this. This variable can be overridden by 
+using the `--hosting-env` parameter in the `fin pull` command.
+
+### HOSTING_PLATFORM
+
+This variable is part of the hosting integration variable set. Use the platform hosting provider associated with your
+project `acquia`, `pantheon`, `platform.sh`, or set it to `drush` or `wp`. This variable can be overridden by using the
+`--hosting-platform` parameter in the `fin pull` command.
+
+### HOSTING_SITE
+
+This variable is part of the hosting integration variable set. Use the site id given by your hosting provider. This 
+variable can be overridden by using the `--hosting-env` parameter in the `fin pull` command.
 
 ### MYSQL_ALLOW_EMPTY_PASSWORD
 
@@ -435,11 +462,17 @@ Defines the timeout of inactivity after which the project stack and code base wi
 
 ### PROJECT_INACTIVITY_TIMEOUT
 
-Defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h).
+Enables the [auto-stop feature](/use-cases/project-auto-start-stop#auto-stop) and defines the period after which a 
+project stack is considered inactive and is stopped (e.g., 0.5h).
+
+This feature is disabled by default (set to `0`).
 
 ### PROJECT_AUTOSTART
 
-Setting this variable to `0` will disable autostart projects by visiting project url. This option is active by default (set to `1`).
+Toggles the [auto-start feature](/use-cases/project-auto-start-stop#auto-start) for projects (automatic start by 
+visiting project url).
+
+This feature is disabled by default (set to `0`).
 
 ### SANDBOX_PERMANENT
 

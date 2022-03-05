@@ -10,8 +10,8 @@ down to your local environment without manually running through the steps.
 
 ### Acquia
 
-To interact with Acquia through Drush, the `SECRET_ACAPI_EMAIL` and
-`SECRET_ACAPI_KEY` are required. Additionally, access to the Acquia Cloud API
+To interact with Acquia through Drush, the `SECRET_ACQUIA_CLI_SECRET` and
+`SECRET_ACQUIA_CLI_KEY` are required. Additionally, access to the Acquia Cloud API
 is required. If access is not allowed, fallback to using the [Drush](/fin/fin-pull/#drupal-drush) method.
 
 More information on working with [Docksal with Acquia Drush](/tools/acquia-drush).

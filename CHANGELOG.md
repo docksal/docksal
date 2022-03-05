@@ -1,5 +1,102 @@
 # Changelog
 
+## 1.16.2 (2021-09-28)
+
+### New software versions
+
+- fin v1.107.1
+
+### Changes and improvements
+
+- Fixed terminal colors in `fin` broken on some systems after update to v1.16.1
+
+
+## 1.16.1 (2021-09-27)
+
+### New software versions
+
+- fin v1.107.0
+
+### Changes and improvements
+
+- Use `ifconfig` command instead of `ip` command on Mac
+- Minor refactoring in Github Actions
+- Minor changes to UI in `fin`
+  - Revised terminal colors and notification types
+
+### Documentation
+
+- Simplified troubleshooting docs around Docker Machine TLS certs
+- Replaced references to Gitter with GitHub Discussions
+- Added documentation for the `HOSTING_*` variables on the configuration variables page
+
+
+## 1.16.0 (2021-08-03)
+
+### New software versions
+
+- fin v1.106.0
+- Docker Desktop v3.4.0 (65384)
+- Docker v20.10.7
+- Docker Compose v1.29.2
+- VirtualBox v6.1.22
+- Switched `vhost-proxy` service to [docksal/vhost-proxy:1.7](https://github.com/docksal/service-vhost-proxy/releases/tag/v1.7.0) (multi-arch amd64/arm64 image)
+- Switched `cli` service and `run-cli` command to [docksal/cli:php7.4-3.0](https://github.com/docksal/service-cli/releases/tag/v3.0.0)
+  - **This is a major version upgrade of the image**
+  - arm64 support
+  - PHP 8.0 image
+  - Xdebug v3 PHP extension
+  - Dropped some tools, not all tools available for arm64, terminus not available for PHP 8.0
+- Switched `mysql` service to [docksal/mysql:5.7-1.5](https://github.com/docksal/service-mysql/releases/tag/v1.5.0)
+
+### New features
+
+- Switched [stack files](https://github.com/docksal/docksal/tree/develop/stacks) to Docker Compose file format v3.9
+  - As the `"version"` property is now optional, this change is fully backwards compatible with the existing `2.1` stack files.
+  - Moved `dns`, `healthchecks`, and `logging` settings into `x-common-settings` in `services.yml` (yaml anchors are now supported!)
+- Platform.sh alike stack (`stack-platformsh.yml`) based on [platformsh-templates/drupal9](https://github.com/platformsh-templates/drupal9)
+- `fin acli` to top level command (using [acquia/cli](https://github.com/acquia/cli))
+
+### Changes and improvements
+
+- Switched from Travis CI to Github Actions for CI/CD
+- Enhanced NFS diagnostics in `fin sysinfo`
+  - Showing `nfsd status` and `showmount -e`
+- Allow addons/scripts to use variables and functions defined in `fin` by sourcing it (`source $(which fin)`)
+- Removed deprecated `services/web`
+- Fixed NFS mounts with Docker Desktop (Virtualization Framework/M1) in macOS Big Sur
+- Added check for existing host name before adding to eliminate duplicates
+- Replaced `which` with `command` in shell function wrappers (`pwd`, `docker`, `docker-compose`) (#1496)
+- Dropped `docker-machine` wrapper, as microsoft/WSL#4078 is now resolved.
+- Fixed exit code at the end of `fin update` - without this, `fin update` would exit with `0` even if there were errors during the update process.
+- Updated XHProf service to work with XHProf 2.x and 3.x (#1507)
+- Updated IDE settings for XDebug v3 compatibility
+- Preserving compatibility with XDebug v2
+  - This will prevent breaking changes for custom stacks or stacks that pin the `CLI_IMAGE` version to a version with XDebug v2 (`docksal/cli` v2.12 and below).
+- Added sponsor prompt after `fin update`
+- Using `busybox` instead of `docksal/empty` image in `is_docker_path` check (busybox is multi-arch)
+Included WSL in Windows usage reporting
+
+### Documentation
+
+- Added documentation for Xdebug 3
+- Added documentation for Platform.sh alike stack
+- Bumped WSL Ubuntu v20.04 in docs
+- Added warning for changing volume mount type (#1486)
+- Update docs for Acquia CLI ([acquia/cli](https://github.com/acquia/cli)) and add to top level commands (#1481)
+- Updated drush links in doc for `fin pull`
+- Blocked search engines on feature/version branches of the docs
+- Added a redirect for a most common URLs linking to the [old RTD docs website](https://docksal.readthedocs.io/)
+- Added documentation version link for develop branch as "Upcoming"
+- Added example and help on obtaining info on latest available images
+- Added documentation on routing to a custom port (#1526)
+- Created `CODEOWNERS`
+- Added Feedback button in docs (#1527)
+- Switched to CarbonAds in docs
+- Switches community support to GitHub discussions
+- Added GitHub Discussions link to docs sidebar menu
+
+
 ## 1.15.1 (2021-01-15)
 
 ### Changes and improvements

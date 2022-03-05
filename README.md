@@ -1,8 +1,8 @@
-# Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?style=flat-square)](https://github.com/docksal/docksal/releases/latest) [![Build Status](https://img.shields.io/travis/docksal/docksal.svg?style=flat-square)](https://travis-ci.org/docksal/docksal)
+# Docksal [![Latest Release](https://img.shields.io/github/release/docksal/docksal.svg?logo=github&style=for-the-badge)](https://github.com/docksal/docksal/releases/latest) [![Build Status](https://img.shields.io/github/workflow/status/docksal/docksal/Default?label=actions&logo=github&style=for-the-badge)](https://github.com/docksal/docksal/actions/workflows/default.yaml)
 
-[![Docs](https://img.shields.io/badge/%E2%9A%99-%20Install%20Docksal%20-blue.svg)](https://docs.docksal.io/getting-started/setup/)
-[![Blog](https://img.shields.io/badge/📖-Tips%20and%20Updates-orange.svg)](https://blog.docksal.io)
-[![Chat](https://img.shields.io/gitter/room/docksal/community-support.svg)](https://gitter.im/docksal/community-support)
+[![Documentation](https://img.shields.io/badge/📖-Documentation-blue.svg?style=for-the-badge)](https://docs.docksal.io)
+[![Blog](https://img.shields.io/badge/📰-Tips%20and%20Updates-orange.svg?style=for-the-badge)](https://blog.docksal.io)
+[![GitHub Discussions](https://img.shields.io/github/discussions/docksal/docksal?style=for-the-badge)](https://github.com/docksal/docksal/discussions)
 
 Docker powered web development environments for macOS, Windows, and Linux. Unified environment for your team regardless of the OS.
 
@@ -62,9 +62,9 @@ More advanced use cases and tutorials are available in the [Documentation](https
 
 Ready to give back? Check the [Contributing](CONTRIBUTING.md) docs on how to get involved.
 
-We have chat rooms on Gitter and Slack where questions can be asked and answered: 
+We have GitHub Discussions and chat rooms on Slack where questions can be asked and answered: 
 
-- [Gitter](https://gitter.im/docksal/community-support)
+- [GitHub Discussions](https://github.com/docksal/docksal/discussions)
 - [Drupal Slack](https://app.slack.com/client/T06GX3JTS/C6GPEEEV8)
 
 If you have experience with Docksal and Docker, please stick around in the rooms to help others.

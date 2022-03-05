@@ -23,7 +23,7 @@ If that did not help, take a look at some of the common problems using Docksal a
 If above did not help, try:
 
 - searching the [GitHub issue queue](https://github.com/docksal/docksal/issues). Others may have experienced a similar issue and already found a solution or a workaround.
-- asking community for support in our [Gitter room](https://gitter.im/docksal/community-support)
+- asking community for support in [Discussions](https://github.com/docksal/docksal/discussions) on GitHub
 - creating a [new issue](https://github.com/docksal/docksal/issues/new) if your problem is still not resolved.
 
 -----
@@ -55,62 +55,43 @@ Sometimes Virtual Box fails to initialize its network interfaces properly.
 
 ## Issue 2. Error checking TLS Connection (VM is not accessible) {#issue-02}
 
-### 2a. Certificate validation, getsockopt connection refused:
+There can be two very similar errors starting with "Error checking TLS connection" and ending with:
 
-```
-Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
-You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
-Be advised that this will trigger a Docker daemon restart which will stop running containers.
-```
+- "getsockopt: connection refused"
 
-#### How to Resolve
+    ```
+    Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": dial tcp 192.168.64.100:2376: getsockopt: connection refused
+    You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
+    Be advised that this will trigger a Docker daemon restart which will stop running containers.
+    ```
 
-Sometimes docker-machine certificates re-generation fails. Perform the following steps to resolve:
+- "x509: certificate has expired or is not yet valid"
 
-1. Perform `fin vm restart`
-2. If above did not help, then reboot your local host
-3. If above did not help, perform commands below and then reboot your host:
-
-	```bash
-	fin docker-machine regenerate-certs docksal -f
-	fin vm restart
-	```
-
-4. In the rare cases when above did not help the only solution is to delete the existing VM and re-create it.
-
-	```bash
-	fin vm remove
-	fin system start
-	```
-
-
-### 2b. Certificate validation, x509 certificate has expired 
-
-```
-Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": x509: certificate has expired or is not yet valid
-You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
-Be advised that this will trigger a Docker daemon restart which might stop running containers.
-
- ERROR:  Failed to properly access virtual machine
-        In case you see certificates problem, try rebooting your local host.
-        Common issues: https://docs.docksal.io/troubleshooting/common-issues/
-```
+    ```
+    Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates for host "192.168.64.100:2376": x509: certificate has expired or is not yet valid
+    You can attempt to regenerate them using 'docker-machine regenerate-certs [name]'.
+    Be advised that this will trigger a Docker daemon restart which might stop running containers.
+    ```
 
 #### How to Resolve
-
-For reference: https://docs.docker.com/machine/reference/regenerate-certs/
-
-If you see the above error where it mentions x509: certificate has expired or is not yet valid, then you need to regenerate your certificates with the added `--client-certs` argument to the regenerate command. Perform the following steps:
 
 1. Run the following command:
 
 	```bash
-	fin docker-machine regenerate-certs -f --client-certs docksal
+	fin docker-machine regenerate-certs --client-certs --force docksal
 	fin vm restart
 	```
 
-2. Verify the docksal machine starts and that you can start your projects.
+    For reference: https://docs.docker.com/machine/reference/regenerate-certs/
 
+2. Verify the docksal VM starts and that you can start your projects.
+
+In the rare cases when above did not help, the only solution is to delete the existing VM and re-create it:
+
+```bash
+fin vm remove
+fin system start
+```
 
 
 ## Issue 3. Out-of-memory Issues {#issue-03}
@@ -348,15 +329,19 @@ to run the project.
 
 See Issue 3. Lack of memory for resolution.
 
-## Issue 12. VirtualBox Installation Fails on macOS High Sierra 10.13 {#issue-12}
+## Issue 12. VirtualBox Installation Fails on macOS {#issue-12}
 
-New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced
+VirtualBox installation fails on macOS High Sierra v10.13 or later due to the new policy Apple introduced
 around third-party kernel extensions.
 
 ### How to Resolve
 
-- Open System Preferences > Security & Privacy and click the `Allow` button for `Oracle America, Inc.`
-- Restart the VirtualBox installation manually
+- Open `System Preferences > Security & Privacy` and click the `Allow` button for `Oracle America, Inc.`
+- Restart VirtualBox installation manually
+
+If you do not see the "Allow" button, it means the extension is already enabled.
+
+![Allowing VirtualBox kernel extension](/images/virtualbox-kernel-extension-allow.png)
 
 In certain cases you may have to reboot your Mac and then reinstall VirtualBox manually.
 
@@ -483,3 +468,35 @@ There is no guarantee that pinning the vhost-proxy image won't result in incompa
 {{% /notice %}}
 
 Long term fix: consider switching to a host with a modern CPU with SSE 4.2 support.
+
+## Issue 18. Composer Out of Memory
+
+Composer 2 is much improved over Composer 1. However, even Composer 2 can throw the dreaded "exhausted memory" or "cannot allocate memory" message.
+
+### How to Resolve
+
+Run your composer command beginning with...
+
+```bash
+fin exec COMPOSER_MEMORY_LIMIT=-1 composer
+```
+
+If you are still having memory issues, see [Out-of-memory Issues](/troubleshooting/common-issues/#issue-03).
+
+## Issue 19. Out of disk space
+
+Out of disk issues may manifest in many ways. One is:
+
+```
+ERROR 1114 (HY000) at line xxxx: The table 'xxxx' is full
+```
+
+You can diagnose this issue with `fin exec df -lh`. If a disk shows close to 100% usage, you'll need to either [clean up your projects](https://docs.docksal.io/core/vm/#free-up-space-in-virtualbox-vm-docker-for-mac-or-docker-for-windows) or expand the disk.
+
+### How to Resolve
+
+- [If you are using VirtualBox](https://docs.docksal.io/core/vm/#increasing-docksal-s-virtualbox-vm-disk-size-hdd)
+- If you are using Docker Desktop:
+  - In the UI, go to Preferences > Resources
+  - Increase the "Disk image size"
+  - `fin up` to restart your project

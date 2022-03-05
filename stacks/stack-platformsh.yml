@@ -1,8 +1,8 @@
 # Platform.sh alike stack
 # see https://github.com/platformsh-templates/drupal9
 #
-# - Nginx 1.14
-# - MariaDB 10.3
+# - Nginx 1.20
+# - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
 # - PHP 7.4
 # - Redis 6.0
 
@@ -15,7 +15,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: nginx
     # Pin nginx version
-    image: ${WEB_IMAGE:-docksal/nginx:1.14-edge}
+    image: ${WEB_IMAGE:-docksal/nginx:1.20-1.2}
     depends_on:
       - cli
 
@@ -24,14 +24,15 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mariadb
     # Pin MariaDB version
-    image: ${DB_IMAGE:-docksal/mariadb:10.3-1.1}
+    # MariaDB v10.4 functions as limited drop-in replacement for MySQL 5.7
+    image: ${DB_IMAGE:-docksal/mariadb:10.4-1.3}
 
   cli:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
     # Pin PHP version
-    image: ${CLI_IMAGE:=docksal/cli:stable-php7.4}
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.1}
 
   redis:
     extends:

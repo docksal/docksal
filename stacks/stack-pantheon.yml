@@ -1,10 +1,10 @@
 # Pantheon alike stack
 #
-# - Nginx 1.14
-# - MariaDB 10.1
-# - PHP 7.2
-# - Varnish 4.1
-# - Redis 4.0
+# - Nginx 1.20
+# - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
+# - PHP 7.4
+# - Varnish 6.6
+# - Redis 6.0
 # - ApacheSolr 3.6
 
 version: "3.9"
@@ -16,7 +16,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: nginx
     # Pin nginx version
-    image: ${WEB_IMAGE:-docksal/nginx:1.14-edge}
+    image: ${WEB_IMAGE:-docksal/nginx:1.20-1.2}
     depends_on:
       - cli
 
@@ -25,12 +25,15 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mariadb
     # Pin MariaDB version
-    image: ${DB_IMAGE:-docksal/mariadb:10.1-1.1}
+    # MariaDB v10.4 functions as limited drop-in replacement for MySQL 5.7
+    image: ${DB_IMAGE:-docksal/mariadb:10.4-1.3}
 
   cli:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
+    # Pin PHP version
+    image: ${DB_IMAGE:-docksal/cli:php7.4-3.1}
 
   # http(s)://varnish.VIRTUAL_HOST
   varnish:
@@ -38,7 +41,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: varnish
     # Pin Varnish version
-    image: ${VARNISH_IMAGE:-docksal/varnish:4.1-2.0}
+    image: ${VARNISH_IMAGE:-docksal/varnish:6.6-3.1}
     depends_on:
       - web
 
@@ -47,7 +50,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: redis
     # Pin Redis version
-    image: ${REDIS_IMAGE:-wodby/redis:4.0}
+    image: ${REDIS_IMAGE:-wodby/redis:6.0}
 
   # http(s)://solr.VIRTUAL_HOST/solr
   solr:

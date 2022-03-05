@@ -3,8 +3,8 @@
 set -euo pipefail
 
 fin ssh-key add project_key
-fin config set --global "SECRET_ACAPI_EMAIL=${SECRET_ACAPI_EMAIL}"
-fin config set --global "SECRET_ACAPI_KEY=${SECRET_ACAPI_KEY}"
+fin config set --global "SECRET_ACQUIA_CLI_SECRET=${SECRET_ACQUIA_CLI_SECRET}"
+fin config set --global "SECRET_ACQUIA_CLI_KEY=${SECRET_ACQUIA_CLI_KEY}"
 
 mkdir "$GITHUB_WORKSPACE/../test-pull"
 cd "$GITHUB_WORKSPACE/../test-pull"
