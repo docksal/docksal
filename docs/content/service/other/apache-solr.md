@@ -153,11 +153,20 @@ from another version of solr, then I suggest that you delete the contents of the
 
 ### Solr 8
 
-- These instructions are for version 8.1.1 of solr which is installed
+- These instructions are for version 8.6.1 of solr which is installed
   via the docksal specified docker image in the ~/.docksal/stacks/services.yml
-  and the .docksal/docksal.env variable SOLR_IMAGE='docksal/solr:latest'
-  which is currently at [docksal/solr:latest](https://hub.docker.com/layers/docksal/solr/latest/images/sha256-21ba69c5bd4d3c4c328669213bea7fdd4d1743e3936d3c3fde883a5c60d9f088?context=explore)
-  which specifies version 8.1.1 (line 34).
+  and the .docksal/docksal.env variable SOLR_IMAGE.
+  which is currently at [docksal/solr:8-edge](https://hub.docker.com/layers/docksal/solr/8-edge/images/sha256-db378c5d6c3fd870d5128274811ec48f6bef365af0b1e26a0c99fbad19d5a6be?context=explore)
+  which specifies version 8.6.1 (line 12).
+
+```bash
+SOLR_IMAGE='docksal/solr:8-edge'
+```
+This can also be set with `fin config set`.
+
+```bash
+fin config set SOLR_IMAGE='docksal/solr:8-edge'
+```
 
   For Solr 8, the core location changes to /opt/solr/server/solr/{{your_new_core_name}}.
   [See dockerfile](https://github.com/docksal/service-solr/blob/2466d83b4579464b1b05c7f2e7d7273eb00c1ab0/Dockerfile#L31)
@@ -168,7 +177,7 @@ from another version of solr, then I suggest that you delete the contents of the
 ---
 version: '2.1'
 services:
-  # Solr 8.1.1
+  # Solr 8.6.1
   solr:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
@@ -180,7 +189,7 @@ services:
 and your .docksal/docksal.env
 
 ```bash
-SOLR_IMAGE='docksal/solr:latest'
+SOLR_IMAGE='docksal/solr:8-edge'
 ```
 
 - You will need to `fin project reset` to create the new mount (see yml above).
