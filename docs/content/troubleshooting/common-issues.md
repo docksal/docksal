@@ -503,7 +503,7 @@ You can diagnose this issue with `fin exec df -lh`. If a disk shows close to 100
 
 ## Issue 20. Mobile Device Management (MDM) Services
 
-Mobile Device Management (MDM's) have become more popular lately for organizations to manage their devices. Kandji and JumpCloud are just a few examples.
+Mobile Device Management (MDMs) have become more popular lately for organizations to manage their devices. Kandji and JumpCloud are just a few examples.
 
 Possible symptoms:
 
