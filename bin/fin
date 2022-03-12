@@ -4058,6 +4058,9 @@ install_proxy_service ()
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
 	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
+	# Enable auto-start of projects by default in CI environments
+	is_ci && PROJECT_AUTOSTART=${PROJECT_AUTOSTART:-1}
+
 	# Mount custom certs folder if available
 	local mount_certs
 	if [[ -d "${CONFIG_CERTS}" ]] && is_docker_path "${CONFIG_CERTS}"; then
