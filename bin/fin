@@ -4043,17 +4043,8 @@ configure_mounts ()
 install_proxy_service ()
 {
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
+	# TODO: Clean this up in 2023
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
-
-	# Create a bind mount volume to the projects directory if defined and exists. Otherwise, create an empty volume.
-	if [[ -d "$PROJECTS_ROOT" ]]; then
-		# No quotes around ${PROJECTS_ROOT} below or the volume will not work correctly!!!
-		docker volume create --name docksal_projects --opt type=none --opt device=${PROJECTS_ROOT} --opt o=bind >/dev/null 2>&1
-	else
-		docker volume create --name docksal_projects >/dev/null 2>&1
-		# Warn if PROJECTS_ROOT was set but is not a valid directory
-		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
-	fi
 
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
 	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
@@ -4067,7 +4058,13 @@ install_proxy_service ()
 		mount_certs="--mount type=bind,src=${CONFIG_CERTS},dst=/etc/certs/custom"
 	fi
 
-	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
+	# Mount projects directory
+	local mount_projects
+	if [[ -d "${PROJECTS_ROOT}" ]] && is_docker_path "${PROJECTS_ROOT}"; then
+		mount_projects="--mount type=bind,src=${PROJECTS_ROOT},dst=/projects"
+	fi
+
+	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT are used in CI
 	# and are inactive unless configured.
 	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h)
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
@@ -4082,13 +4079,14 @@ install_proxy_service ()
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
 		-e PROJECT_AUTOSTART="${PROJECT_AUTOSTART:-0}" \
 		-e DEFAULT_CERT="${DOCKSAL_VHOST_PROXY_DEFAULT_CERT:-docksal}" \
-		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		${mount_certs} \
+		${mount_projects} \
 		--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
 		--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
 		--health-interval=${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
+
 	if_failed_error "Failed starting the proxy service."
 }
 
