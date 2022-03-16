@@ -26,14 +26,14 @@ services:
       service: mariadb
     # Pin MariaDB version
     # MariaDB v10.4 functions as limited drop-in replacement for MySQL 5.7
-    image: ${CLI_IMAGE:-docksal/mariadb:10.4-1.3}
+    image: ${DB_IMAGE:-docksal/mariadb:10.4-1.3}
 
   cli:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
     # Pin PHP version
-    image: ${DB_IMAGE:-docksal/cli:php7.4-3.1}
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.1}
 
   # http(s)://varnish.VIRTUAL_HOST
   varnish:
