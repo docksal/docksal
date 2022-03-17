@@ -14,7 +14,7 @@ Terminus is pre-installed in the `cli` container. Note: required `docksal/cli` v
 
 Follow the [official docs](https://pantheon.io/docs/terminus/install) to generate your machine token.  
 
-Add the token to `$HOME/docksal/docksal.env`:
+Add the token to `$HOME/.docksal/docksal.env`:
 
 ```
 ...
