@@ -2,6 +2,11 @@
 
 FIN_VERSION=1.108.0
 
+# Allow to override Docksal version during install.
+# Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
+# Update: DOCKSAL_VERSION=develop fin update
+DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.16.2}"
+
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
 # See https://misc.flogisoft.com/bash/tip_colors_and_formatting
@@ -183,11 +188,6 @@ ver_to_int ()
 }
 
 #---------------------------- Global Constants --------------------------------
-
-# Allow to override Docksal version during install.
-# Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
-# Update: DOCKSAL_VERSION=develop fin update
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
 REQUIREMENTS_DOCKER='20.10.12'
@@ -1195,8 +1195,9 @@ is_docker_server_version ()
 is_docker_compose_version ()
 {
 	! [[ -x ${DOCKER_COMPOSE_BIN} ]] && return 1
+	# Trim 'v' prefix from output
 	# Trim \r from output (necessary on Windows)
-	local version=$(docker-compose version --short | tr -d '\r')
+	local version=$(docker-compose version --short | tr -d 'v' | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") <= $(ver_to_int "$version") ))
 }
 
@@ -2405,7 +2406,8 @@ version ()
 	if [[ $1 == '--short' ]]; then
 		echo "$FIN_VERSION"
 	else
-		echo "fin version: $FIN_VERSION"
+		echo "Docksal version: $DOCKSAL_VERSION"
+		echo "fin version:     $FIN_VERSION"
 	fi
 
 	# Ping stats server
@@ -6016,7 +6018,7 @@ sysinfo ()
 	eval $(parse_params "$@")
 
 	echo
-	echo "███  FIN" &&
+	echo "███  DOCKSAL" &&
 	version
 
 	echo
