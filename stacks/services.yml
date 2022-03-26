@@ -264,7 +264,7 @@ services:
   # Cloudflare Argo Tunnel
   cloudflared:
     hostname: cloudflared
-    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:2021.8.1}
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:2022.3.4}
     environment:
       - TUNNEL_URL=http://web
       - NO_AUTOUPDATE=true
