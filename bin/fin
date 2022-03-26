@@ -1195,8 +1195,9 @@ is_docker_server_version ()
 is_docker_compose_version ()
 {
 	! [[ -x ${DOCKER_COMPOSE_BIN} ]] && return 1
+	# Trim 'v' prefix from output
 	# Trim \r from output (necessary on Windows)
-	local version=$(docker-compose version --short | tr -d '\r')
+	local version=$(docker-compose version --short | tr -d 'v' | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") <= $(ver_to_int "$version") ))
 }
 
