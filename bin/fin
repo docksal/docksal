@@ -6370,6 +6370,7 @@ load_configuration ()
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
 	local local_env_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.env"
+	local overrides_env_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}-overrides.env"
 	if [[ -f "$env_file" ]]; then
 		ENV_FILE="$env_file"
 		fix_crlf_warning "$env_file"
@@ -6384,6 +6385,15 @@ load_configuration ()
 			fix_crlf_warning "$local_env_file"
 			# Source and allexport variables in the .env file
 			set -a; source "$local_env_file"; set +a
+	fi
+	# This is used to print the list of included env files in `fin config`
+
+  # Source overrides env file if it exist
+	if [[ -f "$overrides_env_file" ]]; then
+			ENV_FILE="${ENV_FILE}${SEPARATOR}${overrides_env_file}"
+			fix_crlf_warning "$overrides_env_file"
+			# Source and allexport variables in the .env file
+			set -a; source "$overrides_env_file"; set +a
 	fi
 	# This is used to print the list of included env files in `fin config`
 	export ENV_FILE
@@ -6420,6 +6430,16 @@ load_configuration ()
 			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
 			local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
 			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
+		fi
+
+    # Throw an error if COMPOSE_FILE is empty here
+		if [[ "$COMPOSE_FILE" == "" ]]; then
+			echo-error "No configuration files found." "Expected in $yml_file"
+			exit 1
+		else
+			# Include docksal-{DOCKSAL_ENVIRONMENT}-overrides.yml (if exists)
+			local overrides_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}-overrides.yml"
+			[[ -f "$overrides_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_yml_file}"
 		fi
 
 		# Include a volumes yml if requested. Use bind mount volumes by default.
