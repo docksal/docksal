@@ -2,6 +2,11 @@
 
 FIN_VERSION=1.108.0
 
+# Allow to override Docksal version during install.
+# Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
+# Update: DOCKSAL_VERSION=develop fin update
+DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.16.2}"
+
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
 # See https://misc.flogisoft.com/bash/tip_colors_and_formatting
@@ -183,11 +188,6 @@ ver_to_int ()
 }
 
 #---------------------------- Global Constants --------------------------------
-
-# Allow to override Docksal version during install.
-# Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
-# Update: DOCKSAL_VERSION=develop fin update
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
 
 # Dependency versions
 REQUIREMENTS_DOCKER='20.10.12'
@@ -407,7 +407,7 @@ URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v$
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.4}
-IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.7}
+IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.8}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.2}
 IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php7.4-3.1}
 
@@ -1195,8 +1195,9 @@ is_docker_server_version ()
 is_docker_compose_version ()
 {
 	! [[ -x ${DOCKER_COMPOSE_BIN} ]] && return 1
+	# Trim 'v' prefix from output
 	# Trim \r from output (necessary on Windows)
-	local version=$(docker-compose version --short | tr -d '\r')
+	local version=$(docker-compose version --short | tr -d 'v' | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") <= $(ver_to_int "$version") ))
 }
 
@@ -2459,7 +2460,8 @@ version ()
 	if [[ $1 == '--short' ]]; then
 		echo "$FIN_VERSION"
 	else
-		echo "fin version: $FIN_VERSION"
+		echo "Docksal version: $DOCKSAL_VERSION"
+		echo "fin version:     $FIN_VERSION"
 	fi
 
 	# Ping stats server
@@ -4043,20 +4045,14 @@ configure_mounts ()
 install_proxy_service ()
 {
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
+	# TODO: Clean this up in 2023
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
-
-	# Create a bind mount volume to the projects directory if defined and exists. Otherwise, create an empty volume.
-	if [[ -d "$PROJECTS_ROOT" ]]; then
-		# No quotes around ${PROJECTS_ROOT} below or the volume will not work correctly!!!
-		docker volume create --name docksal_projects --opt type=none --opt device=${PROJECTS_ROOT} --opt o=bind >/dev/null 2>&1
-	else
-		docker volume create --name docksal_projects >/dev/null 2>&1
-		# Warn if PROJECTS_ROOT was set but is not a valid directory
-		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
-	fi
 
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
 	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+
+	# Enable auto-start of projects by default in CI environments
+	is_ci && PROJECT_AUTOSTART=${PROJECT_AUTOSTART:-1}
 
 	# Mount custom certs folder if available
 	local mount_certs
@@ -4064,7 +4060,13 @@ install_proxy_service ()
 		mount_certs="--mount type=bind,src=${CONFIG_CERTS},dst=/etc/certs/custom"
 	fi
 
-	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
+	# Mount projects directory
+	local mount_projects
+	if [[ -d "${PROJECTS_ROOT}" ]] && is_docker_path "${PROJECTS_ROOT}"; then
+		mount_projects="--mount type=bind,src=${PROJECTS_ROOT},dst=/projects"
+	fi
+
+	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT are used in CI
 	# and are inactive unless configured.
 	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h)
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
@@ -4079,13 +4081,14 @@ install_proxy_service ()
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
 		-e PROJECT_AUTOSTART="${PROJECT_AUTOSTART:-0}" \
 		-e DEFAULT_CERT="${DOCKSAL_VHOST_PROXY_DEFAULT_CERT:-docksal}" \
-		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		${mount_certs} \
+		${mount_projects} \
 		--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
 		--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
 		--health-interval=${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
+
 	if_failed_error "Failed starting the proxy service."
 }
 
@@ -6069,7 +6072,7 @@ sysinfo ()
 	eval $(parse_params "$@")
 
 	echo
-	echo "███  FIN" &&
+	echo "███  DOCKSAL" &&
 	version
 
 	echo
@@ -6489,6 +6492,13 @@ load_configuration ()
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE}
 	else
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
+	fi
+
+	# Display deprecation notice for .docksal TLD.
+	if [[ "$VIRTUAL_HOST" == *.docksal ]]; then
+		echo-warning "'.docksal' base domain and local DNS resolver are deprecated" \
+			"Please update your Docksal and project configuration" \
+			"See https://docs.docksal.io/stack/configuration-variables/#docksal-dns-disabled"
 	fi
 
 	# Make VIRTUAL_HOST lowercase, replace '_' with '-', remove everything non-letter or digit,

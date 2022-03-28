@@ -1,10 +1,10 @@
 # Pantheon alike stack
 #
-# - Nginx 1.14
-# - MariaDB 10.4
-# - PHP 7.2
-# - Varnish 4.1
-# - Redis 4.0
+# - Nginx 1.20
+# - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
+# - PHP 7.4
+# - Varnish 6.6
+# - Redis 6.0
 # - ApacheSolr 3.6
 
 version: "3.9"
@@ -32,6 +32,8 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
+    # Pin PHP version
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.1}
 
   # http(s)://varnish.VIRTUAL_HOST
   varnish:
@@ -39,7 +41,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: varnish
     # Pin Varnish version
-    image: ${VARNISH_IMAGE:-docksal/varnish:4.1-2.0}
+    image: ${VARNISH_IMAGE:-docksal/varnish:6.6-3.1}
     depends_on:
       - web
 

@@ -41,7 +41,7 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	mkdir -p 'project2/.docksal'
-	echo 'VIRTUAL_HOST=project1.docksal' > 'project2/.docksal/docksal.env'
+	echo 'VIRTUAL_HOST=project1.docksal.site' > 'project2/.docksal/docksal.env'
 	cd 'project2'
 	run fin start
 	[ ! $status -eq 0 ]

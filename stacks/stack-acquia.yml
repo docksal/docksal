@@ -1,9 +1,9 @@
 # Acquia alike stack
 #
 # - Apache 2.4
-# - MySQL 5.6
-# - PHP 7.2
-# - Varnish 4.1
+# - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
+# - PHP 7.4
+# - Varnish 6.6
 # - Memcached 1.4
 # - ApacheSolr 4.5
 
@@ -30,6 +30,8 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
+    # Pin PHP version
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.1}
 
   # http(s)://varnish.VIRTUAL_HOST
   varnish:
@@ -37,7 +39,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: varnish
     # Pin Varnish version
-    image: ${VARNISH_IMAGE:-docksal/varnish:4.1-2.0}
+    image: ${VARNISH_IMAGE:-docksal/varnish:6.6-3.1}
     depends_on:
       - web
 
@@ -45,6 +47,8 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: memcached
+    # Pin Memcached version
+    image: ${MEMCACHED_IMAGE:-memcached:1.6-alpine}
 
   # http(s)://solr.VIRTUAL_HOST/solr
   solr:
