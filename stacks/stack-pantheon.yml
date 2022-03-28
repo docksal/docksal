@@ -48,7 +48,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: redis
     # Pin Redis version
-    image: ${REDIS_IMAGE:-wodby/redis:4.0}
+    image: ${REDIS_IMAGE:-wodby/redis:6.0}
 
   # http(s)://solr.VIRTUAL_HOST/solr
   solr:

@@ -197,7 +197,7 @@ services:
   # Redis
   redis:
     hostname: redis
-    image: ${REDIS_IMAGE:-wodby/redis:5.0}
+    image: ${REDIS_IMAGE:-wodby/redis:6.0}
     environment:
       - REDIS_MAXMEMORY=${REDIS_MAXMEMORY:-256m}
       # Additional variables can be found https://github.com/wodby/redis
