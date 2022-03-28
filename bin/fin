@@ -6494,6 +6494,13 @@ load_configuration ()
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	fi
 
+	# Display deprecation notice for .docksal TLD.
+	if [[ "$VIRTUAL_HOST" == *.docksal ]]; then
+		echo-warning "'.docksal' base domain and local DNS resolver are deprecated" \
+			"Please update your Docksal and project configuration" \
+			"See https://docs.docksal.io/stack/configuration-variables/#docksal-dns-disabled"
+	fi
+
 	# Make VIRTUAL_HOST lowercase, replace '_' with '-', remove everything non-letter or digit,
 	# make sure it starts with letter or digit
 	local OLD_VHOST=${VIRTUAL_HOST}

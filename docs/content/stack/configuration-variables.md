@@ -116,16 +116,23 @@ Also check `DOCKSAL_DNS_DISABLED` as it may be a better option than just disabli
 
 `Default: 0`
 
-Set to `1` and do `fin system reset` to disable the `docksal-dns` built-in service and switch to using the public 
-`.docksal.site` base domain. This automatically sets `DOCKSAL_DNS_DOMAIN=docksal.site` and  `DOCKSAL_NO_DNS_RESOLVER=1`.
+To disable the `docksal-dns` built-in service and switch to using the public `.docksal.site` base domain, run:
 
-Useful when `docksal-dns` is conflicting with corporate rules or if some other software restricts it 
+```bash
+fin config set --global DOCKSAL_DNS_DISABLED=1
+fin system reset
+```
+
+This automatically sets `DOCKSAL_DNS_DOMAIN=docksal.site` and  `DOCKSAL_NO_DNS_RESOLVER=1`.
+
+Useful when `docksal-dns` conflicts with corporate rules or if some other software restricts binding to `UDP:53` port 
 (`0.0.0.0:53: bind: address already in use`). 
 
 Projects that do not override the `VIRTUAL_HOST` variable will switch to the new `docksal.site` base domain after running 
-`fin project restart`. Projects that hardcode `VIRTUAL_HOST` will either need to update the value 
-(e.g., `VIRTUAL_HOST=myproject.docksal.site`) or use [fin hosts](/fin/fin-help/#hosts) command to manage host records. 
-semi-automatic mode.
+`fin project restart`.
+
+Projects that hardcode `VIRTUAL_HOST` will either need to update the value (e.g., `VIRTUAL_HOST=myproject.docksal.site`) 
+or use [fin hosts](/fin/fin-help/#hosts) command to manage host records manually.
 
 ### DOCKSAL_HEALTHCHECK_TIMEOUT
 
