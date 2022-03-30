@@ -6075,17 +6075,6 @@ ngrok_share ()
 
 # Cloudflare Tunnel (cloudflared) integration
 
-# Check requirements
-cloudflared_check_requirements ()
-{
-	if [[ "$(host_arch_new)" != "amd64" ]]; then
-		echo-error "Host architecture not supported" \
-			"This feature is only available on ${yellow}amd64${NC} architecture."
-		# Quit here unless were are in debug mode
-		! [[ ${FIN_DEBUG} == 1 || "${1}" == "debug" ]] && exit 1
-	fi
-}
-
 # Check whether cloudflared container is running
 cloudflared_is_running ()
 {
@@ -8714,7 +8703,6 @@ case "$1" in
 		ngrok_share "$@"
 		;;
 	share-v2)
-		cloudflared_check_requirements
 		shift
 		case "$1" in
 			start)
