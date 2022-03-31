@@ -6078,7 +6078,6 @@ ngrok_share ()
 # Check whether cloudflared container is running
 cloudflared_is_running ()
 {
-	load_configuration
 	# docker ps is about 1s faster than docker-compose ps
 	local container_id=$(docker ps --quiet --filter "name=${COMPOSE_PROJECT_NAME_SAFE}_cloudflared_1")
 	[[ "${container_id}" != "" ]] && return 0 || return 1
@@ -6093,7 +6092,6 @@ cloudflared_get_status ()
 # Output cloudflared container logs
 cloudflared_get_logs ()
 {
-	load_configuration
 	# docker logs is about 1s faster than docker-compose logs
 	docker logs "${COMPOSE_PROJECT_NAME_SAFE}_cloudflared_1"
 }
@@ -6121,10 +6119,8 @@ cloudflared_print_status ()
 # Enable and start cloudflared integration
 cloudflared_start ()
 {
-	# Write the variables into docksal-local.env
-	config_set --env=local "CLOUDFLARED_ENABLED=1"
-	# Force re-reading of configuration files and updated stack
-	COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
+	config_set --env=local "CLOUDFLARED_ENABLED=1" 1>/dev/null
+	load_configuration 1>/dev/null # Reload stack config after variable update
 	up
 
 	sleep 10 # Give the tunnel some time to initialize
@@ -6134,10 +6130,9 @@ cloudflared_start ()
 # Disable and remove cloudflared integration
 cloudflared_stop ()
 {
-	# Remove the variables from docksal-local.env
-	config_remove --env=local "CLOUDFLARED_ENABLED"
-	# Force re-reading of configuration files and updated stack
-	COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
+	config_remove --env=local "CLOUDFLARED_ENABLED" 1>/dev/null
+	unset CLOUDFLARED_ENABLED
+	load_configuration 1>/dev/null # Reload stack config after variable update
 	up
 }
 
@@ -8703,6 +8698,7 @@ case "$1" in
 		ngrok_share "$@"
 		;;
 	share-v2)
+		load_configuration
 		shift
 		case "$1" in
 			start)
