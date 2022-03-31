@@ -4,7 +4,7 @@
 # - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
 # - PHP 7.4
 # - Varnish 6.6
-# - Redis 6.0
+# - Redis 5.0
 # - ApacheSolr 3.6
 
 version: "3.9"
@@ -50,7 +50,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: redis
     # Pin Redis version
-    image: ${REDIS_IMAGE:-wodby/redis:6.0}
+    image: ${REDIS_IMAGE:-wodby/redis:5.0}
 
   # http(s)://solr.VIRTUAL_HOST/solr
   solr:
