@@ -6366,6 +6366,7 @@ load_configuration ()
 	# Re-load global env file once again, since 'up' resets some variables to force re-reading config
 	set -a; source "$CONFIG_ENV"; set +a
 
+	ENV_FILE=""
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
@@ -6388,87 +6389,85 @@ load_configuration ()
 	# This is used to print the list of included env files in `fin config`
 	export ENV_FILE
 
-	# Set COMPOSE_FILE unless it has been already set by user
+	COMPOSE_FILE=""
+	yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+
+	# Allow to define the stack file via DOCKSAL_STACK
+	# Set it to "default" if empty and there is no project yml file
+	[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
+	[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
+	stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+	[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
+		echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
+			"Stack file does not exist: $stack_yml_file" &&
+		exit 1
+
+	# Include both the stack and the project yml files if both exist
+	if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
+		COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
+	# Otherwise try including only one that exists
+	else
+		[[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
+		[[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
+	fi
+
+	# Throw an error if COMPOSE_FILE is empty here
 	if [[ "$COMPOSE_FILE" == "" ]]; then
-		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+		echo-error "No configuration files found." "Expected in $yml_file"
+		exit 1
+	else
+		# Include docksal-local.yml (if exists)
+		# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+		local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
+		[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
+	fi
 
-		# Allow to define the stack file via DOCKSAL_STACK
-		# Set it to "default" if empty and there is no project yml file
-		[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
-		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
-		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
-		[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
-			echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
-				"Stack file does not exist: $stack_yml_file" &&
+	DOCKSAL_VOLUMES=""
+	# Include a volumes yml if requested. Use bind mount volumes by default.
+	if is_mac; then
+		# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
+	else
+		# Bind mounted volumes on all other systems
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+	fi
+	if [[ "$DOCKSAL_VOLUMES" != "disabled" ]]; then
+		volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+		if [[ -f "$volumes_yml_file" ]]; then
+			COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
+		else
+			echo-error "Volumes definition not found in ${volumes_yml_file}." \
+				"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
+				"You may need to run ${yellow}fin update${NC} to download volume definitions."
 			exit 1
+		fi
+	fi
+	export DOCKSAL_VOLUMES
 
-		# Include both the stack and the project yml files if both exist
-		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
-			COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
-		# Otherwise try including only one that exists
-		else
-			[[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
-			[[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
-		fi
+	# Fix bind volumes on Docker Desktop v2.3.0.2+
+	# See https://github.com/docksal/docksal/issues/1368
+	overrides_dd_bind_file="$(get_config_dir_dc)/stacks/overrides-dd-bind.yml"
+	if [[ -f "${overrides_dd_bind_file}" ]] && \
+		is_docker_native && \
+		(( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.3.0.2') )) && \
+		[[ "$DOCKSAL_VOLUMES" == "bind" ]];
+	then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_dd_bind_file}"
+	fi
 
-		# Throw an error if COMPOSE_FILE is empty here
-		if [[ "$COMPOSE_FILE" == "" ]]; then
-			echo-error "No configuration files found." "Expected in $yml_file"
-			exit 1
-		else
-			# Include docksal-local.yml (if exists)
-			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
-			local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
-			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
-		fi
+	# Enable VSCode (Coder) IDE
+	overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
+	if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
+	fi
 
-		# Include a volumes yml if requested. Use bind mount volumes by default.
-		if is_mac; then
-			# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
-			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
-		else
-			# Bind mounted volumes on all other systems
-			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
-		fi
-		if [[ "$DOCKSAL_VOLUMES" != "disabled" ]]; then
-			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-			if [[ -f "$volumes_yml_file" ]]; then
-				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
-			else
-				echo-error "Volumes definition not found in ${volumes_yml_file}." \
-					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
-					"You may need to run ${yellow}fin update${NC} to download volume definitions."
-				exit 1
-			fi
-		fi
-		export DOCKSAL_VOLUMES
-
-		# Fix bind volumes on Docker Desktop v2.3.0.2+
-		# See https://github.com/docksal/docksal/issues/1368
-		overrides_dd_bind_file="$(get_config_dir_dc)/stacks/overrides-dd-bind.yml"
-		if [[ -f "${overrides_dd_bind_file}" ]] && \
-			is_docker_native && \
-			(( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.3.0.2') )) && \
-			[[ "$DOCKSAL_VOLUMES" == "bind" ]];
-		then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_dd_bind_file}"
-		fi
-
-		# Enable VSCode (Coder) IDE
-		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
-		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
-		fi
-
-		# Enable xhprof integration
-		overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
-		if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
-		fi
+	# Enable xhprof integration
+	overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
+	if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
 	fi
 
 	export COMPOSE_FILE
-	export DOCKSAL_ENVIRONMENT
 
 	# Set project name if it was not set previously
 	if [[ -d $(get_project_path) ]]; then
@@ -8213,15 +8212,8 @@ case "$1" in
 			init "$@"
 		fi
 		;;
-	start)
+	start|up)
 		load_configuration
-		check_for_updates
-		shift
-		up
-		;;
-	up)
-		# force re-reading of configuration files
-		COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
 		check_for_updates
 		shift
 		up
@@ -8294,15 +8286,8 @@ case "$1" in
 				check_for_updates
 				project_status
 				;;
-			start)
+			start|up)
 				load_configuration
-				check_for_updates
-				shift
-				up
-				;;
-			up)
-				# force re-reading of configuration files
-				COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
 				check_for_updates
 				shift
 				up
