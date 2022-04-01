@@ -129,6 +129,10 @@ is_github_actions ()
 	[[ "$GITHUB_RUN_ID" != "" ]]
 }
 
+is_gitpod () {
+	[[ "$GITPOD_HOST" != "" ]]
+}
+
 # Returns x86_64 / aarch64 (aka "old school")
 host_arch () {
 	case $(uname -m) in
@@ -372,6 +376,7 @@ URL_REPO_BACKDROP="https://github.com/docksal/boilerplate-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
 STACKS_OVERRIDES_CLOUDFLARED="overrides-cloudflared.yml"
+STACKS_OVERRIDES_GITPOD="overrides-gitpod.yml"
 STACKS_OVERRIDES_DD_BIND="overrides-dd-bind.yml"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
 STACKS_OVERRIDES_XHPROF="overrides-xhprof.yml"
@@ -925,7 +930,7 @@ is_docksal_running ()
 	# will fail. However, there could be cases, when system services have been already started and after that hosts
 	# network settings are adjusted/corrupted externally.
 	is_mac && is_docker_native && ! check_network_mac && return 1
-	is_linux && ! check_network_alpine && return 1
+	is_linux && ! is_gitpod && ! check_network_alpine && return 1
 	is_windows && is_docker_native && ! check_network_windows && return 1
 	is_wsl && is_docker_native && ! check_network_wsl && return 1
 
@@ -976,7 +981,7 @@ check_docksal_environment ()
 {
 	# Since network configuration is not permanent on Linux we need to restore it when possible
 	# check_docksal_environment is a good place to do it, but we don't need to know the result
-	if is_linux; then
+	if is_linux && ! is_gitpod; then
 		configure_network_alpine "on"
 		configure_resolver_alpine "on"
 	fi
@@ -1154,7 +1159,7 @@ docker_desktop_version ()
 is_docker_version ()
 {
 	# Skip the check on GitHub Actions/Play-with-Docker/Katacoda
-	( is_github_actions || is_pwd || is_katacoda ) && return
+	( is_github_actions || is_pwd || is_katacoda || is_gitpod ) && return
 
 	# Rely on our own docker binary, except on Linux
 	if is_linux; then
@@ -1170,7 +1175,7 @@ is_docker_version ()
 is_docker_server_version ()
 {
 	# Skip the check on GitHub Actions/Play-with-Docker/Katacoda
-	( is_github_actions || is_pwd || is_katacoda ) && return
+	( is_github_actions || is_pwd || is_katacoda || is_gitpod ) && return
 
 	# Rely on our own docker binary, except on Linux
 	if is_linux; then
@@ -3803,6 +3808,8 @@ stats_ping ()
 	is_pwd && source='PWD'
 	# Katacoda instances
 	is_katacoda && source='Katacoda'
+	# Gitpod instance
+	is_gitpod && source="Gitpod"
 
 	curl -kfsL \
 		--user-agent "$user_agent" \
@@ -3941,6 +3948,7 @@ configure_network ()
 	fi
 
 	echo-green "Configuring network settings..."
+	is_gitpod && return 0
 	is_linux && configure_network_alpine "$mode" && return $?
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
@@ -4018,7 +4026,7 @@ install_proxy_service ()
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
 
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
-	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+	( is_ci || is_pwd || is_katacoda || is_gitpod ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
 
 	# Enable auto-start of projects by default in CI environments
 	is_ci && PROJECT_AUTOSTART=${PROJECT_AUTOSTART:-1}
@@ -4920,6 +4928,7 @@ update_config_files ()
 {
 	files_to_download="
 			$STACKS_OVERRIDES_CLOUDFLARED
+			$STACKS_OVERRIDES_GITPOD
 			$STACKS_OVERRIDES_DD_BIND
 			$STACKS_OVERRIDES_IDE
 			$STACKS_OVERRIDES_XHPROF
@@ -5532,7 +5541,7 @@ run_cli ()
 
 	# Address an edge case when run-cli is run in the home folder (/root) on PWD/Katacoda
 	# See https://github.com/docksal/docksal/issues/661
-	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda); then
+	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda || is_gitpod); then
 		chown 1000:1000 $HOME
 	fi
 
@@ -6506,6 +6515,12 @@ load_configuration ()
 		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_cloudflared_file}"
 	fi
 
+	# Enable gitpod integration
+	overrides_gitpod_file="${get_config_dir_d}/stacks/overrides-gitpod.yml"
+	if [[ -f "${overrides_gitpod_file}" ]] && [[ is_gitpod ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_gitpod_file}"
+	fi
+
 	export COMPOSE_FILE
 
 	# Set project name if it was not set previously
@@ -6528,6 +6543,8 @@ load_configuration ()
 	if is_pwd || is_katacoda; then
 		# Don't include .$DOCKSAL_DNS_DOMAIN in Play-with-Docker or Katacoda to keep the URL shorter.
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE}
+	elif is_gitpod; then
+		export VIRTUAL_HOST=${DOCKSAL_VHOST_PROXY_PORT_HTTP}-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}
 	else
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
 	fi
@@ -7352,6 +7369,18 @@ if ! is_supported_arch; then
 	! [[ ${FIN_DEBUG} == 1 || "${1}" == "debug" ]] && exit 1
 fi
 
+# Gitpod Configuration
+if is_gitpod; then
+	export DOCKSAL_VHOST_PROXY_PORT_HTTP=8080
+	export DOCKSAL_VHOST_PROXY_PORT_HTTPS=4443
+	export DOCKSAL_NO_DNS_RESOLVER=1
+	export DOCKSAL_DNS_DISABLED=1
+	# Fix the permissions to project directory
+	[[ "$(stat -c "%a" ${GITPOD_REPO_ROOT})" < "755" ]] && 
+		echo-warning "${yellow}Fixing Gitpod Repo Root Permissions${NC}" && 
+		chmod 755 ${GITPOD_REPO_ROOT}
+fi
+
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
 if is_tty; then
@@ -7430,7 +7459,7 @@ if ! is_windows; then
 		# Note: php-fpm inside cli will fail to start as uid=0
 		# Don't display this in PWD and Katacoda since users do not control those environments anyway.
 		# TODO: handle this case better
-		if ! (is_pwd || is_katacoda); then
+		if ! (is_pwd || is_katacoda || is_gitpod); then
 			echo-notice "Running as root is not recommended"
 		fi
 	fi
