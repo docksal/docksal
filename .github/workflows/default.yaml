@@ -39,6 +39,7 @@ jobs:
           - db
           - system
           - commands
+          - share-v2
           #- acquia
           #- pantheon
           #- platform

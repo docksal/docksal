@@ -371,6 +371,7 @@ URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/boilerplate-symfony-webapp.g
 URL_REPO_BACKDROP="https://github.com/docksal/boilerplate-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
+STACKS_OVERRIDES_CLOUDFLARED="overrides-cloudflared.yml"
 STACKS_OVERRIDES_DD_BIND="overrides-dd-bind.yml"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
 STACKS_OVERRIDES_XHPROF="overrides-xhprof.yml"
@@ -1718,6 +1719,7 @@ show_help ()
 	printh "pull [options]" "Commands for interacting with Hosting Providers (${yellow}fin help pull${NC})"
 	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
 	printh "share" "Create temporary public url for current project using ngrok"
+	printh "share-v2" "Create a temporary public URL for the project using Cloudflare Tunnel"
 	printh "vhosts" "List all virtual *.docksal hosts registered in Docksal proxy"
 	echo
 
@@ -2244,7 +2246,7 @@ show_help_alias ()
 show_help_share ()
 {
 	echo
-	echo "Share the project via public url generated with ngrok"
+	echo "Create a temporary public URL for the project using ngrok"
 
 	echo
 	echo "Usage: share [options]"
@@ -2261,6 +2263,27 @@ show_help_share ()
 	echo
 	echo "Examples:"
 	printh "fin share --host=subdomain.mysite.docksal" "Expose certain subdomain"
+}
+
+show_help_share-v2 ()
+{
+	echo
+	echo "Create a temporary public URL for the project using Cloudflare Tunnel"
+
+	echo
+	echo "Usage: share-v2 [command]"
+
+	echo
+	echo "Commands:"
+	printh "start" "Start tunnel and print public URL"
+	printh "stop" "Stop tunnel"
+	printh "status" "Prints tunnel status and public URL (if Active)"
+	printh "url" "Prints tunnel public URL"
+	printh "logs" "Prints tunnel container logs"
+
+	echo
+	echo "Examples:"
+	printh "fin share-v2 start" "Start tunnel and print public URL"
 }
 
 show_help_config ()
@@ -4896,6 +4919,7 @@ update_tools ()
 update_config_files ()
 {
 	files_to_download="
+			$STACKS_OVERRIDES_CLOUDFLARED
 			$STACKS_OVERRIDES_DD_BIND
 			$STACKS_OVERRIDES_IDE
 			$STACKS_OVERRIDES_XHPROF
@@ -5995,6 +6019,69 @@ ngrok_share ()
 		sh -c "${ARGS}"
 }
 
+# Cloudflare Tunnel (cloudflared) integration
+
+# Check whether cloudflared container is running
+cloudflared_is_running ()
+{
+	# docker ps is about 1s faster than docker-compose ps
+	local container_id=$(docker ps --quiet --filter "name=${COMPOSE_PROJECT_NAME_SAFE}_cloudflared_1")
+	[[ "${container_id}" != "" ]] && return 0 || return 1
+}
+
+# Get cloudflared container status
+cloudflared_get_status ()
+{
+	cloudflared_is_running && echo "Active" || echo "Inactive"
+}
+
+# Output cloudflared container logs
+cloudflared_get_logs ()
+{
+	# docker logs is about 1s faster than docker-compose logs
+	docker logs "${COMPOSE_PROJECT_NAME_SAFE}_cloudflared_1"
+}
+
+# Extracts tunnel host name from cloudflared container logs
+cloudflared_get_host ()
+{
+	cloudflared_get_logs 2>&1 | grep "trycloudflare.com" | tail -1 | awk '{print $4}'
+}
+
+# Nicely print tunnel URL
+cloudflared_print_url ()
+{
+	echo -e "${green}Public URL:${NC} ${yellow}$(cloudflared_get_host)${NC}"
+}
+
+# Nicely print tunnel status
+cloudflared_print_status ()
+{
+	echo -e "${green}Status:${NC} $(cloudflared_get_status)"
+	cloudflared_is_running &&
+		echo -e "${green}Public URL:${NC} ${yellow}$(cloudflared_get_host)${NC}"
+}
+
+# Enable and start cloudflared integration
+cloudflared_start ()
+{
+	config_set --env=local "CLOUDFLARED_ENABLED=1" 1>/dev/null
+	load_configuration 1>/dev/null # Reload stack config after variable update
+	up
+
+	sleep 10 # Give the tunnel some time to initialize
+	cloudflared_print_url
+}
+
+# Disable and remove cloudflared integration
+cloudflared_stop ()
+{
+	config_remove --env=local "CLOUDFLARED_ENABLED" 1>/dev/null
+	unset CLOUDFLARED_ENABLED
+	load_configuration 1>/dev/null # Reload stack config after variable update
+	up
+}
+
 # Print information required for issue diagnostics
 # --all will print additional information that is hidden by default as it's not usually needed
 diagnose ()
@@ -6312,6 +6399,7 @@ load_configuration ()
 	# Re-load global env file once again, since 'up' resets some variables to force re-reading config
 	set -a; source "$CONFIG_ENV"; set +a
 
+	ENV_FILE=""
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
@@ -6334,87 +6422,91 @@ load_configuration ()
 	# This is used to print the list of included env files in `fin config`
 	export ENV_FILE
 
-	# Set COMPOSE_FILE unless it has been already set by user
+	COMPOSE_FILE=""
+	yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+
+	# Allow to define the stack file via DOCKSAL_STACK
+	# Set it to "default" if empty and there is no project yml file
+	[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
+	[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
+	stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+	[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
+		echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
+			"Stack file does not exist: $stack_yml_file" &&
+		exit 1
+
+	# Include both the stack and the project yml files if both exist
+	if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
+		COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
+	# Otherwise try including only one that exists
+	else
+		[[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
+		[[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
+	fi
+
+	# Throw an error if COMPOSE_FILE is empty here
 	if [[ "$COMPOSE_FILE" == "" ]]; then
-		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+		echo-error "No configuration files found." "Expected in $yml_file"
+		exit 1
+	else
+		# Include docksal-local.yml (if exists)
+		# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+		local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
+		[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
+	fi
 
-		# Allow to define the stack file via DOCKSAL_STACK
-		# Set it to "default" if empty and there is no project yml file
-		[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
-		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
-		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
-		[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
-			echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
-				"Stack file does not exist: $stack_yml_file" &&
+	DOCKSAL_VOLUMES=""
+	# Include a volumes yml if requested. Use bind mount volumes by default.
+	if is_mac; then
+		# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
+	else
+		# Bind mounted volumes on all other systems
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+	fi
+	if [[ "$DOCKSAL_VOLUMES" != "disabled" ]]; then
+		volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+		if [[ -f "$volumes_yml_file" ]]; then
+			COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
+		else
+			echo-error "Volumes definition not found in ${volumes_yml_file}." \
+				"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
+				"You may need to run ${yellow}fin update${NC} to download volume definitions."
 			exit 1
+		fi
+	fi
+	export DOCKSAL_VOLUMES
 
-		# Include both the stack and the project yml files if both exist
-		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
-			COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
-		# Otherwise try including only one that exists
-		else
-			[[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
-			[[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
-		fi
+	# Fix bind volumes on Docker Desktop v2.3.0.2+
+	# See https://github.com/docksal/docksal/issues/1368
+	overrides_dd_bind_file="$(get_config_dir_dc)/stacks/overrides-dd-bind.yml"
+	if [[ -f "${overrides_dd_bind_file}" ]] && \
+		is_docker_native && \
+		(( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.3.0.2') )) && \
+		[[ "$DOCKSAL_VOLUMES" == "bind" ]];
+	then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_dd_bind_file}"
+	fi
 
-		# Throw an error if COMPOSE_FILE is empty here
-		if [[ "$COMPOSE_FILE" == "" ]]; then
-			echo-error "No configuration files found." "Expected in $yml_file"
-			exit 1
-		else
-			# Include docksal-local.yml (if exists)
-			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
-			local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
-			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
-		fi
+	# Enable VSCode (Coder) IDE
+	overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
+	if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
+	fi
 
-		# Include a volumes yml if requested. Use bind mount volumes by default.
-		if is_mac; then
-			# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
-			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
-		else
-			# Bind mounted volumes on all other systems
-			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
-		fi
-		if [[ "$DOCKSAL_VOLUMES" != "disabled" ]]; then
-			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-			if [[ -f "$volumes_yml_file" ]]; then
-				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
-			else
-				echo-error "Volumes definition not found in ${volumes_yml_file}." \
-					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
-					"You may need to run ${yellow}fin update${NC} to download volume definitions."
-				exit 1
-			fi
-		fi
-		export DOCKSAL_VOLUMES
+	# Enable xhprof integration
+	overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
+	if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
+	fi
 
-		# Fix bind volumes on Docker Desktop v2.3.0.2+
-		# See https://github.com/docksal/docksal/issues/1368
-		overrides_dd_bind_file="$(get_config_dir_dc)/stacks/overrides-dd-bind.yml"
-		if [[ -f "${overrides_dd_bind_file}" ]] && \
-			is_docker_native && \
-			(( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.3.0.2') )) && \
-			[[ "$DOCKSAL_VOLUMES" == "bind" ]];
-		then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_dd_bind_file}"
-		fi
-
-		# Enable VSCode (Coder) IDE
-		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
-		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
-		fi
-
-		# Enable xhprof integration
-		overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
-		if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
-		fi
+	# Enable Cloudflare Tunnel (cloudflared) integration
+	overrides_cloudflared_file="$(get_config_dir_dc)/stacks/overrides-cloudflared.yml"
+	if [[ -f "${overrides_cloudflared_file}" ]] && [[ "$CLOUDFLARED_ENABLED" != "" ]] && [[ "$CLOUDFLARED_ENABLED" != "0" ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_cloudflared_file}"
 	fi
 
 	export COMPOSE_FILE
-	export DOCKSAL_ENVIRONMENT
 
 	# Set project name if it was not set previously
 	if [[ -d $(get_project_path) ]]; then
@@ -6541,8 +6633,12 @@ config_show ()
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
 	echo "VIRTUAL_HOST_ALIASES: *.${VIRTUAL_HOST}"
 	echo "IP: $DOCKSAL_IP"
+	echo ""
 
-	echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$DOCKSAL_IP/")
+	echo "MySQL endpoint:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$DOCKSAL_IP/")
+	echo "Public URL:" $(cloudflared_get_host)
+
+	# Stop here for "fin config env"
 	[[ "$1" == "env" ]] && return
 
 	echo
@@ -7513,15 +7609,8 @@ case "$1" in
 			init "$@"
 		fi
 		;;
-	start)
+	start|up)
 		load_configuration
-		check_for_updates
-		shift
-		up
-		;;
-	up)
-		# force re-reading of configuration files
-		COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
 		check_for_updates
 		shift
 		up
@@ -7594,15 +7683,8 @@ case "$1" in
 				check_for_updates
 				project_status
 				;;
-			start)
+			start|up)
 				load_configuration
-				check_for_updates
-				shift
-				up
-				;;
-			up)
-				# force re-reading of configuration files
-				COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
 				check_for_updates
 				shift
 				up
@@ -7914,6 +7996,36 @@ case "$1" in
 		load_configuration
 		shift
 		ngrok_share "$@"
+		;;
+	share-v2)
+		load_configuration
+		shift
+		case "$1" in
+			start)
+				shift
+				cloudflared_start
+				;;
+			stop)
+				shift
+				cloudflared_stop
+				;;
+			status)
+				shift
+				cloudflared_print_status
+				;;
+			url)
+				shift
+				cloudflared_print_url
+				;;
+			logs)
+				shift
+				cloudflared_get_logs
+				;;
+			*)
+				shift
+				show_help_share-v2
+				;;
+		esac
 		;;
 	cleanup)
 		# no load_configuration
