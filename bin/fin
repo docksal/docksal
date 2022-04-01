@@ -7367,6 +7367,7 @@ if ! is_supported_arch; then
 		"Only ${yellow}amd64${NC} and ${yellow}arm64${NC} architectures are supported."
 	# Quit here unless were are in debug mode
 	! [[ ${FIN_DEBUG} == 1 || "${1}" == "debug" ]] && exit 1
+fi
 
 # Gitpod Configuration
 if is_gitpod; then
