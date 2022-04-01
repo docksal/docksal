@@ -500,3 +500,16 @@ You can diagnose this issue with `fin exec df -lh`. If a disk shows close to 100
   - In the UI, go to Preferences > Resources
   - Increase the "Disk image size"
   - `fin up` to restart your project
+
+## Issue 20. Mobile Device Management (MDM) Services
+
+Mobile Device Management (MDMs) have become more popular lately for organizations to manage their devices. Kandji and JumpCloud are just a few examples.
+
+Possible symptoms:
+
+- Asking constantly for user account password `sudo`
+- NFS timing out causing issues with projects mounting in Docker
+
+### How To Resolve
+
+Contact your IT Services and mention that you will need sudo access as well as NFS services.
