@@ -22,12 +22,12 @@ Add the `pma` service under the `services` section in `.docksal/docksal.yml`:
       - PMA_USER=root
       - PMA_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
     labels:
-      - io.docksal.virtual-host=pma.${VIRTUAL_HOST}
+      - io.docksal.virtual-host=pma-${VIRTUAL_HOST}
 ```
 
 Apply new configuration with `fin project start` (`fin p start`).
 
-Use `http://pma.<VIRTUAL_HOST>` to access the PHPMyAdmin web UI.
+Use `http://pma-<VIRTUAL_HOST>` to access the PHPMyAdmin web UI.
 
 
 ## Setup (as a project addon)
