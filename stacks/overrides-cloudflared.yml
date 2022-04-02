@@ -1,4 +1,4 @@
-# Adds Cloudflare Argo Tunnel (cloudflared) service to the project
+# Adds Cloudflare Tunnel (cloudflared) service to the project
 
 version: "3.9"
 
