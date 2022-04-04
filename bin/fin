@@ -3331,27 +3331,24 @@ project_create ()
 		echo -e "${green}    1.${NC}  Drupal 9 (Composer Version)"
 		echo -e "${green}    2.${NC}  Drupal 9 (BLT Version)"
 		echo -e "${green}    3.${NC}  Drupal 9"
-		echo -e "${green}    4.${NC}  Drupal 8"
-		echo -e "${green}    5.${NC}  Drupal 8 (Composer Version)"
-		echo -e "${green}    6.${NC}  Drupal 8 (BLT Version)"
-		echo -e "${green}    7.${NC}  Drupal 7"
-		echo -e "${green}    8.${NC}  Wordpress"
-		echo -e "${green}    9.${NC}  Magento"
-		echo -e "${green}    10.${NC} Laravel"
-		echo -e "${green}    11.${NC} Symfony Skeleton"
-		echo -e "${green}    12.${NC} Symfony WebApp"
-		echo -e "${green}    13.${NC} Grav CMS"
-		echo -e "${green}    14.${NC} Backdrop CMS"
+		echo -e "${green}    4.${NC}  Drupal 7"
+		echo -e "${green}    5.${NC}  Wordpress"
+		echo -e "${green}    6.${NC}  Magento"
+		echo -e "${green}    7.${NC} Laravel"
+		echo -e "${green}    8.${NC} Symfony Skeleton"
+		echo -e "${green}    9.${NC} Symfony WebApp"
+		echo -e "${green}    10.${NC} Grav CMS"
+		echo -e "${green}    11.${NC} Backdrop CMS"
 		echo
 		echo -e "${acqua}  Go based${NC}"
-		echo -e "${green}    15.${NC} Hugo"
+		echo -e "${green}    12.${NC} Hugo"
 		echo
 		echo -e "${lime}  JS based${NC}"
-		echo -e "${green}    16.${NC} Gatsby JS"
-		echo -e "${green}    17.${NC} Angular"
+		echo -e "${green}    13.${NC} Gatsby JS"
+		echo -e "${green}    14.${NC} Angular"
 		echo
 		echo -e "${magenta}  HTML${NC}"
-		echo -e "${green}    18.${NC} Static HTML site"
+		echo -e "${green}    15.${NC} Static HTML site"
 		echo
 		echo -e "${red}  Custom${NC}"
 		echo -e "${green}    0.${NC} Custom git repository"
@@ -3359,7 +3356,7 @@ project_create ()
 		echo -e ""
 
 		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
-		local choices=18
+		local choices=15
 
 		while [[ "$choice" == "" ]]; do
 			read -p "Enter your choice (0-$choices): " choice
@@ -3388,76 +3385,61 @@ project_create ()
 			target_repo="$URL_REPO_DRUPAL9"
 			;;
 		4)
-			target_cms="Drupal 8"
-			target_host_name_search_string="drupal8.docksal"
-			target_repo="$URL_REPO_DRUPAL8"
-			;;
-		5)
-			target_cms="Drupal 8 (Composer Version)"
-			target_host_name_search_string="drupal8.docksal"
-			target_repo="$URL_REPO_DRUPAL8COMPOSER"
-			;;
-		6)
-			target_cms="Drupal 8 (BLT Version)"
-			target_host_name_search_string="drupal8.docksal"
-			target_repo="$URL_REPO_DRUPAL8BLT"
-			;;
-		7)
 			target_cms="Drupal 7"
 			target_host_name_search_string="drupal7.docksal"
 			target_repo="$URL_REPO_DRUPAL7"
 			;;
-		8)
+		5)
 			target_cms="Wordpress"
 			target_host_name_search_string="wordpress.docksal"
 			target_repo="$URL_REPO_WORDPRESS"
 			;;
-		9)
+		6)
 			target_cms="Magento"
 			target_host_name_search_string="magento.docksal"
 			target_repo="$URL_REPO_MAGENTO"
 			;;
-		10)
+		7)
 			target_cms="Laravel"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_LARAVEL"
 			;;
-		11)
+		8)
 			target_cms="Symfony Skeleton"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_SKELETON"
 			;;
-		12)
+		9)
 			target_cms="Symfony WebApp"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_WEBAPP"
 			;;
-		13)
+		10)
 			target_cms="Grav CMS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GRAV"
 			;;
-		14)
+		11)
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
 			target_repo="$URL_REPO_BACKDROP"
 			;;
-		15)
+		12)
 			target_cms="Hugo"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_HUGO"
 			;;
-		16)
+		13)
 			target_cms="Gatsby JS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GATSBY"
 			;;
-		17)
+		14)
 			target_cms="Angular"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_ANGULAR"
 			;;
-		18)
+		15)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
