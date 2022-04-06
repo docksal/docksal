@@ -22,7 +22,7 @@ services:
   # Web: Apache
   apache:
     hostname: web
-    image: ${WEB_IMAGE:-docksal/apache:2.4-2.4}
+    image: ${WEB_IMAGE:-docksal/apache:2.4-2.5}
     volumes:
       - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
