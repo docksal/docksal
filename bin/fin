@@ -415,7 +415,7 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.4}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.8}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.2}
-IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php7.4-3.1}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php7.4-3.2}
 
 #---------------------------- Helper functions --------------------------------
 

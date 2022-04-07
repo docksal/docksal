@@ -37,13 +37,13 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `CLI_IMAGE` variable in `.docksal/docksal.env`, e.g.:
 
 ```
-CLI_IMAGE='docksal/cli:php8.1-3.1'
+CLI_IMAGE='docksal/cli:php8.1-3.2'
 ```
 
 This can also be set with `fin config set`.
 
 ```bash
-fin config set CLI_IMAGE='docksal/cli:php8.1-3.1'
+fin config set CLI_IMAGE='docksal/cli:php8.1-3.2'
 ```
 
 Run `fin project reset cli` (`fin p reset cli`) to properly reset and update the `cli` service.

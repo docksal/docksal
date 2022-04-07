@@ -31,7 +31,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
     # Pin PHP version
-    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.1}
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.2}
 
   # http(s)://varnish.VIRTUAL_HOST
   varnish:
