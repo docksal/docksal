@@ -24,6 +24,7 @@ sections="
 	pull
 	run-cli
 	share
+	share-v2
 
 	cleanup
 	update
