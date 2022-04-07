@@ -86,7 +86,7 @@ v3 images bundle stock Debian versions of Ruby and Python, thus there is a versi
 
 | Image| Notes |
 |------|-------|
-| `docksal/apache:2.4-2.4` | *Default* Apache 2.4 |
+| `docksal/apache:2.4-2.5` | *Default* Apache 2.4 |
 | `docksal/apache:2.4`     | Apache 2.4 (latest) |
 
 ## Nginx 

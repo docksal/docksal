@@ -63,13 +63,13 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `WEB_IMAGE` variable in `.docksal/docksal.env`, e.g.:
 
 ```bash
-WEB_IMAGE='docksal/apache:2.4-2.4'
+WEB_IMAGE='docksal/apache:2.4-2.5'
 ```
 
 This can also be set with `fin config set`.
 
 ```bash
-fin config set WEB_IMAGE='docksal/apache:2.4-2.4'
+fin config set WEB_IMAGE='docksal/apache:2.4-2.5'
 ```
 
 Remember to run `fin project restart web` (`fin p restart web`) to apply the configuration.

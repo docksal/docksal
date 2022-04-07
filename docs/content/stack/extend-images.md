@@ -83,7 +83,7 @@ Here's another example for `web`:
 
 ```Dockerfile
 # Use a stock Docksal image as the base
-FROM docksal/apache:2.4-2.4
+FROM docksal/apache:2.4-2.5
 
 RUN set -x \
 	# Enabled extra modules
