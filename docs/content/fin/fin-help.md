@@ -497,6 +497,25 @@ Examples:
   fin share --host=subdomain.mysite.docksal	Expose certain subdomain
 ```
 
+## share-v2 {#share-v2}
+
+```text
+
+Create a temporary public URL for the project using Cloudflare Tunnel
+
+Usage: share-v2 [command]
+
+Commands:
+  start                    	Start tunnel and print public URL
+  stop                     	Stop tunnel
+  status                   	Prints tunnel status and public URL (if Active)
+  url                      	Prints tunnel public URL
+  logs                     	Prints tunnel container logs
+
+Examples:
+  fin share-v2 start       	Start tunnel and print public URL
+```
+
 ## cleanup {#cleanup}
 
 ```text

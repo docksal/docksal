@@ -259,7 +259,7 @@ services:
     << : *logging
     << : *healthcheck
 
-  # Cloudflare Argo Tunnel
+  # Cloudflare Tunnel
   cloudflared:
     hostname: cloudflared
     image: ${CLOUDFLARED_IMAGE:-raspbernetes/cloudflared:latest}
