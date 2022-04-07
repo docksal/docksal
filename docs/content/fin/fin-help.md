@@ -8,7 +8,7 @@ aliases:
 ## fin {#fin}
 
 ```text
-Docksal command line utility (v1.108.0)
+Docksal command line utility (v1.110.0)
 
 Docksal Docs:      https://docs.docksal.io/
 Sponsor ❤ Docksal: https://github.com/sponsors/docksal
@@ -37,6 +37,7 @@ Commands:
   pull [options]           	Commands for interacting with Hosting Providers (fin help pull)
   run-cli (rc) <command>   	Run a command in a standalone cli container in the current directory (fin help run-cli)
   share                    	Create temporary public url for current project using ngrok
+  share-v2                 	Create a temporary public URL for the project using Cloudflare Tunnel
   vhosts                   	List all virtual *.docksal hosts registered in Docksal proxy
 
 Docker command wrappers
@@ -375,6 +376,19 @@ Examples:
 ```text
 
 
+Usage:  docker compose logs [SERVICE...]
+
+View output from containers
+
+Options:
+  -f, --follow          Follow log output.
+      --no-color        Produce monochrome output.
+      --no-log-prefix   Don't print prefix in logs.
+      --since string    Show logs since timestamp (e.g. 2013-01-02T13:23:37Z) or relative (e.g. 42m for 42 minutes)
+      --tail string     Number of lines to show from the end of the logs for each container. (default "all")
+  -t, --timestamps      Show timestamps.
+      --until string    Show logs before a timestamp (e.g. 2013-01-02T13:23:37Z) or relative (e.g. 42m for 42 minutes)
+
 Examples:
   fin logs web             	Show web container logs
   fin logs -f web          	Show web container logs and follow it
@@ -383,49 +397,60 @@ Examples:
 ## pull {#pull}
 
 ```text
+Docksal command line utility (v1.110.0)
 
-Docksal Provider Interaction commands.
+Docksal Docs:      https://docs.docksal.io/
+Sponsor ❤ Docksal: https://github.com/sponsors/docksal
 
-Usage: pull <options> <asset>
+Usage:
+  fin [command]            	
 
-Possible Options for Asssets:
-  init                     	Pull a project repo down
-  db                       	Export a database from the provider
-  files                    	Rsync files from remote to local
-  code                     	Execute a pull on code
-  (blank)                  	All (Default)
+Management Commands:
+  addon <command>          	Addons management commands: install, remove (fin help addon)
+  alias <command>          	Manage aliases that allow fin @alias execution (fin help alias)
+  db <command>             	Manage databases (fin help db)
+  hosts <command>          	Hosts file commands: add, remove, list (fin help hosts)
+  project <command>        	Manage project(s) (fin help project)
+  ssh-key <command>        	Manage SSH keys (fin help ssh-key)
+  system <command>         	Manage Docksal state (fin help system)
+  vm <command>             	Manage Docksal VM (fin help vm)
 
-Options:
-  --hosting-platform=<provider>	Platform to interact with.
-                           	Options: acquia, pantheon, platform.sh, drush, wp
-  --hosting-site=<id>      	Site ID on Provider
-  --hosting-env=<env>      	Site Env on Provider
+Commands:
+  bash [service]           	Open shell into service's container. Defaults to cli
+  config [command]         	Show or change configuration (fin help config)
+  exec <command|file>      	Execute a command or a script in cli
+  exec-url <url>           	Download script from URL and run it on host (URL should be public)
+  init                     	Initialize a project (override it with your own automation, see fin help init)
+  image <command>          	Image management commands: registry, save, load (fin help image)
+  logs [service]           	Show service logs (e.g., Apache logs, MySQL logs) and Unison logs (fin help logs)
+  pull [options]           	Commands for interacting with Hosting Providers (fin help pull)
+  run-cli (rc) <command>   	Run a command in a standalone cli container in the current directory (fin help run-cli)
+  share                    	Create temporary public url for current project using ngrok
+  share-v2                 	Create a temporary public URL for the project using Cloudflare Tunnel
+  vhosts                   	List all virtual *.docksal hosts registered in Docksal proxy
 
-Extra Options for Code
-  --sync-git-remote        	The GIT Remote to pull from. (Defaults to origin)
-  --sync-git-branch        	The GIT Branch to pull from. (Defaults to current branch)
+Docker command wrappers
+  docker (d) <command>     	Run Docker commands directly
+  docker-compose (dc) <command>	Run Docker Compose commands directly
+  docker-machine (dm) <command>	Run Docker Machine commands directly
 
-Extra Options for DB
-  --db-user=<user>         	Specify the DB User (Defaults to root)
-  --db-pass=<pass>         	Specify the DB Password (Defaults to root)
-  --db-name=<dbname>       	Specify the DB Name to import into. (Defaults to default)
-  --force                  	Generate and pull a new db dump, rather than using locally cached in /tmp
-  --remote-db=<remotedb>   	Specify the remote DB name to pull. (Used with Acquia)
+Misc. command wrappers
+  composer <command>       	Run Composer commands
+  drush <command>          	Drush command (requires Drupal)
+  drupal <command>         	Drupal Console command (requires Drupal 8)
+  platform <command>       	Platform.sh's CLI (requires docksal/cli 2.3+)
+  terminus <command>       	Pantheon's Terminus (requires docksal/cli 2.1+)
+  wp <command>             	WordPress CLI command (requires WordPress)
 
-Extra Options for Files
-  --rsync-options=<options>	Rsync Options to append.
-  --files-dir=<dir>        	Directory to sync files with.
-                           	Default Drupal: {DOCROOT}/sites/default/files/
-                           	Wordpress Default: {DOCROOT}/wp-content/uploads/
+Diagnostics/maintenance/updates
+  cleanup [options]        	Remove all unused Docker images, unused Docksal volumes and containers
+  diagnose                 	Show diagnostic information for troubleshooting and bug reporting
+  sysinfo                  	Show system information
+  update [options]         	Update Docksal
+  version (--version, v, -v)	Print fin version. [v, -v] prints short version
 
-Examples:
-  fin pull init            	Start a project by pulling the repo from the provider.
-      --hosting-platform=acquia	Provide the Platform Name.
-      --hosting-site=testsiteid	Provide the Site ID.
-      test_project_directory	Specify the directory to clone the project in.
-  fin pull                 	Pull all items from provider
-  fin pull db              	Pull only the db from the provider
-  fin pull db --remote-db=dbname	Pull the db name dbname from the provider. (Acquia Cloud Only)
+Installed Addons:
+  mkcert [g]               	mkcert addon
 ```
 
 ## run-cli {#run-cli}
@@ -457,7 +482,7 @@ Examples:
 
 ```text
 
-Share the project via public url generated with ngrok
+Create a temporary public URL for the project using ngrok
 
 Usage: share [options]
 
