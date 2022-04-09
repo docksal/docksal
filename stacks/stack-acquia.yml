@@ -4,8 +4,8 @@
 # - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
 # - PHP 7.4
 # - Varnish 6.6
-# - Memcached 1.4
-# - ApacheSolr 4.5
+# - Memcached 1.6
+# - Apache Solr 4.5
 
 version: "3.9"
 
