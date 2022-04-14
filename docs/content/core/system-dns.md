@@ -24,7 +24,7 @@ always a fallback.
 
 ## Disabling the Resolver {#disable}
 
-If you run into issues with DNS resolution on the host machine, try disabling the build-in DNS resolver:
+If you run into issues with DNS resolution on the host machine, try disabling the built-in DNS resolver:
 
 ```bash
 fin config set --global DOCKSAL_DNS_DISABLED=1
