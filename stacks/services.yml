@@ -206,7 +206,7 @@ services:
   # Solr
   solr:
     hostname: solr
-    image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}
+    image: ${SOLR_IMAGE:-docksal/solr:8.6-edge}
     volumes:
       - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
@@ -220,7 +220,7 @@ services:
   # MailHog
   mail:
     hostname: mail
-    image: ${MAILHOG_IMAGE:-mailhog/mailhog}
+    image: ${MAILHOG_IMAGE:-mailhog/mailhog:v1.0.1}
     volumes:
       - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
@@ -244,7 +244,7 @@ services:
   # Elastic Search
   elasticsearch:
     hostname: elasticsearch
-    image: ${ELASTICSEARCH_IMAGE:-elasticsearch:8.0}
+    image: ${ELASTICSEARCH_IMAGE:-elasticsearch:8.1.2}
     ports:
       - "${ELASTICSEARCH_PORT_MAPPING:-9200}"
     environment:
