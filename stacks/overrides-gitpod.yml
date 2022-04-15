@@ -1,0 +1,8 @@
+# Adds Gitpod service to the project
+
+version: "3.9"
+
+services:
+  web:
+    labels:
+      - io.docksal.virtual-host=${DOCKSAL_VHOST_PROXY_PORT_HTTP}-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}

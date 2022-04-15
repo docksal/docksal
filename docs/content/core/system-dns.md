@@ -24,15 +24,16 @@ always a fallback.
 
 ## Disabling the Resolver {#disable}
 
-If you run into issues with DNS resolution, try disabling the automatic resolver:
+If you run into issues with DNS resolution on the host machine, try disabling the built-in DNS resolver:
 
 ```bash
-fin system stop
-fin config set --global DOCKSAL_NO_DNS_RESOLVER=1
-fin system start
+fin config set --global DOCKSAL_DNS_DISABLED=1
+fin system reset
 ```
 
-You can then [manually manage DNS records](#manual).
+See [DOCKSAL_DNS_DISABLED]((/stack/configuration-variables/#docksal-dns-disabled)) variable docs for more information.
+
+You can also [manually manage](#manual) custom DNS records.
 
 
 ## Managing DNS Manually {#manual} 

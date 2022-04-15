@@ -1,5 +1,108 @@
 # Changelog
 
+## 1.17.0 (2022-04-15)
+
+### New software versions ✨ 
+
+- fin v1.110.1
+- Docker Desktop v4.4.2+ (build 73305)
+- Docker v20.10.12 (boot2docker pinned at v19.03.5)
+- Docker Compose v2.1.0
+- VirtualBox v6.1.32
+- New multi-arch (amd64/arm64) image releases
+  - [docksal/vhost-proxy v1.8](https://github.com/docksal/service-vhost-proxy/releases)
+  - [docksal/ssh-agent v1.4 ](https://github.com/docksal/service-ssh-agent/releases)
+  - [docksal/dns v1.2](https://github.com/docksal/service-dns/releases)
+  - [docksal/cli v3.2](https://github.com/docksal/service-cli/releases)
+  - [docksal/apache v2.5](https://github.com/docksal/service-apache/releases)
+  - [docksal/nginx v1.2](https://github.com/docksal/service-nginx/releases)
+  - [docksal/mysql v2.0](https://github.com/docksal/service-mysql/releases)
+  - [docksal/mariadb v1.3 ](https://github.com/docksal/service-mariadb/releases)
+  - [docksal/varnish v3.1](https://github.com/docksal/service-varnish/releases)
+- PHP 8.1 is now the default version in the `default` stack and in `fin run cli` command
+  - See docs on [switching/pinning PHP versions](https://docs.docksal.io/service/cli/settings/#php-versions)
+
+### Changes and improvements ⚙️ 
+
+- 🎉 Apple M1 and Linux ARM64 support 🎉 
+  - All services in the Docksal catalog (except `solr` and `mailhog`) now use multi-arch (amd64/arm64) images
+- Switched to Docker Compose v2 (v1 support dropped)
+  - Running v2 in compatibility mode (forces the use underscores instead of hyphens in container names (like in v1)).
+- Use of `.docksal` base domain along with `docksal-dns` internal DNS resolver is deprecated
+  - Follow the [instructions](https://docs.docksal.io/stack/configuration-variables/#docksal-dns-disabled) to switch to the new public base domain - `.docksal.site`
+- New `fin share-v2` command
+  - Creates a temporary public URL for the project using a free Cloudflare Tunnel
+- Project auto-start is now disabled by default for local environments (still ON by default for CI environments)
+- Included Docksal version in `fin --version` output
+  - no more confusion which Docksal vs fin version you are running
+- Gitpod Integration
+- `fin pull` is now an [addon](https://github.com/docksal/addons) (removed from fin core)
+- Fixed VirtualBox support on macOS 12 Monterey
+- Removed Drupal 8 options from `fin project create` (Drupal 8 is EOL)
+- Bumped all services to the most recent image tags
+  - We'll stick to the most recent versions by default and pin versions in hosting platform specific stacks
+  - Current default versions:
+    - Apache 2.4
+    - Nginx 1.20
+    - MySQL 8.0
+    - MariaDB 10.6
+    - Postgres 14.2
+    - PHP 8.1
+    - Varnish 7.0
+    - Memcached 1.6
+    - Redis 6.2
+    - Solr 8.6-edge (legacy image, likely to be deprecated)
+    - Mailhog 1.0.1
+    - Elasticsearch 8.1.2
+    - cloudflared `latest` (has to stay on `latest` as Cloudflare makes frequent updates and blocks older client versions)
+- Switched to MariaDB 10.4 as the default `db` service in all hosting platform stacks
+  - MariaDB 10.4 functions as limited drop-in replacements for MySQL 5.7, as far as InnoDB is concerned
+- Updated Acquia stack versions
+  - Apache 2.4
+  - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
+  - PHP 7.4
+  - Varnish 6.6
+  - Memcached 1.6
+  - Apache Solr 4.5
+- Updated Pantheon stack image versions
+  - Nginx 1.20
+  - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
+  - PHP 7.4
+  - Varnish 6.6
+  - Redis 5.0
+  - Apache Solr 3.6
+- Updated Platform.sh stack image versions
+  - Nginx 1.20
+  - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
+  - PHP 7.4
+  - Redis 5.0
+- Switched to Blackfire Agent v2 in stacks (requires docksal/cli [v3.1.0](https://github.com/docksal/service-cli/releases/tag/v3.1.0)+)
+
+### Documentation 📖 
+
+- Expanded docs around project auto start/stop features
+- Added instructions for installing an addon globally
+- Added documentation on composer memory issues
+- Reorganized and updated help sections in fin + misc updates in `fin help`
+- Added disk space issue to common issues
+- Updated MailHog docs 
+- Added Github Actions build badge in README.md
+- Added section on common issues for Apple MDM (Mobile Device Management) troubleshooting
+- Updated docs around disabling built-in DNS resolver (docksal-dns)
+- Added Cloudflare Tunnel (`fin share-v2`) docs
+- Added example on how to override `solr` service image
+- Added sponsor documentation
+
+### Contributors 🤓 
+
+- @lmakarov, @sean-e-dietrich, @shelane, @froboy, @waako, @marvoey, @paulsheldrake, @vladtulku, @JDDoesDev 
+
+### Sponsors 🤑 
+
+- @markaspot, @froboy, @lpeabody, @alexander-danilenko, @paulsheldrake, @610, @twfahey1, @johnoltman65
+- [❤️ You ❤️ ](https://github.com/sponsors/docksal)
+
+
 ## 1.16.2 (2021-09-28)
 
 ### New software versions

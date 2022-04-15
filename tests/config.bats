@@ -409,11 +409,11 @@ services:
 	mkdir .docksal
 
 	# Create local env file
-	echo "VIRTUAL_HOST=feaTures.Alpha-beta_zulu.docksal" > .docksal/docksal-local.env
+	echo "VIRTUAL_HOST=feaTures.Alpha-beta_zulu.docksal.site" > .docksal/docksal-local.env
 
 	# Check config (check if local environment variables are used in docksal.yml)
 	TERM=dumb run fin config
-	[[ $(echo "$output" | grep -c "VIRTUAL_HOST: feaTures.Alpha-beta_zulu.docksal") -eq 0 ]]
-	[[ "${output}" =~ "The VIRTUAL_HOST has been modified from feaTures.Alpha-beta_zulu.docksal to features.alpha-beta-zulu.docksal to comply with browser standards." ]]
+	[[ $(echo "$output" | grep -c "VIRTUAL_HOST: feaTures.Alpha-beta_zulu.docksal.site") -eq 0 ]]
+	[[ "${output}" =~ "The VIRTUAL_HOST has been modified from feaTures.Alpha-beta_zulu.docksal.site to features.alpha-beta-zulu.docksal.site to comply with browser standards." ]]
 	unset output
 }
