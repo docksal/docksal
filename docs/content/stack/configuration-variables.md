@@ -5,7 +5,7 @@ aliases:
   - /en/master/advanced/stack-config/
 ---
 
-Configuration variables can be specified in the `docksal.env` file or by running the `fin config set` command.
+Configuration variables can be specified by running the `fin config set` command.
 
 There are 2 scopes of variables: global and project. Global scope variables are set in `$HOME/.docksal/docksal.env`, 
 while project scope variables are set in `$PROJECT_ROOT/.docksal/docksal.env`. 

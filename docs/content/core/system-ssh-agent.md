@@ -26,14 +26,14 @@ See [fin help ssh-key](/fin/fin-help/#ssh-key) for more information and usage gu
 
 ## Automatically Add Keys
 
-Adding SSH keys automatically whenever Docksal project is started can be done by defining special variable(s) within
-the `$HOME/.docksal/docksal.env` file. All variables should be prefixed with `SECRET_SSH_KEY_` plus the
-identifier of the SSH key. After that has been done, restart your project with `fin project restart`, and the keys will be added.
+Adding SSH keys automatically whenever a Docksal project is started can be done by adding special variable(s)
+to the global configuration. All variables should be prefixed with `SECRET_SSH_KEY_` plus the identifier of the SSH key. 
+After that has been done, restart your project with `fin project restart`, and the keys will be added.
 
-For example, assuming you have a private SSH key `$HOME/.ssh/acquia_key`, you would define a variable:
+For example, assuming you have a private SSH key `$HOME/.ssh/acquia_key`, you would run the command:
 
 ```
-SECRET_SSH_KEY_ACQUIA='acquia_key'
+fin config set --global SECRET_SSH_KEY_ACQUIA='acquia_key'
 ```
 
 When creating the variable use the file name within `$HOME/.ssh/` directory as the variable value. NOTE: the **private** key should be referenced, not the public one.
@@ -52,7 +52,7 @@ pass-through:
 
   * When running Docksal as part of a CI job, set the environment variable `CI` to `1`. This will result in ssh-agent
     starting in proxy mode by default.
-  * By setting the environment variable `DOCKSAL_SSH_AGENT_USE_HOST` to `1`. This will explictly enable proxy mode. Set
+  * By setting the environment variable `DOCKSAL_SSH_AGENT_USE_HOST` to `1`. This will explicitly enable proxy mode. Set
     it by running `fin config set --global DOCKSAL_SSH_AGENT_USE_HOST=1` followed by `fin system reset ssh-agent`.
 
 On Linux, ssh-agent is able to directly mount your host SSH agent's Unix socket into the container.
