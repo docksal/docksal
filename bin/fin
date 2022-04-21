@@ -268,7 +268,8 @@ DOCKSAL_COMMANDS_PATH=".docksal/commands"
 DOCKSAL_ADDONS_PATH=".docksal/addons"
 
 # Docksal environment
-DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
+# Exported to be visible in custom commands and addons by default.
+export DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 
 # Network settings
 
