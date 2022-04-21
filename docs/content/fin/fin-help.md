@@ -8,7 +8,7 @@ aliases:
 ## fin {#fin}
 
 ```text
-Docksal command line utility (v1.110.0)
+Docksal command line utility (v1.110.1)
 
 Docksal Docs:      https://docs.docksal.io/
 Sponsor ❤ Docksal: https://github.com/sponsors/docksal
@@ -397,7 +397,7 @@ Examples:
 ## pull {#pull}
 
 ```text
-Docksal command line utility (v1.110.0)
+Docksal command line utility (v1.110.1)
 
 Docksal Docs:      https://docs.docksal.io/
 Sponsor ❤ Docksal: https://github.com/sponsors/docksal

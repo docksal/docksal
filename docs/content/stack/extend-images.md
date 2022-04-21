@@ -46,7 +46,7 @@ Below is an example of extending the `cli` image with additional configs, apt, a
 **File `.docksal/services/cli/Dockerfile`**
 
 ```Dockerfile
-# Note how we use cli:2 here, which refers to the latest available 2.x version
+# Note how we use cli:3 here, which refers to the latest available 3.x version
 # So that we wouldn't need to update this every time new version of Docksal cli releases
 FROM docksal/cli:php7.4-3
 

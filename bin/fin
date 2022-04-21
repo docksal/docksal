@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.110.0
+FIN_VERSION=1.110.1
 
 # Allow to override Docksal version during install.
 # Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
 # Update: DOCKSAL_VERSION=develop fin update
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.16.2}"
+DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.17.0}"
 
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
@@ -6390,6 +6390,7 @@ load_configuration ()
 	# Re-load global env file once again, since 'up' resets some variables to force re-reading config
 	set -a; source "$CONFIG_ENV"; set +a
 
+	# Reset (as this variables is a list)
 	ENV_FILE=""
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
@@ -6413,9 +6414,10 @@ load_configuration ()
 	# This is used to print the list of included env files in `fin config`
 	export ENV_FILE
 
+	# Reset (as this variables is a list)
 	COMPOSE_FILE=""
+	# Project config file
 	yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
-
 	# Allow to define the stack file via DOCKSAL_STACK
 	# Set it to "default" if empty and there is no project yml file
 	[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
@@ -6446,7 +6448,6 @@ load_configuration ()
 		[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
 	fi
 
-	DOCKSAL_VOLUMES=""
 	# Include a volumes yml if requested. Use bind mount volumes by default.
 	if is_mac; then
 		# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
