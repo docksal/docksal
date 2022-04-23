@@ -31,7 +31,7 @@ fin config set --global DOCKSAL_DNS_DISABLED=1
 fin system reset
 ```
 
-See [DOCKSAL_DNS_DISABLED]((/stack/configuration-variables/#docksal-dns-disabled)) variable docs for more information.
+See [DOCKSAL_DNS_DISABLED](/stack/configuration-variables/#docksal-dns-disabled) variable docs for more information.
 
 You can also [manually manage](#manual) custom DNS records.
 
