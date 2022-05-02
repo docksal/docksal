@@ -162,7 +162,7 @@ Click the preferred option to proceed to option-specific docs.
 
 1. Install **Ubuntu 20.04** app from Microsoft Store 
 
-    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2018.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71)
+    [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2020.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71)
 
 1. Install Docksal (VirtualBox will be installed automatically if necessary)
 
