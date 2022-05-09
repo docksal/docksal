@@ -6,3 +6,8 @@ services:
   web:
     labels:
       - io.docksal.virtual-host=${DOCKSAL_VHOST_PROXY_PORT_HTTP}-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}
+  solr:
+    ports:
+      - "8983:8983"
+    labels:
+      - io.docksal.virtual-host=8983-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}
