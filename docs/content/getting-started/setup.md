@@ -83,9 +83,9 @@ Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal proje
 to [v2.1.0.5](https://download.docker.com/mac/stable/40693/Docker.dmg) as a temporary measure.
 {{% /notice %}}
 
-1. Install Docker Desktop for Mac v4.4.2 (Intel only)
+1. Install Docker Desktop for Mac
 
-    [![Docker Desktop for Mac v4.4.2](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/main/amd64/73305/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    Docker Desktop for Mac [Intel chip](https://desktop.docker.com/mac/main/amd64/Docker.dmg) or [Apple chip](https://desktop.docker.com/mac/main/arm64/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 1. Start Docker Desktop
 
