@@ -5281,10 +5281,10 @@ image_registry_list ()
 		tag_escaped=${1//\//\\\/}
 		# for instance $1 == "docksal/db"
 		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags\?page_size\=100 | \
-                        grep -o '"name\":\"[-_\.a-zA-Z0-9]*' | \
-                        cut -d ":" -f2 | \
-                        tr -d \" | \
-                        sed "s/^/${tag_escaped}:/"	
+			grep -o '"name\":\"[-_\.a-zA-Z0-9]*' | \
+			cut -d ":" -f2 | \
+			tr -d \" | \
+			sed "s/^/${tag_escaped}:/"
 	else
 		fin docker search "docksal" | grep "^docksal\/"
 	fi
