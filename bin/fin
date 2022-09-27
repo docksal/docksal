@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.107.1
+FIN_VERSION=1.110.1
+
+# Allow to override Docksal version during install.
+# Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
+# Update: DOCKSAL_VERSION=develop fin update
+DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.17.0}"
 
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
@@ -119,8 +124,36 @@ is_katacoda ()
 	[[ "$KATACODA" != "" ]]
 }
 
-is_github_actions () {
+is_github_actions ()
+{
 	[[ "$GITHUB_RUN_ID" != "" ]]
+}
+
+is_gitpod () {
+	[[ "$GITPOD_HOST" != "" ]]
+}
+
+# Returns x86_64 / aarch64 (aka "old school")
+host_arch () {
+	case $(uname -m) in
+		x86_64|amd64) echo "x86_64" ;;
+		aarch64|arm64) echo "aarch64" ;;
+		* ) uname -m;; # Catch-all for anything else
+	esac
+}
+
+# Returns amd64 / arm64 (aka "new style")
+host_arch_new () {
+	case $(uname -m) in
+		x86_64|amd64) echo "amd64" ;;
+		aarch64|arm64) echo "arm64" ;;
+		* ) uname -m;; # Catch-all for anything else
+	esac
+}
+
+is_supported_arch ()
+{
+	[[ "$(host_arch_new)" =~ ^amd64|arm64$ ]]
 }
 
 #------------------------------------------------------------------------------
@@ -151,28 +184,30 @@ wsl_path ()
 	echo $(wslpath "$@" | tr -d '\r')
 }
 
+# Convert version string like 1.2.3.4 to integer for comparison
+# param $1 version string of 4 components max (e.g., 1.10.3.0)
+ver_to_int ()
+{
+	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d", $1,$2,$3,$4); }'
+}
+
 #---------------------------- Global Constants --------------------------------
 
-# Allow to override Docksal version during install.
-# Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
-# Update: DOCKSAL_VERSION=develop fin update
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-master}"
-
 # Dependency versions
-REQUIREMENTS_DOCKER='20.10.7'
-REQUIREMENTS_DOCKER_DD='20.10.7'  # Ships with Docker Desktop 3.4.0 (65384)
+REQUIREMENTS_DOCKER='20.10.12'
+REQUIREMENTS_DOCKER_DD='20.10.12'  # Ships with Docker Desktop 4.4.2 (73305)
 REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
-REQUIREMENTS_DOCKER_COMPOSE='1.29.2'
-REQUIREMENTS_DOCKER_MACHINE='0.16.2'
+REQUIREMENTS_DOCKER_COMPOSE='2.1.0' # Docker Compose V2 (arm64/M1 compatible)
+REQUIREMENTS_DOCKER_MACHINE='0.16.2' # This is the final docker-machine version
 REQUIREMENTS_VBOX='6.1.22'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
-REQUIREMENTS_DOCKER_DESKTOP='3.4.0' # Build 65384
+REQUIREMENTS_DOCKER_DESKTOP='4.4.2' # Build 73305
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
-URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.22/VirtualBox-6.1.22-144080-OSX.dmg"
-URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.22/VirtualBox-6.1.22-144080-Win.exe"
+URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.32/VirtualBox-6.1.32-149290-OSX.dmg"
+URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.32/VirtualBox-6.1.32-149290-Win.exe"
 
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
@@ -233,7 +268,8 @@ DOCKSAL_COMMANDS_PATH=".docksal/commands"
 DOCKSAL_ADDONS_PATH=".docksal/addons"
 
 # Docksal environment
-DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
+# Exported to be visible in custom commands and addons by default.
+export DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 
 # Network settings
 
@@ -340,6 +376,8 @@ URL_REPO_SYMFONY_WEBAPP="https://github.com/docksal/boilerplate-symfony-webapp.g
 URL_REPO_BACKDROP="https://github.com/docksal/boilerplate-backdrop.git"
 URL_ADDONS_HOSTING="https://raw.githubusercontent.com"
 URL_ADDONS_REPO="$URL_ADDONS_HOSTING/docksal/addons"
+STACKS_OVERRIDES_CLOUDFLARED="overrides-cloudflared.yml"
+STACKS_OVERRIDES_GITPOD="overrides-gitpod.yml"
 STACKS_OVERRIDES_DD_BIND="overrides-dd-bind.yml"
 STACKS_OVERRIDES_IDE="overrides-ide.yml"
 STACKS_OVERRIDES_XHPROF="overrides-xhprof.yml"
@@ -349,32 +387,36 @@ STACKS_STACK_DEFAULT="stack-default.yml"
 STACKS_STACK_DEFAULT_NODB="stack-default-nodb.yml"
 STACKS_STACK_NODE="stack-node.yml"
 STACKS_STACK_PANTHEON="stack-pantheon.yml"
+STACKS_STACK_PLATFORMSH="stack-platformsh.yml"
 STACKS_VOLUMES_BIND="volumes-bind.yml"
 STACKS_VOLUMES_NFS="volumes-nfs.yml"
 STACKS_VOLUMES_NONE="volumes-none.yml"
 STACKS_VOLUMES_UNISON="volumes-unison.yml"
 
 URL_DOCKER_COM="https://get.docker.com/"
-URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
-URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/x86_64/docker-${REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_MAC="https://download.docker.com/mac/static/stable/$(host_arch)/docker-${REQUIREMENTS_DOCKER}.tgz"
+URL_DOCKER_NIX="https://download.docker.com/linux/static/stable/$(host_arch)/docker-${REQUIREMENTS_DOCKER}.tgz"
 # Docker stopped publishing docker client binaries for Windows. They are now available from Microsoft.
 # See https://github.com/docker/for-win/issues/1460#issuecomment-442585850
 # MS uses a different naming convention, e.g. "docker-18-09-2.zip" instead of "docker-18.09.2.zip".
 URL_DOCKER_WIN="https://dockermsft.blob.core.windows.net/dockercontainer/docker-${REQUIREMENTS_DOCKER//./-}.zip"
-URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Darwin-x86_64"
-URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Linux-x86_64"
-URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-Windows-x86_64.exe"
+# docker-compose v2
+URL_DOCKER_COMPOSE_MAC="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-darwin-$(host_arch)"
+URL_DOCKER_COMPOSE_NIX="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-linux-$(host_arch)"
+URL_DOCKER_COMPOSE_WIN="https://github.com/docker/compose/releases/download/v${REQUIREMENTS_DOCKER_COMPOSE}/docker-compose-windows-$(host_arch).exe"
+# docker-machine (x86_64 only on Mac/Windows)
 URL_DOCKER_MACHINE_MAC="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Darwin-x86_64"
-URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-x86_64"
+URL_DOCKER_MACHINE_NIX="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Linux-$(host_arch)"
 URL_DOCKER_MACHINE_WIN="https://github.com/docker/machine/releases/download/v${REQUIREMENTS_DOCKER_MACHINE}/docker-machine-Windows-x86_64.exe"
+# boot2docker
 URL_BOOT2DOCKER="https://github.com/boot2docker/boot2docker/releases/download/v${REQUIREMENTS_DOCKER_B2D}/boot2docker.iso"
 
 URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS_WINPTY}/winpty-${REQUIREMENTS_WINPTY}-cygwin-${REQUIREMENTS_WINPTY_CYGWIN}-ia32.tar.gz"
 
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.4}
-IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.7}
+IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.8}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.2}
-IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php7.4-3.0}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php7.4-3.2}
 
 #---------------------------- Helper functions --------------------------------
 
@@ -520,9 +562,13 @@ docker-compose ()
 		[[ ! -O "$SSH_AUTH_SOCK_DIR" ]] && sudo chown $(id -u):$(id -g) "$SSH_AUTH_SOCK_DIR"
 	fi
 
-	# Call regular docker-compose.
+	# Call docker compose (v2)
+	# As a plugin for docker cli, it has to be called as "/path/to/binary compose"
+	# This would not be necessary if the binary was installed in the default location
+	# (~/.docker/cli-plugins/docker-compose). However, we install it in ~/.docksal/bin/docker-copose-v2
+	# to prevent conflicts with system binaries.
 	# "command <binary>" calls the binary directly ignoring any overriding shell functions
-	command docker-compose "$@"
+	command docker-compose compose "$@"
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -885,7 +931,7 @@ is_docksal_running ()
 	# will fail. However, there could be cases, when system services have been already started and after that hosts
 	# network settings are adjusted/corrupted externally.
 	is_mac && is_docker_native && ! check_network_mac && return 1
-	is_linux && ! check_network_alpine && return 1
+	is_linux && ! is_gitpod && ! check_network_alpine && return 1
 	is_windows && is_docker_native && ! check_network_windows && return 1
 	is_wsl && is_docker_native && ! check_network_wsl && return 1
 
@@ -923,13 +969,6 @@ testing_warn ()
 		echo-yellow "[!] Using Docksal version: ${DOCKSAL_VERSION}"
 }
 
-# Convert version string like 1.2.3.4 to integer for comparison
-# param $1 version string of 4 components max (e.g., 1.10.3.0)
-ver_to_int ()
-{
-	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d", $1,$2,$3,$4); }'
-}
-
 #---------------------------- Control functions -------------------------------
 
 # Check that project root exists and Docker is running.
@@ -943,7 +982,7 @@ check_docksal_environment ()
 {
 	# Since network configuration is not permanent on Linux we need to restore it when possible
 	# check_docksal_environment is a good place to do it, but we don't need to know the result
-	if is_linux; then
+	if is_linux && ! is_gitpod; then
 		configure_network_alpine "on"
 		configure_resolver_alpine "on"
 	fi
@@ -1121,7 +1160,7 @@ docker_desktop_version ()
 is_docker_version ()
 {
 	# Skip the check on GitHub Actions/Play-with-Docker/Katacoda
-	( is_github_actions || is_pwd || is_katacoda ) && return
+	( is_github_actions || is_pwd || is_katacoda || is_gitpod ) && return
 
 	# Rely on our own docker binary, except on Linux
 	if is_linux; then
@@ -1137,7 +1176,7 @@ is_docker_version ()
 is_docker_server_version ()
 {
 	# Skip the check on GitHub Actions/Play-with-Docker/Katacoda
-	( is_github_actions || is_pwd || is_katacoda ) && return
+	( is_github_actions || is_pwd || is_katacoda || is_gitpod ) && return
 
 	# Rely on our own docker binary, except on Linux
 	if is_linux; then
@@ -1163,8 +1202,9 @@ is_docker_server_version ()
 is_docker_compose_version ()
 {
 	! [[ -x ${DOCKER_COMPOSE_BIN} ]] && return 1
+	# Trim 'v' prefix from output
 	# Trim \r from output (necessary on Windows)
-	local version=$(docker-compose version --short | tr -d '\r')
+	local version=$(docker-compose version --short | tr -d 'v' | tr -d '\r')
 	(( $(ver_to_int "$REQUIREMENTS_DOCKER_COMPOSE") <= $(ver_to_int "$version") ))
 }
 
@@ -1295,12 +1335,28 @@ sponsor_message ()
 }
 
 #-------------------------- Containers management -----------------------------
-_disconnect_network ()
+
+# Connects project containers to the project network
+_connect_project_network ()
 {
-	local network=$1
-	# disconect all containers, connected to project network
-	# '-I {}' and '{}' can be used to position the argument passed by xargs.
-	xargs -I {} docker network disconnect -f "$network" {} &>/dev/null <<< "$(docker ps -aq --no-trunc -f "network=${network}")"
+	local project="${COMPOSE_PROJECT_NAME_SAFE}"
+	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
+	local containers=$(docker ps -aq --no-trunc --filter "label=com.docker.compose.project=${project}")
+
+	for container in ${containers}; do
+		docker network connect ${network} ${container} &>/dev/null
+	done
+}
+
+# Disconnects all containers, connected to project network
+_disconnect_project_network ()
+{
+	local network=${1}
+	local containers=$(docker ps -aq --no-trunc --filter "network=${network}")
+
+	for container in ${containers}; do
+		docker network disconnect -f "$network" ${container} &>/dev/null
+	done
 }
 
 _start_containers ()
@@ -1312,12 +1368,18 @@ _start_containers ()
 	# Note: triggering this check in load_configuration would introduce a blocker for many fin commands.
 	check_docker_path
 
+	# Suppress docker pull details in CI environments otherwise pull prints too much garbage in CI logs.
+	is_ci && quiet_pull="--quiet-pull" || quiet_pull=""
+
 	echo-green "Starting services..."
-	docker-compose up -d --remove-orphans --build || return 1
+	docker-compose up -d --remove-orphans --build ${quiet_pull} || return 1
 	# TODO: Workaround. Handle this case in docksal/vhost-proxy.
 	# When project stack is started, but vhost-proxy is not yet connected to the stack network, vhost-proxy config breaks.
 	# To mitigate this we should connect vhost-proxy to the project stack network ASAP.
 	_vhost_proxy_connect
+	# Workaround for Docker Compose v2
+	# We have to manually reconnect project containers to project network
+	_connect_project_network
 	_healthcheck_wait
 }
 
@@ -1369,12 +1431,17 @@ _stop_containers ()
 	load_configuration
 	check_project_unique
 
+	# TODO: Do we still need this?
+	# While Docker Compose v2 recreates the project network if one does not exist,
+	# it does not reconnect project containers to the project network.
+	# If we delete the project network, we have to then manually reconnect project containers to the project network.
+	# See _connect_project_network
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]] || [[ -z $1 ]]; then
 		echo-green "Disconnecting project network..."
 		# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
 		# The project network will be automatically recreated by docker-compose up.
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-		_disconnect_network "${network}"
+		_disconnect_project_network "${network}"
 
 		docker network rm "${network}" &>/dev/null || true
 	fi
@@ -1398,7 +1465,7 @@ _remove_containers ()
 		# Disconnect all containers from the project network, otherwise network will not be removed.
 		# Figure out the default project network name
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-		_disconnect_network "${network}"
+		_disconnect_project_network "${network}"
 
 		# Taking the whole docker-compose project down (this removes containers, volumes, and networks)
 		docker-compose down --volumes --remove-orphans
@@ -1624,14 +1691,21 @@ show_help ()
 			fi
 	fi
 
-	echo "Docksal command line utility (v$FIN_VERSION)"
-	echo "Docksal docs: https://docs.docksal.io/"
+	echo-green "Docksal command line utility${NC} (${yellow}v${FIN_VERSION}${NC})"
 	echo
-	echo "Usage: fin [command]"
+	echo -e "${lightmagenta}Docksal Docs:${NC}      https://docs.docksal.io/"
+	echo -e "${lightmagenta}Sponsor ❤ Docksal:${NC} ${URL_GITHUB_SPONSOR}"
+	echo
+
+	echo-green "Usage:"
+	printh "fin [command]"
 	echo
 
 	echo-green "Management Commands:"
+	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})" "yellow"
+	printh "alias <command>" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})" "yellow"
 	printh "db <command>" "Manage databases (${yellow}fin help db${NC})" "yellow"
+	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})" "yellow"
 	printh "project <command>" "Manage project(s) (${yellow}fin help project${NC})" "yellow"
 	printh "ssh-key <command>" "Manage SSH keys (${yellow}fin help ssh-key${NC})" "yellow"
 	printh "system <command>" "Manage Docksal state (${yellow}fin help system${NC})" "yellow"
@@ -1642,38 +1716,42 @@ show_help ()
 
 	echo-green "Commands:"
 	printh "bash [service]" "Open shell into service's container. Defaults to ${yellow}cli${NC}"
-	printh "logs [service]" "Show service logs (e.g., Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
-	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "config [command]" "Show or change configuration (${yellow}fin help config${NC})"
-	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
-
-	echo
-	printh "pull [options]" "Commands for interacting with Hosting Provider (${yellow}fin help pull${NC})"
-	printh "drush [command]" "Drush command (requires Drupal)"
-	printh "drupal [command]" "Drupal Console command (requires Drupal 8)"
-	printh "platform [command]" "Platform.sh's CLI (requires docksal/cli 2.3+)"
-	printh "terminus [command]" "Pantheon's Terminus (requires docksal/cli 2.1+)"
-	printh "wp [command]" "WordPress CLI command (requires WordPress)"
-	printh "composer [command]" "Run Composer commands"
-	printh "docker (d) [command]" "Run Docker commands directly"
-	printh "docker-compose (dc) [cmd]" "Run Docker Compose commands directly"
-
-	echo
-	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
-	printh "addon <command>" "Addons management commands: install, remove (${yellow}fin help addon${NC})"
-	printh "alias" "Manage aliases that allow ${yellow}fin @alias${NC} execution (${yellow}fin help alias${NC})"
-	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
-	printh "share" "Create temporary public url for current project using ngrok"
+	printh "exec <command|file>" "Execute a command or a script in ${yellow}cli${NC}"
 	printh "exec-url <url>" "Download script from URL and run it on host (URL should be public)"
+	printh "init" "Initialize a project (override it with your own automation, see ${yellow}fin help init${NC})"
 	printh "image <command>" "Image management commands: registry, save, load (${yellow}fin help image${NC})"
-	printh "hosts <command>" "Hosts file commands: add, remove, list (${yellow}fin help hosts${NC})"
+	printh "logs [service]" "Show service logs (e.g., Apache logs, MySQL logs) and Unison logs (${yellow}fin help logs${NC})"
+	printh "pull [options]" "Commands for interacting with Hosting Providers (${yellow}fin help pull${NC})"
+	printh "run-cli (rc) <command>" "Run a command in a standalone cli container in the current directory (${yellow}fin help run-cli${NC})"
+	printh "share" "Create temporary public url for current project using ngrok"
+	printh "share-v2" "Create a temporary public URL for the project using Cloudflare Tunnel"
 	printh "vhosts" "List all virtual *.docksal hosts registered in Docksal proxy"
-	printh "sysinfo" "Show system information"
-	printh "diagnose" "Show diagnostic information for troubleshooting and bug reporting"
-	printh "version (--version, v, -v)" "Print fin version. [v, -v] prints short version"
-	printh "update" "${yellow}Update Docksal${NC}" "yellow"
+	echo
 
-	# Do not show addons and custom commands if help for fin only ie requested (needed for docs generation)
+	echo-green "Docker command wrappers"
+	printh "docker (d) <command>" "Run Docker commands directly"
+	printh "docker-compose (dc) <command>" "Run Docker Compose commands directly"
+	printh "docker-machine (dm) <command>" "Run Docker Machine commands directly"
+	echo
+
+	echo-green "Misc. command wrappers"
+	printh "composer <command>" "Run Composer commands"
+	printh "drush <command>" "Drush command (requires Drupal)"
+	printh "drupal <command>" "Drupal Console command (requires Drupal 8)"
+	printh "platform <command>" "Platform.sh's CLI (requires docksal/cli 2.3+)"
+	printh "terminus <command>" "Pantheon's Terminus (requires docksal/cli 2.1+)"
+	printh "wp <command>" "WordPress CLI command (requires WordPress)"
+	echo
+
+	echo-green "Diagnostics/maintenance/updates"
+	printh "cleanup [options]" "Remove all unused Docker images, unused Docksal volumes and containers"
+	printh "diagnose" "Show diagnostic information for troubleshooting and bug reporting"
+	printh "sysinfo" "Show system information"
+	printh "update [options]" "Update Docksal"
+	printh "version (--version, v, -v)" "Print fin version. [v, -v] prints short version"
+
+	# Do not show addons and custom commands if help for fin only is requested (needed for docs generation)
 	if [[ "$1" == "fin" ]]; then
 		return;
 	fi
@@ -1682,7 +1760,7 @@ show_help ()
 	load_global_configuration
 	if ! empty_dir "$PROJECT_ROOT/$DOCKSAL_ADDONS_PATH" || ! empty_dir "$HOME/$DOCKSAL_ADDONS_PATH"; then
 		echo
-		echo-green "Addons found:"
+		echo-green "Installed Addons:"
 	fi
 	if [[ ! -z "$(get_project_path)" ]]; then
 		show_help_list_addons_in_help 'project'
@@ -1703,7 +1781,6 @@ show_help ()
 		show_help_list_commands_in_help 'global'
 	fi
 
-	echo
 }
 
 # param $1 - 'project' or 'global'
@@ -2175,7 +2252,7 @@ show_help_alias ()
 show_help_share ()
 {
 	echo
-	echo "Share the project via public url generated with ngrok"
+	echo "Create a temporary public URL for the project using ngrok"
 
 	echo
 	echo "Usage: share [options]"
@@ -2192,6 +2269,27 @@ show_help_share ()
 	echo
 	echo "Examples:"
 	printh "fin share --host=subdomain.mysite.docksal" "Expose certain subdomain"
+}
+
+show_help_share-v2 ()
+{
+	echo
+	echo "Create a temporary public URL for the project using Cloudflare Tunnel"
+
+	echo
+	echo "Usage: share-v2 [command]"
+
+	echo
+	echo "Commands:"
+	printh "start" "Start tunnel and print public URL"
+	printh "stop" "Stop tunnel"
+	printh "status" "Prints tunnel status and public URL (if Active)"
+	printh "url" "Prints tunnel public URL"
+	printh "logs" "Prints tunnel container logs"
+
+	echo
+	echo "Examples:"
+	printh "fin share-v2 start" "Start tunnel and print public URL"
 }
 
 show_help_config ()
@@ -2328,60 +2426,6 @@ show_help_logs ()
 	printh "fin logs -f web" "Show web container logs and follow it"
 }
 
-show_help_pull ()
-{
-	echo
-	echo "Docksal Provider Interaction commands."
-
-	echo
-	echo "Usage: pull <options> <asset>"
-
-	echo
-	echo "Possible Options for Asssets:"
-	printh "init" "Pull a project repo down"
-	printh "db" "Export a database from the provider"
-	printh "files" "Rsync files from remote to local"
-	printh "code" "Execute a pull on code"
-	printh "(blank)" "All (Default)"
-
-	echo
-	echo "Options:"
-	printh "--hosting-platform=<provider>" "Platform to interact with."
-	printh "" "Options: acquia, pantheon, platform.sh, drush, wp"
-	printh "--hosting-site=<id>" "Site ID on Provider"
-	printh "--hosting-env=<env>" "Site Env on Provider"
-
-	echo
-	echo "Extra Options for Code"
-	printh "--sync-git-remote" "The GIT Remote to pull from. (Defaults to origin)"
-	printh "--sync-git-branch" "The GIT Branch to pull from. (Defaults to current branch)"
-
-	echo
-	echo "Extra Options for DB"
-	printh "--db-user=<user>" "Specify the DB User (Defaults to root)"
-	printh "--db-pass=<pass>" "Specify the DB Password (Defaults to root)"
-	printh "--db-name=<dbname>" "Specify the DB Name to import into. (Defaults to default)"
-	printh "--force" "Generate and pull a new db dump, rather than using locally cached in /tmp"
-	printh "--remote-db=<remotedb>" "Specify the remote DB name to pull. (Used with Acquia)"
-
-	echo
-	echo "Extra Options for Files"
-	printh "--rsync-options=<options>" "Rsync Options to append."
-	printh "--files-dir=<dir>" "Directory to sync files with."
-	printh "" "Default Drupal: {DOCROOT}/sites/default/files/"
-	printh "" "Wordpress Default: {DOCROOT}/wp-content/uploads/"
-
-	echo
-	echo "Examples:"
-	printh "fin pull init" "Start a project by pulling the repo from the provider."
-	printh "    --hosting-platform=acquia" "Provide the Platform Name."
-	printh "    --hosting-site=testsiteid" "Provide the Site ID."
-	printh "    test_project_directory" "Specify the directory to clone the project in."
-	printh "fin pull" "Pull all items from provider"
-	printh "fin pull db" "Pull only the db from the provider"
-	printh "fin pull db --remote-db=dbname" "Pull the db name dbname from the provider. (Acquia Cloud Only)"
-}
-
 #---------- END HELP FUNCTIONS
 
 # Display fin version
@@ -2391,7 +2435,8 @@ version ()
 	if [[ $1 == '--short' ]]; then
 		echo "$FIN_VERSION"
 	else
-		echo "fin version: $FIN_VERSION"
+		echo "Docksal version: $DOCKSAL_VERSION"
+		echo "fin version:     $FIN_VERSION"
 	fi
 
 	# Ping stats server
@@ -2516,13 +2561,21 @@ docker_machine_create ()
 	fi
 
 	# Use 2 CPUs in case of 4 or more CPUs/cores on host
-	# This tremendously helps with network files sytem operations in some cases
+	# This tremendously helps with network files system operations in some cases
 	local VIRTUALBOX_CPU_COUNT=1
 	system_cpu_count=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
 	# process possible failure as 1 cpu
 	system_cpu_count=${system_cpu_count:-1}
 	if (( ${system_cpu_count} > 3 )); then
 		VIRTUALBOX_CPU_COUNT=2
+	fi
+
+	# Allow Docksal subnet IPs to be assigned to a VirtualBox host-only adapter (VirtualBox v6.1.28+)
+	# https://github.com/docksal/docksal/issues/1596
+	if is_mac && ! (cat /etc/vbox/networks.conf 2>/dev/null | grep -e "^\* ${DOCKSAL_SUBNET}" >/dev/null); then
+		echo "Writing /etc/vbox/networks.conf..."
+		sudo mkdir -p /etc/vbox
+		echo "* ${DOCKSAL_SUBNET}" | sudo tee -a /etc/vbox/networks.conf >/dev/null
 	fi
 
 	docker-machine create \
@@ -3279,27 +3332,24 @@ project_create ()
 		echo -e "${green}    1.${NC}  Drupal 9 (Composer Version)"
 		echo -e "${green}    2.${NC}  Drupal 9 (BLT Version)"
 		echo -e "${green}    3.${NC}  Drupal 9"
-		echo -e "${green}    4.${NC}  Drupal 8"
-		echo -e "${green}    5.${NC}  Drupal 8 (Composer Version)"
-		echo -e "${green}    6.${NC}  Drupal 8 (BLT Version)"
-		echo -e "${green}    7.${NC}  Drupal 7"
-		echo -e "${green}    8.${NC}  Wordpress"
-		echo -e "${green}    9.${NC}  Magento"
-		echo -e "${green}    10.${NC} Laravel"
-		echo -e "${green}    11.${NC} Symfony Skeleton"
-		echo -e "${green}    12.${NC} Symfony WebApp"
-		echo -e "${green}    13.${NC} Grav CMS"
-		echo -e "${green}    14.${NC} Backdrop CMS"
+		echo -e "${green}    4.${NC}  Drupal 7"
+		echo -e "${green}    5.${NC}  Wordpress"
+		echo -e "${green}    6.${NC}  Magento"
+		echo -e "${green}    7.${NC} Laravel"
+		echo -e "${green}    8.${NC} Symfony Skeleton"
+		echo -e "${green}    9.${NC} Symfony WebApp"
+		echo -e "${green}    10.${NC} Grav CMS"
+		echo -e "${green}    11.${NC} Backdrop CMS"
 		echo
 		echo -e "${acqua}  Go based${NC}"
-		echo -e "${green}    15.${NC} Hugo"
+		echo -e "${green}    12.${NC} Hugo"
 		echo
 		echo -e "${lime}  JS based${NC}"
-		echo -e "${green}    16.${NC} Gatsby JS"
-		echo -e "${green}    17.${NC} Angular"
+		echo -e "${green}    13.${NC} Gatsby JS"
+		echo -e "${green}    14.${NC} Angular"
 		echo
 		echo -e "${magenta}  HTML${NC}"
-		echo -e "${green}    18.${NC} Static HTML site"
+		echo -e "${green}    15.${NC} Static HTML site"
 		echo
 		echo -e "${red}  Custom${NC}"
 		echo -e "${green}    0.${NC} Custom git repository"
@@ -3307,7 +3357,7 @@ project_create ()
 		echo -e ""
 
 		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
-		local choices=18
+		local choices=15
 
 		while [[ "$choice" == "" ]]; do
 			read -p "Enter your choice (0-$choices): " choice
@@ -3336,76 +3386,61 @@ project_create ()
 			target_repo="$URL_REPO_DRUPAL9"
 			;;
 		4)
-			target_cms="Drupal 8"
-			target_host_name_search_string="drupal8.docksal"
-			target_repo="$URL_REPO_DRUPAL8"
-			;;
-		5)
-			target_cms="Drupal 8 (Composer Version)"
-			target_host_name_search_string="drupal8.docksal"
-			target_repo="$URL_REPO_DRUPAL8COMPOSER"
-			;;
-		6)
-			target_cms="Drupal 8 (BLT Version)"
-			target_host_name_search_string="drupal8.docksal"
-			target_repo="$URL_REPO_DRUPAL8BLT"
-			;;
-		7)
 			target_cms="Drupal 7"
 			target_host_name_search_string="drupal7.docksal"
 			target_repo="$URL_REPO_DRUPAL7"
 			;;
-		8)
+		5)
 			target_cms="Wordpress"
 			target_host_name_search_string="wordpress.docksal"
 			target_repo="$URL_REPO_WORDPRESS"
 			;;
-		9)
+		6)
 			target_cms="Magento"
 			target_host_name_search_string="magento.docksal"
 			target_repo="$URL_REPO_MAGENTO"
 			;;
-		10)
+		7)
 			target_cms="Laravel"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_LARAVEL"
 			;;
-		11)
+		8)
 			target_cms="Symfony Skeleton"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_SKELETON"
 			;;
-		12)
+		9)
 			target_cms="Symfony WebApp"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_WEBAPP"
 			;;
-		13)
+		10)
 			target_cms="Grav CMS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GRAV"
 			;;
-		14)
+		11)
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
 			target_repo="$URL_REPO_BACKDROP"
 			;;
-		15)
+		12)
 			target_cms="Hugo"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_HUGO"
 			;;
-		16)
+		13)
 			target_cms="Gatsby JS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GATSBY"
 			;;
-		17)
+		14)
 			target_cms="Angular"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_ANGULAR"
 			;;
-		18)
+		15)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
@@ -3756,6 +3791,8 @@ stats_ping ()
 	is_pwd && source='PWD'
 	# Katacoda instances
 	is_katacoda && source='Katacoda'
+	# Gitpod instance
+	is_gitpod && source="Gitpod"
 
 	curl -kfsL \
 		--user-agent "$user_agent" \
@@ -3894,6 +3931,7 @@ configure_network ()
 	fi
 
 	echo-green "Configuring network settings..."
+	is_gitpod && return 0
 	is_linux && configure_network_alpine "$mode" && return $?
 	is_mac && configure_network_mac "$mode" && return $?
 	is_windows && configure_network_windows "$mode" && return $?
@@ -3967,20 +4005,14 @@ configure_mounts ()
 install_proxy_service ()
 {
 	docker rm -f docksal-vhost-proxy >/dev/null 2>&1 || true
+	# TODO: Clean this up in 2023
 	docker volume rm docksal_projects >/dev/null 2>&1 || true
 
-	# Create a bind mount volume to the projects directory if defined and exists. Otherwise, create an empty volume.
-	if [[ -d "$PROJECTS_ROOT" ]]; then
-		# No quotes around ${PROJECTS_ROOT} below or the volume will not work correctly!!!
-		docker volume create --name docksal_projects --opt type=none --opt device=${PROJECTS_ROOT} --opt o=bind >/dev/null 2>&1
-	else
-		docker volume create --name docksal_projects >/dev/null 2>&1
-		# Warn if PROJECTS_ROOT was set but is not a valid directory
-		[[ "$PROJECTS_ROOT" != "" ]] && echo-warning "PROJECTS_ROOT ($PROJECTS_ROOT) is not a valid directory"
-	fi
-
 	# Open up vhost-proxy to the world in CI/Sandbox/PWD environments
-	( is_ci || is_pwd || is_katacoda ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+	( is_ci || is_pwd || is_katacoda || is_gitpod ) && DOCKSAL_VHOST_PROXY_IP="0.0.0.0"
+
+	# Enable auto-start of projects by default in CI environments
+	is_ci && PROJECT_AUTOSTART=${PROJECT_AUTOSTART:-1}
 
 	# Mount custom certs folder if available
 	local mount_certs
@@ -3988,7 +4020,13 @@ install_proxy_service ()
 		mount_certs="--mount type=bind,src=${CONFIG_CERTS},dst=/etc/certs/custom"
 	fi
 
-	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT (docksal_projects volume) are used in CI
+	# Mount projects directory
+	local mount_projects
+	if [[ -d "${PROJECTS_ROOT}" ]] && is_docker_path "${PROJECTS_ROOT}"; then
+		mount_projects="--mount type=bind,src=${PROJECTS_ROOT},dst=/projects"
+	fi
+
+	# PROJECT_INACTIVITY_TIMEOUT, PROJECT_DANGLING_TIMEOUT and PROJECTS_ROOT are used in CI
 	# and are inactive unless configured.
 	# PROJECT_INACTIVITY_TIMEOUT - defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h)
 	# PROJECT_DANGLING_TIMEOUT - defines the timeout of inactivity after which the project stack and code base will be
@@ -4003,13 +4041,14 @@ install_proxy_service ()
 		-e PROJECT_DANGLING_TIMEOUT="${PROJECT_DANGLING_TIMEOUT:-0}" \
 		-e PROJECT_AUTOSTART="${PROJECT_AUTOSTART:-0}" \
 		-e DEFAULT_CERT="${DOCKSAL_VHOST_PROXY_DEFAULT_CERT:-docksal}" \
-		--mount type=volume,src=docksal_projects,dst=/projects \
 		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
 		${mount_certs} \
+		${mount_projects} \
 		--log-opt max-size=${DOCKSAL_CONTAINER_LOG_MAX_SIZE} \
 		--log-opt max-file=${DOCKSAL_CONTAINER_LOG_MAX_FILE} \
 		--health-interval=${DOCKSAL_CONTAINER_HEALTHCHECK_INTERVAL} \
 		"${IMAGE_VHOST_PROXY}" >/dev/null
+
 	if_failed_error "Failed starting the proxy service."
 }
 
@@ -4339,7 +4378,7 @@ install_tools_mac ()
 	# Install Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_MAC")
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
 			curl -fL# "$URL_DOCKER_MAC" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
@@ -4364,7 +4403,7 @@ install_tools_mac ()
 	# Install docker-compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_MAC")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		if [[ ! -f "$dc_pkg" ]]; then
 			echo-green "Downloading ${dc_pkg}..."
 			curl -fL# "$URL_DOCKER_COMPOSE_MAC" -o "$DOCKER_COMPOSE_BIN" && \
@@ -4382,7 +4421,7 @@ install_tools_mac ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_MAC")
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		if [[ ! -f "$dm_pkg" ]]; then
 			echo-green "Downloading ${dm_pkg}..."
 			curl -fL# "$URL_DOCKER_MACHINE_MAC" -o "$DOCKER_MACHINE_BIN" && \
@@ -4404,7 +4443,7 @@ install_tools_windows ()
 	# Install Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_WIN")
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
 			curl -fL# "$URL_DOCKER_WIN" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
@@ -4432,7 +4471,7 @@ install_tools_windows ()
 	# Install docker-compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_WIN")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		if [[ ! -f "$dc_pkg" ]]; then
 			echo-green "Downloading ${dc_pkg}..."
 			curl -fL# "$URL_DOCKER_COMPOSE_WIN" -o "$DOCKER_COMPOSE_BIN.exe" && \
@@ -4450,7 +4489,7 @@ install_tools_windows ()
 	# Install docker-machine
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		if [[ ! -f "$dm_pkg" ]]; then
 			echo-green "Downloading ${dm_pkg}..."
 			curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN.exe" && \
@@ -4467,7 +4506,7 @@ install_tools_windows ()
 
 	# Install winpty
 	if ! is_winpty_version; then
-		echo-green "Installing winpty v${REQUIREMENTS_WINPTY}..."
+		echo-green "Downloading winpty v${REQUIREMENTS_WINPTY}..."
 		local winpty_pkg=$(basename "$URL_WINPTY")
 		if [[ ! -f "$winpty_pkg" ]]; then
 			echo-green "Downloading ${winpty_pkg}..."
@@ -4507,7 +4546,7 @@ install_tools_debian ()
 	# Install Docker client
 	sudo service docker start 2>/dev/null
 	if ! is_docker_version || ! is_docker_server_version; then
-		echo-green "Installing Docker..."
+		echo-green "Downloading Docker..."
 		# Stop docker service if it exists
 		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
 			echo "Stopping docker service..."
@@ -4525,10 +4564,11 @@ install_tools_debian ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4539,7 +4579,7 @@ install_tools_fedora ()
 	# Install Docker client
 	sudo service docker start 2>/dev/null
 	if ! is_docker_version || ! is_docker_server_version; then
-		echo-green "Installing Docker..."
+		echo-green "Downloading Docker..."
 		# Stop docker service if it exists
 		if ps aux | grep dockerd | grep -v grep >/dev/null 2>&1; then
 			echo "Stopping docker service..."
@@ -4559,10 +4599,11 @@ install_tools_fedora ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4581,16 +4622,11 @@ install_tools_alpine ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose via pip (this may take a while)..."
-		# docker-compose has to be install via pip on Alpine
-		# See https://github.com/docker/compose/issues/3465
-		apk add --no-cache python3 python3-dev libffi-dev openssl-dev >/dev/null && \
-			# Update pip to avoid warnings like:
-			# - "Cache entry deserialization failed, entry ignored"
-			# - "You are using pip version 10.0.1, however version 19.0.3 is available."
-			pip3 install --upgrade --no-cache-dir pip >/dev/null && \
-			pip3 install "docker-compose==${REQUIREMENTS_DOCKER_COMPOSE}" >/dev/null && \
-			docker-compose --version
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
+		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4608,10 +4644,11 @@ install_tools_generic_linux ()
 
 	# Install Docker Compose
 	if ! is_docker_compose_version; then
-		echo-green "Installing Docker Compose..."
+		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading ${dc_pkg}..."
 		curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-			chmod +x "$DOCKER_COMPOSE_BIN" && \
-			docker-compose --version
+			chmod +x "$DOCKER_COMPOSE_BIN"
 		if_failed "Docker Compose installation/upgrade has failed."
 	fi
 }
@@ -4622,7 +4659,7 @@ install_tools_wsl ()
 	# Install Linux Docker client
 	if ! is_docker_version; then
 		local docker_pkg=$(basename "$URL_DOCKER_NIX")
-		echo-green "Installing docker client v${REQUIREMENTS_DOCKER}..."
+		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
 		if [[ ! -f "$docker_pkg" ]]; then
 			echo-green "Downloading ${docker_pkg}..."
 			curl -fL# "$URL_DOCKER_NIX" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
@@ -4647,7 +4684,7 @@ install_tools_wsl ()
 	# Install Linux Docker Compose
 	if ! is_docker_compose_version; then
 		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
-		echo-green "Installing docker-compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
+		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
 		if [[ ! -f "$dc_pkg" ]]; then
 			echo-green "Downloading ${dc_pkg}..."
 			curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
@@ -4672,7 +4709,7 @@ install_tools_wsl ()
 	# Keeping the rest of the logic below very similar to other host environments.
 	if ! is_docker_machine_version; then
 		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
-		echo-green "Installing docker-machine v${REQUIREMENTS_DOCKER_MACHINE}..."
+		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
 		if [[ ! -f "$dm_pkg" ]]; then
 			echo-green "Downloading ${dm_pkg}..."
 			curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN_WSL" && \
@@ -4873,6 +4910,8 @@ update_tools ()
 update_config_files ()
 {
 	files_to_download="
+			$STACKS_OVERRIDES_CLOUDFLARED
+			$STACKS_OVERRIDES_GITPOD
 			$STACKS_OVERRIDES_DD_BIND
 			$STACKS_OVERRIDES_IDE
 			$STACKS_OVERRIDES_XHPROF
@@ -4882,6 +4921,7 @@ update_config_files ()
 			$STACKS_STACK_DEFAULT_NODB
 			$STACKS_STACK_NODE
 			$STACKS_STACK_PANTHEON
+			$STACKS_STACK_PLATFORMSH
 			$STACKS_VOLUMES_BIND
 			$STACKS_VOLUMES_NFS
 			$STACKS_VOLUMES_NONE
@@ -5484,7 +5524,7 @@ run_cli ()
 
 	# Address an edge case when run-cli is run in the home folder (/root) on PWD/Katacoda
 	# See https://github.com/docksal/docksal/issues/661
-	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda); then
+	if [[ "$(pwd)" == "$HOME" ]] && (is_pwd || is_katacoda || is_gitpod); then
 		chown 1000:1000 $HOME
 	fi
 
@@ -5501,8 +5541,8 @@ run_cli ()
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
-			-e SECRET_ACAPI_EMAIL \
-			-e SECRET_ACAPI_KEY \
+			-e SECRET_ACQUIA_CLI_KEY \
+			-e SECRET_ACQUIA_CLI_SECRET \
 			-e SECRET_TERMINUS_TOKEN \
 			-e SECRET_PLATFORMSH_CLI_TOKEN \
 			-e GIT_USER_EMAIL \
@@ -5527,8 +5567,8 @@ run_cli ()
 			-e BLACKFIRE_CLIENT_ID \
 			-e BLACKFIRE_CLIENT_TOKEN \
 			-e SECRET_SSH_PRIVATE_KEY \
-			-e SECRET_ACAPI_EMAIL \
-			-e SECRET_ACAPI_KEY \
+			-e SECRET_ACQUIA_CLI_KEY \
+			-e SECRET_ACQUIA_CLI_SECRET \
 			-e SECRET_TERMINUS_TOKEN \
 			-e SECRET_PLATFORMSH_CLI_TOKEN \
 			-e GIT_USER_EMAIL \
@@ -5971,6 +6011,69 @@ ngrok_share ()
 		sh -c "${ARGS}"
 }
 
+# Cloudflare Tunnel (cloudflared) integration
+
+# Check whether cloudflared container is running
+cloudflared_is_running ()
+{
+	# docker ps is about 1s faster than docker-compose ps
+	local container_id=$(docker ps --quiet --filter "name=${COMPOSE_PROJECT_NAME_SAFE}_cloudflared_1")
+	[[ "${container_id}" != "" ]] && return 0 || return 1
+}
+
+# Get cloudflared container status
+cloudflared_get_status ()
+{
+	cloudflared_is_running && echo "Active" || echo "Inactive"
+}
+
+# Output cloudflared container logs
+cloudflared_get_logs ()
+{
+	# docker logs is about 1s faster than docker-compose logs
+	docker logs "${COMPOSE_PROJECT_NAME_SAFE}_cloudflared_1"
+}
+
+# Extracts tunnel host name from cloudflared container logs
+cloudflared_get_host ()
+{
+	cloudflared_get_logs 2>&1 | grep "trycloudflare.com" | tail -1 | awk '{print $4}'
+}
+
+# Nicely print tunnel URL
+cloudflared_print_url ()
+{
+	echo -e "${green}Public URL:${NC} ${yellow}$(cloudflared_get_host)${NC}"
+}
+
+# Nicely print tunnel status
+cloudflared_print_status ()
+{
+	echo -e "${green}Status:${NC} $(cloudflared_get_status)"
+	cloudflared_is_running &&
+		echo -e "${green}Public URL:${NC} ${yellow}$(cloudflared_get_host)${NC}"
+}
+
+# Enable and start cloudflared integration
+cloudflared_start ()
+{
+	config_set --env=local "CLOUDFLARED_ENABLED=1" 1>/dev/null
+	load_configuration 1>/dev/null # Reload stack config after variable update
+	up
+
+	sleep 10 # Give the tunnel some time to initialize
+	cloudflared_print_url
+}
+
+# Disable and remove cloudflared integration
+cloudflared_stop ()
+{
+	config_remove --env=local "CLOUDFLARED_ENABLED" 1>/dev/null
+	unset CLOUDFLARED_ENABLED
+	load_configuration 1>/dev/null # Reload stack config after variable update
+	up
+}
+
 # Print information required for issue diagnostics
 # --all will print additional information that is hidden by default as it's not usually needed
 diagnose ()
@@ -5994,7 +6097,7 @@ sysinfo ()
 	eval $(parse_params "$@")
 
 	echo
-	echo "███  FIN" &&
+	echo "███  DOCKSAL" &&
 	version
 
 	echo
@@ -6034,21 +6137,23 @@ sysinfo ()
 
 	echo
 	echo "███  DOCKER"
-	echo "EXPECTED CLIENT VERSION: ${REQUIREMENTS_DOCKER}"
+	echo "Expected client version: ${REQUIREMENTS_DOCKER}"
 	if is_linux; then
-		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER}"
+		echo "Expected server version: ${REQUIREMENTS_DOCKER}"
 	elif is_docker_native; then
-		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_DD}"
+		echo "Expected server version: ${REQUIREMENTS_DOCKER_DD}"
 	else
-		echo "EXPECTED SERVER VERSION: ${REQUIREMENTS_DOCKER_B2D}"
+		echo "Expected server version: ${REQUIREMENTS_DOCKER_B2D}"
 	fi
 	echo
-	docker version
+	echo "Installed versions:"
+	echo
+	docker version 2>/dev/null
 
 	echo
 	echo "███  DOCKER COMPOSE"
-	echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_COMPOSE"
-	docker-compose version
+	echo "Expected version:  $REQUIREMENTS_DOCKER_COMPOSE"
+	echo "Installed version: $(docker-compose version --short 2>/dev/null)"
 
 	if [[ "$all" == "all" ]]; then
 		echo
@@ -6059,8 +6164,10 @@ sysinfo ()
 	if is_boot2docker; then
 		echo
 		echo "███  DOCKER MACHINE"
-		echo "EXPECTED VERSION: $REQUIREMENTS_DOCKER_MACHINE"
-		docker-machine --version
+		echo "Expected version: $REQUIREMENTS_DOCKER_MACHINE"
+		echo
+		echo "Installed version:"
+		docker-machine --version 2>/dev/null
 		echo
 		docker-machine ls
 
@@ -6284,6 +6391,8 @@ load_configuration ()
 	# Re-load global env file once again, since 'up' resets some variables to force re-reading config
 	set -a; source "$CONFIG_ENV"; set +a
 
+	# Reset (as this variables is a list)
+	ENV_FILE=""
 	# Mac and Linux use ":"" as a separator, Windows uses ";"
 	local SEPARATOR=':'; is_windows && SEPARATOR=';'
 	local env_file="$(get_project_path_dc)/.docksal/docksal.env"
@@ -6306,87 +6415,97 @@ load_configuration ()
 	# This is used to print the list of included env files in `fin config`
 	export ENV_FILE
 
-	# Set COMPOSE_FILE unless it has been already set by user
+	# Reset (as this variables is a list)
+	COMPOSE_FILE=""
+	# Project config file
+	yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+	# Allow to define the stack file via DOCKSAL_STACK
+	# Set it to "default" if empty and there is no project yml file
+	[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
+	[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
+	stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
+	[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
+		echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
+			"Stack file does not exist: $stack_yml_file" &&
+		exit 1
+
+	# Include both the stack and the project yml files if both exist
+	if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
+		COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
+	# Otherwise try including only one that exists
+	else
+		[[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
+		[[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
+	fi
+
+	# Throw an error if COMPOSE_FILE is empty here
 	if [[ "$COMPOSE_FILE" == "" ]]; then
-		yml_file="$(get_project_path_dc)/.docksal/docksal.yml"
+		echo-error "No configuration files found." "Expected in $yml_file"
+		exit 1
+	else
+		# Include docksal-local.yml (if exists)
+		# Allow using this with the pre-configured stacks by not checking docksal.env presence.
+		local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
+		[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
+	fi
 
-		# Allow to define the stack file via DOCKSAL_STACK
-		# Set it to "default" if empty and there is no project yml file
-		[[ "$DOCKSAL_STACK" == "" ]] && export DOCKSAL_STACK=""
-		[[ "$DOCKSAL_STACK" == "" ]] && [[ ! -f "$yml_file" ]] && DOCKSAL_STACK='default'
-		stack_yml_file="$(get_config_dir_dc)/stacks/stack-$DOCKSAL_STACK.yml"
-		[[ "$DOCKSAL_STACK" != "" && ! -f "$stack_yml_file" ]] &&
-			echo-error "Incorrect stack definition '$DOCKSAL_STACK'" \
-				"Stack file does not exist: $stack_yml_file" &&
+	# Include a volumes yml if requested. Use bind mount volumes by default.
+	if is_mac; then
+		# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
+	else
+		# Bind mounted volumes on all other systems
+		DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
+	fi
+	if [[ "$DOCKSAL_VOLUMES" != "disabled" ]]; then
+		volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
+		if [[ -f "$volumes_yml_file" ]]; then
+			COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
+		else
+			echo-error "Volumes definition not found in ${volumes_yml_file}." \
+				"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
+				"You may need to run ${yellow}fin update${NC} to download volume definitions."
 			exit 1
+		fi
+	fi
+	export DOCKSAL_VOLUMES
 
-		# Include both the stack and the project yml files if both exist
-		if [[ -f "$stack_yml_file" ]] && [[ -f "$yml_file" ]]; then
-			COMPOSE_FILE="${stack_yml_file}${SEPARATOR}${yml_file}"
-		# Otherwise try including only one that exists
-		else
-			[[ -f "$stack_yml_file" ]] && COMPOSE_FILE="$stack_yml_file"
-			[[ -f "$yml_file" ]] && COMPOSE_FILE="$yml_file"
-		fi
+	# Fix bind volumes on Docker Desktop v2.3.0.2+
+	# See https://github.com/docksal/docksal/issues/1368
+	overrides_dd_bind_file="$(get_config_dir_dc)/stacks/overrides-dd-bind.yml"
+	if [[ -f "${overrides_dd_bind_file}" ]] && \
+		is_docker_native && \
+		(( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.3.0.2') )) && \
+		[[ "$DOCKSAL_VOLUMES" == "bind" ]];
+	then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_dd_bind_file}"
+	fi
 
-		# Throw an error if COMPOSE_FILE is empty here
-		if [[ "$COMPOSE_FILE" == "" ]]; then
-			echo-error "No configuration files found." "Expected in $yml_file"
-			exit 1
-		else
-			# Include docksal-local.yml (if exists)
-			# Allow using this with the pre-configured stacks by not checking docksal.env presence.
-			local local_yml_file="$(get_project_path_dc)/.docksal/docksal-${DOCKSAL_ENVIRONMENT}.yml"
-			[[ -f "$local_yml_file" ]] && COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${local_yml_file}"
-		fi
+	# Enable VSCode (Coder) IDE
+	overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
+	if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
+	fi
 
-		# Include a volumes yml if requested. Use bind mount volumes by default.
-		if is_mac; then
-			# Default to NFS volumes on Mac (both VirtualBox and Docker Desktop)
-			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-nfs}
-		else
-			# Bind mounted volumes on all other systems
-			DOCKSAL_VOLUMES=${DOCKSAL_VOLUMES:-bind}
-		fi
-		if [[ "$DOCKSAL_VOLUMES" != "disabled" ]]; then
-			volumes_yml_file="$(get_config_dir_dc)/stacks/volumes-$DOCKSAL_VOLUMES.yml"
-			if [[ -f "$volumes_yml_file" ]]; then
-				COMPOSE_FILE="${volumes_yml_file}${SEPARATOR}${COMPOSE_FILE}"
-			else
-				echo-error "Volumes definition not found in ${volumes_yml_file}." \
-					"Please check that ${yellow}DOCKSAL_VOLUMES${NC} is set properly." \
-					"You may need to run ${yellow}fin update${NC} to download volume definitions."
-				exit 1
-			fi
-		fi
-		export DOCKSAL_VOLUMES
+	# Enable xhprof integration
+	overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
+	if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
+	fi
 
-		# Fix bind volumes on Docker Desktop v2.3.0.2+
-		# See https://github.com/docksal/docksal/issues/1368
-		overrides_dd_bind_file="$(get_config_dir_dc)/stacks/overrides-dd-bind.yml"
-		if [[ -f "${overrides_dd_bind_file}" ]] && \
-			is_docker_native && \
-			(( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.3.0.2') )) && \
-			[[ "$DOCKSAL_VOLUMES" == "bind" ]];
-		then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_dd_bind_file}"
-		fi
+	# Enable Cloudflare Tunnel (cloudflared) integration
+	overrides_cloudflared_file="$(get_config_dir_dc)/stacks/overrides-cloudflared.yml"
+	if [[ -f "${overrides_cloudflared_file}" ]] && [[ "$CLOUDFLARED_ENABLED" != "" ]] && [[ "$CLOUDFLARED_ENABLED" != "0" ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_cloudflared_file}"
+	fi
 
-		# Enable VSCode (Coder) IDE
-		overrides_ide_file="$(get_config_dir_dc)/stacks/overrides-ide.yml"
-		if [[ -f "${overrides_ide_file}" ]] && [[ "$IDE_ENABLED" != "" ]] && [[ "$IDE_ENABLED" != "0" ]]; then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_ide_file}"
-		fi
-
-		# Enable xhprof integration
-		overrides_xhprof_file="$(get_config_dir_dc)/stacks/overrides-xhprof.yml"
-		if [[ -f "${overrides_xhprof_file}" ]] && [[ "$XHPROF_ENABLED" != "" ]] && [[ "$XHPROF_ENABLED" != "0" ]]; then
-			COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_xhprof_file}"
-		fi
+	# Enable gitpod integration
+	overrides_gitpod_file="${get_config_dir_d}/stacks/overrides-gitpod.yml"
+	if [[ -f "${overrides_gitpod_file}" ]] && [[ is_gitpod ]]; then
+		COMPOSE_FILE="${COMPOSE_FILE}${SEPARATOR}${overrides_gitpod_file}"
 	fi
 
 	export COMPOSE_FILE
-	export DOCKSAL_ENVIRONMENT
 
 	# Set project name if it was not set previously
 	if [[ -d $(get_project_path) ]]; then
@@ -6399,12 +6518,26 @@ load_configuration ()
 		export COMPOSE_PROJECT_VHOST_NAME_SAFE
 	fi
 
+	# Run Docker Compose v2 in compatibility mode.
+	# This forces compose to use underscores instead of hyphens in container names (like in v1).
+	# TODO: Remove this and switch to hyphens in Docksal 2.0.
+	export COMPOSE_COMPATIBILITY=true
+
 	# Set defaults
 	if is_pwd || is_katacoda; then
 		# Don't include .$DOCKSAL_DNS_DOMAIN in Play-with-Docker or Katacoda to keep the URL shorter.
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE}
+	elif is_gitpod; then
+		export VIRTUAL_HOST=${DOCKSAL_VHOST_PROXY_PORT_HTTP}-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}
 	else
 		export VIRTUAL_HOST=${VIRTUAL_HOST:-$COMPOSE_PROJECT_VHOST_NAME_SAFE.$DOCKSAL_DNS_DOMAIN}
+	fi
+
+	# Display deprecation notice for .docksal TLD.
+	if [[ "$VIRTUAL_HOST" == *.docksal ]]; then
+		echo-warning "'.docksal' base domain and local DNS resolver are deprecated" \
+			"Please update your Docksal and project configuration" \
+			"See https://docs.docksal.io/stack/configuration-variables/#docksal-dns-disabled"
 	fi
 
 	# Make VIRTUAL_HOST lowercase, replace '_' with '-', remove everything non-letter or digit,
@@ -6501,8 +6634,12 @@ config_show ()
 	echo "VIRTUAL_HOST: ${VIRTUAL_HOST}"
 	echo "VIRTUAL_HOST_ALIASES: *.${VIRTUAL_HOST}"
 	echo "IP: $DOCKSAL_IP"
+	echo ""
 
-	echo "MYSQL:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$DOCKSAL_IP/")
+	echo "MySQL endpoint:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$DOCKSAL_IP/")
+	echo "Public URL:" $(cloudflared_get_host)
+
+	# Stop here for "fin config env"
 	[[ "$1" == "env" ]] && return
 
 	echo
@@ -7152,652 +7289,6 @@ set_project_root_permissions ()
 	is_root && chown -R 1000:1000 "$PROJECT_ROOT"
 }
 
-# Pull main command for interacting with Hosting Providers.
-# $1 - action to run (init, db, files, code)
-# $2 -
-#	- project directory (when ran with init)
-#	- db name (when ran in with Acquia DB pull)
-# $3 -
-#	- git url (when ran in with Drush / WP init)
-# $4 -
-#	- git branch (when ran in with Drush / WP init)
-# $hostingplatform - the hosting platform name.
-# $hostingsite - the site id on the hosting platform.
-# $hostingenv - the env id on the hosting platform for the site.
-provider_pull ()
-{
-	# Set Columns to 200 so text wouldn't
-	# get cut off when testing in CI.
-	COLUMNS=200
-
-	eval $(parse_params "$@")
-
-	local hostingplatform=${HOSTING_PLATFORM:-${hostingplatform}}
-	local hostingsite=${HOSTING_SITE:-${hostingsite}}
-	local hostingenv=${HOSTING_ENV:-${hostingenv}}
-
-	if [[ "${hostingplatform}" == "" || "${hostingsite}" == ""  ]]; then
-		echo-error "Hosting Provider not set up. Following variables must be set: hostingplatform and hostingsite"
-		exit 1
-	fi
-
-	hostingplatform=$(echo ${hostingplatform} | tr '[:upper:]' '[:lower:]')
-
-	# Check to see if a support platform is supported.
-	if [[ " acquia pantheon platformsh drush wp " != *" ${hostingplatform} "* ]]; then
-		echo-error "Only the following platforms are supported: Acquia (acquia), Pantheon (pantheon), Platform.sh (platformsh), Drupal (drush), and WordPress (wp)."
-		exit 1
-	fi
-
-	# Run some checks before continuing.
-	provider_pull_find_function ${hostingplatform} 'precheck'
-
-	echo-green "Starting provider pull for ${hostingplatform}"
-
-	# Query the provider for the given repo url. Only Pantheon, Platform.sh, and Acquia support this.
-	# All others will need to do a git clone.
-	if [[ "${ARGV[0]}" == "init" ]]; then
-		provider_pull_init
-		return
-	fi
-
-	# Execute a Pull On Code.
-	if [[ "${ARGV[0]}" == "code" ]] || [[ "${ARGV[0]}" == "" ]]; then
-		provider_pull_code
-	fi
-
-	# Execute a Pull on DB.
-	if [[ "${ARGV[0]}" == "db" ]] || [[ "${ARGV[0]}" == "" ]];  then
-		provider_pull_db
-	fi
-
-	# Execute a pull on Files.
-	if [[ "${ARGV[0]}" == "files" ]] || [[ "${ARGV[0]}" == "" ]]; then
-		provider_pull_files
-	fi
-
-	echo-green "Pull Completed"
-}
-
-# Provider Pull Init Subcommand
-# Used specifically for pulling the repo from a provider.
-# $1 - directory to clone the repo into
-# $2 - git repo url (optional)
-# $3 - git branch url (optional)
-provider_pull_init ()
-{
-	echo-green "Starting Pull Init Process."
-	local project_directory=${ARGV[1]:-${hostingsite}}
-
-	# Check to see if project_directory already exists.
-	if [[ -d ${project_directory} ]]; then
-		echo-error "Project Directory ${project_directory} already exists."
-		exit 1
-	fi
-
-	provider_pull_find_function ${hostingplatform} 'init' 1 "Init function not currently supported for ${hostingplatform}."
-	echo-green "Pulling code complete."
-
-	# Change into the project directory.
-	cd "${project_directory}"
-
-	# Check to see if .docksal directory exists.
-	if [[ ! -d .docksal ]]; then
-		if [[ "$y" != "y" && "$yes" != "yes" ]]; then
-			_confirm "Project is not a docksal project. Would you like to generate config?"
-		fi
-		config_generate
-	fi
-
-	# Set the Current Hosting Platform and Hosting Site for project.
-	config_set "HOSTING_PLATFORM=${hostingplatform}" > /dev/null
-	config_set "HOSTING_SITE=${hostingsite}" > /dev/null
-	config_set "HOSTING_ENV=${hostingenv}" > /dev/null
-	addon_file_path="$(addon_get_path init)"
-	if [[ ! -z "$addon_file_path" ]] && [[ -x "$addon_file_path" ]]; then
-		if _confirm "Init command found for project run?" --no-exit; then
-			addon_execute "$addon_file_path"
-		fi
-	fi
-}
-
-# Generic Precheck function to check if ${hostingenv} variable is set.
-provider_pull_precheck ()
-{
-	# After Init Process Let's Check to Make sure hostingenv has been set.
-	if [[ "${hostingenv}" == "" ]]; then
-		echo-error "hostingenv variable is required to continue."
-		exit 1
-	fi
-}
-
-# Provider Pull Code Subcommand
-# Used specifically for pulling the repo from a provider.
-provider_pull_code ()
-{
-	echo-green "Pulling code"
-	provider_pull_find_function ${hostingplatform} 'code' 1
-	if_failed_error "Error pulling code from ${hostingplatform}."
-	echo-green "Code Pull Successful"
-}
-
-# Provider Pull DB Subcommand
-# Used specifically for pulling the db from a provider.
-# $1 - database name to connect to
-provider_pull_db ()
-{
-	if [[ "$y" != "y" && "$yes" != "yes" ]]; then
-		_confirm "Existing database will be truncated, Continue?"
-	fi
-
-	echo-green "Pulling DB"
-
-	# Variables to set for local use.
-	local __db_user="${dbuser:-root}"
-	local __db_password="${dbpass:-root}"
-	local __db_database="${dbname:-default}"
-
-	# Set the db file that will be stored within the cli container
-	local db_file="/tmp/${__db_database}.${hostingenv}.${hostingsite}.sql.gz"
-	# Check to see if the file exists in the cli container
-	local file_exists=$(_exec "ls -1 /tmp/**  2> /dev/null | grep \"${db_file}\"\$ | wc -l | tr -d '[:space:]'")
-	# Get the time of that file within the cli container.
-	local file_time=$(_exec "find ${db_file} -mmin +360 2> /dev/null | tr -d '[:space:]'")
-	# Get the time from 24 hours ago.
-	local yesterday=$(_exec date --date='yesterday' "+%Y-%m-%d %H:%M:%S");
-
-	# Check to see if file doesn't exist, or if file exists and is older, or using force flag
-	if ( [[ "${file_exists}" == "0" ]] && [[ "${file_time}" == "" ]] ) || ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
-		# Check to see if File Is Older than 1 hour
-		if ( [[ "${file_exists}" > "0" ]] && [[ "${file_time}" != "" ]] ) || [[ "${force}" == "force" ]]; then
-			echo -e "${acqua}Cached DB file needs updating${NC}"
-			echo -e "${acqua}Removing old database file${NC}"
-			_exec rm -f "${db_file}"
-		fi
-
-		echo -e "${acqua}Pulling new database file...${NC}"
-		provider_pull_find_function ${hostingplatform} 'db' 1
-	else
-		echo-green "Cached DB file still valid found and using to import"
-	fi
-
-	# ToDo: Do we need to account for Multi-Site and other DB Names?
-
-	# Import the Database.
-	# Truncate the existing db.
-	echo -e "${acqua}Truncating Existing Database${NC}"
-	mysql_db_truncate "${dbname}" > /dev/null
-	# Execute ZCAT on the db file and import into mysql database.
-	_exec "zcat < ${db_file} | mysql -u ${__db_user} -p${__db_password} -h db ${__db_database}"
-	if_failed_error "Error importing DB"
-	echo-green "DB Pull Successful"
-}
-
-# Provider Pull Files Subcommand
-# Used specifically for pulling the db from a provider.
-provider_pull_files ()
-{
-	if [[ "$y" != "y" && "$yes" != "yes" ]]; then
-		_confirm "The following will delete all files within the files directory, Continue?"
-	fi
-	echo -e "${acqua}Pulling Files...${NC}"
-
-	# Default directory for Drupal Files.
-	local drupal_files="sites/default/files/"
-	# Default directory for WordPress Files.
-	local wordpress_files="wp-content/uploads/"
-
-	# Default to Drupal Specifically.
-	local default_dir=${drupal_files}
-	# If find a wp-config.php file in the docroot set to wordpress_files
-	if [[ -f ${PROJECT_ROOT}/${DOCROOT}/wp-config.php ]]; then
-		default_dir=${wordpress_files}
-	fi
-
-	# Allow for this to be modified with the --filesdir option.
-	filesdir=${filesdir:-$default_dir}
-	# Exclude specific items by default. Allow other rsync options to be included using --rsync-options flag.
-	local rsyncoptions="${rsyncoptions} --exclude='styles' --exclude='css' --exclude='js'"
-	provider_pull_find_function ${hostingplatform} 'files' 1
-	echo-green "File Pull Complete"
-}
-
-##############################
-### GENERIC PROVIDER FUNCTIONS
-##############################
-
-# Generic function for searching if function exists and executing.
-# Searches for a function that is in the format of provider_pull_${PROVIDER}_${ACTION}
-# $1 - the provider machine name to check
-# $2 - the action to perform for the provider (Examples db, files, code)
-# $3 - any value to indicate this function is required to exist
-# $4 - the message to display if this function cannot be found
-provider_pull_find_function ()
-{
-	# Providers name to attach to function.
-	local provider=$1
-	# Action for provider.
-	local action=$2
-	# Is this function required. Any value is acceptable.
-	local required=$3
-	# If required what is the error message if not found.
-	local required_message=${4:-"Pulling ${action} is currently not supported for ${provider}."}
-
-	# Check for help function for specific command
-	local pull_function="provider_pull_${provider}_${action}"
-	type "${pull_function}" >/dev/null 2>&1
-	[[ $? -eq 0 ]] && ${pull_function} || ( [[ -n $required ]] && echo "${required_message}" )
-}
-
-# Runs a git pull on the project repo.
-provider_pull_generic_git_pull ()
-{
-	local git_remote=${syncgitremote:-origin}
-	# Trim \r from output (necessary on Windows)
-	local current_branch=$(_exec "git rev-parse --abbrev-ref HEAD" | tr -d '\r')
-	local git_branch=${syncgitbranch:-$current_branch}
-	echo -e "${acqua}Pulling Code From ${git_remote} - ${git_branch}${NC}"
-	_exec -T "git pull -q ${git_remote} ${git_branch} 2>/dev/null"
-	if_failed_error "Error Pulling Code from ${git_remote} - ${git_branch}"
-}
-
-# Runs a generic drush rsync command.
-provider_pull_generic_drush_rsync ()
-{
-	cd ${PROJECT_ROOT}/${DOCROOT}
-	echo -e "${acqua}Downloading Files from ${hostingsite} on the ${hostingenv} environment${NC}"
-	local drush_version=$(_exec "drush version --format=string | cut -d'.' -f1" | sed "s/[[:space:]]//")
-	local separator=""
-	if [[ "$drush_version" == "9" ]]; then
-		separator="--"
-	fi
-	local rsync_filesdir
-	rsync_filesdir="/var/www/${DOCROOT}/${filesdir}"
-	_exec drush -q -y rsync \
-		@${hostingsite}.${hostingenv}:%files \
-		${rsync_filesdir} \
-		${separator} \
-		--delete \
-		${rsyncoptions} 2>/dev/null
-	if_failed_error "Error Downloading Files from ${hostingsite} on the ${hostingenv} environment"
-}
-
-# Generic Git Clone for Init Function
-# $1 - git repo to clone
-# $2 - repo branch to checkout
-provider_pull_generic_init ()
-{
-	local repo_url="$1"
-	if [[ -z "${repo_url}" ]]; then
-		echo-error "Repository URL required for Drush Project to init."
-		exit 1
-	fi
-	local repo_checkout=${2:-"master"}
-	echo -e "${acqua}Cloning Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
-	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory} 2>/dev/null"
-	if_failed_error "Error Cloning Repo"
-}
-
-#############################
-### ACQUIA PROVIDER FUNCTIONS
-#############################
-
-# Check to see if acquia keys have been set.
-provider_pull_acquia_precheck ()
-{
-	if [[ -z "${SECRET_ACAPI_EMAIL}" ]] || [[ -z "${SECRET_ACAPI_KEY}" ]]; then
-		echo-error "SECRET_ACAPI_EMAIL and SECRET_ACAPI_KEY must be set in order to work with Acquia."
-		exit 1;
-	fi
-
-	if [[ "${ARGV[0]}" == "init" ]]; then
-		return;
-	fi
-
-	provider_pull_precheck
-}
-
-# Init process to pull code from acquia.
-provider_pull_acquia_init ()
-{
-	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
-
-	# Set hostingenv to dev if none are set.
-	hostingenv=${hostingenv:-dev}
-	# Get the repo url for the specific environment.provider_pull_platformsh_files
-	local repo_url
-	repo_url=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-site-info | grep 'vcs_url' | awk '{print \$3}' | tr -d '[:space:]'")
-	if_failed_error "Error accessing Acquia Cloud API to get Project Git Repo"
-	# Get the branch for the specific environment.
-	local repo_checkout
-	repo_checkout=$(run_cli -T "${acquia_alias_update}; drush8 @${hostingsite}.${hostingenv} ac-environment-info | grep 'vcs_path' | awk '{print \$3}' | sed 's/tags\///g' | tr -d '[:space:]'")
-	if_failed_error "Error accessing Acquia Cloud API to get ${hostingenv} info."
-
-	echo -e "${acqua}Cloning Acquia Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
-	# Run a git clone to get the specific repo.
-	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}" 2>/dev/null
-	if_failed_error "Error cloning Acquia Project."
-}
-
-# Pull process to pull files from Acquia.
-provider_pull_acquia_files ()
-{
-	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
-
-	# Update Acquia Drush Aliases in container.
-	_exec "${acquia_alias_update}"
-
-	# Execute a generic rsync on files from remote.
-	provider_pull_generic_drush_rsync
-}
-
-# Pull process to pull db from Acquia.
-provider_pull_acquia_db ()
-{
-	local acquia_alias_update="drush8 -q acquia-update; [[ -d "~/.drush/site-aliases" ]] && mv ~/.drush/*.aliases.* ~/.drush/site-aliases/"
-
-	# Update Acquia Drush Aliases in container.
-	_exec "${acquia_alias_update}"
-
-	# TODO: Allow for all databases to be downloaded. drush ac-database-list will list all databases for a site.
-	# Following will grab all databases for a site.
-	# local acquia_dbs=$(_exec drush @${hostingsite}.${hostingenv} ac-database-list | awk '{print $3}')
-
-	# Default Acquia DB Name to project name.
-	local acquia_db_name="${remotedb:-${hostingsite}}"
-	if [[ -z "${acquia_db_name}" ]]; then
-		echo-error "Database name is required."
-		exit 1
-	fi
-
-	local query
-	query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
-	if_failed_error "Error retrieving list of backups from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
-
-	# Returns timestamp of last backup.
-	local last_date
-	last_date=$(printf "${query}" | grep started | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
-	if [[ "${last_date}" != "" ]]; then
-		# Convert Date To Y-m-d H:m:s format
-		last_date=$(_exec date --date=@${last_date} "+%Y-%m-%d %H:%M:%S")
-	fi
-
-	# If Last backup was more than 24 hours ago. Create one.
-	if [[ "${last_date}" < "${yesterday}" ]] || [[ "$force" == "force" ]]; then
-		# Create backup on Acquia through Cloud API.
-		echo -e "${acqua}Creating new backup on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-		_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup ${acquia_db_name}
-		if_failed_error "Error creating backup on Acquia for ${acquia_db_name}."
-		echo -e "${acqua}Backup queued on Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name} waiting 10 seconds to finish${NC}"
-		# Sleep for 10 seconds wait for backup to finish.
-		sleep 10
-		# Requery to get a new list of backups.
-		query=$(_exec drush8 @${hostingsite}.${hostingenv} ac-database-instance-backup-list ${acquia_db_name})
-		if_failed_error "Error retrieving list of backups from Acquia on site ${hostingsite} on environment ${hostingenv} for database ${acquia_db_name}"
-	else
-		echo -e "${acqua}Using latest backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-	fi
-
-	# Returns id of last backup.
-	local last_id=$(printf "${query}" | grep "^ id" | tail -n 1 | awk '{ print $3 }' | tr -d '[:space:]')
-	# Use Drush to download the latest file using the Acquia Cloud API.
-	echo -e "${acqua}Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}${NC}"
-	_exec drush8 -q @${hostingsite}.${hostingenv} ac-database-instance-backup-download ${acquia_db_name} ${last_id} --result-file="${db_file}"
-	if_failed_error "Error Downloading backup from Acquia for ${hostingsite} - ${hostingenv} for database ${acquia_db_name}"
-}
-
-# Pull process to pull files from Acquia.
-provider_pull_acquia_code ()
-{
-	# Execute a generic git pull on code.
-	provider_pull_generic_git_pull
-}
-
-###############################
-### PANTHEON PROVIDER FUNCTIONS
-###############################
-
-# Check to see if tokens are set correctly.
-provider_pull_pantheon_precheck ()
-{
-	if [[ -z "${SECRET_TERMINUS_TOKEN}" ]]; then
-		echo-error "SECRET_TERMINUS_TOKEN must be set in order to work with Pantheon."
-		exit 1;
-	fi
-
-	if [[ "${ARGV[0]}" == "init" ]]; then
-		return;
-	fi
-
-	provider_pull_precheck
-}
-
-# Init process to pull code from Pantheon
-provider_pull_pantheon_init ()
-{
-	# If hostingenv isn't set default to dev.
-	hostingenv=${hostingenv:-dev}
-	# Set the BRANCH to be what the hostingenv is.
-	local repo_checkout=${hostingenv}
-	# The URL for the repo to clone.
-	local repo_url
-	repo_url=$(run_cli -T "terminus connection:info ${hostingsite}.dev --field=\"Git Command\" | awk '{print \$3}'")
-	if_failed_error "Error retrieving Git URL from Pantheon"
-
-	if [[ "${hostingenv}" == 'dev' ]]; then
-		# If hostingenv is set to dev set the repo_checkout to be master.
-		repo_checkout='master'
-	elif [[ "${hostingenv}" == 'test' ]] || [[ "${hostingenv}" == "live" ]]; then
-		# If hostingenv is test or live get the latest tag for the repo.
-		repo_checkout=$(run_cli -T "git ls-remote --exit-code -t ${repo_url} | grep 'refs/tags/pantheon_${hostingenv}_' | awk '{print $2}' | cut -d'/' -f3 | sort -k1.15n | grep '[0-9]$' | tail -1 | tr -d '[:space:]'")
-		if_failed_error "Error getting latest tag for ${hostingenv} on Pantheon repo"
-	fi
-
-	echo -e "${acqua}Cloning Pantheon Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
-	# Run git clone and checkout the provided branch.
-	run_cli "git clone -q --depth=1 --branch='${repo_checkout}' ${repo_url} ${project_directory}"
-	if_failed_error "Error cloning Pantheon project ${hostingsite} - ${hostingenv} in ${project_directory}"
-}
-
-# Pull process to pull files from Pantheon.
-# Need to run a custom rsync command as every environment is different.
-provider_pull_pantheon_files ()
-{
-	# Get the SFTP Hostname from Site's Info.
-	local host_url
-	host_url=$(_exec -T "terminus connection:info ${hostingsite}.${hostingenv} --field=\"SFTP Command\" 2>/dev/null | awk '{print \$4}'")
-	if_failed_error "Could not communicate with Pantheon. Check connection and SECRET_TERMINUS_TOKEN is set to an active token."
-	echo -e "${acqua}Downloading Files from ${hostingsite} on the ${hostingenv} through Pantheon${NC}"
-	# Execute a rsync using Pantheon recommended Options.
-	_exec "rsync \
-		-rlz \
-		--copy-unsafe-links \
-		--size-only \
-		--ipv4 \
-		--progress \
-		-e 'ssh -p 2222' \
-		${host_url}:files/ \
-		/var/www/${DOCROOT}/${filesdir} \
-		--delete \
-		${rsyncoptions}"
-	if_failed_error "Could not rsync files from Pantheon. Confirm that SSH Key has been added to Pantheon account and added to Docksal SSH-Agent."
-}
-
-# Pull process to pull db from Pantheon.
-# Pull from Pantheon backup system so that can pull the live db and not impact the site performance.
-provider_pull_pantheon_db ()
-{
-	# Get Time of Last Backup In Pantheon.
-	local last_backup
-	last_backup=$(_exec -T "terminus backup:list ${hostingsite}.${hostingenv} --element=db --format=list --field=date | head -n 1")
-	if_failed_error "Error retrieving list of backups from Pantheon for ${hostingsite} on the ${hostingenv} environment"
-	if [[ "last_backup" == "" ]] || [[ "${last_backup}" < "${yesterday}" ]] || [[ "$force" == "force" ]]; then
-		# If last backup does not exist or is older than 24 hours create new one.
-		echo -e "${acqua}Creating new backup on Pantheon for ${hostingsite} on the ${hostingenv} environment${NC}"
-		_exec terminus backup:create ${hostingsite}.${hostingenv} --element=db
-		if_failed_error "Error creating backup on Pantheon for ${hostingsite} on the ${hostingenv} environment"
-	fi
-	# Download backup with Terminus to given location.
-	echo -e "${acqua}Downloading database backup from Pantheon for ${hostingsite} on the ${hostingenv} environment${NC}"
-	_exec terminus backup:get ${hostingsite}.${hostingenv} --element="db" --to="${db_file}"
-	if_failed_error "Error Downloading backup from Pantheon for ${hostingsite} on the ${hostingenv} environment"
-}
-
-# Pull process to pull files from Pantheon.
-provider_pull_pantheon_code ()
-{
-	# Execute a generic git pull on code.
-	provider_pull_generic_git_pull
-}
-
-##################################
-### PLATFORM.SH PROVIDER FUNCTIONS
-##################################
-
-# Check to see if tokens are set correctly.
-provider_pull_platformsh_precheck ()
-{
-	if [[ -z "${SECRET_PLATFORMSH_CLI_TOKEN}" ]]; then
-		echo-error "SECRET_PLATFORMSH_CLI_TOKEN must be set in order to work with Platform.sh."
-		exit 1
-	fi
-
-	if [[ "${ARGV[0]}" == "init" ]]; then
-		return;
-	fi
-
-	provider_pull_precheck
-}
-
-# Init process to pull code from Platform.sh
-provider_pull_platformsh_init ()
-{
-	# If hostingenv isn't set use master as default.
-	hostingenv=${hostingenv:-master}
-	echo -e "${acqua}Cloning Platform.sh Site Locally: ${hostingsite} - ${hostingenv} in ${project_directory}${NC}"
-	run_cli "platform project:get -q --environment=${hostingenv} ${hostingsite} ${project_directory}"
-	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
-}
-
-# Pull process to pull files from Platform.sh
-provider_pull_platformsh_files ()
-{
-	local host_url
-	host_url=$(_exec -T "platform ssh --pipe --project=${hostingsite} --environment=${hostingenv} 2>/dev/null");
-	if_failed_error "Could not communicate with Platform.sh. Check connection and SECRET_PLATFORMSH_CLI_TOKEN is set to an active token."
-	echo -e "${acqua}Downloading Files from ${hostingsite} on the ${hostingenv} through Platform.sh${NC}"
-	_exec rsync \
-		-rlz \
-		--copy-unsafe-links \
-		--size-only \
-		--ipv4 \
-		--progress \
-		${host_url}:/app/${DOCROOT}/${filesdir} \
-		/var/www/${DOCROOT}/${filesdir} \
-		--delete \
-		${rsyncoptions}
-	if_failed_error "Could not rsync files from Platform.sh. Confirm that SSH Key has been added to Platform.sh account and added to Docksal SSH-Agent."
-}
-
-# Pull process to pull db from Platform.sh
-provider_pull_platformsh_db ()
-{
-	echo -e "${acqua}Downloading database backup from Platform.sh for ${hostingsite} on the ${hostingenv} environment${NC}"
-	_exec platform -q db:dump -p ${hostingsite} -e ${hostingenv} --gzip -f ${db_file}
-	if_failed_error "Error Downloading backup from Platform.sh for ${hostingsite} on the ${hostingenv} environment"
-}
-
-# Pull process to pull code from Platform.sh.
-provider_pull_platformsh_code ()
-{
-	syncgitremote=${syncgitremote:-"platform"}
-	# Execute a generic git pull on code.
-	provider_pull_generic_git_pull
-}
-
-############################
-### DRUSH PROVIDER FUNCTIONS
-############################
-
-# Execute a generic git clone on the provided.
-provider_pull_drush_init ()
-{
-	provider_pull_generic_init "${ARGV[2]}" "${ARGV[3]}"
-	if_failed_error "Could not communicate with Drush site repo. Check connection and try again."
-}
-
-# Use Generic Precheck function to makes sure env is set.
-provider_pull_drush_precheck ()
-{
-	if [[ "${ARGV[0]}" == "init" ]]; then
-		return;
-	fi
-
-	provider_pull_precheck
-}
-
-# Execute a generic rsync on files from remote.
-provider_pull_drush_files ()
-{
-	provider_pull_generic_drush_rsync
-}
-
-# Pull database from the drush provider using the alias. Exclude cache, session, and watchdog data.
-provider_pull_drush_db ()
-{
-	cd ${PROJECT_ROOT}/${DOCROOT}
-	# Execute drush sql-dump on remote host and exclude cache, session, watchdog tables.
-	echo -e "${acqua}Creating database export for @${hostingsite}.${hostingenv}${NC}"
-	# Drush appends a .gz when using the --gzip option. Remove .gz extension.
-	local db_save=$(echo $db_file | sed 's/\.gz//')
-	_exec drush -q -y @${hostingsite}.${hostingenv} sql-dump --structure-tables-list="cache,cache_*,sessions,watchdog" --gzip --result-file="${db_save}.export" 2>/dev/null
-	if_failed_error "Error accessing Drush Site @${hostingsite}.${hostingenv} to create database export"
-	# Rsync database file locally
-	echo -e "${acqua}Downloading database export for @${hostingsite}.${hostingenv}${NC}"
-	_exec drush -q -y rsync @${hostingsite}.${hostingenv}:${db_save}.export.gz ${db_file} 2>/dev/null
-	if_failed_error "Error accessing Drush Site @${hostingsite}.${hostingenv} to download database export"
-}
-
-# Pull process to pull files from Drush.
-provider_pull_drush_code ()
-{
-	provider_pull_generic_git_pull
-}
-
-################################
-### WORDPRESS PROVIDER FUNCTIONS
-################################
-
-# Execute a generic git clone on the provided.
-provider_pull_wp_init ()
-{
-	provider_pull_generic_init "${ARGV[2]}" "${ARGV[3]}"
-	if_failed_error "Could not communicate with WP site repo. Check connection and try again."
-}
-
-# Pull db from provider using the wp db export function.
-provider_pull_wp_db ()
-{
-	cd ${PROJECT_ROOT}/${DOCROOT}
-	echo -e "${acqua}Downloading database export for @${hostingsite}${NC}"
-	_exec "wp @${hostingsite} db export --add-drop-table - | gzip > ${db_file}"
-	if_failed_error "Error accessing WordPress Site @${hostingsite} to create database export"
-}
-
-# Pull process to pull code from WP-CLI.
-provider_pull_wp_code ()
-{
-	# Execute a generic git pull on code.
-	provider_pull_generic_git_pull
-}
-
-# Pull process to pull files from WP-CLI
-provider_pull_wp_files ()
-{
-	# Show Error as currently not supported.
-	echo-warning "File Pull for WordPress is currently not supported."
-}
-
 # Execute specific functions if they exist within the hooks directory.
 # Examples could be hook_init_pre or hook_db_import.
 # Specifically look for hooks to run pre and post actions.
@@ -7852,6 +7343,27 @@ execute_hook ()
 
 # Debug mode: print all commands
 [[ ${FIN_DEBUG} == 1 ]] && set -x
+
+# Check host architecture is supported
+if ! is_supported_arch; then
+	echo-error "Host architecture not supported" \
+		"Your host architecture is ${yellow}$(host_arch_new)${NC}." \
+		"Only ${yellow}amd64${NC} and ${yellow}arm64${NC} architectures are supported."
+	# Quit here unless were are in debug mode
+	! [[ ${FIN_DEBUG} == 1 || "${1}" == "debug" ]] && exit 1
+fi
+
+# Gitpod Configuration
+if is_gitpod; then
+	export DOCKSAL_VHOST_PROXY_PORT_HTTP=8080
+	export DOCKSAL_VHOST_PROXY_PORT_HTTPS=4443
+	export DOCKSAL_NO_DNS_RESOLVER=1
+	export DOCKSAL_DNS_DISABLED=1
+	# Fix the permissions to project directory
+	[[ "$(stat -c "%a" ${GITPOD_REPO_ROOT})" < "755" ]] && 
+		echo-warning "${yellow}Fixing Gitpod Repo Root Permissions${NC}" && 
+		chmod 755 ${GITPOD_REPO_ROOT}
+fi
 
 # Figure out COLUMNS and LINES (not set in scripts) have to be passed to workaround a bug in Docker.
 # See https://github.com/moby/moby/issues/35407#issuecomment-355753176
@@ -7931,7 +7443,7 @@ if ! is_windows; then
 		# Note: php-fpm inside cli will fail to start as uid=0
 		# Don't display this in PWD and Katacoda since users do not control those environments anyway.
 		# TODO: handle this case better
-		if ! (is_pwd || is_katacoda); then
+		if ! (is_pwd || is_katacoda || is_gitpod); then
 			echo-notice "Running as root is not recommended"
 		fi
 	fi
@@ -8110,15 +7622,8 @@ case "$1" in
 			init "$@"
 		fi
 		;;
-	start)
+	start|up)
 		load_configuration
-		check_for_updates
-		shift
-		up
-		;;
-	up)
-		# force re-reading of configuration files
-		COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
 		check_for_updates
 		shift
 		up
@@ -8191,15 +7696,8 @@ case "$1" in
 				check_for_updates
 				project_status
 				;;
-			start)
+			start|up)
 				load_configuration
-				check_for_updates
-				shift
-				up
-				;;
-			up)
-				# force re-reading of configuration files
-				COMPOSE_FILE="" ENV_FILE="" DOCKSAL_VOLUMES="" load_configuration
 				check_for_updates
 				shift
 				up
@@ -8512,6 +8010,36 @@ case "$1" in
 		shift
 		ngrok_share "$@"
 		;;
+	share-v2)
+		load_configuration
+		shift
+		case "$1" in
+			start)
+				shift
+				cloudflared_start
+				;;
+			stop)
+				shift
+				cloudflared_stop
+				;;
+			status)
+				shift
+				cloudflared_print_status
+				;;
+			url)
+				shift
+				cloudflared_print_url
+				;;
+			logs)
+				shift
+				cloudflared_get_logs
+				;;
+			*)
+				shift
+				show_help_share-v2
+				;;
+		esac
+		;;
 	cleanup)
 		# no load_configuration
 		check_for_updates
@@ -8628,12 +8156,15 @@ case "$1" in
 		addon "$@"
 		;;
 	pull)
-		shift
-		# Only load the project config if $1 isn't init.
-		if [[ "$1" != "init" ]]; then
-			load_configuration
+		# Todo: Deprecated Moving to Addon
+		addon_file_path="$(addon_get_path $1)"
+		if [[ -z "$addon_file_path" ]]; then
+			echo-yellow "'fin pull' command has been removed out of core and into an addon. See https://github.com/docksal/addons/tree/master/pull for more details."
+			exit 1
 		fi
-		provider_pull "$@"
+
+		shift
+		addon_execute "$addon_file_path" "$@"
 		;;
 	*)
 		addon_file_path="$(addon_get_path $1)"

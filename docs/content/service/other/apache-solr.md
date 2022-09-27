@@ -71,18 +71,30 @@ Apply configuration changes with `fin project start` (`fin p start`).
 Run `fin image registry docksal/solr` to get a list of available image tags.
 
 ```bash
-fin image registry docksal/solr
-docksal/sorl:1.0-solr3 (deprecated)
-docksal/sorl:1.0-solr4 (deprecated)
-docksal/solr:5.5-2.0
-docksal/solr:6.6-2.0
-docksal/solr:7.5-2.0
+$ fin image registry docksal/solr
+...
+docksal/solr:7.7
+docksal/solr:7.7-2.1
+docksal/solr:7.7-edge
+docksal/solr:8
+docksal/solr:8-2.1
+docksal/solr:8-edge
+docksal/solr:8.1
+docksal/solr:8.1-2.1
+docksal/solr:8.1-edge
+docksal/solr:8.6-edge
 ```
 
 Legend: 
 
 - `<image-repo>:<software-version>[-<image-stability-tag>][-<flavor>]`
 
+To use one of these versions, set the `SOLR_IMAGE` variable in your project:
+
+```bash
+fin config set SOLR_IMAGE=docksal/solr:8.1-2.1
+fin project reset solr
+```
 
 ## Multiple Solr Cores
 

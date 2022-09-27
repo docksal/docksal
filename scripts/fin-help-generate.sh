@@ -4,6 +4,32 @@
 
 OUTFILE="../docs/content/fin/fin-help.md"
 
+# List of help sections to include
+sections="
+	fin
+	addon
+	alias
+	db
+	hosts
+	project
+	ssh-key
+	system
+	vm
+
+	config
+	exec-url
+	init
+	image
+	logs
+	pull
+	run-cli
+	share
+	share-v2
+
+	cleanup
+	update
+"
+
 # Tell fin to remove colors
 export TERM="dumb"
 
@@ -16,8 +42,11 @@ headergen ()
 # $1 commmand
 helpgen ()
 {
-	../bin/fin help "$1" | sed "s/^/	/" >> "$(pwd)/$OUTFILE"
-	echo >> "$(pwd)/$OUTFILE"
+	printf \
+'```text
+%s
+```\n\n' \
+	"$(../bin/fin help "$1")" >> "$(pwd)/$OUTFILE"
 }
 
 # --------------------------------- RUNTIME ------------------------------------
@@ -31,7 +60,7 @@ cd "$__DIR__"
 echo "Generating help..."
 
 # Markdown header
-cat <<EOF >> "$(pwd)/$OUTFILE"
+cat << EOF >> "$(pwd)/$OUTFILE"
 ---
 title: "fin help"
 weight: 2
@@ -41,58 +70,9 @@ aliases:
 
 EOF
 
-echo " - fin"
-headergen "fin"
-helpgen fin
-
-echo " - project"
-headergen "project"
-helpgen project
-
-echo " - db"
-headergen "db"
-helpgen db
-
-echo " - pull"
-headergen "pull"
-helpgen pull
-
-echo " - ssh-key"
-headergen "ssh-key"
-helpgen ssh-key
-
-echo " - system"
-headergen "system"
-helpgen system
-
-echo " - config"
-headergen "config"
-helpgen config
-
-echo " - addon"
-headergen "addon"
-helpgen addon
-
-echo " - exec"
-headergen "exec"
-helpgen exec
-
-echo " - run-cli"
-headergen "run-cli"
-helpgen run-cli
-
-echo " - hosts"
-headergen "hosts"
-helpgen hosts
-
-echo " - alias"
-headergen "alias"
-helpgen alias
-
-echo " - logs"
-headergen "logs"
-helpgen logs
-
-echo " - image"
-headergen "image"
-helpgen image
+# Generate help for all help sections
+for section in ${sections}; do
+	echo " - ${section}"
+	headergen ${section}
+	helpgen ${section}
+done

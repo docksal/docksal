@@ -27,13 +27,13 @@ Examples:
 ### Passing Variables to Containers {#pass-variables}
 
 You may add environment variables that you can pass into containers through the `docksal.env` or `docksal-local.env` files.
+These are easily set using `fin config set`:
+
+```bash
+fin config set MY_CUSTOM_VARIBLE='test key'
+```
 
 Variable values can be statically set or passed from the host. See example below.
-
-```
-# docksal.env
-MY_CUSTOM_VARIBLE='test key'
-```
 
 ```yaml
 # docksal.yml

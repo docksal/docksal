@@ -46,9 +46,9 @@ Below is an example of extending the `cli` image with additional configs, apt, a
 **File `.docksal/services/cli/Dockerfile`**
 
 ```Dockerfile
-# Note how we use cli:2 here, which refers to the latest available 2.x version
+# Note how we use cli:3 here, which refers to the latest available 3.x version
 # So that we wouldn't need to update this every time new version of Docksal cli releases
-FROM docksal/cli:2-php7.3
+FROM docksal/cli:php7.4-3
 
 # Install additional apt packages
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -83,7 +83,7 @@ Here's another example for `web`:
 
 ```Dockerfile
 # Use a stock Docksal image as the base
-FROM docksal/apache:2.4-2.3
+FROM docksal/apache:2.4-2.5
 
 RUN set -x \
 	# Enabled extra modules
