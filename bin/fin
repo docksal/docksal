@@ -5280,9 +5280,9 @@ image_registry_list ()
 	if [[ "$1" != "" ]]; then
 		tag_escaped=${1//\//\\\/}
 		# for instance $1 == "docksal/db"
-		curl -ksSL https://registry.hub.docker.com/v1/repositories/${1}/tags | \
-			grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | \
-			cut -d " " -f2 | \
+		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags\?page_size\=100 | \
+			grep -o '"name\":\"[-_\.a-zA-Z0-9]*' | \
+			cut -d ":" -f2 | \
 			tr -d \" | \
 			sed "s/^/${tag_escaped}:/"
 	else
