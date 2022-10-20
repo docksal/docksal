@@ -5898,9 +5898,11 @@ ngrok_share ()
 	eval $(parse_params "$@")
 
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-	local container_name=${container:-$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)}
+	local container=${container:-${NGROK_CONTAINER:-web}}
+	local container_name=$(docker-compose ps ${container} | grep Up | grep _${container}_ | cut -d " " -f 1)
+
 	if [[ "$container_name" == "" ]]; then
-		echo-error "Could not find running web container in this project"
+		echo-error "Could not find running ${container} container in this project"
 		exit 1
 	fi
 	local ngrok_container_name=${container_name}_ngrok
@@ -5999,7 +6001,12 @@ ngrok_share ()
 
 	# Add -host-header by default if no arguments are included.
 	if [[ "${ARGS}" == "ngrok http" ]]; then
-		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}' ${container_name}.${network}:${NGROK_PORT}"
+		ARGS="${ARGS} -host-header '${NGROK_VIRTUAL_HOST}'"
+	fi
+
+	# If no configuration was used we append main container.
+	if [[ -z $CONF_ARGS ]]; then
+		ARGS="${ARGS} ${container_name}.${network}:${NGROK_PORT}"
 	fi
 
 	${winpty} docker run --rm ${NGROK_VOLUME} -it \
