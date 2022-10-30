@@ -85,7 +85,7 @@ many concurrently running containers.
 `Default: docksal`
 
 This is the domain name used for Docksal project URLs, i.e., `http://$PROJECT_NAME.$DOCKSAL_DNS_DOMAIN`. 
-Project named `myproject` will result in `http://myproject.docksal` URL by default.
+Project named `myproject` will result in `http://myproject.docksal.site` URL by default.
 
 ### DOCKSAL_DNS_IP
 
