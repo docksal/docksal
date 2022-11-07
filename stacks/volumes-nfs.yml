@@ -12,7 +12,7 @@ volumes:
     driver_opts:
       type: nfs
       device: :${PROJECT_ROOT}
-      o: addr=${DOCKSAL_HOST_IP},vers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1
+      o: addr=${DOCKSAL_HOST_IP},vers=3,nolock,noacl,nocto,noatime,nodiratime,actimeo=1,wsize=32768,rsize=32768
   db_data:  # Database data volume (bind)
   docksal_ssh_agent:  # Shared ssh-agent volume
     external: true
