@@ -13,5 +13,5 @@ This helps us better understand our user base size and composition and prioritiz
 If you prefer not to share this minimal information, change your global configuration:
 
 ```
-fin config set --global DOCKSAL_STATS_OPTOUT=1`
+fin config set --global DOCKSAL_STATS_OPTOUT=1
 ```
