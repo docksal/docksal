@@ -2436,7 +2436,7 @@ version ()
 		echo "$FIN_VERSION"
 	else
 		echo "Docksal version: $DOCKSAL_VERSION"
-		echo "fin version:     $FIN_VERSION"
+		echo "fin version:     v$FIN_VERSION"
 	fi
 
 	# Ping stats server
