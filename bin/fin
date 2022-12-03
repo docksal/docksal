@@ -194,20 +194,20 @@ ver_to_int ()
 #---------------------------- Global Constants --------------------------------
 
 # Dependency versions
-REQUIREMENTS_DOCKER='20.10.12'
-REQUIREMENTS_DOCKER_DD='20.10.12'  # Ships with Docker Desktop 4.4.2 (73305)
+REQUIREMENTS_DOCKER='20.10.21'
+REQUIREMENTS_DOCKER_DD='20.10.21'  # Ships with Docker Desktop 4.15.0 (93002)
 REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
-REQUIREMENTS_DOCKER_COMPOSE='2.1.0' # Docker Compose V2 (arm64/M1 compatible)
+REQUIREMENTS_DOCKER_COMPOSE='2.13.0' # Docker Compose V2
 REQUIREMENTS_DOCKER_MACHINE='0.16.2' # This is the final docker-machine version
-REQUIREMENTS_VBOX='6.1.22'  # Remember to update the download URLs below
+REQUIREMENTS_VBOX='6.1.40'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
-REQUIREMENTS_DOCKER_DESKTOP='4.4.2' # Build 73305
+REQUIREMENTS_DOCKER_DESKTOP='4.15.0' # Build 93002
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
-URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.32/VirtualBox-6.1.32-149290-OSX.dmg"
-URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.32/VirtualBox-6.1.32-149290-Win.exe"
+URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.40/VirtualBox-6.1.40-154048-OSX.dmg"
+URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.40/VirtualBox-6.1.40-154048-Win.exe"
 
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
