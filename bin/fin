@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.110.1
+FIN_VERSION=1.111.0
 
 # Allow to override Docksal version during install.
 # Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
 # Update: DOCKSAL_VERSION=develop fin update
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.17.0}"
+DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.18.0}"
 
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
