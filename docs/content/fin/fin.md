@@ -14,9 +14,6 @@ Docksal Fin (`fin`) is a command line tool for controlling Docksal.
 To list available commands, either run `fin` with no parameters or `fin help`.
 
 
-
-
-
 Complex management commands have their own help sections, e.g., `fin help db`
 
 For a complete list of `fin help` topics see [fin-help](/fin/fin-help/)
@@ -32,3 +29,14 @@ If a projects has custom commands defined, they will show up at the bottom of `f
     ...
     Custom commands found in project commands:
         init                          Initialize a Docksal powered Drupal 8 site
+
+## Using Integrated Tools
+
+There are several [tools](/tools/) pre-installed in the cli container. Some of those tools are aliased as 
+"top level" tools and can be used by running `fin` and the tool name such as drush or composer. Other tools
+will require that you use the `exec` command to run them on-demand. Some commands that you might run:
+
+```bash
+    fin exec python3 --version
+    fin exec npm install
+```
