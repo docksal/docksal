@@ -89,7 +89,7 @@ This is useful for tedious tasks that you need in every project.
 It is not imperative to use bash. You can use any interpreter for your custom command scripts
 
 ```python
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 print "Custom python command!"
 ```
