@@ -5,23 +5,21 @@ aliases:
   - /tools/apache-solr/
 ---
 
-
 ## Docksal Configuration
 
 Add the `solr` service under the `services` section in `.docksal/docksal.yml`:
 
 ```yaml
-  # Solr
-  solr:
-    extends:
-      file: ${HOME}/.docksal/stacks/services.yml
-      service: solr
+# Solr
+solr:
+  extends:
+    file: ${HOME}/.docksal/stacks/services.yml
+    service: solr
 ```
 
 Apply new configuration with `fin project start` (`fin p start`).
 
 Use `http://solr.<VIRTUAL_HOST>/solr` to access the Solr web UI.
-
 
 ## Drupal Configuration
 
@@ -35,14 +33,13 @@ http://solr:8983/solr
 
 For the Search API module use these values:
 
-| Name | Value |
-|---|---|
-| Protocol | `HTTP` |
-| Host | `solr` |
-| Port | `8983` |
-| Solr path | `/solr` |
+| Name      | Value         |
+| --------- | ------------- |
+| Protocol  | `HTTP`        |
+| Host      | `solr`        |
+| Port      | `8983`        |
+| Solr path | `/solr`       |
 | Solr core | `collection1` |
-
 
 ## Updating Solr Configuration
 
@@ -65,7 +62,6 @@ solr:
 
 Apply configuration changes with `fin project start` (`fin p start`).
 
-
 ## Versions
 
 Run `fin image registry docksal/solr` to get a list of available image tags.
@@ -82,7 +78,6 @@ docksal/solr:7.5-2.0
 Legend:
 
 - `<image-repo>:<software-version>[-<image-stability-tag>][-<flavor>]`
-
 
 ## Multiple Solr Cores
 
@@ -128,14 +123,15 @@ Docksal current has Solr 4 defined in the Docksal images. For users with a need 
 your `docksal.yml` file.
 
 ```yaml
-  solr:
-    volumes:
-      - ${PROJECT_ROOT}/.docksal/etc/solr/a:/opt/solr/server/solr/a:ro
-      - ${PROJECT_ROOT}/../data/a/solr:/var/solr/a/data:rw
-      - ${PROJECT_ROOT}/.docksal/etc/solr/b:/opt/solr/server/solr/b:ro
-      - ${PROJECT_ROOT}/../data/b/solr:/var/solr/b/data:rw
-    image: solr:6.6-alpine
+solr:
+  volumes:
+    - ${PROJECT_ROOT}/.docksal/etc/solr/a:/opt/solr/server/solr/a:ro
+    - ${PROJECT_ROOT}/../data/a/solr:/var/solr/a/data:rw
+    - ${PROJECT_ROOT}/.docksal/etc/solr/b:/opt/solr/server/solr/b:ro
+    - ${PROJECT_ROOT}/../data/b/solr:/var/solr/b/data:rw
+  image: solr:6.6-alpine
 ```
+
 Create the file `.docksal/etc/solr/a/core.properties` for instance a with the contents:
 
 ```bash
@@ -153,55 +149,34 @@ from another version of solr, then I suggest that you delete the contents of the
 
 ### Solr 8
 
-- These instructions are for version 8.6.1 of solr which is installed
-  via the docksal specified docker image in the ~/.docksal/stacks/services.yml
-  and the .docksal/docksal.env variable SOLR_IMAGE.
-  which is currently at [docksal/solr:8-edge](https://hub.docker.com/layers/docksal/solr/8-edge/images/sha256-db378c5d6c3fd870d5128274811ec48f6bef365af0b1e26a0c99fbad19d5a6be?context=explore)
-  which specifies version 8.6.1 (line 12).
+Specify the image to use in the docksal.env file
 
 ```bash
-SOLR_IMAGE='docksal/solr:8-edge'
+SOLR_IMAGE='docksal/solr:8'
 ```
+
 This can also be set with `fin config set`.
 
 ```bash
-fin config set SOLR_IMAGE='docksal/solr:8-edge'
+fin config set SOLR_IMAGE='docksal/solr:8'
 ```
-
-  For Solr 8, the core location changes to /opt/solr/server/solr/{{your_new_core_name}}.
-  [See dockerfile](https://github.com/docksal/service-solr/blob/2466d83b4579464b1b05c7f2e7d7273eb00c1ab0/Dockerfile#L31)
-  Your .docksal.yml setup it can look like this (substituting {{your_new_core_name}} with a string of your
-  choice.
 
 ```yml
 ---
-version: '2.1'
+version: "3.9"
 services:
-  # Solr 8.6.1
+  # Solr 8
   solr:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: solr
-    volumes:
-      - ${PROJECT_ROOT}/.docksal/etc/solr/:/opt/solr/server/solr/{{your_new_core_name}}/
-```
-
-and your .docksal/docksal.env
-
-```bash
-SOLR_IMAGE='docksal/solr:8-edge'
 ```
 
 - You will need to `fin project reset` to create the new mount (see yml above).
-- Next, generate the core with solr inside the solr container
-  This will place the config files in the mount you setup above.
-  Please note generating the solr core natively (with solr) might work better than the
-  config sets provided [here](https://github.com/docksal/service-solr/tree/develop/configsets/search_api_solr_8.x-3.0/conf)
+- Generate the solr core with
 
   ```
-  docker exec -ti {{project_name}}_solr_1 bash
-
-  solr create_core -c {{your_new_core_name}} -d /opt/solr/server/solr/ -n {{your_new_core_name}}
+  docker exec -ti $(docker ps --filter "name=solr" '{{ .ID }}') solr create_core -c {{your_core_name}} -n {{your_core_name}}
   ```
 
 Once you have configured your solr instance in the Drupal Admin, and then
@@ -234,6 +209,5 @@ search_api.server.{{server_name}}.yml file, then it can look similar to this
         solr_install_dir: ''
       ```
 
-Notice the path does NOT have /solr in it.  The search_api_solr php code adds
+Notice the path does NOT have /solr in it. The search_api_solr php code adds
 that in there already so if you add in /solr the request will have /solr/solr in the path.
-
