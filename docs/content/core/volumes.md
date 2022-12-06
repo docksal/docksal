@@ -217,23 +217,26 @@ fin project reset
 Use `fin bash` to log into bash and checkout files into `/var/www` with git. Or use `fin docker cp` to copy
 files into the `cli` container.
 
-### DOCKSAL_VOLUMES=none {#volumes-mutagen}
+### Mutagen {#volumes-mutagen}
 
-This option only makes sense with Docker Desktop on macOS.
+- This option only makes sense with Docker Desktop on macOS.
+- Like the Unison option, Mutagen is used to synchronize the files from host to the container.
+- There are two configuration and usage options for Mutagen: Docker Desktop Extension and Stand alone.
 
-Like the Unison option, Mutagen is used to synchronize the files from host to the container.
-There are two configuration and usage options for Mutagen: DD Extension and Stand alone.
+#### The Docker Desktop Extension
 
-#### The Docker Desktop Extension is more recent but comes in two flavors ( https://mutagen.io/documentation/docker-desktop-extension )
-  1. The Free version which only allows for one Cache Setup.
-  2. The Paid Subscription ( https://mutagen.io/account/subscription $7/month) which allows for multiple cache directory setups.
+- This option is more recent but comes in two flavors
+- The Free version which only allows for one Cache Setup.
+- The Paid Subscription ( https://mutagen.io/account/subscription $7/month) which allows for multiple cache directory setups.
+- The Docker Desktop Extension provides a nice GUI integration with Docker Desktop and thus the maintenance of it is easier.
+- To use it, set your "DOCKSAL_VOLUMES="bind" within .docksal/docksal.env and then follow the instructions at
+  - https://mutagen.io/documentation/docker-desktop-extension
 
-  - The Docker Desktop Extension provides a nice GUI integration with Docker Desktop and thus the maintenance of it is easier.
-  - To use it, set your "DOCKSAL_VOLUMES="bind" within .docksal/docksal.env and then follow the instructions on the link above.
+#### The Stand Alone Mutagen version
 
-#### The Stand Alone Mutagen version is setup as follows:
-
-1. Create a mutagen.yml configuration file like so:
+- This option allows for as many sync sessions as you would like and is free. ( https://github.com/mutagen-io/mutagen )
+- Setup and install as follows:
+  - Create a mutagen.yml configuration file in your project directory with contents like:
 
 ```yaml
 sync:
@@ -274,8 +277,8 @@ sync:
     mode: "two-way-resolved"
 ```
 
-2. Replace 'myprojectname' (two instances) with the name of your project in the mutagen.yml file.
-3. Run the following:
+- Replace 'myprojectname' (two instances) with the name of your project in the mutagen.yml file.
+- Run the following:
 
 ```bash
 brew install mutagen-io/mutagen/mutagen
@@ -304,6 +307,9 @@ the mutagen helper:
 ```bash
 fin mutagen restart
 ```
+
+- We believe this is the fastest option available for the MacOs.
+- Documentation on the different mutagen commands : https://mutagen.io/documentation/introduction/getting-started#session-management
 
 {{% notice warning %}}
 Switching volumes is a destructive operation for the whole project stack. To preserve the current state of the database,
