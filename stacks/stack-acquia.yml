@@ -5,7 +5,7 @@
 # - PHP 7.4
 # - Varnish 6.6
 # - Memcached 1.6
-# - Apache Solr 4.5
+# - Apache Solr 7
 
 version: "3.9"
 
@@ -56,4 +56,4 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: solr
     # Pin Solr version
-    image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}
+    image: ${SOLR_IMAGE:-docksal/solr:7}
