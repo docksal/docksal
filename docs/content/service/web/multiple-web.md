@@ -25,7 +25,17 @@ Using a subdomain for the extra virtual host is the most straightforward approac
 </Directory>
 ```
 
-To route an additional custom domain to the primary web container, [see vhost-proxy docs](/core/system-vhost-proxy/#custom-domains). 
+You can add `Include conf/extra/includes/host.conf` at the top of of the `<VirtualHost>` to include the boilerplate configuration of the main virtual host.
+This includes setting up the virtual host to run PHP and proxy through to the `cli` container.
+
+```
+<VirtualHost *:80>
+    Include conf/extra/includes/host.conf
+    ...
+</VirtualHost>
+```
+
+To route an additional custom domain to the primary `web` container, [see vhost-proxy docs](/core/system-vhost-proxy/#custom-domains). 
 
 
 ## Secondary Web Service
@@ -38,7 +48,7 @@ Apache:
 services:
   ...
   styleguide:
-    image: docksal/apache:2.4-2.3
+    image: docksal/apache:2.4-2.5
     volumes:
       - project_root:/var/www:ro,nocopy,cached
     environment:
@@ -53,7 +63,7 @@ Nginx:
 services:
   ...
   styleguide:
-    image: docksal/nginx:1.14-1.0
+    image: docksal/nginx:1.20-1.2
     volumes:
       - project_root:/var/www:ro,nocopy,cached
     environment:

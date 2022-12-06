@@ -1,11 +1,11 @@
 # Acquia alike stack
 #
 # - Apache 2.4
-# - MySQL 5.6
-# - PHP 7.2
-# - Varnish 4.1
-# - Memcached 1.4
-# - ApacheSolr 4.5
+# - MariaDB 10.4 (MySQL 5.7 drop-in replacement)
+# - PHP 7.4
+# - Varnish 6.6
+# - Memcached 1.6
+# - Apache Solr 7
 
 version: "3.9"
 
@@ -21,12 +21,17 @@ services:
   db:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
-      service: mysql
+      service: mariadb
+    # Pin MariaDB version
+    # MariaDB v10.4 functions as limited drop-in replacement for MySQL 5.7
+    image: ${DB_IMAGE:-docksal/mariadb:10.4-1.3}
 
   cli:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: cli
+    # Pin PHP version
+    image: ${CLI_IMAGE:-docksal/cli:php7.4-3.2}
 
   # http(s)://varnish.VIRTUAL_HOST
   varnish:
@@ -34,7 +39,7 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: varnish
     # Pin Varnish version
-    image: ${VARNISH_IMAGE:-docksal/varnish:4.1-2.0}
+    image: ${VARNISH_IMAGE:-docksal/varnish:6.6-3.1}
     depends_on:
       - web
 
@@ -42,6 +47,8 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: memcached
+    # Pin Memcached version
+    image: ${MEMCACHED_IMAGE:-memcached:1.6-alpine}
 
   # http(s)://solr.VIRTUAL_HOST/solr
   solr:
@@ -49,4 +56,4 @@ services:
       file: ${HOME}/.docksal/stacks/services.yml
       service: solr
     # Pin Solr version
-    image: ${SOLR_IMAGE:-docksal/solr:1.0-solr4}
+    image: ${SOLR_IMAGE:-docksal/solr:7}

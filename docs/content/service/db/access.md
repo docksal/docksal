@@ -57,10 +57,14 @@ Password: root
 
 ## Root password
 
-Override the default admin password by changing the value of `MYSQL_ROOT_PASSWORD` in `.docksal/docksal.env` or `.docksal/docksal-local.env`.
+Override the default admin password by changing the configuration value of `MYSQL_ROOT_PASSWORD` for project environment file or the local environment file.
 
 ```
-MYSQL_ROOT_PASSWORD="gue$$-me-not"
+fin config set MYSQL_ROOT_PASSWORD="gue$$-me-not"
+```
+or
+```
+fin config set --env=local MYSQL_ROOT_PASSWORD="gue$$-me-not"
 ```
 
 {{% notice note %}}

@@ -67,59 +67,39 @@ Apply configuration changes with `fin project start` (`fin p start`).
 Run `fin image registry docksal/solr` to get a list of available image tags.
 
 ```bash
-fin image registry docksal/solr
-docksal/sorl:1.0-solr3 (deprecated)
-docksal/sorl:1.0-solr4 (deprecated)
-docksal/solr:5.5-2.0
-docksal/solr:6.6-2.0
-docksal/solr:7.5-2.0
+$ fin image registry docksal/solr
+...
+docksal/solr:7.7
+docksal/solr:7.7-2.1
+docksal/solr:7.7-edge
+docksal/solr:8
+docksal/solr:8-2.1
+docksal/solr:8-edge
+docksal/solr:8.1
+docksal/solr:8.1-2.1
+docksal/solr:8.1-edge
+docksal/solr:8.6-edge
 ```
 
 Legend:
 
 - `<image-repo>:<software-version>[-<image-stability-tag>][-<flavor>]`
 
+To use one of these versions, set the `SOLR_IMAGE` variable in your project:
+
+```bash
+fin config set SOLR_IMAGE=docksal/solr:8.1-2.1
+fin project reset solr
+```
+
 ## Multiple Solr Cores
 
 To run multiple Solr cores, follow version specific instructions below.
 
-### Solr 4
-
-To set up multiple Solr cores for use with the [Drupal Search API Solr module](https://www.drupal.org/project/search_api_solr),
-modify your `.docksal/docksal.yml` or `.docksal/docksal-local.yml` file with the following:
-
-```yaml
-services:
-  solr:
-    extends:
-      file: ${HOME}/.docksal/stacks/services.yml
-      service: solr
-    labels:
-      io.docksal.virtual-host: solr-a.${VIRTUAL_HOST},solr-b.${VIRTUAL_HOST}
-    volumes:
-      - ${PROJECT_ROOT}/.docksal/etc/solr/a:/opt/solr/example/solr/a:ro
-      - /var/lib/solr/a/data:rw
-      - ${PROJECT_ROOT}/.docksal/etc/solr/b:/opt/solr/example/solr/b:ro
-      - /var/lib/solr/b/data:rw
-```
-
-Create the file `.docksal/etc/solr/a/core.properties` for instance a with the contents:
-
-```bash
-name=a
-dataDir=/var/lib/solr/a/data
-```
-
-Create the file `.docksal/etc/solr/b/core.properties` for instance b with the contents:
-
-```bash
-name=b
-dataDir=/var/lib/solr/b/data
-```
 
 ### Solr 6
 
-Docksal current has Solr 4 defined in the Docksal images. For users with a need to use Solr 6.x, you can set this in
+Docksal current has Solr 8 defined in the Docksal images. For users with a need to use Solr 6.x, you can set this in
 your `docksal.yml` file.
 
 ```yaml

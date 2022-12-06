@@ -5,7 +5,7 @@ aliases:
   - /en/master/advanced/stack-config/
 ---
 
-Configuration variables can be specified in the `docksal.env` file or by running the `fin config set` command.
+Configuration variables can be specified by running the `fin config set` command.
 
 There are 2 scopes of variables: global and project. Global scope variables are set in `$HOME/.docksal/docksal.env`, 
 while project scope variables are set in `$PROJECT_ROOT/.docksal/docksal.env`. 
@@ -85,7 +85,7 @@ many concurrently running containers.
 `Default: docksal`
 
 This is the domain name used for Docksal project URLs, i.e., `http://$PROJECT_NAME.$DOCKSAL_DNS_DOMAIN`. 
-Project named `myproject` will result in `http://myproject.docksal` URL by default.
+Project named `myproject` will result in `http://myproject.docksal.site` URL by default.
 
 ### DOCKSAL_DNS_IP
 
@@ -116,16 +116,23 @@ Also check `DOCKSAL_DNS_DISABLED` as it may be a better option than just disabli
 
 `Default: 0`
 
-Set to `1` and do `fin system reset` to disable the `docksal-dns` built-in service and switch to using the public 
-`.docksal.site` base domain. This automatically sets `DOCKSAL_DNS_DOMAIN=docksal.site` and  `DOCKSAL_NO_DNS_RESOLVER=1`.
+To disable the `docksal-dns` built-in service and switch to using the public `.docksal.site` base domain, run:
 
-Useful when `docksal-dns` is conflicting with corporate rules or if some other software restricts it 
+```bash
+fin config set --global DOCKSAL_DNS_DISABLED=1
+fin system reset
+```
+
+This automatically sets `DOCKSAL_DNS_DOMAIN=docksal.site` and  `DOCKSAL_NO_DNS_RESOLVER=1`.
+
+Useful when `docksal-dns` conflicts with corporate rules or if some other software restricts binding to `UDP:53` port 
 (`0.0.0.0:53: bind: address already in use`). 
 
 Projects that do not override the `VIRTUAL_HOST` variable will switch to the new `docksal.site` base domain after running 
-`fin project restart`. Projects that hardcode `VIRTUAL_HOST` will either need to update the value 
-(e.g., `VIRTUAL_HOST=myproject.docksal.site`) or use [fin hosts](/fin/fin-help/#hosts) command to manage host records. 
-semi-automatic mode.
+`fin project restart`.
+
+Projects that hardcode `VIRTUAL_HOST` will either need to update the value (e.g., `VIRTUAL_HOST=myproject.docksal.site`) 
+or use [fin hosts](/fin/fin-help/#hosts) command to manage host records manually.
 
 ### DOCKSAL_HEALTHCHECK_TIMEOUT
 
@@ -133,6 +140,16 @@ semi-automatic mode.
 
 How many seconds to give project containers to reach `healthy` state before `fin` considers the stack startup as failed. 
 The value should be a multiple of `5`.
+
+### DOCKSAL_HOST
+
+`Default: "<unset>"`
+
+If set, overrides the internal `DOCKER_HOST` variable used by Docker / Docker Compose.
+
+This allows pointing Docker client to a different/external Docker host and can be useful in CI scenarios.
+
+Note: Consider using [Docker Contexts](https://docs.docker.com/engine/context/working-with-contexts/) instead.
 
 ### DOCKSAL_LOCK_UPDATES
 
@@ -452,11 +469,17 @@ Defines the timeout of inactivity after which the project stack and code base wi
 
 ### PROJECT_INACTIVITY_TIMEOUT
 
-Defines the timeout of inactivity after which the project stack will be stopped (e.g., 0.5h).
+Enables the [auto-stop feature](/use-cases/project-auto-start-stop#auto-stop) and defines the period after which a 
+project stack is considered inactive and is stopped (e.g., 0.5h).
+
+This feature is disabled by default (set to `0`).
 
 ### PROJECT_AUTOSTART
 
-Setting this variable to `0` will disable autostart projects by visiting project url. This option is active by default (set to `1`).
+Toggles the [auto-start feature](/use-cases/project-auto-start-stop#auto-start) for projects (automatic start by 
+visiting project url).
+
+This feature is disabled by default (set to `0`).
 
 ### SANDBOX_PERMANENT
 

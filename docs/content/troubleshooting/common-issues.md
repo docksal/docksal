@@ -329,15 +329,19 @@ to run the project.
 
 See Issue 3. Lack of memory for resolution.
 
-## Issue 12. VirtualBox Installation Fails on macOS High Sierra 10.13 {#issue-12}
+## Issue 12. VirtualBox Installation Fails on macOS {#issue-12}
 
-New Docksal / VirtualBox installations fail on a fresh macOS High Sierra 10.13.x due to the new policy Apple introduced
+VirtualBox installation fails on macOS High Sierra v10.13 or later due to the new policy Apple introduced
 around third-party kernel extensions.
 
 ### How to Resolve
 
-- Open System Preferences > Security & Privacy and click the `Allow` button for `Oracle America, Inc.`
-- Restart the VirtualBox installation manually
+- Open `System Preferences > Security & Privacy` and click the `Allow` button for `Oracle America, Inc.`
+- Restart VirtualBox installation manually
+
+If you do not see the "Allow" button, it means the extension is already enabled.
+
+![Allowing VirtualBox kernel extension](/images/virtualbox-kernel-extension-allow.png)
 
 In certain cases you may have to reboot your Mac and then reinstall VirtualBox manually.
 
@@ -464,3 +468,48 @@ There is no guarantee that pinning the vhost-proxy image won't result in incompa
 {{% /notice %}}
 
 Long term fix: consider switching to a host with a modern CPU with SSE 4.2 support.
+
+## Issue 18. Composer Out of Memory
+
+Composer 2 is much improved over Composer 1. However, even Composer 2 can throw the dreaded "exhausted memory" or "cannot allocate memory" message.
+
+### How to Resolve
+
+Run your composer command beginning with...
+
+```bash
+fin exec COMPOSER_MEMORY_LIMIT=-1 composer
+```
+
+If you are still having memory issues, see [Out-of-memory Issues](/troubleshooting/common-issues/#issue-03).
+
+## Issue 19. Out of disk space
+
+Out of disk issues may manifest in many ways. One is:
+
+```
+ERROR 1114 (HY000) at line xxxx: The table 'xxxx' is full
+```
+
+You can diagnose this issue with `fin exec df -lh`. If a disk shows close to 100% usage, you'll need to either [clean up your projects](https://docs.docksal.io/core/vm/#free-up-space-in-virtualbox-vm-docker-for-mac-or-docker-for-windows) or expand the disk.
+
+### How to Resolve
+
+- [If you are using VirtualBox](https://docs.docksal.io/core/vm/#increasing-docksal-s-virtualbox-vm-disk-size-hdd)
+- If you are using Docker Desktop:
+  - In the UI, go to Preferences > Resources
+  - Increase the "Disk image size"
+  - `fin up` to restart your project
+
+## Issue 20. Mobile Device Management (MDM) Services
+
+Mobile Device Management (MDMs) have become more popular lately for organizations to manage their devices. Kandji and JumpCloud are just a few examples.
+
+Possible symptoms:
+
+- Asking constantly for user account password `sudo`
+- NFS timing out causing issues with projects mounting in Docker
+
+### How To Resolve
+
+Contact your IT Services and mention that you will need sudo access as well as NFS services.
