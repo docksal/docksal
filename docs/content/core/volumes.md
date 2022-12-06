@@ -229,8 +229,18 @@ files into the `cli` container.
 - The Free version which only allows for one Cache Setup.
 - The Paid Subscription ( https://mutagen.io/account/subscription $7/month) which allows for multiple cache directory setups.
 - The Docker Desktop Extension provides a nice GUI integration with Docker Desktop and thus the maintenance of it is easier.
-- To use it, set your "DOCKSAL_VOLUMES="bind" within .docksal/docksal.env and then follow the instructions at
-  - https://mutagen.io/documentation/docker-desktop-extension
+- To use it run
+
+```bash
+fin config set DOCKSAL_VOLUMES=bind
+docker extension install mutagenio/docker-desktop-extension:latest
+docker context use desktop-linux-mutagen
+fin project reset
+```
+
+  - Then create the cache as instructed here: https://mutagen.io/documentation/docker-desktop-extension
+  - Please note that although you set "DOCKSAL_VOLUMES" to "bind", it is automatically switched when you run the extension.
+  - Also, you can only remove the single cache instance after you have `fin project remove` your project.
 
 #### The Stand Alone Mutagen version
 
