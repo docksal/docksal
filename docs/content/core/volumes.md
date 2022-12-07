@@ -317,7 +317,7 @@ fin mutagen restart
 ```
 
 - We believe this is the fastest option available for the MacOs.
-- Read documentation on the [different mutagen commands.](https://mutagen.io/documentation/introduction/getting-started#session-management)
+- Read documentation on the [different mutagen commands](https://mutagen.io/documentation/introduction/getting-started#session-management).
 
 {{% notice warning %}}
 Switching volumes is a destructive operation for the whole project stack. To preserve the current state of the database,
