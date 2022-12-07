@@ -300,7 +300,7 @@ fin db import your_db_backup.sql
 ```
 
 - The initial synchronization takes several seconds depending on the amount of files in your project.
-- The database import command is necessary since you have now done a "project reset".
+- The database import command is necessary since you have now done a "project reset."
 - It is advisable to have the mutagen monitor running for mutagen so you can see what it is doing at any given time as sometimes
   it will be busy or need to be restarted if it reports errors.
 - Start the Monitor and leave it running (in a seperate terminal window) with
