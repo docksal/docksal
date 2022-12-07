@@ -225,7 +225,7 @@ files into the `cli` container.
 
 #### The Docker Desktop Extension
 
-- [The Paid Subscription](https://mutagen.io/account/subscription $7/month) which allows for multiple cache directory setups.
+- The Paid Subscription - [Create an account](https://mutagen.io/login) and [then subscribe for $7/month](https://mutagen.io/account/subscriptions) which allows for multiple cache directory setups.
 - The Docker Desktop Extension provides a nice GUI integration with Docker Desktop and thus the maintenance of it is easier.
 - To use it run
 
@@ -317,7 +317,7 @@ fin mutagen restart
 ```
 
 - We believe this is the fastest option available for the MacOs.
-- Read documentation on the [different mutagen commands](https://mutagen.io/documentation/introduction/getting-started#session-management)
+- Read documentation on the [different mutagen commands.](https://mutagen.io/documentation/introduction/getting-started#session-management)
 
 {{% notice warning %}}
 Switching volumes is a destructive operation for the whole project stack. To preserve the current state of the database,
