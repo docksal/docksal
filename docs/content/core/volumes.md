@@ -225,9 +225,7 @@ files into the `cli` container.
 
 #### The Docker Desktop Extension
 
-- This option is more recent but comes in two flavors
-- The Free version which only allows for one Cache Setup.
-- The Paid Subscription ( https://mutagen.io/account/subscription $7/month) which allows for multiple cache directory setups.
+- [The Paid Subscription](https://mutagen.io/account/subscription $7/month) which allows for multiple cache directory setups.
 - The Docker Desktop Extension provides a nice GUI integration with Docker Desktop and thus the maintenance of it is easier.
 - To use it run
 
@@ -238,7 +236,7 @@ docker context use desktop-linux-mutagen
 fin project reset
 ```
 
-  - Then create the cache as instructed here: https://mutagen.io/documentation/docker-desktop-extension
+  - Then create the [cache as instructed](https://mutagen.io/documentation/docker-desktop-extension)
   - Please note that although you set "DOCKSAL_VOLUMES" to "bind", it is automatically switched when you run the extension.
   - Also, you can only remove the single cache instance after you have `fin project remove` your project.
 
@@ -311,7 +309,7 @@ fin db import your_db_backup.sql
 mutagen sync monitor -l
 ```
 
-As discussed here ( https://github.com/nicoschi/mutagen-for-docksal/#usage ) if you need to restart your project, do it with
+If you [need to restart your project](https://github.com/nicoschi/mutagen-for-docksal/#usage), do it with
 the mutagen helper:
 
 ```bash
@@ -319,7 +317,7 @@ fin mutagen restart
 ```
 
 - We believe this is the fastest option available for the MacOs.
-- Documentation on the different mutagen commands : https://mutagen.io/documentation/introduction/getting-started#session-management
+- Read documentation on the [different mutagen commands](https://mutagen.io/documentation/introduction/getting-started#session-management)
 
 {{% notice warning %}}
 Switching volumes is a destructive operation for the whole project stack. To preserve the current state of the database,
