@@ -9,7 +9,7 @@ aliases:
 You can simply create a `.docksal` directory in your project root and run `fin project start` (`fin start` for short) 
 to get a Docksal-powered stack up and running for a project.
 
-The default LAMP [stack](/stack/understanding-stack-config/) (`DOCKSAL_STACK=defaut`) with Apache, PHP, and MySQL 
+The default LAMP [stack](/stack/understanding-stack-config/) (`DOCKSAL_STACK=default`) with Apache, PHP, and MySQL 
 will be used to create containers. The default Document Root path for web-accessible files is `docroot`.
 
 This is a great way to start developing a new project. This approach can also be used on a permanent basis,
