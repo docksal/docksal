@@ -358,12 +358,10 @@ URL_REPO_UI="https://github.com/docksal/docksal"
 URL_RELEASE_NOTES="https://docksal.io/updates"
 URL_GITHUB_SPONSOR="https://github.com/sponsors/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
-URL_REPO_DRUPAL8="https://github.com/docksal/boilerplate-drupal8.git"
-URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
-URL_REPO_DRUPAL8BLT="https://github.com/docksal/boilerplate-drupal8-blt.git"
-URL_REPO_DRUPAL9="https://github.com/docksal/boilerplate-drupal9.git"
 URL_REPO_DRUPAL9COMPOSER="https://github.com/docksal/boilerplate-drupal9-composer.git"
 URL_REPO_DRUPAL9BLT="https://github.com/docksal/boilerplate-drupal9-blt.git"
+URL_REPO_DRUPAL10COMPOSER="https://github.com/docksal/boilerplate-drupal10-composer.git"
+URL_REPO_DRUPAL10BLT="https://github.com/docksal/boilerplate-drupal10-blt.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/boilerplate-wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/boilerplate-magento.git"
 URL_REPO_GRAV="https://github.com/docksal/boilerplate-grav.git"
@@ -416,7 +414,7 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.4}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.8}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.2}
-IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php7.4-3.2}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php8.1-3.3}
 
 #---------------------------- Helper functions --------------------------------
 
@@ -3329,27 +3327,28 @@ project_create ()
 	if [[ "$choice" == "" ]]; then
 		echo -e "${yellow}2. What would you like to install?${NC}"
 		echo -e "${blue}  PHP based${NC}"
-		echo -e "${green}    1.${NC}  Drupal 9 (Composer Version)"
-		echo -e "${green}    2.${NC}  Drupal 9 (BLT Version)"
-		echo -e "${green}    3.${NC}  Drupal 9"
-		echo -e "${green}    4.${NC}  Drupal 7"
-		echo -e "${green}    5.${NC}  Wordpress"
-		echo -e "${green}    6.${NC}  Magento"
-		echo -e "${green}    7.${NC} Laravel"
-		echo -e "${green}    8.${NC} Symfony Skeleton"
-		echo -e "${green}    9.${NC} Symfony WebApp"
-		echo -e "${green}    10.${NC} Grav CMS"
-		echo -e "${green}    11.${NC} Backdrop CMS"
+		echo -e "${green}    1.${NC}  Drupal 10 (Composer Version)"
+		echo -e "${green}    2.${NC}  Drupal 10 (BLT Version)"
+		echo -e "${green}    3.${NC}  Drupal 9 (Composer Version)"
+		echo -e "${green}    4.${NC}  Drupal 9 (BLT Version)"
+		echo -e "${green}    5.${NC}  Drupal 7"
+		echo -e "${green}    6.${NC}  Wordpress"
+		echo -e "${green}    7.${NC}  Magento"
+		echo -e "${green}    8.${NC} Laravel"
+		echo -e "${green}    9.${NC} Symfony Skeleton"
+		echo -e "${green}    10.${NC} Symfony WebApp"
+		echo -e "${green}    11.${NC} Grav CMS"
+		echo -e "${green}    12.${NC} Backdrop CMS"
 		echo
 		echo -e "${acqua}  Go based${NC}"
-		echo -e "${green}    12.${NC} Hugo"
+		echo -e "${green}    13.${NC} Hugo"
 		echo
 		echo -e "${lime}  JS based${NC}"
-		echo -e "${green}    13.${NC} Gatsby JS"
-		echo -e "${green}    14.${NC} Angular"
+		echo -e "${green}    14.${NC} Gatsby JS"
+		echo -e "${green}    15.${NC} Angular"
 		echo
 		echo -e "${magenta}  HTML${NC}"
-		echo -e "${green}    15.${NC} Static HTML site"
+		echo -e "${green}    16.${NC} Static HTML site"
 		echo
 		echo -e "${red}  Custom${NC}"
 		echo -e "${green}    0.${NC} Custom git repository"
@@ -3371,76 +3370,81 @@ project_create ()
 	# Set target repo
 	case ${choice} in
 		1)
+			target_cms="Drupal 10 (Composer Version)"
+			target_host_name_search_string="drupal9.docksal"
+			target_repo="$URL_REPO_DRUPAL10COMPOSER"
+			;;
+		2)
+			target_cms="Drupal 10 (BLT Version)"
+			target_host_name_search_string="drupal9.docksal"
+			target_repo="$URL_REPO_DRUPAL10BLT"
+			;;
+		3)
 			target_cms="Drupal 9 (Composer Version)"
 			target_host_name_search_string="drupal9.docksal"
 			target_repo="$URL_REPO_DRUPAL9COMPOSER"
 			;;
-		2)
+		4)
 			target_cms="Drupal 9 (BLT Version)"
 			target_host_name_search_string="drupal9.docksal"
 			target_repo="$URL_REPO_DRUPAL9BLT"
 			;;
-		3)
-			target_cms="Drupal 9"
-			target_host_name_search_string="drupal9.docksal"
-			target_repo="$URL_REPO_DRUPAL9"
-			;;
-		4)
+		5)
 			target_cms="Drupal 7"
 			target_host_name_search_string="drupal7.docksal"
 			target_repo="$URL_REPO_DRUPAL7"
 			;;
-		5)
+		6)
 			target_cms="Wordpress"
 			target_host_name_search_string="wordpress.docksal"
 			target_repo="$URL_REPO_WORDPRESS"
 			;;
-		6)
+		7)
 			target_cms="Magento"
 			target_host_name_search_string="magento.docksal"
 			target_repo="$URL_REPO_MAGENTO"
 			;;
-		7)
+		8)
 			target_cms="Laravel"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_LARAVEL"
 			;;
-		8)
+		9)
 			target_cms="Symfony Skeleton"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_SKELETON"
 			;;
-		9)
+		10)
 			target_cms="Symfony WebApp"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_WEBAPP"
 			;;
-		10)
+		11)
 			target_cms="Grav CMS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GRAV"
 			;;
-		11)
+		12)
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
 			target_repo="$URL_REPO_BACKDROP"
 			;;
-		12)
+		13)
 			target_cms="Hugo"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_HUGO"
 			;;
-		13)
+		14)
 			target_cms="Gatsby JS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GATSBY"
 			;;
-		14)
+		15)
 			target_cms="Angular"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_ANGULAR"
 			;;
-		15)
+		16)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
