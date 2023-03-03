@@ -262,7 +262,7 @@ services:
   # Cloudflare Tunnel
   cloudflared:
     hostname: cloudflared
-    image: ${CLOUDFLARED_IMAGE:-raspbernetes/cloudflared:latest}
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
     environment:
       - TUNNEL_URL=http://web
       - NO_AUTOUPDATE=true
