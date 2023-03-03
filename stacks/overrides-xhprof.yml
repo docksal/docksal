@@ -14,7 +14,7 @@ services:
 
   # XHProf Service to review
   xhprof:
-    image: ${XHPROF_IMAGE:-wodby/xhprof:3.0.2}
+    image: ${XHPROF_IMAGE:-wodby/xhprof:2-3.7.6}
     hostname: xhprof
     depends_on:
       - cli
