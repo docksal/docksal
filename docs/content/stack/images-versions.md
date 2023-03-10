@@ -51,33 +51,14 @@ e.g., `fin image registry docksal/cli`, to see list of available CLI images. [Se
 [![CLI on Github](https://img.shields.io/badge/Release%20notes-black.svg?logo=github&style=flat-square&classes=inline)](https://github.com/docksal/service-cli/releases)
 [![CLI on Docker hub](https://img.shields.io/badge/View%20on%20Docker%20Hub-gray.svg?logo=docker&style=flat-square&classes=inline)](https://hub.docker.com/r/docksal/cli/tags)
 
-| Image| Notes |
-|------|-------|
-| `docksal/cli:php8.1-3.2` | *Default image* PHP 8.1.4, Nodejs 16.14.0, Ruby 2.7.4, Python 3.9.2 |
-| `docksal/cli:php8.0-3.2` | PHP 8.0.17, Nodejs 16.14.0, Ruby 2.7.4, Python 3.9.2 |
-| `docksal/cli:php7.4-3.2` | PHP 7.4.28, Nodejs 16.14.0, Ruby 2.7.4, Python 3.9.2 |
-| `docksal/cli:php8.1-3.1` | PHP 8.1.3, Nodejs 14.17.3, Ruby 2.7.4, Python 3.9.2 |
-| `docksal/cli:php8.0-3.1` | PHP 8.0.16, Nodejs 14.17.3, Ruby 2.7.4, Python 3.9.2 |
-| `docksal/cli:php7.4-3.1` | PHP 7.4.28, Nodejs 14.17.3, Ruby 2.7.4, Python 3.9.2 |
-| `docksal/cli:php8.1-3`    | Latest 3.x image version of PHP 8.1 flavor, convenient when [extending images](/stack/extend-images)
-| `docksal/cli:php8.0-3`    | Latest 3.x image version of PHP 8.0 flavor, convenient when [extending images](/stack/extend-images)
-| `docksal/cli:php7.4-3`    | Latest 3.x image version of PHP 7.4 flavor, convenient when [extending images](/stack/extend-images)
-| `docksal/cli:php7.3-3.0` | *Deprecated* PHP 7.3, Nodejs 14.17.3, Ruby 2.5.5, Python 3.8.3, msmtp |
-| `docksal/cli:2.13-php7.4` | *Deprecated* PHP 7.4, Nodejs 14.15.0, Ruby 2.7.2, Python 3.8.3, msmtp |
-| `docksal/cli:2.13-php7.3` | *Deprecated* PHP 7.3, Nodejs 14.15.0, Ruby 2.7.2, Python 3.8.3, msmtp |
-| `docksal/cli:2.11-php7.2` | *Deprecated* PHP 7.2, Nodejs 12.18.1, Ruby 2.7.1, Python 3.8.3, msmtp |
-| `docksal/cli:2.10-php7.1` | *Deprecated* PHP 7.1, Nodejs 12.13.0, Ruby 2.6.5, Python 3.8.3, msmtp |
-| `docksal/cli:2.5-php7.0`  | *Deprecated* PHP 7.0, mhsendmail |
-| `docksal/cli:2.5-php5.6`  | *Deprecated* PHP 5.6, mhsendmail |
-
-{{% notice warning %}}
-v3 images use a new image tag naming convention, which aligns with the rest of the recent Docksal images. 
-"2.13-php7.4" => "php7.4-3.0"
-{{% /notice %}}
-
-{{% notice info %}}
-v3 images bundle stock Debian versions of Ruby and Python, thus there is a version drop for those compared to v2 images.
-{{% /notice %}}
+| Image                     | Notes                                                                                                      |
+|---------------------------|------------------------------------------------------------------------------------------------------------|
+| `docksal/cli:php8.1-3.3`  | *Default image* PHP 8.1.14, Nodejs 18.13.0 LTS, Ruby 2.7.4, Python 3.9.2                                   |
+| `docksal/cli:php8.0-3.3`  | PHP 8.0.27, Nodejs 18.13.0 LTS, Ruby 2.7.4, Python 3.9.2                                                   |
+| `docksal/cli:php7.4-3.3`  | PHP 7.4.33, Nodejs 18.13.0 LTS, Ruby 2.7.4, Python 3.9.2                                                   |
+| `docksal/cli:php8.1-3`    | Latest 3.x image version of PHP 8.1 flavor, convenient when [extending stock images](/stack/extend-images) 
+| `docksal/cli:php8.0-3`    | Latest 3.x image version of PHP 8.0 flavor, convenient when [extending stock images](/stack/extend-images) 
+| `docksal/cli:php7.4-3`    | Latest 3.x image version of PHP 7.4 flavor, convenient when [extending stock images](/stack/extend-images) 
 
 ## Apache
 
