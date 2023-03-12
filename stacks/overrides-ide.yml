@@ -21,9 +21,7 @@ services:
       - IDE_ENABLED
       - IDE_PASSWORD
       # Point xdebug to the PHP Debug listener in the ide container.
-      # "client_host" used by xdebug 3 (docksal/cli v2.13+). "remote_host" used by xdebug 2 (prior docksal/cli versions).
-      # TODO: Drop "remote_host" in 2022.
-      - XDEBUG_CONFIG=client_host=ide remote_host=ide
+      - XDEBUG_CONFIG=client_host=ide
     labels:
       - io.docksal.virtual-host=ide-${VIRTUAL_HOST},ide-${VIRTUAL_HOST}.*
       - io.docksal.virtual-port=8080

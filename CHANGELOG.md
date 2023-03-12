@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.18.0 (2023-03-12)
+
+### New software versions ✨
+
+- fin v1.112.0
+- Docker Desktop v4.17.0
+- Docker v20.10.23
+- Docker Compose v2.15.1
+- VirtualBox v6.1.42
+- New image versions
+  - [docksal/cli v3.3](https://github.com/docksal/service-cli/releases/tag/v3.3.0)
+- Switched all stacks to PHP 8.1 (`docksal/cli:php8.1-3.3` image)
+
+### Changes and improvements ⚙️
+
+- macOS Ventura 13.0 compatibility
+  - Adjusted NFS mount read/write buffers
+- Ubuntu 22.04 compatibility
+- Made `DOCKSAL_ENVIRONMENT` variable visible in custom commands and add-ons by default
+- Updated Solr version to v7 for the Acquia stack
+- Fixed `fin image registry <image_name>` command
+- Fixed `fin share` command
+- Fixed network settings in Gitpod
+- Updated the list of options for `fin project create` (added Drupal 10 options, removed Drupal 8)
+- Updated `xhprof` image to work with arm64/Apple Silicone
+- Switched `cloudflared` service to the official `cloudflare/cloudflared` image (which now supports arm64)
+- Dropped legacy xdebug v2 `remote_host` option in stack configs
+- Improved fin sysinfo output (added green/red colors for PASS/FAIL tests)
+
+### Documentation 📖
+
+- Adding Mutagen option in [Shared Volumes](https://docs.docksal.io/core/volumes/) docs
+- Updated PHP version docs
+- Removed Solr 4 instructions and updated the listed default version to Solr 8
+- Various small updates
+
+### Contributors 🤓
+
+@lmakarov, @froboy, @paulsheldrake, @shelane, @halisonfernandes, @obriat, @khaledzaidan, @nicoschi, @shaal, 
+@matthiasseghers, @eloso-uk, @sean-e-dietrich, @danshumaker, @rosenstrauch, @jasonawant, @anpolimus, 
+
+### Sponsors 🤑
+
+@markaspot, @lpeabody, @alexander-danilenko, @andreyzb, @twfahey1, @johnoltman65, [❤️ You ❤️ ](https://github.com/sponsors/docksal)
+
+
 ## 1.17.0 (2022-04-15)
 
 ### New software versions ✨ 

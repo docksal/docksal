@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.110.1
+FIN_VERSION=1.112.0
 
 # Allow to override Docksal version during install.
 # Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
 # Update: DOCKSAL_VERSION=develop fin update
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.17.0}"
+DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.18.0}"
 
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
@@ -194,20 +194,20 @@ ver_to_int ()
 #---------------------------- Global Constants --------------------------------
 
 # Dependency versions
-REQUIREMENTS_DOCKER='20.10.12'
-REQUIREMENTS_DOCKER_DD='20.10.12'  # Ships with Docker Desktop 4.4.2 (73305)
+REQUIREMENTS_DOCKER='20.10.23'
+REQUIREMENTS_DOCKER_DD='20.10.23'  # Ships with Docker Desktop 4.17.0 (99724)
 REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
-REQUIREMENTS_DOCKER_COMPOSE='2.1.0' # Docker Compose V2 (arm64/M1 compatible)
+REQUIREMENTS_DOCKER_COMPOSE='2.15.1' # Docker Compose V2
 REQUIREMENTS_DOCKER_MACHINE='0.16.2' # This is the final docker-machine version
-REQUIREMENTS_VBOX='6.1.22'  # Remember to update the download URLs below
+REQUIREMENTS_VBOX='6.1.42'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
-REQUIREMENTS_DOCKER_DESKTOP='4.4.2' # Build 73305
+REQUIREMENTS_DOCKER_DESKTOP='4.17.0' # Build 99724
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
-URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.32/VirtualBox-6.1.32-149290-OSX.dmg"
-URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.32/VirtualBox-6.1.32-149290-Win.exe"
+URL_VBOX_MAC="https://download.virtualbox.org/virtualbox/6.1.42/VirtualBox-6.1.42-155177-OSX.dmg"
+URL_VBOX_WIN="https://download.virtualbox.org/virtualbox/6.1.42/VirtualBox-6.1.42-155177-Win.exe"
 
 # Configuration paths
 # Rewrite $HOME on windows to be absolute path in Unix notation
@@ -268,7 +268,8 @@ DOCKSAL_COMMANDS_PATH=".docksal/commands"
 DOCKSAL_ADDONS_PATH=".docksal/addons"
 
 # Docksal environment
-DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
+# Exported to be visible in custom commands and addons by default.
+export DOCKSAL_ENVIRONMENT="${DOCKSAL_ENVIRONMENT:-local}"
 
 # Network settings
 
@@ -357,12 +358,10 @@ URL_REPO_UI="https://github.com/docksal/docksal"
 URL_RELEASE_NOTES="https://docksal.io/updates"
 URL_GITHUB_SPONSOR="https://github.com/sponsors/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
-URL_REPO_DRUPAL8="https://github.com/docksal/boilerplate-drupal8.git"
-URL_REPO_DRUPAL8COMPOSER="https://github.com/docksal/boilerplate-drupal8-composer.git"
-URL_REPO_DRUPAL8BLT="https://github.com/docksal/boilerplate-drupal8-blt.git"
-URL_REPO_DRUPAL9="https://github.com/docksal/boilerplate-drupal9.git"
 URL_REPO_DRUPAL9COMPOSER="https://github.com/docksal/boilerplate-drupal9-composer.git"
 URL_REPO_DRUPAL9BLT="https://github.com/docksal/boilerplate-drupal9-blt.git"
+URL_REPO_DRUPAL10COMPOSER="https://github.com/docksal/boilerplate-drupal10-composer.git"
+URL_REPO_DRUPAL10BLT="https://github.com/docksal/boilerplate-drupal10-blt.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/boilerplate-wordpress.git"
 URL_REPO_MAGENTO="https://github.com/docksal/boilerplate-magento.git"
 URL_REPO_GRAV="https://github.com/docksal/boilerplate-grav.git"
@@ -415,7 +414,7 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.4}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.8}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.2}
-IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php7.4-3.2}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php8.1-3.3}
 
 #---------------------------- Helper functions --------------------------------
 
@@ -2435,7 +2434,7 @@ version ()
 		echo "$FIN_VERSION"
 	else
 		echo "Docksal version: $DOCKSAL_VERSION"
-		echo "fin version:     $FIN_VERSION"
+		echo "fin version:     v$FIN_VERSION"
 	fi
 
 	# Ping stats server
@@ -3273,7 +3272,7 @@ project_status ()
 	check_docksal_environment
 	check_project_unique
 
-	docker-compose ps
+	docker-compose ps -a
 }
 
 # List Docksal projects
@@ -3328,27 +3327,28 @@ project_create ()
 	if [[ "$choice" == "" ]]; then
 		echo -e "${yellow}2. What would you like to install?${NC}"
 		echo -e "${blue}  PHP based${NC}"
-		echo -e "${green}    1.${NC}  Drupal 9 (Composer Version)"
-		echo -e "${green}    2.${NC}  Drupal 9 (BLT Version)"
-		echo -e "${green}    3.${NC}  Drupal 9"
-		echo -e "${green}    4.${NC}  Drupal 7"
-		echo -e "${green}    5.${NC}  Wordpress"
-		echo -e "${green}    6.${NC}  Magento"
-		echo -e "${green}    7.${NC} Laravel"
-		echo -e "${green}    8.${NC} Symfony Skeleton"
-		echo -e "${green}    9.${NC} Symfony WebApp"
-		echo -e "${green}    10.${NC} Grav CMS"
-		echo -e "${green}    11.${NC} Backdrop CMS"
+		echo -e "${green}    1.${NC}  Drupal 10 (Composer Version)"
+		echo -e "${green}    2.${NC}  Drupal 10 (BLT Version)"
+		echo -e "${green}    3.${NC}  Drupal 9 (Composer Version)"
+		echo -e "${green}    4.${NC}  Drupal 9 (BLT Version)"
+		echo -e "${green}    5.${NC}  Drupal 7"
+		echo -e "${green}    6.${NC}  Wordpress"
+		echo -e "${green}    7.${NC}  Magento"
+		echo -e "${green}    8.${NC} Laravel"
+		echo -e "${green}    9.${NC} Symfony Skeleton"
+		echo -e "${green}    10.${NC} Symfony WebApp"
+		echo -e "${green}    11.${NC} Grav CMS"
+		echo -e "${green}    12.${NC} Backdrop CMS"
 		echo
 		echo -e "${acqua}  Go based${NC}"
-		echo -e "${green}    12.${NC} Hugo"
+		echo -e "${green}    13.${NC} Hugo"
 		echo
 		echo -e "${lime}  JS based${NC}"
-		echo -e "${green}    13.${NC} Gatsby JS"
-		echo -e "${green}    14.${NC} Angular"
+		echo -e "${green}    14.${NC} Gatsby JS"
+		echo -e "${green}    15.${NC} Angular"
 		echo
 		echo -e "${magenta}  HTML${NC}"
-		echo -e "${green}    15.${NC} Static HTML site"
+		echo -e "${green}    16.${NC} Static HTML site"
 		echo
 		echo -e "${red}  Custom${NC}"
 		echo -e "${green}    0.${NC} Custom git repository"
@@ -3370,76 +3370,81 @@ project_create ()
 	# Set target repo
 	case ${choice} in
 		1)
+			target_cms="Drupal 10 (Composer Version)"
+			target_host_name_search_string="drupal9.docksal"
+			target_repo="$URL_REPO_DRUPAL10COMPOSER"
+			;;
+		2)
+			target_cms="Drupal 10 (BLT Version)"
+			target_host_name_search_string="drupal9.docksal"
+			target_repo="$URL_REPO_DRUPAL10BLT"
+			;;
+		3)
 			target_cms="Drupal 9 (Composer Version)"
 			target_host_name_search_string="drupal9.docksal"
 			target_repo="$URL_REPO_DRUPAL9COMPOSER"
 			;;
-		2)
+		4)
 			target_cms="Drupal 9 (BLT Version)"
 			target_host_name_search_string="drupal9.docksal"
 			target_repo="$URL_REPO_DRUPAL9BLT"
 			;;
-		3)
-			target_cms="Drupal 9"
-			target_host_name_search_string="drupal9.docksal"
-			target_repo="$URL_REPO_DRUPAL9"
-			;;
-		4)
+		5)
 			target_cms="Drupal 7"
 			target_host_name_search_string="drupal7.docksal"
 			target_repo="$URL_REPO_DRUPAL7"
 			;;
-		5)
+		6)
 			target_cms="Wordpress"
 			target_host_name_search_string="wordpress.docksal"
 			target_repo="$URL_REPO_WORDPRESS"
 			;;
-		6)
+		7)
 			target_cms="Magento"
 			target_host_name_search_string="magento.docksal"
 			target_repo="$URL_REPO_MAGENTO"
 			;;
-		7)
+		8)
 			target_cms="Laravel"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_LARAVEL"
 			;;
-		8)
+		9)
 			target_cms="Symfony Skeleton"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_SKELETON"
 			;;
-		9)
+		10)
 			target_cms="Symfony WebApp"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_WEBAPP"
 			;;
-		10)
+		11)
 			target_cms="Grav CMS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GRAV"
 			;;
-		11)
+		12)
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
 			target_repo="$URL_REPO_BACKDROP"
 			;;
-		12)
+		13)
 			target_cms="Hugo"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_HUGO"
 			;;
-		13)
+		14)
 			target_cms="Gatsby JS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GATSBY"
 			;;
-		14)
+		15)
 			target_cms="Angular"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_ANGULAR"
 			;;
-		15)
+		16)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
@@ -5279,9 +5284,9 @@ image_registry_list ()
 	if [[ "$1" != "" ]]; then
 		tag_escaped=${1//\//\\\/}
 		# for instance $1 == "docksal/db"
-		curl -ksSL https://registry.hub.docker.com/v1/repositories/${1}/tags | \
-			grep -o 'name\":\ \"[-_\.a-zA-Z0-9]*' | \
-			cut -d " " -f2 | \
+		curl -ksSL https://registry.hub.docker.com/v2/repositories/${1}/tags\?page_size\=100 | \
+			grep -o '"name\":\"[-_\.a-zA-Z0-9]*' | \
+			cut -d ":" -f2 | \
 			tr -d \" | \
 			sed "s/^/${tag_escaped}:/"
 	else
@@ -5897,7 +5902,7 @@ ngrok_share ()
 	eval $(parse_params "$@")
 
 	local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
-	local container_name=${container:-$(docker-compose ps web | grep Up | grep _web_ | cut -d " " -f 1)}
+	local container_name=${container:-$(docker-compose ps web | grep 'Up\|running' | grep _web_ | cut -d " " -f 1)}
 	if [[ "$container_name" == "" ]]; then
 		echo-error "Could not find running web container in this project"
 		exit 1
@@ -6212,15 +6217,15 @@ sysinfo ()
 		local PING="ping -c 1 -W 1"
 		echo -n "Host to ${DOCKSAL_IP}: 	"
 		eval "${PING} ${DOCKSAL_IP}" &>/dev/null
-		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
+		[[ $? == 0 ]] && echo-green "PASS" || echo-red "FAIL"
 		## Check that containers can access DOCKSAL_IP
 		echo -n "Container to ${DOCKSAL_IP}: 	"
 		docker run --rm busybox sh -c "${PING} ${DOCKSAL_IP}" &>/dev/null
-		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
+		[[ $? == 0 ]] && echo-green "PASS" || echo-red "FAIL"
 		## Check that containers can access DOCKSAL_HOST_IP
 		echo -n "Container to ${DOCKSAL_HOST_IP}: 	"
 		docker run --rm busybox sh -c "${PING} ${DOCKSAL_HOST_IP}" &>/dev/null
-		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
+		[[ $? == 0 ]] && echo-green "PASS" || echo-red "FAIL"
 
 		# DNS resolution
 		local TEST_URL="http://dns-test.${DOCKSAL_DNS_DOMAIN}"
@@ -6232,9 +6237,9 @@ sysinfo ()
 		echo -n "Host: "
 		eval ${TEST_CMD} &>/dev/null
 		if [[ $? == 0 ]]; then
-			echo "PASS"
+			echo-green "PASS"
 		else
-			echo "FAIL"
+			echo-red "FAIL"
 			echo
 			echo "Debug info:"
 			echo "----------"
@@ -6250,7 +6255,7 @@ sysinfo ()
 		echo -n "Containers: "
 		# TODO: figure out how to use busybox/wget in docksal/empty or use our own version with full wget/curl instead
 		docker run --rm --dns="${DOCKSAL_DNS1}" --dns="${DOCKSAL_DNS2}" curlimages/curl sh -c "${TEST_CMD}" &>/dev/null
-		[[ $? == 0 ]] && echo "PASS" || echo "FAIL"
+		[[ $? == 0 ]] && echo-green "PASS" || echo-red "FAIL"
 
 		echo
 		echo "███  DOCKER: RUNNING CONTAINERS"

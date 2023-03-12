@@ -57,5 +57,5 @@ netscout_web_1   /opt/startup.sh apache2 -D ...   Up      443/tcp, 80/tcp
 
 **5.** Accessing exposed port
 
-To access the exposed port use dedicated Docksal IP `192.168.64.100`, not `localhost`.
-I.e. in the example above access `192.168.64.100:2222`.
+To access the exposed port use dedicated Docksal IP `192.168.64.100`, not `localhost`,
+i.e., in the example above access `192.168.64.100:2222`.

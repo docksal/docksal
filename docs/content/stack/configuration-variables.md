@@ -5,7 +5,7 @@ aliases:
   - /en/master/advanced/stack-config/
 ---
 
-Configuration variables can be specified in the `docksal.env` file or by running the `fin config set` command.
+Configuration variables can be specified by running the `fin config set` command.
 
 There are 2 scopes of variables: global and project. Global scope variables are set in `$HOME/.docksal/docksal.env`, 
 while project scope variables are set in `$PROJECT_ROOT/.docksal/docksal.env`. 
@@ -85,7 +85,7 @@ many concurrently running containers.
 `Default: docksal`
 
 This is the domain name used for Docksal project URLs, i.e., `http://$PROJECT_NAME.$DOCKSAL_DNS_DOMAIN`. 
-Project named `myproject` will result in `http://myproject.docksal` URL by default.
+Project named `myproject` will result in `http://myproject.docksal.site` URL by default.
 
 ### DOCKSAL_DNS_IP
 

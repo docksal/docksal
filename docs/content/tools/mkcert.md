@@ -36,7 +36,7 @@ Open https://[project].docksal to validate.
 mkcert can also be installed as an [addon](https://github.com/docksal/addons/tree/master/mkcert). 
 
 ```bash
-fin addon install mkcert
+fin addon install mkcert -g
 ```
 
 This will download and install `mkcert` binary in `$HOME/.docksal/bin/mkcert` **except** when `mkcert` is already 

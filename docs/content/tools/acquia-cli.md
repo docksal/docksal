@@ -29,10 +29,11 @@ fin config set --global SECRET_ACQUIA_CLI_KEY="8842fd3a-e3f3-47e9-916f-6ff760e26
 Refresh `cli` service configuration with `fin project start`. This will inject the values into `cli`
 which will be used for authentication for the Acquia CLI.
 
-Note: It is also possible to add/override these values via `.docksal/docksal-local.env` at the project level. 
+{{% notice note %}}
+It is also possible to add/override these values via `.docksal/docksal-local.env` at the project level (replace `--global` with `--env=local`). 
 Keep in mind, `.docksal/docksal-local.env` can be used for local overrides and should be excluded from git.
 As such, it is best to use `.docksal/docksal-local.env` for any personal keys and tokens configured at the project level.
-
+{{% /notice %}}
 
 ## Usage
 

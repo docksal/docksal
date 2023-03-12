@@ -12,9 +12,8 @@ Platform.sh's CLI is pre-installed in the `cli` container. Note: required `docks
 
 ## Configuration
 
-Follow the [official docs](https://docs.platform.sh/gettingstarted/cli/api-tokens.html) to generate your API token.
-
-Add the token to `$HOME/docksal/docksal.env`:
+Follow the [official docs](https://docs.platform.sh/gettingstarted/cli/api-tokens.html) to generate your API token 
+and then add the token to your global configuration:
 
 ```
 fin config set --global SECRET_PLATFORMSH_CLI_TOKEN="XMAG92S9_9gf5Mlhb7-JIEjVwYYhY-MGuKcspAdL0CjkU"
@@ -33,7 +32,11 @@ Use `fin platform <command>` from the host or `platform <command>` inside `cli`.
 
 Please refer to the [official docs](https://docs.platform.sh/gettingstarted/cli.html#usage) for usage details.
 
-Note: It is also possible to add/override these values via `.docksal/docksal.env` and `.docksal/docksal-local.env` at the project level. Keep in mind, `.docksal/docksal.env` is a shared configuration file and should be committed to git. `.docksal/docksal-local.env`, on the other hand, can be used for local overrides and should be excluded from git. As such, it is best to use `.docksal/docksal-local.env` for any personal keys and tokens configured at the project level.
+{{% notice note %}}
+It is also possible to add/override these values via `.docksal/docksal-local.env` at the project level (replace `--global` with `--env=local`).
+Keep in mind, `.docksal/docksal-local.env` can be used for local overrides and should be excluded from git.
+As such, it is best to use `.docksal/docksal-local.env` for any personal keys and tokens configured at the project level.
+{{% /notice %}}
 
 ## Integration
 
