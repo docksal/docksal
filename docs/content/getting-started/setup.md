@@ -83,10 +83,10 @@ Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal proje
 to [v2.1.0.5](https://download.docker.com/mac/stable/40693/Docker.dmg) as a temporary measure.
 {{% /notice %}}
 
-1. Install Docker Desktop for Mac v4.15.0
+1. Install Docker Desktop for Mac v4.17.0
 
-    [![Docker Desktop for Mac v4.15.0 (Intel chip)](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/main/amd64/93002/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
-    [![Docker Desktop for Mac v4.15.0 (Apple silicon)](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/main/arm64/93002/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Mac v4.17.0 (Intel chip)](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/main/amd64/99724/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Mac v4.17.0 (Apple silicon)](https://img.shields.io/badge/download-Docker%20Desktop%20for%20Mac-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/main/arm64/99724/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 1. Start Docker Desktop
 
