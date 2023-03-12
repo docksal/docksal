@@ -39,9 +39,9 @@ teardown() {
 
 	# Check that containers are running
 	run fin ps
-	echo "$output" | grep "_web_1" | grep "running"
-	echo "$output" | grep "_db_1" | grep "running"
-	echo "$output" | grep "_cli_1" | grep "running"
+	echo "$output" | grep "_web_1" | grep "Up"
+	echo "$output" | grep "_db_1" | grep "Up"
+	echo "$output" | grep "_cli_1" | grep "Up"
 	unset output
 }
 
@@ -58,9 +58,9 @@ teardown() {
 
 	# Check that containers are stopped
 	run fin ps
-	echo "$output" | grep "_web_1" | grep "exited"
-	echo "$output" | grep "_db_1" | grep "exited"
-	echo "$output" | grep "_cli_1" | grep "exited"
+	echo "$output" | grep "_web_1" | grep "Exited"
+	echo "$output" | grep "_db_1" | grep "Exited"
+	echo "$output" | grep "_cli_1" | grep "Exited"
 	unset output
 
 	# Start containers back
@@ -86,9 +86,9 @@ teardown() {
 
 	# Check that containers are running
 	run fin ps
-	echo "$output" | grep "_web_1" | grep "running"
-	echo "$output" | grep "_db_1" | grep "running"
-	echo "$output" | grep "_cli_1" | grep "running"
+	echo "$output" | grep "_web_1" | grep "Up"
+	echo "$output" | grep "_db_1" | grep "Up"
+	echo "$output" | grep "_cli_1" | grep "Up"
 	unset output
 }
 
@@ -153,9 +153,9 @@ teardown() {
 
 	# Check that containers are running
 	run fin ps
-	echo "$output" | grep "_web_1" | grep "running"
-	echo "$output" | grep "_db_1" | grep "running"
-	echo "$output" | grep "_cli_1" | grep "running"
+	echo "$output" | grep "_web_1" | grep "Up"
+	echo "$output" | grep "_db_1" | grep "Up"
+	echo "$output" | grep "_cli_1" | grep "Up"
 	unset output
 }
 
@@ -190,9 +190,9 @@ teardown() {
 
 	# Check that containers are running
 	run fin ps
-	echo "$output" | grep "_web_1" | grep "running"
-	echo "$output" | grep "_db_1" | grep "running"
-	echo "$output" | grep "_cli_1" | grep "running"
+	echo "$output" | grep "_web_1" | grep "Up"
+	echo "$output" | grep "_db_1" | grep "Up"
+	echo "$output" | grep "_cli_1" | grep "Up"
 	unset output
 
 	# Check if site is available and its name is correct

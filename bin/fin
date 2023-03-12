@@ -3272,7 +3272,7 @@ project_status ()
 	check_docksal_environment
 	check_project_unique
 
-	docker-compose ps
+	docker-compose ps -a
 }
 
 # List Docksal projects
