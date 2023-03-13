@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.112.0
+# Allow to override Docksal version during:
+# install - DOCKSAL_UPDATE_VERSION=develop bash <(curl -fsSL https://get.docksal.io)
+# update  - DOCKSAL_UPDATE_VERSION=develop fin update
+# Support the historical "DOCKSAL_VERSION" option
+DOCKSAL_UPDATE_VERSION="${DOCKSAL_UPDATE_VERSION:-$DOCKSAL_VERSION}"
 
-# Allow to override Docksal version during install.
-# Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
-# Update: DOCKSAL_VERSION=develop fin update
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.18.0}"
+# Set current version constants
+FIN_VERSION=1.112.0
+DOCKSAL_VERSION=v1.18.0
 
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
@@ -963,8 +966,8 @@ is_root ()
 
 testing_warn ()
 {
-	[[ "$DOCKSAL_VERSION" != 'master' ]] && is_tty && \
-		echo-yellow "[!] Using Docksal version: ${DOCKSAL_VERSION}"
+	[[ "${DOCKSAL_UPDATE_VERSION}" != "" ]] && is_tty && \
+		echo-yellow "[!] Using Docksal version: ${DOCKSAL_UPDATE_VERSION}"
 }
 
 #---------------------------- Control functions -------------------------------
@@ -2046,7 +2049,7 @@ show_help_update ()
 
 	echo
 	echo "Options:"
-	printh "DOCKSAL_VERSION=develop fin update" "Update Docksal to the latest development version"
+	printh "DOCKSAL_UPDATE_VERSION=develop fin update" "Update Docksal to the latest development version"
 }
 
 show_help_exec-url ()
@@ -2431,7 +2434,7 @@ show_help_logs ()
 version ()
 {
 	if [[ $1 == '--short' ]]; then
-		echo "$FIN_VERSION"
+		echo -n "$FIN_VERSION"
 	else
 		echo "Docksal version: $DOCKSAL_VERSION"
 		echo "fin version:     v$FIN_VERSION"
@@ -5072,12 +5075,6 @@ update ()
 
 	# [STEP 1] Update fin unless already running fin.updated binary
 	if ! is_fin_updated; then
-		# Pass the version to the newly downloaded fin to run the updates
-		export DOCKSAL_VERSION=$(get_docksal_version_latest)
-
-		# Store current fin version
-		export EXISTING_FIN_VERSION=${FIN_VERSION}
-
 		testing_warn
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 
@@ -5172,17 +5169,25 @@ update ()
 	check_docker_running
 }
 
-# Return the latest version
-# For RC users, this will return the latest RC release tag. For everyone else - the latest stable release tag.
+# Return the latest available Docksal version
 get_docksal_version_latest ()
 {
-	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases"
+	# Return the requested version when overridden
+	if [[ "${DOCKSAL_UPDATE_VERSION}" != "" ]]; then
+		echo -n ${DOCKSAL_UPDATE_VERSION}
+		return
+	fi
 
-	# If we have an RC user and DOCKSAL_VERSION was not overridden, then return the latest RC release tag
-	if wants_rc_version && [[ "${DOCKSAL_VERSION}" == "master" ]]; then
-		echo $(curl -kfsSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
+	# Get all available release tags
+	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases"
+	tags=$(curl -kfsSL $URL_REPO_RELEASE | grep tag_name | sed 's/.*"tag_name": "\(.*\)",/\1/')
+
+	if wants_rc_version; then
+		# Return the latest available tag for RC users (final or rc)
+		echo -n $(echo "${tags}" | head -n 1)
 	else
-		echo ${DOCKSAL_VERSION}
+		# Return the latest final tag for regular users (filter out "rc" tags)
+		echo -n $(echo "${tags}" | grep -v "rc" | head -n 1)
 	fi
 }
 
