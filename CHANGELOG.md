@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.18.1 (2023-03-31)
+
+❗**IMPORTANT:** This release addresses a bug in the update process introduced in [v1.17.0](https://github.com/docksal/docksal/releases/tag/v1.17.0).
+
+Please use the command below to force the update to this release.
+
+```bash
+DOCKSAL_VERSION=v1.18.1 fin update
+```
+
+### New software versions ✨
+
+- fin v1.113.0
+
+### Changes and improvements ⚙️
+
+- Fixed network issues after project stack stop/restart
+- Fixed update process
+- Switched CI builds to `actions/checkout@v3`
+
+## #Documentation 📖
+
+- Updated Docker Desktop links in setup.md docs
+
+
 ## 1.18.0 (2023-03-12)
 
 ### New software versions ✨

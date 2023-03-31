@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-FIN_VERSION=1.112.0
+# Allow to override Docksal version during:
+# install - DOCKSAL_UPDATE_VERSION=develop bash <(curl -fsSL https://get.docksal.io)
+# update  - DOCKSAL_UPDATE_VERSION=develop fin update
+# Support the historical "DOCKSAL_VERSION" option
+DOCKSAL_UPDATE_VERSION="${DOCKSAL_UPDATE_VERSION:-$DOCKSAL_VERSION}"
 
-# Allow to override Docksal version during install.
-# Install: curl -L https://get.docksal.io | DOCKSAL_VERSION=develop bash
-# Update: DOCKSAL_VERSION=develop fin update
-DOCKSAL_VERSION="${DOCKSAL_VERSION:-v1.18.0}"
+# Set current version constants
+FIN_VERSION=1.113.0
+DOCKSAL_VERSION=v1.18.0
 
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
@@ -963,8 +966,8 @@ is_root ()
 
 testing_warn ()
 {
-	[[ "$DOCKSAL_VERSION" != 'master' ]] && is_tty && \
-		echo-yellow "[!] Using Docksal version: ${DOCKSAL_VERSION}"
+	[[ "${DOCKSAL_UPDATE_VERSION}" != "" ]] && is_tty && \
+		echo-yellow "[!] Using Docksal version: ${DOCKSAL_UPDATE_VERSION}"
 }
 
 #---------------------------- Control functions -------------------------------
@@ -1357,6 +1360,9 @@ _disconnect_project_network ()
 	done
 }
 
+# This starts/restart the project start.
+# The order of actions is important in the case of restart, since we manipulate the project network.
+# Order: (re)create => (re)connect network => start.
 _start_containers ()
 {
 	check_docker_running
@@ -1366,18 +1372,26 @@ _start_containers ()
 	# Note: triggering this check in load_configuration would introduce a blocker for many fin commands.
 	check_docker_path
 
-	# Suppress docker pull details in CI environments otherwise pull prints too much garbage in CI logs.
-	is_ci && quiet_pull="--quiet-pull" || quiet_pull=""
+	# (Re)create project resources
+	# This will recraete the project network if missing.
+	# docker-compose create &>/dev/null || (echo-error "Failed to create project resources"; return 1)
+	echo-yellow "(Re)creating resources..."
+	docker-compose create --no-recreate || return 1
 
-	echo-green "Starting services..."
-	docker-compose up -d --remove-orphans --build ${quiet_pull} || return 1
+	# (Re)connect containers to project network
+	# We have to manually reconnect project containers to project network (after restart).
+	_connect_project_network
 	# TODO: Workaround. Handle this case in docksal/vhost-proxy.
 	# When project stack is started, but vhost-proxy is not yet connected to the stack network, vhost-proxy config breaks.
 	# To mitigate this we should connect vhost-proxy to the project stack network ASAP.
 	_vhost_proxy_connect
-	# Workaround for Docker Compose v2
-	# We have to manually reconnect project containers to project network
-	_connect_project_network
+
+	# Start project containers
+	# Suppress docker pull details in CI environments otherwise pull prints too much garbage in CI logs.
+	is_ci && quiet_pull="--quiet-pull" || quiet_pull=""
+	echo-yellow "Starting services..."
+	docker-compose up -d --remove-orphans --build ${quiet_pull} || return 1
+
 	_healthcheck_wait
 }
 
@@ -1429,13 +1443,16 @@ _stop_containers ()
 	load_configuration
 	check_project_unique
 
+	echo-yellow "Stopping services..."
+	docker-compose stop "$@"
+
 	# TODO: Do we still need this?
 	# While Docker Compose v2 recreates the project network if one does not exist,
 	# it does not reconnect project containers to the project network.
 	# If we delete the project network, we have to then manually reconnect project containers to the project network.
 	# See _connect_project_network
 	if [[ $1 == '-a' ]] || [[ $1 == '--all' ]] || [[ -z $1 ]]; then
-		echo-green "Disconnecting project network..."
+		echo-yellow "Disconnecting project network..."
 		# There is a limit of about 30 docker networks per host, so unused (stopped projects') networks should be dropped.
 		# The project network will be automatically recreated by docker-compose up.
 		local network="${COMPOSE_PROJECT_NAME_SAFE}_default"
@@ -1443,9 +1460,6 @@ _stop_containers ()
 
 		docker network rm "${network}" &>/dev/null || true
 	fi
-
-	echo-green "Stopping services..."
-	docker-compose stop "$@"
 }
 
 _restart_containers ()
@@ -1458,7 +1472,7 @@ _remove_containers ()
 {
 	check_project_environment
 	if [[ $1 == "" ]]; then
-		echo-yellow "Removing containers..."
+		echo-yellow "Removing resources..."
 
 		# Disconnect all containers from the project network, otherwise network will not be removed.
 		# Figure out the default project network name
@@ -2046,7 +2060,7 @@ show_help_update ()
 
 	echo
 	echo "Options:"
-	printh "DOCKSAL_VERSION=develop fin update" "Update Docksal to the latest development version"
+	printh "DOCKSAL_UPDATE_VERSION=develop fin update" "Update Docksal to the latest development version"
 }
 
 show_help_exec-url ()
@@ -2431,7 +2445,7 @@ show_help_logs ()
 version ()
 {
 	if [[ $1 == '--short' ]]; then
-		echo "$FIN_VERSION"
+		echo -n "$FIN_VERSION"
 	else
 		echo "Docksal version: $DOCKSAL_VERSION"
 		echo "fin version:     v$FIN_VERSION"
@@ -5072,12 +5086,6 @@ update ()
 
 	# [STEP 1] Update fin unless already running fin.updated binary
 	if ! is_fin_updated; then
-		# Pass the version to the newly downloaded fin to run the updates
-		export DOCKSAL_VERSION=$(get_docksal_version_latest)
-
-		# Store current fin version
-		export EXISTING_FIN_VERSION=${FIN_VERSION}
-
 		testing_warn
 		echo-green "[STEP 1/$TOTAL_STEPS] Updating fin..."
 
@@ -5172,17 +5180,25 @@ update ()
 	check_docker_running
 }
 
-# Return the latest version
-# For RC users, this will return the latest RC release tag. For everyone else - the latest stable release tag.
+# Return the latest available Docksal version
 get_docksal_version_latest ()
 {
-	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases"
+	# Return the requested version when overridden
+	if [[ "${DOCKSAL_UPDATE_VERSION}" != "" ]]; then
+		echo -n ${DOCKSAL_UPDATE_VERSION}
+		return
+	fi
 
-	# If we have an RC user and DOCKSAL_VERSION was not overridden, then return the latest RC release tag
-	if wants_rc_version && [[ "${DOCKSAL_VERSION}" == "master" ]]; then
-		echo $(curl -kfsSL $URL_REPO_RELEASE | grep tag_name | sed 's/\"tag_name": \"\(.*\)",/\1/' | head -n 1 | tr -d '[:space:]')
+	# Get all available release tags
+	URL_REPO_RELEASE="${GITHUB_API}/repos/docksal/docksal/releases"
+	tags=$(curl -kfsSL $URL_REPO_RELEASE | grep tag_name | sed 's/.*"tag_name": "\(.*\)",/\1/')
+
+	if wants_rc_version; then
+		# Return the latest available tag for RC users (final or rc)
+		echo -n $(echo "${tags}" | head -n 1)
 	else
-		echo ${DOCKSAL_VERSION}
+		# Return the latest final tag for regular users (filter out "rc" tags)
+		echo -n $(echo "${tags}" | grep -v "rc" | head -n 1)
 	fi
 }
 

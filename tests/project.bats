@@ -28,9 +28,12 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin project start
-	echo "$output" | egrep "Starting services..."
+	echo "$output" | grep "(Re)creating resources..."
 	echo "$output" | egrep "Network .*_default \s* Created"
+	echo "$output" | egrep "Volume \".*_cli_home\" \s* Created"
 	echo "$output" | egrep "Volume \".*_project_root\" \s* Created"
+	echo "$output" | egrep "Volume \".*_db_data\" \s* Created"
+	echo "$output" | grep "Starting services..."
 	echo "$output" | egrep "Container .*_web_1 \s* Started"
 	echo "$output" | egrep "Container .*_db_1 \s* Started"
 	echo "$output" | egrep "Container .*_cli_1 \s* Started"
@@ -49,11 +52,11 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin project stop
-	echo "$output" | egrep "Disconnecting project network..."
-	echo "$output" | egrep "Stopping services..."
+	echo "$output" | grep "Stopping services..."
 	echo "$output" | egrep "Container .*_web_1 \s* Stopped"
 	echo "$output" | egrep "Container .*_db_1 \s* Stopped"
 	echo "$output" | egrep "Container .*_cli_1 \s* Stopped"
+	echo "$output" | grep "Disconnecting project network..."
 	unset output
 
 	# Check that containers are stopped
@@ -71,17 +74,19 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin project restart
-	echo "$output" | egrep "Disconnecting project network..."
-	echo "$output" | egrep "Stopping services..."
+	echo "$output" | grep "Stopping services..."
 	echo "$output" | egrep "Container .*_web_1 \s* Stopped"
 	echo "$output" | egrep "Container .*_db_1 \s* Stopped"
 	echo "$output" | egrep "Container .*_cli_1 \s* Stopped"
+	echo "$output" | grep "Disconnecting project network..."
 
-	echo "$output" | egrep "Starting services..."
+	echo "$output" | grep "(Re)creating resources..."
+	echo "$output" | egrep "Network .*_default \s* Created"
+	echo "$output" | egrep "Connected vhost-proxy to \".*_default\" network"
+	echo "$output" | grep "Starting services..."
 	echo "$output" | egrep "Container .*_web_1 \s* Started"
 	echo "$output" | egrep "Container .*_db_1 \s* Started"
 	echo "$output" | egrep "Container .*_cli_1 \s* Started"
-	echo "$output" | egrep "Connected vhost-proxy to \".*_default\" network"
 	unset output
 
 	# Check that containers are running
@@ -136,15 +141,20 @@ teardown() {
 	[[ $SKIP == 1 ]] && skip
 
 	run fin project reset -f
-	echo "$output" | egrep "Removing containers..."
+	echo "$output" | grep "Removing resources..."
 	echo "$output" | egrep "Container .*_web_1 \s* Removed"
 	echo "$output" | egrep "Container .*_db_1 \s* Removed"
 	echo "$output" | egrep "Container .*_cli_1 \s* Removed"
 	echo "$output" | egrep "Volume .*_project_root \s* Removed"
+	echo "$output" | egrep "Volume .*_db_data \s* Removed"
+	echo "$output" | egrep "Volume .*_cli_home \s* Removed"
 	echo "$output" | egrep "Network .*_default \s* Removed"
 
+	echo "$output" | grep "(Re)creating resources..."
 	echo "$output" | egrep "Network .*_default \s* Created"
+	echo "$output" | egrep "Volume \".*_cli_home\" \s* Created"
 	echo "$output" | egrep "Volume \".*_project_root\" \s* Created"
+	echo "$output" | egrep "Volume \".*_db_data\" \s* Created"
 	echo "$output" | egrep "Container .*_web_1 \s* Started"
 	echo "$output" | egrep "Container .*_db_1 \s* Started"
 	echo "$output" | egrep "Container .*_cli_1 \s* Started"
@@ -164,11 +174,13 @@ teardown() {
 
 	# First run
 	run fin project remove -f
-	echo "$output" | egrep "Removing containers..."
+	echo "$output" | grep "Removing resources..."
 	echo "$output" | egrep "Container .*_web_1 \s* Removed"
 	echo "$output" | egrep "Container .*_db_1 \s* Removed"
 	echo "$output" | egrep "Container .*_cli_1 \s* Removed"
 	echo "$output" | egrep "Volume .*_project_root \s* Removed"
+	echo "$output" | egrep "Volume .*_db_data \s* Removed"
+	echo "$output" | egrep "Volume .*_cli_home \s* Removed"
 	echo "$output" | egrep "Network .*_default \s* Removed"
 	unset output
 
