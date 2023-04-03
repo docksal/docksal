@@ -4952,7 +4952,7 @@ update_config_files ()
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
-			curl -kfsSLO "${URL_REPO}/${DOCKSAL_VERSION}/stacks/$f" || exit 1
+			curl -kfsSLO "${URL_REPO}/${DOCKSAL_UPDATE_VERSION}/stacks/$f" || exit 1
 		done
 	)
 
