@@ -86,8 +86,8 @@ jobs:
       -
         name: Install Docksal
         env:
-          DOCKSAL_VERSION: ${{ steps.use_branch.outputs.branch }}
-        # This installs Docksal using the passed DOCKSAL_VERSION value
+          DOCKSAL_UPDATE_VERSION: ${{ steps.use_branch.outputs.branch }}
+        # This installs Docksal using the passed DOCKSAL_UPDATE_VERSION value
         run: curl -fsSL https://get.docksal.io | bash
       -
         name: fin sysinfo
