@@ -12,11 +12,11 @@ DOCKSAL_VERSION=v1.18.2 fin update
 
 ### New software versions ✨
 
-- fin v1.113.1
+- fin v1.113.2
 
 ### Changes and improvements ⚙️
 
-- Fixed stack files download URL
+- Refactored version overrides during updates
 - Replaced the legacy set-output command in GitHub Actions
 
 
