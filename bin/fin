@@ -7,8 +7,8 @@
 DOCKSAL_UPDATE_VERSION="${DOCKSAL_UPDATE_VERSION:-$DOCKSAL_VERSION}"
 
 # Set current version constants
-FIN_VERSION=1.113.0
-DOCKSAL_VERSION=v1.18.0
+FIN_VERSION=1.113.1
+DOCKSAL_VERSION=v1.18.2
 
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
@@ -4952,7 +4952,7 @@ update_config_files ()
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
-			curl -kfsSLO "${URL_REPO}/${DOCKSAL_VERSION}/stacks/$f" || exit 1
+			curl -kfsSLO "${URL_REPO}/${DOCKSAL_UPDATE_VERSION}/stacks/$f" || exit 1
 		done
 	)
 

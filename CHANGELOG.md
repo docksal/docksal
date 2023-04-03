@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.18.2 (2023-04-03)
+
+❗**IMPORTANT:** This release addresses a bug in the update process introduced in [v1.17.0](https://github.com/docksal/docksal/releases/tag/v1.17.0).
+
+Please use the command below to force the update to this release.
+
+```bash
+DOCKSAL_VERSION=v1.18.2 fin update
+```
+
+### New software versions ✨
+
+- fin v1.113.1
+
+### Changes and improvements ⚙️
+
+- Fixed stack files download URL
+- Replaced the legacy set-output command in GitHub Actions
+
+
 ## 1.18.1 (2023-03-31)
 
 ❗**IMPORTANT:** This release addresses a bug in the update process introduced in [v1.17.0](https://github.com/docksal/docksal/releases/tag/v1.17.0).
