@@ -81,8 +81,8 @@ jobs:
           if [[ "${GITHUB_REF}" =~ "refs/tags/" ]]; then USE_BRANCH="${GITHUB_REF#refs/tags/}"; fi # Release tag
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" && "${GITHUB_REPOSITORY}" == "${REPO}" ]]; then USE_BRANCH="${PR_BRANCH}"; fi # Internal PR
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" && "${GITHUB_REPOSITORY}" != "${REPO}" ]]; then USE_BRANCH='develop'; fi # External PR
-          echo "::set-output name=branch::$(echo ${USE_BRANCH})"
-          echo "branch: ${USE_BRANCH}"
+          echo "branch=${USE_BRANCH}" >> $GITHUB_OUTPUT
+          echo "branch=${USE_BRANCH}"
       -
         name: Install Docksal
         env:
