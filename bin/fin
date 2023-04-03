@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# Allow to override Docksal version during:
-# install - DOCKSAL_UPDATE_VERSION=develop bash <(curl -fsSL https://get.docksal.io)
-# update  - DOCKSAL_UPDATE_VERSION=develop fin update
-# Support the historical "DOCKSAL_VERSION" option
+# To override Docksal version during:
+# - install - DOCKSAL_UPDATE_VERSION=develop bash <(curl -fsSL https://get.docksal.io)
+# - update  - DOCKSAL_UPDATE_VERSION=develop fin update
+# Support the historical "DOCKSAL_VERSION" version override parameter
 DOCKSAL_UPDATE_VERSION="${DOCKSAL_UPDATE_VERSION:-$DOCKSAL_VERSION}"
 
 # Set current version constants
@@ -4949,10 +4949,12 @@ update_config_files ()
 		cd "$CONFIG_STACKS_DIR" || exit 1;
 		# Cleanup the stacks directory before downloading files (this will help with updates, when file names are changing).
 		rm -f "$CONFIG_STACKS_DIR/*" &>/dev/null
+		# Keep get_repo_version_url out of the loop as it may call curl (and slow things down).
+		repo=$(get_repo_version_url)
 		for f in ${files_to_download}; do
 			echo "$(basename ${f})"
 			# exit subshell with error if download failed
-			curl -kfsSLO "${URL_REPO}/${DOCKSAL_UPDATE_VERSION}/stacks/$f" || exit 1
+			curl -kfsSLO "${repo}/stacks/$f" || exit 1
 		done
 	)
 
@@ -5035,7 +5037,7 @@ update_docksal_images ()
 # Return value 2: new fin version is the same as the current version
 get_fin_updated ()
 {
-	local fin_url=$(get_fin_url)
+	local fin_url="$(get_repo_version_url)/bin/fin"
 	local new_fin
 	new_fin=$(curl -kfsSL "${fin_url}?r=$RANDOM")
 	if_failed_error "fin download failed."
@@ -5091,8 +5093,9 @@ update ()
 
 		# Download new fin version to FIN_PATH_UPDATED
 		get_fin_updated
-		# Run the rest of the update with the newly downloaded fin version
-		( "$FIN_PATH_UPDATED" update )
+		# Run the rest of the update with the newly downloaded fin version.
+		# Pass DOCKSAL_UPDATE_VERSION to keeps versions overrides (if any) consistent.
+		( DOCKSAL_UPDATE_VERSION=${DOCKSAL_UPDATE_VERSION} "$FIN_PATH_UPDATED" update )
 		# Catch errors here, otherwise we would exit without errors even "fin update" above failed
 		if_failed_error "Updates failed. fin was not updated."
 		# Overwrite old fin
@@ -5202,10 +5205,10 @@ get_docksal_version_latest ()
 	fi
 }
 
-# Return the url for fin
-get_fin_url ()
+# Return a versioned repo URL
+get_repo_version_url ()
 {
-	echo "${URL_REPO}/$(get_docksal_version_latest)/bin/fin"
+	echo "${URL_REPO}/$(get_docksal_version_latest)"
 }
 
 check_for_updates ()
@@ -5250,7 +5253,7 @@ check_for_updates ()
 	echo "$timestamp" > "$CONFIG_LAST_CHECK"
 
 	# Get the version of fin that should be used.
-	local fin_url=$(get_fin_url)
+	local fin_url="$(get_repo_version_url)/bin/fin"
 
 	# No -S for curl here to be completely silent. Connection timeout 1 sec, total max time 3 sec or fail
 	new_fin=$(curl -kfsL --connect-timeout 1 --max-time 3 "${fin_url}?r=${RANDOM}")
@@ -7825,7 +7828,7 @@ case "$1" in
 		elif [[ "$1" == "--project-images" ]]; then
 			update_project_images
 		elif [[ "$1" == "--self" ]]; then
-			fin_url=$(get_fin_url)
+			fin_url="$(get_repo_version_url)/bin/fin"
 			echo "Downloading ${fin_url}"
 			curl -kfsSL "${fin_url}?r=$RANDOM" | sudo tee "$FIN_PATH_UPDATED" >/dev/null
 			[[ "$2" == "--diff" ]] && diff "$FIN_PATH" "$FIN_PATH_UPDATED"
