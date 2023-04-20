@@ -1376,7 +1376,7 @@ _start_containers ()
 	# This will recraete the project network if missing.
 	# docker-compose create &>/dev/null || (echo-error "Failed to create project resources"; return 1)
 	echo-yellow "(Re)creating resources..."
-	docker-compose create --no-recreate || return 1
+	docker-compose create --build --no-recreate || return 1
 
 	# (Re)connect containers to project network
 	# We have to manually reconnect project containers to project network (after restart).
