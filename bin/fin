@@ -981,11 +981,16 @@ check_project_environment ()
 # Check that project root exists, Docker is running, and Docksal system services are running
 check_docksal_environment ()
 {
+  local mode="${1:-on}"
+
+  # Global DNS resolver kill switch
+  [[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode='off'
+
 	# Since network configuration is not permanent on Linux we need to restore it when possible
 	# check_docksal_environment is a good place to do it, but we don't need to know the result
 	if is_linux && ! is_gitpod; then
 		configure_network_alpine "on"
-		configure_resolver_alpine "on"
+		configure_resolver_alpine $mode
 	fi
 	check_project_root && check_docksal_running
 }
