@@ -97,33 +97,34 @@ $ fin project create
 
 2. What would you like to install?
   PHP based
-    1.  Drupal 8
-    2.  Drupal 8 (Composer Version)
-    3.  Drupal 8 (BLT Version)
-    4.  Drupal 7
-    5.  Wordpress
-    6.  Magento
-    7.  Laravel
-    8.  Symfony Skeleton
-    9.  Symfony WebApp
-    10. Grav CMS
-    11. Backdrop CMS
+    1.  Drupal 10 (Composer Version)
+    2.  Drupal 10 (BLT Version) 
+    3.  Drupal 9 (Composer Version)
+    4.  Drupal 9 (BLT Version)
+    5.  Drupal 7
+    6.  Wordpress
+    7.  Magento
+    8.  Laravel
+    9.  Symfony Skeleton
+    10. Symfony WebApp
+    11. Grav CMS
+    12. Backdrop CMS
 
   Go based
-    12. Hugo
+    13. Hugo
 
   JS based
-    13. Gatsby JS
-    14. Angular
+    14. Gatsby JS
+    15. Angular
 
   HTML
-    15. Static HTML site
+    16. Static HTML site
     
   Custom
     0.  Custom git repository
   ...
 
-Enter your choice (0-15): 1
+Enter your choice (0-16): 1
 
 Project folder:   /Users/username/Projects/demo
 Project software: Drupal 8
