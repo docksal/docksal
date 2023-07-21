@@ -3348,8 +3348,8 @@ project_create ()
 		echo -e "${green}    5.${NC}  Drupal 7"
 		echo -e "${green}    6.${NC}  Wordpress"
 		echo -e "${green}    7.${NC}  Magento"
-		echo -e "${green}    8.${NC} Laravel"
-		echo -e "${green}    9.${NC} Symfony Skeleton"
+		echo -e "${green}    8.${NC}  Laravel"
+		echo -e "${green}    9.${NC}  Symfony Skeleton"
 		echo -e "${green}    10.${NC} Symfony WebApp"
 		echo -e "${green}    11.${NC} Grav CMS"
 		echo -e "${green}    12.${NC} Backdrop CMS"
@@ -3370,7 +3370,7 @@ project_create ()
 		echo -e ""
 
 		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
-		local choices=15
+		local choices=16
 
 		while [[ "$choice" == "" ]]; do
 			read -p "Enter your choice (0-$choices): " choice
