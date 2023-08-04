@@ -53,9 +53,9 @@ e.g., `fin image registry docksal/cli`, to see list of available CLI images. [Se
 
 | Image                    | Notes                                                                                                      |
 |--------------------------|------------------------------------------------------------------------------------------------------------|
-| `docksal/cli:php8.2-3.4` | PHP 8.2.3, Nodejs 18.15.0 LTS, Ruby 2.7.4, Python 3.9.2                                                    |
-| `docksal/cli:php8.1-3.4` | *Default image* PHP 8.1.16, Nodejs 18.15.0 LTS, Ruby 2.7.4, Python 3.9.2                                   |
-| `docksal/cli:php8.0-3.4` | PHP 8.0.28, Nodejs 18.15.0 LTS, Ruby 2.7.4, Python 3.9.2                                                   |
+| `docksal/cli:php8.2-3.5` | PHP 8.2.8, Nodejs 18.17.0 LTS, Ruby 2.7.4, Python 3.9.2                                                    |
+| `docksal/cli:php8.1-3.5` | *Default image* PHP 8.1.21, Nodejs 18.17.0 LTS, Ruby 2.7.4, Python 3.9.2                                   |
+| `docksal/cli:php8.0-3.5` | PHP 8.0.29, Nodejs 18.17.0 LTS, Ruby 2.7.4, Python 3.9.2                                                   |
 | `docksal/cli:php8.2-3`   | Latest 3.x image version of PHP 8.2 flavor, convenient when [extending stock images](/stack/extend-images) |
 | `docksal/cli:php8.1-3`   | Latest 3.x image version of PHP 8.1 flavor, convenient when [extending stock images](/stack/extend-images) |
 | `docksal/cli:php8.0-3`   | Latest 3.x image version of PHP 8.0 flavor, convenient when [extending stock images](/stack/extend-images) |
