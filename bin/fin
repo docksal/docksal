@@ -2498,7 +2498,14 @@ bash_comp_words ()
 			local custom_commands
 
 			for cmd_name in $(ls "$project_commands_path" 2>/dev/null | tr "\n" " "); do
-				custom_commands+=" $cmd_name"
+				if [ -d "$project_commands_path/$cmd_name" ]; then
+					for sub_cmd_name in $(ls "$project_commands_path/$cmd_name" 2>/dev/null | tr "\n" " "); do
+						[[ -f "$project_commands_path/$cmd_name/$sub_cmd_name" ]] &&
+							custom_commands+=" $cmd_name/$sub_cmd_name"
+					done
+				else
+					custom_commands+=" $cmd_name"
+				fi
 			done
 
 			for cmd_name in $(ls "$project_addons_path" 2>/dev/null); do
