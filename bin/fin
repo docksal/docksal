@@ -4973,7 +4973,7 @@ update_config_files ()
 install_bash_autocomplete ()
 {
 	local destination="$FIN_AUTOCOMPLETE_PATH"
-	tee "$destination" >/dev/null <<'EOF'
+	sudo tee "$destination" >/dev/null <<'EOF'
 _docksal_completion()
 {
 	local cur=${COMP_WORDS[COMP_CWORD]} #current word part
@@ -4990,7 +4990,7 @@ complete -o bashdefault -o default -F _docksal_completion fin
 EOF
 	if_failed "Failed to write file to $destination"
 	echo-green "Script saved to $destination"
-	chmod +x "$destination"
+	sudo chmod +x "$destination"
 
 	SOURCE_FILE=".bash_profile"
 	grep -q "$destination" "$HOME/$SOURCE_FILE"
