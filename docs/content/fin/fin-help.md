@@ -545,6 +545,12 @@ Update Docksal system components to the latest stable version
 Usage: update
 
 Options:
-  DOCKSAL_VERSION=develop fin update	Update Docksal to the latest development version
+  DOCKSAL_VERSION=develop fin update    Update Docksal to the latest development version
+  --system-images                       Update system images
+  --project-images                      Update project images
+  --self                                Update fin executbale
+  --tools                               Update tools
+  --stack                               Update config files
+  --bash-complete                       Install bash autocomplete
 ```
 
