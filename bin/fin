@@ -361,8 +361,6 @@ URL_REPO_UI="https://github.com/docksal/docksal"
 URL_RELEASE_NOTES="https://docksal.io/updates"
 URL_GITHUB_SPONSOR="https://github.com/sponsors/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
-URL_REPO_DRUPAL9COMPOSER="https://github.com/docksal/boilerplate-drupal9-composer.git"
-URL_REPO_DRUPAL9BLT="https://github.com/docksal/boilerplate-drupal9-blt.git"
 URL_REPO_DRUPAL10COMPOSER="https://github.com/docksal/boilerplate-drupal10-composer.git"
 URL_REPO_DRUPAL10BLT="https://github.com/docksal/boilerplate-drupal10-blt.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/boilerplate-wordpress.git"
@@ -3370,7 +3368,7 @@ project_create ()
 		echo -e ""
 
 		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
-		local choices=16
+		local choices=14
 
 		while [[ "$choice" == "" ]]; do
 			read -p "Enter your choice (0-$choices): " choice
@@ -3394,71 +3392,61 @@ project_create ()
 			target_repo="$URL_REPO_DRUPAL10BLT"
 			;;
 		3)
-			target_cms="Drupal 9 (Composer Version)"
-			target_host_name_search_string="drupal9.docksal"
-			target_repo="$URL_REPO_DRUPAL9COMPOSER"
-			;;
-		4)
-			target_cms="Drupal 9 (BLT Version)"
-			target_host_name_search_string="drupal9.docksal"
-			target_repo="$URL_REPO_DRUPAL9BLT"
-			;;
-		5)
 			target_cms="Drupal 7"
 			target_host_name_search_string="drupal7.docksal"
 			target_repo="$URL_REPO_DRUPAL7"
 			;;
-		6)
+		4)
 			target_cms="Wordpress"
 			target_host_name_search_string="wordpress.docksal"
 			target_repo="$URL_REPO_WORDPRESS"
 			;;
-		7)
+		5)
 			target_cms="Magento"
 			target_host_name_search_string="magento.docksal"
 			target_repo="$URL_REPO_MAGENTO"
 			;;
-		8)
+		6)
 			target_cms="Laravel"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_LARAVEL"
 			;;
-		9)
+		7)
 			target_cms="Symfony Skeleton"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_SKELETON"
 			;;
-		10)
+		8)
 			target_cms="Symfony WebApp"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_WEBAPP"
 			;;
-		11)
+		9)
 			target_cms="Grav CMS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GRAV"
 			;;
-		12)
+		10)
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
 			target_repo="$URL_REPO_BACKDROP"
 			;;
-		13)
+		11)
 			target_cms="Hugo"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_HUGO"
 			;;
-		14)
+		12)
 			target_cms="Gatsby JS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GATSBY"
 			;;
-		15)
+		13)
 			target_cms="Angular"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_ANGULAR"
 			;;
-		16)
+		14)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
