@@ -23,7 +23,7 @@ For a complete list of `fin help` topics see [fin-help](/fin/fin-help/)
 
 Fin can be extended with project level [custom commands](/fin/custom-commands/) written in any script language.
 
-If a projects has custom commands defined, they will show up at the bottom of `fin help`:
+If a project has custom commands defined, they will show up at the bottom of `fin help`:
 
     $ fin help
     ...
