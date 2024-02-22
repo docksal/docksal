@@ -2739,11 +2739,10 @@ nfs_share_add ()
 			return 1
 		fi
 		# With VirtualBox, connections originate from ${DOCKSAL_IP}
-		is_mac_vbox && exports="${exports}$share_export ${DOCKSAL_IP} -alldirs -maproot=0:0\n"
-		# With Docker Desktop (HyperKit), connections originate from 127.0.0.1 or ${DOCKSAL_HOST_IP} (alias on lo0)
-		is_mac_dd_hk && exports="${exports}$share_export 127.0.0.1 ${DOCKSAL_HOST_IP} -alldirs -maproot=0:0\n"
-		# With Docker Desktop (Virtualization Framework/M1), connections originate from 192.168.81.0/24
-		is_mac_dd_vf && exports="${exports}$share_export -network 192.168.81.0 -mask 255.255.255.0 -alldirs -maproot=0:0\n"
+		# With Docker Desktop using HyperKit, connections originate from 127.0.0.1 or ${DOCKSAL_HOST_IP} (alias on lo0)
+		# With Docker Desktop using Virtualization Framework or on Apple Silicone, connections originate from the 192.168.81.0/24 network or ${DOCKSAL_HOST_IP}
+		# We can put them all in the same export line
+		exports="${exports}$share_export 127.0.0.1 ${DOCKSAL_HOST_IP} 192.168.81.0 -alldirs -maproot=0:0\n"
 	done
 	exports="${exports}${exports_close}"
 
