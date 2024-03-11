@@ -530,11 +530,11 @@ docker-compose ()
 	# session. When the session is disconnected, the mounted socket would be removed, which makes the mount invalid and
 	# thus results in a broken stack when vhost-proxy attempts to start a stopped project.
 	# docksal/vhost-proxy operates with docker commands and cannot update config for containers in the stack automatically.
-	if is_ci && [[ "${SSH_AUTH_SOCK}" != "" ]]; then
+	if is_ci && [[ "$(readlink -f ${SSH_AUTH_SOCK})" != "" ]]; then
 		# Derive a custom ssh-agent socket path from the original value
 		# The socket must reside on the same volume or we'll get "Invalid cross-device link"
 		# Example: SSH_AUTH_SOCK=/tmp/ssh-KweeHCNAIt/agent.1909 => SSH_AUTH_SOCK_DIR /tmp/.docksal/project
-		export SSH_AUTH_SOCK_DIR="/$(echo ${SSH_AUTH_SOCK} | cut -d'/' -f2)/.docksal/${COMPOSE_PROJECT_NAME_SAFE}"
+		export SSH_AUTH_SOCK_DIR="/$(echo $(readlink -f ${SSH_AUTH_SOCK}) | cut -d'/' -f2)/.docksal/${COMPOSE_PROJECT_NAME_SAFE}"
 		# Create socket directory under the current user, otherwise docker will create as root, which will case issues
 		mkdir -p "$SSH_AUTH_SOCK_DIR"
 		# Fix permissions in cases when the volume directory has been already created by docker (root user)
@@ -544,11 +544,11 @@ docker-compose ()
 			# Remove unused socket
 			(SSH_AUTH_SOCK=${socket} && ssh-add -L >/dev/null 2>&1) || rm -f ${socket}
 		done
-		AGENT_ID=$(basename ${SSH_AUTH_SOCK})
+		AGENT_ID=$(basename $(readlink -f ${SSH_AUTH_SOCK}))
 		# Create socket link unless one already exits
 		if [[ ! -S "$SSH_AUTH_SOCK_DIR/$AGENT_ID" ]]
 		then
-			ln -f ${SSH_AUTH_SOCK} "$SSH_AUTH_SOCK_DIR/$AGENT_ID"
+			ln -f $(readlink -f ${SSH_AUTH_SOCK}) "$SSH_AUTH_SOCK_DIR/$AGENT_ID"
 		fi
 		# Override ssh-agent socket with out shadow copy
 		export SSH_AUTH_SOCK="$SSH_AUTH_SOCK_DIR/$AGENT_ID"
