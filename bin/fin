@@ -2722,6 +2722,32 @@ nfs_share_add ()
 
 	eval $(parse_params "$@")
 
+	# Ensure /etc/exports exists and nfsd is enabled
+	# nfsd won't start or even do "checkexports" without /etc/exports present
+	if [[ ! -f /etc/exports ]]; then
+		echo "Creating /etc/exports..."
+		sudo touch /etc/exports
+	fi
+
+	# Start nfsd if it's not running
+	if ! (sudo nfsd status >/dev/null 2>&1); then
+		echo "Starting nfsd..."
+		# Give nfsd a moment to start
+		sudo nfsd start >/dev/null; sleep 1
+	fi
+
+	# Set nfs.server.mount.require_resv_port = 0
+	# Many NFS server implementations require this because of the false belief that this requirement increases security.
+	# NFS mounts are very likely to fail without this.
+	if ! (cat /etc/nfs.conf | grep -e '^nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
+		echo "Writing /etc/nfs.conf..."
+		echo "nfs.server.mount.require_resv_port = 0" | sudo tee -a /etc/nfs.conf >/dev/null
+		# Need to stop and start nfsd because macOS 14.4 broke the restart command
+		sudo nfsd stop &>/dev/null
+		# Give nfsd a moment to start
+		sudo nfsd start >/dev/null; sleep 1
+	fi
+
 	# Remove our own old exports
 	local exports_open="# <ds-nfs $DEFAULT_MACHINE_NAME"
 	local exports_close="# ds-nfs>"
@@ -2749,13 +2775,6 @@ nfs_share_add ()
 	local new_exports=$(echo -e "$exports")
 	local old_exports=$(cat /etc/exports 2>/dev/null)
 	if [[ "$new_exports" != "$old_exports" ]]; then
-		# Ensure /etc/exports exists
-		# nfsd won't start or even do "checkexports" without the config file
-		if [[ ! -f /etc/exports ]]; then
-			sudo touch /etc/exports # This automatically triggers nfsd start
-			sleep 5 # Give nfsd site time to start
-		fi
-
 		# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
 		local exports_test="/tmp/etc.exports.$RANDOM"
 		echo -e "$exports" | tee "$exports_test" >/dev/null
@@ -2777,38 +2796,19 @@ nfs_share_add ()
 			fi
 		fi
 
+		# Write and apply /etc/exports settings
 		echo "Writing /etc/exports..."
 		echo -e "$exports" | sudo tee /etc/exports >/dev/null
-
-		NFSD_RESTART_REQUIRED="true"
+		# Give nfsd a moment to update exports list
+		sudo nfsd update; sleep 1
 	else
 		# /etc/export already contains what is required
 		echo "NFS shares are already configured"
 	fi
 
-	# Set nfs.server.mount.require_resv_port = 0
-	# Many NFS server implementations require this because of
-	# the false belief that this requirement increases security.
-	# Without this, NFS mounts are very likely to fail
-	if ! (cat /etc/nfs.conf | grep -e '^nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
-		echo "Writing /etc/nfs.conf..."
-		echo "nfs.server.mount.require_resv_port = 0" | sudo tee -a /etc/nfs.conf >/dev/null
-		NFSD_RESTART_REQUIRED="true"
-	fi
-
-	# Start/Restart nfsd
-	(ps aux | grep /sbin/nfsd | grep -v grep >/dev/null) && NFSD_IS_RUNNING="true"
-	if [[ "$NFSD_IS_RUNNING" == "true" ]]; then
-		if [[ "$NFSD_RESTART_REQUIRED" == "true" ]]; then
-			echo-green "Restarting nfsd..."
-			sudo nfsd restart
-			sleep 5
-		fi
-	else
-		echo-green "Starting nfsd..."
-		sudo nfsd start
-		sleep 10
-	fi
+	# Check nfsd status and exports
+	nfsd status
+	showmount -e
 }
 
 # Removes all Docksal NFS exports
@@ -2842,9 +2842,15 @@ nfs_share_remove ()
 		return 2
 	fi
 
-	echo "Writing and applying /etc/exports..."
+	# Write and apply /etc/exports settings
+	echo "Writing /etc/exports..."
 	echo -e "$exports_new" | sudo tee /etc/exports >/dev/null
-	sudo nfsd restart
+	# Give nfsd a moment to update exports list
+	sudo nfsd update; sleep 1
+
+	# Check nfsd status and exports
+	nfsd status
+	showmount -e
 }
 
 # Mount folder inside docker-machine with NFS
