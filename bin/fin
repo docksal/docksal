@@ -2801,7 +2801,7 @@ nfs_share_add ()
 	if [[ "$NFSD_IS_RUNNING" == "true" ]]; then
 		if [[ "$NFSD_RESTART_REQUIRED" == "true" ]]; then
 			echo-green "Restarting nfsd..."
-			sudo nfsd restart
+			sudo nfsd update
 			sleep 5
 		fi
 	else
@@ -2844,7 +2844,7 @@ nfs_share_remove ()
 
 	echo "Writing and applying /etc/exports..."
 	echo -e "$exports_new" | sudo tee /etc/exports >/dev/null
-	sudo nfsd restart
+	sudo nfsd update
 }
 
 # Mount folder inside docker-machine with NFS
