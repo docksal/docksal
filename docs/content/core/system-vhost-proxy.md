@@ -87,13 +87,13 @@ for a workaround.
 The `io.docksal.virtual-host` lable allows setting the domain(s) that will be routed to an HTTP service (listening on port 80) in your project stack.
 If the service inside the container listens on a different port, you can use the `io.docksal.virtual-port` lable to override the default port mapping.
 
-This is how it is set up for the MailHog service definition found in `services.yml`:
+This is how it is set up for the Mailpit service definition found in `services.yml`:
 
 ```yaml
- # MailHog
+ # Mailpit
  mail:
    hostname: mail
-   image: ${MAILHOG_IMAGE:-mailhog/mailhog}
+   image: ${MAILPIT_IMAGE:-axllent/mailpit}
    volumes:
      - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
    labels:
@@ -102,7 +102,7 @@ This is how it is set up for the MailHog service definition found in `services.y
      - io.docksal.cert-name=${VIRTUAL_HOST_CERT_NAME:-none}
 ```
 
-In the example above, MailHog application listends on port `8025` inside the `mail` container.
+In the example above, Mailpit application listends on port `8025` inside the `mail` container.
 Docksal's vhost-proxy handles the routing and mapping from `http(s)://mail.${VIRTUAL_HOST}` (e.g., http://mail.myproject.docksal.site) to http://mail:8025 (internal endpoint accessible only between containers in a project stack).
 
 Your host machine as well as containers will be able to access the exposed virtual host endpoint.
