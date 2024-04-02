@@ -3,6 +3,7 @@ title: "Mailpit"
 aliases:
   - /en/master/tools/mailhog/
   - /tools/mailhog/
+  - /service/other/mailhog/
 ---
 
 
