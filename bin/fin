@@ -2496,7 +2496,14 @@ bash_comp_words ()
 			local custom_commands
 
 			for cmd_name in $(ls "$project_commands_path" 2>/dev/null | tr "\n" " "); do
-				custom_commands+=" $cmd_name"
+				if [ -d "$project_commands_path/$cmd_name" ]; then
+					for sub_cmd_name in $(ls "$project_commands_path/$cmd_name" 2>/dev/null | tr "\n" " "); do
+						[[ -f "$project_commands_path/$cmd_name/$sub_cmd_name" ]] &&
+							custom_commands+=" $cmd_name/$sub_cmd_name"
+					done
+				else
+					custom_commands+=" $cmd_name"
+				fi
 			done
 
 			for cmd_name in $(ls "$project_addons_path" 2>/dev/null); do
@@ -4957,7 +4964,7 @@ update_config_files ()
 install_bash_autocomplete ()
 {
 	local destination="$FIN_AUTOCOMPLETE_PATH"
-	tee "$destination" >/dev/null <<'EOF'
+	sudo tee "$destination" >/dev/null <<'EOF'
 _docksal_completion()
 {
 	local cur=${COMP_WORDS[COMP_CWORD]} #current word part
@@ -4974,7 +4981,7 @@ complete -o bashdefault -o default -F _docksal_completion fin
 EOF
 	if_failed "Failed to write file to $destination"
 	echo-green "Script saved to $destination"
-	chmod +x "$destination"
+	sudo chmod +x "$destination"
 
 	SOURCE_FILE=".bash_profile"
 	grep -q "$destination" "$HOME/$SOURCE_FILE"
