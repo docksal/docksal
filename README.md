@@ -2,7 +2,7 @@
 
 [![Documentation](https://img.shields.io/badge/📖-Documentation-blue.svg?style=for-the-badge)](https://docs.docksal.io)
 [![Blog](https://img.shields.io/badge/📰-Tips%20and%20Updates-orange.svg?style=for-the-badge)](https://blog.docksal.io)
-[![GitHub Discussions](https://img.shields.io/github/discussions/docksal/docksal?style=for-the-badge)](https://github.com/docksal/docksal/discussions)
+[![GitHub Discussions](https://img.shields.io/github/discussions/docksal/docksal?label=discussions&logo=github&style=for-the-badge)](https://github.com/docksal/docksal/discussions)
 
 Docker powered web development environments for macOS, Windows, and Linux. Unified environment for your team regardless of the OS.
 
