@@ -2058,6 +2058,15 @@ show_help_update ()
 
 	echo
 	echo "Options:"
+	printh "--system-images" "Update system images"
+	printh "--project-images" "Update project images"
+	printh "--self" "Update fin executbale"
+	printh "--tools" "Update tools"
+	printh "--stack" "Update config files"
+	printh "--bash-complete" "Install bash completions"
+	echo
+	echo "Examples:"
+	printh "fin update --project-images" "Pull the latest project specific images"
 	printh "DOCKSAL_UPDATE_VERSION=develop fin update" "Update Docksal to the latest development version"
 }
 
