@@ -220,5 +220,5 @@ or [read the blog post on writing custom commands](https://blog.docksal.io/writi
 
 ## Enable bash autocompletion
 
-Bash autocompletion could be enable by executing: `fin update ----bash-complete`.
+Bash autocompletion could be enable by executing: `fin update --bash-complete`.
 Then, type `fin` and press the TAB key twice to display commands available in the current dir.
