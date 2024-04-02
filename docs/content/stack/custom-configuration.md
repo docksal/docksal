@@ -19,7 +19,7 @@ with additional docker-compose overrides and definitions via the `.docksal/docks
 
 Examples:
 
-- Extend the default stack with the [MailHog](/service/other/mailhog/) service to capture outbound emails
+- Extend the default stack with the [Mailpit](/service/other/mailpit/) service to capture outbound emails
 - Repurpose the `cli` service to [run a different command](/service/cli/override-command/) on startup 
 (e.g., a node app instead of PHP-FPM).
 - [Pass variables](#pass-variables) from the host/project config inside containers 

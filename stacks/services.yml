@@ -215,10 +215,10 @@ services:
     << : *logging
     << : *healthcheck
 
-  # MailHog
+  # Mailpit
   mail:
     hostname: mail
-    image: ${MAILHOG_IMAGE:-mailhog/mailhog:v1.0.1}
+    image: ${MAILPIT_IMAGE:-axllent/mailpit:v1.15.1}
     volumes:
       - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
     labels:
