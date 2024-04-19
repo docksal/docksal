@@ -37,18 +37,18 @@ When using the default stack (a custom project stack is not defined in `.docksal
 via the `CLI_IMAGE` variable in `.docksal/docksal.env`, e.g.:
 
 ```
-CLI_IMAGE='docksal/cli:php8.1-3.3'
+CLI_IMAGE='docksal/cli:php8.3-3.8'
 ```
 
 This can also be set with `fin config set`.
 
 ```bash
-fin config set CLI_IMAGE='docksal/cli:php8.1-3.3'
+fin config set CLI_IMAGE='docksal/cli:php8.3-3.8'
 ```
 
 Run `fin project reset cli` (`fin p reset cli`) to properly reset and update the `cli` service.
 
-Available PHP versions: 7.4, 8.0, 8.1 supported, and 7.3, 7.2, 7.1, 7.0, 5.6 deprecated. Check the [list of the available CLI images](/stack/images-versions#cli) for the full list. 
+You can find the list of CLI images and corresponding PHP versions [here](/stack/images-versions#cli).
 
 There are also "edge" versions available that contain code from ongoing updates, but may not be stable. Don't switch to an
 edge image unless directed to do so by the Docksal team for testing purposes only.
