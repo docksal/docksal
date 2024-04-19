@@ -7,7 +7,7 @@
 DOCKSAL_UPDATE_VERSION="${DOCKSAL_UPDATE_VERSION:-$DOCKSAL_VERSION}"
 
 # Set current version constants
-FIN_VERSION=1.116.0
+FIN_VERSION=1.117.0
 DOCKSAL_VERSION=v1.18.2
 
 # Predefined terminal colors
