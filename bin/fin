@@ -564,10 +564,10 @@ docker-compose ()
 	# Call docker compose (v2)
 	# As a plugin for docker cli, it has to be called as "/path/to/binary compose"
 	# This would not be necessary if the binary was installed in the default location
-	# (~/.docker/cli-plugins/docker-compose). However, we install it in ~/.docksal/bin/docker-copose-v2
+	# (~/.docker/cli-plugins/docker-compose). However, we install it in ~/.docksal/bin/docker-compose
 	# to prevent conflicts with system binaries.
 	# "command <binary>" calls the binary directly ignoring any overriding shell functions
-	command docker-compose compose "$@"
+	command docker-compose "$@"
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -3742,7 +3742,7 @@ ssh_key ()
 	# Copy all keys from the host to the ssh-agent container.
 	# This is a safer method compared to passing individual keys via stdin.
 	# Takes 600ms vs 200ms for the stdin approach. Is faster when passing 4+ keys.
-	docker cp "$ssh_path/." docksal-ssh-agent:/.ssh
+	docker cp "$ssh_path/." docksal-ssh-agent:/.ssh >/dev/null
 
 	# If we have a key name as the argument, add it to the list of keys to load
 	if [[ "${2}" != "" ]]; then
