@@ -7,8 +7,6 @@
 # - Redis 5.0
 # - Apache Solr 3.6
 
-version: "3.9"
-
 services:
   # http(s)://VIRTUAL_HOST
   web:

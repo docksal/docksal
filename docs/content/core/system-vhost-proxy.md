@@ -57,8 +57,6 @@ either `docksal-local.yml` or `docksal.yml` file in the project.
 Multiple domains have to be separated by commas. Wildcards are supported on the left or right side, but not inbetween.
 
 ```yaml
-version: "2.1"
-
 services:
   web:
     labels:

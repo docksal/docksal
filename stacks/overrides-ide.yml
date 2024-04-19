@@ -1,8 +1,6 @@
 # Adds Web IDE service to the project
 # The IDE can be accessed at ide-${VIRTUAL_HOST}
 
-version: "3.9"
-
 services:
 
   cli:

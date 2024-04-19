@@ -1,8 +1,6 @@
 # Bind mount project volumes
 # Same as mounting host folders, but via named volumes.
 
-version: "3.9"
-
 volumes:
   cli_home:  # /home/docker volume in cli
   project_root:  # Project root volume (bind mount)

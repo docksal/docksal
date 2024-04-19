@@ -1,7 +1,5 @@
 # Default stack sans DB
 
-version: "3.9"
-
 services:
   # Web
   web:

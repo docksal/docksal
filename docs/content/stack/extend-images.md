@@ -96,8 +96,6 @@ If using default Docksal stacks (no `docksal.yml` in the project repo), create a
 with the following content:
 
 ```yaml
-version: "2.1"
-
 services:
   <service-name>:
     image: ${COMPOSE_PROJECT_NAME_SAFE}_<service-name>

@@ -3,8 +3,6 @@
 # Pros: native fs performance, fast file sync, inotify/fs watchers support.
 # Cons: 2x space usage (a mirror of the code base is maintained in a Docker volume), initial sync delay
 
-version: "3.9"
-
 volumes:
   cli_home:  # /home/docker volume in cli
   project_root: # Project root volume

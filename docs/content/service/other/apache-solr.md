@@ -143,7 +143,6 @@ fin config set SOLR_IMAGE='docksal/solr:8'
 
 ```yml
 ---
-version: "3.9"
 services:
   # Solr 8
   solr:
