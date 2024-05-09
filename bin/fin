@@ -3367,8 +3367,8 @@ project_create ()
 		echo -e "${green}    5.${NC}  Magento"
 		echo -e "${green}    6.${NC}  Laravel"
 		echo -e "${green}    7.${NC}  Symfony Skeleton"
-		echo -e "${green}    8.${NC} Symfony WebApp"
-		echo -e "${green}    9.${NC} Grav CMS"
+		echo -e "${green}    8.${NC}  Symfony WebApp"
+		echo -e "${green}    9.${NC}  Grav CMS"
 		echo -e "${green}    10.${NC} Backdrop CMS"
 		echo
 		echo -e "${acqua}  Go based${NC}"
@@ -3382,7 +3382,7 @@ project_create ()
 		echo -e "${green}    14.${NC} Static HTML site"
 		echo
 		echo -e "${red}  Custom${NC}"
-		echo -e "${green}    0.${NC} Custom git repository"
+		echo -e "${green}    0.${NC}  Custom git repository"
 		echo
 		echo -e ""
 
