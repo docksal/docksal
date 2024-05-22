@@ -34,10 +34,18 @@ fi
 
 #-------------------------------- OS Checks ------------------------------------
 # OS version detection
+
+# WSL should be managed as a standard Linux
+export WSL_VERSION=""
 if  [[ -f "/etc/os-release" ]]; then
-	(uname -a | grep -v 'Microsoft' >/dev/null) && OS_TYPE="Linux" || OS_TYPE="WSL"
+	
 	IFS=";" read OS_NAME OS_VERSION OS_ID OS_ID_LIKE < <(source "/etc/os-release"; echo "$NAME;$VERSION_ID;$ID;$ID_LIKE")
 	export OS_TYPE OS_NAME OS_VERSION
+	export OS_TYPE="Linux"
+	if (uname -a | grep 'microsoft' >/dev/null); then
+		export WSL_VERSION="$(uname -a| sed -E "s/.*(microsoft[^ ]*).*/\1/")"
+		export OS_TYPE="Linux (${WSL_VERSION})"
+	fi
 elif (uname | grep 'Darwin' >/dev/null); then
 	export OS_TYPE="Darwin"
 	export OS_NAME="$(sw_vers -productName)"
@@ -81,7 +89,7 @@ is_windows ()
 
 is_wsl ()
 {
-	[[ "$OS_TYPE" == "WSL" ]]
+	[[ "$WSL_VERSION" != "" ]]
 }
 
 is_mac ()
@@ -170,23 +178,6 @@ cygpath_abs_unix ()
 	echo "/$(cygpath -m $1 | sed 's/^\/cygdrive//' | sed 's/\([A-Z]\)\:/\l\1/')"
 }
 
-# Returns the value of Windows environment var in WSL
-# @param $1 var name
-wsl_env ()
-{
-	# Trim \r from output (necessary on Windows)
-	# "cd /mnt/c" is a workaround to fix a warning message in Windows 10 v1903+
-	# See https://github.com/docksal/docksal/issues/1103#issuecomment-522160146
-	echo $(cd /mnt/c && cmd.exe /c "echo %$1%" | tr -d '\r')
-}
-
-# Unfortunately wslpath output contains \r that has to be cleaned
-wsl_path ()
-{
-	# Trim \r from output (necessary on Windows)
-	echo $(wslpath "$@" | tr -d '\r')
-}
-
 # Convert version string like 1.2.3.4 to integer for comparison
 # param $1 version string of 4 components max (e.g., 1.10.3.0)
 ver_to_int ()
@@ -221,8 +212,6 @@ fi
 # WIN_HOME is a Unix path, e.g. /c/Users/user
 if is_windows; then
 	WIN_HOME=$(cygpath -u ${USERPROFILE})
-elif is_wsl; then
-	WIN_HOME=$(wsl_path -u $(wsl_env "USERPROFILE"))
 fi
 
 # Directory structure in ~/.docksal
@@ -255,7 +244,6 @@ DOCKER_MACHINE_BIN="$CONFIG_BIN_DIR/docker-machine"
 WINPTY_BIN="$CONFIG_BIN_DIR/winpty"
 vboxmanage="VBoxManage"
 is_windows && vboxmanage="/cygdrive/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
-is_wsl && vboxmanage="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 CONFIG_DOCKER_MACHINE_ENV="$CONFIG_DOCKER_MACHINE_DIR/machine.env"
 
 # Custom certs folder for vhost-proxy (overridable)
@@ -492,8 +480,6 @@ pwd ()
 	# "command <binary>" calls the binary directly ignoring any overriding shell functions
 	if is_windows; then
 		command pwd -L | sed 's/^\/cygdrive//'
-	elif is_wsl; then
-		command pwd -L | sed 's/^\/mnt//'
 	else
 		command pwd -L
 	fi
@@ -932,7 +918,6 @@ is_docksal_running ()
 	is_mac && is_docker_native && ! check_network_mac && return 1
 	is_linux && ! is_gitpod && ! check_network_alpine && return 1
 	is_windows && is_docker_native && ! check_network_windows && return 1
-	is_wsl && is_docker_native && ! check_network_wsl && return 1
 
 	local system_services=$(docker ps --filter "label=io.docksal.group=system" --format '{{.Names}}' 2>/dev/null)
 	# Assume Docksal is running when the following system services are running
@@ -1072,18 +1057,10 @@ check_docker_running ()
 
 		# Docker Desktop may not be running
 		if is_docker_native; then
-			if is_wsl; then
-				echo-error "Docker Desktop is not running or cannot be accessed" \
-					"WHAT TO DO?" \
-					"1. Start Docker Desktop, wait for Docker to start." \
-					"2. Make sure 'Expose daemon on tcp://localhost:2375 without TLS' in Docker Desktop settings is set."
-				exit 1
-			else
-				echo-error "Docker Desktop is not running" \
-					"WHAT TO DO?" \
-					"Start Docker Desktop, wait for Docker to start, and try again."
-				exit 1
-			fi
+			echo-error "Docker Desktop is not running" \
+				"WHAT TO DO?" \
+				"Start Docker Desktop, wait for Docker to start, and try again."
+			exit 1
 		else
 			echo-error "Unable to talk to docker daemon." \
 				"WHAT TO DO?" \
@@ -1149,11 +1126,7 @@ docker_desktop_version ()
 	if is_mac; then
 		echo $(defaults read /Applications/Docker.app/Contents/Info.plist CFBundleShortVersionString) 2>/dev/null
 	fi
-
-	if is_wsl; then
-		# Query Windows registry for the "Docker Desktop" app "DisplayVersion"
-		powershell.exe 'Get-ItemPropertyValue "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Docker Desktop" DisplayVersion'
-	fi
+	# WSL2 should not use Docker Desktop, but native docker.
 }
 
 is_docker_version ()
@@ -2632,12 +2605,7 @@ docker_machine_env ()
 	rm -f "$CONFIG_DOCKER_MACHINE_ENV" 2>/dev/null
 
 	# get the env
-	if is_wsl; then
-		# In WSL, docker-machine is a Windows binary, but WSL does not understand Windows paths
-		_env=$(docker-machine env --shell=bash docksal | sed "s/\\\\/\//g" | sed "s/C:/\/c/")
-	else
-		_env=$(docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME")
-	fi
+	_env=$(docker-machine env --shell=bash "$DEFAULT_MACHINE_NAME")
 	res=$?
 
 	# apply the env
@@ -2726,7 +2694,6 @@ docker_machine_remove ()
 		"$vboxmanage" hostonlyif remove "$vboxifname" 2>/dev/null
 		# Remove old DHCP leases because VirtualBox 6 retains then which breaks docker machine IP re-creation
 		is_mac && rm -f "$HOME/Library/VirtualBox/HostInterfaceNetworking-${vboxifname}-Dhcpd.leases"
-		is_wsl && rm -f "$WIN_HOME/.VirtualBox/HostInterfaceNetworking-${vboxifname}-Dhcpd.leases"
 	fi
 }
 
@@ -2935,18 +2902,11 @@ smb_share_add()
 	local share_name=$1
 	local share_path=$2
 
-	is_wsl && USERNAME="$(wsl_env USERNAME)"
-	is_wsl && USERDOMAIN="$(wsl_env USERDOMAIN)"
-
 	# Add SMB share if it does not exist.
 	if [[ "$(net.exe share)" != *"${share_name}"* ]]; then
 		echo-green "Adding docker SMB share ${share_name}..."
-		if is_wsl; then
-			sudowin net.exe share "${share_name}=${share_path}" "/grant:${USERDOMAIN}\\${USERNAME},FULL" "/REMARK:Docksal"
-		else
-			command_share="net.exe share ${share_name}=${share_path} /grant:${USERDOMAIN}\\${USERNAME},FULL /REMARK:Docksal"
-			winsudo "$command_share"
-		fi
+		command_share="net.exe share ${share_name}=${share_path} /grant:${USERDOMAIN}\\${USERNAME},FULL /REMARK:Docksal"
+		winsudo "$command_share"
 
 		if [[ $? != 0 ]]; then
 			echo-error "SMB share creation failed." \
@@ -2966,12 +2926,9 @@ smb_share_remove ()
 	for drive in ${drives}; do
 		# Avoid conflicts with existing drive shares by using a unique share name
 		local share_name="docksal-$drive"
-		if is_wsl; then
-			sudowin net share ${share_name} /DELETE
-		else
-			command_share="net.exe share ${share_name} /DELETE"
-			winsudo "$command_share"
-		fi
+		command_share="net.exe share ${share_name} /DELETE"
+		winsudo "$command_share"
+
 	done
 }
 
@@ -2984,8 +2941,6 @@ smb_share_mount()
 	local password=$3
 	# single quotes are banned from being used in password
 	password=${password//\'/}
-	is_wsl && USERNAME="$(wsl_env USERNAME)"
-	is_wsl && USERDOMAIN="$(wsl_env USERDOMAIN)"
 
 	# User ntlmssp by default. For some Windows machines ntlm should be used instead
 	# Also see https://unix.stackexchange.com/questions/124342/mount-error-13-permission-denied/124352#124352
@@ -3049,15 +3004,8 @@ docker_machine_mount_smb ()
 wsl_mount_drives ()
 {
 	! is_wsl && return;
-	local mounts=$(mount)
 	# Create mnt point binds if they don't exist
-	for drive in $(ls /mnt); do
-		if ! (echo "$mounts" | grep " on /$drive " >/dev/null); then
-			echo "Creating bind mount /mnt/$drive -> /$drive"
-			sudo mkdir -p "/$drive"
-			sudo mount --bind "/mnt/$drive" "/$drive"
-		fi
-	done
+	# TODO Check that "root = /" in /etc/wsl.conf
 }
 
 #------------------------------- VM Commands -----------------------------------
@@ -3806,7 +3754,7 @@ stats_ping ()
 	local user_agent
 	is_linux && user_agent="fin/${FIN_VERSION} (Linux ${OS_NAME}-${OS_VERSION})"
 	is_mac && user_agent="fin/${FIN_VERSION} (Macintosh Intel Mac OS X ${OS_VERSION})"
-	(is_wsl || is_windows) && user_agent="fin/${FIN_VERSION} (Windows NT ${OS_VERSION})"
+	is_windows && user_agent="fin/${FIN_VERSION} (Windows NT ${OS_VERSION})"
 
 	# Local instances
 	local source='Local'
@@ -3917,10 +3865,11 @@ configure_network_windows ()
 # Applicable to Docker Desktop only.
 check_network_wsl ()
 {
+	# TODO: Update for WSL2
 	# Trim \r from output (necessary on Windows)
-	local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
-	grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
-	grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
+	#local settings=$(netsh.exe interface ip show address name="${DOCKER_WIN_NETWORK}" | tr -d '\r')
+	#grep -q "${DOCKSAL_IP}$" <<< ${settings}  || return 1
+	#grep -q "${DOCKSAL_HOST_IP}$" <<< ${settings} || return 1
 }
 
 # Configure Docksal network settings on WSL
@@ -3933,12 +3882,14 @@ configure_network_wsl ()
 	# Docker for Win
 	if [[ "$mode" == "on" && "$status" == "disabled" ]] ; then
 		# Add Docksal IP aliases on the DockerNAT adapter
-		sudowin netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_IP}" mask="255.255.255.0"
-		sudowin netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
+		# TODO Update for WSL2
+		#sudowin netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_IP}" mask="255.255.255.0"
+		#sudowin netsh.exe interface ip add address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_HOST_IP}" mask="255.255.255.0"
 	elif [[ "$mode" == "off" && "$status" == "enabled" ]]; then
 		# Remove Docksal IP aliases on the DockerNAT adapter
-		sudowin netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_IP}"
-		sudowin netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_HOST_IP}"
+		# TODO Update for WSL2
+		#sudowin netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_IP}"
+		#sudowin netsh.exe interface ip delete address name=\"${DOCKER_WIN_NETWORK}\" addr="${DOCKSAL_HOST_IP}"
 	fi
 	# Wait 5s for network configuration to apply
 	sleep 5
@@ -3949,9 +3900,9 @@ configure_network ()
 {
 	local mode="${1:-on}"
 
-	# Always set mode to "off" when running on Mac/Windows/WSL in VirtualBox mode.
+	# Always set mode to "off" when running on Mac/Windows in VirtualBox mode.
 	# Mode "on" is only applicable to Linux and Docker for Mac/Windows.
-	if ! is_docker_native && (is_mac || is_windows || is_wsl); then
+	if ! is_docker_native && (is_mac || is_windows); then
 		mode="off"
 	fi
 
@@ -4010,7 +3961,7 @@ configure_mounts ()
 			fi
 		fi
 		# Create, then mount shares in VirtualBox
-		if (is_wsl || is_windows) && ! is_docker_native; then
+		if is_windows && ! is_docker_native; then
 			echo-green "Configuring SMB shares..."
 			docker_machine_mount_smb
 		fi
@@ -4019,7 +3970,7 @@ configure_mounts ()
 			echo-green "Removing NFS exports..."
 			nfs_share_remove
 		fi
-		if (is_wsl || is_windows) && ! is_docker_native; then
+		if is_windows && ! is_docker_native; then
 			echo-green "Removing SMB shares..."
 			smb_share_remove
 		fi
@@ -4101,7 +4052,10 @@ detect_dns ()
 			# In case no name servers found, fall back to the default
 			DOCKSAL_DNS_UPSTREAM="$DOCKSAL_DEFAULT_DNS"
 		fi
-	elif is_windows || is_wsl; then
+		if is_wsl; then
+			# TODO: check if wsl2 specific config is need here
+		fi
+	elif is_windows; then
 		# Look for Primary WINS server, it represents DNS whe WINS services is in use
 		local primary_wins=$(ipconfig.exe /all | grep "Primary WINS")
 		if [[ "$primary_wins" =~ ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) ]]; then
@@ -4259,38 +4213,7 @@ configure_resolver_windows () {
 # Configure system-wide *.docksal resolver
 # @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
 configure_resolver_wsl () {
-	local mode="${1:-on}"
-
-	local dns_ip="$DOCKSAL_IP"
-	# 10 is used increase the adapter's priority. 75 to - deprioritize it
-	local metric=10
-	# Enable resolver by default
-	if [[ "$mode" == "off" ]]; then
-		dns_ip="none"
-		metric=75
-	fi
-
-	local network_id
-	if is_docker_native; then
-		# Use the default DockerNAT adapter
-		network_id="${DOCKER_WIN_NETWORK}"
-	elif is_docker_machine_exist; then
-		# Need to check whether machine exists, otherwise we cannot get its info
-		# Figure out the name of the network (not the name of the adapter) the VM is using
-		network_id=$("$vboxmanage" showvminfo ${DEFAULT_MACHINE_NAME} --machinereadable | grep hostonlyadapter | cut -d'"' -f2 | sed 's/Ethernet Adapter/Network/')
-	else
-		# There is nothing to configure (machine and thus its network interface does not exist)
-		return
-	fi
-
-	# Set DNS server to Docksal IP on the VM's VBox adapter
-	sudowin netsh.exe interface ip set dnsservers "${network_id}" static ${dns_ip} none
-	# Set the adapter metric (priority) to 10, so its DNS settings will take over other adapters
-	sudowin netsh.exe interface ip set interface "${network_id}" metric=${metric}
-
-	# Flush DNS cache
-	echo-green "Clearing DNS cache..."
-	ipconfig.exe /flushdns >/dev/null 2>&1
+	# TODO: check if a specific config is needed here for WSL2
 }
 
 # Configure system-wide *.docksal resolver (Windows is not supported)
@@ -4678,80 +4601,6 @@ install_tools_generic_linux ()
 	fi
 }
 
-# Install WSL dependencies
-install_tools_wsl ()
-{
-	# Install Linux Docker client
-	if ! is_docker_version; then
-		local docker_pkg=$(basename "$URL_DOCKER_NIX")
-		echo-green "Downloading Docker client v${REQUIREMENTS_DOCKER}..."
-		if [[ ! -f "$docker_pkg" ]]; then
-			echo-green "Downloading ${docker_pkg}..."
-			curl -fL# "$URL_DOCKER_NIX" -o "$CONFIG_DOWNLOADS_DIR/$docker_pkg"
-			if_failed "Check internet connection."
-		# Use a local/portable copy if available
-		else
-			echo "Found a local copy of ${docker_pkg}. Using it..."
-			cp -f "$docker_pkg" "$CONFIG_DOWNLOADS_DIR"
-			if_failed "Check file permissions."
-		fi
-
-		# Run in sub-shell so we don't have to cd back
-		(
-			cd "$CONFIG_DOWNLOADS_DIR" && \
-			tar zxf "$docker_pkg" && \
-			mv -f "docker/docker" "$CONFIG_BIN_DIR/" && \
-			chmod +x "$DOCKER_BIN"
-		)
-		if_failed "Check file permissions."
-	fi
-
-	# Install Linux Docker Compose
-	if ! is_docker_compose_version; then
-		local dc_pkg=$(basename "$URL_DOCKER_COMPOSE_NIX")
-		echo-green "Downloading Docker Compose v${REQUIREMENTS_DOCKER_COMPOSE}..."
-		if [[ ! -f "$dc_pkg" ]]; then
-			echo-green "Downloading ${dc_pkg}..."
-			curl -fL# "$URL_DOCKER_COMPOSE_NIX" -o "$DOCKER_COMPOSE_BIN" && \
-				chmod +x "$DOCKER_COMPOSE_BIN"
-			if_failed "Check file permissions and internet connection."
-		# Use a local/portable copy if available
-		else
-			echo "Found a local copy of ${dc_pkg}. Using it..."
-			cp -f "$dc_pkg" "$DOCKER_COMPOSE_BIN" && \
-				chmod +x "$DOCKER_COMPOSE_BIN"
-			if_failed "Check file permissions."
-		fi
-	fi
-
-	# Install Windows Docker Machine client.
-	# The Linux one cannot correctly interact with the Windows VirtualBox cli, eventually resulting in something like:
-	# "Error creating machine: Error in driver during machine creation: write |1: broken pipe"
-	# The Windows binary has to be run from the Windows FS (e.g. from Windows user's profile).
-	local USERPROFILE=$(wsl_path -u $(wsl_env USERPROFILE))
-	local DOCKER_MACHINE_BIN_WSL="${USERPROFILE}/.docksal/bin/docker-machine.exe"
-	mkdir -p "${USERPROFILE}/.docksal/bin"
-	# Keeping the rest of the logic below very similar to other host environments.
-	if ! is_docker_machine_version; then
-		local dm_pkg=$(basename "$URL_DOCKER_MACHINE_WIN")
-		echo-green "Downloading Docker Machine v${REQUIREMENTS_DOCKER_MACHINE}..."
-		if [[ ! -f "$dm_pkg" ]]; then
-			echo-green "Downloading ${dm_pkg}..."
-			curl -fL# "$URL_DOCKER_MACHINE_WIN" -o "$DOCKER_MACHINE_BIN_WSL" && \
-				chmod +x "$DOCKER_MACHINE_BIN_WSL"
-			if_failed "Check file permissions and internet connection."
-		# Use a local/portable copy if available
-		else
-			echo "Found a local copy of ${dm_pkg}. Using it..."
-			cp -f "$dm_pkg" "$DOCKER_MACHINE_BIN_WSL" && \
-				chmod +x "$DOCKER_MACHINE_BIN_WSL"
-			if_failed "Check file permissions."
-		fi
-	fi
-	# Create a symlink to the Windows docker-machine binary inside the WSL FS.
-	ln -sf "$DOCKER_MACHINE_BIN_WSL" "$DOCKER_MACHINE_BIN"
-}
-
 # Installs VirtualBox on Mac/Windows
 # Picks up a matching vbox version package from ~/Downloads or current directory (preferred).
 install_virtualbox () {
@@ -4762,12 +4611,6 @@ install_virtualbox () {
 	if is_windows; then
  		url="$URL_VBOX_WIN"
 		vbox_pkg=$(cygpath -u "$USERPROFILE/Downloads")/$(basename "$url")
-	fi
-
-	if is_wsl; then
-		url="$URL_VBOX_WIN"
-		local USERPROFILE=$(wsl_path -u $(wsl_env "USERPROFILE"))
-		vbox_pkg="$USERPROFILE/Downloads"/$(basename "$url")
 	fi
 
 	if is_mac; then
@@ -4806,8 +4649,8 @@ install_virtualbox () {
 			open "/Volumes/VirtualBox/VirtualBox.pkg"
 	)
 
-	# Install Win/WSL
-	(is_windows || is_wsl) && (
+	# Install Win
+	is_windows && (
 		chmod +x "$vbox_pkg"
 		"$vbox_pkg"
 	)
@@ -4875,7 +4718,7 @@ update_boot2docker ()
 				# Path to boot2docker.iso for the machine
 				local DEFAULT_MACHINE_ISO_PATH=".docker/machine/machines/${DEFAULT_MACHINE_NAME}/boot2docker.iso"
 				# On Windows machines are stored in the Windows user profile
-				if is_windows || is_wsl; then
+				if is_windows; then
 					DEFAULT_MACHINE_ISO_PATH="${WIN_HOME}/${DEFAULT_MACHINE_ISO_PATH}"
 				else
 					# Mac - straightforward
@@ -4919,10 +4762,7 @@ update_tools ()
 			return $?
 	fi
 
-	is_wsl &&
-		install_tools_wsl &&
-		return $?
-
+	# Ne special tools are needed for WSL2.
 	is_windows &&
 		install_tools_windows &&
 		return $?
@@ -6881,7 +6721,7 @@ config_remove ()
 # Can add or remove a host to/from hosts file
 hosts ()
 {
-	is_windows || is_wsl && HOSTS_FILE="/c/windows/system32/drivers/etc/hosts"
+	is_windows && HOSTS_FILE="/c/windows/system32/drivers/etc/hosts"
 	is_mac && HOSTS_FILE="/etc/hosts"
 	is_linux && HOSTS_FILE="/etc/hosts"
 	case "$1" in
@@ -7485,18 +7325,14 @@ fi
 
 # Network settings
 
-# Disable internal DNS resolver and use external domain with Docker Desktop for Windows
+# Disable internal DNS resolver and use external with domain WSL2
 # This is necessary to have a working setup out of the box without the need to ask the user to manually configure DNS
 # records using "fin hosts".
-# See https://github.com/docksal/docksal/issues/1276
 if is_wsl && is_docker_native; then
 	# Only proceed if DOCKSAL_DNS_DOMAIN was not explicitly set (matches the default)
 	if [[ "${DOCKSAL_DNS_DOMAIN}" == "${DOCKSAL_DNS_DOMAIN_DEFAULT}" ]]; then
-		# Limit this to Docker Desktop for Windows 2.2.0.0+, where it is absolutely necessary
-		if (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.2.0.0') )); then
-			export DOCKSAL_NO_DNS_RESOLVER=1
-			export DOCKSAL_DNS_DOMAIN=docksal.site
-		fi
+		export DOCKSAL_NO_DNS_RESOLVER=1
+		export DOCKSAL_DNS_DOMAIN=docksal.site
 	fi
 fi
 
@@ -7507,11 +7343,8 @@ if is_docker_native && (( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_in
 	DOCKSAL_VHOST_PROXY_IP=${DOCKSAL_VHOST_PROXY_IP:-0.0.0.0}
 	DOCKSAL_DNS_IP=${DOCKSAL_DNS_IP:-0.0.0.0}
 
-	# Disable internal DNS resolver and use external domain with Docker Desktop for Windows
-	# This is necessary to have a working setup out of the box without the need to ask the user to manually configure DNS
-	# records using "fin hosts".
-	# See https://github.com/docksal/docksal/issues/1276
-	# Do this only if DOCKSAL_DNS_DOMAIN was not explicitly set (matches the default)
+	# Disable internal DNS resolver and use external with domain WSL2
+	# @see above
 	is_wsl && [[ "${DOCKSAL_DNS_DOMAIN}" == "${DOCKSAL_DNS_DOMAIN_DEFAULT}" ]] && DOCKSAL_DNS_DISABLED=1
 fi
 
@@ -7531,20 +7364,13 @@ else
 	export DOCKSAL_DNS2='9.9.9.9' # Backup external DNS
 fi
 
-# Create drives bind mounts on wsl
-# E.g. /mnt/c -> /c
+# WSL2: Check that "root = /" in /etc/wsl.conf
 wsl_mount_drives
 
 # DOCKER_HOST defines how we talk to the docker daemon
 # Linux - via /var/run/docker.sock (DOCKER_HOST='')
 if is_linux; then
 	export DOCKER_HOST='';
-elif is_docker_native; then
-	if is_wsl; then
-		# WSL + Docker Desktop => connecting via HTTP
-		# The "legacy" (tcp://localhost:2375) connection option in Docker Desktop settings must be enabled.
-		export DOCKER_HOST='127.0.0.1:2375'
-	fi
 else
 	# Mac/Windows + Docker Machine => connecting via tcp://192.168.64.100:2376 (TLS) (DOCKER_HOST='192.168.64.100:2376')
 	# We rely on docker-machine to configure the connection settings
