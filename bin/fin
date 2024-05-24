@@ -280,7 +280,7 @@ export DOCKSAL_IP="192.168.64.100"
 export DOCKSAL_HOST_IP="192.168.64.1"
 export DOCKSAL_SUBNET="192.168.64.1/24"
 # Allow turning built-in DNS features on/off. Set to "1" to switch to external DNS (which will be standard in v2)
-DOCKSAL_DNS_DISABLED="${DOCKSAL_DNS_DISABLED:-0}"
+DOCKSAL_DNS_DISABLED="${DOCKSAL_DNS_DISABLED:-1}"
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
 DOCKSAL_DEFAULT_DNS="8.8.8.8"
 # For visibility on this variable
@@ -288,7 +288,7 @@ DOCKSAL_DNS_IP="${DOCKSAL_DNS_IP}"
 DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
 DOCKSAL_DNS_DOMAIN_DEFAULT="docksal"
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-$DOCKSAL_DNS_DOMAIN_DEFAULT}"
-# Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
+# Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "1" to activate.
 DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER:-0}"
 # Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
 DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
@@ -982,8 +982,8 @@ check_docksal_environment ()
 	# Since network configuration is not permanent on Linux we need to restore it when possible
 	# check_docksal_environment is a good place to do it, but we don't need to know the result
 	if is_linux && ! is_gitpod; then
-		configure_network_alpine "on"
-		configure_resolver_alpine "on"
+		configure_network_alpine
+		configure_resolver_alpine
 	fi
 	check_project_root && check_docksal_running
 }
@@ -4173,6 +4173,9 @@ install_dns_service ()
 configure_resolver_mac () {
 	local mode="${1:-on}"
 
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
+
 	if [[ "$mode" == "on" ]]; then
 		# Check whether resolver is already configured
 		if ! (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
@@ -4184,6 +4187,7 @@ configure_resolver_mac () {
 				sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 		fi
 	elif [[ "$mode" == "off" ]]; then
+		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN_DEFAULT" >/dev/null 2>&1
 		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
 	fi
 
@@ -4201,6 +4205,9 @@ configure_resolver_alpine () {
 	local mode="${1:-on}"
 	local dns_settings="nameserver ${DOCKSAL_IP}"
 	local conf_file="/etc/resolv.conf"
+
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
 
 	# Enabling and settings are not present
 	if [[ "$mode" == "on" ]] && (! grep -q "$dns_settings" ${conf_file}); then
@@ -4222,10 +4229,12 @@ configure_resolver_alpine () {
 # @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
 configure_resolver_windows () {
 	local mode="${1:-on}"
-
 	local dns_ip="$DOCKSAL_IP"
-	# 10 is used increase the adapter's priority. 75 to - deprioritize it
-	local metric=10
+	local metric=10 # 10 is used increase the adapter's priority. 75 to - deprioritize it
+
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
+
 	# Enable resolver by default
 	if [[ "$mode" == "off" ]]; then
 		dns_ip="none"
@@ -4260,10 +4269,12 @@ configure_resolver_windows () {
 # @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
 configure_resolver_wsl () {
 	local mode="${1:-on}"
-
 	local dns_ip="$DOCKSAL_IP"
-	# 10 is used increase the adapter's priority. 75 to - deprioritize it
-	local metric=10
+	local metric=10 # 10 is used increase the adapter's priority. 75 to - deprioritize it
+
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
+
 	# Enable resolver by default
 	if [[ "$mode" == "off" ]]; then
 		dns_ip="none"
@@ -4299,7 +4310,7 @@ configure_resolver ()
 	local mode="${1:-on}"
 
 	# Global DNS resolver kill switch
-	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode='off'
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
 
 	if [[ "$mode" == "on" ]]; then
 		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
