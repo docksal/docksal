@@ -1,7 +1,5 @@
 # Adds Cloudflare Tunnel (cloudflared) service to the project
 
-version: "3.9"
-
 services:
   cloudflared:
     extends:

@@ -1,5 +1,46 @@
 # Changelog
 
+## 1.19.0 (2024-05-24)
+
+### New software versions ✨
+
+- fin v1.118.0
+- Docker Desktop v4.29.0 (build 145265)
+- Docker / Docker CLI v26.0.0
+- Docker Compose v2.26.1
+- New image versions
+  - [docksal/cli v3.8](https://github.com/docksal/service-cli/releases/tag/v3.8.0)
+  - [docksal/mariadb v1.4](https://github.com/docksal/service-mariadb/releases/tag/v1.4.0)
+
+### Changes and improvements ⚙️
+
+- macOS Sonoma 14.4 compatibility
+  - Refactored NFS configuration
+  - Improved NFS diagnostics
+- Docker Compose new version compatibility
+  - dropped the obsolete `version` prop in stack configs
+- Disabled `dns` service and resolver configuration by default
+  - Both will be completely removed in the following release
+- Replaced `mailhog` service with `mailpit`
+- Updated `fin project create` wizard list
+- Added `--build` option to `docker-compose create` to use dockerfiles
+- Using sudo to create `FIN_AUTOCOMPLETE_PATH` (which is usually owned by root)
+- Updated GitHub Actions config
+
+### Documentation 📖
+
+- Extended "fin help update" output 
+- Various small updates
+
+### Contributors 🤓
+
+@lmakarov, @shelane, @obriat, @tomclopez, @onefreewalk
+
+### Sponsors 🤑
+
+@markaspot, @lpeabody, @paulsheldrake, @andreyzb, @twfahey1, @johnoltman65, [❤️ You ❤️ ](https://github.com/sponsors/docksal)
+
+
 ## 1.18.2 (2023-04-03)
 
 ❗**IMPORTANT:** This release addresses a bug in the update process introduced in [v1.17.0](https://github.com/docksal/docksal/releases/tag/v1.17.0).

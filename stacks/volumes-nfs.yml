@@ -3,8 +3,6 @@
 # Pros: very good performance, almost realtime file sync 
 # Cons: no inotify/fs watchers
 
-version: "3.9"
-
 volumes:
   cli_home:  # /home/docker volume in cli
   project_root:  # Project root volume (NFS)

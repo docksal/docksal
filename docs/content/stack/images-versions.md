@@ -51,14 +51,14 @@ e.g., `fin image registry docksal/cli`, to see list of available CLI images. [Se
 [![CLI on Github](https://img.shields.io/badge/Release%20notes-black.svg?logo=github&style=flat-square&classes=inline)](https://github.com/docksal/service-cli/releases)
 [![CLI on Docker hub](https://img.shields.io/badge/View%20on%20Docker%20Hub-gray.svg?logo=docker&style=flat-square&classes=inline)](https://hub.docker.com/r/docksal/cli/tags)
 
-| Image                     | Notes                                                                                                      |
-|---------------------------|------------------------------------------------------------------------------------------------------------|
-| `docksal/cli:php8.1-3.3`  | *Default image* PHP 8.1.14, Nodejs 18.13.0 LTS, Ruby 2.7.4, Python 3.9.2                                   |
-| `docksal/cli:php8.0-3.3`  | PHP 8.0.27, Nodejs 18.13.0 LTS, Ruby 2.7.4, Python 3.9.2                                                   |
-| `docksal/cli:php7.4-3.3`  | PHP 7.4.33, Nodejs 18.13.0 LTS, Ruby 2.7.4, Python 3.9.2                                                   |
-| `docksal/cli:php8.1-3`    | Latest 3.x image version of PHP 8.1 flavor, convenient when [extending stock images](/stack/extend-images) 
-| `docksal/cli:php8.0-3`    | Latest 3.x image version of PHP 8.0 flavor, convenient when [extending stock images](/stack/extend-images) 
-| `docksal/cli:php7.4-3`    | Latest 3.x image version of PHP 7.4 flavor, convenient when [extending stock images](/stack/extend-images) 
+| Image                    | Notes                                                                                                      |
+|--------------------------|------------------------------------------------------------------------------------------------------------|
+| `docksal/cli:php8.3-3.8` | *Default image* PHP 8.3.6, Nodejs 20.12.2 LTS, Ruby 2.7.4, Python 3.9.2                                    |
+| `docksal/cli:php8.2-3.8` | PHP 8.2.18, Nodejs 20.12.2 LTS, Ruby 2.7.4, Python 3.9.2                                                   |
+| `docksal/cli:php8.1-3.8` | PHP 8.1.28, Nodejs 20.12.2 LTS, Ruby 2.7.4, Python 3.9.2                                                   |
+| `docksal/cli:php8.3-3`   | Latest 3.x image version of PHP 8.3 flavor, convenient when [extending stock images](/stack/extend-images) |
+| `docksal/cli:php8.2-3`   | Latest 3.x image version of PHP 8.2 flavor, convenient when [extending stock images](/stack/extend-images) |
+| `docksal/cli:php8.1-3`   | Latest 3.x image version of PHP 8.1 flavor, convenient when [extending stock images](/stack/extend-images) |
 
 ## Apache
 
@@ -103,15 +103,14 @@ e.g., `fin image registry docksal/cli`, to see list of available CLI images. [Se
 
 | Image| Notes |
 |------|-------|
-| `docksal/mariadb:10.6-1.3`     | MariaDB 10.6 (image v1.3, default) |
+| `docksal/mariadb:10.11-1.4`    | MariaDB 10.11 (image v1.4, default) |
+| `docksal/mariadb:10.11`        | MariaDB 10.11 (latest version) |
+| `docksal/mariadb:10.6-1.4`     | MariaDB 10.6 (pinned version) |
 | `docksal/mariadb:10.6`         | MariaDB 10.6 (latest version) |
-| `docksal/mariadb:10.5-1.3`     | MariaDB 10.5 (pinned version) |
+| `docksal/mariadb:10.5-1.4`     | MariaDB 10.5 (pinned version) |
 | `docksal/mariadb:10.5`         | MariaDB 10.5 (latest version) |
-| `docksal/mariadb:10.4-1.3`     | MariaDB 10.4 (pinned version) |
+| `docksal/mariadb:10.4-1.4`     | MariaDB 10.4 (pinned version) |
 | `docksal/mariadb:10.4`         | MariaDB 10.4 (latest version) |
-| `docksal/mariadb:10.3-1.3`     | MariaDB 10.3 (pinned version) |
-| `docksal/mariadb:10.3`         | MariaDB 10.3 (latest version) |
-| `docksal/mariadb:10.2`         | MariaDB 10.2 (legacy version) |
 | ...                            | ... |
 
 ## Apache Solr

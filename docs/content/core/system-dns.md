@@ -65,8 +65,6 @@ To have your project containers resolve a custom DNS record, you can use the doc
 Add this parameter in the project's `docksal.yml` to any container, where you want your custom DNS records to work:
 
 ```yaml
-version: "2.1"
-
 services:
   cli:
     extra_hosts:

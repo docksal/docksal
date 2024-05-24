@@ -7,8 +7,8 @@
 DOCKSAL_UPDATE_VERSION="${DOCKSAL_UPDATE_VERSION:-$DOCKSAL_VERSION}"
 
 # Set current version constants
-FIN_VERSION=1.113.2
-DOCKSAL_VERSION=v1.18.2
+FIN_VERSION=1.118.0
+DOCKSAL_VERSION=v1.19.0
 
 # Predefined terminal colors
 # Format: '\033[<formatting>;<text-color>;<background-color>m'
@@ -197,15 +197,15 @@ ver_to_int ()
 #---------------------------- Global Constants --------------------------------
 
 # Dependency versions
-REQUIREMENTS_DOCKER='20.10.23'
-REQUIREMENTS_DOCKER_DD='20.10.23'  # Ships with Docker Desktop 4.17.0 (99724)
+REQUIREMENTS_DOCKER='26.0.0'
+REQUIREMENTS_DOCKER_DD='26.0.0'  # Ships with Docker Desktop 4.29.0 (145265)
 REQUIREMENTS_DOCKER_B2D='19.03.5'  # This is the final boot2docker version
-REQUIREMENTS_DOCKER_COMPOSE='2.15.1' # Docker Compose V2
+REQUIREMENTS_DOCKER_COMPOSE='2.26.1' # Docker Compose V2
 REQUIREMENTS_DOCKER_MACHINE='0.16.2' # This is the final docker-machine version
 REQUIREMENTS_VBOX='6.1.42'  # Remember to update the download URLs below
 REQUIREMENTS_WINPTY='0.4.3'
 REQUIREMENTS_WINPTY_CYGWIN='2.8.0'
-REQUIREMENTS_DOCKER_DESKTOP='4.17.0' # Build 99724
+REQUIREMENTS_DOCKER_DESKTOP='4.29.0' # Build 145265
 
 # VirtualBox download URLs
 # Remember to update REQUIREMENTS_VBOX above
@@ -280,7 +280,7 @@ export DOCKSAL_IP="192.168.64.100"
 export DOCKSAL_HOST_IP="192.168.64.1"
 export DOCKSAL_SUBNET="192.168.64.1/24"
 # Allow turning built-in DNS features on/off. Set to "1" to switch to external DNS (which will be standard in v2)
-DOCKSAL_DNS_DISABLED="${DOCKSAL_DNS_DISABLED:-0}"
+DOCKSAL_DNS_DISABLED="${DOCKSAL_DNS_DISABLED:-1}"
 # For environments, where access to external DNS servers is blocked, DOCKSAL_DNS_UPSTREAM should be set to the LAN DNS server
 DOCKSAL_DEFAULT_DNS="8.8.8.8"
 # For visibility on this variable
@@ -288,7 +288,7 @@ DOCKSAL_DNS_IP="${DOCKSAL_DNS_IP}"
 DOCKSAL_DNS_UPSTREAM="${DOCKSAL_DNS_UPSTREAM}"
 DOCKSAL_DNS_DOMAIN_DEFAULT="docksal"
 DOCKSAL_DNS_DOMAIN="${DOCKSAL_DNS_DOMAIN:-$DOCKSAL_DNS_DOMAIN_DEFAULT}"
-# Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "true" to activate.
+# Allow disabling the DNS resolver configuration (in case there are issues with it). Set to "1" to activate.
 DOCKSAL_NO_DNS_RESOLVER="${DOCKSAL_NO_DNS_RESOLVER:-0}"
 # Set to "true" to enable logging DNS queries in docksal-dns. View logs via "fin docker logs docksal-dns"
 DOCKSAL_DNS_DEBUG="${DOCKSAL_DNS_DEBUG}"
@@ -361,8 +361,6 @@ URL_REPO_UI="https://github.com/docksal/docksal"
 URL_RELEASE_NOTES="https://docksal.io/updates"
 URL_GITHUB_SPONSOR="https://github.com/sponsors/docksal"
 URL_REPO_DRUPAL7="https://github.com/docksal/boilerplate-drupal7.git"
-URL_REPO_DRUPAL9COMPOSER="https://github.com/docksal/boilerplate-drupal9-composer.git"
-URL_REPO_DRUPAL9BLT="https://github.com/docksal/boilerplate-drupal9-blt.git"
 URL_REPO_DRUPAL10COMPOSER="https://github.com/docksal/boilerplate-drupal10-composer.git"
 URL_REPO_DRUPAL10BLT="https://github.com/docksal/boilerplate-drupal10-blt.git"
 URL_REPO_WORDPRESS="https://github.com/docksal/boilerplate-wordpress.git"
@@ -417,7 +415,7 @@ URL_WINPTY="https://github.com/rprichard/winpty/releases/download/${REQUIREMENTS
 IMAGE_SSH_AGENT=${IMAGE_SSH_AGENT:-docksal/ssh-agent:1.4}
 IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.8}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.2}
-IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php8.1-3.3}
+IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php8.3-3.8}
 
 #---------------------------- Helper functions --------------------------------
 
@@ -566,10 +564,10 @@ docker-compose ()
 	# Call docker compose (v2)
 	# As a plugin for docker cli, it has to be called as "/path/to/binary compose"
 	# This would not be necessary if the binary was installed in the default location
-	# (~/.docker/cli-plugins/docker-compose). However, we install it in ~/.docksal/bin/docker-copose-v2
+	# (~/.docker/cli-plugins/docker-compose). However, we install it in ~/.docksal/bin/docker-compose
 	# to prevent conflicts with system binaries.
 	# "command <binary>" calls the binary directly ignoring any overriding shell functions
-	command docker-compose compose "$@"
+	command docker-compose "$@"
 }
 
 # Search for a file/directory in a directory tree upwards. Return its path.
@@ -984,8 +982,8 @@ check_docksal_environment ()
 	# Since network configuration is not permanent on Linux we need to restore it when possible
 	# check_docksal_environment is a good place to do it, but we don't need to know the result
 	if is_linux && ! is_gitpod; then
-		configure_network_alpine "on"
-		configure_resolver_alpine "on"
+		configure_network_alpine
+		configure_resolver_alpine
 	fi
 	check_project_root && check_docksal_running
 }
@@ -1376,7 +1374,7 @@ _start_containers ()
 	# This will recraete the project network if missing.
 	# docker-compose create &>/dev/null || (echo-error "Failed to create project resources"; return 1)
 	echo-yellow "(Re)creating resources..."
-	docker-compose create --no-recreate || return 1
+	docker-compose create --build --no-recreate || return 1
 
 	# (Re)connect containers to project network
 	# We have to manually reconnect project containers to project network (after restart).
@@ -2060,6 +2058,15 @@ show_help_update ()
 
 	echo
 	echo "Options:"
+	printh "--system-images" "Update system images"
+	printh "--project-images" "Update project images"
+	printh "--self" "Update fin executbale"
+	printh "--tools" "Update tools"
+	printh "--stack" "Update config files"
+	printh "--bash-complete" "Install bash completions"
+	echo
+	echo "Examples:"
+	printh "fin update --project-images" "Pull the latest project specific images"
 	printh "DOCKSAL_UPDATE_VERSION=develop fin update" "Update Docksal to the latest development version"
 }
 
@@ -2498,7 +2505,14 @@ bash_comp_words ()
 			local custom_commands
 
 			for cmd_name in $(ls "$project_commands_path" 2>/dev/null | tr "\n" " "); do
-				custom_commands+=" $cmd_name"
+				if [ -d "$project_commands_path/$cmd_name" ]; then
+					for sub_cmd_name in $(ls "$project_commands_path/$cmd_name" 2>/dev/null | tr "\n" " "); do
+						[[ -f "$project_commands_path/$cmd_name/$sub_cmd_name" ]] &&
+							custom_commands+=" $cmd_name/$sub_cmd_name"
+					done
+				else
+					custom_commands+=" $cmd_name"
+				fi
 			done
 
 			for cmd_name in $(ls "$project_addons_path" 2>/dev/null); do
@@ -2724,6 +2738,32 @@ nfs_share_add ()
 
 	eval $(parse_params "$@")
 
+	# Ensure /etc/exports exists and nfsd is enabled
+	# nfsd won't start or even do "checkexports" without /etc/exports present
+	if [[ ! -f /etc/exports ]]; then
+		echo "Creating /etc/exports..."
+		sudo touch /etc/exports
+	fi
+
+	# Start nfsd if it's not running
+	if ! (sudo nfsd status >/dev/null 2>&1); then
+		echo "Starting nfsd..."
+		# Give nfsd a moment to start
+		sudo nfsd start >/dev/null; sleep 1
+	fi
+
+	# Set nfs.server.mount.require_resv_port = 0
+	# Many NFS server implementations require this because of the false belief that this requirement increases security.
+	# NFS mounts are very likely to fail without this.
+	if ! (cat /etc/nfs.conf | grep -e '^nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
+		echo "Writing /etc/nfs.conf..."
+		echo "nfs.server.mount.require_resv_port = 0" | sudo tee -a /etc/nfs.conf >/dev/null
+		# Need to stop and start nfsd because macOS 14.4 broke the restart command
+		sudo nfsd stop &>/dev/null
+		# Give nfsd a moment to start
+		sudo nfsd start >/dev/null; sleep 1
+	fi
+
 	# Remove our own old exports
 	local exports_open="# <ds-nfs $DEFAULT_MACHINE_NAME"
 	local exports_close="# ds-nfs>"
@@ -2741,24 +2781,16 @@ nfs_share_add ()
 			return 1
 		fi
 		# With VirtualBox, connections originate from ${DOCKSAL_IP}
-		is_mac_vbox && exports="${exports}$share_export ${DOCKSAL_IP} -alldirs -maproot=0:0\n"
-		# With Docker Desktop (HyperKit), connections originate from 127.0.0.1 or ${DOCKSAL_HOST_IP} (alias on lo0)
-		is_mac_dd_hk && exports="${exports}$share_export 127.0.0.1 ${DOCKSAL_HOST_IP} -alldirs -maproot=0:0\n"
-		# With Docker Desktop (Virtualization Framework/M1), connections originate from 192.168.81.0/24
-		is_mac_dd_vf && exports="${exports}$share_export -network 192.168.81.0 -mask 255.255.255.0 -alldirs -maproot=0:0\n"
+		# With Docker Desktop using HyperKit, connections originate from 127.0.0.1 or ${DOCKSAL_HOST_IP} (alias on lo0)
+		# With Docker Desktop using Virtualization Framework or on Apple Silicone, connections originate from the 192.168.81.0/24 network or ${DOCKSAL_HOST_IP}
+		# We can put them all in the same export line
+		exports="${exports}$share_export 127.0.0.1 ${DOCKSAL_HOST_IP} 192.168.81.0 -alldirs -maproot=0:0\n"
 	done
 	exports="${exports}${exports_close}"
 
 	local new_exports=$(echo -e "$exports")
 	local old_exports=$(cat /etc/exports 2>/dev/null)
 	if [[ "$new_exports" != "$old_exports" ]]; then
-		# Ensure /etc/exports exists
-		# nfsd won't start or even do "checkexports" without the config file
-		if [[ ! -f /etc/exports ]]; then
-			sudo touch /etc/exports # This automatically triggers nfsd start
-			sleep 5 # Give nfsd site time to start
-		fi
-
 		# Write temporary exports file to /tmp/etc.exports.XXXXX and check it
 		local exports_test="/tmp/etc.exports.$RANDOM"
 		echo -e "$exports" | tee "$exports_test" >/dev/null
@@ -2780,38 +2812,19 @@ nfs_share_add ()
 			fi
 		fi
 
+		# Write and apply /etc/exports settings
 		echo "Writing /etc/exports..."
 		echo -e "$exports" | sudo tee /etc/exports >/dev/null
-
-		NFSD_RESTART_REQUIRED="true"
+		# Give nfsd a moment to update exports list
+		sudo nfsd update; sleep 1
 	else
 		# /etc/export already contains what is required
 		echo "NFS shares are already configured"
 	fi
 
-	# Set nfs.server.mount.require_resv_port = 0
-	# Many NFS server implementations require this because of
-	# the false belief that this requirement increases security.
-	# Without this, NFS mounts are very likely to fail
-	if ! (cat /etc/nfs.conf | grep -e '^nfs\.server\.mount\.require_resv_port\s*=\s*0' >/dev/null); then
-		echo "Writing /etc/nfs.conf..."
-		echo "nfs.server.mount.require_resv_port = 0" | sudo tee -a /etc/nfs.conf >/dev/null
-		NFSD_RESTART_REQUIRED="true"
-	fi
-
-	# Start/Restart nfsd
-	(ps aux | grep /sbin/nfsd | grep -v grep >/dev/null) && NFSD_IS_RUNNING="true"
-	if [[ "$NFSD_IS_RUNNING" == "true" ]]; then
-		if [[ "$NFSD_RESTART_REQUIRED" == "true" ]]; then
-			echo-green "Restarting nfsd..."
-			sudo nfsd restart
-			sleep 5
-		fi
-	else
-		echo-green "Starting nfsd..."
-		sudo nfsd start
-		sleep 10
-	fi
+	# Check nfsd status and exports
+	nfsd status
+	showmount -e
 }
 
 # Removes all Docksal NFS exports
@@ -2845,9 +2858,15 @@ nfs_share_remove ()
 		return 2
 	fi
 
-	echo "Writing and applying /etc/exports..."
+	# Write and apply /etc/exports settings
+	echo "Writing /etc/exports..."
 	echo -e "$exports_new" | sudo tee /etc/exports >/dev/null
-	sudo nfsd restart
+	# Give nfsd a moment to update exports list
+	sudo nfsd update; sleep 1
+
+	# Check nfsd status and exports
+	nfsd status
+	showmount -e
 }
 
 # Mount folder inside docker-machine with NFS
@@ -3343,34 +3362,32 @@ project_create ()
 		echo -e "${blue}  PHP based${NC}"
 		echo -e "${green}    1.${NC}  Drupal 10 (Composer Version)"
 		echo -e "${green}    2.${NC}  Drupal 10 (BLT Version)"
-		echo -e "${green}    3.${NC}  Drupal 9 (Composer Version)"
-		echo -e "${green}    4.${NC}  Drupal 9 (BLT Version)"
-		echo -e "${green}    5.${NC}  Drupal 7"
-		echo -e "${green}    6.${NC}  Wordpress"
-		echo -e "${green}    7.${NC}  Magento"
-		echo -e "${green}    8.${NC} Laravel"
-		echo -e "${green}    9.${NC} Symfony Skeleton"
-		echo -e "${green}    10.${NC} Symfony WebApp"
-		echo -e "${green}    11.${NC} Grav CMS"
-		echo -e "${green}    12.${NC} Backdrop CMS"
+		echo -e "${green}    3.${NC}  Drupal 7"
+		echo -e "${green}    4.${NC}  Wordpress"
+		echo -e "${green}    5.${NC}  Magento"
+		echo -e "${green}    6.${NC}  Laravel"
+		echo -e "${green}    7.${NC}  Symfony Skeleton"
+		echo -e "${green}    8.${NC}  Symfony WebApp"
+		echo -e "${green}    9.${NC}  Grav CMS"
+		echo -e "${green}    10.${NC} Backdrop CMS"
 		echo
 		echo -e "${acqua}  Go based${NC}"
-		echo -e "${green}    13.${NC} Hugo"
+		echo -e "${green}    11.${NC} Hugo"
 		echo
 		echo -e "${lime}  JS based${NC}"
-		echo -e "${green}    14.${NC} Gatsby JS"
-		echo -e "${green}    15.${NC} Angular"
+		echo -e "${green}    12.${NC} Gatsby JS"
+		echo -e "${green}    13.${NC} Angular"
 		echo
 		echo -e "${magenta}  HTML${NC}"
-		echo -e "${green}    16.${NC} Static HTML site"
+		echo -e "${green}    14.${NC} Static HTML site"
 		echo
 		echo -e "${red}  Custom${NC}"
-		echo -e "${green}    0.${NC} Custom git repository"
+		echo -e "${green}    0.${NC}  Custom git repository"
 		echo
 		echo -e ""
 
 		# TODO: UPDATE THIS VARIABLE IF YOU ADD MORE CHOICES!
-		local choices=15
+		local choices=14
 
 		while [[ "$choice" == "" ]]; do
 			read -p "Enter your choice (0-$choices): " choice
@@ -3394,71 +3411,61 @@ project_create ()
 			target_repo="$URL_REPO_DRUPAL10BLT"
 			;;
 		3)
-			target_cms="Drupal 9 (Composer Version)"
-			target_host_name_search_string="drupal9.docksal"
-			target_repo="$URL_REPO_DRUPAL9COMPOSER"
-			;;
-		4)
-			target_cms="Drupal 9 (BLT Version)"
-			target_host_name_search_string="drupal9.docksal"
-			target_repo="$URL_REPO_DRUPAL9BLT"
-			;;
-		5)
 			target_cms="Drupal 7"
 			target_host_name_search_string="drupal7.docksal"
 			target_repo="$URL_REPO_DRUPAL7"
 			;;
-		6)
+		4)
 			target_cms="Wordpress"
 			target_host_name_search_string="wordpress.docksal"
 			target_repo="$URL_REPO_WORDPRESS"
 			;;
-		7)
+		5)
 			target_cms="Magento"
 			target_host_name_search_string="magento.docksal"
 			target_repo="$URL_REPO_MAGENTO"
 			;;
-		8)
+		6)
 			target_cms="Laravel"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_LARAVEL"
 			;;
-		9)
+		7)
 			target_cms="Symfony Skeleton"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_SKELETON"
 			;;
-		10)
+		8)
 			target_cms="Symfony WebApp"
 			target_host_name_search_string="symfony.docksal"
 			target_repo="$URL_REPO_SYMFONY_WEBAPP"
 			;;
-		11)
+		9)
 			target_cms="Grav CMS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GRAV"
 			;;
-		12)
+		10)
 			target_cms="Backdrop CMS"
 			target_host_name_search_string="backdrop.docksal"
 			target_repo="$URL_REPO_BACKDROP"
 			;;
-		13)
+		11)
 			target_cms="Hugo"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_HUGO"
 			;;
-		14)
+		12)
 			target_cms="Gatsby JS"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_GATSBY"
 			;;
-		15)
+		13)
 			target_cms="Angular"
 			target_host_name_search_string=""
 			target_repo="$URL_REPO_ANGULAR"
 			;;
-		16)
+		14)
 			target_cms="Plain HTML"
 			target_host_name_search_string=""
 			target_repo=""
@@ -3735,7 +3742,7 @@ ssh_key ()
 	# Copy all keys from the host to the ssh-agent container.
 	# This is a safer method compared to passing individual keys via stdin.
 	# Takes 600ms vs 200ms for the stdin approach. Is faster when passing 4+ keys.
-	docker cp "$ssh_path/." docksal-ssh-agent:/.ssh
+	docker cp "$ssh_path/." docksal-ssh-agent:/.ssh >/dev/null
 
 	# If we have a key name as the argument, add it to the list of keys to load
 	if [[ "${2}" != "" ]]; then
@@ -4166,6 +4173,9 @@ install_dns_service ()
 configure_resolver_mac () {
 	local mode="${1:-on}"
 
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
+
 	if [[ "$mode" == "on" ]]; then
 		# Check whether resolver is already configured
 		if ! (grep "^nameserver $DOCKSAL_IP$" /etc/resolver/$DOCKSAL_DNS_DOMAIN >/dev/null 2>&1); then
@@ -4177,6 +4187,7 @@ configure_resolver_mac () {
 				sudo tee 1>/dev/null "/etc/resolver/$DOCKSAL_DNS_DOMAIN"
 		fi
 	elif [[ "$mode" == "off" ]]; then
+		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN_DEFAULT" >/dev/null 2>&1
 		sudo rm -r "/etc/resolver/$DOCKSAL_DNS_DOMAIN" >/dev/null 2>&1
 	fi
 
@@ -4194,6 +4205,9 @@ configure_resolver_alpine () {
 	local mode="${1:-on}"
 	local dns_settings="nameserver ${DOCKSAL_IP}"
 	local conf_file="/etc/resolv.conf"
+
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
 
 	# Enabling and settings are not present
 	if [[ "$mode" == "on" ]] && (! grep -q "$dns_settings" ${conf_file}); then
@@ -4215,10 +4229,12 @@ configure_resolver_alpine () {
 # @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
 configure_resolver_windows () {
 	local mode="${1:-on}"
-
 	local dns_ip="$DOCKSAL_IP"
-	# 10 is used increase the adapter's priority. 75 to - deprioritize it
-	local metric=10
+	local metric=10 # 10 is used increase the adapter's priority. 75 to - deprioritize it
+
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
+
 	# Enable resolver by default
 	if [[ "$mode" == "off" ]]; then
 		dns_ip="none"
@@ -4253,10 +4269,12 @@ configure_resolver_windows () {
 # @param $1 mode, set to "off" to disable/revert settings, leave empty to enable
 configure_resolver_wsl () {
 	local mode="${1:-on}"
-
 	local dns_ip="$DOCKSAL_IP"
-	# 10 is used increase the adapter's priority. 75 to - deprioritize it
-	local metric=10
+	local metric=10 # 10 is used increase the adapter's priority. 75 to - deprioritize it
+
+	# Global DNS resolver kill switch
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
+
 	# Enable resolver by default
 	if [[ "$mode" == "off" ]]; then
 		dns_ip="none"
@@ -4292,7 +4310,7 @@ configure_resolver ()
 	local mode="${1:-on}"
 
 	# Global DNS resolver kill switch
-	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode='off'
+	[[ "$DOCKSAL_NO_DNS_RESOLVER" != "0" ]] && mode="off"
 
 	if [[ "$mode" == "on" ]]; then
 		echo-green "Enabling automatic *.$DOCKSAL_DNS_DOMAIN DNS resolver..."
@@ -4966,7 +4984,7 @@ update_config_files ()
 install_bash_autocomplete ()
 {
 	local destination="$FIN_AUTOCOMPLETE_PATH"
-	tee "$destination" >/dev/null <<'EOF'
+	sudo tee "$destination" >/dev/null <<'EOF'
 _docksal_completion()
 {
 	local cur=${COMP_WORDS[COMP_CWORD]} #current word part
@@ -4983,7 +5001,7 @@ complete -o bashdefault -o default -F _docksal_completion fin
 EOF
 	if_failed "Failed to write file to $destination"
 	echo-green "Script saved to $destination"
-	chmod +x "$destination"
+	sudo chmod +x "$destination"
 
 	SOURCE_FILE=".bash_profile"
 	grep -q "$destination" "$HOME/$SOURCE_FILE"
@@ -6150,12 +6168,16 @@ sysinfo ()
 		echo
 		nfsd status
 		echo
-		echo "NFS EXPORTS"
-		echo "----------"
+		echo "/etc/exports:"
+		echo "-------------"
 		cat /etc/exports
-		echo "----------"
+		echo "-------------"
 		echo
+		# List configured NFS exports
 		showmount -e
+		echo
+		# List active NFS clients (client:path)
+		showmount -a
 	fi
 
 	echo

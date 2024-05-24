@@ -14,8 +14,6 @@ This is the default method.
 Add the following to the `docksal.yml` file in your project.
 
 ```yaml
-version: "2.1"
-
 services:
   # Redis
   redis:
@@ -61,8 +59,6 @@ This list may become outdated. Please check [wodby/redis](https://github.com/wod
 This can be done by adding a line to reference the custom config file (`.docksal/etc/redis/redis.conf`) in the `docksal.yml` file. The following is an example.
 
 ```yaml
-version: "2.1"
-
 services:
   redis:
     hostname: redis

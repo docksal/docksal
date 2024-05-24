@@ -8,7 +8,7 @@ aliases:
 ## fin {#fin}
 
 ```text
-Docksal command line utility (v1.110.1)
+Docksal command line utility (v1.118.0)
 
 Docksal Docs:      https://docs.docksal.io/
 Sponsor ❤ Docksal: https://github.com/sponsors/docksal
@@ -376,17 +376,19 @@ Examples:
 ```text
 
 
-Usage:  docker compose logs [SERVICE...]
+Usage:  docker compose logs [OPTIONS] [SERVICE...]
 
 View output from containers
 
 Options:
-  -f, --follow          Follow log output.
-      --no-color        Produce monochrome output.
-      --no-log-prefix   Don't print prefix in logs.
+      --dry-run         Execute command in dry run mode
+  -f, --follow          Follow log output
+      --index int       index of the container if service has multiple replicas
+      --no-color        Produce monochrome output
+      --no-log-prefix   Don't print prefix in logs
       --since string    Show logs since timestamp (e.g. 2013-01-02T13:23:37Z) or relative (e.g. 42m for 42 minutes)
-      --tail string     Number of lines to show from the end of the logs for each container. (default "all")
-  -t, --timestamps      Show timestamps.
+  -n, --tail string     Number of lines to show from the end of the logs for each container (default "all")
+  -t, --timestamps      Show timestamps
       --until string    Show logs before a timestamp (e.g. 2013-01-02T13:23:37Z) or relative (e.g. 42m for 42 minutes)
 
 Examples:
@@ -397,7 +399,7 @@ Examples:
 ## pull {#pull}
 
 ```text
-Docksal command line utility (v1.110.1)
+Docksal command line utility (v1.118.0)
 
 Docksal Docs:      https://docs.docksal.io/
 Sponsor ❤ Docksal: https://github.com/sponsors/docksal
@@ -448,9 +450,6 @@ Diagnostics/maintenance/updates
   sysinfo                  	Show system information
   update [options]         	Update Docksal
   version (--version, v, -v)	Print fin version. [v, -v] prints short version
-
-Installed Addons:
-  mkcert [g]               	mkcert addon
 ```
 
 ## run-cli {#run-cli}
@@ -545,6 +544,15 @@ Update Docksal system components to the latest stable version
 Usage: update
 
 Options:
-  DOCKSAL_VERSION=develop fin update	Update Docksal to the latest development version
+  --system-images          	Update system images
+  --project-images         	Update project images
+  --self                   	Update fin executbale
+  --tools                  	Update tools
+  --stack                  	Update config files
+  --bash-complete          	Install bash completions
+
+Examples:
+  fin update --project-images	Pull the latest project specific images
+  DOCKSAL_UPDATE_VERSION=develop fin update	Update Docksal to the latest development version
 ```
 

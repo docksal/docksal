@@ -4,8 +4,6 @@
 # Can be used to provision completely blank environments and have all work (code checkout, etc.) done inside cli.
 # Provides THE BEST fs performance.
 
-version: "3.9"
-
 volumes:
   cli_home:  # /home/docker volume in cli
   project_root: # Project root volume

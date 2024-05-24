@@ -217,3 +217,8 @@ fin=`which fin`
 
 Check the commands directory (examples/.docksal/commands) located in the [Docksal project](https://github.com/docksal/docksal) 
 or [read the blog post on writing custom commands](https://blog.docksal.io/writing-fin-init-and-other-docksal-custom-commands-dc103b2747cd).
+
+## Enable bash autocompletion
+
+Bash autocompletion could be enable by executing: `fin update --bash-complete`.
+Then, type `fin` and press the TAB key twice to display commands available in the current dir.

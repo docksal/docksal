@@ -1,8 +1,6 @@
 # Adds XHProf service to the project
 # The XHProf Outputs can be accessed at xhprof.${VIRTUAL_HOST}
 
-version: "3.9"
-
 services:
 
   cli:

@@ -92,8 +92,6 @@ services:
 
 	# Add a stack override via docksal.yml
 	yml='
-version: "2.1"
-
 services:
   cli:
     image: docksal/cli
@@ -133,8 +131,6 @@ services:
 
 	# Add a stack override via docksal-local.yml
 	yml='
-version: "2.1"
-
 services:
   cli:
     image: docksal/cli
