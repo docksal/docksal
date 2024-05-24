@@ -74,7 +74,7 @@ services:
   # DB: MySQL
   mariadb:
     hostname: db
-    image: ${DB_IMAGE:-docksal/mariadb:10.6-1.3}
+    image: ${DB_IMAGE:-docksal/mariadb:10.11-1.4}
     ports:
     - "${MYSQL_PORT_MAPPING:-3306}"
     volumes:

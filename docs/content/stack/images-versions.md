@@ -103,15 +103,14 @@ e.g., `fin image registry docksal/cli`, to see list of available CLI images. [Se
 
 | Image| Notes |
 |------|-------|
-| `docksal/mariadb:10.6-1.3`     | MariaDB 10.6 (image v1.3, default) |
+| `docksal/mariadb:10.11-1.4`    | MariaDB 10.11 (image v1.4, default) |
+| `docksal/mariadb:10.11`        | MariaDB 10.11 (latest version) |
+| `docksal/mariadb:10.6-1.4`     | MariaDB 10.6 (pinned version) |
 | `docksal/mariadb:10.6`         | MariaDB 10.6 (latest version) |
-| `docksal/mariadb:10.5-1.3`     | MariaDB 10.5 (pinned version) |
+| `docksal/mariadb:10.5-1.4`     | MariaDB 10.5 (pinned version) |
 | `docksal/mariadb:10.5`         | MariaDB 10.5 (latest version) |
-| `docksal/mariadb:10.4-1.3`     | MariaDB 10.4 (pinned version) |
+| `docksal/mariadb:10.4-1.4`     | MariaDB 10.4 (pinned version) |
 | `docksal/mariadb:10.4`         | MariaDB 10.4 (latest version) |
-| `docksal/mariadb:10.3-1.3`     | MariaDB 10.3 (pinned version) |
-| `docksal/mariadb:10.3`         | MariaDB 10.3 (latest version) |
-| `docksal/mariadb:10.2`         | MariaDB 10.2 (legacy version) |
 | ...                            | ... |
 
 ## Apache Solr

@@ -23,7 +23,7 @@ services:
       service: mariadb
     # Pin MariaDB version
     # MariaDB v10.4 functions as limited drop-in replacement for MySQL 5.7
-    image: ${DB_IMAGE:-docksal/mariadb:10.4-1.3}
+    image: ${DB_IMAGE:-docksal/mariadb:10.4-1.4}
 
   cli:
     extends:
