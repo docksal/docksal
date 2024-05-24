@@ -83,10 +83,10 @@ Starting with Docker Desktop v2.2.0.0+, the eTDL (base domain) for Docksal proje
 to [v2.1.0.5](https://download.docker.com/mac/stable/40693/Docker.dmg) as a temporary measure.
 {{% /notice %}}
 
-1. Install Docker Desktop for Mac v4.17.0
+1. Install Docker Desktop for Mac v4.29.0
 
-    [![Docker Desktop for Mac v4.17.0 (Intel chip)](https://img.shields.io/badge/Docker%20Desktop%20for%20Mac%20v4.17.0%20(Intel)-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/main/amd64/145265/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
-    [![Docker Desktop for Mac v4.17.0 (Apple silicon)](https://img.shields.io/badge/Docker%20Desktop%20for%20Mac%20v4.17.0%20(Apple)-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/main/arm64/145265/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Mac v4.29.0 (Intel chip)](https://img.shields.io/badge/Docker%20Desktop%20for%20Mac%20v4.29.0%20(Intel)-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/main/amd64/145265/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Mac v4.29.0 (Apple silicon)](https://img.shields.io/badge/Docker%20Desktop%20for%20Mac%20v4.29.0%20(Apple)-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/mac/main/arm64/145265/Docker.dmg) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 1. Start Docker Desktop
 
@@ -189,9 +189,9 @@ to [v2.1.0.5](https://download.docker.com/win/stable/40693/Docker%20Desktop%20In
 
     [![Ubuntu App for Windows](https://img.shields.io/badge/Ubuntu%2020.04%20App-orange.svg?logo=ubuntu&style=for-the-badge&classes=inline)](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71)
 
-3. Install Docker Desktop for Windows v4.17.0
+3. Install Docker Desktop for Windows v4.29.0
 
-    [![Docker Desktop for Windows v4.17.0](https://img.shields.io/badge/Docker%20Desktop%20for%20Windows%20v4.17.0-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/win/main/amd64/145265/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
+    [![Docker Desktop for Windows v4.29.0](https://img.shields.io/badge/Docker%20Desktop%20for%20Windows%20v4.29.0-blue.svg?logo=docker&style=for-the-badge&classes=inline)](https://desktop.docker.com/win/main/amd64/145265/Docker%20Desktop%20Installer.exe) <!-- when changing this version please change https://github.com/docksal/docksal.io/tree/master/src/pages/installation.js as well -->
 
 4. Configure Docker Desktop on Windows
 
