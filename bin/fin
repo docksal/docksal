@@ -1148,7 +1148,11 @@ is_vbox_version ()
 docker_desktop_version ()
 {
 	if is_mac; then
-		echo $(defaults read /Applications/Docker.app/Contents/Info.plist CFBundleShortVersionString) 2>/dev/null
+		if [ -d "/Applications/Docker.app" ]; then
+			echo $(defaults read /Applications/Docker.app/Contents/Info.plist CFBundleShortVersionString) 2>/dev/null
+		else
+			echo "4.37.2"
+		fi
 	fi
 
 	if is_wsl; then
@@ -3977,7 +3981,7 @@ configure_mounts ()
 
 	# Create and mount network shares from host to VM
 	if [[ "$mode" == "on" ]]; then
-		if is_mac; then
+		if is_mac && [[ "$DOCKSAL_VOLUMES" == "nfs" ]]; then
 			echo-green "Configuring NFS shares..."
 			nfs_share_add "${DOCKSAL_NFS_PATH}"
 			res=$?
@@ -6526,7 +6530,8 @@ load_configuration ()
 	# See https://github.com/docksal/docksal/issues/1368
 	overrides_dd_bind_file="$(get_config_dir_dc)/stacks/overrides-dd-bind.yml"
 	if [[ -f "${overrides_dd_bind_file}" ]] && \
-		is_docker_native && \
+		(is_docker_native && \
+		(! is_mac || [ -d "/Applications/Docker.app" ])) && \
 		(( $(ver_to_int $(docker_desktop_version)) >= $(ver_to_int '2.3.0.2') )) && \
 		[[ "$DOCKSAL_VOLUMES" == "bind" ]];
 	then
