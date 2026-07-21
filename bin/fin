@@ -418,6 +418,11 @@ IMAGE_VHOST_PROXY=${IMAGE_VHOST_PROXY:-docksal/vhost-proxy:1.8}
 IMAGE_DNS=${IMAGE_DNS:-docksal/dns:1.2}
 IMAGE_RUN_CLI=${IMAGE_RUN_CLI:-docksal/cli:php8.3-3.8}
 
+# Database types
+DB_TYPE_UNKNOWN='unknown'
+DB_TYPE_MYSQL='mysql'
+DB_TYPE_POSTGRES='postgres'
+
 #---------------------------- Helper functions --------------------------------
 
 DOCKSAL_PATH='' #docksal path value will be cached here
@@ -5914,6 +5919,329 @@ mysql_dump ()
 	fi
 }
 
+get_db_type()
+{
+	# Check if the db container is running and has psql installed
+	local container_id=$(get_project_container_id "db")
+	if [[ -z "$container_id" ]]; then
+		echo ${DB_TYPE_UNKNOWN}
+		return
+	fi
+
+	# Check to see if the db container has a specific label for db type.
+	local db_type=$(docker inspect --format '{{ index .Config.Labels "io.docksal.db-type"}}' ${container_id} 2>/dev/null)
+	if [[ "$db_type" != "" ]]; then
+		echo $db_type
+		return
+	fi
+
+	# Check the mounted volumes to determine the db type
+	# This is a workaround for the case when the db container does not have the label set
+	# and we need to determine the db type based on the mounted volumes.
+	# This is useful for legacy projects that do not have the label set.
+	# It assumes that the db container has a volume mounted to /var/lib/mysql/data for MySQL
+	# and /var/lib/postgresql/data for PostgreSQL.
+	# If the volume is not mounted, it defaults to MySQL.
+	local volume_destination=$(docker inspect --format '{{ (index .Mounts 1).Destination }}'	${container_id} 2>/dev/null)
+	local psql_volume=$(echo $volume_destination | grep '/postgresql/data')
+	if [[ "$psql_volume" != "" ]]; then
+		echo ${DB_TYPE_POSTGRES}
+		return
+	fi
+
+	# If no specific db type is set, default to MySQL
+	echo ${DB_TYPE_MYSQL}
+}
+
+# Start interactive psql shell
+# --db-user="admin" to override psql username
+# --db-password="otherpass" to override psql password
+# --db="drupal" to override database (only applies to queries)
+_psql ()
+{
+	check_winpty_found
+	check_docksal_environment
+	eval $(parse_params "$@")
+
+	# Bring in POSTGRES env variables from the db container, so that we can use them here
+	container_id=$(get_project_container_id "db")
+	container_psql_vars=$(docker exec "$container_id" env | grep "^POSTGRES_")
+	eval ${container_psql_vars}
+
+	local __psql_args="${psql_args:-''}"
+	# POSTGRES_* variable expansion happens here
+	local __dump_user="${dbuser:-$POSTGRES_USER}"
+	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
+	local __database="${db:-$POSTGRES_DATABASE}"
+	local __pty_command=''
+	if is_tty || [[ -z "${ARGV[*]}" ]]; then
+		__pty_command="${winpty}"
+	fi
+	local __pty_alloc=''
+	if is_tty; then
+		__pty_alloc='-t'
+	fi
+
+	${__pty_command} docker exec -i ${__pty_alloc} --env PGPASSWORD=${__dump_password} "${container_id}" psql \
+		--username="${__dump_user}" \
+		${__psql_args} \
+		${__database} \
+		${ARGV:+--command="${ARGV[*]}"}
+}
+
+# Show databases list
+# --db-user="admin" to override psql username
+# --db-password="otherpass" to override psql password
+psql_list ()
+{
+	check_project_environment
+	eval $(parse_params "$@")
+
+	# Bring in POSTGRES env variables from the db container, so that we can use them here
+	container_id=$(get_project_container_id "db")
+	container_psql_vars=$(docker exec "$container_id" env | grep "^POSTGRES_")
+	eval ${container_psql_vars}
+
+	local __dump_user="${dbuser:-$POSTGRES_USER}"
+	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
+
+	_exec --in="db" "echo '\l' | PGPASSWORD=${__dump_password} psql --username=${__dump_user} postgres"
+}
+
+# Create a database
+# $0 - database name
+# --db-user="admin" to override psql username
+# --db-password="otherpass" to override psql password
+# --db-charset="..." to override charset (default is utf8)
+# --db-collation="..." to override collation (default is en_US.utf8)
+psql_db_create ()
+{
+	check_project_environment
+	eval $(parse_params "$@")
+
+	# Bring in POSTGRES env variables from the db container, so that we can use them here
+	container_id=$(get_project_container_id "db")
+	container_psql_vars=$(docker exec "$container_id" env | grep "^POSTGRES_")
+	eval ${container_psql_vars}
+
+	local __dump_user="${dbuser:-$POSTGRES_USER}"
+	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
+	local __database="${ARGV[0]}"
+	local __database_charset="${dbcharset:-utf8}"
+	local __database_collation="${dbcollation:-en_US.utf8}"
+
+	[[ "${__database}" == "" ]] && echo-error "Provide a name for the database to create" && exit 1
+
+	_exec --in="db" "PGPASSWORD=${__dump_password} createdb --username=${__dump_user} --encoding=${__database_charset} --lc-collate=${__database_collation} ${__database}"
+
+		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+	(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		"GRANT ALL ON ALL TABLES IN SCHEMA public TO PUBLIC;") \
+		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+		(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		"GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO PUBLIC;")
+
+	if_failed_error "Database '${__database}' creation failed"
+
+	echo -e "Database ${yellow}${__database}${NC} created"
+}
+
+# Delete a database
+# $0 - database name
+# --db-user="admin" to override psql username
+# --db-password="otherpass" to override psql password
+psql_db_drop ()
+{
+	check_project_environment
+	eval $(parse_params "$@")
+
+	# Bring in POSTGRES env variables from the db container, so that we can use them here
+	container_id=$(get_project_container_id "db")
+	container_psql_vars=$(docker exec "$container_id" env | grep "^POSTGRES_")
+	eval ${container_psql_vars}
+
+	local __dump_user="${dbuser:-$POSTGRES_USER}"
+	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
+	local __database="${ARGV[0]}"
+
+	[[ "${__database}" == "" ]] && echo-error "Provide the name of the database to drop." && exit 1
+
+	_exec --in="db" "PGPASSWORD=${__dump_password} dropdb --username=${__dump_user} --if-exist ${__database}"
+
+	if_failed_error "Dropping '${__database}' database failed"
+	echo -e "Database ${yellow}${__database}${NC} dropped"
+}
+
+# Truncate db
+# @params
+# $1 - database name
+# --db-user="admin" to override psql username
+# --db-password="otherpass" to override psql password
+psql_db_truncate ()
+{
+	check_project_environment
+	eval $(parse_params "$@")
+
+	# Bring in POSTGRES env variables from the db container, so that we can use them here
+	container_id=$(get_project_container_id "db")
+	container_psql_vars=$(docker exec "$container_id" env | grep "^POSTGRES_")
+	eval ${container_psql_vars}
+
+	local __dump_user="${dbuser:-$POSTGRES_USER}"
+	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
+	local __database="${ARGV[0]:-${POSTGRES_DATABASE:-default}}"
+
+	echo -e "Truncating ${yellow}${__database}${NC} database...."
+  IFS="|" read -r __database_charset __database_collation <<< "$(docker exec "$container_id" bash -c "echo -n \"\$(PGPASSWORD=${__dump_password} psql --username=${__dump_user} -q -t -A -c \"SELECT pg_encoding_to_char(encoding), datcollate FROM pg_database WHERE datname = '${__database}'\" ${__database})\"")"
+
+	_exec --in="db" "PGPASSWORD=${__dump_password} dropdb --username=${__dump_user} --if-exist ${__database}"
+
+	if_failed_error "Dropping '${__database}' database failed"
+	echo -e "Database ${yellow}${__database}${NC} dropped"
+
+	_exec --in="db" "PGPASSWORD=${__dump_password} createdb --username=${__dump_user} --encoding=${__database_charset} --lc-collate=${__database_collation} ${__database}"
+
+		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+	(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		"GRANT ALL ON ALL TABLES IN SCHEMA public TO PUBLIC;") \
+		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+		(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		"GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO PUBLIC;")
+
+	if_failed_error "Database '${__database}' creation failed"
+
+	echo -e "Database ${yellow}${__database}${NC} created"
+}
+
+# Truncate db and import from sql dump
+# @params
+# $0 - file name
+# --db="drupal" to override database username
+# --db-user="admin" to override psql username
+# --db-password="otherpass" to override psql password
+# --no-truncate to avoid truncate
+psql_import ()
+{
+	check_project_environment
+	eval $(parse_params "$@")
+
+	# Bring in POSTGRES env variables from the db container, so that we can use them here
+	container_id=$(get_project_container_id "db")
+	container_psql_vars=$(docker exec "$container_id" env | grep "^POSTGRES_")
+	eval ${container_psql_vars}
+
+	local __dump_user="${dbuser:-$POSTGRES_USER}"
+	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
+	local __database="${db:-${POSTGRES_DATABASE:-default}}"
+	# /dev/fd/0 is the stdin stream for current script
+	# IMPORTANT: don't run "docker exec" with "-i" until value of /dev/fd/0 is used or its value will be lost
+	local __input="${ARGV[0]:-/dev/fd/0}"
+
+	[[ "${__input}" != "/dev/fd/0" ]] && [[ ! -r "${__input}" ]] &&
+		echo-error "Can not read ${__input}" "Please check file path and permissions" && exit 1
+
+	local confirm=0
+	[[ "$force" == "force" ]] && confirm=1
+	# Use cat to pipe dump content by default
+	local pipe_cmd='cat'
+	# Show DB import progress if requested and pv binary is available
+	if [[ "$progress" == "progress" ]]; then
+		if (which 'pv' >/dev/null 2>&1); then
+			pipe_cmd='pv'
+		else
+			echo-yellow "Cannot display import progress: pv binary is needed, but missing."
+		fi
+	fi
+
+	#-- 1) RECREATE DATABASE WITH THE SAME CHARSET AND COLLATION
+	if [[ "$notruncate" != "notruncate" ]]; then
+		IFS="|" read -r __database_charset __database_collation <<< "$(docker exec "$container_id" bash -c "echo -n \"\$(PGPASSWORD=${__dump_password} psql --username=${__dump_user} -q -t -A -c \"SELECT pg_encoding_to_char(encoding), datcollate FROM pg_database WHERE datname = '${__database}'\" ${__database})\"")"
+
+		_exec --in="db" "PGPASSWORD=${__dump_password} dropdb --username=${__dump_user} --if-exist ${__database}"
+
+		if_failed_error "Dropping '${__database}' database failed"
+		echo -e "Database ${yellow}${__database}${NC} dropped"
+
+		_exec --in="db" "PGPASSWORD=${__dump_password} createdb --username=${__dump_user} --encoding=${__database_charset} --lc-collate=${__database_collation} ${__database}"
+
+			# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+		(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+			"GRANT ALL ON ALL TABLES IN SCHEMA public TO PUBLIC;") \
+			# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+			(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+			"GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO PUBLIC;")
+
+		if_failed_error "Database '${__database}' creation failed"
+
+		echo -e "Database ${yellow}${__database}${NC} created"
+
+		if [[ ! $? -eq 0 ]] && (exit ${confirm}); then
+			_confirm "There were errors during truncation. Continue anyways?"
+		fi
+	fi
+
+	#-- 2) IMPORTING
+	[[ "${__input}" != "/dev/fd/0" ]] &&
+		echo -e "Importing ${yellow}$(basename ${__input})${NC}..." ||
+		echo "Importing from stdin..."
+	# We can not use _run here because we need to launch docker exec with only -i param
+	# and only psql command directly (no bash wrapper) so that stdin could be received inside that exec
+	container_id=$(get_project_container_id "db")
+	__psql_command=$(docker exec "$container_id" bash -c "echo --username=${__dump_user}")
+	__psql_command=$(echo "${__psql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
+	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
+	${pipe_cmd} "${__input}" | docker exec --env PGPASSWORD=${__dump_password} -i ${container_id}  psql ${__psql_command} ${__database}
+
+	# Check if import succeeded or not and print results.
+	if [ $? -eq 0 ]; then
+		echo-green "Done"
+		exit 0
+	else
+		echo-red "Import failed"
+		exit 1
+	fi
+}
+
+# Dump psql database
+# @params
+# $0 - file name, if omitted then stdout
+# --db="drupal" to override database username
+# --db-user="admin" to override psql username
+# --db-password="otherpass" to override psql password
+psql_dump ()
+{
+	check_project_environment
+	eval $(parse_params "$@")
+
+	# Bring in POSTGRES env variables from the db container, so that we can use them here
+	container_id=$(get_project_container_id "db")
+	container_psql_vars=$(docker exec "$container_id" env | grep "^POSTGRES_")
+	eval ${container_psql_vars}
+
+	local __dump_user="${dbuser:-$POSTGRES_USER}"
+	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
+	local __database="${db:-${POSTGRES_DATABASE:-default}}"
+	local __output="${ARGV[0]}"
+
+	if [[ "${ARGV[0]}" != "" ]]; then
+		touch "${__output}"
+		if_failed_error "Could not write ${__output}" "Please check your file permissions"
+		echo-green "Exporting..."
+	fi
+
+	container_id=$(get_project_container_id "db")
+	__psql_command=$(docker exec -i "$container_id" bash -c "echo --username=${__dump_user}")
+	if [[ "${ARGV[0]}" == "" ]]; then
+		docker exec -i --env PGPASSWORD=${__dump_password} "$container_id" pg_dump ${__psql_command} --create --clean ${__database}
+	else
+		docker exec -i --env PGPASSWORD=${__dump_password} "$container_id" pg_dump ${__psql_command} --create --clean ${__database} | tee "${__output}" >/dev/null
+	fi
+
+	if [[ "${ARGV[0]}" != "" ]]; then
+		[ $? -eq 0 ] && echo "Done."
+	fi
+}
+
 # Download script by URL and execute it
 # @param $1 url of script.
 exec_url ()
@@ -6688,7 +7016,16 @@ config_show ()
 	echo "IP: $DOCKSAL_IP"
 	echo ""
 
-	echo "MySQL endpoint:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$DOCKSAL_IP/")
+  local db_type=$(get_db_type);
+  # Print MySQL endpoint only if the volume is defined in the config
+  if [[ "$db_type" == ${DB_TYPE_MYSQL} ]]; then
+    echo "MySQL endpoint:" $(docker-compose port db 3306 2>/dev/null | sed "s/0\.0\.0\.0/$DOCKSAL_IP/")
+  fi
+
+  # Print PostgreSQL endpoint only if the volume is defined in the config
+  if [[ "$db_type" == ${DB_TYPE_POSTGRES} ]]; then
+    echo "PostgreSQL endpoint:" $(docker-compose port db 5432 2>/dev/null | sed "s/0\.0\.0\.0/$DOCKSAL_IP/")
+  fi
 	echo "Public URL:" $(cloudflared_get_host)
 
 	# Stop here for "fin config env"
@@ -7600,6 +7937,13 @@ export MYSQL_USER=${MYSQL_USER:-user}
 export MYSQL_PASSWORD=${MYSQL_PASSWORD:-user}
 export MYSQL_DATABASE=${MYSQL_DATABASE:-default}
 
+# Default PostgresSQL settings
+# These may be overridden via project level env files (e.g., docksal.env)
+export POSTGRES_HOST=${POSTGRES_HOST:-db}
+export POSTGRES_USER=${POSTGRES_USER:-user}
+export POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-user}
+export POSTGRES_DATABASE=${POSTGRES_DATABASE:-default}
+
 # Container logging settings
 export DOCKSAL_CONTAINER_LOG_MAX_SIZE
 export DOCKSAL_CONTAINER_LOG_MAX_FILE
@@ -7930,34 +8274,84 @@ case "$1" in
 	db)
 		load_configuration
 		shift
+		db_type=$(get_db_type);
 		case "$1" in
 			cli)
 				shift
-				_mysql "$@"
+				case $db_type in
+					${DB_TYPE_MYSQL})
+						_mysql "$@"
+						;;
+					${DB_TYPE_POSTGRES})
+						_psql "$@"
+						;;
+				esac
 				;;
 			list|ls)
 				shift
-				mysql_list "$@"
+		 		case $db_type in
+					${DB_TYPE_MYSQL})
+						mysql_list "$@"
+						;;
+					${DB_TYPE_POSTGRES})
+						psql_list "$@"
+						;;
+				esac
 				;;
 			import)
 				shift
-				mysql_import "$@"
+				case $db_type in
+					${DB_TYPE_MYSQL})
+						mysql_import "$@"
+						;;
+					${DB_TYPE_POSTGRES})
+						psql_import "$@"
+						;;
+				esac
 				;;
 			dump)
 				shift
-				mysql_dump "$@"
+				case $db_type in
+					${DB_TYPE_MYSQL})
+						mysql_dump "$@"
+						;;
+					${DB_TYPE_POSTGRES})
+						psql_dump "$@"
+						;;
+				esac
 				;;
 			create)
 				shift
-				mysql_db_create "$@"
+				case $db_type in
+					${DB_TYPE_MYSQL})
+						mysql_db_create "$@"
+						;;
+					${DB_TYPE_POSTGRES})
+						psql_db_create "$@"
+						;;
+				esac
 				;;
 			drop)
 				shift
-				mysql_db_drop "$@"
+				case $db_type in
+					${DB_TYPE_MYSQL})
+						mysql_db_drop "$@"
+						;;
+					${DB_TYPE_POSTGRES})
+						psql_db_drop "$@"
+						;;
+				esac
 				;;
 			truncate)
 				shift
-				mysql_db_truncate "$@"
+				case $db_type in
+					${DB_TYPE_MYSQL})
+						mysql_db_truncate "$@"
+						;;
+					${DB_TYPE_POSTGRES})
+						psql_db_truncate "$@"
+						;;
+				esac
 				;;
 			*)
 				show_help_db
