@@ -6034,13 +6034,11 @@ psql_db_create ()
 
 	_exec --in="db" "PGPASSWORD=${__dump_password} createdb --username=${__dump_user} --encoding=${__database_charset} --lc-collate=${__database_collation} ${__database}"
 
-		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
-	(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
-		"GRANT ALL ON ALL TABLES IN SCHEMA public TO PUBLIC;") \
-		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
-		(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
-		"GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO PUBLIC;")
-
+	# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+  _psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		"GRANT ALL ON ALL TABLES IN SCHEMA public TO \"${__dump_user}\";" && \
+	_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		"GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO \"${__dump_user}\";"
 	if_failed_error "Database '${__database}' creation failed"
 
 	echo -e "Database ${yellow}${__database}${NC} created"
@@ -6101,12 +6099,11 @@ psql_db_truncate ()
 
 	_exec --in="db" "PGPASSWORD=${__dump_password} createdb --username=${__dump_user} --encoding=${__database_charset} --lc-collate=${__database_collation} ${__database}"
 
-		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
-	(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
-		"GRANT ALL ON ALL TABLES IN SCHEMA public TO PUBLIC;") \
-		# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
-		(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
-		"GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO PUBLIC;")
+	# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+  _psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		"GRANT ALL ON ALL TABLES IN SCHEMA public TO \"${__dump_user}\";" && \
+	_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		"GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO \"${__dump_user}\";"
 
 	if_failed_error "Database '${__database}' creation failed"
 
@@ -6164,12 +6161,11 @@ psql_import ()
 
 		_exec --in="db" "PGPASSWORD=${__dump_password} createdb --username=${__dump_user} --encoding=${__database_charset} --lc-collate=${__database_collation} ${__database}"
 
-			# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
-		(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
-			"GRANT ALL ON ALL TABLES IN SCHEMA public TO PUBLIC;") \
-			# GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
-			(_psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
-			"GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO PUBLIC;")
+	  # GRANT ALL has to happen in a separate query, otherwise we will be hitting a race condition (when db is not yet created).
+    _psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		  "GRANT ALL ON ALL TABLES IN SCHEMA public TO \"${__dump_user}\";" && \
+	  _psql --db="${__database}" --db-user="${__dump_user}" --db-password="${__dump_password}" --psql_args="-q" \
+		  "GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO \"${__dump_user}\";"
 
 		if_failed_error "Database '${__database}' creation failed"
 
