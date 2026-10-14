@@ -8285,6 +8285,11 @@ case "$1" in
 					${DB_TYPE_POSTGRES})
 						_psql "$@"
 						;;
+					*)
+						check_project_environment
+						echo-error "Could not determine the db service type. Is the 'db' container running?"
+						exit 1
+						;;
 				esac
 				;;
 			list|ls)
@@ -8295,6 +8300,11 @@ case "$1" in
 						;;
 					${DB_TYPE_POSTGRES})
 						psql_list "$@"
+						;;
+					*)
+						check_project_environment
+						echo-error "Could not determine the db service type. Is the 'db' container running?"
+						exit 1
 						;;
 				esac
 				;;
@@ -8307,6 +8317,11 @@ case "$1" in
 					${DB_TYPE_POSTGRES})
 						psql_import "$@"
 						;;
+					*)
+						check_project_environment
+						echo-error "Could not determine the db service type. Is the 'db' container running?"
+						exit 1
+						;;
 				esac
 				;;
 			dump)
@@ -8317,6 +8332,11 @@ case "$1" in
 						;;
 					${DB_TYPE_POSTGRES})
 						psql_dump "$@"
+						;;
+					*)
+						check_project_environment
+						echo-error "Could not determine the db service type. Is the 'db' container running?"
+						exit 1
 						;;
 				esac
 				;;
@@ -8329,6 +8349,11 @@ case "$1" in
 					${DB_TYPE_POSTGRES})
 						psql_db_create "$@"
 						;;
+					*)
+						check_project_environment
+						echo-error "Could not determine the db service type. Is the 'db' container running?"
+						exit 1
+						;;
 				esac
 				;;
 			drop)
@@ -8340,6 +8365,11 @@ case "$1" in
 					${DB_TYPE_POSTGRES})
 						psql_db_drop "$@"
 						;;
+					*)
+						check_project_environment
+						echo-error "Could not determine the db service type. Is the 'db' container running?"
+						exit 1
+						;;
 				esac
 				;;
 			truncate)
@@ -8350,6 +8380,11 @@ case "$1" in
 						;;
 					${DB_TYPE_POSTGRES})
 						psql_db_truncate "$@"
+						;;
+					*)
+						check_project_environment
+						echo-error "Could not determine the db service type. Is the 'db' container running?"
+						exit 1
 						;;
 				esac
 				;;
