@@ -6218,6 +6218,7 @@ psql_dump ()
 	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
 	local __database="${db:-${POSTGRES_DATABASE:-default}}"
 	local __output="${ARGV[0]}"
+  local -a __dump_status
 
 	if [[ "${ARGV[0]}" != "" ]]; then
 		touch "${__output}"
@@ -6231,10 +6232,15 @@ psql_dump ()
 		docker exec -i --env PGPASSWORD=${__dump_password} "$container_id" pg_dump ${__psql_command} --create --clean ${__database}
 	else
 		docker exec -i --env PGPASSWORD=${__dump_password} "$container_id" pg_dump ${__psql_command} --create --clean ${__database} | tee "${__output}" >/dev/null
+		__dump_status=("${PIPESTATUS[@]}")
 	fi
 
 	if [[ "${ARGV[0]}" != "" ]]; then
-		[ $? -eq 0 ] && echo "Done."
+		if [[ "${__dump_status[0]}" -eq 0 && "${__dump_status[1]}" -eq 0 ]]; then
+			echo "Done."
+		else
+			return 1
+		fi
 	fi
 }
 
