@@ -6066,7 +6066,7 @@ psql_db_drop ()
 
 	[[ "${__database}" == "" ]] && echo-error "Provide the name of the database to drop." && exit 1
 
-	_exec --in="db" "PGPASSWORD=${__dump_password} dropdb --username=${__dump_user} --if-exist ${__database}"
+	_exec --in="db" "PGPASSWORD=${__dump_password} dropdb --username=${__dump_user} --if-exists ${__database}"
 
 	if_failed_error "Dropping '${__database}' database failed"
 	echo -e "Database ${yellow}${__database}${NC} dropped"
@@ -6094,7 +6094,7 @@ psql_db_truncate ()
 	echo -e "Truncating ${yellow}${__database}${NC} database...."
   IFS="|" read -r __database_charset __database_collation <<< "$(docker exec "$container_id" bash -c "echo -n \"\$(PGPASSWORD=${__dump_password} psql --username=${__dump_user} -q -t -A -c \"SELECT pg_encoding_to_char(encoding), datcollate FROM pg_database WHERE datname = '${__database}'\" ${__database})\"")"
 
-	_exec --in="db" "PGPASSWORD=${__dump_password} dropdb --username=${__dump_user} --if-exist ${__database}"
+	_exec --in="db" "PGPASSWORD=${__dump_password} dropdb --username=${__dump_user} --if-exists ${__database}"
 
 	if_failed_error "Dropping '${__database}' database failed"
 	echo -e "Database ${yellow}${__database}${NC} dropped"
@@ -6157,7 +6157,7 @@ psql_import ()
 	if [[ "$notruncate" != "notruncate" ]]; then
 		IFS="|" read -r __database_charset __database_collation <<< "$(docker exec "$container_id" bash -c "echo -n \"\$(PGPASSWORD=${__dump_password} psql --username=${__dump_user} -q -t -A -c \"SELECT pg_encoding_to_char(encoding), datcollate FROM pg_database WHERE datname = '${__database}'\" ${__database})\"")"
 
-		_exec --in="db" "PGPASSWORD=${__dump_password} dropdb --username=${__dump_user} --if-exist ${__database}"
+		_exec --in="db" "PGPASSWORD=${__dump_password} dropdb --username=${__dump_user} --if-exists ${__database}"
 
 		if_failed_error "Dropping '${__database}' database failed"
 		echo -e "Database ${yellow}${__database}${NC} dropped"
