@@ -379,7 +379,7 @@ This is used to create a user, and the user is granted superuser permissions for
 The port to use when setting up PostgreSQL.
 
 
-### POSTGRES_DB
+### POSTGRES_DATABASE
 
 `Default: user`
 
@@ -395,7 +395,7 @@ This is used to set the newly created user's password.
 
 `Default: user`
 
-This is used to create a user, and the user is granted superuser permissions for the database specified by the `POSTGRES_DB` variable.
+This is used to create a user, and the user is granted superuser permissions for the database specified by the `POSTGRES_DATABASE` variable.
 
 ### XDEBUG_ENABLED
 

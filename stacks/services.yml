@@ -101,7 +101,7 @@ services:
       - project_root:/var/www:ro,nocopy,cached  # Project root volume (read-only)
       - db_data:/var/lib/postgresql/data  # Database data volume
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-default}
+      - POSTGRES_DATABASE=${POSTGRES_DATABASE:-default}
       - POSTGRES_USER=${POSTGRES_USER:-user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-user}
     <<: *common-settings
