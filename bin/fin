@@ -5968,7 +5968,7 @@ _psql ()
 	container_psql_vars=$(docker exec "$container_id" env | grep "^POSTGRES_")
 	eval ${container_psql_vars}
 
-	local __psql_args="${psql_args:-''}"
+	local __psql_args="${psql_args:-}"
 	# POSTGRES_* variable expansion happens here
 	local __dump_user="${dbuser:-$POSTGRES_USER}"
 	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
