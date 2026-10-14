@@ -6186,7 +6186,7 @@ psql_import ()
 	__psql_command=$(docker exec "$container_id" bash -c "echo --username=${__dump_user}")
 	__psql_command=$(echo "${__psql_command}" | sed -e 's/[^a-zA-Z0-9_-]$//')
 	# "docker exec -i" is required as it creates stdin/stdout streams but does not create tty
-	${pipe_cmd} "${__input}" | docker exec --env PGPASSWORD=${__dump_password} -i ${container_id}  psql ${__psql_command} ${__database}
+	${pipe_cmd} "${__input}" | docker exec --env PGPASSWORD=${__dump_password} -i ${container_id} psql -v ON_ERROR_STOP=1 ${__psql_command} ${__database}
 
 	# Check if import succeeded or not and print results.
 	if [ $? -eq 0 ]; then
