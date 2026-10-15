@@ -5972,7 +5972,7 @@ _psql ()
 	# POSTGRES_* variable expansion happens here
 	local __dump_user="${dbuser:-$POSTGRES_USER}"
 	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
-	local __database="${db:-$POSTGRES_DATABASE}"
+	local __database="${db:-$POSTGRES_DB}"
 	local __pty_command=''
 	if is_tty || [[ -z "${ARGV[*]}" ]]; then
 		__pty_command="${winpty}"
@@ -6087,7 +6087,7 @@ psql_db_truncate ()
 
 	local __dump_user="${dbuser:-$POSTGRES_USER}"
 	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
-	local __database="${ARGV[0]:-${POSTGRES_DATABASE:-default}}"
+	local __database="${ARGV[0]:-${POSTGRES_DB:-default}}"
 
 	echo -e "Truncating ${yellow}${__database}${NC} database...."
   IFS="|" read -r __database_charset __database_collation <<< "$(docker exec "$container_id" bash -c "echo -n \"\$(PGPASSWORD=${__dump_password} psql --username=${__dump_user} -q -t -A -c \"SELECT pg_encoding_to_char(encoding), datcollate FROM pg_database WHERE datname = '${__database}'\" ${__database})\"")"
@@ -6129,7 +6129,7 @@ psql_import ()
 
 	local __dump_user="${dbuser:-$POSTGRES_USER}"
 	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
-	local __database="${db:-${POSTGRES_DATABASE:-default}}"
+	local __database="${db:-${POSTGRES_DB:-default}}"
 	# /dev/fd/0 is the stdin stream for current script
 	# IMPORTANT: don't run "docker exec" with "-i" until value of /dev/fd/0 is used or its value will be lost
 	local __input="${ARGV[0]:-/dev/fd/0}"
@@ -6216,7 +6216,7 @@ psql_dump ()
 
 	local __dump_user="${dbuser:-$POSTGRES_USER}"
 	local __dump_password="${dbpassword:-$POSTGRES_PASSWORD}"
-	local __database="${db:-${POSTGRES_DATABASE:-default}}"
+	local __database="${db:-${POSTGRES_DB:-default}}"
 	local __output="${ARGV[0]}"
   local -a __dump_status
 
@@ -7944,7 +7944,7 @@ export MYSQL_DATABASE=${MYSQL_DATABASE:-default}
 export POSTGRES_HOST=${POSTGRES_HOST:-db}
 export POSTGRES_USER=${POSTGRES_USER:-user}
 export POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-user}
-export POSTGRES_DATABASE=${POSTGRES_DATABASE:-default}
+export POSTGRES_DB=${POSTGRES_DB:-default}
 
 # Container logging settings
 export DOCKSAL_CONTAINER_LOG_MAX_SIZE

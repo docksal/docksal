@@ -107,7 +107,7 @@ services:
     labels:
       - io.docksal.db-type=postgres
     environment:
-      - POSTGRES_DATABASE=${POSTGRES_DATABASE:-default}
+      - POSTGRES_DB=${POSTGRES_DB:-default}
       - POSTGRES_USER=${POSTGRES_USER:-user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-user}
     <<: *common-settings
@@ -153,7 +153,7 @@ services:
       - POSTGRES_HOST
       - POSTGRES_USER
       - POSTGRES_PASSWORD
-      - POSTGRES_DATABASE
+      - POSTGRES_DB
       - COMPOSER_DEFAULT_VERSION
       - COMPOSER_ALLOW_XDEBUG=${XDEBUG_ENABLED:-0}
       - COMPOSER_DISABLE_XDEBUG_WARN=${XDEBUG_ENABLED:-0}
