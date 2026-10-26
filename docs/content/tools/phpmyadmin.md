@@ -16,7 +16,7 @@ Add the `pma` service under the `services` section in `.docksal/docksal.yml`:
   # PHPMyAdmin
   pma:
     hostname: pma
-    image: phpmyadmin/phpmyadmin
+    image: phpmyadmin
     environment:
       - PMA_HOST=db
       - PMA_USER=root
