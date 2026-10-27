@@ -379,11 +379,20 @@ This is used to create a user, and the user is granted superuser permissions for
 The port to use when setting up PostgreSQL.
 
 
+### POSTGRES_HOST
+
+`Default: db`
+
+This variable allows you to specify the name of a database docker host.
+
 ### POSTGRES_DB
 
-`Default: user`
+`Default: default`
 
 This variable allows you to specify the name of a database to be created on image startup.
+
+This is one of the [environment variables](https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables)
+used by the PostgreSQL Docker Community.
 
 ### POSTGRES_PASSWORD
 
@@ -391,11 +400,17 @@ This variable allows you to specify the name of a database to be created on imag
 
 This is used to set the newly created user's password.
 
+This is one of the [environment variables](https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables)
+used by the PostgreSQL Docker Community.
+
 ### POSTGRES_USER
 
 `Default: user`
 
 This is used to create a user, and the user is granted superuser permissions for the database specified by the `POSTGRES_DB` variable.
+
+This is one of the [environment variables](https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables)
+used by the PostgreSQL Docker Community.
 
 ### XDEBUG_ENABLED
 
